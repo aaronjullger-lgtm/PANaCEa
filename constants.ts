@@ -69,3 +69,7 @@ export const TASK_DECK: string[] = [
     // 8% Applying Foundational Scientific Concepts
     "Applying Foundational Scientific Concepts", "Applying Foundational Scientific Concepts", "Applying Foundational Scientific Concepts", "Applying Foundational Scientific Concepts", "Applying Foundational Scientific Concepts", "Applying Foundational Scientific Concepts", "Applying Foundational Scientific Concepts", "Applying Foundational Scientific Concepts"
 ];
+
+// Gemini model constants
+export const GEMINI_FLASH_MODEL = "models/gemini-2.5-flash";
+export const GEMINI_PRO_MODEL   = "models/gemini-2.5-pro";
