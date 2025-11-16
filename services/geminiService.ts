@@ -1,4 +1,4 @@
-// services/geminiService.ts
+// src/services/geminiService.ts
 
 import {
   PANCE_TOPICS,
@@ -9,8 +9,9 @@ import {
 } from "../constants";
 import type { Question, SessionSettings } from "../types";
 
-// ---------- Helper: Call Netlify serverless function (Gemini proxy) ----------
-
+/**
+ * Call the Netlify serverless function, which talks to Gemini securely.
+ */
 async function callGeminiText(
   modelName: string,
   prompt: string,
@@ -23,27 +24,72 @@ async function callGeminiText(
   });
 
   if (!response.ok) {
-    console.error("Gemini proxy returned error status", response.status);
+    console.error(
+      "Gemini proxy returned error status",
+      response.status,
+      await response.text().catch(() => "<no body>")
+    );
     throw new Error("Gemini proxy error");
   }
 
-  const data = await response.json();
+  const data = await response.json().catch((err) => {
+    console.error("Failed to parse JSON from proxy:", err);
+    throw new Error("Gemini proxy returned invalid JSON");
+  });
+
   if (!data || typeof data.text !== "string") {
-    console.error("Gemini proxy returned invalid data:", data);
+    console.error("Proxy returned unexpected shape:", data);
     throw new Error("Gemini proxy returned invalid data");
   }
 
   return data.text;
 }
 
-// ---------- Deck state ----------
+/**
+ * Clean up Gemini's text so it's valid JSON:
+ * - Remove ```json / ``` fences if present
+ * - Trim whitespace
+ * - Slice from first '{' to last '}' in case of extra text
+ */
+function cleanJsonText(raw: string): string {
+  if (!raw) {
+    throw new Error("Empty response from Gemini");
+  }
 
+  let text = raw.trim();
+
+  // Strip ```json ... ``` fences if present
+  if (text.startsWith("```")) {
+    // Remove first line (``` or ```json)
+    const firstNewline = text.indexOf("\n");
+    if (firstNewline !== -1) {
+      text = text.slice(firstNewline + 1);
+    }
+    // Remove trailing ``` if present
+    const lastFence = text.lastIndexOf("```");
+    if (lastFence !== -1) {
+      text = text.slice(0, lastFence);
+    }
+    text = text.trim();
+  }
+
+  // As a final safety, slice from first '{' to last '}'.
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    text = text.slice(firstBrace, lastBrace + 1);
+  }
+
+  return text.trim();
+}
+
+// Deck queues + recent history
 let shuffledContentQueue: string[] = [];
 let shuffledTaskQueue: string[] = [];
 let recentQuestionHistory: string[] = [];
 const RECENT_HISTORY_COUNT = 10;
 
-// Shuffle helper for content deck
+// Shuffle helpers
 export function refillShuffledContentQueue() {
   const deck = [...PANCE_DECK];
   for (let i = deck.length - 1; i > 0; i--) {
@@ -53,7 +99,6 @@ export function refillShuffledContentQueue() {
   shuffledContentQueue = deck;
 }
 
-// Shuffle helper for task deck
 export function refillShuffledTaskQueue() {
   const deck = [...TASK_DECK];
   for (let i = deck.length - 1; i > 0; i--) {
@@ -62,8 +107,6 @@ export function refillShuffledTaskQueue() {
   }
   shuffledTaskQueue = deck;
 }
-
-// ---------- Question generation ----------
 
 export async function fetchNewQuestion(
   settings: SessionSettings,
@@ -95,7 +138,6 @@ export async function fetchNewQuestion(
 
   let prompt = "";
 
-  // ---------- Focus: all (blueprint-driven) ----------
   if (focus === "all") {
     if (shuffledContentQueue.length === 0) {
       refillShuffledContentQueue();
@@ -167,7 +209,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 }`;
     }
   } else {
-    // ---------- Focus: topic / growth / fallback ----------
     let topicInstruction = "";
     if (focus === "topic" && settings.topic) {
       const fullTopicName =
@@ -216,29 +257,26 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   }
 
   try {
-    const rawText = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
-
-    // Strip ```json ... ``` or ``` ... ``` fences if Gemini adds them
-    const cleanedJsonString = rawText
-      .trim()
-      .replace(/^```(?:json)?\s*/i, "")
-      .replace(/```$/, "")
-      .trim();
+    const raw = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
+    const jsonString = cleanJsonText(raw);
 
     let parsed: any;
     try {
-      parsed = JSON.parse(cleanedJsonString);
+      parsed = JSON.parse(jsonString);
     } catch (parseError) {
       console.error(
-        "Failed to parse JSON from Gemini. String that failed:",
-        cleanedJsonString
+        "Failed to parse JSON from Gemini. Raw text:",
+        raw,
+        "Cleaned JSON string:",
+        jsonString,
+        "Error:",
+        parseError
       );
       throw new Error(
         "The API returned a malformed JSON response. Please try again."
       );
     }
 
-    // Basic sanity checks
     if (
       !parsed.question ||
       !parsed.question.includes("?") ||
@@ -257,7 +295,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       return fetchNewQuestion(settings, growthAreas);
     }
 
-    // Track recent questions for uniqueness
     if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
       recentQuestionHistory.shift();
     }
@@ -286,8 +323,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   }
 }
 
-// ---------- Prefetch multiple questions ----------
-
 export async function prefetchQuestions(
   count: number,
   settings: SessionSettings,
@@ -300,8 +335,6 @@ export async function prefetchQuestions(
   }
   return questions;
 }
-
-// ---------- Study guide / flashcards generation ----------
 
 export async function generateContent(
   type: "study-guide" | "flashcards",
@@ -335,8 +368,6 @@ A: [Answer]
     );
   }
 }
-
-// ---------- Alternate rationale generation ----------
 
 export async function generateAlternateRationale(
   question: Question,
