@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { fetchNewQuestion, generateAlternateRationale } from '../services/geminiService';
 import type { Question, PerformanceRecord, SessionSettings } from '../types';
 import { CloseIcon } from './icons/CloseIcon';
-import { MenuIcon } from './icons/MenuIcon';
 import { FlagIcon } from './icons/FlagIcon';
+import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
+import { ClearHighlightIcon } from './icons/ClearHighlightIcon';
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -315,12 +316,13 @@ const QuizView: React.FC<QuizViewProps> = ({
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-3 min-w-0">
+            {/* Back to dashboard */}
             <button 
               onClick={onShowMenu}
               className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors flex-shrink-0"
-              aria-label="Open Menu"
+              aria-label="Back to Menu"
             >
-              <MenuIcon className="w-6 h-6 text-slate-600" />
+              <ArrowLeftIcon className="w-6 h-6 text-slate-600" />
             </button>
             <p className="text-sm font-medium text-slate-500 truncate">
               Question {questionNumber}
@@ -328,6 +330,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           </div>
           
           <div className="flex items-center space-x-2 flex-shrink-0">
+            {/* Flag */}
             <button
               onClick={toggleFlag}
               title={isFlagged ? "Unflag for review" : "Flag for review"}
@@ -337,6 +340,29 @@ const QuizView: React.FC<QuizViewProps> = ({
             >
               <FlagIcon className="w-5 h-5" />
             </button>
+
+            {/* Clear Highlights */}
+            <button
+              onClick={() => {
+                const container = document.getElementById("question-container");
+                if (!container) return;
+                const spans = container.querySelectorAll("span.user-highlight");
+                spans.forEach((s) => {
+                  const parent = s.parentNode;
+                  if (!parent) return;
+                  while (s.firstChild) {
+                    parent.insertBefore(s.firstChild, s);
+                  }
+                  parent.removeChild(s);
+                });
+              }}
+              title="Clear highlights"
+              className="p-1.5 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"
+            >
+              <ClearHighlightIcon className="w-5 h-5" />
+            </button>
+
+            {/* Font size controls */}
             <div className="flex items-center border border-slate-300 rounded-md">
               <button 
                 onClick={() => setFontSizeAdjustment(prev => prev - 1)}
@@ -354,6 +380,8 @@ const QuizView: React.FC<QuizViewProps> = ({
                 A+
               </button>
             </div>
+
+            {/* End session */}
             <button
               onClick={onEndSession}
               title="End Session"
