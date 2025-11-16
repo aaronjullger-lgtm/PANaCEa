@@ -1,3 +1,4 @@
+// services/geminiService.ts
 import {
   PANCE_TOPICS,
   TOPIC_MAP,
@@ -7,7 +8,7 @@ import {
 } from "../constants";
 import type { Question, SessionSettings } from "../types";
 
-// Helper: call Netlify serverless function, which talks to Gemini (backend-only key)
+// Helper: call Netlify serverless function, which talks to Gemini
 async function callGeminiText(
   modelName: string,
   prompt: string,
@@ -21,20 +22,19 @@ async function callGeminiText(
 
   if (!response.ok) {
     console.error("Gemini proxy returned error status", response.status);
+    const text = await response.text().catch(() => "");
+    console.error("Gemini proxy error body:", text);
     throw new Error("Gemini proxy error");
   }
 
   const data = await response.json();
   if (!data || typeof data.text !== "string") {
+    console.error("Gemini proxy returned invalid JSON:", data);
     throw new Error("Gemini proxy returned invalid data");
   }
 
   return data.text;
 }
-
-// ---------------------------------------------------------
-// Internal state for shuffling and question uniqueness
-// ---------------------------------------------------------
 
 let shuffledContentQueue: string[] = [];
 let shuffledTaskQueue: string[] = [];
@@ -59,10 +59,6 @@ export function refillShuffledTaskQueue() {
   }
   shuffledTaskQueue = deck;
 }
-
-// ---------------------------------------------------------
-// Main: fetchNewQuestion
-// ---------------------------------------------------------
 
 export async function fetchNewQuestion(
   settings: SessionSettings,
@@ -94,7 +90,6 @@ export async function fetchNewQuestion(
 
   let prompt = "";
 
-  // -------- focus === "all" (blueprint deck mode) ----------
   if (focus === "all") {
     if (shuffledContentQueue.length === 0) {
       refillShuffledContentQueue();
@@ -166,7 +161,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 }`;
     }
   } else {
-    // -------- Growth / single-topic modes ----------
     let topicInstruction = "";
     if (focus === "topic" && settings.topic) {
       const fullTopicName =
@@ -230,7 +224,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       );
     }
 
-    // Basic sanity checks
     if (
       !parsed.question ||
       !parsed.question.includes("?") ||
@@ -249,7 +242,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       return fetchNewQuestion(settings, growthAreas);
     }
 
-    // Track recent questions for uniqueness
     if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
       recentQuestionHistory.shift();
     }
@@ -271,10 +263,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   }
 }
 
-// ---------------------------------------------------------
-// Prefetch multiple questions
-// ---------------------------------------------------------
-
 export async function prefetchQuestions(
   count: number,
   settings: SessionSettings,
@@ -287,10 +275,6 @@ export async function prefetchQuestions(
   }
   return questions;
 }
-
-// ---------------------------------------------------------
-// Study-guide / flashcard content generator
-// ---------------------------------------------------------
 
 export async function generateContent(
   type: "study-guide" | "flashcards",
@@ -314,20 +298,9 @@ A: [Answer]
   const modelName = useProModel ? "gemini-2.5-pro" : "gemini-2.5-flash";
   const temperature = useProModel ? 0.5 : 0.7;
 
-  try {
-    const text = await callGeminiText(modelName, prompt, temperature);
-    return text;
-  } catch (error) {
-    console.error("Error generating content:", error);
-    throw new Error(
-      "Failed to generate content. The API may be busy or an error occurred."
-    );
-  }
+  const text = await callGeminiText(modelName, prompt, temperature);
+  return text;
 }
-
-// ---------------------------------------------------------
-// Alternate rationale generator
-// ---------------------------------------------------------
 
 export async function generateAlternateRationale(
   question: Question,
@@ -354,13 +327,6 @@ Your Task:
 3. Use a supportive, educational tone.
 4. Format your response clearly with short paragraphs and bullet points where helpful.`;
 
-  try {
-    const text = await callGeminiText("gemini-2.5-flash", prompt, 0.6);
-    return text;
-  } catch (error) {
-    console.error("Error generating alternate rationale:", error);
-    throw new Error(
-      "Failed to generate an explanation. The API may be busy or an error occurred."
-    );
-  }
+  const text = await callGeminiText("gemini-2.5-flash", prompt, 0.6);
+  return text;
 }
