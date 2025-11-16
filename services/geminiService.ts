@@ -37,7 +37,7 @@ async function callGeminiText(
   return text;
 }
 
-// --- Helper: strip any HTML tags from a string (for question/options/condition) ---
+// --- Helper: strip any HTML tags from a string (for options/condition) ---
 
 const stripHtmlTags = (text: string): string =>
   typeof text === "string" ? text.replace(/<\/?[^>]+(>|$)/g, "") : text;
@@ -122,7 +122,7 @@ Core Instructions:
 2. Plausible Options: The options must represent plausible courses of action or interpretations of the scenario, with one clear best answer according to current professional standards.
 3. HTML Formatting: The "rationale" string and all strings in the "pearls" array MUST use simple HTML tags (<b>, <i>) for formatting, NOT markdown.
 4. Key Pearls Formatting: The "pearls" array MUST contain 3–4 single, high-yield sentences related to the core principle being tested. Each sentence is a concise, complete thought.
-5. Very important: The "question", "options", and "condition" fields MUST be plain text only (no HTML tags). Use HTML tags ONLY in "rationale" and "pearls".
+5. Very important: The "options" and "condition" fields MUST be plain text only (no HTML tags). The "question" field MAY use simple HTML tags (<b>, <i>, <table>) for formatting if needed.
 6. Uniqueness: ${uniquenessInstruction}
 7. Topic: The "topic" field in the JSON output MUST be exactly "Professional Practice".
 
@@ -159,7 +159,7 @@ Core Instructions:
 5. Data Table Formatting: If you include vitals or labs, embed a simple HTML <table> with a header row in the question string.
 6. HTML Formatting: The "rationale" and all "pearls" MUST use simple HTML tags (<b>, <i>) instead of markdown.
 7. Key Pearls: "pearls" must be 3–4 high-yield, single-sentence clinical pearls.
-8. Very important: The "question", "options", and "condition" fields MUST be plain text only (no HTML tags). Use HTML tags ONLY in "rationale" and "pearls".
+8. Very important: The "options" and "condition" fields MUST be plain text only (no HTML tags). The "question" field MAY use simple HTML tags (<b>, <i>, <table>) for formatting if needed.
 9. Uniqueness: ${uniquenessInstruction}
 10. Topic field: The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".
 
@@ -205,7 +205,7 @@ Core Instructions:
 5. If including vitals/labs, embed an HTML <table> with a header row in the question string.
 6. "rationale" and "pearls" MUST use simple HTML tags (<b>, <i>), no markdown.
 7. "pearls" = 3–4 high-yield single-sentence pearls.
-8. Very important: The "question", "options", and "condition" fields MUST be plain text only (no HTML tags). Use HTML tags ONLY in "rationale" and "pearls".
+8. Very important: The "options" and "condition" fields MUST be plain text only (no HTML tags). The "question" field MAY use simple HTML tags (<b>, <i>, <table>) for formatting if needed.
 9. Uniqueness: ${uniquenessInstruction}
 
 Topic and Difficulty:
@@ -262,10 +262,10 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       return fetchNewQuestion(settings, growthAreas);
     }
 
-    // Sanitize key text fields so they never contain HTML tags
-    parsed.question = stripHtmlTags(parsed.question);
+    // Sanitize options/condition so they never contain HTML tags
     parsed.options = parsed.options.map((opt: string) => stripHtmlTags(opt));
     parsed.condition = stripHtmlTags(parsed.condition);
+    // NOTE: parsed.question is left as-is so <b>, <i>, <table> render correctly.
 
     // Track recent questions for uniqueness
     if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
