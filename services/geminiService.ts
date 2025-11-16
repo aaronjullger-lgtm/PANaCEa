@@ -122,9 +122,10 @@ Core Instructions:
 2. Plausible Options: The options must represent plausible courses of action or interpretations of the scenario, with one clear best answer according to current professional standards.
 3. HTML Formatting: The "rationale" string and all strings in the "pearls" array MUST use simple HTML tags (<b>, <i>) for formatting, NOT markdown.
 4. Key Pearls Formatting: The "pearls" array MUST contain 3–4 single, high-yield sentences related to the core principle being tested. Each sentence is a concise, complete thought.
-5. Very important: The "options" and "condition" fields MUST be plain text only (no HTML tags). The "question" field MAY use simple HTML tags (<b>, <i>, <table>) for formatting if needed.
-6. Uniqueness: ${uniquenessInstruction}
-7. Topic: The "topic" field in the JSON output MUST be exactly "Professional Practice".
+5. Question HTML: The "question" string MAY include a simple HTML <table> (using only <table>, <thead>, <tbody>, <tr>, <th>, <td>) and <br> tags for formatting vitals/labs. Do NOT use <b> or <i> tags in the question.
+6. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
+7. Uniqueness: ${uniquenessInstruction}
+8. Topic: The "topic" field in the JSON output MUST be exactly "Professional Practice".
 
 Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
@@ -156,12 +157,13 @@ Core Instructions:
 2. Task-Focused Question: The vignette must end with a clear, single-sentence question that directly relates to the specified task ("${taskTopic}").
 3. Plausible, Crafted Distractors: The three distractors MUST be highly plausible (common misconceptions, similar diagnoses, or common mistakes).
 4. Vignette Formatting: Insert "\\n" in the question string to separate paragraphs; do NOT return a single wall of text.
-5. Data Table Formatting: If you include vitals or labs, embed a simple HTML <table> with a header row in the question string.
+5. Data Table Formatting: If you include vitals or labs, embed a simple HTML <table> with a header row in the question string, using only <table>, <thead>, <tbody>, <tr>, <th>, <td>.
 6. HTML Formatting: The "rationale" and all "pearls" MUST use simple HTML tags (<b>, <i>) instead of markdown.
 7. Key Pearls: "pearls" must be 3–4 high-yield, single-sentence clinical pearls.
-8. Very important: The "options" and "condition" fields MUST be plain text only (no HTML tags). The "question" field MAY use simple HTML tags (<b>, <i>, <table>) for formatting if needed.
-9. Uniqueness: ${uniquenessInstruction}
-10. Topic field: The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".
+8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks. Do NOT use <b> or <i> tags in the question.
+9. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
+10. Uniqueness: ${uniquenessInstruction}
+11. Topic field: The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".
 
 Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
@@ -202,11 +204,12 @@ Core Instructions:
 2. Second-order question (diagnosis, next best step, mechanism, etc.).
 3. Highly plausible distractors.
 4. Use "\\n" inside the question string for paragraph breaks.
-5. If including vitals/labs, embed an HTML <table> with a header row in the question string.
+5. If including vitals/labs, embed an HTML <table> with a header row in the question string, using only <table>, <thead>, <tbody>, <tr>, <th>, <td>.
 6. "rationale" and "pearls" MUST use simple HTML tags (<b>, <i>), no markdown.
 7. "pearls" = 3–4 high-yield single-sentence pearls.
-8. Very important: The "options" and "condition" fields MUST be plain text only (no HTML tags). The "question" field MAY use simple HTML tags (<b>, <i>, <table>) for formatting if needed.
-9. Uniqueness: ${uniquenessInstruction}
+8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks, but should not use <b> or <i>.
+9. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
+10. Uniqueness: ${uniquenessInstruction}
 
 Topic and Difficulty:
 - ${topicInstruction}
@@ -262,10 +265,10 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       return fetchNewQuestion(settings, growthAreas);
     }
 
-    // Sanitize options/condition so they never contain HTML tags
+    // IMPORTANT: keep question as-is so <table> etc still work.
+    // Sanitize only options and condition.
     parsed.options = parsed.options.map((opt: string) => stripHtmlTags(opt));
     parsed.condition = stripHtmlTags(parsed.condition);
-    // NOTE: parsed.question is left as-is so <b>, <i>, <table> render correctly.
 
     // Track recent questions for uniqueness
     if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
