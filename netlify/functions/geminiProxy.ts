@@ -1,17 +1,45 @@
 // netlify/functions/geminiProxy.ts
+
 import type { Handler } from "@netlify/functions";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  console.error("GEMINI_API_KEY is not set in Netlify environment");
+  throw new Error("GEMINI_API_KEY environment variable is not set");
 }
 
-const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+const genAI = new GoogleGenerativeAI(apiKey);
 
-export const handler: Handler = async (event) => {
-  // Only allow POST
+/**
+ * Clean up Gemini text so the frontend always gets plain JSON-as-string.
+ * - Trims whitespace
+ * - Removes ```json ... ``` or ``` ... ``` fences if present
+ */
+function stripCodeFences(text: string): string {
+  if (!text) return "";
+
+  let cleaned = text.trim();
+
+  if (cleaned.startsWith("```")) {
+    // Drop the first line (``` or ```json)
+    const firstNewline = cleaned.indexOf("\n");
+    if (firstNewline !== -1) {
+      cleaned = cleaned.slice(firstNewline + 1);
+    }
+
+    // Remove trailing ```
+    if (cleaned.endsWith("```")) {
+      cleaned = cleaned.slice(0, -3);
+    }
+
+    cleaned = cleaned.trim();
+  }
+
+  return cleaned;
+}
+
+const handler: Handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -20,62 +48,42 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    if (!genAI || !apiKey) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({
-          error: "GEMINI_API_KEY is not configured on the server",
-        }),
-      };
-    }
-
-    const body = JSON.parse(event.body || "{}");
-    const modelName = body.modelName as string | undefined;
-    const prompt = body.prompt as string | undefined;
-    const temperature = (body.temperature as number | undefined) ?? 0.8;
+    const { modelName, prompt, temperature } = JSON.parse(event.body || "{}");
 
     if (!modelName || !prompt) {
       return {
         statusCode: 400,
-        body: JSON.stringify({
-          error: "modelName and prompt are required",
-        }),
+        body: JSON.stringify({ error: "modelName and prompt are required" }),
       };
     }
 
     const model = genAI.getGenerativeModel({
       model: modelName,
+    });
+
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature,
+        temperature:
+          typeof temperature === "number" ? temperature : 0.8,
       },
     });
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const rawText = result.response.text() || "";
+    const text = stripCodeFences(rawText);
 
-    console.log("Gemini raw text:", text);
-
-    if (!text || !text.trim()) {
-      // This is what was causing your "Empty response from Gemini" error
-      return {
-        statusCode: 502,
-        body: JSON.stringify({ error: "Empty response from Gemini" }),
-      };
-    }
-
-    // IMPORTANT: this shape is what your frontend expects
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     };
-  } catch (err) {
-    console.error("Error in geminiProxy:", err);
+  } catch (error) {
+    console.error("Error in geminiProxy:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        error: "Server error talking to Gemini",
-      }),
+      body: JSON.stringify({ error: "Gemini proxy error" }),
     };
   }
 };
+
+export { handler };
