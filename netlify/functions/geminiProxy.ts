@@ -1,66 +1,58 @@
-import { Handler } from '@netlify/functions';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// netlify/functions/geminiProxy.ts
+import type { Handler } from "@netlify/functions";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is missing from Netlify Environment Variables.");
+  throw new Error("GEMINI_API_KEY is not set in Netlify environment variables");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
 export const handler: Handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+  // Only allow POST
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Method Not Allowed" }),
+    };
   }
 
   try {
-    const payload = JSON.parse(event.body || '{}');
-    const { prompt, model = 'gemini-2.5-flash', temperature = 0.8 } = payload;
+    const { modelName, prompt, temperature } = JSON.parse(event.body || "{}");
 
-    if (!prompt || typeof prompt !== 'string') {
+    if (!modelName || !prompt) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing or invalid "prompt" field.' }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "modelName and prompt are required" }),
       };
     }
 
-    const modelClient = genAI.getGenerativeModel({ model });
-
-    const result = await modelClient.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    const model = genAI.getGenerativeModel({
+      model: modelName,
       generationConfig: {
-        temperature,
+        temperature: typeof temperature === "number" ? temperature : 0.8,
       },
     });
 
+    const result = await model.generateContent(prompt);
     const text = result.response.text();
-
-    // Try to parse JSON server-side so the client gets a clean object
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      // If it isn't JSON, return the raw text so the client can decide
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rawText: text }),
-      };
-    }
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(parsed),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
     };
-  } catch (error: any) {
-    console.error('Gemini Proxy Function Runtime Error:', error);
+  } catch (err) {
+    console.error("Error in geminiProxy:", err);
+
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        error: `The question generation failed. Details: ${error.message || 'Unknown error'}`,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Failed to call Gemini" }),
     };
   }
 };
