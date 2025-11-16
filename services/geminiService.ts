@@ -2,11 +2,13 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { PANCE_TOPICS, TOPIC_MAP, ABBREVIATION_TO_TOPIC_MAP, PANCE_DECK, TASK_DECK } from '../constants';
 import type { Question, SessionSettings } from '../types';
 
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable is not set");
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+if (!apiKey) {
+  throw new Error("VITE_GEMINI_API_KEY environment variable is not set");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey });
 
 const questionSchema = {
   type: Type.OBJECT,
@@ -157,17 +159,19 @@ export async function fetchNewQuestion(settings: SessionSettings, growthAreas: s
   }
   
   try {
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
+    const result = await ai.models.generateContent({
+        model: "models/gemini-2.5-flash",
+        contents: [
+          { role: "user", parts: [{ text: prompt }] }
+        ],
         config: {
-            responseMimeType: "application/json",
-            responseSchema: questionSchema,
-            temperature: 0.8
+          responseMimeType: "application/json",
+          responseSchema: questionSchema,
+          temperature: 0.8,
         },
     });
 
-    const jsonString = response.text;
+    const jsonString = result.response.text();
     
     try {
         const parsed = JSON.parse(jsonString);
@@ -238,13 +242,15 @@ export async function generateContent(type: 'study-guide' | 'flashcards', topic:
     ? { thinkingConfig: { thinkingBudget: 32768 }, temperature: 0.5 }
     : { temperature: 0.7 };
 
-  try {
-    const response = await ai.models.generateContent({
-        model: model,
-        contents: prompt,
-        config: config
+   try {
+    const result = await ai.models.generateContent({
+        model: useProModel ? "models/gemini-2.5-pro" : "models/gemini-2.5-flash",
+        contents: [
+          { role: "user", parts: [{ text: prompt }] }
+        ],
+        config: config,
     });
-    return response.text;
+    return result.response.text();
   } catch (error) {
     console.error("Error generating content:", error);
     throw new Error("Failed to generate content. The API may be busy or an error occurred.");
@@ -274,14 +280,16 @@ Explain this differently.
 4.  Format your response clearly. Use paragraphs and bullet points for readability.`;
 
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
+        const result = await ai.models.generateContent({
+            model: "models/gemini-2.5-flash",
+            contents: [
+              { role: "user", parts: [{ text: prompt }] }
+            ],
             config: {
-                temperature: 0.6
-            }
+                temperature: 0.6,
+            },
         });
-        return response.text;
+        return result.response.text();
     } catch (error) {
         console.error("Error generating alternate rationale:", error);
         throw new Error("Failed to generate an explanation. The API may be busy or an error occurred.");
