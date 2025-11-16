@@ -157,7 +157,7 @@ Core Instructions:
 2. Task-Focused Question: The vignette must end with a clear, single-sentence question that directly relates to the specified task ("${taskTopic}").
 3. Plausible, Crafted Distractors: The three distractors MUST be highly plausible (common misconceptions, similar diagnoses, or common mistakes).
 4. Vignette Formatting: Insert "\\n" in the question string to separate paragraphs; do NOT return a single wall of text.
-5. Data Table Formatting: If you include vitals or labs, embed a simple HTML <table> with a header row in the question string, using only <table>, <thead>, <tbody>, <tr>, <th>, <td>.
+5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row in the question string. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
 6. HTML Formatting: The "rationale" and all "pearls" MUST use simple HTML tags (<b>, <i>) instead of markdown.
 7. Key Pearls: "pearls" must be 3–4 high-yield, single-sentence clinical pearls.
 8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks. Do NOT use <b> or <i> tags in the question.
@@ -204,7 +204,7 @@ Core Instructions:
 2. Second-order question (diagnosis, next best step, mechanism, etc.).
 3. Highly plausible distractors.
 4. Use "\\n" inside the question string for paragraph breaks.
-5. If including vitals/labs, embed an HTML <table> with a header row in the question string, using only <table>, <thead>, <tbody>, <tr>, <th>, <td>.
+5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row in the question string. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
 6. "rationale" and "pearls" MUST use simple HTML tags (<b>, <i>), no markdown.
 7. "pearls" = 3–4 high-yield single-sentence pearls.
 8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks, but should not use <b> or <i>.
@@ -265,8 +265,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       return fetchNewQuestion(settings, growthAreas);
     }
 
-    // IMPORTANT: keep question as-is so <table> etc still work.
-    // Sanitize only options and condition.
+    // Keep question HTML (for tables), sanitize options & condition only
     parsed.options = parsed.options.map((opt: string) => stripHtmlTags(opt));
     parsed.condition = stripHtmlTags(parsed.condition);
 
