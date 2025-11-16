@@ -1,4 +1,5 @@
 // services/geminiService.ts
+
 import {
   PANCE_TOPICS,
   TOPIC_MAP,
@@ -8,7 +9,8 @@ import {
 } from "../constants";
 import type { Question, SessionSettings } from "../types";
 
-// Helper: call Netlify serverless function, which talks to Gemini
+// ---------- Helper: Call Netlify serverless function (Gemini proxy) ----------
+
 async function callGeminiText(
   modelName: string,
   prompt: string,
@@ -22,26 +24,26 @@ async function callGeminiText(
 
   if (!response.ok) {
     console.error("Gemini proxy returned error status", response.status);
-    const text = await response.text().catch(() => "");
-    console.error("Gemini proxy error body:", text);
     throw new Error("Gemini proxy error");
   }
 
   const data = await response.json();
   if (!data || typeof data.text !== "string") {
-    console.error("Gemini proxy returned invalid JSON:", data);
+    console.error("Gemini proxy returned invalid data:", data);
     throw new Error("Gemini proxy returned invalid data");
   }
 
   return data.text;
 }
 
+// ---------- Deck state ----------
+
 let shuffledContentQueue: string[] = [];
 let shuffledTaskQueue: string[] = [];
 let recentQuestionHistory: string[] = [];
 const RECENT_HISTORY_COUNT = 10;
 
-// Deck shuffling
+// Shuffle helper for content deck
 export function refillShuffledContentQueue() {
   const deck = [...PANCE_DECK];
   for (let i = deck.length - 1; i > 0; i--) {
@@ -51,6 +53,7 @@ export function refillShuffledContentQueue() {
   shuffledContentQueue = deck;
 }
 
+// Shuffle helper for task deck
 export function refillShuffledTaskQueue() {
   const deck = [...TASK_DECK];
   for (let i = deck.length - 1; i > 0; i--) {
@@ -59,6 +62,8 @@ export function refillShuffledTaskQueue() {
   }
   shuffledTaskQueue = deck;
 }
+
+// ---------- Question generation ----------
 
 export async function fetchNewQuestion(
   settings: SessionSettings,
@@ -90,6 +95,7 @@ export async function fetchNewQuestion(
 
   let prompt = "";
 
+  // ---------- Focus: all (blueprint-driven) ----------
   if (focus === "all") {
     if (shuffledContentQueue.length === 0) {
       refillShuffledContentQueue();
@@ -161,6 +167,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 }`;
     }
   } else {
+    // ---------- Focus: topic / growth / fallback ----------
     let topicInstruction = "";
     if (focus === "topic" && settings.topic) {
       const fullTopicName =
@@ -209,21 +216,29 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   }
 
   try {
-    const jsonString = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
+    const rawText = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
+
+    // Strip ```json ... ``` or ``` ... ``` fences if Gemini adds them
+    const cleanedJsonString = rawText
+      .trim()
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/```$/, "")
+      .trim();
 
     let parsed: any;
     try {
-      parsed = JSON.parse(jsonString);
+      parsed = JSON.parse(cleanedJsonString);
     } catch (parseError) {
       console.error(
         "Failed to parse JSON from Gemini. String that failed:",
-        jsonString
+        cleanedJsonString
       );
       throw new Error(
         "The API returned a malformed JSON response. Please try again."
       );
     }
 
+    // Basic sanity checks
     if (
       !parsed.question ||
       !parsed.question.includes("?") ||
@@ -242,6 +257,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       return fetchNewQuestion(settings, growthAreas);
     }
 
+    // Track recent questions for uniqueness
     if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
       recentQuestionHistory.shift();
     }
@@ -257,11 +273,20 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     return { ...parsed, topic: topicAbbreviation } as Question;
   } catch (error) {
     console.error("Error during fetchNewQuestion:", error);
+    if (
+      error instanceof Error &&
+      (error.message.startsWith("The API returned an invalid response") ||
+        error.message.startsWith("The API returned a malformed JSON"))
+    ) {
+      throw error;
+    }
     throw new Error(
       "Failed to generate a new question. Please check your Gemini API key and network connection."
     );
   }
 }
+
+// ---------- Prefetch multiple questions ----------
 
 export async function prefetchQuestions(
   count: number,
@@ -270,11 +295,13 @@ export async function prefetchQuestions(
 ): Promise<Question[]> {
   const questions: Question[] = [];
   for (let i = 0; i < count; i++) {
-    const question = await fetchNewQuestion(settings, growthAreas);
-    questions.push(question);
+    const q = await fetchNewQuestion(settings, growthAreas);
+    questions.push(q);
   }
   return questions;
 }
+
+// ---------- Study guide / flashcards generation ----------
 
 export async function generateContent(
   type: "study-guide" | "flashcards",
@@ -298,9 +325,18 @@ A: [Answer]
   const modelName = useProModel ? "gemini-2.5-pro" : "gemini-2.5-flash";
   const temperature = useProModel ? 0.5 : 0.7;
 
-  const text = await callGeminiText(modelName, prompt, temperature);
-  return text;
+  try {
+    const text = await callGeminiText(modelName, prompt, temperature);
+    return text;
+  } catch (error) {
+    console.error("Error generating content:", error);
+    throw new Error(
+      "Failed to generate content. The API may be busy or an error occurred."
+    );
+  }
 }
+
+// ---------- Alternate rationale generation ----------
 
 export async function generateAlternateRationale(
   question: Question,
@@ -327,6 +363,13 @@ Your Task:
 3. Use a supportive, educational tone.
 4. Format your response clearly with short paragraphs and bullet points where helpful.`;
 
-  const text = await callGeminiText("gemini-2.5-flash", prompt, 0.6);
-  return text;
+  try {
+    const text = await callGeminiText("gemini-2.5-flash", prompt, 0.6);
+    return text;
+  } catch (error) {
+    console.error("Error generating alternate rationale:", error);
+    throw new Error(
+      "Failed to generate an explanation. The API may be busy or an error occurred."
+    );
+  }
 }
