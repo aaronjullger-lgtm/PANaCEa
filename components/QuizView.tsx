@@ -65,11 +65,25 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     };
   }, [text]);
 
-  // Try to grab the last sentence to bold it
+  // If the question contains an HTML table, render it as HTML so vitals/labs look like a chart.
+  const hasTable = text.includes('<table');
+
+  if (hasTable) {
+    return (
+      <div
+        ref={containerRef}
+        id="question-container"
+        className="text-xl md:text-2xl leading-relaxed text-[#333333]"
+        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
+        dangerouslySetInnerHTML={{ __html: text }}
+      />
+    );
+  }
+
+  // No table: treat as plain text, bold the final sentence.
   const lastSentenceMatch = text.match(/[^.!?]+[.!?]+\s*$/);
 
   if (!lastSentenceMatch) {
-    // If we can't confidently split, just render the whole thing as normal text
     return (
       <div ref={containerRef} id="question-container">
         <div
