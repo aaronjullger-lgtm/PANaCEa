@@ -1,4 +1,4 @@
-// src/services/geminiService.ts
+// services/geminiService.ts
 
 import {
   PANCE_TOPICS,
@@ -9,9 +9,8 @@ import {
 } from "../constants";
 import type { Question, SessionSettings } from "../types";
 
-/**
- * Call the Netlify serverless function, which talks to Gemini securely.
- */
+// --- Helper: call Netlify serverless function, which talks to Gemini ---
+
 async function callGeminiText(
   modelName: string,
   prompt: string,
@@ -24,66 +23,27 @@ async function callGeminiText(
   });
 
   if (!response.ok) {
-    console.error(
-      "Gemini proxy returned error status",
-      response.status,
-      await response.text().catch(() => "<no body>")
-    );
+    console.error("Gemini proxy returned error status", response.status);
     throw new Error("Gemini proxy error");
   }
 
-  const data = await response.json().catch((err) => {
-    console.error("Failed to parse JSON from proxy:", err);
-    throw new Error("Gemini proxy returned invalid JSON");
-  });
+  const data = await response.json();
+  const text = typeof data === "string" ? data : data.text;
 
-  if (!data || typeof data.text !== "string") {
-    console.error("Proxy returned unexpected shape:", data);
-    throw new Error("Gemini proxy returned invalid data");
-  }
-
-  return data.text;
-}
-
-/**
- * Clean up Gemini's text so it's valid JSON:
- * - Remove ```json / ``` fences if present
- * - Trim whitespace
- * - Slice from first '{' to last '}' in case of extra text
- */
-function cleanJsonText(raw: string): string {
-  if (!raw) {
+  if (!text || !text.trim()) {
     throw new Error("Empty response from Gemini");
   }
 
-  let text = raw.trim();
-
-  // Strip ```json ... ``` fences if present
-  if (text.startsWith("```")) {
-    // Remove first line (``` or ```json)
-    const firstNewline = text.indexOf("\n");
-    if (firstNewline !== -1) {
-      text = text.slice(firstNewline + 1);
-    }
-    // Remove trailing ``` if present
-    const lastFence = text.lastIndexOf("```");
-    if (lastFence !== -1) {
-      text = text.slice(0, lastFence);
-    }
-    text = text.trim();
-  }
-
-  // As a final safety, slice from first '{' to last '}'.
-  const firstBrace = text.indexOf("{");
-  const lastBrace = text.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    text = text.slice(firstBrace, lastBrace + 1);
-  }
-
-  return text.trim();
+  return text;
 }
 
-// Deck queues + recent history
+// --- Helper: strip any HTML tags from a string (for question/options/condition) ---
+
+const stripHtmlTags = (text: string): string =>
+  typeof text === "string" ? text.replace(/<\/?[^>]+(>|$)/g, "") : text;
+
+// --- Deck / history state ---
+
 let shuffledContentQueue: string[] = [];
 let shuffledTaskQueue: string[] = [];
 let recentQuestionHistory: string[] = [];
@@ -107,6 +67,8 @@ export function refillShuffledTaskQueue() {
   }
   shuffledTaskQueue = deck;
 }
+
+// --- Main question generator ---
 
 export async function fetchNewQuestion(
   settings: SessionSettings,
@@ -138,6 +100,7 @@ export async function fetchNewQuestion(
 
   let prompt = "";
 
+  // -------- FOCUS: ALL (use content + task decks) --------
   if (focus === "all") {
     if (shuffledContentQueue.length === 0) {
       refillShuffledContentQueue();
@@ -146,6 +109,7 @@ export async function fetchNewQuestion(
     const fullContentTopicName = ABBREVIATION_TO_TOPIC_MAP[contentTopicAbbr];
 
     if (contentTopicAbbr === "PRO") {
+      // Professional Practice special handling
       prompt = `You are generating a structured JSON object for a PANCE practice question.
 
 Generate one new, unique, PANCE-style multiple-choice question on the topic of "Professional Practice".
@@ -158,8 +122,9 @@ Core Instructions:
 2. Plausible Options: The options must represent plausible courses of action or interpretations of the scenario, with one clear best answer according to current professional standards.
 3. HTML Formatting: The "rationale" string and all strings in the "pearls" array MUST use simple HTML tags (<b>, <i>) for formatting, NOT markdown.
 4. Key Pearls Formatting: The "pearls" array MUST contain 3–4 single, high-yield sentences related to the core principle being tested. Each sentence is a concise, complete thought.
-5. Uniqueness: ${uniquenessInstruction}
-6. Topic: The "topic" field in the JSON output MUST be exactly "Professional Practice".
+5. Very important: The "question", "options", and "condition" fields MUST be plain text only (no HTML tags). Use HTML tags ONLY in "rationale" and "pearls".
+6. Uniqueness: ${uniquenessInstruction}
+7. Topic: The "topic" field in the JSON output MUST be exactly "Professional Practice".
 
 Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
@@ -173,6 +138,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   "pearls": [string, string, string]
 }`;
     } else {
+      // Regular medical content with task deck
       if (shuffledTaskQueue.length === 0) {
         refillShuffledTaskQueue();
       }
@@ -190,11 +156,12 @@ Core Instructions:
 2. Task-Focused Question: The vignette must end with a clear, single-sentence question that directly relates to the specified task ("${taskTopic}").
 3. Plausible, Crafted Distractors: The three distractors MUST be highly plausible (common misconceptions, similar diagnoses, or common mistakes).
 4. Vignette Formatting: Insert "\\n" in the question string to separate paragraphs; do NOT return a single wall of text.
-5. Data Table Formatting: If you include vitals or labs, embed a simple HTML <table> in the question string.
+5. Data Table Formatting: If you include vitals or labs, embed a simple HTML <table> with a header row in the question string.
 6. HTML Formatting: The "rationale" and all "pearls" MUST use simple HTML tags (<b>, <i>) instead of markdown.
 7. Key Pearls: "pearls" must be 3–4 high-yield, single-sentence clinical pearls.
-8. Uniqueness: ${uniquenessInstruction}
-9. Topic field: The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".
+8. Very important: The "question", "options", and "condition" fields MUST be plain text only (no HTML tags). Use HTML tags ONLY in "rationale" and "pearls".
+9. Uniqueness: ${uniquenessInstruction}
+10. Topic field: The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".
 
 Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
@@ -209,6 +176,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 }`;
     }
   } else {
+    // -------- FOCUS: topic / growth / generic --------
     let topicInstruction = "";
     if (focus === "topic" && settings.topic) {
       const fullTopicName =
@@ -234,10 +202,11 @@ Core Instructions:
 2. Second-order question (diagnosis, next best step, mechanism, etc.).
 3. Highly plausible distractors.
 4. Use "\\n" inside the question string for paragraph breaks.
-5. If including vitals/labs, embed an HTML <table> in the question string.
+5. If including vitals/labs, embed an HTML <table> with a header row in the question string.
 6. "rationale" and "pearls" MUST use simple HTML tags (<b>, <i>), no markdown.
 7. "pearls" = 3–4 high-yield single-sentence pearls.
-8. Uniqueness: ${uniquenessInstruction}
+8. Very important: The "question", "options", and "condition" fields MUST be plain text only (no HTML tags). Use HTML tags ONLY in "rationale" and "pearls".
+9. Uniqueness: ${uniquenessInstruction}
 
 Topic and Difficulty:
 - ${topicInstruction}
@@ -256,27 +225,25 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 }`;
   }
 
+  // --- Call Gemini through proxy and parse JSON ---
+
   try {
-    const raw = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
-    const jsonString = cleanJsonText(raw);
+    const jsonString = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
 
     let parsed: any;
     try {
       parsed = JSON.parse(jsonString);
     } catch (parseError) {
       console.error(
-        "Failed to parse JSON from Gemini. Raw text:",
-        raw,
-        "Cleaned JSON string:",
-        jsonString,
-        "Error:",
-        parseError
+        "Failed to parse JSON from Gemini. String that failed:",
+        jsonString
       );
       throw new Error(
         "The API returned a malformed JSON response. Please try again."
       );
     }
 
+    // Basic sanity checks
     if (
       !parsed.question ||
       !parsed.question.includes("?") ||
@@ -295,6 +262,12 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       return fetchNewQuestion(settings, growthAreas);
     }
 
+    // Sanitize key text fields so they never contain HTML tags
+    parsed.question = stripHtmlTags(parsed.question);
+    parsed.options = parsed.options.map((opt: string) => stripHtmlTags(opt));
+    parsed.condition = stripHtmlTags(parsed.condition);
+
+    // Track recent questions for uniqueness
     if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
       recentQuestionHistory.shift();
     }
@@ -323,6 +296,8 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   }
 }
 
+// --- Prefetch multiple questions ---
+
 export async function prefetchQuestions(
   count: number,
   settings: SessionSettings,
@@ -330,11 +305,13 @@ export async function prefetchQuestions(
 ): Promise<Question[]> {
   const questions: Question[] = [];
   for (let i = 0; i < count; i++) {
-    const q = await fetchNewQuestion(settings, growthAreas);
-    questions.push(q);
+    const question = await fetchNewQuestion(settings, growthAreas);
+    questions.push(question);
   }
   return questions;
 }
+
+// --- Study-guide / flashcard generator ---
 
 export async function generateContent(
   type: "study-guide" | "flashcards",
@@ -368,6 +345,8 @@ A: [Answer]
     );
   }
 }
+
+// --- Alternate rationale generator ---
 
 export async function generateAlternateRationale(
   question: Question,
