@@ -5,39 +5,27 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PANCE AI Practice Quiz</title>
-
-    <!-- Tailwind (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     >
-
-    <!-- Base + question styles -->
     <style>
       body {
         font-family: 'Inter', sans-serif;
       }
 
-      /* Allow HTML from Gemini (tables, <b>, <i>, etc.) and preserve line breaks */
-      #question-container {
-        white-space: pre-wrap !important;
-      }
-
-      /* Table styles for vitals and labs inside the question */
+      /* Table styles for vitals and labs */
       #question-container table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 1rem;
-        margin-bottom: 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
         font-size: 0.9em;
         line-height: 1.5;
       }
-
       #question-container th,
       #question-container td {
         border: 1px solid #e2e8f0;
@@ -45,13 +33,11 @@
         text-align: left;
         vertical-align: top;
       }
-
       #question-container th {
         background-color: #f8fafc;
         font-weight: 600;
         color: #334155;
       }
-
       #question-container tbody tr:nth-child(even) {
         background-color: #f8fafc;
       }
@@ -105,16 +91,23 @@
         font-weight: 600;
         color: #1e293b;
       }
-
       .feedback-content i {
         font-style: italic;
       }
     </style>
 
-    <!-- Optional: local CSS file (can be empty, but avoids 404 in console) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.1"
+      }
+    }
+    </script>
     <link rel="stylesheet" href="/index.css">
   </head>
-
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
