@@ -1,19 +1,23 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background Circle -->
-  <circle cx="256" cy="256" r="256" fill="#3D1B0E" />
+<svg
+  width="256"
+  height="256"
+  viewBox="0 0 256 256"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="112" fill="#3D1B0E" />
 
-  <!-- Perfectly centered "P" using geometric shapes -->
-  <g fill="#E6A495" transform="translate(0, 8)">
-    <!-- Vertical spine -->
-    <rect x="220" y="130" width="32" height="260" rx="16" />
-    
-    <!-- Upper P loop -->
-    <path d="
-      M252 130
-      H310
-      A55 55 0 0 1 310 240
-      H252
-      Z
-    " />
-  </g>
+  <!-- Simple "P" for PANaCEa Prep -->
+  <text
+    x="50%"
+    y="50%"
+    text-anchor="middle"
+    dominant-baseline="central"
+    fill="#FFFFFF"
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Inter', sans-serif"
+    font-size="140"
+    font-weight="700"
+  >
+    P
+  </text>
 </svg>
