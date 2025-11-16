@@ -66,9 +66,10 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     };
   }, [text]);
 
-  // If the question contains an HTML table, render it as HTML so vitals/labs look like a chart.
+  // Does this question contain a vitals/labs table?
   const hasTable = text.includes('<table');
 
+  // If it has a table, render as HTML so the table looks right.
   if (hasTable) {
     return (
       <div
@@ -81,8 +82,12 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     );
   }
 
-  // No table: treat as plain text, bold the final sentence.
-  const lastSentenceMatch = text.match(/[^.!?]+[.!?]+\s*$/);
+  // Otherwise, treat as plain text and normalize <br> / &lt;br&gt; into real line breaks.
+  const normalizedText = text
+    .replace(/&lt;br\s*\/?&gt;/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n');
+
+  const lastSentenceMatch = normalizedText.match(/[^.!?]+[.!?]+\s*$/);
 
   if (!lastSentenceMatch) {
     return (
@@ -91,14 +96,17 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
           className="text-xl md:text-2xl font-semibold leading-tight text-[#333333] whitespace-pre-wrap"
           style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
         >
-          {text}
+          {normalizedText}
         </div>
       </div>
     );
   }
 
   const lastSentence = lastSentenceMatch[0].trim();
-  const vignette = text.substring(0, text.length - lastSentenceMatch[0].length).trim();
+  const vignette = normalizedText.substring(
+    0,
+    normalizedText.length - lastSentenceMatch[0].length
+  ).trim();
 
   return (
     <div
