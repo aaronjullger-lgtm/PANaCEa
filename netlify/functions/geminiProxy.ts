@@ -4,13 +4,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  // This will appear in Netlify function logs if the env var is missing
   console.error("GEMINI_API_KEY is not set in environment variables");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey || "");
 
-// Netlify Function handler
 export const handler = async (event: any) => {
   // Only allow POST
   if (event.httpMethod !== "POST") {
@@ -22,7 +20,6 @@ export const handler = async (event: any) => {
   }
 
   try {
-    // Parse request body
     const { modelName, prompt, temperature } = JSON.parse(event.body || "{}");
 
     if (!prompt || !modelName) {
