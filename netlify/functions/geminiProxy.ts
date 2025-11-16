@@ -1,16 +1,17 @@
 // netlify/functions/geminiProxy.ts
-import type { Handler } from "@netlify/functions";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.GEMINI_API_KEY;
 
 if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is not set in Netlify environment variables");
+  // This will appear in Netlify function logs if the env var is missing
+  console.error("GEMINI_API_KEY is not set in environment variables");
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
+const genAI = new GoogleGenerativeAI(apiKey || "");
 
-export const handler: Handler = async (event) => {
+// Netlify Function handler
+export const handler = async (event: any) => {
   // Only allow POST
   if (event.httpMethod !== "POST") {
     return {
@@ -21,13 +22,22 @@ export const handler: Handler = async (event) => {
   }
 
   try {
+    // Parse request body
     const { modelName, prompt, temperature } = JSON.parse(event.body || "{}");
 
-    if (!modelName || !prompt) {
+    if (!prompt || !modelName) {
       return {
         statusCode: 400,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ error: "modelName and prompt are required" }),
+      };
+    }
+
+    if (!apiKey) {
+      return {
+        statusCode: 500,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Server is missing GEMINI_API_KEY" }),
       };
     }
 
@@ -46,13 +56,16 @@ export const handler: Handler = async (event) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     };
-  } catch (err) {
+  } catch (err: any) {
     console.error("Error in geminiProxy:", err);
 
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ error: "Failed to call Gemini" }),
+      body: JSON.stringify({
+        error: "Failed to call Gemini",
+        details: err?.message || "Unknown error",
+      }),
     };
   }
 };
