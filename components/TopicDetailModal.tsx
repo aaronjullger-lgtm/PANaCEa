@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { TopicStats } from '../types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../constants';
@@ -44,7 +43,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({ topicStats, onClose
           onClick={() => onStartSession(topic)}
           className="w-full px-6 py-3 bg-[#3D1B0E] text-white text-lg font-bold rounded-lg hover:bg-[#2b130a] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
         >
-          Start Session on {topic}
+          Start Session on {fullTopicName}
         </button>
       </div>
     </div>
