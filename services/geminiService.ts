@@ -1,21 +1,40 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { 
-  PANCE_TOPICS, 
-  TOPIC_MAP, 
-  ABBREVIATION_TO_TOPIC_MAP, 
-  PANCE_DECK, 
-  TASK_DECK 
+import {
+  PANCE_TOPICS,
+  TOPIC_MAP,
+  ABBREVIATION_TO_TOPIC_MAP,
+  PANCE_DECK,
+  TASK_DECK,
 } from "../constants";
 import type { Question, SessionSettings } from "../types";
 
-// IMPORTANT: use the Vite client env var
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string;
+// Helper: call Netlify serverless function, which talks to Gemini (backend-only key)
+async function callGeminiText(
+  modelName: string,
+  prompt: string,
+  temperature: number = 0.8
+): Promise<string> {
+  const response = await fetch("/.netlify/functions/geminiProxy", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ modelName, prompt, temperature }),
+  });
 
-if (!apiKey) {
-  throw new Error("VITE_GEMINI_API_KEY is not set in environment variables");
+  if (!response.ok) {
+    console.error("Gemini proxy returned error status", response.status);
+    throw new Error("Gemini proxy error");
+  }
+
+  const data = await response.json();
+  if (!data || typeof data.text !== "string") {
+    throw new Error("Gemini proxy returned invalid data");
+  }
+
+  return data.text;
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
+// ---------------------------------------------------------
+// Internal state for shuffling and question uniqueness
+// ---------------------------------------------------------
 
 let shuffledContentQueue: string[] = [];
 let shuffledTaskQueue: string[] = [];
@@ -41,18 +60,9 @@ export function refillShuffledTaskQueue() {
   shuffledTaskQueue = deck;
 }
 
-// Helper: call Gemini and return plain text
-async function callGeminiText(modelName: string, prompt: string, temperature: number = 0.8): Promise<string> {
-  const model = genAI.getGenerativeModel({
-    model: modelName,
-    generationConfig: {
-      temperature
-    }
-  });
-
-  const result = await model.generateContent(prompt);
-  return result.response.text();
-}
+// ---------------------------------------------------------
+// Main: fetchNewQuestion
+// ---------------------------------------------------------
 
 export async function fetchNewQuestion(
   settings: SessionSettings,
@@ -84,6 +94,7 @@ export async function fetchNewQuestion(
 
   let prompt = "";
 
+  // -------- focus === "all" (blueprint deck mode) ----------
   if (focus === "all") {
     if (shuffledContentQueue.length === 0) {
       refillShuffledContentQueue();
@@ -155,6 +166,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 }`;
     }
   } else {
+    // -------- Growth / single-topic modes ----------
     let topicInstruction = "";
     if (focus === "topic" && settings.topic) {
       const fullTopicName =
@@ -253,18 +265,15 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     return { ...parsed, topic: topicAbbreviation } as Question;
   } catch (error) {
     console.error("Error during fetchNewQuestion:", error);
-    if (
-      error instanceof Error &&
-      (error.message.startsWith("The API returned an invalid response") ||
-        error.message.startsWith("The API returned a malformed JSON"))
-    ) {
-      throw error;
-    }
     throw new Error(
       "Failed to generate a new question. Please check your Gemini API key and network connection."
     );
   }
 }
+
+// ---------------------------------------------------------
+// Prefetch multiple questions
+// ---------------------------------------------------------
 
 export async function prefetchQuestions(
   count: number,
@@ -278,6 +287,10 @@ export async function prefetchQuestions(
   }
   return questions;
 }
+
+// ---------------------------------------------------------
+// Study-guide / flashcard content generator
+// ---------------------------------------------------------
 
 export async function generateContent(
   type: "study-guide" | "flashcards",
@@ -311,6 +324,10 @@ A: [Answer]
     );
   }
 }
+
+// ---------------------------------------------------------
+// Alternate rationale generator
+// ---------------------------------------------------------
 
 export async function generateAlternateRationale(
   question: Question,
