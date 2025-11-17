@@ -1,5 +1,8 @@
 // services/geminiService.ts
 
+import { conditionRegistry } from "../conditionRegistry";
+import type { SystemCode, ConditionDefinition } from "../types";
+
 import {
   PANCE_TOPICS,
   TOPIC_MAP,
