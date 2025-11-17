@@ -300,24 +300,38 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       return fetchNewQuestion(settings, growthAreas);
     }
 
-    // Keep question HTML (for tables), sanitize options & condition only
-    parsed.options = parsed.options.map((opt: string) => stripHtmlTags(opt));
-    parsed.condition = stripHtmlTags(parsed.condition);
+ // Keep question HTML (for tables), sanitize options & condition only
+parsed.options = parsed.options.map((opt: string) => stripHtmlTags(opt));
+parsed.condition = stripHtmlTags(parsed.condition);
 
-    // Track recent questions for uniqueness
-    if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
-      recentQuestionHistory.shift();
-    }
-    recentQuestionHistory.push(parsed.question);
+// Track recent questions for uniqueness
+if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
+  recentQuestionHistory.shift();
+}
+recentQuestionHistory.push(parsed.question);
 
-    const topicAbbreviation = TOPIC_MAP[parsed.topic] || parsed.topic;
-    if (!TOPIC_MAP[parsed.topic]) {
-      console.warn(
-        `API returned an unknown topic "${parsed.topic}". Storing it as-is.`
-      );
-    }
+const topicAbbreviation = TOPIC_MAP[parsed.topic] || parsed.topic;
+if (!TOPIC_MAP[parsed.topic]) {
+  console.warn(
+    `API returned an unknown topic "${parsed.topic}". Storing it as-is.`
+  );
+}
 
-    return { ...parsed, topic: topicAbbreviation } as Question;
+// Build the base question object
+const baseQuestion: Question = {
+  ...parsed,
+  topic: topicAbbreviation,
+};
+
+// If we pre-selected a condition (hybrid mode), lock it in here
+if (chosenConditionDef) {
+  baseQuestion.system = chosenConditionDef.system;
+  baseQuestion.subcategory = chosenConditionDef.subcategory;
+  baseQuestion.conditionId = chosenConditionDef.id;
+  baseQuestion.condition = chosenConditionDef.condition;
+}
+
+return baseQuestion;
   } catch (error) {
     console.error("Error during fetchNewQuestion:", error);
     if (
