@@ -20,9 +20,17 @@ export interface Question {
 
 export interface PerformanceRecord {
   timestamp: number;
-  topic: string;
+
+  // existing
+  topic: string;           // e.g. "CV", "PULM" – keep this as-is
   isCorrect: boolean;
   question: string;
+
+  // NEW: richer stats
+  system?: SystemCode;     // usually same as topic (CV, PULM, etc.)
+  subcategory?: string;    // e.g. "Arrhythmias", "Asthma", "Pediatrics"
+  conditionId?: string;    // from CONDITION_REGISTRY, if you’re using ids
+  condition?: string;      // human-readable condition name, e.g. "STEMI"
 }
 
 export interface TopicStats {
