@@ -44,7 +44,7 @@ let shuffledTaskDeck: string[] = shuffleArray(TASK_DECK);
 let taskIndex = 0;
 
 /** Public helpers for UI to display deck state / refill. */
-export function refillShuffledDecks(): void {
+export function refillShuffledContentQueue(): void {
   shuffledPanceDeck = shuffleArray(PANCE_DECK);
   panceIndex = 0;
   shuffledTaskDeck = shuffleArray(TASK_DECK);
@@ -52,7 +52,7 @@ export function refillShuffledDecks(): void {
 }
 
 export function resetDecks(): void {
-  refillShuffledDecks();
+  refillShuffledContentQueue();
 }
 
 export function getCurrentDeckState(): DeckState {
