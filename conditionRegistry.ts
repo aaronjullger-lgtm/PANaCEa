@@ -17,7 +17,7 @@ export type SystemCode =
   | "PRO"
   | "OTHER"; // for edge/uncategorized things, not shown on heatmap
 
-export interface ConditionMeta {
+export interface ConditionRegistryEntry {
   system: SystemCode;
   subcategory: string;
   condition: string;
@@ -26,7 +26,7 @@ export interface ConditionMeta {
 // --------------------------------------------
 // CARDIOVASCULAR REGISTRY (76 entries)
 // --------------------------------------------
-export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
+export const CONDITION_REGISTRY_CV: ConditionRegistryEntry[] = [
 
   // -------------------------
   // ECG
@@ -130,7 +130,7 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
 // PULMONARY REGISTRY
 // ---------------------------------------------------------------
 
-export const CONDITION_REGISTRY_PULM: ConditionMeta[] = [
+export const CONDITION_REGISTRY_PULM: ConditionRegistryEntry[] = [
 
   // Obstructive Lung Disease
   {
@@ -275,7 +275,7 @@ export const CONDITION_REGISTRY_PULM: ConditionMeta[] = [
 // GASTROINTESTINAL / NUTRITION REGISTRY
 // ---------------------------------------------------------------
 
-export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
+export const CONDITION_REGISTRY_GI: ConditionRegistryEntry[] = [
 
   // Esophagus
   {
@@ -488,7 +488,7 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
 // MUSCULOSKELETAL REGISTRY (MSK)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
+export const CONDITION_REGISTRY_MSK: ConditionRegistryEntry[] = [
   // Arthritis & Crystal Disease
   { system: "MSK", subcategory: "Arthritis", condition: "Osteoarthritis" },
   { system: "MSK", subcategory: "Arthritis", condition: "Rheumatoid Arthritis" },
@@ -601,7 +601,7 @@ export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
 // ENDOCRINE REGISTRY (ENDO)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_ENDO: ConditionMeta[] = [
+export const CONDITION_REGISTRY_ENDO: ConditionRegistryEntry[] = [
 
   // Thyroid Disorders
   { system: "ENDO", subcategory: "Thyroid", condition: "Hypothyroidism (Primary)" },
@@ -679,7 +679,7 @@ export const CONDITION_REGISTRY_ENDO: ConditionMeta[] = [
 // INFECTIOUS DISEASES REGISTRY (ID)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
+export const CONDITION_REGISTRY_ID: ConditionRegistryEntry[] = [
 
   // Bacterial Infections
   { system: "ID", subcategory: "Bacterial", condition: "Cellulitis" },
@@ -793,7 +793,7 @@ export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
 // HEMATOLOGIC SYSTEM REGISTRY (HEME)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_HEME: ConditionMeta[] = [
+export const CONDITION_REGISTRY_HEME: ConditionRegistryEntry[] = [
   // Anemias – Production Problems
   { system: "HEME", subcategory: "Anemia", condition: "Iron Deficiency Anemia" },
   { system: "HEME", subcategory: "Anemia", condition: "Anemia of Chronic Disease" },
@@ -880,7 +880,7 @@ export const CONDITION_REGISTRY_HEME: ConditionMeta[] = [
 // NEUROLOGIC SYSTEM REGISTRY (NEURO)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
+export const CONDITION_REGISTRY_NEURO: ConditionRegistryEntry[] = [
   // Headache Disorders
   { system: "NEURO", subcategory: "Headache", condition: "Tension Headache" },
   { system: "NEURO", subcategory: "Headache", condition: "Migraine Headache" },
@@ -972,7 +972,7 @@ export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
 // DERMATOLOGIC SYSTEM REGISTRY (DERM)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
+export const CONDITION_REGISTRY_DERM: ConditionRegistryEntry[] = [
   // Acneiform Disorders
   { system: "DERM", subcategory: "Acneiform", condition: "Acne Vulgaris" },
   { system: "DERM", subcategory: "Acneiform", condition: "Rosacea" },
@@ -1125,7 +1125,7 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
 // RENAL SYSTEM REGISTRY (RENAL)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
+export const CONDITION_REGISTRY_RENAL: ConditionRegistryEntry[] = [
   // Acute Kidney Injury (AKI)
   { system: "RENAL", subcategory: "AKI", condition: "Acute Kidney Injury (General)" },
   { system: "RENAL", subcategory: "AKI", condition: "Prerenal AKI" },
@@ -1218,7 +1218,7 @@ export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
 // GENITOURINARY SYSTEM REGISTRY (GU)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_GU: ConditionMeta[] = [
+export const CONDITION_REGISTRY_GU: ConditionRegistryEntry[] = [
 
   // PROSTATE
   { system: "GU", subcategory: "Prostate", condition: "Benign Prostatic Hyperplasia (BPH)" },
@@ -1290,7 +1290,7 @@ export const CONDITION_REGISTRY_GU: ConditionMeta[] = [
 // REPRODUCTIVE SYSTEM REGISTRY (REPRO)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
+export const CONDITION_REGISTRY_REPRO: ConditionRegistryEntry[] = [
 
   // MENSTRUAL & CYCLE DISORDERS
   { system: "REPRO", subcategory: "Menstrual Disorders", condition: "Primary Amenorrhea" },
@@ -1414,7 +1414,7 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
 // HEENT REGISTRY (Eyes, Ears, Nose, Throat)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
+export const CONDITION_REGISTRY_HEENT: ConditionRegistryEntry[] = [
   // EYE – ANTERIOR SEGMENT / LIDS
   { system: "HEENT", subcategory: "Eye – Lids & Lacrimal", condition: "Blepharitis" },
   { system: "HEENT", subcategory: "Eye – Lids & Lacrimal", condition: "Hordeolum (Stye)" },
@@ -1552,7 +1552,7 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
 // PSYCH REGISTRY (Psychiatry / Behavioral & Substance Use)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_PSYCH: ConditionMeta[] = [
+export const CONDITION_REGISTRY_PSYCH: ConditionRegistryEntry[] = [
   // MOOD DISORDERS
   { system: "PSYCH", subcategory: "Mood Disorders", condition: "Major Depressive Disorder" },
   { system: "PSYCH", subcategory: "Mood Disorders", condition: "Persistent Depressive Disorder (Dysthymia)" },
@@ -1687,7 +1687,7 @@ export const CONDITION_REGISTRY_PSYCH: ConditionMeta[] = [
 // PRO REGISTRY (Professional Practice)
 // -------------------------------------------
 
-export const CONDITION_REGISTRY_PRO: ConditionMeta[] = [
+export const CONDITION_REGISTRY_PRO: ConditionRegistryEntry[] = [
   // PROFESSIONALISM & ETHICS
   { system: "PRO", subcategory: "Professionalism & Ethics", condition: "Professional Behavior & Accountability" },
   { system: "PRO", subcategory: "Professionalism & Ethics", condition: "Informed Consent & Shared Decision-Making" },
@@ -1791,7 +1791,7 @@ export const CONDITION_REGISTRY_PRO: ConditionMeta[] = [
 // Not shown on heatmap
 // ============================================
 
-export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
+export const CONDITION_REGISTRY_OTHER: ConditionRegistryEntry[] = [
   {
     system: "OTHER",
     subcategory: "General Pediatrics",
@@ -1858,7 +1858,7 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
     condition: "Generalized Weakness"
   }
 ];
-export const CONDITION_REGISTRY: ConditionMeta[] = [
+export const CONDITION_REGISTRY: ConditionRegistryEntry[] = [
   ...CONDITION_REGISTRY_CV,
   ...CONDITION_REGISTRY_PULM,
   ...CONDITION_REGISTRY_GI,
