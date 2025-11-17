@@ -34,34 +34,40 @@ export interface SessionSettings {
   difficulty: 'easier' | 'same' | 'harder';
   topic?: string;
 }
-// High-level systems (matches your existing tiles + PRO + hidden OTHER)
+// ---- System codes (PANCE categories) ----
 export type SystemCode =
-  | 'CV'
-  | 'DERM'
-  | 'ENDO'
-  | 'GI'
-  | 'GU'
-  | 'HEME'
-  | 'HEENT'
-  | 'ID'
-  | 'MSK'
-  | 'NEURO'
-  | 'PRO'
-  | 'PSYCH'
-  | 'PULM'
-  | 'RENAL'
-  | 'REPRO'
-  | 'OTHER'; // internal only, not shown in the heatmap
+  | "CV"
+  | "DERM"
+  | "ENDO"
+  | "GI"
+  | "GU"
+  | "HEME"
+  | "HEENT"
+  | "ID"
+  | "MSK"
+  | "NEURO"
+  | "PRO"
+  | "PSYCH"
+  | "PULM"
+  | "RENAL"
+  | "REPRO"
+  | "OTHER";
 
+// ---- ConditionDefinition ----
+// Clean, minimal, no sourceUnit
 export interface ConditionDefinition {
   /** Stable internal id, e.g. "PULM__asthma__status_asthmaticus" */
   id: string;
-  /** Blueprint system code – this is what your heatmap already uses */
+
+  /** Blueprint system code */
   system: SystemCode;
-  /** Mid-level bucketing (e.g. Coronary Artery Disease, Emergency, Pediatrics, Oncology…) */
+
+  /** Mid-level bucket (e.g. Arrhythmias, Pneumonia, Coronary Disease) */
   subcategory: string;
-  /** Leaf-level condition name, e.g. "STEMI", "Pulmonary Embolism" */
+
+  /** Leaf-level name, e.g. "STEMI", "Asthma Exacerbation" */
   condition: string;
-  /** Where this came from in your notes (helps with debugging / reviewing) */
-  sourceUnit: string;
+
+  /** Optional pearls (later you can auto-fill these per condition) */
+  corePearls?: string[];
 }
