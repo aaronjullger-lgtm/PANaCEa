@@ -1,13 +1,16 @@
-
 export interface Question {
   question: string;
   options: string[];
   correctAnswerIndex: number;
   rationale: string;
   topic: string;
-  system?: SystemCode;        // usually same as topic (CV, PULM, etc.)
-  subcategory?: string;       // e.g. "Emergency", "Arrhythmias"
-  conditionId?: string;       // id from CONDITION_REGISTRY
+  /** PANCE system, mirrors topic but typed */
+  system?: SystemCode;
+  /** Mid-level category, e.g. "Arrhythmias", "Asthma / COPD" */
+  subcategory?: string;
+  /** Stable id from CONDITION_REGISTRY */
+  conditionId?: string;
+  /** Human-readable condition name (usually from the registry) */
   condition: string;
   pearls: string[];
   repetitionLevel?: number;
@@ -30,11 +33,12 @@ export interface TopicStats {
 }
 
 export interface SessionSettings {
-  focus: 'all' | 'growth' | 'review' | 'topic' | 'reviewFlagged';
-  difficulty: 'easier' | 'same' | 'harder';
+  focus: "all" | "growth" | "review" | "topic" | "reviewFlagged";
+  difficulty: "easier" | "same" | "harder";
   topic?: string;
 }
-// ---- System codes (PANCE categories) ----
+
+// High-level systems (matches your existing tiles + PRO + hidden OTHER)
 export type SystemCode =
   | "CV"
   | "DERM"
@@ -51,23 +55,15 @@ export type SystemCode =
   | "PULM"
   | "RENAL"
   | "REPRO"
-  | "OTHER";
+  | "OTHER"; // internal only, not shown in the heatmap
 
-// ---- ConditionDefinition ----
-// Clean, minimal, no sourceUnit
 export interface ConditionDefinition {
   /** Stable internal id, e.g. "PULM__asthma__status_asthmaticus" */
   id: string;
-
-  /** Blueprint system code */
+  /** Blueprint system code – this is what your heatmap already uses */
   system: SystemCode;
-
-  /** Mid-level bucket (e.g. Arrhythmias, Pneumonia, Coronary Disease) */
+  /** Mid-level bucketing (e.g. Coronary Artery Disease, Emergency, Pediatrics, Oncology…) */
   subcategory: string;
-
-  /** Leaf-level name, e.g. "STEMI", "Asthma Exacerbation" */
+  /** Leaf-level condition name, e.g. "STEMI", "Pulmonary Embolism" */
   condition: string;
-
-  /** Optional pearls (later you can auto-fill these per condition) */
-  corePearls?: string[];
 }
