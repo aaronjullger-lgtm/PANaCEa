@@ -1,61 +1,184 @@
 // services/performanceService.ts
-import type { Question, PerformanceRecord } from "../types";
 
-const STORAGE_KEY = "pance-ai-performance-v1";
+import type {
+  Question,
+  PerformanceRecord,
+  SessionSettings,
+  SystemCode,
+} from "../types";
 
-type StoredRecord = PerformanceRecord & {
-  system?: Question["system"];
-  subcategory?: Question["subcategory"];
-  condition?: Question["condition"];
-};
+const STORAGE_KEY = "pance_performance_v1";
 
-// ---- helpers to load/save localStorage ----
+// ---- Low-level helpers ----
 
-function loadAll(): StoredRecord[] {
+function loadAllRecords(): PerformanceRecord[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as StoredRecord[];
+    const parsed = JSON.parse(raw) as PerformanceRecord[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
   } catch {
     return [];
   }
 }
 
-function saveAll(records: StoredRecord[]) {
+function saveAllRecords(records: PerformanceRecord[]) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  } catch {
-    // best-effort only; fail silently if storage is full / blocked
-    console.warn("Unable to save performance records");
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  } catch (err) {
+    console.error("Failed to save performance records", err);
   }
 }
 
-// ---- MAIN API: call this when a question is answered ----
+// ---- Public: record a single question outcome ----
 
-export function savePerformanceRecord(
+export function recordQuestionOutcome(
   question: Question,
-  isCorrect: boolean
+  isCorrect: boolean,
+  settings: SessionSettings
 ) {
-  const records = loadAll();
+  const now = Date.now();
 
-  const record: StoredRecord = {
-    timestamp: Date.now(),
+  const record: PerformanceRecord = {
+    timestamp: now,
+    system: question.system ?? null,
+    subcategory: question.subcategory ?? null,
+    conditionId: question.conditionId ?? null,
+    condition: question.condition,
     topic: question.topic,
     isCorrect,
-    question: question.question,
-    system: question.system,
-    subcategory: question.subcategory,
-    condition: question.condition,
+    focus: settings.focus,
+    difficulty: settings.difficulty,
   };
 
-  records.push(record);
-  saveAll(records);
+  const all = loadAllRecords();
+  all.push(record);
+  saveAllRecords(all);
 }
 
-// ---- Read APIs that the heatmap screen will use later ----
+// ---- Aggregation types for the heatmap ----
 
-export function getAllPerformanceRecords(): StoredRecord[] {
-  return loadAll();
+export interface ConditionStats {
+  system: SystemCode;
+  subcategory: string;
+  conditionId: string | null;
+  condition: string;
+  correct: number;
+  total: number;
+  percent: number; // 0–100
+}
+
+export interface SubcategoryStats {
+  system: SystemCode;
+  subcategory: string;
+  correct: number;
+  total: number;
+  percent: number; // 0–100
+  conditions: ConditionStats[];
+}
+
+export interface SystemStats {
+  system: SystemCode;
+  correct: number;
+  total: number;
+  percent: number; // 0–100
+  subcategories: SubcategoryStats[];
+}
+
+// ---- Core: “PANCE-only ALL-topics” filtered hierarchy ----
+
+export function getHierarchicalStats(): SystemStats[] {
+  const all = loadAllRecords();
+
+  // Only count PANCE-level, ALL-topics sessions:
+  //  - focus === "all"
+  //  - difficulty === "same" (your “PANCE-level” choice)
+  const filtered = all.filter(
+    (r) => r.focus === "all" && r.difficulty === "same" && r.system && r.system !== "OTHER"
+  );
+
+  // system → subcategory → condition → aggregate
+  const systemMap = new Map<SystemCode, SystemStats>();
+
+  for (const rec of filtered) {
+    const system = rec.system as SystemCode;
+    const subcategory = rec.subcategory ?? "Uncategorized";
+    const conditionKey = rec.conditionId ?? rec.condition;
+
+    if (!systemMap.has(system)) {
+      systemMap.set(system, {
+        system,
+        correct: 0,
+        total: 0,
+        percent: 0,
+        subcategories: [],
+      });
+    }
+    const sys = systemMap.get(system)!;
+    sys.total += 1;
+    if (rec.isCorrect) sys.correct += 1;
+
+    // find or create subcategory
+    let sub = sys.subcategories.find((s) => s.subcategory === subcategory);
+    if (!sub) {
+      sub = {
+        system,
+        subcategory,
+        correct: 0,
+        total: 0,
+        percent: 0,
+        conditions: [],
+      };
+      sys.subcategories.push(sub);
+    }
+    sub.total += 1;
+    if (rec.isCorrect) sub.correct += 1;
+
+    // find or create condition
+    let cond = sub.conditions.find(
+      (c) => c.conditionId === rec.conditionId && c.condition === rec.condition
+    );
+    if (!cond) {
+      cond = {
+        system,
+        subcategory,
+        conditionId: rec.conditionId,
+        condition: rec.condition,
+        correct: 0,
+        total: 0,
+        percent: 0,
+      };
+      sub.conditions.push(cond);
+    }
+    cond.total += 1;
+    if (rec.isCorrect) cond.correct += 1;
+  }
+
+  // compute percentages
+  const systems: SystemStats[] = [];
+
+  for (const sys of systemMap.values()) {
+    for (const sub of sys.subcategories) {
+      for (const cond of sub.conditions) {
+        cond.percent = cond.total > 0 ? (cond.correct / cond.total) * 100 : 0;
+      }
+      sub.percent = sub.total > 0 ? (sub.correct / sub.total) * 100 : 0;
+    }
+    sys.percent = sys.total > 0 ? (sys.correct / sys.total) * 100 : 0;
+    systems.push(sys);
+  }
+
+  // optional: sort systems/subcategories/conditions consistently
+  systems.sort((a, b) => a.system.localeCompare(b.system));
+  for (const sys of systems) {
+    sys.subcategories.sort((a, b) => a.subcategory.localeCompare(b.subcategory));
+    for (const sub of sys.subcategories) {
+      sub.conditions.sort((a, b) => a.condition.localeCompare(b.condition));
+    }
+  }
+
+  return systems;
 }
