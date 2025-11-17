@@ -7,7 +7,17 @@ import {
   PANCE_DECK,
   TASK_DECK,
 } from "../constants";
-import type { Question, SessionSettings } from "../types";
+import type {
+  Question,
+  SessionSettings,
+  SystemCode,
+  ConditionDefinition,
+} from "../types";
+import {
+  buildConditionDefinition,
+  getRandomConditionForSystem,
+  type ConditionMeta,
+} from "../conditionRegistry";
 
 // --- Helper: call Netlify serverless function, which talks to Gemini ---
 
