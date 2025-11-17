@@ -1875,15 +1875,15 @@ export function findConditionMeta(rawName?: string | null): ConditionMeta | unde
   const candidate = rawName.trim().toLowerCase();
   if (!candidate) return undefined;
 
-  const all = Object.values(CONDITION_REGISTRY);
+  const all = CONDITION_REGISTRY;
 
-  // 1) Direct name match
-  const byName = all.find(
-    c => c.name.toLowerCase() === candidate
+  // direct condition match
+  const exact = all.find(
+    c => c.condition.toLowerCase() === candidate
   );
-  if (byName) return byName;
+  if (exact) return exact;
 
-  // 2) Alias match
+  // alias match (if used)
   for (const meta of all) {
     if (!meta.aliases) continue;
     if (meta.aliases.some(a => a.toLowerCase() === candidate)) {
@@ -1891,19 +1891,14 @@ export function findConditionMeta(rawName?: string | null): ConditionMeta | unde
     }
   }
 
-  // 3) Contains-style match as a fallback (e.g. "severe atrial fibrillation")
+  // contains (fallback)
   for (const meta of all) {
-    if (candidate.includes(meta.name.toLowerCase())) {
-      return meta;
-    }
-    if (meta.aliases?.some(a => candidate.includes(a.toLowerCase()))) {
-      return meta;
-    }
+    if (candidate.includes(meta.condition.toLowerCase())) return meta;
+    if (meta.aliases?.some(a => candidate.includes(a.toLowerCase()))) return meta;
   }
 
   return undefined;
 }
-
 /**
  * Build a full ConditionDefinition from a ConditionMeta,
  * so it fits the `Question.condition` type.
@@ -1911,12 +1906,13 @@ export function findConditionMeta(rawName?: string | null): ConditionMeta | unde
 export function buildConditionDefinition(meta: ConditionMeta): ConditionDefinition {
   return {
     id: meta.id,
-    name: meta.name,
     system: meta.system,
     subcategory: meta.subcategory,
+    condition: meta.condition,
     corePearls: meta.corePearls ?? []
   };
-}// ---- System codes (PANCE-style) ----
+}
+
 export type SystemCode =
   | "CV"
   | "DERM"
