@@ -110,6 +110,9 @@ export async function fetchNewQuestion(
 
   let prompt = "";
 
+  // Optional condition chosen client-side (for hybrid targeting and stats)
+  let chosenConditionDef: ConditionDefinition | undefined;
+
   // -------- FOCUS: ALL (use content + task decks) --------
   if (focus === "all") {
     if (shuffledContentQueue.length === 0) {
