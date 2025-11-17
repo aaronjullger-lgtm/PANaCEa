@@ -1869,64 +1869,82 @@ export const CONDITION_REGISTRY: ConditionMeta[] = [
  * Try to find a condition meta by name or alias coming back from the model.
  * `rawName` can be messy text from the LLM – we normalize and do loose matching.
  */
-export function findConditionMeta(rawName?: string | null): ConditionMeta | undefined {
+export function findConditionMeta(
+  rawName?: string | null
+): ConditionMeta | undefined {
   if (!rawName) return undefined;
   const candidate = rawName.trim().toLowerCase();
   if (!candidate) return undefined;
 
   const all = CONDITION_REGISTRY;
 
-  // direct condition match
-  const exact = all.find(
-    c => c.condition.toLowerCase() === candidate
+  // 1) Direct name match
+  const byName = all.find(
+    (c) => c.condition.toLowerCase() === candidate
   );
-  if (exact) return exact;
+  if (byName) return byName;
 
-  // alias match (if used)
+  // 2) Alias match
   for (const meta of all) {
     if (!meta.aliases) continue;
-    if (meta.aliases.some(a => a.toLowerCase() === candidate)) {
+    if (meta.aliases.some((a) => a.toLowerCase() === candidate)) {
       return meta;
     }
   }
 
-  // contains (fallback)
+  // 3) Contains-style match as a fallback (e.g. "severe atrial fibrillation")
   for (const meta of all) {
-    if (candidate.includes(meta.condition.toLowerCase())) return meta;
-    if (meta.aliases?.some(a => candidate.includes(a.toLowerCase()))) return meta;
+    if (candidate.includes(meta.condition.toLowerCase())) {
+      return meta;
+    }
+    if (
+      meta.aliases?.some((a) =>
+        candidate.includes(a.toLowerCase())
+      )
+    ) {
+      return meta;
+    }
   }
 
   return undefined;
 }
+
 /**
- * Build a full ConditionDefinition from a ConditionMeta,
- * so it fits the `Question.condition` type.
+ * Build a full ConditionDefinition from a ConditionMeta.
+ * This is what gets attached to each Question.
  */
-export function buildConditionDefinition(meta: ConditionMeta): ConditionDefinition {
+export function buildConditionDefinition(
+  meta: ConditionMeta
+): ConditionDefinition {
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
+
   return {
-    id: meta.id,
+    id: `${meta.system}__${norm(meta.subcategory)}__${norm(
+      meta.condition
+    )}`,
     system: meta.system,
     subcategory: meta.subcategory,
     condition: meta.condition,
-    corePearls: meta.corePearls ?? []
   };
 }
 
-export type SystemCode =
-  | "CV"
-  | "DERM"
-  | "ENDO"
-  | "HEENT"
-  | "GI"
-  | "GU"
-  | "HEME"
-  | "ID"
-  | "MSK"
-  | "NEURO"
-  | "PSYCH"
-  | "PULM"
-  | "RENAL"
-  | "REPRO"
-  | "PRO"
-  | "OTHER"; // for edge/uncategorized things, not shown on heatmap
+/**
+ * Return a random condition for a given PANCE system.
+ * Skips "OTHER" because those are not tracked on the heatmap.
+ */
+export function getRandomConditionForSystem(
+  system: SystemCode
+): ConditionMeta | undefined {
+  if (system === "OTHER") return undefined;
+  const pool = CONDITION_REGISTRY.filter(
+    (c) => c.system === system
+  );
+  if (!pool.length) return undefined;
+  const idx = Math.floor(Math.random() * pool.length);
+  return pool[idx];
+}
 
