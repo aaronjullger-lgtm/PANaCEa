@@ -18,19 +18,24 @@ export interface Question {
   userNote?: string;
 }
 
+import type { SystemCode, SessionSettings } from "./types"; // adjust if needed
+
 export interface PerformanceRecord {
   timestamp: number;
 
-  // existing
-  topic: string;           // e.g. "CV", "PULM" – keep this as-is
-  isCorrect: boolean;
-  question: string;
+  // What was shown
+  system: SystemCode | null;   // e.g. "CV", "PULM"
+  subcategory: string | null;  // e.g. "Arrhythmias", "Asthma"
+  conditionId: string | null;  // from CONDITION_REGISTRY if present
+  condition: string;           // human name from question.condition
+  topic: string;               // your existing topic code/label
 
-  // NEW: richer stats
-  system?: SystemCode;     // usually same as topic (CV, PULM, etc.)
-  subcategory?: string;    // e.g. "Arrhythmias", "Asthma", "Pediatrics"
-  conditionId?: string;    // from CONDITION_REGISTRY, if you’re using ids
-  condition?: string;      // human-readable condition name, e.g. "STEMI"
+  // Result
+  isCorrect: boolean;
+
+  // Meta (so we can filter to PANCE-level ALL sessions)
+  focus: SessionSettings["focus"];         // 'all' | 'growth' | ...
+  difficulty: SessionSettings["difficulty"]; // 'easier' | 'same' | 'harder'
 }
 
 export interface TopicStats {
