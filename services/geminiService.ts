@@ -114,15 +114,26 @@ export async function fetchNewQuestion(
   let chosenConditionDef: ConditionDefinition | undefined;
 
   // -------- FOCUS: ALL (use content + task decks) --------
-  if (focus === "all") {
+    if (focus === "all") {
     if (shuffledContentQueue.length === 0) {
       refillShuffledContentQueue();
     }
     const contentTopicAbbr = shuffledContentQueue.pop()!;
     const fullContentTopicName = ABBREVIATION_TO_TOPIC_MAP[contentTopicAbbr];
 
+    const systemCode = contentTopicAbbr as SystemCode;
+
+    // Hybrid: pick a random condition within this system (except PRO/OTHER)
+    let selectedConditionMeta: ConditionMeta | undefined;
+    if (systemCode !== "PRO" && systemCode !== "OTHER") {
+      selectedConditionMeta = getRandomConditionForSystem(systemCode);
+      if (selectedConditionMeta) {
+        chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
+      }
+    }
+
     if (contentTopicAbbr === "PRO") {
-      // Professional Practice special handling
+      // Professional Practice special handling (no condition registry)
       prompt = `You are generating a structured JSON object for a PANCE practice question.
 
 Generate one new, unique, PANCE-style multiple-choice question on the topic of "Professional Practice".
@@ -133,12 +144,13 @@ ${detailedDifficultyInstruction}
 Core Instructions:
 1. Scenario-Based: The question must present a realistic scenario involving professional practice issues relevant to PAs, such as medical ethics, legal responsibilities, patient safety, or public health principles.
 2. Plausible Options: The options must represent plausible courses of action or interpretations of the scenario, with one clear best answer according to current professional standards.
-3. HTML Formatting: The "rationale" string and all strings in the "pearls" array MUST use simple HTML tags (<b>, <i>) for formatting, NOT markdown.
-4. Key Pearls Formatting: The "pearls" array MUST contain 3–4 single, high-yield sentences related to the core principle being tested. Each sentence is a concise, complete thought.
-5. Question HTML: The "question" string MAY include a simple HTML <table> (using only <table>, <thead>, <tbody>, <tr>, <th>, <td>) and <br> tags for formatting vitals/labs. Do NOT use <b> or <i> tags in the question.
-6. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
-7. Uniqueness: ${uniquenessInstruction}
-8. Topic: The "topic" field in the JSON output MUST be exactly "Professional Practice".
+3. Question Quality: The stem should be clear, focused, and clinically realistic. Avoid vague wording and "gotcha" phrasing.
+4. HTML Formatting: The "rationale" string and all strings in the "pearls" array MUST use simple HTML tags (<b>, <i>) for formatting, NOT markdown.
+5. Key Pearls Formatting: The "pearls" array MUST contain 3–4 single, high-yield sentences related to the core principle being tested. Each sentence is a concise, complete thought.
+6. Question HTML: The "question" string MAY include a simple HTML <table> (using only <table>, <thead>, <tbody>, <tr>, <th>, <td>) and <br> tags for formatting vitals/labs. Do NOT use <b> or <i> tags in the question.
+7. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
+8. Uniqueness: ${uniquenessInstruction}
+9. Topic: The "topic" field in the JSON output MUST be exactly "Professional Practice".
 
 Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
@@ -158,25 +170,33 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       }
       const taskTopic = shuffledTaskQueue.pop()!;
 
+      const conditionContext = selectedConditionMeta
+        ? `You are targeting the subcategory "${selectedConditionMeta.subcategory}" in the "${fullContentTopicName}" system. Where clinically appropriate, focus the vignette on the specific condition "${selectedConditionMeta.condition}". However, if a very closely related variant would make for a better, more realistic PANCE-style question, you may use it instead – just ensure the "condition" field in your JSON exactly matches the condition you used.`
+        : `You are targeting the "${fullContentTopicName}" system.`;
+
+      const topicFieldInstruction = `The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".`;
+
       prompt = `You are generating a structured JSON object for a PANCE practice question.
+
+${conditionContext}
 
 Generate one new, unique, PANCE-style multiple-choice question for the topic "${fullContentTopicName}" that specifically tests the task "${taskTopic}".
 
 Difficulty:
 ${detailedDifficultyInstruction}
 
-Core Instructions:
-1. Vignette with Subtle Red Herring: The question MUST contain a patient case/vignette and include one subtle "red herring" detail that is not relevant to the final diagnosis.
-2. Task-Focused Question: The vignette must end with a clear, single-sentence question that directly relates to the specified task ("${taskTopic}").
-3. Plausible, Crafted Distractors: The three distractors MUST be highly plausible (common misconceptions, similar diagnoses, or common mistakes).
+Core Instructions (question quality matters):
+1. Vignette with Subtle Red Herring: The question MUST contain a realistic patient case/vignette and include one subtle "red herring" detail that is not relevant to the final diagnosis.
+2. Second-Order Task-Focused Question: The vignette must end with a clear, single-sentence question that directly relates to the specified task ("${taskTopic}") and tests second-order thinking (diagnosis, next best step, mechanism, complication, or most appropriate test).
+3. Plausible, Crafted Distractors: The three distractors MUST be highly plausible (common misconceptions, similar diagnoses, or common mistakes) and be clearly wrong once the vignette is understood correctly.
 4. Vignette Formatting: Insert "\\n" in the question string to separate paragraphs; do NOT return a single wall of text.
 5. Data Table Formatting: If you include ANY vital signs and/or laboratory values, you MUST place ALL of them into a single simple HTML <table> with a header row in the question string. Use exactly two columns labeled "Parameter" and "Value". Do NOT repeat vitals or labs in plain text outside the table.
 6. HTML Formatting: The "rationale" and all "pearls" MUST use simple HTML tags (<b>, <i>) instead of markdown.
-7. Key Pearls: "pearls" must be 3–4 high-yield, single-sentence clinical pearls.
+7. Key Pearls: "pearls" must be 3–4 high-yield, single-sentence clinical pearls focusing on diagnosis, classic presentation, red flags, and first-line management.
 8. Question HTML: The "question" string MAY use the table tags above and <br> for line breaks. Do NOT use <b> or <i> tags in the question.
-9. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags).
+9. Options & Condition: The "options" and "condition" fields MUST be plain text only (no HTML tags). The "condition" string should be the single best descriptive name of the main condition tested.
 10. Uniqueness: ${uniquenessInstruction}
-11. Topic field: The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".
+11. Topic field: ${topicFieldInstruction}
 
 Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
@@ -191,6 +211,8 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 }`;
     }
   } else {
+    // -------- FOCUS: topic / growth / generic --------
+    // (keep your existing non-"all" branch as you have it now)
     // -------- FOCUS: topic / growth / generic --------
     let topicInstruction = "";
     if (focus === "topic" && settings.topic) {
