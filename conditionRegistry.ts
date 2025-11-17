@@ -2,14 +2,13 @@
 
 import { ConditionDefinition, SystemCode } from "./types";
 
-/**
- * Internal metadata used to build a full ConditionDefinition.
- * You can safely extend this with as many conditions as you want.
- */
 export interface ConditionMeta {
   system: SystemCode;
   subcategory: string;
+  /** Canonical condition name as it appears in ALL TOPICS / blueprint */
   condition: string;
+  /** Optional alternate names to help fuzzy matching if we ever need it */
+  aliases?: string[];
 }
 
 // --------------------------------------------
