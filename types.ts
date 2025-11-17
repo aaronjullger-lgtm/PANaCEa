@@ -5,6 +5,9 @@ export interface Question {
   correctAnswerIndex: number;
   rationale: string;
   topic: string;
+  system?: SystemCode;        // usually same as topic (CV, PULM, etc.)
+  subcategory?: string;       // e.g. "Emergency", "Arrhythmias"
+  conditionId?: string;       // id from CONDITION_REGISTRY
   condition: string;
   pearls: string[];
   repetitionLevel?: number;
