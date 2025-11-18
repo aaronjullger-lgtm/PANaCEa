@@ -84,7 +84,7 @@ const MenuView: React.FC<MenuViewProps> = ({
       .sort((a, b) => b.total - a.total);
 
     return { overallScore, correct360, total360: last360.length, topicScores };
-  }, [performanceData]);
+  }, [performanceData];
 
   const dueQuestionsCount = useMemo(() => {
     if (!missedQuestions) return 0;
