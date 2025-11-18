@@ -146,7 +146,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
       {selectedSystem && (
         <SystemDrilldownModal
-          system={selectedSystem}
+          selection={selectedSystem}
           performanceData={performanceData}
           onClose={() => setSelectedSystem(null)}
           onStartTopicSession={handleTopicSessionStart}
