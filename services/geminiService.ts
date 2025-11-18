@@ -386,16 +386,109 @@ A: [Answer]
   const modelName = useProModel ? "gemini-2.5-pro" : "gemini-2.5-flash";
   const temperature = useProModel ? 0.5 : 0.7;
 
+    // --- Call Gemini through proxy and parse JSON ---
+
   try {
-    const text = await callGeminiText(modelName, prompt, temperature);
-    return text;
+    const rawText = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
+
+    // Trim and sanitize before parsing
+    let jsonString = (rawText || "").trim();
+
+    if (!jsonString) {
+      throw new Error("Empty response from Gemini");
+    }
+
+    // Gemini sometimes drops stray backslashes in HTML tables like: <tr>\      <td>...</td>
+    // Those are invalid in JSON. This strips any backslash NOT followed by a valid JSON
+    // escape character (" \/ b f n r t u). We keep proper \" and \n intact.
+    const sanitizedJsonString = jsonString.replace(
+      /\\(?!["\\/bfnrtu])/g,
+      ""
+    );
+
+    if (sanitizedJsonString !== jsonString) {
+      console.warn(
+        "Sanitized Gemini JSON string to remove invalid backslashes."
+      );
+    }
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(sanitizedJsonString);
+    } catch (parseError) {
+      console.error(
+        "Failed to parse JSON from Gemini. String that failed:",
+        sanitizedJsonString
+      );
+      throw new Error(
+        "The API returned a malformed JSON response. Please try again."
+      );
+    }
+
+    // Basic sanity checks
+    if (
+      !parsed.question ||
+      !parsed.question.includes("?") ||
+      !Array.isArray(parsed.options) ||
+      parsed.options.length !== 4 ||
+      typeof parsed.correctAnswerIndex !== "number" ||
+      !parsed.rationale ||
+      !parsed.topic ||
+      !parsed.condition ||
+      !Array.isArray(parsed.pearls)
+    ) {
+      console.warn(
+        "Received malformed JSON data from API, retrying once...",
+        parsed
+      );
+      return fetchNewQuestion(settings, growthAreas);
+    }
+
+    // Keep question HTML (for tables), sanitize options & condition only
+    parsed.options = parsed.options.map((opt: string) => stripHtmlTags(opt));
+    parsed.condition = stripHtmlTags(parsed.condition);
+
+    // Track recent questions for uniqueness
+    if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
+      recentQuestionHistory.shift();
+    }
+    recentQuestionHistory.push(parsed.question);
+
+    const topicAbbreviation = TOPIC_MAP[parsed.topic] || parsed.topic;
+    if (!TOPIC_MAP[parsed.topic]) {
+      console.warn(
+        `API returned an unknown topic "${parsed.topic}". Storing it as-is.`
+      );
+    }
+
+    // Build the base question object
+    const baseQuestion: Question = {
+      ...parsed,
+      topic: topicAbbreviation,
+    };
+
+    // If we pre-selected a condition (hybrid mode), lock it in here
+    if (chosenConditionDef) {
+      baseQuestion.system = chosenConditionDef.system;
+      baseQuestion.subcategory = chosenConditionDef.subcategory;
+      baseQuestion.conditionId = chosenConditionDef.id;
+      baseQuestion.condition = chosenConditionDef.condition;
+    }
+
+    return baseQuestion;
   } catch (error) {
-    console.error("Error generating content:", error);
+    console.error("Error during fetchNewQuestion:", error);
+    if (
+      error instanceof Error &&
+      (error.message.startsWith("The API returned an invalid response") ||
+        error.message.startsWith("The API returned a malformed JSON"))
+    ) {
+      throw error;
+    }
     throw new Error(
-      "Failed to generate content. The API may be busy or an error occurred."
+      "Failed to generate a new question. Please check your Gemini API key and network connection."
     );
   }
-}
 
 // --- Alternate rationale generator ---
 
