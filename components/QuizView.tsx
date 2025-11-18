@@ -179,24 +179,47 @@ const QuizView: React.FC<QuizViewProps> = ({
     );
   }, [currentQuestion, flaggedQuestions]);
 
-  const replenishQueue = useCallback(async () => {
-    // Endless stream ONLY for PANCE-level, ALL-topics sessions
+  // inside QuizView.tsx
+
+// Keep this near the top, after your imports and props, before JSX return
+const replenishQueue = useCallback(async () => {
+  // ❌ Do NOT replenish for SRS / flagged review modes
+  if (
+    sessionSettings.focus === "review" ||
+    sessionSettings.focus === "reviewFlagged"
+  ) {
+    return;
+  }
+
+  try {
+    const newQuestion = await fetchNewQuestion(sessionSettings, growthAreas);
+    setParentQueue((prevQueue) => [...prevQueue, newQuestion]);
+  } catch (error) {
+    console.error("Failed to replenish queue in background:", error);
+    // We *don't* throw here so the current session can keep going
+  }
+}, [sessionSettings, growthAreas, setParentQueue]);
+
+const showNextQuestion = useCallback(() => {
+  setParentQueue((prevQueue) => {
+    const nextQueue = prevQueue.slice(1);
+    const nextQuestion = nextQueue[0] ?? null;
+
+    setCurrentQuestion(nextQuestion);
+    setLocalNote(nextQuestion?.userNote || "");
+
+    // Kick off background replenish for all non-review modes
     if (
-      !(
-        sessionSettings.focus === "all" &&
-        sessionSettings.difficulty === "same"
-      )
+      sessionSettings.focus !== "review" &&
+      sessionSettings.focus !== "reviewFlagged"
     ) {
-      return;
+      // fire-and-forget, errors handled inside replenishQueue
+      replenishQueue();
     }
 
-    try {
-      const newQuestion = await fetchNewQuestion(sessionSettings, growthAreas);
-      setParentQueue((prevQueue) => [...prevQueue, newQuestion]);
-    } catch (error) {
-      console.error("Failed to replenish queue in background:", error);
-    }
-  }, [sessionSettings, growthAreas, setParentQueue]);
+    return nextQueue;
+  });
+}, [setParentQueue, sessionSettings.focus, replenishQueue]);
 
   const showNextQuestion = useCallback(() => {
     setIsAnswered(false);
