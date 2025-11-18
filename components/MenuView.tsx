@@ -197,8 +197,13 @@ const MenuView: React.FC<MenuViewProps> = ({
               Knowledge Map (PANCE Systems)
             </h2>
             <TopicHeatmap
-              systemStats={stats.systemStats}
-              onSystemClick={setSelectedSystem}
+              topicScores={stats.topicScores || []}
+              onTopicClick={(systemCode) => {
+                setSelectedSystem({
+                  system: systemCode,
+                  records: performanceData
+                });
+              }}
             />
           </section>
 
