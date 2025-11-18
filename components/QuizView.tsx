@@ -1,10 +1,24 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { fetchNewQuestion, generateAlternateRationale } from '../services/geminiService';
-import type { Question, PerformanceRecord, SessionSettings } from '../types';
-import { CloseIcon } from './icons/CloseIcon';
-import { FlagIcon } from './icons/FlagIcon';
-import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
-import { ClearHighlightIcon } from './icons/ClearHighlightIcon';
+// components/QuizView.tsx
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
+import {
+  fetchNewQuestion,
+  generateAlternateRationale,
+} from "../services/geminiService";
+import type {
+  Question,
+  PerformanceRecord,
+  SessionSettings,
+} from "../types";
+import { CloseIcon } from "./icons/CloseIcon";
+import { FlagIcon } from "./icons/FlagIcon";
+import { ArrowLeftIcon } from "./icons/ArrowLeftIcon";
+import { ClearHighlightIcon } from "./icons/ClearHighlightIcon";
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -46,27 +60,27 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
           return;
         }
 
-        const span = document.createElement('span');
-        span.className = 'user-highlight';
+        const span = document.createElement("span");
+        span.className = "user-highlight";
 
         range.surroundContents(span);
         selection.removeAllRanges();
       } catch (e) {
         console.error(
-          'Highlighting failed. This can happen if the selection spans across formatted sections.',
+          "Highlighting failed. This can happen if the selection spans across formatted sections.",
           e
         );
         window.getSelection()?.removeAllRanges();
       }
     };
 
-    container.addEventListener('mouseup', handleMouseUp);
+    container.addEventListener("mouseup", handleMouseUp);
     return () => {
-      container.removeEventListener('mouseup', handleMouseUp);
+      container.removeEventListener("mouseup", handleMouseUp);
     };
   }, [text]);
 
-  const hasTable = text.includes('<table');
+  const hasTable = text.includes("<table");
 
   if (hasTable) {
     return (
@@ -81,8 +95,8 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
   }
 
   const normalizedText = text
-    .replace(/&lt;br\s*\/?&gt;/gi, '\n')
-    .replace(/<br\s*\/?>/gi, '\n');
+    .replace(/&lt;br\s*\/?&gt;/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n");
 
   const lastSentenceMatch = normalizedText.match(/[^.!?]+[.!?]+\s*$/);
 
@@ -100,10 +114,9 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
   }
 
   const lastSentence = lastSentenceMatch[0].trim();
-  const vignette = normalizedText.substring(
-    0,
-    normalizedText.length - lastSentenceMatch[0].length
-  ).trim();
+  const vignette = normalizedText
+    .substring(0, normalizedText.length - lastSentenceMatch[0].length)
+    .trim();
 
   return (
     <div
@@ -120,13 +133,13 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-const QuizView: React.FC<QuizViewProps> = ({ 
-  initialQueue, 
+const QuizView: React.FC<QuizViewProps> = ({
+  initialQueue,
   setParentQueue,
   addPerformanceRecord,
   addMissedQuestion,
   updateReviewQuestion,
-  setIsLoading, 
+  setIsLoading,
   setError,
   sessionSettings,
   growthAreas,
@@ -138,54 +151,66 @@ const QuizView: React.FC<QuizViewProps> = ({
   flaggedQuestions,
   addFlaggedQuestion,
   removeFlaggedQuestion,
-  updateQuestionNote
+  updateQuestionNote,
 }) => {
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(initialQueue[0] || null);
-  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(
+    initialQueue[0] || null
+  );
+  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(
+    null
+  );
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [questionNumber, setQuestionNumber] = useState<number>(1);
-  const [alternateRationale, setAlternateRationale] = useState<string | null>(null);
-  const [isExplainerLoading, setIsExplainerLoading] = useState<boolean>(false);
-  const [localNote, setLocalNote] = useState<string>('');
-  
+  const [alternateRationale, setAlternateRationale] = useState<string | null>(
+    null
+  );
+  const [isExplainerLoading, setIsExplainerLoading] =
+    useState<boolean>(false);
+  const [localNote, setLocalNote] = useState<string>("");
+
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const isFlagged = useMemo(() => {
     if (!currentQuestion) return false;
-    return flaggedQuestions.some(q => q.question === currentQuestion.question);
+    return flaggedQuestions.some(
+      (q) => q.question === currentQuestion.question
+    );
   }, [currentQuestion, flaggedQuestions]);
 
-  // Only the "PANCE-level · ALL topics" session should be endless
-  const shouldStreamEndless =
-    sessionSettings.focus === 'all' && sessionSettings.difficulty === 'same';
-
   const replenishQueue = useCallback(async () => {
-    if (!shouldStreamEndless) return;
+    // Endless stream ONLY for PANCE-level, ALL-topics sessions
+    if (
+      !(
+        sessionSettings.focus === "all" &&
+        sessionSettings.difficulty === "same"
+      )
+    ) {
+      return;
+    }
 
     try {
       const newQuestion = await fetchNewQuestion(sessionSettings, growthAreas);
-      setParentQueue(prevQueue => [...prevQueue, newQuestion]);
+      setParentQueue((prevQueue) => [...prevQueue, newQuestion]);
     } catch (error) {
-      console.error('Failed to replenish queue in background:', error);
+      console.error("Failed to replenish queue in background:", error);
     }
-  }, [shouldStreamEndless, sessionSettings, growthAreas, setParentQueue]);
+  }, [sessionSettings, growthAreas, setParentQueue]);
 
   const showNextQuestion = useCallback(() => {
     setIsAnswered(false);
     setSelectedAnswerIndex(null);
-    setQuestionNumber(prev => prev + 1);
+    setQuestionNumber((prev) => prev + 1);
     setAlternateRationale(null);
-    setLocalNote('');
-    
-    setParentQueue(prevQueue => {
+    setLocalNote("");
+
+    setParentQueue((prevQueue) => {
       const nextQueue = prevQueue.slice(1);
       setCurrentQuestion(nextQueue[0] || null);
       return nextQueue;
     });
 
-    // For endless mode, always top up the queue in the background
     replenishQueue();
   }, [setParentQueue, replenishQueue]);
 
@@ -193,30 +218,32 @@ const QuizView: React.FC<QuizViewProps> = ({
     if (!currentQuestion && initialQueue.length > 0) {
       setCurrentQuestion(initialQueue[0]);
     }
-    setLocalNote(initialQueue[0]?.userNote || '');
+    setLocalNote(initialQueue[0]?.userNote || "");
   }, [initialQueue, currentQuestion]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.target as HTMLElement).tagName.toLowerCase() === 'textarea') {
+      if (
+        (event.target as HTMLElement).tagName.toLowerCase() === "textarea"
+      ) {
         return;
       }
 
-      if (!isAnswered && ['1', '2', '3', '4'].includes(event.key)) {
+      if (!isAnswered && ["1", "2", "3", "4"].includes(event.key)) {
         event.preventDefault();
         const index = parseInt(event.key) - 1;
         optionButtonsRef.current[index]?.click();
       }
 
-      if (isAnswered && (event.key === 'Enter' || event.key === ' ')) {
+      if (isAnswered && (event.key === "Enter" || event.key === " ")) {
         event.preventDefault();
         nextButtonRef.current?.click();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isAnswered]);
 
@@ -227,8 +254,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     setIsAnswered(true);
     const isCorrect = index === currentQuestion.correctAnswerIndex;
 
-    if (sessionSettings.focus === 'review' || sessionSettings.focus === 'reviewFlagged') {
-      // SRS and flagged-review modes: update existing queues only, no new AI questions
+    if (sessionSettings.focus === "review") {
       updateReviewQuestion(currentQuestion, isCorrect);
     } else {
       if (!isCorrect) {
@@ -236,7 +262,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       }
     }
 
-    // New richer performance record – used for the system/subcategory/condition heatmaps
+    // Record detailed performance, including system/subcategory/condition
     addPerformanceRecord({
       timestamp: Date.now(),
       system: currentQuestion.system ?? null,
@@ -246,33 +272,45 @@ const QuizView: React.FC<QuizViewProps> = ({
       topic: currentQuestion.topic,
       isCorrect,
       focus: sessionSettings.focus,
-      difficulty: sessionSettings.difficulty
+      difficulty: sessionSettings.difficulty,
     });
   };
 
   const handleExplainDifferently = useCallback(async () => {
     if (!currentQuestion || selectedAnswerIndex === null) return;
-    
+
     setIsExplainerLoading(true);
     setAlternateRationale(null);
-    
+
     try {
-      const userAnswer = currentQuestion.options[selectedAnswerIndex];
-      const correctAnswer = currentQuestion.options[currentQuestion.correctAnswerIndex];
-      const explanation = await generateAlternateRationale(currentQuestion, userAnswer, correctAnswer);
+      const userAnswer =
+        currentQuestion.options[selectedAnswerIndex];
+      const correctAnswer =
+        currentQuestion.options[currentQuestion.correctAnswerIndex];
+      const explanation = await generateAlternateRationale(
+        currentQuestion,
+        userAnswer,
+        correctAnswer
+      );
       setAlternateRationale(explanation);
     } catch (err) {
       if (err instanceof Error) {
-        setAlternateRationale(`Sorry, an error occurred while generating a new explanation: ${err.message}`);
+        setAlternateRationale(
+          `Sorry, an error occurred while generating a new explanation: ${err.message}`
+        );
       } else {
-        setAlternateRationale("Sorry, an unknown error occurred while generating a new explanation.");
+        setAlternateRationale(
+          "Sorry, an unknown error occurred while generating a new explanation."
+        );
       }
     } finally {
       setIsExplainerLoading(false);
     }
   }, [currentQuestion, selectedAnswerIndex]);
 
-  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleNoteChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     const newNote = e.target.value;
     setLocalNote(newNote);
 
@@ -298,30 +336,46 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   const topicStats = useMemo(() => {
     if (!isAnswered || !currentQuestion) return null;
-    
+
     const topicQuestions = performanceData
-      .filter(p => p.topic === currentQuestion.topic)
+      .filter((p) => p.topic === currentQuestion.topic)
       .slice(-100);
-      
-    const correct = topicQuestions.filter(p => p.isCorrect).length;
+
+    const correct = topicQuestions.filter((p) => p.isCorrect).length;
     const total = topicQuestions.length;
     const score = total > 0 ? (correct / total) * 100 : 0;
-    
+
     return { score, correct, total };
   }, [isAnswered, currentQuestion, performanceData]);
 
   const getBarColor = (score: number): string => {
-    if (score < 50) return 'bg-red-500';
-    if (score < 80) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (score < 50) return "bg-red-500";
+    if (score < 80) return "bg-yellow-500";
+    return "bg-green-500";
   };
-  
+
   if (!currentQuestion) {
     if (initialQueue.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center">
-          <h2 className="text-2xl font-bold mb-4">Question Queue Empty</h2>
-          <p className="text-slate-600">Please start a new session from the menu.</p>
+        <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
+          <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
+          <p className="text-slate-600">
+            You’ve reached the end of this set of questions.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
+            <button
+              onClick={onShowMenu}
+              className="px-6 py-2 bg-slate-800 text-white font-semibold rounded-lg hover:bg-slate-900 transition-colors shadow-md"
+            >
+              Back to Dashboard
+            </button>
+            <button
+              onClick={onEndSession}
+              className="px-6 py-2 bg-slate-200 text-slate-800 font-semibold rounded-lg hover:bg-slate-300 transition-colors"
+            >
+              End Session
+            </button>
+          </div>
         </div>
       );
     }
@@ -334,7 +388,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-3 min-w-0">
             {/* Back to dashboard */}
-            <button 
+            <button
               onClick={onShowMenu}
               className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors flex-shrink-0"
               aria-label="Back to Menu"
@@ -345,14 +399,16 @@ const QuizView: React.FC<QuizViewProps> = ({
               Question {questionNumber}
             </p>
           </div>
-          
+
           <div className="flex items-center space-x-2 flex-shrink-0">
             {/* Flag */}
             <button
               onClick={toggleFlag}
               title={isFlagged ? "Unflag for review" : "Flag for review"}
               className={`p-1.5 rounded-full transition-colors ${
-                isFlagged ? 'bg-yellow-100 text-yellow-600' : 'text-slate-500 hover:bg-slate-200'
+                isFlagged
+                  ? "bg-yellow-100 text-yellow-600"
+                  : "text-slate-500 hover:bg-slate-200"
               }`}
             >
               <FlagIcon className="w-5 h-5" />
@@ -361,9 +417,11 @@ const QuizView: React.FC<QuizViewProps> = ({
             {/* Clear Highlights */}
             <button
               onClick={() => {
-                const container = document.getElementById("question-container");
+                const container =
+                  document.getElementById("question-container");
                 if (!container) return;
-                const spans = container.querySelectorAll("span.user-highlight");
+                const spans =
+                  container.querySelectorAll("span.user-highlight");
                 spans.forEach((s) => {
                   const parent = s.parentNode;
                   if (!parent) return;
@@ -381,16 +439,20 @@ const QuizView: React.FC<QuizViewProps> = ({
 
             {/* Font size controls */}
             <div className="flex items-center border border-slate-300 rounded-md">
-              <button 
-                onClick={() => setFontSizeAdjustment(prev => prev - 1)}
+              <button
+                onClick={() =>
+                  setFontSizeAdjustment((prev) => prev - 1)
+                }
                 className="px-2 py-0.5 text-slate-600 hover:bg-slate-200 rounded-l-md text-sm"
                 aria-label="Decrease font size"
               >
                 A-
               </button>
               <div className="w-px h-4 bg-slate-300"></div>
-              <button 
-                onClick={() => setFontSizeAdjustment(prev => prev + 1)}
+              <button
+                onClick={() =>
+                  setFontSizeAdjustment((prev) => prev + 1)
+                }
                 className="px-2 py-0.5 text-slate-600 hover:bg-slate-200 rounded-r-md text-sm"
                 aria-label="Increase font size"
               >
@@ -417,27 +479,30 @@ const QuizView: React.FC<QuizViewProps> = ({
           const isSelected = index === selectedAnswerIndex;
 
           let buttonClasses =
-            'w-full text-left p-4 rounded-xl transition-all duration-200 ease-in-out disabled:cursor-not-allowed active:scale-[0.98] font-medium';
-          let animationClass = '';
+            "w-full text-left p-4 rounded-xl transition-all duration-200 ease-in-out disabled:cursor-not-allowed active:scale-[0.98] font-medium";
+          let animationClass = "";
 
           if (isAnswered) {
             if (isCorrect) {
-              buttonClasses += ' !bg-green-600 !text-white !border-transparent font-bold shadow-md';
+              buttonClasses +=
+                " !bg-green-600 !text-white !border-transparent font-bold shadow-md";
             } else if (isSelected) {
-              buttonClasses += ' !bg-red-600 !text-white !border-transparent font-bold shadow-md';
-              animationClass = 'animate-shake';
+              buttonClasses +=
+                " !bg-red-600 !text-white !border-transparent font-bold shadow-md";
+              animationClass = "animate-shake";
             } else {
-              buttonClasses += ' bg-white border border-slate-300 shadow-sm text-[#333333] opacity-60';
+              buttonClasses +=
+                " bg-white border border-slate-300 shadow-sm text-[#333333] opacity-60";
             }
           } else {
             buttonClasses +=
-              ' bg-white border border-slate-300 shadow-sm text-[#333333] hover:shadow-lg hover:border-[#3D1B0E] hover:-translate-y-px';
+              " bg-white border border-slate-300 shadow-sm text-[#333333] hover:shadow-lg hover:border-[#3D1B0E] hover:-translate-y-px";
           }
 
           return (
             <button
               key={index}
-              ref={el => {
+              ref={(el) => {
                 optionButtonsRef.current[index] = el;
               }}
               onClick={() => handleOptionClick(index)}
@@ -457,34 +522,44 @@ const QuizView: React.FC<QuizViewProps> = ({
           {topicStats && (
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
               <div className="flex justify-between items-center mb-1 text-sm">
-                <span className="font-semibold text-slate-700">{currentQuestion.topic}</span>
+                <span className="font-semibold text-slate-700">
+                  {currentQuestion.topic}
+                </span>
                 <span className="font-medium text-slate-500">
-                  {topicStats.score.toFixed(0)}% ({topicStats.correct}/{topicStats.total})
+                  {topicStats.score.toFixed(0)}% (
+                  {topicStats.correct}/{topicStats.total})
                 </span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2.5">
                 <div
-                  className={`h-2.5 rounded-full ${getBarColor(topicStats.score)} transition-all duration-500 ease-out`}
+                  className={`h-2.5 rounded-full ${getBarColor(
+                    topicStats.score
+                  )} transition-all duration-500 ease-out`}
                   style={{ width: `${topicStats.score}%` }}
                 ></div>
               </div>
             </div>
           )}
           <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg feedback-content">
-            <h3 className="font-bold text-lg mb-2 text-slate-800">Rationale</h3>
+            <h3 className="font-bold text-lg mb-2 text-slate-800">
+              Rationale
+            </h3>
             <div
               className="text-slate-700 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: currentQuestion.rationale }}
             />
 
-            {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
+            {selectedAnswerIndex !==
+              currentQuestion.correctAnswerIndex && (
               <div className="mt-4">
                 <button
                   onClick={handleExplainDifferently}
                   disabled={isExplainerLoading}
                   className="px-4 py-2 bg-[#E6A495] text-[#3D1B0E] font-semibold rounded-lg hover:bg-[#d99282] transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
                 >
-                  {isExplainerLoading ? 'Thinking...' : 'Explain this differently'}
+                  {isExplainerLoading
+                    ? "Thinking..."
+                    : "Explain this differently"}
                 </button>
               </div>
             )}
@@ -494,19 +569,23 @@ const QuizView: React.FC<QuizViewProps> = ({
                 <div className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"></div>
                 <div
                   className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"
-                  style={{ animationDelay: '0.2s' }}
+                  style={{ animationDelay: "0.2s" }}
                 ></div>
                 <div
                   className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"
-                  style={{ animationDelay: '0.4s' }}
+                  style={{ animationDelay: "0.4s" }}
                 ></div>
-                <span className="text-sm">Generating new explanation...</span>
+                <span className="text-sm">
+                  Generating new explanation...
+                </span>
               </div>
             )}
 
             {alternateRationale && !isExplainerLoading && (
               <div className="mt-4 pt-4 border-t border-slate-200 animate-fade-in">
-                <h4 className="font-bold text-md mb-2 text-slate-800">Alternate Explanation</h4>
+                <h4 className="font-bold text-md mb-2 text-slate-800">
+                  Alternate Explanation
+                </h4>
                 <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
                   {alternateRationale}
                 </p>
@@ -519,13 +598,18 @@ const QuizView: React.FC<QuizViewProps> = ({
               </h3>
               <ul className="list-disc list-inside space-y-1 text-slate-700">
                 {currentQuestion.pearls.map((pearl, index) => (
-                  <li key={index} dangerouslySetInnerHTML={{ __html: pearl }} />
+                  <li
+                    key={index}
+                    dangerouslySetInnerHTML={{ __html: pearl }}
+                  />
                 ))}
               </ul>
             </div>
 
             <div className="mt-4 pt-4 border-t border-slate-200">
-              <h3 className="font-bold text-lg mb-2 text-slate-800">My Notes</h3>
+              <h3 className="font-bold text-lg mb-2 text-slate-800">
+                My Notes
+              </h3>
               <textarea
                 value={localNote}
                 onChange={handleNoteChange}
