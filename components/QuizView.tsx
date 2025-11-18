@@ -153,19 +153,20 @@ const QuizView: React.FC<QuizViewProps> = ({
   removeFlaggedQuestion,
   updateQuestionNote,
 }) => {
+  // ---- QUEUE HANDLING ----
+  const [queue, setQueue] = useState<Question[]>(initialQueue);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(
     initialQueue[0] || null
   );
-  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(
-    null
-  );
+
+  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [questionNumber, setQuestionNumber] = useState<number>(1);
-  const [alternateRationale, setAlternateRationale] = useState<string | null>(
-    null
-  );
-  const [isExplainerLoading, setIsExplainerLoading] =
-    useState<boolean>(false);
+
+  const [showRationale, setShowRationale] = useState<boolean>(false);
+  const [alternateRationale, setAlternateRationale] = useState<string | null>(null);
+  const [isRequestingAltRationale, setIsRequestingAltRationale] = useState<boolean>(false);
+
   const [localNote, setLocalNote] = useState<string>("");
 
   const noteUpdateTimeout = useRef<number | null>(null);
@@ -174,68 +175,76 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   const isFlagged = useMemo(() => {
     if (!currentQuestion) return false;
-    return flaggedQuestions.some(
-      (q) => q.question === currentQuestion.question
-    );
+    return flaggedQuestions.some((q) => q.question === currentQuestion.question);
   }, [currentQuestion, flaggedQuestions]);
 
-  // inside QuizView.tsx
+  // Keep current question synced with queue[0]
+  useEffect(() => {
+    setCurrentQuestion(queue[0] || null);
+  }, [queue]);
 
-// Keep this near the top, after your imports and props, before JSX return
-const replenishQueue = useCallback(async () => {
-  // ❌ Do NOT replenish for SRS / flagged review modes
-  if (
-    sessionSettings.focus === "review" ||
-    sessionSettings.focus === "reviewFlagged"
-  ) {
-    return;
-  }
+  // ---- SHOULD WE REPLENISH ENDLESSLY? ----
+  const shouldEndlesslyReplenish =
+    sessionSettings.focus !== "review" &&
+    sessionSettings.focus !== "reviewFlagged";
 
-  try {
-    const newQuestion = await fetchNewQuestion(sessionSettings, growthAreas);
-    setParentQueue((prevQueue) => [...prevQueue, newQuestion]);
-  } catch (error) {
-    console.error("Failed to replenish queue in background:", error);
-    // We *don't* throw here so the current session can keep going
-  }
-}, [sessionSettings, growthAreas, setParentQueue]);
+  // ---- REPLENISH QUEUE ----
+  const replenishQueue = useCallback(async () => {
+    if (!shouldEndlesslyReplenish) return;
 
-const showNextQuestion = useCallback(() => {
-  setParentQueue((prevQueue) => {
-    const nextQueue = prevQueue.slice(1);
-    const nextQuestion = nextQueue[0] ?? null;
+    try {
+      setIsLoading(true);
+      const newQuestion = await fetchNewQuestion(sessionSettings, growthAreas);
 
-    setCurrentQuestion(nextQuestion);
-    setLocalNote(nextQuestion?.userNote || "");
-
-    // Kick off background replenish for all non-review modes
-    if (
-      sessionSettings.focus !== "review" &&
-      sessionSettings.focus !== "reviewFlagged"
-    ) {
-      // fire-and-forget, errors handled inside replenishQueue
-      replenishQueue();
+      setParentQueue((prev) => [...prev, newQuestion]);
+      setQueue((prev) => [...prev, newQuestion]);
+    } catch (err: any) {
+      console.error("Failed to replenish queue:", err);
+      setError(err?.message || "Failed to load the next question.");
+    } finally {
+      setIsLoading(false);
     }
+  }, [
+    shouldEndlesslyReplenish,
+    sessionSettings,
+    growthAreas,
+    setParentQueue,
+    setIsLoading,
+    setError,
+  ]);
 
-    return nextQueue;
-  });
-}, [setParentQueue, sessionSettings.focus, replenishQueue]);
-
+  // ---- ADVANCE TO NEXT QUESTION ----
   const showNextQuestion = useCallback(() => {
     setIsAnswered(false);
     setSelectedAnswerIndex(null);
-    setQuestionNumber((prev) => prev + 1);
+    setShowRationale(false);
     setAlternateRationale(null);
-    setLocalNote("");
+    setIsRequestingAltRationale(false);
 
-    setParentQueue((prevQueue) => {
-      const nextQueue = prevQueue.slice(1);
-      setCurrentQuestion(nextQueue[0] || null);
-      return nextQueue;
+    setQueue((prev) => {
+      if (prev.length === 0) return prev;
+
+      const [, ...rest] = prev;
+      const newQueue = rest;
+
+      setParentQueue(newQueue);
+
+      if (!shouldEndlesslyReplenish && newQueue.length === 0) {
+        onEndSession();
+      }
+
+      return newQueue;
     });
 
-    replenishQueue();
-  }, [setParentQueue, replenishQueue]);
+    if (shouldEndlesslyReplenish) {
+      void replenishQueue();
+    }
+  }, [
+    setParentQueue,
+    shouldEndlesslyReplenish,
+    replenishQueue,
+    onEndSession,
+  ]);
 
   useEffect(() => {
     if (!currentQuestion && initialQueue.length > 0) {
