@@ -1,319 +1,326 @@
+// App.tsx
+import React, { useEffect, useMemo, useState } from "react";
+import QuizView from "./components/QuizView";
+import MenuView from "./components/MenuView";
+import Loader from "./components/Loader";
+import { prefetchQuestions } from "./services/geminiService";
+import type {
+  Question,
+  PerformanceRecord,
+  SessionSettings,
+  SystemCode,
+} from "./types";
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import type { PerformanceRecord, Question, TopicStats, SessionSettings } from './types';
-import QuizView from './components/QuizView';
-import MenuView from './components/MenuView';
-import Loader from './components/Loader';
-import { prefetchQuestions, refillShuffledContentQueue, refillShuffledTaskQueue } from './services/geminiService';
+const PERFORMANCE_KEY = "panceai_performance_v2";
+const MISSED_KEY = "panceai_missed_v2";
+const FLAGGED_KEY = "panceai_flagged_v2";
 
-type View = 'quiz' | 'menu';
+type View = "menu" | "quiz";
+
+const INITIAL_QUEUE_SIZE = 3;
+
+// ---- helpers: localStorage ----
+function safeParse<T>(raw: string | null, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+// very small SRS schedule: 1d → 3d → 7d → 14d
+function scheduleNextReview(level: number): string {
+  let days: number;
+  if (level <= 1) days = 1;
+  else if (level === 2) days = 3;
+  else if (level === 3) days = 7;
+  else days = 14;
+
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+}
 
 const App: React.FC = () => {
-  const [view, setView] = useState<View>('menu');
+  const [view, setView] = useState<View>("menu");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [loadingMessage, setLoadingMessage] = useState<string>('Generating with Gemini...');
   const [error, setError] = useState<string | null>(null);
-  const [performanceData, setPerformanceData] = useLocalStorage<PerformanceRecord[]>('panceQuizData', []);
-  const [missedQuestions, setMissedQuestions] = useLocalStorage<Question[]>('panceMissedQuestions', []);
-  const [flaggedQuestions, setFlaggedQuestions] = useLocalStorage<Question[]>('panceFlaggedQuestions', []);
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [fontSizeAdjustment, setFontSizeAdjustment] = useLocalStorage<number>('panceFontSizeAdjustment', 0);
-  
+
+  const [sessionSettings, setSessionSettings] = useState<SessionSettings | null>(
+    null
+  );
   const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
-  const [sessionSettings, setSessionSettings] = useState<SessionSettings>({
-    focus: 'all',
-    difficulty: 'same',
-  });
-  
-  const growthAreas = useMemo(() => {
-    const topics = [...new Set(performanceData.map(q => q.topic))];
-    const topicScores: TopicStats[] = topics.map(topic => {
-      const topicQuestions = performanceData.filter(q => q.topic === topic);
-      const correct = topicQuestions.filter(q => q.isCorrect).length;
-      const total = topicQuestions.length;
-      const score = total > 0 ? (correct / total) * 100 : 0;
-      return { topic, score, correct, total };
-    });
 
-    const significantTopics = topicScores.filter(t => t.total >= 5);
+  const [performanceData, setPerformanceData] = useState<PerformanceRecord[]>(
+    () => safeParse<PerformanceRecord[]>(
+      window.localStorage.getItem(PERFORMANCE_KEY),
+      []
+    )
+  );
+  const [missedQuestions, setMissedQuestions] = useState<Question[]>(() =>
+    safeParse<Question[]>(window.localStorage.getItem(MISSED_KEY), [])
+  );
+  const [flaggedQuestions, setFlaggedQuestions] = useState<Question[]>(() =>
+    safeParse<Question[]>(window.localStorage.getItem(FLAGGED_KEY), [])
+  );
 
-    const redTopics = significantTopics
-      .filter(t => t.score < 70)
-      .sort((a, b) => a.score - b.score)
-      .map(t => t.topic);
+  const [fontSizeAdjustment, setFontSizeAdjustment] = useState<number>(0);
 
-    if (redTopics.length > 0) {
-      return redTopics;
-    }
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-    const yellowTopics = significantTopics
-      .filter(t => t.score >= 70 && t.score <= 85)
-      .sort((a, b) => a.score - b.score)
-      .map(t => t.topic);
-
-    if (yellowTopics.length > 0) {
-      return yellowTopics;
-    }
-
-    return [];
+  // ---- persist to localStorage whenever these change ----
+  useEffect(() => {
+    window.localStorage.setItem(
+      PERFORMANCE_KEY,
+      JSON.stringify(performanceData)
+    );
   }, [performanceData]);
 
-  const handleStartSession = useCallback(async (settings: SessionSettings) => {
-    setModalOpen(false);
-    setView('quiz');
-    setIsLoading(true);
-    setLoadingMessage('Preparing your study session...');
-    setError(null);
-    setSessionSettings(settings);
+  useEffect(() => {
+    window.localStorage.setItem(MISSED_KEY, JSON.stringify(missedQuestions));
+  }, [missedQuestions]);
 
-    try {
-      let initialQuestions: Question[] = [];
-      if (settings.focus === 'review' && missedQuestions.length > 0) {
-        const today = new Date().toISOString().split('T')[0];
-        const dueQuestions = missedQuestions.filter(q => q.nextReviewDate && q.nextReviewDate <= today);
-        initialQuestions = [...dueQuestions].sort(() => 0.5 - Math.random());
-      } else if (settings.focus === 'reviewFlagged' && flaggedQuestions.length > 0) {
-        initialQuestions = [...flaggedQuestions].sort(() => 0.5 - Math.random());
-      } else {
-        if (settings.focus === 'all') {
-          refillShuffledContentQueue();
-          refillShuffledTaskQueue();
-        }
-        initialQuestions = await prefetchQuestions(3, settings, growthAreas);
-      }
-      setQuestionQueue(initialQuestions);
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unknown error occurred while preparing the session.");
-      }
-      setView('menu'); // Go back to menu on error
-    } finally {
-      setIsLoading(false);
-      setLoadingMessage('Generating with Gemini...'); // Reset message
+  useEffect(() => {
+    window.localStorage.setItem(FLAGGED_KEY, JSON.stringify(flaggedQuestions));
+  }, [flaggedQuestions]);
+
+  // ---- derived: “growth areas” and heatmap data ----
+  // Heatmap must ONLY use PANCE-level all-topics sessions
+  const heatmapPerformance = useMemo(
+    () =>
+      performanceData.filter(
+        (r) => r.focus === "all" && r.difficulty === "same"
+      ),
+    [performanceData]
+  );
+
+  // Growth areas by topic, from the same filtered performance
+  const growthAreas: string[] = useMemo(() => {
+    if (heatmapPerformance.length === 0) return [];
+
+    const byTopic = new Map<
+      string,
+      { correct: number; total: number }
+    >();
+
+    for (const rec of heatmapPerformance) {
+      const bucket = byTopic.get(rec.topic) ?? { correct: 0, total: 0 };
+      bucket.total += 1;
+      if (rec.isCorrect) bucket.correct += 1;
+      byTopic.set(rec.topic, bucket);
     }
-  }, [growthAreas, missedQuestions, flaggedQuestions]);
 
-  const addMissedQuestion = useCallback((question: Question) => {
-    setMissedQuestions(prev => {
-      const existingQuestionIndex = prev.findIndex(q => q.question === question.question);
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const nextReviewDate = tomorrow.toISOString().split('T')[0];
+    const topicStats = Array.from(byTopic.entries())
+      .map(([topic, { correct, total }]) => ({
+        topic,
+        total,
+        score: total ? (correct / total) * 100 : 0,
+      }))
+      .filter((t) => t.total >= 10) // only topics you’ve actually seen
+      .sort((a, b) => a.score - b.score); // weakest first
 
-      if (existingQuestionIndex !== -1) {
-        const updatedQuestions = [...prev];
-        const questionToUpdate = { ...updatedQuestions[existingQuestionIndex] };
-        questionToUpdate.repetitionLevel = 1;
-        questionToUpdate.nextReviewDate = nextReviewDate;
-        updatedQuestions[existingQuestionIndex] = questionToUpdate;
-        return updatedQuestions;
-      } else {
-        const newMissedQuestion: Question = {
-          ...question,
-          repetitionLevel: 1,
-          nextReviewDate: nextReviewDate,
-        };
-        return [...prev, newMissedQuestion];
-      }
-    });
-  }, [setMissedQuestions]);
+    return topicStats.slice(0, 5).map((t) => t.topic);
+  }, [heatmapPerformance]);
 
-  const updateReviewQuestion = useCallback((reviewedQuestion: Question, wasCorrect: boolean) => {
-    setMissedQuestions(prev => {
-      const questionIndex = prev.findIndex(q => q.question === reviewedQuestion.question);
-      if (questionIndex === -1) return prev; 
+  // ---- performance record hook passed into QuizView ----
+  const addPerformanceRecord = (record: PerformanceRecord) => {
+    setPerformanceData((prev) => [...prev, record]);
+  };
 
-      const updatedQuestions = [...prev];
+  // ---- missed-question handling ----
+  const addMissedQuestion = (question: Question) => {
+    // When you miss during a normal session, seed its SRS metadata
+    const now = new Date().toISOString().split("T")[0];
+    const base: Question = {
+      ...question,
+      repetitionLevel: question.repetitionLevel ?? 1,
+      nextReviewDate: question.nextReviewDate ?? now,
+    };
 
-      if (wasCorrect) {
-        const questionToUpdate = { ...updatedQuestions[questionIndex] };
-        const currentLevel = questionToUpdate.repetitionLevel || 1;
-        const newLevel = currentLevel + 1;
-        
-        if (newLevel >= 5) {
-          updatedQuestions.splice(questionIndex, 1);
-          return updatedQuestions;
+    setMissedQuestions((prev) => [...prev, base]);
+  };
+
+  const updateReviewQuestion = (question: Question, wasCorrect: boolean) => {
+    setMissedQuestions((prev) =>
+      prev.map((q) => {
+        if (q.question !== question.question) return q;
+
+        const currentLevel = q.repetitionLevel ?? 1;
+
+        if (wasCorrect) {
+          const newLevel = currentLevel + 1;
+          return {
+            ...q,
+            repetitionLevel: newLevel,
+            nextReviewDate: scheduleNextReview(newLevel),
+          };
+        } else {
+          // reset if incorrect in review mode
+          const newLevel = 1;
+          return {
+            ...q,
+            repetitionLevel: newLevel,
+            nextReviewDate: scheduleNextReview(newLevel),
+          };
         }
-        
-        questionToUpdate.repetitionLevel = newLevel;
-        const nextReview = new Date();
-        let daysToAdd = 0;
-        if (newLevel === 2) daysToAdd = 3;
-        else if (newLevel === 3) daysToAdd = 7;
-        else if (newLevel === 4) daysToAdd = 14;
-        
-        nextReview.setDate(nextReview.getDate() + daysToAdd);
-        questionToUpdate.nextReviewDate = nextReview.toISOString().split('T')[0];
-        updatedQuestions[questionIndex] = questionToUpdate;
-        
-      } else { 
-        const questionToUpdate = { ...updatedQuestions[questionIndex] };
-        questionToUpdate.repetitionLevel = 1;
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        questionToUpdate.nextReviewDate = tomorrow.toISOString().split('T')[0];
-        updatedQuestions[questionIndex] = questionToUpdate;
-      }
-      
-      return updatedQuestions;
+      })
+    );
+  };
+
+  // ---- flagged-question helpers ----
+  const addFlaggedQuestion = (question: Question) => {
+    setFlaggedQuestions((prev) => {
+      if (prev.some((q) => q.question === question.question)) return prev;
+      return [...prev, question];
     });
-  }, [setMissedQuestions]);
+  };
 
-  const addPerformanceRecord = useCallback((record: PerformanceRecord) => {
-    setPerformanceData(prevData => [...prevData, record]);
-  }, [setPerformanceData]);
+  const removeFlaggedQuestion = (question: Question) => {
+    setFlaggedQuestions((prev) =>
+      prev.filter((q) => q.question !== question.question)
+    );
+  };
 
-  const addFlaggedQuestion = useCallback((question: Question) => {
-    setFlaggedQuestions(prev => {
-        if (prev.some(q => q.question === question.question)) {
-            return prev; // Already flagged
-        }
-        return [...prev, question];
-    });
-  }, [setFlaggedQuestions]);
+  // ---- notes: keep notes in all places a question might live ----
+  const updateQuestionNote = (question: Question, note: string) => {
+    const updater = (q: Question) =>
+      q.question === question.question ? { ...q, userNote: note } : q;
 
-  const removeFlaggedQuestion = useCallback((question: Question) => {
-    setFlaggedQuestions(prev => prev.filter(q => q.question !== question.question));
-  }, [setFlaggedQuestions]);
+    setQuestionQueue((prev) => prev.map(updater));
+    setMissedQuestions((prev) => prev.map(updater));
+    setFlaggedQuestions((prev) => prev.map(updater));
+  };
 
-  const updateQuestionNote = useCallback((questionToUpdate: Question, note: string) => {
-    const updater = (q: Question) => q.question === questionToUpdate.question ? { ...q, userNote: note } : q;
-    setQuestionQueue(prev => prev.map(updater));
-    setMissedQuestions(prev => prev.map(updater));
-    setFlaggedQuestions(prev => prev.map(updater));
-  }, [setQuestionQueue, setMissedQuestions, setFlaggedQuestions]);
-
-
+  // ---- clearing data from MenuView buttons ----
   const clearPerformanceData = () => {
-    if (window.confirm("Are you sure you want to delete all your performance data? This cannot be undone.")) {
-      setPerformanceData([]);
-      setQuestionQueue([]);
-      setView('menu');
-    }
+    setPerformanceData([]);
   };
 
   const clearMissedQuestionsData = () => {
-    if (window.confirm("Are you sure you want to clear your Missed Question Bank? This cannot be undone.")) {
-        setMissedQuestions([]);
-    }
+    setMissedQuestions([]);
   };
 
   const clearFlaggedQuestionsData = () => {
-    if (window.confirm("Are you sure you want to clear your Flagged Questions? This cannot be undone.")) {
-        setFlaggedQuestions([]);
-    }
-  };
-  
-  const handleEndSession = () => {
-    if (window.confirm("Are you sure you want to end this session? Your current question queue will be cleared.")) {
-      setQuestionQueue([]);
-      setView('menu');
-    }
+    setFlaggedQuestions([]);
   };
 
-  const handleShowMenu = () => {
+  // ---- starting a session ----
+  const handleStartSession = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmSession = async (settings: SessionSettings) => {
+    setIsModalOpen(false);
+    setSessionSettings(settings);
     setError(null);
-    setView('menu');
-  };
 
-  const handleShowQuiz = () => {
-    if (questionQueue.length > 0) {
-      setError(null);
-      setView('quiz');
-    } else {
-      setModalOpen(true); // If no questions, prompt to start a session
+    // DUE + FLAGGED are finite; no background stream. Other modes:
+    // - Only ALL + SAME should be endless (handled in QuizView via replenishQueue)
+    try {
+      setIsLoading(true);
+
+      if (settings.focus === "review") {
+        const today = new Date().toISOString().split("T")[0];
+        const due = missedQuestions.filter(
+          (q) => q.nextReviewDate && q.nextReviewDate <= today
+        );
+        setQuestionQueue(due);
+        setView("quiz");
+      } else if (settings.focus === "reviewFlagged") {
+        setQuestionQueue(flaggedQuestions);
+        setView("quiz");
+      } else {
+        const initialQuestions = await prefetchQuestions(
+          INITIAL_QUEUE_SIZE,
+          settings,
+          growthAreas
+        );
+        setQuestionQueue(initialQuestions);
+        setView("quiz");
+      }
+    } catch (err: any) {
+      console.error("Error starting session:", err);
+      setError(
+        err?.message || "Failed to start session. Please try again in a moment."
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handleEndSession = () => {
+    // Just go back to menu; keep performance/missed/flagged
+    setView("menu");
+    setSessionSettings(null);
+    setQuestionQueue([]);
+  };
+
+  const handleBackToQuiz = () => {
+    if (questionQueue.length > 0 && sessionSettings) {
+      setView("quiz");
+    } else {
+      // no active session → open setup
+      setIsModalOpen(true);
+    }
+  };
+
+  const hasActiveSession =
+    !!sessionSettings && questionQueue && questionQueue.length > 0;
 
   return (
-    <div 
-      className="min-h-screen bg-[#FDFDFD] text-[#333333] flex flex-col items-center justify-center p-4"
-      style={{ '--font-size-adj': `${fontSizeAdjustment}px` } as React.CSSProperties}
-    >
-      <div className="relative w-full max-w-3xl min-h-[600px] bg-white rounded-2xl shadow-2xl p-6 md:p-10 transition-all duration-300">
-        
-        {isLoading && <Loader message={loadingMessage} />}
-        
+    <div className="min-h-screen bg-[#F6F1EC] text-[#1F2933]">
+      <div className="max-w-4xl mx-auto px-4 py-6 md:py-10">
+        {isLoading && <Loader />}
         {error && (
-          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20 rounded-2xl p-4">
-            <h2 className="text-xl font-bold text-red-600 mb-2">An Error Occurred</h2>
-            <p className="text-center text-red-500">{error}</p>
-            <button 
-              onClick={() => {
-                setError(null);
-                setView('menu'); // Go back to menu on error
-              }}
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-            >
-              Back to Menu
-            </button>
+          <div className="mb-4 p-3 rounded-md bg-red-100 text-red-700 text-sm">
+            {error}
           </div>
         )}
-        
-        <div className={view === 'menu' ? 'block' : 'hidden'}>
-          <MenuView 
-            performanceData={performanceData}
+
+        {view === "menu" && (
+          <MenuView
+            performanceData={heatmapPerformance}
             missedQuestions={missedQuestions}
             flaggedQuestions={flaggedQuestions}
-            onBackToQuiz={handleShowQuiz} // This is now "Continue Session"
-            hasActiveSession={questionQueue.length > 0}
+            onBackToQuiz={handleBackToQuiz}
+            hasActiveSession={hasActiveSession}
             clearPerformanceData={clearPerformanceData}
             clearMissedQuestionsData={clearMissedQuestionsData}
             clearFlaggedQuestionsData={clearFlaggedQuestionsData}
             setIsLoading={setIsLoading}
             setError={setError}
-            onStartSession={() => setModalOpen(true)}
+            onStartSession={handleStartSession}
             isModalOpen={isModalOpen}
-            onCloseModal={() => setModalOpen(false)}
-            onConfirmSession={handleStartSession}
+            onCloseModal={() => setIsModalOpen(false)}
+            onConfirmSession={handleConfirmSession}
             growthAreas={growthAreas}
           />
-        </div>
+        )}
 
-        <div className={view === 'quiz' ? 'block' : 'hidden'}>
-          {questionQueue.length > 0 ? (
-            <QuizView
-              initialQueue={questionQueue}
-              setParentQueue={setQuestionQueue}
-              addPerformanceRecord={addPerformanceRecord}
-              addMissedQuestion={addMissedQuestion}
-              updateReviewQuestion={updateReviewQuestion}
-              setIsLoading={setIsLoading}
-              setError={setError}
-              sessionSettings={sessionSettings}
-              growthAreas={growthAreas}
-              onEndSession={handleEndSession}
-              onShowMenu={handleShowMenu}
-              performanceData={performanceData}
-              fontSizeAdjustment={fontSizeAdjustment}
-              setFontSizeAdjustment={setFontSizeAdjustment}
-              flaggedQuestions={flaggedQuestions}
-              addFlaggedQuestion={addFlaggedQuestion}
-              removeFlaggedQuestion={removeFlaggedQuestion}
-              updateQuestionNote={updateQuestionNote}
-            />
-          ) : (
-            // This view is shown if the queue runs out or fails to load
-            <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
-              <h2 className="text-2xl font-bold mb-4">Session Over</h2>
-              <p className="text-slate-600 mb-6 text-center">You've completed all the questions in this session.</p>
-              <button
-                onClick={() => setModalOpen(true)}
-                className="px-6 py-3 bg-[#3D1B0E] text-white font-bold rounded-lg hover:bg-[#2b130a] transition-colors"
-              >
-                Start a New Session
-              </button>
-            </div>
-          )}
-        </div>
-
+        {view === "quiz" && sessionSettings && (
+          <QuizView
+            initialQueue={questionQueue}
+            setParentQueue={setQuestionQueue}
+            addPerformanceRecord={addPerformanceRecord}
+            addMissedQuestion={addMissedQuestion}
+            updateReviewQuestion={updateReviewQuestion}
+            setIsLoading={setIsLoading}
+            setError={setError}
+            sessionSettings={sessionSettings}
+            growthAreas={growthAreas}
+            onEndSession={handleEndSession}
+            onShowMenu={() => setView("menu")}
+            performanceData={heatmapPerformance}
+            fontSizeAdjustment={fontSizeAdjustment}
+            setFontSizeAdjustment={setFontSizeAdjustment}
+            flaggedQuestions={flaggedQuestions}
+            addFlaggedQuestion={addFlaggedQuestion}
+            removeFlaggedQuestion={removeFlaggedQuestion}
+            updateQuestionNote={updateQuestionNote}
+          />
+        )}
       </div>
-      <footer className="text-center text-slate-500 mt-6 text-sm">
-        <p>PANCE AI Practice Quiz</p>
-      </footer>
     </div>
   );
 };
