@@ -41,10 +41,31 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [selectedTopic, setSelectedTopic] = useState<TopicStats | null>(null);
 
   const stats = useMemo(() => {
-    const last360 = performanceData.slice(-360);
-    const correct360 = last360.filter(q => q.isCorrect).length;
-    const overallScore =
-      last360.length > 0 ? (correct360 / last360.length) * 100 : 0;
+  // PANCE-level, ALL-topics sessions only
+  const panceAll = performanceData.filter(
+    (q) => q.focus === 'all' // (and optionally q.difficulty === 'same')
+  );
+
+  const last360 = panceAll.slice(-360);
+  const correct360 = last360.filter(q => q.isCorrect).length;
+  const overallScore = last360.length > 0 ? (correct360 / last360.length) * 100 : 0;
+
+  const topics: string[] = Array.from(new Set(panceAll.map(q => q.topic)));
+
+  const topicScores: TopicStats[] = topics
+    .map(topic => {
+      const topicQuestions = panceAll
+        .filter(q => q.topic === topic)
+        .slice(-100);
+      const correct = topicQuestions.filter(q => q.isCorrect).length;
+      const total = topicQuestions.length;
+      const score = total > 0 ? (correct / total) * 100 : 0;
+      return { topic, score, correct, total };
+    })
+    .sort((a, b) => b.total - a.total);
+
+  return { overallScore, correct360, total360: last360.length, topicScores };
+}, [performanceData]);
 
     const topics: string[] = Array.from(
       new Set(performanceData.map(q => q.topic))
