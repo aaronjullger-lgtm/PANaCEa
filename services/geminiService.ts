@@ -1,83 +1,3 @@
-// services/geminiService.ts
-
-import {
-  PANCE_TOPICS,
-  TOPIC_MAP,
-  ABBREVIATION_TO_TOPIC_MAP,
-  PANCE_DECK,
-  TASK_DECK,
-} from "../constants";
-import type {
-  Question,
-  SessionSettings,
-  SystemCode,
-  ConditionDefinition,
-} from "../types";
-import {
-  buildConditionDefinition,
-  getRandomConditionForSystem,
-  type ConditionMeta,
-} from "../conditionRegistry";
-
-// --- Helper: call Netlify serverless function, which talks to Gemini ---
-
-async function callGeminiText(
-  modelName: string,
-  prompt: string,
-  temperature: number = 0.8
-): Promise<string> {
-  const response = await fetch("/.netlify/functions/geminiProxy", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ modelName, prompt, temperature }),
-  });
-
-  if (!response.ok) {
-    console.error("Gemini proxy returned error status", response.status);
-    throw new Error("Gemini proxy error");
-  }
-
-  const data = await response.json();
-  const text = typeof data === "string" ? data : data.text;
-
-  if (!text || !text.trim()) {
-    throw new Error("Empty response from Gemini");
-  }
-
-  return text;
-}
-
-// --- Helper: strip any HTML tags from a string (for options/condition) ---
-
-const stripHtmlTags = (text: string): string =>
-  typeof text === "string" ? text.replace(/<\/?[^>]+(>|$)/g, "") : text;
-
-// --- Deck / history state ---
-
-let shuffledContentQueue: string[] = [];
-let shuffledTaskQueue: string[] = [];
-let recentQuestionHistory: string[] = [];
-const RECENT_HISTORY_COUNT = 10;
-
-// Shuffle helpers
-export function refillShuffledContentQueue() {
-  const deck = [...PANCE_DECK];
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  shuffledContentQueue = deck;
-}
-
-export function refillShuffledTaskQueue() {
-  const deck = [...TASK_DECK];
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  shuffledTaskQueue = deck;
-}
-
 // --- Main question generator ---
 
 export async function fetchNewQuestion(
@@ -114,7 +34,7 @@ export async function fetchNewQuestion(
   let chosenConditionDef: ConditionDefinition | undefined;
 
   // -------- FOCUS: ALL (use content + task decks) --------
-    if (focus === "all") {
+  if (focus === "all") {
     if (shuffledContentQueue.length === 0) {
       refillShuffledContentQueue();
     }
@@ -212,8 +132,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     }
   } else {
     // -------- FOCUS: topic / growth / generic --------
-    // (keep your existing non-"all" branch as you have it now)
-    // -------- FOCUS: topic / growth / generic --------
     let topicInstruction = "";
     if (focus === "topic" && settings.topic) {
       const fullTopicName =
@@ -264,129 +182,6 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   }
 
   // --- Call Gemini through proxy and parse JSON ---
-
-  try {
-    const jsonString = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
-
-    let parsed: any;
-    try {
-      parsed = JSON.parse(jsonString);
-    } catch (parseError) {
-      console.error(
-        "Failed to parse JSON from Gemini. String that failed:",
-        jsonString
-      );
-      throw new Error(
-        "The API returned a malformed JSON response. Please try again."
-      );
-    }
-
-    // Basic sanity checks
-    if (
-      !parsed.question ||
-      !parsed.question.includes("?") ||
-      !Array.isArray(parsed.options) ||
-      parsed.options.length !== 4 ||
-      typeof parsed.correctAnswerIndex !== "number" ||
-      !parsed.rationale ||
-      !parsed.topic ||
-      !parsed.condition ||
-      !Array.isArray(parsed.pearls)
-    ) {
-      console.warn(
-        "Received malformed JSON data from API, retrying once...",
-        parsed
-      );
-      return fetchNewQuestion(settings, growthAreas);
-    }
-
- // Keep question HTML (for tables), sanitize options & condition only
-parsed.options = parsed.options.map((opt: string) => stripHtmlTags(opt));
-parsed.condition = stripHtmlTags(parsed.condition);
-
-// Track recent questions for uniqueness
-if (recentQuestionHistory.length >= RECENT_HISTORY_COUNT) {
-  recentQuestionHistory.shift();
-}
-recentQuestionHistory.push(parsed.question);
-
-const topicAbbreviation = TOPIC_MAP[parsed.topic] || parsed.topic;
-if (!TOPIC_MAP[parsed.topic]) {
-  console.warn(
-    `API returned an unknown topic "${parsed.topic}". Storing it as-is.`
-  );
-}
-
-// Build the base question object
-const baseQuestion: Question = {
-  ...parsed,
-  topic: topicAbbreviation,
-};
-
-// If we pre-selected a condition (hybrid mode), lock it in here
-if (chosenConditionDef) {
-  baseQuestion.system = chosenConditionDef.system;
-  baseQuestion.subcategory = chosenConditionDef.subcategory;
-  baseQuestion.conditionId = chosenConditionDef.id;
-  baseQuestion.condition = chosenConditionDef.condition;
-}
-
-return baseQuestion;
-  } catch (error) {
-    console.error("Error during fetchNewQuestion:", error);
-    if (
-      error instanceof Error &&
-      (error.message.startsWith("The API returned an invalid response") ||
-        error.message.startsWith("The API returned a malformed JSON"))
-    ) {
-      throw error;
-    }
-    throw new Error(
-      "Failed to generate a new question. Please check your Gemini API key and network connection."
-    );
-  }
-}
-
-// --- Prefetch multiple questions ---
-
-export async function prefetchQuestions(
-  count: number,
-  settings: SessionSettings,
-  growthAreas: string[]
-): Promise<Question[]> {
-  const questions: Question[] = [];
-  for (let i = 0; i < count; i++) {
-    const question = await fetchNewQuestion(settings, growthAreas);
-    questions.push(question);
-  }
-  return questions;
-}
-
-// --- Study-guide / flashcard generator ---
-
-export async function generateContent(
-  type: "study-guide" | "flashcards",
-  topic: string,
-  useProModel: boolean
-): Promise<string> {
-  const fullTopicName = ABBREVIATION_TO_TOPIC_MAP[topic] || topic;
-
-  let prompt: string;
-  if (type === "study-guide") {
-    prompt = `Generate a concise, high-yield study guide for a PA student on the PANCE topic: "${fullTopicName}". Focus on pathophysiology, clinical presentation, diagnosis, and treatment. Format clearly with headings and bullet points.`;
-  } else {
-    prompt = `Generate 10 high-yield PANCE flashcards for the topic "${fullTopicName}". Format them as:
-
-Q: [Question]
-A: [Answer]
-
-(one per block).`;
-  }
-
-  const modelName = useProModel ? "gemini-2.5-pro" : "gemini-2.5-flash";
-  const temperature = useProModel ? 0.5 : 0.7;
-
-    // --- Call Gemini through proxy and parse JSON ---
 
   try {
     const rawText = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
@@ -489,6 +284,57 @@ A: [Answer]
       "Failed to generate a new question. Please check your Gemini API key and network connection."
     );
   }
+}
+
+// --- Prefetch multiple questions ---
+
+export async function prefetchQuestions(
+  count: number,
+  settings: SessionSettings,
+  growthAreas: string[]
+): Promise<Question[]> {
+  const questions: Question[] = [];
+  for (let i = 0; i < count; i++) {
+    const question = await fetchNewQuestion(settings, growthAreas);
+    questions.push(question);
+  }
+  return questions;
+}
+
+// --- Study-guide / flashcard generator ---
+
+export async function generateContent(
+  type: "study-guide" | "flashcards",
+  topic: string,
+  useProModel: boolean
+): Promise<string> {
+  const fullTopicName = ABBREVIATION_TO_TOPIC_MAP[topic] || topic;
+
+  let prompt: string;
+  if (type === "study-guide") {
+    prompt = `Generate a concise, high-yield study guide for a PA student on the PANCE topic: "${fullTopicName}". Focus on pathophysiology, clinical presentation, diagnosis, and treatment. Format clearly with headings and bullet points.`;
+  } else {
+    prompt = `Generate 10 high-yield PANCE flashcards for the topic "${fullTopicName}". Format them as:
+
+Q: [Question]
+A: [Answer]
+
+(one per block).`;
+  }
+
+  const modelName = useProModel ? "gemini-2.5-pro" : "gemini-2.5-flash";
+  const temperature = useProModel ? 0.5 : 0.7;
+
+  try {
+    const text = await callGeminiText(modelName, prompt, temperature);
+    return text;
+  } catch (error) {
+    console.error("Error generating content:", error);
+    throw new Error(
+      "Failed to generate content. The API may be busy or an error occurred."
+    );
+  }
+}
 
 // --- Alternate rationale generator ---
 
