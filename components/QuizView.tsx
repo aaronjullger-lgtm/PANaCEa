@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { fetchNewQuestion, generateAlternateRationale } from '../services/geminiService';
+import { recordQuestionOutcome } from '../services/performanceService';
 import type { Question, PerformanceRecord, SessionSettings } from '../types';
 import { CloseIcon } from './icons/CloseIcon';
 import { FlagIcon } from './icons/FlagIcon';
@@ -233,11 +234,20 @@ const QuizView: React.FC<QuizViewProps> = ({
       }
     }
 
+    // 🔹 Persisted condition-level stats (localStorage / heatmap)
+    recordQuestionOutcome(currentQuestion, isCorrect, sessionSettings);
+
+    // 🔹 In-memory per-session stats (for your topic bar, etc.)
     addPerformanceRecord({
       timestamp: Date.now(),
+      system: currentQuestion.system ?? null,
+      subcategory: currentQuestion.subcategory ?? null,
+      conditionId: currentQuestion.conditionId ?? null,
+      condition: currentQuestion.condition,
       topic: currentQuestion.topic,
-      isCorrect: isCorrect,
-      question: currentQuestion.question,
+      isCorrect,
+      focus: sessionSettings.focus,
+      difficulty: sessionSettings.difficulty,
     });
   };
 
