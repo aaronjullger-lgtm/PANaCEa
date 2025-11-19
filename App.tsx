@@ -117,7 +117,7 @@ const App: React.FC = () => {
         total,
         score: total ? (correct / total) * 100 : 0,
       }))
-      .filter((t) => t.total >= 10) // only topics you’ve actually seen
+      .filter((t) => t.total >= 3) // only topics you’ve actually seen
       .sort((a, b) => a.score - b.score); // weakest first
 
     return topicStats.slice(0, 5).map((t) => t.topic);
