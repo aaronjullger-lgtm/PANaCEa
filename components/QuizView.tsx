@@ -471,10 +471,10 @@ const QuizView: React.FC<QuizViewProps> = ({
             {/* Back to dashboard */}
             <button
               onClick={onShowMenu}
-              className="p-2 rounded-full bg-[#FCF9F6] border border-[#D0C7BF] hover:bg-white hover:border-[#3D1B0E] transition-colors shadow-sm flex-shrink-0"
+              className="p-2 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors h-10 w-10"
               aria-label="Back to Menu"
             >
-              <ArrowLeftIcon className="w-6 h-6 text-slate-700" />
+              <ArrowLeftIcon className="w-6 h-6 text-slate-600" />
             </button>
             <p className="text-sm font-medium text-slate-500 truncate">
               Question {questionNumber}
