@@ -80,25 +80,47 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     };
   }, [text]);
 
-  const hasTable = text.includes("<table");
+  // Normalize line breaks we get back from Gemini
+  const normalizedHtml = text
+    .replace(/&lt;br\s*\/?&gt;/gi, "<br />")
+    .replace(/\\n/g, "<br />");
 
-  // Table case – keep HTML but put it in a bordered card
+  const hasTable = normalizedHtml.includes("<table");
+
+  // Helper: find the last sentence in plain text and wrap it in <strong>…</strong>
+  const boldLastSentence = (html: string): string => {
+    // Strip tags to figure out the last sentence
+    const plain = html
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/?[^>]+(>|$)/g, "");
+
+    const match = plain.match(/[^.!?]+[.!?]+\s*$/);
+    if (!match) return html;
+
+    const sentence = match[0].trim();
+    if (!sentence) return html;
+
+    // Very simple: wrap the first occurrence of that sentence in <strong>.
+    // In practice this is almost always the final question line.
+    return html.replace(sentence, `<strong>${sentence}</strong>`);
+  };
+
   if (hasTable) {
+    const boldedHtml = boldLastSentence(normalizedHtml);
+
     return (
       <div
         ref={containerRef}
         id="question-container"
-        className="text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
+        className="question-content text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
-        dangerouslySetInnerHTML={{ __html: text }}
+        dangerouslySetInnerHTML={{ __html: boldedHtml }}
       />
     );
   }
 
-  // Non-table: split vignette vs question sentence
-  const normalizedText = text
-    .replace(/&lt;br\s*\/?&gt;/gi, "\n")
-    .replace(/<br\s*\/?>/gi, "\n");
+  // NON-TABLE QUESTIONS: strip all HTML tags so no stray <i> / <b> / "nody>" show up
+  const normalizedText = normalizedHtml.replace(/<\/?[^>]+(>|$)/g, "");
 
   const lastSentenceMatch = normalizedText.match(/[^.!?]+[.!?]+\s*$/);
 
@@ -107,14 +129,10 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       <div
         ref={containerRef}
         id="question-container"
-        className="border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
+        className="question-content text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
+        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
-        <div
-          className="text-xl md:text-2xl font-semibold leading-tight text-[#333333] whitespace-pre-wrap"
-          style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
-        >
-          {normalizedText}
-        </div>
+        <p className="font-semibold whitespace-pre-wrap">{normalizedText}</p>
       </div>
     );
   }
@@ -128,12 +146,12 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     <div
       ref={containerRef}
       id="question-container"
-      className="text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
+      className="question-content text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
-      <div className="!leading-[1.6]">
+      <div className="!leading-[1.6] space-y-4">
         <p className="font-normal whitespace-pre-wrap">{vignette}</p>
-        <p className="mt-4 font-semibold whitespace-pre-wrap">{lastSentence}</p>
+        <p className="font-semibold whitespace-pre-wrap">{lastSentence}</p>
       </div>
     </div>
   );
@@ -209,28 +227,30 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // ---- REPLENISH QUEUE (ALL / GROWTH / TOPIC) ----
   const replenishQueue = useCallback(async () => {
-    if (!shouldEndlesslyReplenish) return;
+  // Do NOT show the global loader here – this is background work
+  if (!shouldEndlesslyReplenish) return;
 
-    try {
-      setIsLoading(true);
-      const newQuestion = await fetchNewQuestion(sessionSettings, growthAreas);
+  try {
+    const newQuestion = await fetchNewQuestion(sessionSettings, growthAreas);
 
-      setParentQueue((prev) => [...prev, newQuestion]);
-      setQueue((prev) => [...prev, newQuestion]);
-    } catch (err: any) {
-      console.error("Failed to replenish queue:", err);
-      setError(err?.message || "Failed to load the next question.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    shouldEndlesslyReplenish,
-    sessionSettings,
-    growthAreas,
-    setParentQueue,
-    setIsLoading,
-    setError,
-  ]);
+    // keep both queues in sync
+    setParentQueue((prev) => [...prev, newQuestion]);
+    setQueue((prev) => [...prev, newQuestion]);
+  } catch (err: any) {
+    console.error("Failed to replenish queue:", err);
+    // soft-fail: show a small error but don't kill the session
+    setError(
+      err?.message ||
+        "Failed to load the next question. You can keep working with the current queue."
+    );
+  }
+}, [
+  shouldEndlesslyReplenish,
+  sessionSettings,
+  growthAreas,
+  setParentQueue,
+  setError,
+]);
 
   // ---- ADVANCE TO NEXT QUESTION ----
   const showNextQuestion = useCallback(() => {
