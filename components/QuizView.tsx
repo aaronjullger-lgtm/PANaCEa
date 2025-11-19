@@ -205,7 +205,6 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       </div>
     </div>
   );
-};
 
 const QuizView: React.FC<QuizViewProps> = ({
   initialQueue,
