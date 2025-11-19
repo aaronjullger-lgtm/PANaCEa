@@ -44,6 +44,7 @@ interface QuizViewProps {
 const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Text highlighting logic
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -52,7 +53,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       try {
         const selection = window.getSelection();
         if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
-          return;
+        return;
         }
 
         const range = selection.getRangeAt(0);
@@ -71,33 +72,38 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     };
 
     container.addEventListener("mouseup", handleMouseUp);
-    return () => container.removeEventListener("mouseup", handleMouseUp);
+    return () => {
+      container.removeEventListener("mouseup", handleMouseUp);
+    };
   }, [text]);
 
   const hasTable = text.includes("<table");
 
+  // ---------- TABLE BRANCH ----------
   if (hasTable) {
-    // --- Extract table ---
+    // 1) Extract table HTML
     const tableMatch = text.match(/<table[\s\S]*?<\/table>/i);
     const tableHTML = tableMatch ? tableMatch[0] : "";
 
-    // --- Remove table and normalize surrounding text ---
+    // 2) Replace table with a sentinel
     const beforeAfter = text.replace(tableHTML, "|||TABLE|||");
 
-    // Normalize breaks
+    // 3) Normalize line breaks
     const normalized = beforeAfter
       .replace(/&lt;br\s*\/?&gt;/gi, "\n")
       .replace(/<br\s*\/?>/gi, "\n")
       .replace(/\n{2,}/g, "\n")
       .trim();
 
-    const [beforeTable, afterTableRaw] = normalized.split("|||TABLE|||");
+    const [beforeTable = "", afterTableRaw = ""] =
+      normalized.split("|||TABLE|||");
 
+    // 4) Pull out the last sentence (the actual question) after the table
     const lastSentenceMatch = afterTableRaw.match(/[^.!?]+[.!?]+\s*$/);
     const lastSentence = lastSentenceMatch ? lastSentenceMatch[0].trim() : "";
 
     const vignetteAfterTable = lastSentence
-      ? afterTableRaw.replace(lastSentence, "").trim()
+      ? afterTableRaw.replace(lastSentenceMatch![0], "").trim()
       : afterTableRaw.trim();
 
     return (
@@ -107,7 +113,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
         className="text-xl md:text-2xl leading-relaxed text-[#333333] bg-[#FCF9F6] border border-[#D0C7BF] rounded-xl p-6 shadow-sm space-y-4"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
-        {/* Top vignette */}
+        {/* Text before the table */}
         {beforeTable && (
           <p className="whitespace-pre-wrap">{beforeTable}</p>
         )}
@@ -118,12 +124,12 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
           dangerouslySetInnerHTML={{ __html: tableHTML }}
         />
 
-        {/* Text after table (non-final part) */}
+        {/* Any non-final text after the table */}
         {vignetteAfterTable && (
           <p className="whitespace-pre-wrap">{vignetteAfterTable}</p>
         )}
 
-        {/* Final bolded question */}
+        {/* Final bolded question line */}
         {lastSentence && (
           <p className="font-semibold whitespace-pre-wrap">
             {lastSentence}
@@ -133,7 +139,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     );
   }
 
-  // --- NON-TABLE branch unchanged ---
+  // ---------- NON-TABLE BRANCH ----------
   const normalizedText = text
     .replace(/&lt;br\s*\/?&gt;/gi, "\n")
     .replace(/<br\s*\/?>/gi, "\n");
@@ -164,47 +170,12 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>
-      <p className="font-semibold mt-4 whitespace-pre-wrap">{lastSentence}</p>
+      <p className="font-semibold mt-4 whitespace-pre-wrap">
+        {lastSentence}
+      </p>
     </div>
   );
 };
-
-  // NON-TABLE QUESTIONS: strip all HTML tags so no stray <i> / <b> / "nody>" show up
-  const normalizedText = normalizedHtml.replace(/<\/?[^>]+(>|$)/g, "");
-
-  const lastSentenceMatch = normalizedText.match(/[^.!?]+[.!?]+\s*$/);
-
-  if (!lastSentenceMatch) {
-    return (
-      <div
-        ref={containerRef}
-        id="question-container"
-        className="question-content text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
-      >
-        <p className="font-semibold whitespace-pre-wrap">{normalizedText}</p>
-      </div>
-    );
-  }
-
-  const lastSentence = lastSentenceMatch[0].trim();
-  const vignette = normalizedText
-    .substring(0, normalizedText.length - lastSentenceMatch[0].length)
-    .trim();
-
-  return (
-    <div
-      ref={containerRef}
-      id="question-container"
-      className="question-content text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
-      style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
-    >
-      <div className="!leading-[1.6] space-y-4">
-        <p className="font-normal whitespace-pre-wrap">{vignette}</p>
-        <p className="font-semibold whitespace-pre-wrap">{lastSentence}</p>
-      </div>
-    </div>
-  );
 
 const QuizView: React.FC<QuizViewProps> = ({
   initialQueue,
