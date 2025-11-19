@@ -13,6 +13,7 @@ import ProgressRing from "./ProgressRing";
 import TopicHeatmap from "./TopicHeatmap";
 import SystemDrilldownModal from "./SystemDrilldownModal";
 import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
+import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
 
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
@@ -56,7 +57,9 @@ const MenuView: React.FC<MenuViewProps> = ({
   onConfirmSession,
   growthAreas,
 }) => {
-  const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
+  
+const [selectedSystem, setSelectedSystem] =
+  useState<SystemDrilldownSelection | null>(null);
 
   const stats = useMemo(() => {
     // Overall score = last 360 questions (any mode) as before
@@ -147,9 +150,7 @@ const MenuView: React.FC<MenuViewProps> = ({
       {selectedSystem && (
         <SystemDrilldownModal
           selection={selectedSystem}
-          performanceData={performanceData}
           onClose={() => setSelectedSystem(null)}
-          onStartTopicSession={handleTopicSessionStart}
         />
       )}
 
