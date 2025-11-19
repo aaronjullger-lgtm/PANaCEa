@@ -1,1 +1,32 @@
 /* intentionally left empty to avoid 404 */
+/* -----------------------------------------------------
+   GLOBAL TABLE OVERRIDES FOR QUESTION VIEW
+   (Tailwind CDN is active, so we use !important)
+------------------------------------------------------ */
+
+/* Entire table background */
+#question-container table {
+  background-color: #FCF9F6 !important;    /* soft off-white */
+  width: 100% !important;
+  border-collapse: collapse !important;
+}
+
+/* Table header + cells */
+#question-container th,
+#question-container td {
+  background-color: #FCF9F6 !important;
+  border: 1px solid #E1D8D0 !important;    /* subtle outline */
+  padding: 8px 12px !important;
+}
+
+/* Remove Tailwind’s alternating striping */
+#question-container tr:nth-child(odd),
+#question-container tr:nth-child(even) {
+  background-color: #FCF9F6 !important;
+}
+
+/* Optional — round the outer border radius */
+#question-container table {
+  border-radius: 10px !important;
+  overflow: hidden; /* required for rounded corners */
+}
