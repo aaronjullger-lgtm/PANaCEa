@@ -82,6 +82,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
 
   const hasTable = text.includes("<table");
 
+  // Table case – keep HTML but put it in a bordered card
   if (hasTable) {
     return (
       <div
@@ -94,6 +95,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     );
   }
 
+  // Non-table: split vignette vs question sentence
   const normalizedText = text
     .replace(/&lt;br\s*\/?&gt;/gi, "\n")
     .replace(/<br\s*\/?>/gi, "\n");
@@ -102,7 +104,11 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
 
   if (!lastSentenceMatch) {
     return (
-      <div ref={containerRef} id="question-container">
+      <div
+        ref={containerRef}
+        id="question-container"
+        className="border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
+      >
         <div
           className="text-xl md:text-2xl font-semibold leading-tight text-[#333333] whitespace-pre-wrap"
           style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
@@ -122,7 +128,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     <div
       ref={containerRef}
       id="question-container"
-      className="text-xl md:text-2xl leading-relaxed text-[#333333]"
+      className="text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
       <div className="!leading-[1.6]">
@@ -159,13 +165,16 @@ const QuizView: React.FC<QuizViewProps> = ({
     initialQueue[0] || null
   );
 
-  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState<number | null>(null);
+  const [selectedAnswerIndex, setSelectedAnswerIndex] =
+    useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [questionNumber, setQuestionNumber] = useState<number>(1);
 
   const [showRationale, setShowRationale] = useState<boolean>(false);
-  const [alternateRationale, setAlternateRationale] = useState<string | null>(null);
-  const [isRequestingAltRationale, setIsRequestingAltRationale] = useState<boolean>(false);
+  const [alternateRationale, setAlternateRationale] =
+    useState<string | null>(null);
+  const [isExplainerLoading, setIsExplainerLoading] =
+    useState<boolean>(false);
 
   const [localNote, setLocalNote] = useState<string>("");
 
@@ -175,7 +184,9 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   const isFlagged = useMemo(() => {
     if (!currentQuestion) return false;
-    return flaggedQuestions.some((q) => q.question === currentQuestion.question);
+    return flaggedQuestions.some(
+      (q) => q.question === currentQuestion.question
+    );
   }, [currentQuestion, flaggedQuestions]);
 
   // Keep current question synced with queue[0]
@@ -188,7 +199,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     sessionSettings.focus !== "review" &&
     sessionSettings.focus !== "reviewFlagged";
 
-  // ---- REPLENISH QUEUE ----
+  // ---- REPLENISH QUEUE (ALL / GROWTH / TOPIC) ----
   const replenishQueue = useCallback(async () => {
     if (!shouldEndlesslyReplenish) return;
 
@@ -219,7 +230,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     setSelectedAnswerIndex(null);
     setShowRationale(false);
     setAlternateRationale(null);
-    setIsRequestingAltRationale(false);
+    setIsExplainerLoading(false);
+    setQuestionNumber((prev) => prev + 1);
 
     setQueue((prev) => {
       if (prev.length === 0) return prev;
@@ -229,6 +241,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
       setParentQueue(newQueue);
 
+      // Finite sessions: REVIEW / REVIEW FLAGGED
       if (!shouldEndlesslyReplenish && newQueue.length === 0) {
         onEndSession();
       }
@@ -236,6 +249,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       return newQueue;
     });
 
+    // Endless sessions: ALL + SAME, ALL + other difficulties, topic, growth
     if (shouldEndlesslyReplenish) {
       void replenishQueue();
     }
@@ -246,6 +260,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     onEndSession,
   ]);
 
+  // Initialize from incoming queue once
   useEffect(() => {
     if (!currentQuestion && initialQueue.length > 0) {
       setCurrentQuestion(initialQueue[0]);
@@ -253,6 +268,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     setLocalNote(initialQueue[0]?.userNote || "");
   }, [initialQueue, currentQuestion]);
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -315,8 +331,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     setAlternateRationale(null);
 
     try {
-      const userAnswer =
-        currentQuestion.options[selectedAnswerIndex];
+      const userAnswer = currentQuestion.options[selectedAnswerIndex];
       const correctAnswer =
         currentQuestion.options[currentQuestion.correctAnswerIndex];
       const explanation = await generateAlternateRationale(
@@ -340,9 +355,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     }
   }, [currentQuestion, selectedAnswerIndex]);
 
-  const handleNoteChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
+  const handleNoteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newNote = e.target.value;
     setLocalNote(newNote);
 
@@ -386,6 +399,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     return "bg-green-500";
   };
 
+  // SESSION COMPLETE (finite modes only)
   if (!currentQuestion) {
     if (initialQueue.length === 0) {
       return (
@@ -422,10 +436,10 @@ const QuizView: React.FC<QuizViewProps> = ({
             {/* Back to dashboard */}
             <button
               onClick={onShowMenu}
-              className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors flex-shrink-0"
+              className="p-2 rounded-full bg-[#FCF9F6] border border-[#D0C7BF] hover:bg-white hover:border-[#3D1B0E] transition-colors shadow-sm flex-shrink-0"
               aria-label="Back to Menu"
             >
-              <ArrowLeftIcon className="w-6 h-6 text-slate-600" />
+              <ArrowLeftIcon className="w-6 h-6 text-slate-700" />
             </button>
             <p className="text-sm font-medium text-slate-500 truncate">
               Question {questionNumber}
@@ -437,10 +451,10 @@ const QuizView: React.FC<QuizViewProps> = ({
             <button
               onClick={toggleFlag}
               title={isFlagged ? "Unflag for review" : "Flag for review"}
-              className={`p-1.5 rounded-full transition-colors ${
+              className={`p-1.5 rounded-full transition-colors border ${
                 isFlagged
-                  ? "bg-yellow-100 text-yellow-600"
-                  : "text-slate-500 hover:bg-slate-200"
+                  ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+                  : "bg-[#FCF9F6] text-slate-600 border-[#D0C7BF] hover:bg-white hover:border-[#3D1B0E]"
               }`}
             >
               <FlagIcon className="w-5 h-5" />
@@ -464,28 +478,28 @@ const QuizView: React.FC<QuizViewProps> = ({
                 });
               }}
               title="Clear highlights"
-              className="p-1.5 rounded-full text-slate-500 hover:bg-slate-200 transition-colors"
+              className="p-1.5 rounded-full bg-[#FCF9F6] border border-[#D0C7BF] text-slate-600 hover:bg-white hover:border-[#3D1B0E] transition-colors"
             >
               <ClearHighlightIcon className="w-5 h-5" />
             </button>
 
             {/* Font size controls */}
-            <div className="flex items-center border border-slate-300 rounded-md">
+            <div className="flex items-center border border-[#D0C7BF] rounded-md bg-[#FCF9F6]">
               <button
                 onClick={() =>
                   setFontSizeAdjustment((prev) => prev - 1)
                 }
-                className="px-2 py-0.5 text-slate-600 hover:bg-slate-200 rounded-l-md text-sm"
+                className="px-2 py-0.5 text-slate-700 hover:bg-white rounded-l-md text-sm"
                 aria-label="Decrease font size"
               >
                 A-
               </button>
-              <div className="w-px h-4 bg-slate-300"></div>
+              <div className="w-px h-4 bg-[#D0C7BF]"></div>
               <button
                 onClick={() =>
                   setFontSizeAdjustment((prev) => prev + 1)
                 }
-                className="px-2 py-0.5 text-slate-600 hover:bg-slate-200 rounded-r-md text-sm"
+                className="px-2 py-0.5 text-slate-700 hover:bg-white rounded-r-md text-sm"
                 aria-label="Increase font size"
               >
                 A+
@@ -496,7 +510,7 @@ const QuizView: React.FC<QuizViewProps> = ({
             <button
               onClick={onEndSession}
               title="End Session"
-              className="p-1.5 rounded-full text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors"
+              className="p-1.5 rounded-full bg-[#FCF9F6] border border-[#D0C7BF] text-slate-600 hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-colors"
             >
               <CloseIcon className="w-5 h-5" />
             </button>
@@ -505,6 +519,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         <QuestionDisplay text={currentQuestion.question} />
       </div>
 
+      {/* ANSWER OPTIONS */}
       <div className="space-y-3 mt-6">
         {currentQuestion.options.map((option, index) => {
           const isCorrect = index === currentQuestion.correctAnswerIndex;
@@ -524,11 +539,11 @@ const QuizView: React.FC<QuizViewProps> = ({
               animationClass = "animate-shake";
             } else {
               buttonClasses +=
-                " bg-white border border-slate-300 shadow-sm text-[#333333] opacity-60";
+                " bg-[#FCF9F6] border border-[#D0C7BF] text-[#333333] opacity-60 shadow-sm";
             }
           } else {
             buttonClasses +=
-              " bg-white border border-slate-300 shadow-sm text-[#333333] hover:shadow-lg hover:border-[#3D1B0E] hover:-translate-y-px";
+              " bg-[#FCF9F6] border border-[#D0C7BF] shadow-sm text-[#333333] hover:bg-white hover:border-[#3D1B0E] hover:shadow-lg hover:-translate-y-px";
           }
 
           return (
@@ -549,10 +564,11 @@ const QuizView: React.FC<QuizViewProps> = ({
         })}
       </div>
 
+      {/* FEEDBACK / RATIONALE */}
       {isAnswered && (
         <div className="mt-6 animate-fade-in space-y-4">
           {topicStats && (
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
+            <div className="p-4 bg-[#FCF9F6] border border-[#D0C7BF] rounded-lg">
               <div className="flex justify-between items-center mb-1 text-sm">
                 <span className="font-semibold text-slate-700">
                   {currentQuestion.topic}
@@ -572,7 +588,8 @@ const QuizView: React.FC<QuizViewProps> = ({
               </div>
             </div>
           )}
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg feedback-content">
+
+          <div className="p-4 bg-[#FCF9F6] border border-[#D0C7BF] rounded-lg feedback-content">
             <h3 className="font-bold text-lg mb-2 text-slate-800">
               Rationale
             </h3>
