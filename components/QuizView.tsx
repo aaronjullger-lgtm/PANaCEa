@@ -106,18 +106,25 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
   };
 
   if (hasTable) {
-    const boldedHtml = boldLastSentence(normalizedHtml);
+  // Extract final sentence from full text to bold it
+  const normalized = text.replace(/&lt;br\s*\/?&gt;/gi, "\n").replace(/<br\s*\/?>/gi, "\n");
+  const lastSentenceMatch = normalized.match(/[^.!?]+[.!?]+\s*$/);
+  const lastSentence = lastSentenceMatch ? lastSentenceMatch[0].trim() : null;
 
-    return (
-      <div
-        ref={containerRef}
-        id="question-container"
-        className="question-content text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
-        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
-        dangerouslySetInnerHTML={{ __html: boldedHtml }}
-      />
-    );
-  }
+  const boldedHTML = lastSentence
+    ? text.replace(lastSentence, `<b>${lastSentence}</b>`)
+    : text;
+
+  return (
+    <div
+      ref={containerRef}
+      id="question-container"
+      className="text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
+      style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
+      dangerouslySetInnerHTML={{ __html: boldedHTML }}
+    />
+  );
+}
 
   // NON-TABLE QUESTIONS: strip all HTML tags so no stray <i> / <b> / "nody>" show up
   const normalizedText = normalizedHtml.replace(/<\/?[^>]+(>|$)/g, "");
