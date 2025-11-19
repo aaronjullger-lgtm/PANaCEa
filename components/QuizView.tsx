@@ -62,69 +62,112 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
 
         const span = document.createElement("span");
         span.className = "user-highlight";
-
         range.surroundContents(span);
         selection.removeAllRanges();
       } catch (e) {
-        console.error(
-          "Highlighting failed. This can happen if the selection spans across formatted sections.",
-          e
-        );
+        console.error("Highlighting failed.", e);
         window.getSelection()?.removeAllRanges();
       }
     };
 
     container.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      container.removeEventListener("mouseup", handleMouseUp);
-    };
+    return () => container.removeEventListener("mouseup", handleMouseUp);
   }, [text]);
 
-  // Normalize line breaks we get back from Gemini
-  const normalizedHtml = text
-    .replace(/&lt;br\s*\/?&gt;/gi, "<br />")
-    .replace(/\\n/g, "<br />");
-
-  const hasTable = normalizedHtml.includes("<table");
-
-  // Helper: find the last sentence in plain text and wrap it in <strong>…</strong>
-  const boldLastSentence = (html: string): string => {
-    // Strip tags to figure out the last sentence
-    const plain = html
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/?[^>]+(>|$)/g, "");
-
-    const match = plain.match(/[^.!?]+[.!?]+\s*$/);
-    if (!match) return html;
-
-    const sentence = match[0].trim();
-    if (!sentence) return html;
-
-    // Very simple: wrap the first occurrence of that sentence in <strong>.
-    // In practice this is almost always the final question line.
-    return html.replace(sentence, `<strong>${sentence}</strong>`);
-  };
+  const hasTable = text.includes("<table");
 
   if (hasTable) {
-  // Extract final sentence from full text to bold it
-  const normalized = text.replace(/&lt;br\s*\/?&gt;/gi, "\n").replace(/<br\s*\/?>/gi, "\n");
-  const lastSentenceMatch = normalized.match(/[^.!?]+[.!?]+\s*$/);
-  const lastSentence = lastSentenceMatch ? lastSentenceMatch[0].trim() : null;
+    // --- Extract table ---
+    const tableMatch = text.match(/<table[\s\S]*?<\/table>/i);
+    const tableHTML = tableMatch ? tableMatch[0] : "";
 
-  const boldedHTML = lastSentence
-    ? text.replace(lastSentence, `<b>${lastSentence}</b>`)
-    : text;
+    // --- Remove table and normalize surrounding text ---
+    const beforeAfter = text.replace(tableHTML, "|||TABLE|||");
+
+    // Normalize breaks
+    const normalized = beforeAfter
+      .replace(/&lt;br\s*\/?&gt;/gi, "\n")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/\n{2,}/g, "\n")
+      .trim();
+
+    const [beforeTable, afterTableRaw] = normalized.split("|||TABLE|||");
+
+    const lastSentenceMatch = afterTableRaw.match(/[^.!?]+[.!?]+\s*$/);
+    const lastSentence = lastSentenceMatch ? lastSentenceMatch[0].trim() : "";
+
+    const vignetteAfterTable = lastSentence
+      ? afterTableRaw.replace(lastSentence, "").trim()
+      : afterTableRaw.trim();
+
+    return (
+      <div
+        ref={containerRef}
+        id="question-container"
+        className="text-xl md:text-2xl leading-relaxed text-[#333333] bg-[#FCF9F6] border border-[#D0C7BF] rounded-xl p-6 shadow-sm space-y-4"
+        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
+      >
+        {/* Top vignette */}
+        {beforeTable && (
+          <p className="whitespace-pre-wrap">{beforeTable}</p>
+        )}
+
+        {/* Table */}
+        <div
+          className="my-2"
+          dangerouslySetInnerHTML={{ __html: tableHTML }}
+        />
+
+        {/* Text after table (non-final part) */}
+        {vignetteAfterTable && (
+          <p className="whitespace-pre-wrap">{vignetteAfterTable}</p>
+        )}
+
+        {/* Final bolded question */}
+        {lastSentence && (
+          <p className="font-semibold whitespace-pre-wrap">
+            {lastSentence}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // --- NON-TABLE branch unchanged ---
+  const normalizedText = text
+    .replace(/&lt;br\s*\/?&gt;/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n");
+
+  const lastSentenceMatch = normalizedText.match(/[^.!?]+[.!?]+\s*$/);
+
+  if (!lastSentenceMatch) {
+    return (
+      <div
+        ref={containerRef}
+        id="question-container"
+        className="text-xl md:text-2xl font-semibold text-[#333333] whitespace-pre-wrap"
+        style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
+      >
+        {normalizedText}
+      </div>
+    );
+  }
+
+  const lastSentence = lastSentenceMatch[0].trim();
+  const vignette = normalizedText.replace(lastSentenceMatch[0], "").trim();
 
   return (
     <div
       ref={containerRef}
       id="question-container"
-      className="text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm space-y-2 [&>*]:my-1 [&>table]:my-2"
+      className="text-xl md:text-2xl leading-relaxed text-[#333333]"
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
-      dangerouslySetInnerHTML={{ __html: boldedHTML }}
-    />
+    >
+      <p className="whitespace-pre-wrap">{vignette}</p>
+      <p className="font-semibold mt-4 whitespace-pre-wrap">{lastSentence}</p>
+    </div>
   );
-}
+};
 
   // NON-TABLE QUESTIONS: strip all HTML tags so no stray <i> / <b> / "nody>" show up
   const normalizedText = normalizedHtml.replace(/<\/?[^>]+(>|$)/g, "");
@@ -466,12 +509,12 @@ const QuizView: React.FC<QuizViewProps> = ({
   return (
     <div className="flex flex-col">
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 mt-1">
           <div className="flex items-center space-x-3 min-w-0">
             {/* Back to dashboard */}
             <button
               onClick={onShowMenu}
-              className="p-2 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors h-10 w-10"
+              className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors flex-shrink-0 flex items-center justify-center"
               aria-label="Back to Menu"
             >
               <ArrowLeftIcon className="w-6 h-6 text-slate-600" />
