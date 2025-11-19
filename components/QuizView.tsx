@@ -87,7 +87,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       <div
         ref={containerRef}
         id="question-container"
-        className="text-xl md:text-2xl leading-relaxed text-[#333333]"
+        className="text-xl md:text-2xl leading-relaxed text-[#333333] border border-[#D0C7BF] rounded-xl bg-[#FCF9F6] p-6 shadow-sm"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
         dangerouslySetInnerHTML={{ __html: text }}
       />
