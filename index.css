@@ -35,3 +35,7 @@
   border: 1px solid #E0D7CF !important;
   padding: 6px 10px;
 }
+/* Make the final sentence of the question bold */
+#question-container p:last-of-type {
+  font-weight: 600;
+}
