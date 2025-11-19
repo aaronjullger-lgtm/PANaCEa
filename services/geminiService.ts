@@ -263,8 +263,13 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 
   // --- Call Gemini through proxy and parse JSON ---
 
-  try {
-    const jsonString = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
+   try {
+    const rawText = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
+
+    // Repair common HTML-table newline bug:
+    // Gemini sometimes puts a real newline between tags like </td>\n    <td>,
+    // which is illegal inside a JSON string. This collapses any ">\n<" into "><".
+    const jsonString = rawText.replace(/>\s*\n\s*</g, "><");
 
     let parsed: any;
     try {
@@ -272,7 +277,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     } catch (parseError) {
       console.error(
         "Failed to parse JSON from Gemini. String that failed:",
-        jsonString
+        rawText
       );
       throw new Error(
         "The API returned a malformed JSON response. Please try again."
