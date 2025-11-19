@@ -30,3 +30,8 @@
   border-radius: 10px !important;
   overflow: hidden; /* required for rounded corners */
 }
+#question-container table th,
+#question-container table td {
+  border: 1px solid #E0D7CF !important;
+  padding: 6px 10px;
+}
