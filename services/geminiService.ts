@@ -1,3 +1,83 @@
+// services/geminiService.ts
+
+import {
+  PANCE_TOPICS,
+  TOPIC_MAP,
+  ABBREVIATION_TO_TOPIC_MAP,
+  PANCE_DECK,
+  TASK_DECK,
+} from "../constants";
+import type {
+  Question,
+  SessionSettings,
+  SystemCode,
+  ConditionDefinition,
+} from "../types";
+import {
+  buildConditionDefinition,
+  getRandomConditionForSystem,
+  type ConditionMeta,
+} from "../conditionRegistry";
+
+// --- Helper: call Netlify serverless function, which talks to Gemini ---
+
+async function callGeminiText(
+  modelName: string,
+  prompt: string,
+  temperature: number = 0.8
+): Promise<string> {
+  const response = await fetch("/.netlify/functions/geminiProxy", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ modelName, prompt, temperature }),
+  });
+
+  if (!response.ok) {
+    console.error("Gemini proxy returned error status", response.status);
+    throw new Error("Gemini proxy error");
+  }
+
+  const data = await response.json();
+  const text = typeof data === "string" ? data : data.text;
+
+  if (!text || !text.trim()) {
+    throw new Error("Empty response from Gemini");
+  }
+
+  return text;
+}
+
+// --- Helper: strip any HTML tags from a string (for options/condition) ---
+
+const stripHtmlTags = (text: string): string =>
+  typeof text === "string" ? text.replace(/<\/?[^>]+(>|$)/g, "") : text;
+
+// --- Deck / history state ---
+
+let shuffledContentQueue: string[] = [];
+let shuffledTaskQueue: string[] = [];
+let recentQuestionHistory: string[] = [];
+const RECENT_HISTORY_COUNT = 10;
+
+// Shuffle helpers
+export function refillShuffledContentQueue() {
+  const deck = [...PANCE_DECK];
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  shuffledContentQueue = deck;
+}
+
+export function refillShuffledTaskQueue() {
+  const deck = [...TASK_DECK];
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  shuffledTaskQueue = deck;
+}
+
 // --- Main question generator ---
 
 export async function fetchNewQuestion(
@@ -131,7 +211,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 }`;
     }
   } else {
-    // -------- FOCUS: topic / growth / generic --------
+    // -------- FOCUS: topic / growth / generic (non-ALL) --------
     let topicInstruction = "";
     if (focus === "topic" && settings.topic) {
       const fullTopicName =
@@ -184,36 +264,15 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   // --- Call Gemini through proxy and parse JSON ---
 
   try {
-    const rawText = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
-
-    // Trim and sanitize before parsing
-    let jsonString = (rawText || "").trim();
-
-    if (!jsonString) {
-      throw new Error("Empty response from Gemini");
-    }
-
-    // Gemini sometimes drops stray backslashes in HTML tables like: <tr>\      <td>...</td>
-    // Those are invalid in JSON. This strips any backslash NOT followed by a valid JSON
-    // escape character (" \/ b f n r t u). We keep proper \" and \n intact.
-    const sanitizedJsonString = jsonString.replace(
-      /\\(?!["\\/bfnrtu])/g,
-      ""
-    );
-
-    if (sanitizedJsonString !== jsonString) {
-      console.warn(
-        "Sanitized Gemini JSON string to remove invalid backslashes."
-      );
-    }
+    const jsonString = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
 
     let parsed: any;
     try {
-      parsed = JSON.parse(sanitizedJsonString);
+      parsed = JSON.parse(jsonString);
     } catch (parseError) {
       console.error(
         "Failed to parse JSON from Gemini. String that failed:",
-        sanitizedJsonString
+        jsonString
       );
       throw new Error(
         "The API returned a malformed JSON response. Please try again."
