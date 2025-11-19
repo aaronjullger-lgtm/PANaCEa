@@ -182,6 +182,14 @@ const QuizView: React.FC<QuizViewProps> = ({
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
 
+  // Keep CSS variable in sync with fontSizeAdjustment
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--font-size-adj",
+      `${fontSizeAdjustment * 0.1}rem`
+    );
+  }, [fontSizeAdjustment]);
+  
   const isFlagged = useMemo(() => {
     if (!currentQuestion) return false;
     return flaggedQuestions.some(
