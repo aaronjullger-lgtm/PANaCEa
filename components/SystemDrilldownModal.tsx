@@ -3,15 +3,10 @@ import type { PerformanceRecord, SystemCode } from "../types";
 
 export type SystemDrilldownSelection = {
   system: SystemCode;
-  /** Optional pre-filtered records for this system */
   records?: PerformanceRecord[];
 };
 
 interface SystemDrilldownModalProps {
-  /**
-   * Be flexible with prop names so we don't fight TypeScript:
-   * MenuView might pass `system`, `systemCode`, or a `selection` object.
-   */
   system?: SystemCode;
   systemCode?: SystemCode;
   selection?: SystemDrilldownSelection;
@@ -39,21 +34,26 @@ const SYSTEM_LABELS: Record<SystemCode, string> = {
   OTHER: "Other / Unmapped",
 };
 
-const formatConditionName = (raw: string): string => {
+/**
+ * Turn things like:
+ *  - "GI__colon__diverticulitis" -> "Diverticulitis"
+ *  - "GI__colon__irritable_bowel_syndrome" -> "Irritable Bowel Syndrome"
+ * while preserving short acronyms like IBS/COPD/DVT/PE/HIV.
+ */
+const cleanConditionName = (raw: string | undefined): string => {
   if (!raw) return "Unspecified condition";
 
-  // If it's already human-readable (has spaces and no "__" / "_"), just use it
+  // If it's already human-readable (no "__" and no "_"), just use it.
   if (!raw.includes("__") && !raw.includes("_")) return raw;
 
   let s = raw;
 
-  // For id-style strings like "GI__colon__diverticulitis"
+  // Strip any system/subcategory prefix like "GI__colon__"
   if (s.includes("__")) {
     const parts = s.split("__");
-    s = parts[parts.length - 1]; // take the last segment: "diverticulitis"
+    s = parts[parts.length - 1];
   }
 
-  // Replace underscores with spaces and format per word
   const words = s.split("_").filter(Boolean);
 
   const formatted = words
@@ -61,43 +61,36 @@ const formatConditionName = (raw: string): string => {
       const letters = word.replace(/[^A-Za-z]/g, "");
       if (!letters) return word;
 
-      const isShort = letters.length <= 4; // IBS, COPD, DVT, PE, HIV, STEMI, etc.
-      const isAllUpper = letters === letters.toUpperCase();
-      const isAllLower = letters === letters.toLowerCase();
-
-      // Preserve / enforce acronyms for short chunks
-      if (isShort && (isAllUpper || isAllLower)) {
+      // Preserve acronyms up to length 4 (IBS, COPD, HIV, DVT, PE, STEMI, etc.)
+      if (letters.length <= 4) {
         return letters.toUpperCase();
       }
 
-      // Otherwise, Title Case the word
+      // Title-case normal words
       return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
     })
     .join(" ");
 
   return formatted || "Unspecified condition";
 };
+
 const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
-  // Normalize inputs so this works no matter how MenuView is calling it
   const system: SystemCode | undefined =
     props.system || props.systemCode || props.selection?.system;
 
   const allRecords: PerformanceRecord[] =
     props.records || props.selection?.records || props.performanceData || [];
 
-  // If system is provided, filter to that system; otherwise just use all records
+  // Filter to this system
   const systemRecords = useMemo(() => {
     if (!system) return allRecords;
     return allRecords.filter((r) => r.system === system);
   }, [allRecords, system]);
 
-  // Aggregate a simple summary line for the header
+  // Summary for header
   const systemSummary = useMemo(() => {
     const total = systemRecords.length;
-    let correct = 0;
-    for (const r of systemRecords) {
-      if (r.isCorrect) correct += 1;
-    }
+    const correct = systemRecords.filter((r) => r.isCorrect).length;
     const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
     return { total, correct, percent };
   }, [systemRecords]);
@@ -110,7 +103,8 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
   );
   const [showWeakOnly, setShowWeakOnly] = useState(false);
 
-  // Aggregate subcategory-level stats (raw)
+  /* -------------------------- SUBCATEGORY STATS ------------------------- */
+
   const rawSubcategoryStats = useMemo(() => {
     const map = new Map<
       string,
@@ -118,23 +112,9 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
     >();
 
     for (const r of systemRecords) {
-      const sub = r.subcategory || "Unspecified";
-
-  // Prefer the human-readable name; fall back to id if needed
-      const rawCondition =
-        r.condition || r.conditionId || "Unspecified condition";
-
-  // Clean it up but preserve acronyms (IBS, COPD, DVT, PE, HIV, etc.)
-      const condKey = formatConditionName(rawCondition);
-
-      const key = `${sub}__${condKey}`;
+      const key = r.subcategory || "Unspecified";
       if (!map.has(key)) {
-        map.set(key, {
-          condition: condKey,
-          subcategory: sub,
-          correct: 0,
-          total: 0,
-        });
+        map.set(key, { subcategory: key, correct: 0, total: 0 });
       }
       const entry = map.get(key)!;
       entry.total += 1;
@@ -147,7 +127,6 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
     }));
   }, [systemRecords]);
 
-  // Apply sort + "weak only" filter
   const subcategoryStats = useMemo(() => {
     let list = [...rawSubcategoryStats];
 
@@ -160,46 +139,40 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
     } else if (sortMode === "most") {
       list.sort((a, b) => b.total - a.total);
     } else {
-      // weakest first by default
+      // weakest first
       list.sort((a, b) => a.score - b.score);
     }
 
     return list;
   }, [rawSubcategoryStats, sortMode, showWeakOnly]);
 
-  // Aggregate condition-level stats (we’ll filter by activeSubcategory below)
+  /* --------------------------- CONDITION STATS -------------------------- */
+
   const conditionStats = useMemo(() => {
     const map = new Map<
       string,
-      {
-        condition: string;
-        subcategory: string;
-        correct: number;
-        total: number;
-      }
+      { condition: string; subcategory: string; correct: number; total: number }
     >();
 
     for (const r of systemRecords) {
       const sub = r.subcategory || "Unspecified";
-     const condKey = getCleanConditionName(
-       r.conditionName || r.conditionId || r.condition);
+      const rawCond =
+        r.conditionName || r.condition || r.conditionId || "Unspecified";
+      const condName = cleanConditionName(rawCond);
 
-      const getCleanConditionName = (raw: string | undefined): string => {
-        if (!raw) return "Unspecified condition";
-
-  // If conditionName is already clean, use it
-        if (!raw.includes("__")) return raw;
-
-  // Convert "GI__colon__diverticulitis" → "Diverticulitis"
-        const parts = raw.split("__");
-        const last = parts[parts.length - 1];
-
-  // Convert underscores → spaces + capitalize words
-        return last
-          .split("_")
-          .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-          .join(" ");
-      };
+      const id = `${sub}__${condName}`;
+      if (!map.has(id)) {
+        map.set(id, {
+          condition: condName,
+          subcategory: sub,
+          correct: 0,
+          total: 0,
+        });
+      }
+      const entry = map.get(id)!;
+      entry.total += 1;
+      if (r.isCorrect) entry.correct += 1;
+    }
 
     return Array.from(map.values())
       .map((entry) => ({
@@ -209,7 +182,8 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
       .sort((a, b) => a.score - b.score); // weakest first
   }, [systemRecords]);
 
-  // Default selection: weakest subcategory when data is available
+  /* --------------------- DEFAULT SUBCATEGORY SELECTION ------------------ */
+
   useEffect(() => {
     if (!activeSubcategory && subcategoryStats.length > 0) {
       setActiveSubcategory(subcategoryStats[0].subcategory);
@@ -241,7 +215,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
             <p className="text-xs text-slate-500 mt-1">
               {systemSummary.total > 0
                 ? `Based on ${systemSummary.total} ${systemLabel.toLowerCase()} questions (${systemSummary.correct}/${systemSummary.total}, ${systemSummary.percent}% correct) from PANCE-level ALL-topics sessions.`
-                : "No performance data yet for this system in PANCE-level ALL-topics sessions."}
+                : "No performance data yet for this system."}
             </p>
             <p className="text-[11px] text-slate-400 mt-1">
               Click a subcategory to see condition-level performance.
@@ -279,7 +253,9 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                       className="border border-slate-200 rounded-md bg-white text-[11px] px-2 py-1 text-slate-600"
                       value={sortMode}
                       onChange={(e) =>
-                        setSortMode(e.target.value as typeof sortMode)
+                        setSortMode(
+                          e.target.value as "weakest" | "alpha" | "most"
+                        )
                       }
                     >
                       <option value="weakest">Weakest first</option>
@@ -298,13 +274,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                   {subcategoryStats.map((sub) => (
                     <button
                       key={sub.subcategory}
-                      onClick={() =>
-                        setActiveSubcategory(
-                          sub.subcategory === activeSubcategory
-                            ? sub.subcategory
-                            : sub.subcategory
-                        )
-                      }
+                      onClick={() => setActiveSubcategory(sub.subcategory)}
                       className={`w-full text-left p-3 rounded-lg border ${
                         sub.subcategory === activeSubcategory
                           ? "border-[#3D1B0E] bg-[#FDF5F3]"
