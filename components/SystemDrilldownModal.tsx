@@ -3,16 +3,31 @@ import type { PerformanceRecord, SystemCode } from "../types";
 
 export type SystemDrilldownSelection = {
   system: SystemCode;
+  /** Optional pre-filtered records for this system */
   records?: PerformanceRecord[];
 };
 
 interface SystemDrilldownModalProps {
+  /**
+   * Be flexible with prop names so we don't fight TypeScript:
+   * MenuView might pass `system`, `systemCode`, or a `selection` object.
+   */
   system?: SystemCode;
   systemCode?: SystemCode;
   selection?: SystemDrilldownSelection;
   records?: PerformanceRecord[];
   performanceData?: PerformanceRecord[];
   onClose: () => void;
+
+  /**
+   * Optional callback to start a drill session from a condition card.
+   * We keep it very generic: just hand back system, subcategory, and condition.
+   */
+  onDrillCondition?: (payload: {
+    system: SystemCode | undefined;
+    subcategory: string;
+    condition: string;
+  }) => void;
 }
 
 const SYSTEM_LABELS: Record<SystemCode, string> = {
@@ -75,19 +90,20 @@ const cleanConditionName = (raw: string | undefined): string => {
 };
 
 const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
+  // Normalize inputs so this works no matter how MenuView is calling it
   const system: SystemCode | undefined =
     props.system || props.systemCode || props.selection?.system;
 
   const allRecords: PerformanceRecord[] =
     props.records || props.selection?.records || props.performanceData || [];
 
-  // Filter to this system
+  // If system is provided, filter to that system; otherwise just use all records
   const systemRecords = useMemo(() => {
     if (!system) return allRecords;
     return allRecords.filter((r) => r.system === system);
   }, [allRecords, system]);
 
-  // Summary for header
+  // Aggregate a simple summary line for the header
   const systemSummary = useMemo(() => {
     const total = systemRecords.length;
     const correct = systemRecords.filter((r) => r.isCorrect).length;
@@ -127,6 +143,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
     }));
   }, [systemRecords]);
 
+  // Apply sort + "weak only" filter
   const subcategoryStats = useMemo(() => {
     let list = [...rawSubcategoryStats];
 
@@ -139,7 +156,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
     } else if (sortMode === "most") {
       list.sort((a, b) => b.total - a.total);
     } else {
-      // weakest first
+      // weakest first by default
       list.sort((a, b) => a.score - b.score);
     }
 
@@ -151,13 +168,17 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
   const conditionStats = useMemo(() => {
     const map = new Map<
       string,
-      { condition: string; subcategory: string; correct: number; total: number }
+      {
+        condition: string;
+        subcategory: string;
+        correct: number;
+        total: number;
+      }
     >();
 
     for (const r of systemRecords) {
       const sub = r.subcategory || "Unspecified";
-      const rawCond =
-        r.conditionName || r.condition || r.conditionId || "Unspecified";
+      const rawCond = r.condition || r.conditionId || "Unspecified";
       const condName = cleanConditionName(rawCond);
 
       const id = `${sub}__${condName}`;
@@ -358,6 +379,23 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                         <span className="mt-1 block text-[11px] text-slate-400">
                           Low sample size
                         </span>
+                      )}
+
+                      {props.onDrillCondition && system && (
+                        <button
+                          onClick={() => {
+                            props.onDrillCondition?.({
+                              system,
+                              subcategory: cond.subcategory,
+                              condition: cond.condition,
+                            });
+                            // Close the modal after starting the drill
+                            props.onClose();
+                          }}
+                          className="mt-2 inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md border border-[#3D1B0E]/30 text-[#3D1B0E] hover:bg-[#3D1B0E]/5"
+                        >
+                          Drill this condition
+                        </button>
                       )}
                     </div>
                   ))}
