@@ -199,10 +199,11 @@ const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
             </h2>
             <TopicHeatmap
               topicScores={stats.topicScores || []}
-              onTopicClick={(systemCode) => {
-                setSelectedSystem(systemCode as SystemCode);
-              }}
-            />
+              onTopicClick={(topicStats) => {
+              // topicStats is a TopicStats object; its `.topic` is your "CV", "GI", etc.
+              setSelectedSystem(topicStats.topic as SystemCode);
+            }}
+          />
           </section>
 
           {/* Data management */}
