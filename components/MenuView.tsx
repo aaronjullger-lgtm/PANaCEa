@@ -58,8 +58,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   growthAreas,
 }) => {
   
-const [selectedSystem, setSelectedSystem] =
-  useState<SystemDrilldownSelection | null>(null);
+const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
 
   const stats = useMemo(() => {
     // Overall score = last 360 questions (any mode) as before
@@ -149,7 +148,8 @@ const [selectedSystem, setSelectedSystem] =
 
       {selectedSystem && (
         <SystemDrilldownModal
-          selection={selectedSystem}
+          system={selectedSystem}
+          performanceData={performanceData}
           onClose={() => setSelectedSystem(null)}
         />
       )}
@@ -200,10 +200,7 @@ const [selectedSystem, setSelectedSystem] =
             <TopicHeatmap
               topicScores={stats.topicScores || []}
               onTopicClick={(systemCode) => {
-                setSelectedSystem({
-                  system: systemCode,
-                  records: performanceData
-                });
+                setSelectedSystem(systemCode as SystemCode);
               }}
             />
           </section>
