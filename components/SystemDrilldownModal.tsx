@@ -39,6 +39,44 @@ const SYSTEM_LABELS: Record<SystemCode, string> = {
   OTHER: "Other / Unmapped",
 };
 
+const formatConditionName = (raw: string): string => {
+  if (!raw) return "Unspecified condition";
+
+  // If it's already human-readable (has spaces and no "__" / "_"), just use it
+  if (!raw.includes("__") && !raw.includes("_")) return raw;
+
+  let s = raw;
+
+  // For id-style strings like "GI__colon__diverticulitis"
+  if (s.includes("__")) {
+    const parts = s.split("__");
+    s = parts[parts.length - 1]; // take the last segment: "diverticulitis"
+  }
+
+  // Replace underscores with spaces and format per word
+  const words = s.split("_").filter(Boolean);
+
+  const formatted = words
+    .map((word) => {
+      const letters = word.replace(/[^A-Za-z]/g, "");
+      if (!letters) return word;
+
+      const isShort = letters.length <= 4; // IBS, COPD, DVT, PE, HIV, STEMI, etc.
+      const isAllUpper = letters === letters.toUpperCase();
+      const isAllLower = letters === letters.toLowerCase();
+
+      // Preserve / enforce acronyms for short chunks
+      if (isShort && (isAllUpper || isAllLower)) {
+        return letters.toUpperCase();
+      }
+
+      // Otherwise, Title Case the word
+      return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
+    })
+    .join(" ");
+
+  return formatted || "Unspecified condition";
+};
 const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
   // Normalize inputs so this works no matter how MenuView is calling it
   const system: SystemCode | undefined =
@@ -80,9 +118,23 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
     >();
 
     for (const r of systemRecords) {
-      const key = r.subcategory || "Unspecified";
+      const sub = r.subcategory || "Unspecified";
+
+  // Prefer the human-readable name; fall back to id if needed
+      const rawCondition =
+        r.condition || r.conditionId || "Unspecified condition";
+
+  // Clean it up but preserve acronyms (IBS, COPD, DVT, PE, HIV, etc.)
+      const condKey = formatConditionName(rawCondition);
+
+      const key = `${sub}__${condKey}`;
       if (!map.has(key)) {
-        map.set(key, { subcategory: key, correct: 0, total: 0 });
+        map.set(key, {
+          condition: condKey,
+          subcategory: sub,
+          correct: 0,
+          total: 0,
+        });
       }
       const entry = map.get(key)!;
       entry.total += 1;
@@ -129,22 +181,25 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
 
     for (const r of systemRecords) {
       const sub = r.subcategory || "Unspecified";
-      const condKey =
-        r.conditionName || r.conditionId || r.condition || "Unspecified condition";
+     const condKey = getCleanConditionName(
+       r.conditionName || r.conditionId || r.condition);
 
-      const key = `${sub}__${condKey}`;
-      if (!map.has(key)) {
-        map.set(key, {
-          condition: condKey,
-          subcategory: sub,
-          correct: 0,
-          total: 0,
-        });
-      }
-      const entry = map.get(key)!;
-      entry.total += 1;
-      if (r.isCorrect) entry.correct += 1;
-    }
+      const getCleanConditionName = (raw: string | undefined): string => {
+        if (!raw) return "Unspecified condition";
+
+  // If conditionName is already clean, use it
+        if (!raw.includes("__")) return raw;
+
+  // Convert "GI__colon__diverticulitis" → "Diverticulitis"
+        const parts = raw.split("__");
+        const last = parts[parts.length - 1];
+
+  // Convert underscores → spaces + capitalize words
+        return last
+          .split("_")
+          .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+          .join(" ");
+      };
 
     return Array.from(map.values())
       .map((entry) => ({
