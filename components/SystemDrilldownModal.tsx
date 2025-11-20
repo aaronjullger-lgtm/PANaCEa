@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { PerformanceRecord, SystemCode } from "../types";
 
 export type SystemDrilldownSelection = {
@@ -8,7 +8,7 @@ export type SystemDrilldownSelection = {
 };
 
 interface SystemDrilldownModalProps {
-  /** 
+  /**
    * Be flexible with prop names so we don't fight TypeScript:
    * MenuView might pass `system`, `systemCode`, or a `selection` object.
    */
@@ -42,15 +42,10 @@ const SYSTEM_LABELS: Record<SystemCode, string> = {
 const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
   // Normalize inputs so this works no matter how MenuView is calling it
   const system: SystemCode | undefined =
-    props.system ||
-    props.systemCode ||
-    props.selection?.system;
+    props.system || props.systemCode || props.selection?.system;
 
   const allRecords: PerformanceRecord[] =
-    props.records ||
-    props.selection?.records ||
-    props.performanceData ||
-    [];
+    props.records || props.selection?.records || props.performanceData || [];
 
   // If system is provided, filter to that system; otherwise just use all records
   const systemRecords = useMemo(() => {
@@ -58,12 +53,27 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
     return allRecords.filter((r) => r.system === system);
   }, [allRecords, system]);
 
+  // Aggregate a simple summary line for the header
+  const systemSummary = useMemo(() => {
+    const total = systemRecords.length;
+    let correct = 0;
+    for (const r of systemRecords) {
+      if (r.isCorrect) correct += 1;
+    }
+    const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
+    return { total, correct, percent };
+  }, [systemRecords]);
+
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(
     null
   );
+  const [sortMode, setSortMode] = useState<"weakest" | "alpha" | "most">(
+    "weakest"
+  );
+  const [showWeakOnly, setShowWeakOnly] = useState(false);
 
-  // Aggregate subcategory-level stats
-  const subcategoryStats = useMemo(() => {
+  // Aggregate subcategory-level stats (raw)
+  const rawSubcategoryStats = useMemo(() => {
     const map = new Map<
       string,
       { subcategory: string; correct: number; total: number }
@@ -79,13 +89,31 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
       if (r.isCorrect) entry.correct += 1;
     }
 
-    return Array.from(map.values())
-      .map((entry) => ({
-        ...entry,
-        score: entry.total > 0 ? (entry.correct / entry.total) * 100 : 0,
-      }))
-      .sort((a, b) => a.score - b.score); // weakest first
+    return Array.from(map.values()).map((entry) => ({
+      ...entry,
+      score: entry.total > 0 ? (entry.correct / entry.total) * 100 : 0,
+    }));
   }, [systemRecords]);
+
+  // Apply sort + "weak only" filter
+  const subcategoryStats = useMemo(() => {
+    let list = [...rawSubcategoryStats];
+
+    if (showWeakOnly) {
+      list = list.filter((s) => s.score < 80);
+    }
+
+    if (sortMode === "alpha") {
+      list.sort((a, b) => a.subcategory.localeCompare(b.subcategory));
+    } else if (sortMode === "most") {
+      list.sort((a, b) => b.total - a.total);
+    } else {
+      // weakest first by default
+      list.sort((a, b) => a.score - b.score);
+    }
+
+    return list;
+  }, [rawSubcategoryStats, sortMode, showWeakOnly]);
 
   // Aggregate condition-level stats (we’ll filter by activeSubcategory below)
   const conditionStats = useMemo(() => {
@@ -101,7 +129,8 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
 
     for (const r of systemRecords) {
       const sub = r.subcategory || "Unspecified";
-      const condKey = r.condition || "Unspecified condition";
+      const condKey =
+        r.conditionName || r.conditionId || r.condition || "Unspecified condition";
 
       const key = `${sub}__${condKey}`;
       if (!map.has(key)) {
@@ -125,11 +154,16 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
       .sort((a, b) => a.score - b.score); // weakest first
   }, [systemRecords]);
 
+  // Default selection: weakest subcategory when data is available
+  useEffect(() => {
+    if (!activeSubcategory && subcategoryStats.length > 0) {
+      setActiveSubcategory(subcategoryStats[0].subcategory);
+    }
+  }, [activeSubcategory, subcategoryStats]);
+
   const filteredConditionStats = useMemo(() => {
     if (!activeSubcategory) return [];
-    return conditionStats.filter(
-      (c) => c.subcategory === activeSubcategory
-    );
+    return conditionStats.filter((c) => c.subcategory === activeSubcategory);
   }, [conditionStats, activeSubcategory]);
 
   const getBarColor = (score: number) => {
@@ -150,6 +184,11 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
               {systemLabel} – Drilldown
             </h2>
             <p className="text-xs text-slate-500 mt-1">
+              {systemSummary.total > 0
+                ? `Based on ${systemSummary.total} ${systemLabel.toLowerCase()} questions (${systemSummary.correct}/${systemSummary.total}, ${systemSummary.percent}% correct) from PANCE-level ALL-topics sessions.`
+                : "No performance data yet for this system in PANCE-level ALL-topics sessions."}
+            </p>
+            <p className="text-[11px] text-slate-400 mt-1">
               Click a subcategory to see condition-level performance.
             </p>
           </div>
@@ -166,9 +205,35 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
           {/* Left: Subcategories */}
           <div className="md:w-1/2 border-b md:border-b-0 md:border-r border-slate-200 overflow-y-auto">
             <div className="p-4">
-              <h3 className="text-sm font-semibold text-slate-700 mb-3">
-                Subcategories
-              </h3>
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <h3 className="text-sm font-semibold text-slate-700">
+                  Subcategories
+                </h3>
+                {subcategoryStats.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-1 text-[11px] text-slate-500">
+                      <input
+                        type="checkbox"
+                        className="h-3 w-3 rounded border-slate-300"
+                        checked={showWeakOnly}
+                        onChange={(e) => setShowWeakOnly(e.target.checked)}
+                      />
+                      <span>Weak only (&lt;80%)</span>
+                    </label>
+                    <select
+                      className="border border-slate-200 rounded-md bg-white text-[11px] px-2 py-1 text-slate-600"
+                      value={sortMode}
+                      onChange={(e) =>
+                        setSortMode(e.target.value as typeof sortMode)
+                      }
+                    >
+                      <option value="weakest">Weakest first</option>
+                      <option value="alpha">A–Z</option>
+                      <option value="most">Most questions</option>
+                    </select>
+                  </div>
+                )}
+              </div>
               {subcategoryStats.length === 0 ? (
                 <p className="text-sm text-slate-500">
                   No performance data for this system yet.
@@ -181,7 +246,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                       onClick={() =>
                         setActiveSubcategory(
                           sub.subcategory === activeSubcategory
-                            ? null
+                            ? sub.subcategory
                             : sub.subcategory
                         )
                       }
@@ -207,6 +272,11 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                           style={{ width: `${sub.score}%` }}
                         ></div>
                       </div>
+                      {sub.total < 3 && (
+                        <span className="mt-1 block text-[11px] text-slate-400">
+                          Low sample size
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -225,7 +295,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
 
               {!activeSubcategory && (
                 <p className="text-sm text-slate-500">
-                  Select a subcategory on the left to see <b>condition-level</b>{" "}
+                  Select a subcategory on the left to see condition-level
                   mastery.
                 </p>
               )}
@@ -259,6 +329,11 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                           style={{ width: `${cond.score}%` }}
                         ></div>
                       </div>
+                      {cond.total < 3 && (
+                        <span className="mt-1 block text-[11px] text-slate-400">
+                          Low sample size
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
