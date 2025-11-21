@@ -49,6 +49,9 @@ export interface SessionSettings {
   focus: "all" | "growth" | "review" | "topic" | "reviewFlagged";
   difficulty: "easier" | "same" | "harder";
   topic?: string;
+
+  /** Optional: when present, Gemini should target this specific condition */
+  conditionName?: string;
 }
 
 // High-level systems (matches your existing tiles + PRO + hidden OTHER)
