@@ -1,5 +1,3 @@
-// scripts/generateConditionContent.ts
-
 import fs from "fs";
 import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -36,29 +34,28 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 }
 
 // ======================================================
-// ASCII CLEANER — This ensures no byte >255 EVER gets sent
+// ASCII CLEANER — removes ALL unicode safely
 // ======================================================
 function asciiClean(str: string = ""): string {
   return str
     .normalize("NFKC")
     .replace(/[“”„‟]/g, '"')
     .replace(/[‘’‚‛]/g, "'")
-    .replace(/–/g, "-")
-    .replace(/—/g, "-")
-    .replace(/[^\x00-\x7F]/g, " "); // remove anything non-ASCII
+    .replace(/[–—]/g, "-")
+    .replace(/\u00A0/g, " ")
+    .replace(/[^\x00-\x7F]/g, "");
 }
 
 // ======================================================
-// CLEAN ENTIRE CONDITION OBJECT
+// CLEAN A CONDITION ENTRY
 // ======================================================
 function sanitizeCondition(raw: any) {
   return {
     ...raw,
     condition: asciiClean(raw.condition),
-    name: asciiClean(raw.name),
     subcategory: asciiClean(raw.subcategory),
     system: asciiClean(raw.system),
-    aliases: raw.aliases?.map((a: string) => asciiClean(a)) ?? [],
+    aliases: (raw.aliases || []).map((a: string) => asciiClean(a)),
   };
 }
 
@@ -66,15 +63,14 @@ function sanitizeCondition(raw: any) {
 // GENERATE FOR ONE CONDITION
 // ======================================================
 async function generateForCondition(rawCondition: any) {
-  // Sanitize EVERYTHING first
   const condition = sanitizeCondition(rawCondition);
 
-  const cleanName = condition.condition || condition.name;
+  const cleanName = condition.condition;
 
-  let prompt = asciiClean(`
+  const prompt = asciiClean(`
 You are a medical content generator for the condition "${cleanName}".
 
-Write detailed content that includes:
+Write detailed content including:
 
 - Overview of the condition
 - Suicide risks
@@ -105,10 +101,9 @@ Write detailed content that includes:
       }
 
       const safeId = asciiClean(
-        condition.id ||
-          `${condition.system}_${condition.subcategory}_${cleanName}`
-            .replace(/\s+/g, "_")
-            .replace(/[^a-zA-Z0-9_]/g, "")
+        `${condition.system}_${condition.subcategory}_${cleanName}`
+          .replace(/\s+/g, "_")
+          .replace(/[^a-zA-Z0-9_]/g, "")
       );
 
       const outputPath = path.join(OUTPUT_DIR, `${safeId}.md`);
@@ -138,5 +133,5 @@ Write detailed content that includes:
     await generateForCondition(c);
   }
 
-  console.log("\n🎉 All conditions processed successfully.");
+  console.log("\n🎉 All conditions processed.");
 })();
