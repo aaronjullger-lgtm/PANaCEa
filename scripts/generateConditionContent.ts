@@ -41,6 +41,8 @@ const BASE_DELAY_MS = 2500;
 // Gemini setup
 // ─────────────────────────────────────────────
 
+import { GoogleGenAI } from "@google/genai";
+
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 if (!GEMINI_API_KEY) {
   console.error(
@@ -51,11 +53,16 @@ if (!GEMINI_API_KEY) {
   process.exit(1);
 }
 
-// The client picks up GEMINI_API_KEY from env (per official docs)
-const ai = new GoogleGenAI({});
+// Explicitly pass the API key to the client
+const ai = new GoogleGenAI({
+  apiKey: GEMINI_API_KEY,
+});
 
-// Use Gemini 2.5 Flash explicitly
-const MODEL_ID = "gemini-2.5-Flash";
+// IMPORTANT: model name must be EXACTLY this, no 'models/' prefix, no extra text
+const MODEL_ID = "gemini-2.5-flash";
+// If you’d rather stick with Pro, you can use:
+// const MODEL_ID = "gemini-2.5-pro";
+
 
 // ─────────────────────────────────────────────
 // JSON file helpers
