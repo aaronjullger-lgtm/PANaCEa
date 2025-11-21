@@ -1,7 +1,7 @@
 // scripts/generateConditionContent.ts
 //
 // Generates high-yield PANCE notes for each condition in CONDITION_REGISTRY
-// using Google's Gemini 2.5 Pro model and writes them into
+// using Google's Gemini 2.5 Flash model and writes them into
 // src/conditionContent.generated.json.
 //
 // Requirements:
@@ -54,8 +54,8 @@ if (!GEMINI_API_KEY) {
 // The client picks up GEMINI_API_KEY from env (per official docs)
 const ai = new GoogleGenAI({});
 
-// Use Gemini 2.5 Pro explicitly
-const MODEL_ID = "gemini-2.5-pro";
+// Use Gemini 2.5 Flash explicitly
+const MODEL_ID = "gemini-2.5-Flash";
 
 // ─────────────────────────────────────────────
 // JSON file helpers
