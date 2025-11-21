@@ -1851,81 +1851,81 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
   // --------------------------------------------
 // DERMATOLOGY META
 // --------------------------------------------
-{
-  system: "DERM",
-  subcategory: "Other Dermatologic Disorders",
-  condition: "Photosensitivity Reactions",
-},
-
-// --------------------------------------------
-// GI / NUTRITION META
-// --------------------------------------------
-{
-  system: "GI",
-  subcategory: "Metabolic Disorders",
-  condition: "Phenylketonuria (PKU)",
-},
-{
-  system: "GI",
-  subcategory: "Nutrition",
-  condition: "Refeeding Syndrome",
-},
-
-// --------------------------------------------
-// PULMONARY META
-// --------------------------------------------
-{
-  system: "PULM",
-  subcategory: "Sleep-Related Breathing Disorders",
-  condition: "Obesity Hypoventilation Syndrome",
-},
-
-// --------------------------------------------
-// NEUROLOGY META
-// --------------------------------------------
-{
-  system: "NEURO",
-  subcategory: "Movement Disorders",
-  condition: "Tardive Dyskinesia",
-},
-
-// --------------------------------------------
-// PSYCHIATRY META
-// --------------------------------------------
-{
-  system: "PSYCH",
-  subcategory: "Sexuality & Gender",
-  condition: "Human Sexuality and Gender Dysphoria",
-},
-{
-  system: "PSYCH",
-  subcategory: "Trauma- and Stressor-Related Disorders",
-  condition: "Adjustment Disorders",
-},
-{
-  system: "PSYCH",
-  subcategory: "Somatic Symptom / Conversion",
-  condition: "Psychogenic Nonepileptic Seizure",
-},
-
-// --------------------------------------------
-// INFECTIOUS DISEASE META
-// --------------------------------------------
-{
-  system: "ID",
-  subcategory: "Prion Diseases",
-  condition: "Prion Diseases (e.g., Creutzfeldt-Jakob Disease)",
-},
-{
-  system: "ID",
-  subcategory: "Viral Diseases",
-  condition: "Coronavirus Infections",
-},
-{
-  system: "ID",
-  subcategory: "Perinatal Infections",
-  condition: "Perinatal Group B Streptococcus Infection",
-}
+  {
+    system: "DERM",
+    subcategory: "Other Dermatologic Disorders",
+    condition: "Photosensitivity Reactions",
+  },
+  
+  // --------------------------------------------
+  // GI / NUTRITION META
+  // --------------------------------------------
+  {
+    system: "GI",
+    subcategory: "Metabolic Disorders",
+    condition: "Phenylketonuria (PKU)",
+  },
+  {
+    system: "GI",
+    subcategory: "Nutrition",
+    condition: "Refeeding Syndrome",
+  },
+  
+  // --------------------------------------------
+  // PULMONARY META
+  // --------------------------------------------
+  {
+    system: "PULM",
+    subcategory: "Sleep-Related Breathing Disorders",
+    condition: "Obesity Hypoventilation Syndrome",
+  },
+  
+  // --------------------------------------------
+  // NEUROLOGY META
+  // --------------------------------------------
+  {
+    system: "NEURO",
+    subcategory: "Movement Disorders",
+    condition: "Tardive Dyskinesia",
+  },
+  
+  // --------------------------------------------
+  // PSYCHIATRY META
+  // --------------------------------------------
+  {
+    system: "PSYCH",
+    subcategory: "Sexuality & Gender",
+    condition: "Human Sexuality and Gender Dysphoria",
+  },
+  {
+    system: "PSYCH",
+    subcategory: "Trauma- and Stressor-Related Disorders",
+    condition: "Adjustment Disorders",
+  },
+  {
+    system: "PSYCH",
+    subcategory: "Somatic Symptom / Conversion",
+    condition: "Psychogenic Nonepileptic Seizure",
+  },
+  
+  // --------------------------------------------
+  // INFECTIOUS DISEASE META
+  // --------------------------------------------
+  {
+    system: "ID",
+    subcategory: "Prion Diseases",
+    condition: "Prion Diseases (e.g., Creutzfeldt-Jakob Disease)",
+  },
+  {
+    system: "ID",
+    subcategory: "Viral Diseases",
+    condition: "Coronavirus Infections",
+  },
+  {
+    system: "ID",
+    subcategory: "Perinatal Infections",
+    condition: "Perinatal Group B Streptococcus Infection",
+  }
 ];
 export const CONDITION_REGISTRY: ConditionMeta[] = [
   ...CONDITION_REGISTRY_CV,
