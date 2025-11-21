@@ -1,4 +1,7 @@
 // src/conditionContent.generated.ts
+// AUTO-GENERATED CONTENT WRAPPER
+// The actual data lives in conditionContent.generated.json,
+// which is created/updated by scripts/generateConditionContent.ts.
 
 export interface ConditionContent {
   overview?: string;
@@ -7,14 +10,8 @@ export interface ConditionContent {
   treatmentPearls?: string[];
 }
 
-// Keyed by ConditionMeta.condition (e.g. "Diverticulitis", "DKA", "ACS")
-export const CONDITION_CONTENT: Record<string, ConditionContent> = {
-  // Fill via AI-generated script later.
-  // Example:
-  // "Diverticulitis": {
-  //   overview: "Inflammation of colonic diverticula, classically in the sigmoid colon...",
-  //   keyPoints: ["LLQ pain", "fever", "leukocytosis", "CT with contrast for diagnosis"],
-  //   redFlags: ["Peritonitis", "free air on imaging", "signs of sepsis"],
-  //   treatmentPearls: ["Outpatient if uncomplicated & stable", "IV abx + admit if complicated"],
-  // },
-};
+// If your tsconfig doesn't support JSON imports, enable `resolveJsonModule`
+// OR change this to a manual require(...) in JS-land.
+import raw from "./conditionContent.generated.json";
+
+export const CONDITION_CONTENT = raw as Record<string, ConditionContent>;
