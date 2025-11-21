@@ -4,57 +4,52 @@ import fs from "fs";
 import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// -----------------------------
+// Directly import your condition registry
+import { conditionRegistry as conditions } from "../conditionRegistry";
+
+// ==========================================
 // CONFIG
-// -----------------------------
-const MODEL_NAME = "gemini-2.5-flash";   // << REQUIRED MODEL
+// ==========================================
+const MODEL_NAME = "gemini-2.5-flash";
 const OUTPUT_DIR = "generated";
+const CONCURRENCY = 8; // Fast but safe
 const MAX_RETRIES = 3;
 
-// -----------------------------
+// ==========================================
 // API KEY
-// -----------------------------
-const apiKey = process.env.GOOGLE_API_KEY;
+// ==========================================
+const apiKey =
+  process.env.GOOGLE_API_KEY ||
+  process.env.GEMINI_API_KEY || // backup variable
+  "";
 
 if (!apiKey) {
-  console.error("❌ Missing GOOGLE_API_KEY in environment variables.");
+  console.error("❌ Missing GOOGLE_API_KEY (or GEMINI_API_KEY).");
   process.exit(1);
 }
 
-// Gemini client
 const client = new GoogleGenerativeAI(apiKey);
 const model = client.getGenerativeModel({ model: MODEL_NAME });
 
-// -----------------------------
-// LOAD CONDITIONS
-// -----------------------------
-const conditionsPath = path.join(process.cwd(), "conditionRegistry.json");
-
-if (!fs.existsSync(conditionsPath)) {
-  console.error(`❌ Could not find conditionRegistry.json at: ${conditionsPath}`);
-  process.exit(1);
-}
-
-const conditions = JSON.parse(fs.readFileSync(conditionsPath, "utf8"));
-
-// -----------------------------
-// Ensure output directory exists
-// -----------------------------
+// Ensure output folder exists
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-// -----------------------------
-// Unicode Normalization
-// (Fixes your ByteString >255 error)
-// -----------------------------
+// ==========================================
+// HELPERS
+// ==========================================
 function normalizeText(str: string): string {
-  return str.normalize("NFKC"); // Converts “smart quotes” → "normal quotes"
+  return str.normalize("NFKC"); // fixes Unicode >255 issues
 }
 
-// -----------------------------
-// Generate Content For One Condition
-// -----------------------------
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// ==========================================
+// GENERATE CONTENT FOR ONE CONDITION
+// ==========================================
 async function generateForCondition(condition: any) {
   const cleanName = normalizeText(condition.name);
 
@@ -74,15 +69,10 @@ Write detailed content that includes:
 
   prompt = normalizeText(prompt);
 
-  let attempt = 1;
-
-  while (attempt <= MAX_RETRIES) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.log(`\n🔵 Generating content for: ${cleanName} (attempt ${attempt})`);
+      console.log(`🔵 [${condition.id}] Generating (attempt ${attempt})`);
 
-      // -----------------------------
-      // Gemini 2.5 Flash call (correct format)
-      // -----------------------------
       const result = await model.generateContent({
         contents: [
           {
@@ -93,44 +83,72 @@ Write detailed content that includes:
       });
 
       let fullText = "";
-
       for await (const chunk of result.stream) {
         const text = chunk.text();
         if (text) {
           fullText += text;
-          process.stdout.write(text);
         }
       }
 
-      const filename = path.join(OUTPUT_DIR, `${condition.id}.md`);
-      fs.writeFileSync(filename, fullText, "utf8");
+      const outputPath = path.join(OUTPUT_DIR, `${condition.id}.md`);
+      fs.writeFileSync(outputPath, fullText, "utf8");
 
-      console.log(`\n✅ Saved: ${filename}`);
-
+      console.log(`✅ [${condition.id}] Saved`);
       return;
     } catch (err: any) {
-      console.error(`\n⚠ Error on attempt ${attempt}:`, err.message);
+      console.error(`⚠ [${condition.id}] Error: ${err.message}`);
 
       if (attempt === MAX_RETRIES) {
-        console.error("❌ Max retries reached. Skipping this condition.");
+        console.error(`❌ [${condition.id}] Failed after ${MAX_RETRIES} attempts`);
         return;
       }
 
-      attempt++;
-      await new Promise((res) => setTimeout(res, 800 * attempt));
+      await sleep(500 * attempt); // simple adaptive backoff
     }
   }
 }
 
-// -----------------------------
-// MAIN RUNNER
-// -----------------------------
-(async () => {
-  console.log("🚀 Starting Offline Content Generator (Gemini 2.5 Flash)");
+// ==========================================
+// PARALLEL QUEUE RUNNER
+// ==========================================
+async function runInParallel(items: any[], limit: number, worker: Function) {
+  const queue = [...items];
+  const active: Promise<void>[] = [];
 
-  for (const condition of conditions) {
-    await generateForCondition(condition);
+  async function startNext() {
+    if (queue.length === 0) return;
+
+    const item = queue.shift();
+    const p = worker(item).finally(() => {
+      active.splice(active.indexOf(p), 1);
+    });
+
+    active.push(p);
+
+    if (active.length < limit) startNext();
+
+    await p;
+    startNext();
   }
+
+  for (let i = 0; i < limit && i < items.length; i++) {
+    startNext();
+  }
+
+  while (active.length > 0) {
+    await Promise.race(active);
+  }
+}
+
+// ==========================================
+// MAIN
+// ==========================================
+(async () => {
+  console.log(`🚀 Starting parallel generator using Gemini 2.5 Flash`);
+  console.log(`📌 Conditions loaded: ${conditions.length}`);
+  console.log(`📌 Concurrency: ${CONCURRENCY}`);
+
+  await runInParallel(conditions, CONCURRENCY, generateForCondition);
 
   console.log("\n🎉 All conditions processed.");
 })();
