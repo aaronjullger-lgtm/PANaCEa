@@ -1,59 +1,58 @@
-// scripts/generateConditionContent.ts
-
 import fs from "fs";
 import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// ✅ Correct import based on your registry structure
+// Correct import from your registry:
 import { CONDITION_REGISTRY as conditions } from "../conditionRegistry";
 
-// ==========================================
+// ================================
 // CONFIG
-// ==========================================
+// ================================
 const MODEL_NAME = "gemini-2.5-flash";
 const OUTPUT_DIR = "generated";
-const CONCURRENCY = 8; // parallel tasks
 const MAX_RETRIES = 3;
 
-// ==========================================
+// ================================
 // API KEY
-// ==========================================
+// ================================
 const apiKey =
   process.env.GOOGLE_API_KEY ||
   process.env.GEMINI_API_KEY ||
   "";
 
 if (!apiKey) {
-  console.error("❌ Missing GOOGLE_API_KEY (or GEMINI_API_KEY).");
+  console.error("❌ Missing GOOGLE_API_KEY or GEMINI_API_KEY");
   process.exit(1);
 }
 
 const client = new GoogleGenerativeAI(apiKey);
 const model = client.getGenerativeModel({ model: MODEL_NAME });
 
-// Ensure output folder exists
+// Ensure output directory exists
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-// ==========================================
-// HELPERS
-// ==========================================
-function normalizeText(str: string): string {
-  return str.normalize("NFKC"); // fixes Unicode >255 issues
+// ================================
+// UNICODE SANITIZER — Fixes ByteString crash
+// ================================
+function asciiClean(str: string = ""): string {
+  return str
+    .normalize("NFKC")
+    .replace(/[“”„‟]/g, '"')
+    .replace(/[‘’‚‛]/g, "'")
+    .replace(/–/g, "-")
+    .replace(/—/g, "-")
+    .replace(/[^\x00-\x7F]/g, " "); // removes any remaining non-ASCII chars
 }
 
-async function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// ==========================================
-// GENERATE CONTENT FOR ONE CONDITION
-// ==========================================
+// ================================
+// GENERATE CONTENT (SEQUENTIAL)
+// ================================
 async function generateForCondition(condition: any) {
-  const cleanName = normalizeText(condition.condition ?? condition.name);
+  const cleanName = asciiClean(condition.condition || condition.name);
 
-  let prompt = `
+  let prompt = asciiClean(`
 You are a medical content generator for the condition "${cleanName}".
 
 Write detailed content that includes:
@@ -65,13 +64,11 @@ Write detailed content that includes:
 - OTC treatments
 - Herbal medicine options
 - Notes for clinicians producing patient-friendly explanations
-`;
-
-  prompt = normalizeText(prompt);
+`);
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.log(`🔵 [${condition.condition}] Generating (attempt ${attempt})`);
+      console.log(`🔵 Generating: ${cleanName} (attempt ${attempt})`);
 
       const result = await model.generateContent({
         contents: [
@@ -84,78 +81,43 @@ Write detailed content that includes:
 
       let fullText = "";
       for await (const chunk of result.stream) {
-        const text = chunk.text();
-        if (text) {
-          fullText += text;
-        }
+        const t = chunk.text();
+        if (t) fullText += t;
       }
 
-      const id =
+      const id = asciiClean(
         condition.id ||
-        `${condition.system}__${condition.subcategory}__${cleanName.replace(
-          /\s+/g,
-          "_"
-        )}`;
+          `${condition.system}_${condition.subcategory}_${cleanName}`
+            .replace(/\s+/g, "_")
+            .replace(/[^a-zA-Z0-9_]/g, "")
+      );
 
       const outputPath = path.join(OUTPUT_DIR, `${id}.md`);
       fs.writeFileSync(outputPath, fullText, "utf8");
 
-      console.log(`✅ [${id}] Saved`);
+      console.log(`✅ Saved: ${outputPath}`);
       return;
     } catch (err: any) {
-      console.error(`⚠ [${cleanName}] Error: ${err.message}`);
+      console.error(`⚠ Error on ${cleanName}: ${err.message}`);
 
       if (attempt === MAX_RETRIES) {
-        console.error(`❌ [${cleanName}] Failed after ${MAX_RETRIES} attempts`);
+        console.error(`❌ Giving up on ${cleanName}`);
         return;
       }
-
-      await sleep(500 * attempt); // simple adaptive backoff
     }
   }
 }
 
-// ==========================================
-// PARALLEL EXECUTION QUEUE
-// ==========================================
-async function runInParallel(items: any[], limit: number, worker: Function) {
-  const queue = [...items];
-  const active: Promise<void>[] = [];
-
-  async function startNext() {
-    if (queue.length === 0) return;
-
-    const item = queue.shift();
-    const p = worker(item).finally(() => {
-      active.splice(active.indexOf(p), 1);
-    });
-
-    active.push(p);
-
-    if (active.length < limit) startNext();
-
-    await p;
-    startNext();
-  }
-
-  for (let i = 0; i < limit && i < items.length; i++) {
-    startNext();
-  }
-
-  while (active.length > 0) {
-    await Promise.race(active);
-  }
-}
-
-// ==========================================
-// MAIN
-// ==========================================
+// ================================
+// MAIN LOOP (SEQUENTIAL)
+// ================================
 (async () => {
-  console.log(`🚀 Starting generator (Gemini 2.5 Flash)`);
-  console.log(`📌 Loaded ${conditions.length} conditions`);
-  console.log(`📌 Concurrency: ${CONCURRENCY}`);
+  console.log(`🚀 Starting sequential generator`);
+  console.log(`📌 Total conditions: ${conditions.length}`);
 
-  await runInParallel(conditions, CONCURRENCY, generateForCondition);
+  for (const cond of conditions) {
+    await generateForCondition(cond);
+  }
 
-  console.log("\n🎉 All conditions processed.");
+  console.log("\n🎉 Done — all sequential tasks completed.");
 })();
