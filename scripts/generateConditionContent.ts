@@ -14,6 +14,10 @@ const MODEL_NAME = "gemini-2.5-pro";
 const OUTPUT_DIR = "generated";
 const MAX_RETRIES = 3;
 
+// Tune this based on rate limits
+// Start with 2–3; increase only if you're not hitting quota errors
+const MAX_CONCURRENCY = 3;
+
 // ======================================================
 // API KEY
 // ======================================================
@@ -41,10 +45,10 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 function asciiClean(str: string = ""): string {
   return str
     .normalize("NFKC")
-    .replace(/[“”„‟]/g, '"')     // curly → "
-    .replace(/[‘’‚‛]/g, "'")     // curly → '
-    .replace(/[–—]/g, "-")       // dashes → -
-    .replace(/\u00A0/g, " ")     // non-breaking space
+    .replace(/[“”„‟]/g, '"') // curly → "
+    .replace(/[‘’‚‛]/g, "'") // curly → '
+    .replace(/[–—]/g, "-") // dashes → -
+    .replace(/\u00A0/g, " ") // non-breaking space
     .replace(/[^\x00-\x7F]/g, ""); // remove any remaining unicode
 }
 
@@ -62,11 +66,34 @@ function sanitizeCondition(raw: any) {
 }
 
 // ======================================================
-// GENERATE FOR ONE CONDITION
+// BUILD SAFE OUTPUT PATH FOR A CONDITION
+// ======================================================
+function getOutputPath(rawCondition: any): { cleanName: string; outputPath: string } {
+  const condition = sanitizeCondition(rawCondition);
+  const cleanName = condition.condition;
+
+  const safeId = asciiClean(
+    `${condition.system}_${condition.subcategory}_${cleanName}`
+      .replace(/\s+/g, "_")
+      .replace(/[^a-zA-Z0-9_]/g, "")
+  );
+
+  const outputPath = path.join(OUTPUT_DIR, `${safeId}.md`);
+  return { cleanName, outputPath };
+}
+
+// ======================================================
+// GENERATE FOR ONE CONDITION (RESUME-SAFE)
 // ======================================================
 async function generateForCondition(rawCondition: any) {
   const condition = sanitizeCondition(rawCondition);
-  const cleanName = condition.condition;
+  const { cleanName, outputPath } = getOutputPath(condition);
+
+  // Resume-safe: skip if file already exists
+  if (fs.existsSync(outputPath)) {
+    console.log(`⏩ Skipping (already exists): ${cleanName}`);
+    return;
+  }
 
   const prompt = asciiClean(`
 Generate detailed medical content for the condition "${cleanName}".
@@ -86,56 +113,70 @@ Include:
     try {
       console.log(`🔵 Generating: ${cleanName} (attempt ${attempt})`);
 
-      // Correct Gemini 2.5 API format
       const streamResult = await model.generateContentStream(prompt);
 
       let fullText = "";
-      for await (const chunk of streamResult.stream) {
+      for await (const chunk of (streamResult as any).stream) {
         const t = chunk.text();
         if (t) fullText += asciiClean(t);
       }
 
-      // Build safe filename
-      const safeId = asciiClean(
-        `${condition.system}_${condition.subcategory}_${cleanName}`
-          .replace(/\s+/g, "_")
-          .replace(/[^a-zA-Z0-9_]/g, "")
-      );
-
-      const outputPath = path.join(OUTPUT_DIR, `${safeId}.md`);
       fs.writeFileSync(outputPath, fullText, "utf8");
-
-       if (fs.existsSync(outputPath)) {
-        console.log(`⏩ Skipping (already exists): ${cleanName}`);
-        return; // skip this condition entirely
-  }
       console.log(`✅ Saved: ${outputPath}`);
       return;
-     } catch (err: any) {
+    } catch (err: any) {
       console.error(`\n=================== FULL ERROR (START) ===================`);
       console.error(`Condition: ${cleanName}`);
-      console.error(err);          // full object
-      console.error(err.stack);    // full stack trace
+      console.error(err);
+      console.error(err?.stack);
       console.error(`==================== FULL ERROR (END) ====================\n`);
 
       if (attempt === MAX_RETRIES) {
         console.error(`❌ Giving up on ${cleanName}`);
         return;
       }
+
+      // brief delay before retrying
+      await new Promise((res) => setTimeout(res, 1000 * attempt));
     }
   }
 }
 
 // ======================================================
-// MAIN SEQUENTIAL LOOP
+// MAIN: CONCURRENT WORKER POOL
 // ======================================================
 (async () => {
-  console.log(`🚀 Starting ASCII-clean sequential generator`);
+  console.log(`🚀 Starting ASCII-clean concurrent generator`);
   console.log(`📌 Total conditions: ${CONDITION_REGISTRY.length}`);
+  console.log(`📌 Max concurrency: ${MAX_CONCURRENCY}`);
+  console.log(`📂 Output dir: ${OUTPUT_DIR}\n`);
 
-  for (const c of CONDITION_REGISTRY) {
-    await generateForCondition(c);
+  let index = 0;
+  const total = CONDITION_REGISTRY.length;
+
+  async function worker(workerId: number) {
+    while (true) {
+      const currentIndex = index++;
+      if (currentIndex >= total) {
+        return;
+      }
+
+      const condition = CONDITION_REGISTRY[currentIndex];
+      console.log(
+        `👷 Worker ${workerId}: processing ${currentIndex + 1}/${total} – ${condition.condition}`
+      );
+
+      await generateForCondition(condition);
+    }
   }
 
-  console.log("\n🎉 All conditions processed.");
+  // Launch worker pool
+  const workers: Promise<void>[] = [];
+  for (let i = 0; i < MAX_CONCURRENCY; i++) {
+    workers.push(worker(i + 1));
+  }
+
+  await Promise.all(workers);
+
+  console.log("\n🎉 All conditions processed (or skipped if already generated).");
 })();
