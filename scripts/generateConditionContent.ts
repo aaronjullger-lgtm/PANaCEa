@@ -10,7 +10,7 @@ import { CONDITION_REGISTRY } from "../conditionRegistry";
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-1.5-flash";
+const MODEL_NAME = "gemini-2.5-flash";
 const OUTPUT_DIR = "generated";
 const MAX_RETRIES = 3;
 
