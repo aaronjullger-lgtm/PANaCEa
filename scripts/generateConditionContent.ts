@@ -4,15 +4,15 @@ import fs from "fs";
 import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Directly import your condition registry
-import { conditionRegistry as conditions } from "../conditionRegistry";
+// ✅ Correct import based on your registry structure
+import { CONDITION_REGISTRY as conditions } from "../conditionRegistry";
 
 // ==========================================
 // CONFIG
 // ==========================================
 const MODEL_NAME = "gemini-2.5-flash";
 const OUTPUT_DIR = "generated";
-const CONCURRENCY = 8; // Fast but safe
+const CONCURRENCY = 8; // parallel tasks
 const MAX_RETRIES = 3;
 
 // ==========================================
@@ -20,7 +20,7 @@ const MAX_RETRIES = 3;
 // ==========================================
 const apiKey =
   process.env.GOOGLE_API_KEY ||
-  process.env.GEMINI_API_KEY || // backup variable
+  process.env.GEMINI_API_KEY ||
   "";
 
 if (!apiKey) {
@@ -51,7 +51,7 @@ async function sleep(ms: number) {
 // GENERATE CONTENT FOR ONE CONDITION
 // ==========================================
 async function generateForCondition(condition: any) {
-  const cleanName = normalizeText(condition.name);
+  const cleanName = normalizeText(condition.condition ?? condition.name);
 
   let prompt = `
 You are a medical content generator for the condition "${cleanName}".
@@ -71,7 +71,7 @@ Write detailed content that includes:
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      console.log(`🔵 [${condition.id}] Generating (attempt ${attempt})`);
+      console.log(`🔵 [${condition.condition}] Generating (attempt ${attempt})`);
 
       const result = await model.generateContent({
         contents: [
@@ -90,16 +90,23 @@ Write detailed content that includes:
         }
       }
 
-      const outputPath = path.join(OUTPUT_DIR, `${condition.id}.md`);
+      const id =
+        condition.id ||
+        `${condition.system}__${condition.subcategory}__${cleanName.replace(
+          /\s+/g,
+          "_"
+        )}`;
+
+      const outputPath = path.join(OUTPUT_DIR, `${id}.md`);
       fs.writeFileSync(outputPath, fullText, "utf8");
 
-      console.log(`✅ [${condition.id}] Saved`);
+      console.log(`✅ [${id}] Saved`);
       return;
     } catch (err: any) {
-      console.error(`⚠ [${condition.id}] Error: ${err.message}`);
+      console.error(`⚠ [${cleanName}] Error: ${err.message}`);
 
       if (attempt === MAX_RETRIES) {
-        console.error(`❌ [${condition.id}] Failed after ${MAX_RETRIES} attempts`);
+        console.error(`❌ [${cleanName}] Failed after ${MAX_RETRIES} attempts`);
         return;
       }
 
@@ -109,7 +116,7 @@ Write detailed content that includes:
 }
 
 // ==========================================
-// PARALLEL QUEUE RUNNER
+// PARALLEL EXECUTION QUEUE
 // ==========================================
 async function runInParallel(items: any[], limit: number, worker: Function) {
   const queue = [...items];
@@ -144,8 +151,8 @@ async function runInParallel(items: any[], limit: number, worker: Function) {
 // MAIN
 // ==========================================
 (async () => {
-  console.log(`🚀 Starting parallel generator using Gemini 2.5 Flash`);
-  console.log(`📌 Conditions loaded: ${conditions.length}`);
+  console.log(`🚀 Starting generator (Gemini 2.5 Flash)`);
+  console.log(`📌 Loaded ${conditions.length} conditions`);
   console.log(`📌 Concurrency: ${CONCURRENCY}`);
 
   await runInParallel(conditions, CONCURRENCY, generateForCondition);
