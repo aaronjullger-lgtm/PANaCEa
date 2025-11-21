@@ -107,8 +107,12 @@ Include:
 
       console.log(`✅ Saved: ${outputPath}`);
       return;
-    } catch (err: any) {
-      console.error(`⚠ Error on ${cleanName}: ${err.message}`);
+     } catch (err: any) {
+      console.error(`\n=================== FULL ERROR (START) ===================`);
+      console.error(`Condition: ${cleanName}`);
+      console.error(err);          // full object
+      console.error(err.stack);    // full stack trace
+      console.error(`==================== FULL ERROR (END) ====================\n`);
 
       if (attempt === MAX_RETRIES) {
         console.error(`❌ Giving up on ${cleanName}`);
