@@ -1,8 +1,10 @@
+// scripts/generateConditionContent.ts
+
 import fs from "fs";
 import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Correct import for your registry
+// Import your registry
 import { CONDITION_REGISTRY } from "../conditionRegistry";
 
 // ======================================================
@@ -28,7 +30,7 @@ if (!apiKey) {
 const client = new GoogleGenerativeAI(apiKey);
 const model = client.getGenerativeModel({ model: MODEL_NAME });
 
-// Ensure output folder exists
+// Make sure output folder exists
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
@@ -39,11 +41,11 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 function asciiClean(str: string = ""): string {
   return str
     .normalize("NFKC")
-    .replace(/[“”„‟]/g, '"')
-    .replace(/[‘’‚‛]/g, "'")
-    .replace(/[–—]/g, "-")
-    .replace(/\u00A0/g, " ")
-    .replace(/[^\x00-\x7F]/g, "");
+    .replace(/[“”„‟]/g, '"')     // curly → "
+    .replace(/[‘’‚‛]/g, "'")     // curly → '
+    .replace(/[–—]/g, "-")       // dashes → -
+    .replace(/\u00A0/g, " ")     // non-breaking space
+    .replace(/[^\x00-\x7F]/g, ""); // remove any remaining unicode
 }
 
 // ======================================================
@@ -64,13 +66,12 @@ function sanitizeCondition(raw: any) {
 // ======================================================
 async function generateForCondition(rawCondition: any) {
   const condition = sanitizeCondition(rawCondition);
-
   const cleanName = condition.condition;
 
   const prompt = asciiClean(`
-You are a medical content generator for the condition "${cleanName}".
+Generate detailed medical content for the condition "${cleanName}".
 
-Write detailed content including:
+Include:
 
 - Overview of the condition
 - Suicide risks
@@ -85,21 +86,16 @@ Write detailed content including:
     try {
       console.log(`🔵 Generating: ${cleanName} (attempt ${attempt})`);
 
-      const result = await model.generateContent({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
-      });
+      // Correct Gemini 2.5 API format
+      const streamResult = await model.generateContentStream(prompt);
 
       let fullText = "";
-      for await (const chunk of result.stream) {
+      for await (const chunk of streamResult.stream) {
         const t = chunk.text();
         if (t) fullText += asciiClean(t);
       }
 
+      // Build safe filename
       const safeId = asciiClean(
         `${condition.system}_${condition.subcategory}_${cleanName}`
           .replace(/\s+/g, "_")
