@@ -1,274 +1,136 @@
 // scripts/generateConditionContent.ts
-//
-// Generates high-yield PANCE notes for each condition in CONDITION_REGISTRY
-// using Google's Gemini 2.5 Flash model and writes them into
-// src/conditionContent.generated.json.
-//
-// Requirements:
-//   - npm install @google/genai
-//   - Environment variable GEMINI_API_KEY must be set
-//   - Run from repo root, e.g.:
-//       npx tsx scripts/generateConditionContent.ts
 
 import fs from "fs";
 import path from "path";
-import { GoogleGenAI } from "@google/genai";
-import {
-  CONDITION_REGISTRY,
-  type ConditionMeta,
-  buildConditionDefinition,
-} from "../conditionRegistry";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Keep this in sync with src/conditionContent.generated.(ts|json) usage
-export interface ConditionContent {
-  overview?: string;
-  keyPoints?: string[];
-  redFlags?: string[];
-  treatmentPearls?: string[];
-}
+// -----------------------------
+// CONFIG
+// -----------------------------
+const MODEL_NAME = "gemini-2.5-flash";   // << REQUIRED MODEL
+const OUTPUT_DIR = "generated";
+const MAX_RETRIES = 3;
 
-type ContentMap = Record<string, ConditionContent>;
+// -----------------------------
+// API KEY
+// -----------------------------
+const apiKey = process.env.GOOGLE_API_KEY;
 
-// How many *new* conditions to generate in a single run.
-// Re-running the script will pick up where it left off.
-const MAX_NEW_PER_RUN = 60;
-
-// Base delay between successful requests (ms)
-// 2500ms ≈ 24 calls/minute, well under your 150/min ceiling.
-const BASE_DELAY_MS = 2500;
-
-// ─────────────────────────────────────────────
-// Gemini setup
-// ─────────────────────────────────────────────
-
-import { GoogleGenAI } from "@google/genai";
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) {
-  console.error(
-    "ERROR: GEMINI_API_KEY is not set.\n" +
-      "Get a key from Google AI Studio and then set it, for example:\n" +
-      '  export GEMINI_API_KEY="your-key-here"\n'
-  );
+if (!apiKey) {
+  console.error("❌ Missing GOOGLE_API_KEY in environment variables.");
   process.exit(1);
 }
 
-// Explicitly pass the API key to the client
-const ai = new GoogleGenAI({
-  apiKey: GEMINI_API_KEY,
-});
+// Gemini client
+const client = new GoogleGenerativeAI(apiKey);
+const model = client.getGenerativeModel({ model: MODEL_NAME });
 
-// IMPORTANT: model name must be EXACTLY this, no 'models/' prefix, no extra text
-const MODEL_ID = "gemini-2.5-flash";
-// If you’d rather stick with Pro, you can use:
-// const MODEL_ID = "gemini-2.5-pro";
+// -----------------------------
+// LOAD CONDITIONS
+// -----------------------------
+const conditionsPath = path.join(process.cwd(), "conditionRegistry.json");
 
-
-// ─────────────────────────────────────────────
-// JSON file helpers
-// ─────────────────────────────────────────────
-
-const JSON_PATH = path.resolve(
-  process.cwd(),
-  "src/conditionContent.generated.json"
-);
-
-function loadExistingContent(): ContentMap {
-  if (!fs.existsSync(JSON_PATH)) return {};
-  try {
-    const raw = fs.readFileSync(JSON_PATH, "utf8");
-    if (!raw.trim()) return {};
-    return JSON.parse(raw) as ContentMap;
-  } catch (err) {
-    console.error("Failed to parse existing condition content JSON:", err);
-    return {};
-  }
+if (!fs.existsSync(conditionsPath)) {
+  console.error(`❌ Could not find conditionRegistry.json at: ${conditionsPath}`);
+  process.exit(1);
 }
 
-function saveContent(content: ContentMap) {
-  fs.writeFileSync(JSON_PATH, JSON.stringify(content, null, 2), "utf8");
-  console.log(
-    `\n✅ Saved content for ${Object.keys(content).length} conditions → ${JSON_PATH}`
-  );
+const conditions = JSON.parse(fs.readFileSync(conditionsPath, "utf8"));
+
+// -----------------------------
+// Ensure output directory exists
+// -----------------------------
+if (!fs.existsSync(OUTPUT_DIR)) {
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-// ─────────────────────────────────────────────
-// Prompt + generation
-// ─────────────────────────────────────────────
-
-function buildPrompt(meta: ConditionMeta): string {
-  return `
-You are generating concise, high-yield study notes for a Physician Assistant student preparing for the PANCE.
-
-Condition: "${meta.condition}"
-System: "${meta.system}"
-Subcategory: "${meta.subcategory}"
-
-Return ONLY valid JSON with this exact shape (no markdown, no comments, no extra text):
-
-{
-  "overview": string,
-  "keyPoints": string[],
-  "redFlags": string[],
-  "treatmentPearls": string[]
+// -----------------------------
+// Unicode Normalization
+// (Fixes your ByteString >255 error)
+// -----------------------------
+function normalizeText(str: string): string {
+  return str.normalize("NFKC"); // Converts “smart quotes” → "normal quotes"
 }
 
-Guidelines:
-- overview: 1–3 sentences, clinical, PANCE-level, no fluff.
-- keyPoints: 3–6 bullets with classic presentation, buzzwords, or key diagnostic clues.
-- redFlags: 2–4 bullets with “must-not-miss” features or dangerous complications.
-- treatmentPearls: 2–4 bullets with first-line management and big exam pearls.
-- Do NOT include exact drug dosing or super niche guideline trivia.
-- Focus on NCCPA/PANCE-style general principles.
+// -----------------------------
+// Generate Content For One Condition
+// -----------------------------
+async function generateForCondition(condition: any) {
+  const cleanName = normalizeText(condition.name);
 
-Again: respond with ONLY the JSON object, nothing else.
-`.trim();
-}
+  let prompt = `
+You are a medical content generator for the condition "${cleanName}".
 
-async function generateContentForCondition(
-  meta: ConditionMeta,
-  attempt = 1
-): Promise<ConditionContent | null> {
-  const prompt = buildPrompt(meta);
+Write detailed content that includes:
 
-  try {
-    const response = await ai.models.generateContent({
-      model: MODEL_ID,
-      contents: prompt,
-      // Ask Gemini to return strict JSON
-      config: {
-        responseMimeType: "application/json",
-      },
-    });
+- Overview of the condition
+- Suicide risks
+- Self-care recommendations
+- Hospital treatments
+- OTC treatments
+- Herbal medicine options
+- Notes for clinicians producing patient-friendly explanations
+`;
 
-    const text = response.text();
-    if (!text) {
-      console.warn(
-        `⚠️  Empty response text for condition "${meta.condition}" – skipping.`
-      );
-      return null;
-    }
+  prompt = normalizeText(prompt);
 
-    let raw: any;
+  let attempt = 1;
+
+  while (attempt <= MAX_RETRIES) {
     try {
-      raw = JSON.parse(text);
-    } catch (err) {
-      console.error(
-        `⚠️  Failed to parse JSON for "${meta.condition}". Raw text:\n${text}\n`,
-        err
-      );
-      return null;
+      console.log(`\n🔵 Generating content for: ${cleanName} (attempt ${attempt})`);
+
+      // -----------------------------
+      // Gemini 2.5 Flash call (correct format)
+      // -----------------------------
+      const result = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+      });
+
+      let fullText = "";
+
+      for await (const chunk of result.stream) {
+        const text = chunk.text();
+        if (text) {
+          fullText += text;
+          process.stdout.write(text);
+        }
+      }
+
+      const filename = path.join(OUTPUT_DIR, `${condition.id}.md`);
+      fs.writeFileSync(filename, fullText, "utf8");
+
+      console.log(`\n✅ Saved: ${filename}`);
+
+      return;
+    } catch (err: any) {
+      console.error(`\n⚠ Error on attempt ${attempt}:`, err.message);
+
+      if (attempt === MAX_RETRIES) {
+        console.error("❌ Max retries reached. Skipping this condition.");
+        return;
+      }
+
+      attempt++;
+      await new Promise((res) => setTimeout(res, 800 * attempt));
     }
-
-    const cleanArray = (val: unknown): string[] | undefined => {
-      if (!Array.isArray(val)) return undefined;
-      return val
-        .map((v) => String(v).trim())
-        .filter((s) => s.length > 0);
-    };
-
-    const content: ConditionContent = {
-      overview:
-        typeof raw.overview === "string" ? raw.overview.trim() : undefined,
-      keyPoints: cleanArray(raw.keyPoints),
-      redFlags: cleanArray(raw.redFlags),
-      treatmentPearls: cleanArray(raw.treatmentPearls),
-    };
-
-    return content;
-  } catch (err: any) {
-    const status = err?.status ?? err?.error?.code;
-    const raw = JSON.stringify(err);
-
-    // Handle quota / rate limit errors with backoff + retry
-    if (
-      (status === 429 || raw.includes("RESOURCE_EXHAUSTED")) &&
-      attempt < 4
-    ) {
-      const backoffMs = 15000 * attempt; // 15s, 30s, 45s...
-      console.warn(
-        `⏳ Quota/rate limit for "${meta.condition}" (attempt ${attempt}). ` +
-          `Sleeping ${backoffMs / 1000}s then retrying...`
-      );
-      await sleep(backoffMs);
-      return generateContentForCondition(meta, attempt + 1);
-    }
-
-    console.error(
-      `❌ Error generating content for "${meta.condition}" (${meta.system} / ${meta.subcategory}):`,
-      err
-    );
-    return null;
   }
 }
 
-// Simple throttle so we don't hammer the API
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+// -----------------------------
+// MAIN RUNNER
+// -----------------------------
+(async () => {
+  console.log("🚀 Starting Offline Content Generator (Gemini 2.5 Flash)");
 
-// ─────────────────────────────────────────────
-// Main driver
-// ─────────────────────────────────────────────
-
-async function main() {
-  const existing = loadExistingContent();
-  const contentMap: ContentMap = { ...existing };
-
-  const allMetas: ConditionMeta[] = CONDITION_REGISTRY;
-
-  const allWithIds = allMetas.map((meta) => {
-    const def = buildConditionDefinition(meta);
-    return { meta, id: def.id };
-  });
-
-  const toGenerate = allWithIds.filter(({ id }) => !contentMap[id]);
-
-  console.log(
-    `Found ${allMetas.length} conditions total.\n` +
-      `${Object.keys(existing).length} already have content.\n` +
-      `${toGenerate.length} remain to be generated.\n`
-  );
-
-  let i = 0;
-  let generatedThisRun = 0;
-
-  for (const { meta, id } of toGenerate) {
-    if (generatedThisRun >= MAX_NEW_PER_RUN) {
-      console.log(
-        `\n⛳️ Reached MAX_NEW_PER_RUN (${MAX_NEW_PER_RUN}). ` +
-          `Re-run the script later to keep going.`
-      );
-      break;
-    }
-
-    i += 1;
-    console.log(
-      `\n[${i}/${toGenerate.length}] Generating: ${meta.system} / ${meta.subcategory} / ${meta.condition} (${id})`
-    );
-
-    const generated = await generateContentForCondition(meta);
-    if (generated) {
-      contentMap[id] = generated;
-      generatedThisRun += 1;
-      console.log(
-        `✅ Saved in-memory for "${meta.condition}" (${id}) – will write to disk at the end.`
-      );
-    } else {
-      console.warn(
-        `⚠️  Skipped "${meta.condition}" due to an error or empty response.`
-      );
-    }
-
-    // Gentle throttle between *successful* requests
-    await sleep(BASE_DELAY_MS);
+  for (const condition of conditions) {
+    await generateForCondition(condition);
   }
 
-  saveContent(contentMap);
-}
-
-
-main().catch((err) => {
-  console.error("Fatal error while generating condition content:", err);
-  process.exit(1);
-});
+  console.log("\n🎉 All conditions processed.");
+})();
