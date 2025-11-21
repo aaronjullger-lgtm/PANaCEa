@@ -51,7 +51,7 @@ export interface SessionSettings {
   topic?: string;
 
   /** Optional: when present, Gemini should target this specific condition */
-  conditionName?: string;
+  subcategoryName?: string;
 }
 
 // High-level systems (matches your existing tiles + PRO + hidden OTHER)
