@@ -14,6 +14,8 @@ import TopicHeatmap from "./TopicHeatmap";
 import SystemDrilldownModal from "./SystemDrilldownModal";
 import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
 import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
+import { CONDITION_REGISTRY, type ConditionMeta } from "../conditionRegistry";
+import ConditionDetailModal from "./ConditionDetailModal";
 
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
@@ -37,9 +39,9 @@ interface MenuViewProps {
 export interface SystemStats {
   system: SystemCode;
   label: string;
-  score: number;   // % correct
+  score: number; // % correct
   correct: number; // # correct
-  total: number;   // # attempts
+  total: number; // # attempts
 }
 
 const MenuView: React.FC<MenuViewProps> = ({
@@ -57,8 +59,10 @@ const MenuView: React.FC<MenuViewProps> = ({
   onConfirmSession,
   growthAreas,
 }) => {
-  
-const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
+  const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(null);
 
   const stats = useMemo(() => {
     // Overall score = last 360 questions (any mode) as before
@@ -115,7 +119,13 @@ const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
       })
       .sort((a, b) => b.total - a.total);
 
-    return { overallScore, correct360, total360: last360.length, systemStats, topicScores };
+    return {
+      overallScore,
+      correct360,
+      total360: last360.length,
+      systemStats,
+      topicScores,
+    };
   }, [performanceData]);
 
   const dueQuestionsCount = useMemo(() => {
@@ -134,6 +144,20 @@ const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
     });
   };
 
+  const searchResults: ConditionMeta[] = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return CONDITION_REGISTRY.filter((meta) => {
+      if (meta.condition.toLowerCase().includes(q)) return true;
+      if (meta.aliases) {
+        return meta.aliases.some((alias) =>
+          alias.toLowerCase().includes(q)
+        );
+      }
+      return false;
+    }).slice(0, 20);
+  }, [searchQuery]);
+
   return (
     <>
       {isModalOpen && (
@@ -146,27 +170,78 @@ const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
         />
       )}
 
-     {selectedSystem && (
-       <SystemDrilldownModal
+      {selectedSystem && (
+        <SystemDrilldownModal
           system={selectedSystem}
           performanceData={performanceData}
           onClose={() => setSelectedSystem(null)}
           onDrillSubcategory={({ system, subcategory }) => {
-             if (!system) return;
-             onConfirmSession({
+            if (!system) return;
+            onConfirmSession({
               focus: "topic",
-               difficulty: "same",
-               topic: system,
-               subcategoryName: subcategory,
+              difficulty: "same",
+              topic: system,
+              subcategoryName: subcategory,
             });
-           }}
-         />
+          }}
+        />
+      )}
+
+      {selectedCondition && (
+        <ConditionDetailModal
+          condition={selectedCondition}
+          onClose={() => setSelectedCondition(null)}
+          onDrillCondition={(meta) => {
+            onConfirmSession({
+              focus: "topic",
+              difficulty: "same",
+              topic: meta.system,
+              conditionName: meta.condition,
+            });
+            setSelectedCondition(null);
+          }}
+        />
       )}
 
       <div className="flex flex-col">
-        <h1 className="text-3xl font-bold text-[#3D1B0E] mb-6 text-center">
+        <h1 className="text-3xl font-bold text-[#3D1B0E] mb-4 text-center">
           PANaCEa
         </h1>
+
+        {/* Condition search */}
+        <div className="w-full max-w-md mx-auto mb-6 relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search conditions (e.g., ACS, Diverticulitis, DKA)..."
+            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3D1B0E]/60 focus:border-[#3D1B0E]"
+          />
+          {searchResults.length > 0 && (
+            <div className="absolute z-30 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+              {searchResults.map((meta) => (
+                <button
+                  key={`${meta.system}-${meta.subcategory}-${meta.condition}`}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCondition(meta);
+                    setSearchQuery("");
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium text-slate-800">
+                      {meta.condition}
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      {meta.system} • {meta.subcategory}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="space-y-8">
           {/* Session controls */}
@@ -209,10 +284,10 @@ const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
             <TopicHeatmap
               topicScores={stats.topicScores || []}
               onTopicClick={(topicStats) => {
-              // topicStats is a TopicStats object; its `.topic` is your "CV", "GI", etc.
-              setSelectedSystem(topicStats.topic as SystemCode);
-            }}
-          />
+                // topicStats is a TopicStats object; its `.topic` is your "CV", "GI", etc.
+                setSelectedSystem(topicStats.topic as SystemCode);
+              }}
+            />
           </section>
 
           {/* Data management */}
