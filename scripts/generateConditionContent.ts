@@ -1,14 +1,25 @@
 // scripts/generateConditionContent.ts
+//
+// Generates high-yield PANCE notes for each condition in CONDITION_REGISTRY
+// using Google's Gemini 2.5 Pro model and writes them into
+// src/conditionContent.generated.json.
+//
+// Requirements:
+//   - npm install @google/genai
+//   - Environment variable GEMINI_API_KEY must be set
+//   - Run from repo root, e.g.:
+//       npx tsx scripts/generateConditionContent.ts
 
 import fs from "fs";
 import path from "path";
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import {
   CONDITION_REGISTRY,
   type ConditionMeta,
-} from "../src/conditionRegistry";
+  buildConditionDefinition,
+} from "../conditionRegistry";
 
-// Keep this in sync with src/conditionContent.generated.ts
+// Keep this in sync with src/conditionContent.generated.(ts|json) usage
 export interface ConditionContent {
   overview?: string;
   keyPoints?: string[];
@@ -18,20 +29,37 @@ export interface ConditionContent {
 
 type ContentMap = Record<string, ConditionContent>;
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// ─────────────────────────────────────────────
+// Gemini setup
+// ─────────────────────────────────────────────
 
-// Where the JSON lives
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+if (!GEMINI_API_KEY) {
+  console.error(
+    "ERROR: GEMINI_API_KEY is not set.\n" +
+      "Get a key from Google AI Studio and then set it, for example:\n" +
+      '  export GEMINI_API_KEY="your-key-here"\n'
+  );
+  process.exit(1);
+}
+
+// The client picks up GEMINI_API_KEY from env (per official docs)
+const ai = new GoogleGenAI({});
+
+// Use Gemini 2.5 Pro explicitly
+const MODEL_ID = "gemini-2.5-pro";
+
+// ─────────────────────────────────────────────
+// JSON file helpers
+// ─────────────────────────────────────────────
+
 const JSON_PATH = path.resolve(
-  __dirname,
-  "../src/conditionContent.generated.json"
+  process.cwd(),
+  "src/conditionContent.generated.json"
 );
 
 function loadExistingContent(): ContentMap {
-  if (!fs.existsSync(JSON_PATH)) {
-    return {};
-  }
+  if (!fs.existsSync(JSON_PATH)) return {};
   try {
     const raw = fs.readFileSync(JSON_PATH, "utf8");
     if (!raw.trim()) return {};
@@ -45,9 +73,13 @@ function loadExistingContent(): ContentMap {
 function saveContent(content: ContentMap) {
   fs.writeFileSync(JSON_PATH, JSON.stringify(content, null, 2), "utf8");
   console.log(
-    `Saved content for ${Object.keys(content).length} conditions → ${JSON_PATH}`
+    `\n✅ Saved content for ${Object.keys(content).length} conditions → ${JSON_PATH}`
   );
 }
+
+// ─────────────────────────────────────────────
+// Prompt + generation
+// ─────────────────────────────────────────────
 
 function buildPrompt(meta: ConditionMeta): string {
   return `
@@ -71,11 +103,11 @@ Guidelines:
 - keyPoints: 3–6 bullets with classic presentation, buzzwords, or key diagnostic clues.
 - redFlags: 2–4 bullets with “must-not-miss” features or dangerous complications.
 - treatmentPearls: 2–4 bullets with first-line management and big exam pearls.
-- Do NOT include dosing numbers or country-specific guideline trivia.
-- Focus on NCCPA/PANCE-style general principles, not rare edge cases.
+- Do NOT include exact drug dosing or super niche guideline trivia.
+- Focus on NCCPA/PANCE-style general principles.
 
 Again: respond with ONLY the JSON object, nothing else.
-`;
+`.trim();
 }
 
 async function generateContentForCondition(
@@ -83,79 +115,115 @@ async function generateContentForCondition(
 ): Promise<ConditionContent | null> {
   const prompt = buildPrompt(meta);
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4.1-mini",
-    temperature: 0.2,
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a concise, accurate medical study-note writer for PA students preparing for the PANCE.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-  });
-
-  const raw = completion.choices[0]?.message?.content ?? "";
-
   try {
-    const parsed = JSON.parse(raw) as ConditionContent;
-    return parsed;
+    const response = await ai.models.generateContent({
+      model: MODEL_ID,
+      contents: prompt,
+      // Ask Gemini to return strict JSON
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+
+    const text = response.text();
+    if (!text) {
+      console.warn(
+        `⚠️  Empty response text for condition "${meta.condition}" – skipping.`
+      );
+      return null;
+    }
+
+    let raw: any;
+    try {
+      raw = JSON.parse(text);
+    } catch (err) {
+      console.error(
+        `⚠️  Failed to parse JSON for "${meta.condition}". Raw text:\n${text}\n`,
+        err
+      );
+      return null;
+    }
+
+    const cleanArray = (val: unknown): string[] | undefined => {
+      if (!Array.isArray(val)) return undefined;
+      return val
+        .map((v) => String(v).trim())
+        .filter((s) => s.length > 0);
+    };
+
+    const content: ConditionContent = {
+      overview:
+        typeof raw.overview === "string" ? raw.overview.trim() : undefined,
+      keyPoints: cleanArray(raw.keyPoints),
+      redFlags: cleanArray(raw.redFlags),
+      treatmentPearls: cleanArray(raw.treatmentPearls),
+    };
+
+    return content;
   } catch (err) {
     console.error(
-      `JSON parse error for condition "${meta.condition}". Raw content:`,
-      raw
+      `❌ Error generating content for "${meta.condition}" (${meta.system} / ${meta.subcategory}):`,
+      err
     );
     return null;
   }
 }
 
+// Simple throttle so we don't hammer the API
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// ─────────────────────────────────────────────
+// Main driver
+// ─────────────────────────────────────────────
+
 async function main() {
   const existing = loadExistingContent();
-  const updated: ContentMap = { ...existing };
+  const contentMap: ContentMap = { ...existing };
 
-  const allConditions = CONDITION_REGISTRY;
-  console.log(`Total conditions in registry: ${allConditions.length}`);
+  const allMetas: ConditionMeta[] = CONDITION_REGISTRY;
 
-  // You can temporarily limit this for testing, e.g. `slice(0, 20)`
-  for (const meta of allConditions) {
-    const key = meta.condition;
+  const allWithIds = allMetas.map((meta) => {
+    const def = buildConditionDefinition(meta);
+    return { meta, id: def.id };
+  });
 
-    if (updated[key]) {
-      // Already have content, skip
-      continue;
-    }
-
-    console.log(`Generating content for: ${key} (${meta.system} / ${meta.subcategory})`);
-
-    try {
-      const generated = await generateContentForCondition(meta);
-      if (!generated) {
-        console.warn(`Skipping "${key}" due to generation/parse failure.`);
-        continue;
-      }
-
-      updated[key] = generated;
-      saveContent(updated);
-
-      // Small delay to avoid hammering the API / hitting rate limits
-      await new Promise((res) => setTimeout(res, 750));
-    } catch (err) {
-      console.error(`Error while generating for "${key}":`, err);
-      // brief delay on error as well
-      await new Promise((res) => setTimeout(res, 1500));
-    }
-  }
+  const toGenerate = allWithIds.filter(({ id }) => !contentMap[id]);
 
   console.log(
-    `Done. Generated content for ${Object.keys(updated).length} conditions total.`
+    `Found ${allMetas.length} conditions total.\n` +
+      `${Object.keys(existing).length} already have content.\n` +
+      `${toGenerate.length} remain to be generated.\n`
   );
+
+  let i = 0;
+  for (const { meta, id } of toGenerate) {
+    i += 1;
+    console.log(
+      `\n[${i}/${toGenerate.length}] Generating: ${meta.system} / ${meta.subcategory} / ${meta.condition} (${id})`
+    );
+
+    const generated = await generateContentForCondition(meta);
+    if (generated) {
+      contentMap[id] = generated;
+      console.log(
+        `✅ Saved in-memory for "${meta.condition}" (${id}) – will write to disk at the end.`
+      );
+    } else {
+      console.warn(
+        `⚠️  Skipped "${meta.condition}" due to an error or empty response.`
+      );
+    }
+
+    // Gentle throttle (tune as needed)
+    await sleep(500);
+  }
+
+  saveContent(contentMap);
 }
 
 main().catch((err) => {
-  console.error("Fatal error in generator:", err);
+  console.error("Fatal error while generating condition content:", err);
   process.exit(1);
 });
