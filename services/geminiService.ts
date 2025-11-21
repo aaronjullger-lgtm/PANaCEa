@@ -16,6 +16,7 @@ import type {
 import {
   buildConditionDefinition,
   getRandomConditionForSystem,
+  findConditionMeta,
   type ConditionMeta,
 } from "../conditionRegistry";
 
