@@ -330,79 +330,79 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
           </div>
 
           {/* Right: Conditions */}
-<div className="md:w-1/2 overflow-y-auto bg-slate-50 border-l border-slate-200">
-  <div className="p-4">
-    {activeSubcategory ? (
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-slate-700">
-            {activeSubcategory} — Condition Performance
-          </h3>
-
-          {props.onDrillSubcategory && system && (
-            <button
-              onClick={() => {
-                props.onDrillSubcategory?.({
-                  system,
-                  subcategory: activeSubcategory,
-                });
-                props.onClose();
-              }}
-              className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md border border-[#3D1B0E]/40 text-[#3D1B0E] bg-white hover:bg-[#3D1B0E]/5 shadow-sm transition"
-            >
-              Drill this subcategory
-            </button>
-          )}
-        </div>
-
-        <p className="text-xs text-slate-500 mb-3">
-          Questions from this subcategory shown below.
-        </p>
-      </div>
-    ) : (
-      <p className="text-sm text-slate-500">Select a subcategory.</p>
-    )}
-
-    {activeSubcategory && filteredConditionStats.length === 0 && (
-      <p className="text-sm text-slate-500">
-        No condition-level data yet for this subcategory.
-      </p>
-    )}
-
-    {activeSubcategory && filteredConditionStats.length > 0 && (
-      <div className="space-y-3">
-        {filteredConditionStats.map((cond) => (
-          <div
-            key={`${cond.subcategory}__${cond.condition}`}
-            className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm"
-          >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium text-slate-800">
-                {cond.condition}
-              </span>
-              <span className="text-xs font-semibold text-slate-600">
-                {cond.score.toFixed(0)}% ({cond.correct}/{cond.total})
-              </span>
+          <div className="md:w-1/2 overflow-y-auto bg-slate-50 border-l border-slate-200">
+            <div className="p-4">
+              {activeSubcategory ? (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-semibold text-slate-700">
+                      {activeSubcategory} — Condition Performance
+                    </h3>
+          
+                    {props.onDrillSubcategory && system && (
+                      <button
+                        onClick={() => {
+                          props.onDrillSubcategory?.({
+                            system,
+                            subcategory: activeSubcategory,
+                          });
+                          props.onClose();
+                        }}
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md border border-[#3D1B0E]/40 text-[#3D1B0E] bg-white hover:bg-[#3D1B0E]/5 shadow-sm transition"
+                      >
+                        Drill this subcategory
+                      </button>
+                    )}
+                  </div>
+          
+                  <p className="text-xs text-slate-500 mb-3">
+                    Questions from this subcategory shown below.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">Select a subcategory.</p>
+              )}
+          
+              {activeSubcategory && filteredConditionStats.length === 0 && (
+                <p className="text-sm text-slate-500">
+                  No condition-level data yet for this subcategory.
+                </p>
+              )}
+          
+              {activeSubcategory && filteredConditionStats.length > 0 && (
+                <div className="space-y-3">
+                  {filteredConditionStats.map((cond) => (
+                    <div
+                      key={`${cond.subcategory}__${cond.condition}`}
+                      className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium text-slate-800">
+                          {cond.condition}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-600">
+                          {cond.score.toFixed(0)}% ({cond.correct}/{cond.total})
+                        </span>
+                      </div>
+          
+                      <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
+                        <div
+                          className={`h-1.5 rounded-full ${getBarColor(cond.score)}`}
+                          style={{ width: `${cond.score}%` }}
+                        ></div>
+                      </div>
+          
+                      {cond.total < 3 && (
+                        <span className="text-[11px] text-slate-400">
+                          Low sample size
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-
-            <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
-              <div
-                className={`h-1.5 rounded-full ${getBarColor(cond.score)}`}
-                style={{ width: `${cond.score}%` }}
-              ></div>
-            </div>
-
-            {cond.total < 3 && (
-              <span className="text-[11px] text-slate-400">
-                Low sample size
-              </span>
-            )}
           </div>
-        ))}
-      </div>
-    )}
-  </div>
-</div>
 
         {/* Footer hint */}
         <div className="px-6 py-3 border-t border-slate-200 text-xs text-slate-500">
