@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+  import React, { useEffect, useMemo, useState } from "react";
 import type { PerformanceRecord, SystemCode } from "../types";
 
 export type SystemDrilldownSelection = {
@@ -26,7 +26,6 @@ interface SystemDrilldownModalProps {
   onDrillCondition?: (payload: {
     system: SystemCode | undefined;
     subcategory: string;
-    condition: string;
   }) => void;
 }
 
@@ -351,7 +350,22 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                   No condition-level data yet for this subcategory.
                 </p>
               )}
-
+              {activeSubcategory && (
+                <button
+                  className="mb-3 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-[#3D1B0E]/40 text-[#3D1B0E] hover:bg-[#3D1B0E]/5"
+                  onClick={() => {
+                    if (props.onDrillSubcategory && system) {
+                      props.onDrillSubcategory({
+                        system,
+                        subcategory: activeSubcategory,
+                      });
+                      props.onClose();
+                    }
+                  }}
+                >
+                  Drill this subcategory
+                </button>
+              )}
               {activeSubcategory && filteredConditionStats.length > 0 && (
                 <div className="space-y-2">
                   {filteredConditionStats.map((cond) => (
