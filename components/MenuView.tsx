@@ -148,25 +148,21 @@ const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
 
      {selectedSystem && (
   <SystemDrilldownModal
-    system={selectedSystem}
-    performanceData={performanceData}
-    onClose={() => setSelectedSystem(null)}
-    onDrillCondition={({ system, subcategory, condition }) => {
-      // For now: start a TOPIC session for this system at same difficulty.
-      // (We can tighten this later to truly lock to the condition in the Gemini prompt.)
-      if (!system) return;
+  system={selectedSystem}
+  performanceData={performanceData}
+  onClose={() => setSelectedSystem(null)}
 
-      onConfirmSession({
-        focus: "topic",
-        difficulty: "same",
-        topic: system, // system code doubles as your topic abbreviation (CV, GI, etc.)
-        // condition / subcategory are available here if we want to use them later
-        // condition,
-        // subcategory,
-      });
-    }}
-  />
-)}
+  onDrillSubcategory={({ system, subcategory }) => {
+    if (!system) return;
+
+    onConfirmSession({
+      focus: "topic",
+      difficulty: "same",
+      topic: system,
+      subcategoryName: subcategory,
+    });
+  }}
+/>
 
       <div className="flex flex-col">
         <h1 className="text-3xl font-bold text-[#3D1B0E] mb-6 text-center">
