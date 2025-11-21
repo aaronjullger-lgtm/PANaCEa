@@ -105,6 +105,10 @@ Include:
       const outputPath = path.join(OUTPUT_DIR, `${safeId}.md`);
       fs.writeFileSync(outputPath, fullText, "utf8");
 
+       if (fs.existsSync(outputPath)) {
+        console.log(`⏩ Skipping (already exists): ${cleanName}`);
+        return; // skip this condition entirely
+  }
       console.log(`✅ Saved: ${outputPath}`);
       return;
      } catch (err: any) {
