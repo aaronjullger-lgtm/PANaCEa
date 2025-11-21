@@ -5,10 +5,13 @@ import { ConditionDefinition, SystemCode } from "./types";
 export interface ConditionMeta {
   system: SystemCode;
   subcategory: string;
-  /** Canonical condition name as it appears in ALL TOPICS / blueprint */
   condition: string;
-  /** Optional alternate names to help fuzzy matching if we ever need it */
   aliases?: string[];
+
+  overview?: string;          // 1–3 sentence summary
+  keyPoints?: string[];       // buzzword bullets
+  redFlags?: string[];        // “do not miss” findings
+  treatmentPearls?: string[]; // high-yield management bullets
 }
 
 // --------------------------------------------
