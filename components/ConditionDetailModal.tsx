@@ -2,7 +2,7 @@
 
 import React from "react";
 import type { ConditionMeta } from "../conditionRegistry";
-import { CONDITION_CONTENT } from "../conditionContent.generated";
+import { CONDITION_CONTENT } from "../src/conditionContent.generated";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
