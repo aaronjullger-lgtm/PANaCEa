@@ -115,6 +115,10 @@ export async function fetchNewQuestion(
   let chosenConditionDef: ConditionDefinition | undefined;
   // If the client requested a specific condition (e.g. drill from heatmap),
   // resolve it into a ConditionDefinition from the registry.
+  let chosenSubcategory: string | undefined;
+  if (settings.subcategoryName) {
+    chosenSubcategory = settings.subcategoryName;
+  }
   if (settings.conditionName) {
     const meta = findConditionMeta(settings.conditionName);
     if (meta) {
@@ -235,6 +239,10 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       topicInstruction = `First choose exactly ONE topic from: [${PANCE_TOPICS.join(
         ", "
       )}] and use that value in the "topic" field.`;
+    }
+    let subcategoryInstruction = "";
+    if (chosenSubcategory) {
+      subcategoryInstruction = `- Subcategory targeting: Choose ONE condition from the "${chosenSubcategory}" subcategory of this system. The JSON "subcategory" must be exactly "${chosenSubcategory}".`;
     }
     // Optional: tighten the question onto a specific condition
     let conditionInstruction = "";
