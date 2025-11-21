@@ -113,6 +113,14 @@ export async function fetchNewQuestion(
 
   // Optional condition chosen client-side (for hybrid targeting and stats)
   let chosenConditionDef: ConditionDefinition | undefined;
+  // If the client requested a specific condition (e.g. drill from heatmap),
+  // resolve it into a ConditionDefinition from the registry.
+  if (settings.conditionName) {
+    const meta = findConditionMeta(settings.conditionName);
+    if (meta) {
+      chosenConditionDef = buildConditionDefinition(meta);
+    }
+  }
 
   // -------- FOCUS: ALL (use content + task decks) --------
   if (focus === "all") {
@@ -228,7 +236,16 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
         ", "
       )}] and use that value in the "topic" field.`;
     }
+    // Optional: tighten the question onto a specific condition
+    let conditionInstruction = "";
+    if (chosenConditionDef) {
+      const fullTopicName =
+        ABBREVIATION_TO_TOPIC_MAP[chosenConditionDef.system] ||
+        chosenConditionDef.system;
 
+       conditionInstruction = `- Condition targeting: The question's PRIMARY condition MUST be "${chosenConditionDef.condition}" within the "${chosenConditionDef.subcategory}" subcategory of the "${fullTopicName}" system. The "condition" field in the JSON MUST be exactly "${chosenConditionDef.condition}".`;
+  }
+    
     prompt = `You are generating a structured JSON object for a PANCE practice question.
 
 Generate one new, unique, PANCE-style multiple-choice question.
@@ -248,6 +265,7 @@ Core Instructions:
 Topic and Difficulty:
 - ${topicInstruction}
 - ${detailedDifficultyInstruction}
+${conditionInstruction ? conditionInstruction + "\n" : ""}
 
 Output Format:
 Return ONLY a single JSON object (no prose before or after) with the exact structure:
