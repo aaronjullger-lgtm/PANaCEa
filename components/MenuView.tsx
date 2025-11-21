@@ -147,22 +147,21 @@ const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
       )}
 
      {selectedSystem && (
-  <SystemDrilldownModal
-  system={selectedSystem}
-  performanceData={performanceData}
-  onClose={() => setSelectedSystem(null)}
-
-  onDrillSubcategory={({ system, subcategory }) => {
-    if (!system) return;
-
-    onConfirmSession({
-      focus: "topic",
-      difficulty: "same",
-      topic: system,
-      subcategoryName: subcategory,
-    });
-  }}
-/>
+       <SystemDrilldownModal
+          system={selectedSystem}
+          performanceData={performanceData}
+          onClose={() => setSelectedSystem(null)}
+          onDrillSubcategory={({ system, subcategory }) => {
+             if (!system) return;
+             onConfirmSession({
+              focus: "topic",
+               difficulty: "same",
+               topic: system,
+               subcategoryName: subcategory,
+            });
+           }}
+         />
+      )}
 
       <div className="flex flex-col">
         <h1 className="text-3xl font-bold text-[#3D1B0E] mb-6 text-center">
