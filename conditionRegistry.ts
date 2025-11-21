@@ -1847,7 +1847,7 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
     system: "OTHER",
     subcategory: "General Medicine",
     condition: "Generalized Weakness"
-  }
+  },
   // --------------------------------------------
 // DERMATOLOGY META
 // --------------------------------------------
