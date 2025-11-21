@@ -1,20 +1,22 @@
+// scripts/generateConditionContent.ts
+
 import fs from "fs";
 import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Correct import from your registry:
-import { CONDITION_REGISTRY as conditions } from "../conditionRegistry";
+// Correct import for your registry
+import { CONDITION_REGISTRY } from "../conditionRegistry";
 
-// ================================
+// ======================================================
 // CONFIG
-// ================================
+// ======================================================
 const MODEL_NAME = "gemini-2.5-flash";
 const OUTPUT_DIR = "generated";
 const MAX_RETRIES = 3;
 
-// ================================
+// ======================================================
 // API KEY
-// ================================
+// ======================================================
 const apiKey =
   process.env.GOOGLE_API_KEY ||
   process.env.GEMINI_API_KEY ||
@@ -28,14 +30,14 @@ if (!apiKey) {
 const client = new GoogleGenerativeAI(apiKey);
 const model = client.getGenerativeModel({ model: MODEL_NAME });
 
-// Ensure output directory exists
+// Ensure output folder exists
 if (!fs.existsSync(OUTPUT_DIR)) {
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-// ================================
-// UNICODE SANITIZER — Fixes ByteString crash
-// ================================
+// ======================================================
+// ASCII CLEANER — This ensures no byte >255 EVER gets sent
+// ======================================================
 function asciiClean(str: string = ""): string {
   return str
     .normalize("NFKC")
@@ -43,14 +45,31 @@ function asciiClean(str: string = ""): string {
     .replace(/[‘’‚‛]/g, "'")
     .replace(/–/g, "-")
     .replace(/—/g, "-")
-    .replace(/[^\x00-\x7F]/g, " "); // removes any remaining non-ASCII chars
+    .replace(/[^\x00-\x7F]/g, " "); // remove anything non-ASCII
 }
 
-// ================================
-// GENERATE CONTENT (SEQUENTIAL)
-// ================================
-async function generateForCondition(condition: any) {
-  const cleanName = asciiClean(condition.condition || condition.name);
+// ======================================================
+// CLEAN ENTIRE CONDITION OBJECT
+// ======================================================
+function sanitizeCondition(raw: any) {
+  return {
+    ...raw,
+    condition: asciiClean(raw.condition),
+    name: asciiClean(raw.name),
+    subcategory: asciiClean(raw.subcategory),
+    system: asciiClean(raw.system),
+    aliases: raw.aliases?.map((a: string) => asciiClean(a)) ?? [],
+  };
+}
+
+// ======================================================
+// GENERATE FOR ONE CONDITION
+// ======================================================
+async function generateForCondition(rawCondition: any) {
+  // Sanitize EVERYTHING first
+  const condition = sanitizeCondition(rawCondition);
+
+  const cleanName = condition.condition || condition.name;
 
   let prompt = asciiClean(`
 You are a medical content generator for the condition "${cleanName}".
@@ -82,17 +101,17 @@ Write detailed content that includes:
       let fullText = "";
       for await (const chunk of result.stream) {
         const t = chunk.text();
-        if (t) fullText += t;
+        if (t) fullText += asciiClean(t);
       }
 
-      const id = asciiClean(
+      const safeId = asciiClean(
         condition.id ||
           `${condition.system}_${condition.subcategory}_${cleanName}`
             .replace(/\s+/g, "_")
             .replace(/[^a-zA-Z0-9_]/g, "")
       );
 
-      const outputPath = path.join(OUTPUT_DIR, `${id}.md`);
+      const outputPath = path.join(OUTPUT_DIR, `${safeId}.md`);
       fs.writeFileSync(outputPath, fullText, "utf8");
 
       console.log(`✅ Saved: ${outputPath}`);
@@ -108,16 +127,16 @@ Write detailed content that includes:
   }
 }
 
-// ================================
-// MAIN LOOP (SEQUENTIAL)
-// ================================
+// ======================================================
+// MAIN SEQUENTIAL LOOP
+// ======================================================
 (async () => {
-  console.log(`🚀 Starting sequential generator`);
-  console.log(`📌 Total conditions: ${conditions.length}`);
+  console.log(`🚀 Starting ASCII-clean sequential generator`);
+  console.log(`📌 Total conditions: ${CONDITION_REGISTRY.length}`);
 
-  for (const cond of conditions) {
-    await generateForCondition(cond);
+  for (const c of CONDITION_REGISTRY) {
+    await generateForCondition(c);
   }
 
-  console.log("\n🎉 Done — all sequential tasks completed.");
+  console.log("\n🎉 All conditions processed successfully.");
 })();
