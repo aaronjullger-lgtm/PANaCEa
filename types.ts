@@ -9,7 +9,7 @@ export interface Question {
   /** Mid-level category, e.g. "Arrhythmias", "Asthma / COPD" */
   subcategory?: string;
   /** Stable id from CONDITION_REGISTRY */
-  conditionId?: string;
+  conditionId: string;
   /** Human-readable condition name (usually from the registry) */
   condition: string;
   pearls: string[];
@@ -26,7 +26,7 @@ export interface PerformanceRecord {
   // What was shown
   system: SystemCode | null;   // e.g. "CV", "PULM"
   subcategory: string | null;  // e.g. "Arrhythmias", "Asthma"
-  conditionId: string | null;  // from CONDITION_REGISTRY if present
+  conditionId: string;         // from CONDITION_REGISTRY if present
   condition: string;           // human name from question.condition
   topic: string;               // your existing topic code/label
 
