@@ -290,6 +290,83 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           </section>
         )}
 
+        {/* Etiology / Pathophysiology */}
+        {content.etiologyPathophysiology && (
+          <section className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              Etiology &amp; Pathophysiology
+            </h3>
+            <p className="text-sm text-slate-600">
+              {content.etiologyPathophysiology}
+            </p>
+          </section>
+        )}
+
+        {/* Epidemiology */}
+        {content.epidemiology && (
+          <section className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              Epidemiology
+            </h3>
+            <p className="text-sm text-slate-600">{content.epidemiology}</p>
+          </section>
+        )}
+
+        {/* Risk factors */}
+        {Array.isArray(content.riskFactors) && content.riskFactors.length > 0 && (
+          <section className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              Risk Factors
+            </h3>
+            <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
+              {content.riskFactors.map((pt: string) => (
+                <li key={pt}>{pt}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Clinical presentation */}
+        {content.clinicalPresentation && (
+          <section className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              Clinical Presentation
+            </h3>
+            <p className="text-sm text-slate-600">
+              {content.clinicalPresentation}
+            </p>
+          </section>
+        )}
+
+        {/* Symptoms */}
+        {Array.isArray(content.symptoms) && content.symptoms.length > 0 && (
+          <section className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              Symptoms
+            </h3>
+            <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
+              {content.symptoms.map((pt: string) => (
+                <li key={pt}>{pt}</li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Exam findings */}
+        {Array.isArray(content.examFindings) &&
+          content.examFindings.length > 0 && (
+            <section className="mb-4">
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+                Exam Findings
+              </h3>
+              <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
+                {content.examFindings.map((pt: string) => (
+                  <li key={pt}>{pt}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
         {/* Key points */}
         {Array.isArray(content.keyPoints) && content.keyPoints.length > 0 && (
           <section className="mb-4">
@@ -401,6 +478,16 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               Prognosis
             </h3>
             <MarkdownBlock value={content.prognosis} />
+          </section>
+        )}
+
+        {/* Prognosis */}
+        {content.prognosis && (
+          <section className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">
+              Prognosis
+            </h3>
+            <p className="text-sm text-slate-600">{content.prognosis}</p>
           </section>
         )}
 
