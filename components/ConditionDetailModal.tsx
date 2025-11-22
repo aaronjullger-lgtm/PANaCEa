@@ -1,8 +1,16 @@
 // src/components/ConditionDetailModal.tsx
 
-import React from "react";
-import type { ConditionMeta } from "../conditionRegistry";
-import { CONDITION_CONTENT } from "../src/conditionContent.generated";
+import React, { useMemo, useState } from "react";
+import {
+  CONDITION_CONTENT,
+  type ConditionContent,
+} from "../src/conditionContent.generated";
+import {
+  buildConditionDefinition,
+  type ConditionMeta,
+} from "../conditionRegistry";
+import { inlineFormat } from "../src/lib/markdown";
+import MarkdownBlock from "./MarkdownBlock";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -10,12 +18,70 @@ interface ConditionDetailModalProps {
   onDrillCondition?: (meta: ConditionMeta) => void;
 }
 
+const ListSection: React.FC<{
+  title: string;
+  items?: string[];
+  variant?: "default" | "alert";
+}> = ({ title, items, variant = "default" }) => {
+  if (!items || items.length === 0) return null;
+  const textClass =
+    variant === "alert" ? "text-red-700" : "text-slate-600";
+
+  return (
+    <section className="mb-4">
+      <h3 className="text-sm font-semibold text-slate-700 mb-1">{title}</h3>
+      <ul
+        className={`condition-content list-disc ml-5 text-sm ${textClass} space-y-1`}
+      >
+        {items.map((pt) => (
+          <li
+            key={pt}
+            dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
+          />
+        ))}
+      </ul>
+    </section>
+  );
+};
+
 const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   condition,
   onClose,
   onDrillCondition,
 }) => {
-  const content = CONDITION_CONTENT[condition.condition] || {};
+  const [mediaIndex, setMediaIndex] = useState(0);
+
+  const definition = useMemo(
+    () => buildConditionDefinition(condition),
+    [condition]
+  );
+
+  const content: ConditionContent = useMemo(() => {
+    const id = definition.id;
+    return CONDITION_CONTENT[id] || CONDITION_CONTENT[condition.condition] || {};
+  }, [condition.condition, definition.id]);
+
+  const mediaIds = content.mediaIds ?? [];
+
+  const hasAnyContent = useMemo(() => {
+    return (
+      !!content.overview ||
+      !!content.etiologyPathophysiology ||
+      !!content.epidemiology ||
+      !!content.clinicalPresentation ||
+      !!content.prognosis ||
+      !!content.diagnostics?.notes ||
+      (content.keyPoints?.length ?? 0) > 0 ||
+      (content.redFlags?.length ?? 0) > 0 ||
+      (content.treatmentPearls?.length ?? 0) > 0 ||
+      (content.riskFactors?.length ?? 0) > 0 ||
+      (content.symptoms?.length ?? 0) > 0 ||
+      (content.examFindings?.length ?? 0) > 0 ||
+      (content.treatment?.length ?? 0) > 0 ||
+      (content.management?.length ?? 0) > 0 ||
+      (content.complications?.length ?? 0) > 0
+    );
+  }, [content]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -38,68 +104,135 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           </button>
         </div>
 
+        {mediaIds.length > 0 && (
+          <section className="mb-4">
+            <div className="relative rounded-lg overflow-hidden border border-slate-200">
+              <img
+                src={`/media/${
+                  mediaIds[mediaIndex].includes(".")
+                    ? mediaIds[mediaIndex]
+                    : `${mediaIds[mediaIndex]}.png`
+                }`}
+                alt={`${condition.condition} media ${mediaIndex + 1}`}
+                className="w-full h-56 object-cover bg-slate-50"
+              />
+              {mediaIds.length > 1 && (
+                <div className="absolute inset-0 flex items-center justify-between px-3">
+                  <button
+                    className="bg-white/80 rounded-full p-2 text-xs shadow"
+                    onClick={() =>
+                      setMediaIndex(
+                        (mediaIndex - 1 + mediaIds.length) % mediaIds.length
+                      )
+                    }
+                    aria-label="Previous media"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className="bg-white/80 rounded-full p-2 text-xs shadow"
+                    onClick={() =>
+                      setMediaIndex((mediaIndex + 1) % mediaIds.length)
+                    }
+                    aria-label="Next media"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
+            </div>
+            {mediaIds.length > 1 && (
+              <div className="flex justify-center gap-2 mt-2">
+                {mediaIds.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setMediaIndex(idx)}
+                    className={`h-2 w-2 rounded-full ${
+                      idx === mediaIndex ? "bg-[#3D1B0E]" : "bg-slate-300"
+                    }`}
+                    aria-label={`View media ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Overview */}
         {content.overview && (
           <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Overview
-            </h3>
-            <p className="text-sm text-slate-600">{content.overview}</p>
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Overview</h3>
+            <MarkdownBlock value={content.overview} />
           </section>
         )}
 
-        {/* Key points */}
-        {Array.isArray(content.keyPoints) && content.keyPoints.length > 0 && (
+        {content.diagnostics?.notes && (
+          <section className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Diagnostics</h3>
+            <MarkdownBlock value={content.diagnostics.notes} />
+          </section>
+        )}
+
+        {content.etiologyPathophysiology && (
           <section className="mb-4">
             <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Key Points
+              Etiology &amp; Pathophysiology
             </h3>
-            <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.keyPoints.map((pt: string) => (
-                <li key={pt}>{pt}</li>
-              ))}
-            </ul>
+            <MarkdownBlock value={content.etiologyPathophysiology} />
           </section>
         )}
 
-        {/* Red flags */}
-        {Array.isArray(content.redFlags) && content.redFlags.length > 0 && (
+        {content.epidemiology && (
+          <section className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Epidemiology</h3>
+            <MarkdownBlock value={content.epidemiology} />
+          </section>
+        )}
+
+        <ListSection title="Risk Factors" items={content.riskFactors} />
+
+        {content.clinicalPresentation && (
           <section className="mb-4">
             <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Red Flags
+              Clinical Presentation
             </h3>
-            <ul className="list-disc ml-5 text-sm text-red-700 space-y-1">
-              {content.redFlags.map((pt: string) => (
-                <li key={pt}>{pt}</li>
-              ))}
-            </ul>
+            <MarkdownBlock value={content.clinicalPresentation} />
           </section>
         )}
 
-        {/* Treatment pearls */}
-        {Array.isArray(content.treatmentPearls) &&
-          content.treatmentPearls.length > 0 && (
-            <section className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
-                Treatment Pearls
-              </h3>
-              <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
-                {content.treatmentPearls.map((pt: string) => (
-                  <li key={pt}>{pt}</li>
-                ))}
-              </ul>
-            </section>
-          )}
+        <ListSection title="Symptoms" items={content.symptoms} />
+
+        <ListSection title="Exam Findings" items={content.examFindings} />
+
+        <ListSection title="Key Points" items={content.keyPoints} />
+
+        <ListSection
+          title="Red Flags"
+          items={content.redFlags}
+          variant="alert"
+        />
+
+        <ListSection title="Treatment Pearls" items={content.treatmentPearls} />
+
+        <ListSection title="Treatment" items={content.treatment} />
+
+        <ListSection title="Management" items={content.management} />
+
+        <ListSection title="Complications" items={content.complications} />
+
+        {content.prognosis && (
+          <section className="mb-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Prognosis</h3>
+            <MarkdownBlock value={content.prognosis} />
+          </section>
+        )}
 
         {/* Fallback if no content yet */}
-        {!content.overview &&
-          (!content.keyPoints || content.keyPoints.length === 0) &&
-          (!content.redFlags || content.redFlags.length === 0) &&
-          (!content.treatmentPearls || content.treatmentPearls.length === 0) && (
-            <p className="text-sm text-slate-500 mb-4">
-              Detailed notes for this condition haven&apos;t been added yet.
-            </p>
-          )}
+        {!hasAnyContent && (
+          <p className="text-sm text-slate-500 mb-4">
+            Detailed notes for this condition haven&apos;t been added yet.
+          </p>
+        )}
 
         {/* Footer buttons */}
         <div className="mt-6 flex justify-end gap-2">

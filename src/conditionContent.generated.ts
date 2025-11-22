@@ -7,6 +7,18 @@ export interface ConditionContent {
   keyPoints?: string[];
   redFlags?: string[];
   treatmentPearls?: string[];
+  mediaIds?: string[];
+  diagnostics?: { notes?: string };
+  etiologyPathophysiology?: string;
+  epidemiology?: string;
+  riskFactors?: string[];
+  clinicalPresentation?: string;
+  symptoms?: string[];
+  examFindings?: string[];
+  treatment?: string[];
+  management?: string[];
+  complications?: string[];
+  prognosis?: string;
 }
 
 import data from "./conditionContent.generated.json";
