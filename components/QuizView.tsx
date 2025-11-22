@@ -363,7 +363,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       timestamp: Date.now(),
       system: currentQuestion.system ?? null,
       subcategory: currentQuestion.subcategory ?? null,
-      conditionId: currentQuestion.conditionId ?? null,
+      conditionId: currentQuestion.conditionId,
       condition: currentQuestion.condition,
       topic: currentQuestion.topic,
       isCorrect,
