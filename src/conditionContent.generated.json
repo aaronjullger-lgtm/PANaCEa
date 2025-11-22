@@ -1,192 +1,69 @@
 {
   "CV__ecg__normal_sinus_rhythm_nsr": {
-    "diagnostics": {
-      "notes": "The definitive diagnosis of NSR is made via an Electrocardiogram (EKG/ECG)."
-    },
-    "overview": "Normal Sinus Rhythm (NSR) is the physiologic, baseline electrical rhythm of the heart driven by the sinoatrial node. It features a normal rate with coordinated atrial and ventricular contraction and serves as the benchmark rhythm for comparison to other arrhythmias.",
-    "etiologyPathophysiology": "NSR reflects a healthy conduction system: spontaneous SA node depolarization (60\u2013100 bpm), atrial depolarization (P wave), AV nodal delay (PR interval), rapid His-Purkinje ventricular depolarization (QRS complex), and ventricular repolarization (T wave), modulated by sympathetic and parasympathetic tone.",
-    "epidemiology": "Most common rhythm in healthy individuals of all ages; considered the physiologic standard.",
-    "riskFactors": [],
-    "clinicalPresentation": "Hemodynamically stable and asymptomatic from a rhythm standpoint; any symptoms are due to other conditions.",
-    "symptoms": [],
-    "examFindings": [],
-    "treatment": [],
-    "management": [],
-    "complications": [],
-    "prognosis": "Excellent; indicates a healthy, stable cardiac conduction system."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ecg__sinus_bradycardia": {
-    "overview": "Sinus bradycardia is a sinus rhythm <60 bpm originating from the SA node with normal conduction. It can be physiologic (athletes, sleep) or pathologic; significance depends on symptoms and hemodynamic stability.",
-    "etiologyPathophysiology": "Decreased automaticity of the SA node or blocked conduction near the node slows the intrinsic pacing rate.",
-    "epidemiology": "Common arrhythmia; prevalence rises with age but is benign in many young, athletic individuals.",
-    "riskFactors": [],
-    "clinicalPresentation": "Presentation varies. Asymptomatic cases are incidental; symptomatic patients show signs of end-organ hypoperfusion and are unstable.",
-    "symptoms": [],
-    "examFindings": [],
-    "management": [],
-    "complications": [],
-    "prognosis": "Excellent for physiologic bradycardia; otherwise depends on etiology. Prognosis improves with pacemaker therapy when indicated."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ecg__sinus_tachycardia": {
-    "diagnostics": {
-      "notes": "EKG: rate >100 bpm, regular rhythm, normal P before each QRS, normal PR and QRS. Labs and imaging guided by suspected underlying cause (CBC, BMP/CMP, TSH, troponin, D-dimer, cultures, CXR, CTA chest, venous Doppler, etc.)."
-    },
-    "overview": "Sinus tachycardia is a >100 bpm rhythm from the SA node with normal conduction, usually a physiologic response to stressors rather than a primary arrhythmia.",
-    "etiologyPathophysiology": "Increased SA node firing from heightened sympathetic tone or reduced vagal tone. Causes include physiologic stress, hypovolemia, infection/sepsis, hypoxia, anemia, shock, PE, hyperthyroidism, ischemia, heart failure, stimulants, and medication effects.",
-    "epidemiology": "Extremely common across inpatient and outpatient settings; prevalence mirrors underlying causes across all ages.",
-    "clinicalPresentation": "Driven by underlying etiology: may be asymptomatic, symptomatic but stable (palpitations, fever context), or unstable in shock states.",
-    "prognosis": "Depends entirely on cause: excellent for reversible/physiologic triggers; guarded to poor when signaling life-threatening conditions like septic shock, massive PE, or acute MI."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ecg__premature_atrial_complexes_pacs": {
-    "diagnostics": {
-      "notes": "12-lead EKG shows premature, abnormally shaped P waves with narrow QRS and non-compensatory pause. Ambulatory monitoring quantifies burden; echo if frequent/suspicious for structural disease. Labs may assess electrolytes, thyroid, CBC."
-    },
-    "overview": "Premature Atrial Complexes are early atrial beats from an ectopic focus outside the SA node, producing premature P waves followed by a QRS and pause. Often benign but can cause palpitations and precede atrial fibrillation.",
-    "epidemiology": "Extremely common (>60% of healthy adults on Holter); frequency increases with age and cardiovascular disease.",
-    "riskFactors": [],
-    "clinicalPresentation": "Frequently asymptomatic; symptomatic patients note intermittent irregular heartbeat sensations often linked to triggers.",
-    "symptoms": [],
-    "examFindings": [],
-    "treatment": [],
-    "management": [],
-    "complications": [],
-    "prognosis": "Excellent in structurally normal hearts; higher PAC burden in older/heart disease patients correlates with increased AFib, stroke, and mortality risk."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ecg__premature_ventricular_complexes_pvcs": {
-    "diagnostics": {
-      "notes": "EKG: premature wide QRS without preceding P wave, discordant T wave, full compensatory pause. Holter quantifies burden and complexity; echo essential to assess structural disease. Labs for electrolytes/TSH; stress testing to assess ischemia and exercise effect on PVCs."
-    },
-    "overview": "Premature Ventricular Complexes are early ectopic ventricular beats producing wide, bizarre QRS complexes without preceding P waves and followed by a compensatory pause. Often benign but can signal underlying pathology and frequent PVCs may lead to cardiomyopathy.",
-    "etiologyPathophysiology": "Ectopic ventricular focus depolarizes prematurely, spreading slowly cell-to-cell, creating a wide QRS and compensatory pause. Causes include idiopathic cases, structural heart disease (CAD, heart failure, cardiomyopathy), electrolyte disturbances, systemic triggers (hypoxia, hyperthyroidism), stimulants, alcohol, and medication toxicity.",
-    "epidemiology": "Extremely common; prevalence and frequency increase with age and structural heart disease.",
-    "clinicalPresentation": "Ranges from asymptomatic incidental findings to symptomatic palpitations; significance depends on underlying heart disease and PVC burden.",
-    "prognosis": "Excellent in structurally normal hearts; guarded in significant structural disease where frequent PVCs mark higher sudden cardiac death and mortality risk."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ecg__atrial_fibrillation": {
-    "diagnostics": {
-      "notes": "ECG: irregularly irregular R-R intervals, no discernible P waves, fibrillatory waves; QRS typically narrow. Labs: TSH, CBC, BMP/CMP; troponin if ischemia suspected. Imaging: TTE for structural assessment; TEE for LAA thrombus; ambulatory monitoring for paroxysmal AFib."
-    },
-    "overview": "Atrial Fibrillation is a chaotic supraventricular tachyarrhythmia with uncoordinated atrial activation and irregular ventricular response, raising concerns for instability and thromboembolism.",
-    "etiologyPathophysiology": "Triggered by rapidly firing ectopic foci (often pulmonary veins) sustained by atrial disease causing multiple re-entrant wavelets. AV node variably conducts impulses, producing an irregular ventricular rhythm and loss of atrial kick, reducing cardiac output. Etiologies include hypertension, CAD, valvular disease, HF, pulmonary disease, hyperthyroidism, diabetes, obesity, alcohol, and electrolyte issues.",
-    "epidemiology": "Most common sustained arrhythmia; prevalence rises with age (~10% >80 years), slightly more common in men and those of European descent.",
-    "clinicalPresentation": "Ranges from asymptomatic discovery to palpitations, fatigue, dyspnea, or presentation with TIA/stroke or heart failure; instability shows hypotension, shock signs, chest pain, or acute pulmonary edema.",
-    "prognosis": "Associated with 1.5\u20132\u00d7 mortality increase; outcomes depend on comorbidities but improve with rate/rhythm control and anticoagulation."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ecg__atrial_flutter": {
-    "diagnostics": {
-      "notes": "ECG: atrial rate 250\u2013350 bpm with sawtooth flutter waves (best in II, III, aVF), absent P waves, typically narrow QRS; rhythm regular with fixed block or irregular with variable block. Labs: TSH, CMP, CBC, troponin as indicated. Echo to assess structure/LAA thrombus before cardioversion if >48h."
-    },
-    "overview": "Atrial Flutter is a macro-reentrant atrial tachyarrhythmia (often right atrial CTI-dependent) producing rapid atrial rates with filtered ventricular response. Concerns mirror AFib: instability and thromboembolism.",
-    "etiologyPathophysiology": "Driven by a macro-reentrant circuit (typically around the tricuspid annulus via the cavotricuspid isthmus). AV node blocks impulses leading to fixed (often 2:1) or variable conduction. Atypical flutters may involve left atrial circuits or scar-related pathways.",
-    "epidemiology": "Incidence increases with age; more common in men; strongly linked to structural heart disease and often coexists with AFib.",
-    "riskFactors": [
-      "Structural heart disease (ischemic, hypertensive, valvular, cardiomyopathy)",
-      "Congenital heart disease",
-      "Post-cardiac surgery atriotomy scars",
-      "Pulmonary disease (COPD, PE, OSA)",
-      "Advanced age, hyperthyroidism, electrolyte abnormalities, alcohol use, obesity, diabetes"
-    ],
-    "clinicalPresentation": "Symptoms depend on ventricular rate and duration: may be asymptomatic, stable tachycardia, or unstable with hypotension, AMS, ischemic pain, or acute HF.",
-    "symptoms": [
-      "Palpitations",
-      "Fatigue or reduced exercise tolerance",
-      "Dyspnea",
-      "Lightheadedness or presyncope",
-      "Angina in patients with CAD",
-      "Heart failure symptom worsening"
-    ],
-    "examFindings": [
-      "Tachycardia often near 150 bpm",
-      "Pulse regular with fixed block or irregular with variable block",
-      "JVD or S3 in heart failure",
-      "Fluttering neck venous pulsations"
-    ],
-    "treatment": [
-      "Unstable: immediate synchronized cardioversion (50\u2013100 J biphasic)",
-      "Stable: rate control with beta-blocker or non-dihydropyridine CCB; digoxin/amiodarone in HF patients"
-    ],
-    "management": [
-      "Assess stroke risk with CHA2DS2-VASc and anticoagulate when indicated",
-      "Ensure anticoagulation around cardioversion if duration >48h or unknown",
-      "Consider catheter ablation (first-line definitive therapy for typical CTI-dependent flutter)"
-    ],
-    "complications": [
-      "Thromboembolism (ischemic stroke)",
-      "Tachycardia-induced cardiomyopathy",
-      "Hemodynamic collapse",
-      "Progression to atrial fibrillation"
-    ],
-    "prognosis": "Anticoagulation lowers stroke risk; catheter ablation is often curative for typical flutter, with prognosis shaped by underlying cardiac disease."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ecg__av_nodal_reentry_tachycardia_avnrt": {
-    "diagnostics": {
-      "notes": "EKG during tachycardia: regular narrow-complex rhythm 150\u2013250 bpm; P waves often buried with pseudo R' in V1 or pseudo S' in inferior leads. Vagal maneuvers or adenosine can terminate. EP study confirms dual AV nodal pathways."
-    },
-    "overview": "AVNRT is the most common PSVT, a paroxysmal regular narrow-complex tachycardia caused by a re-entry circuit within the AV node/perinodal tissue, often in structurally normal hearts.",
-    "etiologyPathophysiology": "Requires dual AV nodal pathways (slow-fast typical variant most common). A PAC blocks the fast pathway, conducts down the slow pathway, then re-enters retrograde via the fast pathway, creating a loop with near-simultaneous atrial and ventricular activation.",
-    "epidemiology": "Accounts for ~60% of PSVT; prevalence ~2.25/1000, presenting commonly in young to middle-aged adults and more often in women.",
-    "riskFactors": [
-      "Female sex",
-      "Middle age",
-      "Stimulants (caffeine, alcohol, sympathomimetics)",
-      "Stress/anxiety"
-    ],
-    "clinicalPresentation": "Abrupt onset and termination of rapid palpitations; may cause dizziness, dyspnea, chest discomfort, neck pounding, or presyncope/syncope depending on rate and cardiac reserve.",
-    "symptoms": [
-      "Rapid regular palpitations",
-      "Lightheadedness or dizziness",
-      "Presyncope or syncope in fast rates/underlying disease",
-      "Dyspnea",
-      "Chest discomfort",
-      "Neck pounding from cannon A waves",
-      "Anxiety"
-    ],
-    "examFindings": [
-      "Regular tachycardia 150\u2013250 bpm",
-      "Visible neck vein pulsations from cannon A waves"
-    ],
-    "treatment": [
-      "Unstable: synchronized cardioversion",
-      "Stable: vagal maneuvers then adenosine (6 mg then 12 mg if needed)",
-      "Second-line IV CCBs or beta-blockers"
-    ],
-    "management": [
-      "Catheter ablation targeting the slow pathway is curative in >95% and first-line for recurrent/symptomatic cases",
-      "Chronic beta-blocker or non-dihydropyridine CCB for those deferring ablation"
-    ],
-    "complications": [
-      "Syncope from rapid rates",
-      "Rare tachycardia-induced cardiomyopathy",
-      "Therapy-related risks (adenosine bronchospasm; ablation-related AV block)"
-    ],
-    "prognosis": "Excellent; generally benign with high ablation cure rates."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ecg__ventricular_tachycardia": {
-    "overview": "Ventricular Tachycardia is \u22653 consecutive ventricular beats >100 bpm from an ectopic ventricular focus, classified by morphology and duration, and is a major cause of sudden cardiac death.",
-    "etiologyPathophysiology": "Usually due to re-entry around scarred myocardium (post-MI most common), but can arise from enhanced automaticity or triggered activity (e.g., torsades with QT prolongation). Causes include ischemic and non-ischemic cardiomyopathies, valvular disease, channelopathies, electrolytes, drug toxicity, myocarditis, and acute ischemia.",
-    "epidemiology": "Incidence rises with age and structural heart disease; more common in men paralleling CAD prevalence and responsible for many sudden deaths annually.",
-    "clinicalPresentation": "Spectrum from asymptomatic NSVT to palpitations with stability to unstable VT with hypotension, altered mental status, shock signs, ischemic pain, or pulseless arrest requiring ACLS.",
-    "prognosis": "Prognosis hinges on structural heart disease severity. Poor without ICD in post-MI/low EF patients; generally excellent in idiopathic VT."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ecg__ventricular_fibrillation": {
-    "diagnostics": {
-      "notes": "Diagnosis via ECG/rhythm monitor showing chaotic, disorganized activity without identifiable P/QRS/T complexes (coarse vs. fine V-fib). Post-ROSC evaluation includes labs (CMP, troponin, ABG, tox screen) and imaging (12-lead ECG, echo, coronary angiography when indicated)."
-    },
-    "overview": "Ventricular Fibrillation is a pulseless, life-threatening arrhythmia of disorganized ventricular activity causing immediate loss of cardiac output and sudden death without rapid defibrillation.",
-    "etiologyPathophysiology": "Multiple chaotic re-entrant wavelets prevent coordinated depolarization. Most commonly triggered by acute myocardial ischemia/infarction; other causes include structural cardiomyopathy/HF, myocarditis, electrolyte disturbances, inherited channelopathies, drug toxicity, severe hypoxia/acidosis, hypothermia, trauma, and electrocution.",
-    "epidemiology": "Most frequent arrhythmia in adult out-of-hospital cardiac arrest and terminal event in many sudden cardiac deaths; incidence increases with age and is higher in men due to CAD prevalence.",
-    "clinicalPresentation": "Abrupt collapse with immediate loss of consciousness and unresponsiveness; requires emergent defibrillation.",
-    "prognosis": "Extremely poor without immediate intervention; survival decreases 7\u201310% per minute without defibrillation. Prognosis improves with witnessed arrest, bystander CPR, early defibrillation, and shockable initial rhythm."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ischemic_heart_disease__acute_coronary_syndrome_acs": {
-    "diagnostics": {
-      "notes": "ECG within 10 minutes: STEMI shows new ST elevation \u22651 mm in contiguous leads or new LBBB; NSTEMI/UA may show ST depression \u22650.5 mm, T-wave inversions, or be normal. Troponins are gold standard (rise 2\u20134h, peak 12\u201324h); CK-MB useful for reinfarction. CXR to assess alternate causes/complications; coronary angiography is definitive."
-    },
-    "overview": "Acute Coronary Syndrome encompasses UA, NSTEMI, and STEMI\u2014acute myocardial ischemia/infarction from sudden supply-demand mismatch, usually plaque rupture with thrombus.",
-    "etiologyPathophysiology": "Rupture/erosion of atherosclerotic plaque exposes thrombogenic core, forming thrombus. Partial occlusion causes UA/NSTEMI; complete occlusion causes STEMI. Less common causes include vasospasm, coronary embolism, and SCAD.",
-    "epidemiology": "CAD is leading cause of death; >1 million ACS events annually in US with incidence rising with age and earlier in men.",
-    "clinicalPresentation": "Classically retrosternal chest pain with radiation and associated symptoms; atypical presentations (dyspnea, epigastric discomfort, nausea, diaphoresis, syncope) common in women, elderly, and diabetics.",
-    "prognosis": "Outcomes depend on myocardial damage extent (LVEF pivotal), complications, and speed of reperfusion. STEMI has higher short-term mortality; long-term risk similar to NSTEMI due to disease burden."
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
   },
   "CV__ischemic_heart_disease__stable_angina": {
     "overview": "",
