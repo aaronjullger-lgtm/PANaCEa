@@ -17,12 +17,41 @@ interface ConditionDetailModalProps {
   onDrillCondition?: (meta: ConditionMeta) => void;
 }
 
-const ConditionMarkdownBlock = ({ value }: { value: string }) => (
-  <div
-    className="condition-content text-sm text-slate-700"
-    dangerouslySetInnerHTML={{ __html: renderMarkdownHtml(value) }}
-  />
-);
+const MarkdownBlock: React.FC<{ value?: string }> = ({ value }) => {
+  if (!value) return null;
+  return (
+    <div
+      className="condition-content text-sm text-slate-700"
+      dangerouslySetInnerHTML={{ __html: renderMarkdownHtml(value) }}
+    />
+  );
+};
+
+const ListSection: React.FC<{
+  title: string;
+  items?: string[];
+  variant?: "default" | "alert";
+}> = ({ title, items, variant = "default" }) => {
+  if (!items || items.length === 0) return null;
+  const textClass =
+    variant === "alert" ? "text-red-700" : "text-slate-600";
+
+  return (
+    <section className="mb-4">
+      <h3 className="text-sm font-semibold text-slate-700 mb-1">{title}</h3>
+      <ul
+        className={`condition-content list-disc ml-5 text-sm ${textClass} space-y-1`}
+      >
+        {items.map((pt) => (
+          <li
+            key={pt}
+            dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
+          />
+        ))}
+      </ul>
+    </section>
+  );
+};
 
 const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   condition,
@@ -30,14 +59,16 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   onDrillCondition,
 }) => {
   const [mediaIndex, setMediaIndex] = useState(0);
+
+  const definition = useMemo(
+    () => buildConditionDefinition(condition),
+    [condition]
+  );
+
   const content: ConditionContent = useMemo(() => {
-    const id = buildConditionDefinition(condition).id;
-    return (
-      CONDITION_CONTENT[id] ||
-      CONDITION_CONTENT[condition.condition] ||
-      {}
-    );
-  }, [condition]);
+    const id = definition.id;
+    return CONDITION_CONTENT[id] || CONDITION_CONTENT[condition.condition] || {};
+  }, [condition.condition, definition.id]);
 
   const mediaIds = content.mediaIds ?? [];
 
@@ -139,216 +170,69 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
         {/* Overview */}
         {content.overview && (
           <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Overview
-            </h3>
-            <ConditionMarkdownBlock value={content.overview} />
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Overview</h3>
+            <MarkdownBlock value={content.overview} />
           </section>
         )}
 
-        {/* Diagnostics */}
         {content.diagnostics?.notes && (
           <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Diagnostics
-            </h3>
-            <ConditionMarkdownBlock value={content.diagnostics.notes} />
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Diagnostics</h3>
+            <MarkdownBlock value={content.diagnostics.notes} />
           </section>
         )}
 
-        {/* Etiology / Pathophysiology */}
         {content.etiologyPathophysiology && (
           <section className="mb-4">
             <h3 className="text-sm font-semibold text-slate-700 mb-1">
               Etiology &amp; Pathophysiology
             </h3>
-            <ConditionMarkdownBlock value={content.etiologyPathophysiology} />
+            <MarkdownBlock value={content.etiologyPathophysiology} />
           </section>
         )}
 
-        {/* Epidemiology */}
         {content.epidemiology && (
           <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Epidemiology
-            </h3>
-            <ConditionMarkdownBlock value={content.epidemiology} />
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Epidemiology</h3>
+            <MarkdownBlock value={content.epidemiology} />
           </section>
         )}
 
-        {/* Risk factors */}
-        {Array.isArray(content.riskFactors) && content.riskFactors.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Risk Factors
-            </h3>
-            <ul className="condition-content list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.riskFactors.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <ListSection title="Risk Factors" items={content.riskFactors} />
 
-        {/* Clinical presentation */}
         {content.clinicalPresentation && (
           <section className="mb-4">
             <h3 className="text-sm font-semibold text-slate-700 mb-1">
               Clinical Presentation
             </h3>
-            <ConditionMarkdownBlock value={content.clinicalPresentation} />
+            <MarkdownBlock value={content.clinicalPresentation} />
           </section>
         )}
 
-        {/* Symptoms */}
-        {Array.isArray(content.symptoms) && content.symptoms.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Symptoms
-            </h3>
-            <ul className="condition-content list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.symptoms.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <ListSection title="Symptoms" items={content.symptoms} />
 
-        {/* Exam findings */}
-        {Array.isArray(content.examFindings) &&
-          content.examFindings.length > 0 && (
-            <section className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
-                Exam Findings
-              </h3>
-              <ul className="condition-content list-disc ml-5 text-sm text-slate-600 space-y-1">
-                {content.examFindings.map((pt: string) => (
-                  <li
-                    key={pt}
-                    dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <ListSection title="Exam Findings" items={content.examFindings} />
 
-        {/* Key points */}
-        {Array.isArray(content.keyPoints) && content.keyPoints.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Key Points
-            </h3>
-            <ul className="condition-content list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.keyPoints.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <ListSection title="Key Points" items={content.keyPoints} />
 
-        {/* Red flags */}
-        {Array.isArray(content.redFlags) && content.redFlags.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Red Flags
-            </h3>
-            <ul className="condition-content list-disc ml-5 text-sm text-red-700 space-y-1">
-              {content.redFlags.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <ListSection
+          title="Red Flags"
+          items={content.redFlags}
+          variant="alert"
+        />
 
-        {/* Treatment pearls */}
-        {Array.isArray(content.treatmentPearls) &&
-          content.treatmentPearls.length > 0 && (
-            <section className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
-                Treatment Pearls
-              </h3>
-              <ul className="condition-content list-disc ml-5 text-sm text-slate-600 space-y-1">
-                {content.treatmentPearls.map((pt: string) => (
-                  <li
-                    key={pt}
-                    dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <ListSection title="Treatment Pearls" items={content.treatmentPearls} />
 
-        {/* Treatment */}
-        {Array.isArray(content.treatment) && content.treatment.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Treatment
-            </h3>
-            <ul className="condition-content list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.treatment.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <ListSection title="Treatment" items={content.treatment} />
 
-        {/* Management */}
-        {Array.isArray(content.management) && content.management.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Management
-            </h3>
-            <ul className="condition-content list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.management.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <ListSection title="Management" items={content.management} />
 
-        {/* Complications */}
-        {Array.isArray(content.complications) &&
-          content.complications.length > 0 && (
-            <section className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
-                Complications
-              </h3>
-              <ul className="condition-content list-disc ml-5 text-sm text-slate-600 space-y-1">
-                {content.complications.map((pt: string) => (
-                  <li
-                    key={pt}
-                    dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <ListSection title="Complications" items={content.complications} />
 
-        {/* Prognosis */}
         {content.prognosis && (
           <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Prognosis
-            </h3>
-            <ConditionMarkdownBlock value={content.prognosis} />
+            <h3 className="text-sm font-semibold text-slate-700 mb-1">Prognosis</h3>
+            <MarkdownBlock value={content.prognosis} />
           </section>
         )}
 

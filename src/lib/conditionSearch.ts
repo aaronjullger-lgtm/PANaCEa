@@ -2,8 +2,8 @@ import {
   CONDITION_REGISTRY,
   buildConditionDefinition,
   type ConditionMeta,
-} from "../../conditionRegistry.ts";
-import type { SystemCode } from "../../types.ts";
+} from "../../conditionRegistry";
+import type { SystemCode } from "../../types";
 
 export interface ConditionSearchResult {
   id: string;
