@@ -1,6 +1,6 @@
 // src/components/ConditionDetailModal.tsx
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   CONDITION_CONTENT,
   type ConditionContent,
@@ -18,6 +18,8 @@ interface ConditionDetailModalProps {
 
 const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+const SECTION_BREAK_TOKEN = "__SECTION_BREAK__";
 
 const inlineFormat = (value: string) =>
   escapeHtml(value)
@@ -40,6 +42,12 @@ const renderMarkdown = (value: string) => {
   };
 
   lines.forEach((line) => {
+    if (line.includes(SECTION_BREAK_TOKEN)) {
+      closeList();
+      html += '<hr class="my-3 border-t border-slate-200" />';
+      return;
+    }
+
     const bullet = line.match(/^\s*[-*]\s+(.*)/);
     const numbered = line.match(/^\s*\d+\.\s+(.*)/);
 
@@ -73,6 +81,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   onClose,
   onDrillCondition,
 }) => {
+  const [mediaIndex, setMediaIndex] = useState(0);
   const content: ConditionContent = useMemo(() => {
     const id = buildConditionDefinition(condition).id;
     return (
@@ -81,6 +90,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
       {}
     );
   }, [condition]);
+
+  const mediaIds = content.mediaIds ?? [];
 
   const hasAnyContent = useMemo(() => {
     return (
@@ -122,6 +133,60 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             Close
           </button>
         </div>
+
+        {mediaIds.length > 0 && (
+          <section className="mb-4">
+            <div className="relative rounded-lg overflow-hidden border border-slate-200">
+              <img
+                src={`/media/${
+                  mediaIds[mediaIndex].includes(".")
+                    ? mediaIds[mediaIndex]
+                    : `${mediaIds[mediaIndex]}.png`
+                }`}
+                alt={`${condition.condition} media ${mediaIndex + 1}`}
+                className="w-full h-56 object-cover bg-slate-50"
+              />
+              {mediaIds.length > 1 && (
+                <div className="absolute inset-0 flex items-center justify-between px-3">
+                  <button
+                    className="bg-white/80 rounded-full p-2 text-xs shadow"
+                    onClick={() =>
+                      setMediaIndex(
+                        (mediaIndex - 1 + mediaIds.length) % mediaIds.length
+                      )
+                    }
+                    aria-label="Previous media"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className="bg-white/80 rounded-full p-2 text-xs shadow"
+                    onClick={() =>
+                      setMediaIndex((mediaIndex + 1) % mediaIds.length)
+                    }
+                    aria-label="Next media"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
+            </div>
+            {mediaIds.length > 1 && (
+              <div className="flex justify-center gap-2 mt-2">
+                {mediaIds.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setMediaIndex(idx)}
+                    className={`h-2 w-2 rounded-full ${
+                      idx === mediaIndex ? "bg-[#3D1B0E]" : "bg-slate-300"
+                    }`}
+                    aria-label={`View media ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Overview */}
         {content.overview && (
@@ -222,18 +287,6 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                 />
               ))}
             </ul>
-          </section>
-        )}
-
-        {/* Diagnostics */}
-        {content.diagnostics?.notes && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Diagnostics
-            </h3>
-            <p className="text-sm text-slate-600">
-              {content.diagnostics.notes}
-            </p>
           </section>
         )}
 
@@ -427,49 +480,6 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             <MarkdownBlock value={content.prognosis} />
           </section>
         )}
-
-        {/* Treatment */}
-        {Array.isArray(content.treatment) && content.treatment.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Treatment
-            </h3>
-            <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.treatment.map((pt: string) => (
-                <li key={pt}>{pt}</li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Management */}
-        {Array.isArray(content.management) && content.management.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Management
-            </h3>
-            <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.management.map((pt: string) => (
-                <li key={pt}>{pt}</li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Complications */}
-        {Array.isArray(content.complications) &&
-          content.complications.length > 0 && (
-            <section className="mb-4">
-              <h3 className="text-sm font-semibold text-slate-700 mb-1">
-                Complications
-              </h3>
-              <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
-                {content.complications.map((pt: string) => (
-                  <li key={pt}>{pt}</li>
-                ))}
-              </ul>
-            </section>
-          )}
 
         {/* Prognosis */}
         {content.prognosis && (

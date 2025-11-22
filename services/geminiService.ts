@@ -54,6 +54,12 @@ async function callGeminiText(
 const stripHtmlTags = (text: string): string =>
   typeof text === "string" ? text.replace(/<\/?[^>]+(>|$)/g, "") : text;
 
+const slugify = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+
 function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
   const id = buildConditionDefinition(meta).id;
   const content = CONDITION_CONTENT[id];
@@ -378,6 +384,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     const baseQuestion: Question = {
       ...parsed,
       topic: topicAbbreviation,
+      conditionId: parsed.conditionId || "",
     };
 
     // If we pre-selected a condition (hybrid mode), lock it in here
@@ -386,6 +393,22 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       baseQuestion.subcategory = chosenConditionDef.subcategory;
       baseQuestion.conditionId = chosenConditionDef.id;
       baseQuestion.condition = chosenConditionDef.condition;
+    }
+
+    if (!baseQuestion.conditionId) {
+      const matchedMeta = findConditionMeta(baseQuestion.condition);
+      if (matchedMeta) {
+        const def = buildConditionDefinition(matchedMeta);
+        baseQuestion.conditionId = def.id;
+        baseQuestion.system = baseQuestion.system ?? def.system;
+        baseQuestion.subcategory = baseQuestion.subcategory ?? def.subcategory;
+      } else {
+        baseQuestion.conditionId = `OTHER__unspecified__${slugify(
+          baseQuestion.condition
+        )}`;
+        baseQuestion.system = baseQuestion.system ?? "OTHER";
+        baseQuestion.subcategory = baseQuestion.subcategory ?? "Uncategorized";
+      }
     }
 
     return baseQuestion;

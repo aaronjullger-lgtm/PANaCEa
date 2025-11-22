@@ -7,6 +7,7 @@ export interface ConditionContent {
   keyPoints?: string[];
   redFlags?: string[];
   treatmentPearls?: string[];
+  mediaIds?: string[];
   diagnostics?: { notes?: string };
   etiologyPathophysiology?: string;
   epidemiology?: string;
