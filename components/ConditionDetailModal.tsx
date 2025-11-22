@@ -16,6 +16,12 @@ interface ConditionDetailModalProps {
   onClose: () => void;
   onDrillCondition?: (meta: ConditionMeta) => void;
 }
+const MarkdownBlock = ({ value }: { value: string }) => (
+  <div
+    className="condition-content text-sm text-slate-700"
+    dangerouslySetInnerHTML={{ __html: renderMarkdownHtml(value) }}
+  />
+);
 
 const MarkdownBlock = ({ value }: { value: string }) => (
   <div
@@ -237,6 +243,21 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </ul>
           </section>
         )}
+
+        {/* Exam findings */}
+        {Array.isArray(content.examFindings) &&
+          content.examFindings.length > 0 && (
+            <section className="mb-4">
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">
+                Exam Findings
+              </h3>
+              <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
+                {content.examFindings.map((pt: string) => (
+                  <li key={pt}>{pt}</li>
+                ))}
+              </ul>
+            </section>
+          )}
 
         {/* Key points */}
         {Array.isArray(content.keyPoints) && content.keyPoints.length > 0 && (
