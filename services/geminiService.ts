@@ -19,6 +19,7 @@ import {
   findConditionMeta,
   type ConditionMeta,
 } from "../conditionRegistry";
+import { CONDITION_CONTENT } from "../src/conditionContent.generated";
 
 // --- Helper: call Netlify serverless function, which talks to Gemini ---
 
@@ -52,6 +53,26 @@ async function callGeminiText(
 
 const stripHtmlTags = (text: string): string =>
   typeof text === "string" ? text.replace(/<\/?[^>]+(>|$)/g, "") : text;
+
+function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
+  const id = buildConditionDefinition(meta).id;
+  const content = CONDITION_CONTENT[id];
+  if (!content) return undefined;
+
+  const pieces: string[] = [];
+  if (content.overview) pieces.push(`Overview: ${content.overview}`);
+  if (content.etiologyPathophysiology)
+    pieces.push(`Etiology/Pathophysiology: ${content.etiologyPathophysiology}`);
+  if (content.diagnostics?.notes)
+    pieces.push(`Diagnostics: ${content.diagnostics.notes}`);
+  if (content.clinicalPresentation)
+    pieces.push(`Clinical Presentation: ${content.clinicalPresentation}`);
+  if (content.riskFactors?.length)
+    pieces.push(`Risk Factors: ${content.riskFactors.join("; ")}`);
+  if (content.prognosis) pieces.push(`Prognosis: ${content.prognosis}`);
+
+  return pieces.join("\n");
+}
 
 // --- Deck / history state ---
 
@@ -113,6 +134,7 @@ export async function fetchNewQuestion(
 
   // Optional condition chosen client-side (for hybrid targeting and stats)
   let chosenConditionDef: ConditionDefinition | undefined;
+  let conditionRegistryNotes: string | undefined;
   // If the client requested a specific condition (e.g. drill from heatmap),
   // resolve it into a ConditionDefinition from the registry.
   let chosenSubcategory: string | undefined;
@@ -142,6 +164,7 @@ export async function fetchNewQuestion(
       selectedConditionMeta = getRandomConditionForSystem(systemCode);
       if (selectedConditionMeta) {
         chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
+        conditionRegistryNotes = getConditionRegistryContext(selectedConditionMeta);
       }
     }
 
@@ -183,8 +206,12 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       }
       const taskTopic = shuffledTaskQueue.pop()!;
 
+      const registryInstruction = conditionRegistryNotes
+        ? `\n\nCondition registry summary (use this to stay accurate without re-deriving facts):\n${conditionRegistryNotes}`
+        : "";
+
       const conditionContext = selectedConditionMeta
-        ? `You are targeting the subcategory "${selectedConditionMeta.subcategory}" in the "${fullContentTopicName}" system. Where clinically appropriate, focus the vignette on the specific condition "${selectedConditionMeta.condition}". However, if a very closely related variant would make for a better, more realistic PANCE-style question, you may use it instead – just ensure the "condition" field in your JSON exactly matches the condition you used.`
+        ? `You are targeting the subcategory "${selectedConditionMeta.subcategory}" in the "${fullContentTopicName}" system. Where clinically appropriate, focus the vignette on the specific condition "${selectedConditionMeta.condition}". However, if a very closely related variant would make for a better, more realistic PANCE-style question, you may use it instead – just ensure the "condition" field in your JSON exactly matches the condition you used.${registryInstruction}`
         : `You are targeting the "${fullContentTopicName}" system.`;
 
       const topicFieldInstruction = `The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".`;
