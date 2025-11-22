@@ -39,3 +39,36 @@
 #question-container p:last-of-type {
   font-weight: 600;
 }
+
+/* Condition detail modal rich text */
+.condition-content p {
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.condition-content ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.condition-content li {
+  margin-bottom: 0.35rem;
+}
+
+.condition-content strong {
+  font-weight: 700;
+  color: #111827;
+}
+
+.condition-content em {
+  font-style: italic;
+}
+
+.condition-content code {
+  background: #f1f5f9;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}

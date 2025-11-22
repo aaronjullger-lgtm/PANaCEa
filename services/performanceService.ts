@@ -46,7 +46,7 @@ export function recordQuestionOutcome(
     timestamp: now,
     system: question.system ?? null,
     subcategory: question.subcategory ?? null,
-    conditionId: question.conditionId ?? null,
+    conditionId: question.conditionId,
     condition: question.condition,
     topic: question.topic,
     isCorrect,
@@ -64,7 +64,7 @@ export function recordQuestionOutcome(
 export interface ConditionStats {
   system: SystemCode;
   subcategory: string;
-  conditionId: string | null;
+  conditionId: string;
   condition: string;
   correct: number;
   total: number;
@@ -106,7 +106,7 @@ export function getHierarchicalStats(): SystemStats[] {
   for (const rec of filtered) {
     const system = rec.system as SystemCode;
     const subcategory = rec.subcategory ?? "Uncategorized";
-    const conditionKey = rec.conditionId ?? rec.condition;
+    const conditionKey = rec.conditionId || rec.condition;
 
     if (!systemMap.has(system)) {
       systemMap.set(system, {

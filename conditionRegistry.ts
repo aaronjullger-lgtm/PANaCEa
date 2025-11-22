@@ -1,12 +1,13 @@
 // conditionRegistry.ts
 
-import { ConditionDefinition, SystemCode } from "./types";
+import type { ConditionDefinition, SystemCode } from "./types.ts";
 
 export interface ConditionMeta {
   system: SystemCode;
   subcategory: string;
   condition: string;
   aliases?: string[];
+  mediaIds?: string[];
 
   overview?: string;          // 1–3 sentence summary
   keyPoints?: string[];       // buzzword bullets

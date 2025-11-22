@@ -13,9 +13,9 @@ import ProgressRing from "./ProgressRing";
 import TopicHeatmap from "./TopicHeatmap";
 import SystemDrilldownModal from "./SystemDrilldownModal";
 import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
-import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
 import { CONDITION_REGISTRY, type ConditionMeta } from "../conditionRegistry";
 import ConditionDetailModal from "./ConditionDetailModal";
+import { findConditionMetaById, searchConditions } from "../src/lib/conditionSearch";
 
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
@@ -62,7 +62,9 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(null);
+  const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(
+    null
+  );
 
   const stats = useMemo(() => {
     // Overall score = last 360 questions (any mode) as before
@@ -144,18 +146,10 @@ const MenuView: React.FC<MenuViewProps> = ({
     });
   };
 
-  const searchResults: ConditionMeta[] = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return [];
-    return CONDITION_REGISTRY.filter((meta) => {
-      if (meta.condition.toLowerCase().includes(q)) return true;
-      if (meta.aliases) {
-        return meta.aliases.some((alias) =>
-          alias.toLowerCase().includes(q)
-        );
-      }
-      return false;
-    }).slice(0, 20);
+  const searchResults = useMemo(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) return [];
+    return searchConditions(trimmed);
   }, [searchQuery]);
 
   return (
@@ -219,22 +213,25 @@ const MenuView: React.FC<MenuViewProps> = ({
           />
           {searchResults.length > 0 && (
             <div className="absolute z-30 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-              {searchResults.map((meta) => (
+              {searchResults.map((result) => (
                 <button
-                  key={`${meta.system}-${meta.subcategory}-${meta.condition}`}
+                  key={result.id}
                   type="button"
                   onClick={() => {
-                    setSelectedCondition(meta);
+                    const meta = findConditionMetaById(result.id);
+                    if (meta) {
+                      setSelectedCondition(meta);
+                    }
                     setSearchQuery("");
                   }}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                 >
                   <div className="flex flex-col">
                     <span className="font-medium text-slate-800">
-                      {meta.condition}
+                      {result.condition}
                     </span>
                     <span className="text-[11px] text-slate-500">
-                      {meta.system} • {meta.subcategory}
+                      {result.system} • {result.subcategory}
                     </span>
                   </div>
                 </button>
