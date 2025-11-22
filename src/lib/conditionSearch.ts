@@ -2,8 +2,8 @@ import {
   CONDITION_REGISTRY,
   buildConditionDefinition,
   type ConditionMeta,
-} from "../../conditionRegistry";
-import type { SystemCode } from "../../types";
+} from "../../conditionRegistry.ts";
+import type { SystemCode } from "../../types.ts";
 
 export interface ConditionSearchFilters {
   system?: SystemCode;
@@ -50,6 +50,14 @@ function similarityScore(query: string, target: string): number {
   return 1 / (1 + distance);
 }
 
+function bestTermScore(query: string, term: string): number {
+  const candidates = [term, ...term.split(/\s+|[-–—]/).filter(Boolean)];
+  return candidates.reduce(
+    (score, candidate) => Math.max(score, similarityScore(query, candidate)),
+    0
+  );
+}
+
 export function getSystemOptions(): SystemCode[] {
   return Array.from(new Set(CONDITION_REGISTRY.map((c) => c.system)));
 }
@@ -79,11 +87,11 @@ export function searchConditions(
     let bestScore = 0;
 
     for (const term of terms) {
-      const score = similarityScore(query, term);
+      const score = bestTermScore(query, term);
       if (score > bestScore) bestScore = score;
     }
 
-    if (bestScore > 0.2) {
+    if (bestScore > 0.1) {
       const id = buildConditionDefinition(meta).id;
       results.push({
         id,

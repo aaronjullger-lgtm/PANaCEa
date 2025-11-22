@@ -9,70 +9,17 @@ import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
+import { inlineFormat, renderMarkdownHtml } from "../src/lib/markdown";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
   onClose: () => void;
   onDrillCondition?: (meta: ConditionMeta) => void;
 }
-
-const escapeHtml = (value: string) =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-const SECTION_BREAK_TOKEN = "__SECTION_BREAK__";
-
-const inlineFormat = (value: string) =>
-  escapeHtml(value)
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/__(.+?)__/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/_(.+?)_/g, "<em>$1</em>")
-    .replace(/`(.+?)`/g, "<code>$1</code>");
-
-const renderMarkdown = (value: string) => {
-  const lines = value.split(/\r?\n/);
-  let html = "";
-  let inList = false;
-
-  const closeList = () => {
-    if (inList) {
-      html += "</ul>";
-      inList = false;
-    }
-  };
-
-  lines.forEach((line) => {
-    if (line.includes(SECTION_BREAK_TOKEN)) {
-      closeList();
-      html += '<hr class="my-3 border-t border-slate-200" />';
-      return;
-    }
-
-    const bullet = line.match(/^\s*[-*]\s+(.*)/);
-    const numbered = line.match(/^\s*\d+\.\s+(.*)/);
-
-    if (bullet || numbered) {
-      if (!inList) {
-        html += "<ul>";
-        inList = true;
-      }
-      html += `<li>${inlineFormat(bullet ? bullet[1] : numbered?.[1] ?? "")}</li>`;
-    } else if (line.trim().length === 0) {
-      closeList();
-    } else {
-      closeList();
-      html += `<p>${inlineFormat(line)}</p>`;
-    }
-  });
-
-  closeList();
-  return html;
-};
-
 const MarkdownBlock = ({ value }: { value: string }) => (
   <div
     className="condition-content text-sm text-slate-700"
-    dangerouslySetInnerHTML={{ __html: renderMarkdown(value) }}
+    dangerouslySetInnerHTML={{ __html: renderMarkdownHtml(value) }}
   />
 );
 
@@ -290,68 +237,6 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           </section>
         )}
 
-        {/* Etiology / Pathophysiology */}
-        {content.etiologyPathophysiology && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Etiology &amp; Pathophysiology
-            </h3>
-            <p className="text-sm text-slate-600">
-              {content.etiologyPathophysiology}
-            </p>
-          </section>
-        )}
-
-        {/* Epidemiology */}
-        {content.epidemiology && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Epidemiology
-            </h3>
-            <p className="text-sm text-slate-600">{content.epidemiology}</p>
-          </section>
-        )}
-
-        {/* Risk factors */}
-        {Array.isArray(content.riskFactors) && content.riskFactors.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Risk Factors
-            </h3>
-            <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.riskFactors.map((pt: string) => (
-                <li key={pt}>{pt}</li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Clinical presentation */}
-        {content.clinicalPresentation && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Clinical Presentation
-            </h3>
-            <p className="text-sm text-slate-600">
-              {content.clinicalPresentation}
-            </p>
-          </section>
-        )}
-
-        {/* Symptoms */}
-        {Array.isArray(content.symptoms) && content.symptoms.length > 0 && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Symptoms
-            </h3>
-            <ul className="list-disc ml-5 text-sm text-slate-600 space-y-1">
-              {content.symptoms.map((pt: string) => (
-                <li key={pt}>{pt}</li>
-              ))}
-            </ul>
-          </section>
-        )}
-
         {/* Exam findings */}
         {Array.isArray(content.examFindings) &&
           content.examFindings.length > 0 && (
@@ -478,16 +363,6 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               Prognosis
             </h3>
             <MarkdownBlock value={content.prognosis} />
-          </section>
-        )}
-
-        {/* Prognosis */}
-        {content.prognosis && (
-          <section className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-700 mb-1">
-              Prognosis
-            </h3>
-            <p className="text-sm text-slate-600">{content.prognosis}</p>
           </section>
         )}
 

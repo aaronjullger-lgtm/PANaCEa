@@ -16,12 +16,7 @@ import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
 import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
 import { CONDITION_REGISTRY, type ConditionMeta } from "../conditionRegistry";
 import ConditionDetailModal from "./ConditionDetailModal";
-import {
-  findConditionMetaById,
-  getSubcategoryOptions,
-  getSystemOptions,
-  searchConditions,
-} from "../src/lib/conditionSearch";
+import { findConditionMetaById, searchConditions } from "../src/lib/conditionSearch";
 
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
@@ -68,14 +63,8 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(null);
-  const [systemFilter, setSystemFilter] = useState<SystemCode | "">("");
-  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("");
-
-  const systemOptions = useMemo(() => getSystemOptions(), []);
-  const subcategoryOptions = useMemo(
-    () => getSubcategoryOptions(systemFilter || undefined),
-    [systemFilter]
+  const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(
+    null
   );
 
   const stats = useMemo(() => {
@@ -159,12 +148,8 @@ const MenuView: React.FC<MenuViewProps> = ({
   };
 
   const searchResults = useMemo(
-    () =>
-      searchConditions(searchQuery, {
-        system: systemFilter || undefined,
-        subcategory: subcategoryFilter || undefined,
-      }),
-    [searchQuery, subcategoryFilter, systemFilter]
+    () => searchConditions(searchQuery),
+    [searchQuery]
   );
 
   return (
