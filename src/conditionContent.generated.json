@@ -1,1 +1,6308 @@
-{}
+{
+  "CV__ecg__normal_sinus_rhythm_nsr": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ecg__sinus_bradycardia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ecg__sinus_tachycardia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ecg__premature_atrial_complexes_pacs": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ecg__premature_ventricular_complexes_pvcs": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ecg__atrial_fibrillation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ecg__atrial_flutter": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ecg__av_nodal_reentry_tachycardia_avnrt": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ecg__ventricular_tachycardia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ecg__ventricular_fibrillation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ischemic_heart_disease__acute_coronary_syndrome_acs": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ischemic_heart_disease__stable_angina": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ischemic_heart_disease__prinzmetal_variant_angina": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__ischemic_heart_disease__silent_ischemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__blood_pressure__essential_hypertension": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__blood_pressure__secondary_hypertension": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__blood_pressure__malignant_hypertension": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__blood_pressure__orthostatic_hypotension": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__heart_failure__leftsided_heart_failure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__heart_failure__rightsided_heart_failure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__heart_failure__biventricular_heart_failure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__heart_failure__highoutput_heart_failure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__valvular_disease__aortic_stenosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__valvular_disease__aortic_regurgitation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__valvular_disease__mitral_stenosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__valvular_disease__mitral_regurgitation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__valvular_disease__tricuspid_regurgitation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__valvular_disease__pulmonic_stenosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__cardiomyopathy__dilated_cardiomyopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__cardiomyopathy__hypertrophic_cardiomyopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__cardiomyopathy__restrictive_cardiomyopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__carditis__endocarditis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__carditis__myocarditis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__carditis__pericarditis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__conduction_disorders__sick_sinus_syndrome_sss": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__conduction_disorders__firstdegree_av_block": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__conduction_disorders__seconddegree_av_block_mobitz_i": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__conduction_disorders__seconddegree_av_block_mobitz_ii": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__conduction_disorders__thirddegree_av_block": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__peripheral_arterial_disease_pad": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__peripheral_venous_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__superficial_venous_thrombosis_svt": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__deep_venous_thrombosis_dvt": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__chronic_arterial_occlusive_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__acute_arterial_occlusive_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__raynauds_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__chronic_venous_insufficiency": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__varicose_veins": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__venous_ulceration": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__giant_cell_arteritis_temporal_arteritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__vascular_disease__aortic_aneurysm": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__congenital_heart_disease__atrial_septal_defect_asd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__congenital_heart_disease__ventricular_septal_defect_vsd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__congenital_heart_disease__patent_ductus_arteriosus_pda": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__congenital_heart_disease__tetralogy_of_fallot": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__congenital_heart_disease__coarctation_of_the_aorta": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "CV__congenital_heart_disease__transposition_of_the_great_arteries": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__obstructive__asthma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__obstructive__chronic_bronchitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__obstructive__emphysema": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__obstructive__chronic_obstructive_pulmonary_disease_copd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__obstructive__bronchiectasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__obstructive__cystic_fibrosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__pulmonary_circulation__pulmonary_embolism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__pulmonary_circulation__pulmonary_hypertension": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__pulmonary_circulation__cor_pulmonale": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__infectious__communityacquired_pneumonia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__infectious__hospitalacquired_pneumonia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__infectious__atypical_pneumonia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__infectious__viral_pneumonia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__infectious__tuberculosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__pleural_disease__pleural_effusion": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__pleural_disease__pneumothorax": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__pleural_disease__hemothorax": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__pleural_disease__empyema": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__interstitial__idiopathic_pulmonary_fibrosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__interstitial__sarcoidosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__oncology__small_cell_lung_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__oncology__nonsmall_cell_lung_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__oncology__carcinoid_tumor": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__toxicenvironmental__smoke_inhalation_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__toxicenvironmental__occupational_lung_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__esophagus__gastroesophageal_reflux_disease_gerd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__esophagus__esophagitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__esophagus__achalasia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__esophagus__esophageal_stricture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__esophagus__esophageal_varices": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__esophagus__malloryweiss_tear": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__esophagus__boerhaave_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__stomach__gastritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__stomach__peptic_ulcer_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__stomach__gastric_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__small_bowel__celiac_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__small_bowel__small_bowel_obstruction": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__small_bowel__ileus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__small_bowel__short_bowel_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__colon__diverticulitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__colon__diverticulosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__colon__ulcerative_colitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__colon__crohn_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__colon__colorectal_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__colon__irritable_bowel_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__colon__pseudomembranous_colitis_c_diff": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__liver__hepatitis_a": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__liver__hepatitis_b": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__liver__hepatitis_c": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__liver__cirrhosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__liver__hepatic_encephalopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__liver__hepatocellular_carcinoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__gallbladder__cholelithiasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__gallbladder__cholecystitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__gallbladder__choledocholithiasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__gallbladder__cholangitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__pancreas__acute_pancreatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__pancreas__chronic_pancreatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__pancreas__pancreatic_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__nutrition__obesity": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__nutrition__malnutrition": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__nutrition__vitamin_deficiencies": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__nutrition__electrolyte_abnormalities": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__arthritis__osteoarthritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__arthritis__rheumatoid_arthritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__arthritis__juvenile_idiopathic_arthritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__arthritis__psoriatic_arthritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__arthritis__reactive_arthritis_reiter_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__crystal_disease__gout": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__crystal_disease__pseudogout_calcium_pyrophosphate_deposition": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__arthritis__septic_arthritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__arthritis__lyme_arthritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__seronegative_spondyloarthropathy__ankylosing_spondylitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__seronegative_spondyloarthropathy__enteropathic_arthritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__rotator_cuff_tendinopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__rotator_cuff_tear": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__adhesive_capsulitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__subacromial_bursitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__lateral_epicondylitis_tennis_elbow": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__medial_epicondylitis_golfer_elbow": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__de_quervain_tenosynovitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__plantar_fasciitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__trochanteric_bursitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__patellar_tendinopathy_jumper_knee": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__iliotibial_band_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__carpal_tunnel_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__ulnar_neuropathy_at_the_elbow_cubital_tunnel": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__trigger_finger_stenosing_tenosynovitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__soft_tissueoveruse__ganglion_cyst": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__back__spine__mechanical_low_back_pain": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__back__spine__lumbar_radiculopathy_herniated_disc": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__back__spine__spinal_stenosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__back__spine__cauda_equina_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__back__spine__compression_vertebral_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__back__spine__spondylolisthesis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__back__spine__spondylolysis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__back__spine__scoliosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__clavicle_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__proximal_humerus_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__anterior_shoulder_dislocation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__posterior_shoulder_dislocation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__acromioclavicular_ac_joint_separation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__supracondylar_humerus_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__radial_head_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__monteggia_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__galeazzi_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__colles_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__smith_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__scaphoid_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__boxer_fracture_5th_metacarpal_neck": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__gamekeeperskier_thumb_ucl_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__nursemaid_elbow_radial_head_subluxation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__hip_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__hip_dislocation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__femoral_shaft_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__patellar_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__tibial_plateau_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__tibial_shaft_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__ankle_fracture_bimalleolartrimalleolar": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__maisonneuve_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__jones_fracture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__traumafracture__stress_fracture_tibiametatarsal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__ligament_injury__anterior_cruciate_ligament_acl_tear": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__ligament_injury__posterior_cruciate_ligament_pcl_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__ligament_injury__medial_collateral_ligament_mcl_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__ligament_injury__lateral_collateral_ligament_lcl_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__meniscal_injury__medial_meniscus_tear": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__meniscal_injury__lateral_meniscus_tear": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__ankle_sprain__lateral_ankle_sprain": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__ankle_sprain__high_ankle_syndesmotic_sprain": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__metabolicbone__osteoporosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__metabolicbone__osteopenia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__metabolicbone__osteomalacia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__metabolicbone__paget_disease_of_bone": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__metabolicbone__osteomyelitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__metabolicbone__avascular_necrosis_of_the_femoral_head": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__rheumatologic__polymyalgia_rheumatica": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__rheumatologic__polymyositis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__rheumatologic__dermatomyositis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__rheumatologic__systemic_lupus_erythematosus__msk_manifestations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__rheumatologic__fibromyalgia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__pediatrics__developmental_dysplasia_of_the_hip": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__pediatrics__leggcalvperthes_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__pediatrics__slipped_capital_femoral_epiphysis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__pediatrics__osgoodschlatter_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__pediatrics__nursemaid_elbow_radial_head_subluxation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__pediatrics__osteochondritis_dissecans": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__infection__septic_bursitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__infection__septic_tenosynovitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "MSK__infection__prosthetic_joint_infection": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__thyroid__hypothyroidism_primary": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__thyroid__hyperthyroidism_graves_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__thyroid__subacute_thyroiditis_de_quervain": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__thyroid__postpartum_thyroiditis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__thyroid__hashimoto_thyroiditis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__thyroid__thyroid_nodule": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__thyroid__thyroid_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__thyroid__myxedema_coma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__thyroid__thyroid_storm": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__diabetes__type_1_diabetes_mellitus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__diabetes__type_2_diabetes_mellitus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__diabetes__gestational_diabetes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__diabetes__diabetic_ketoacidosis_dka": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__diabetes__hyperosmolar_hyperglycemic_state_hhs": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__diabetes__diabetic_foot_infection": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__diabetes__diabetic_neuropathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__diabetes__diabetic_nephropathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__diabetes__diabetic_retinopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__adrenal__cushing_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__adrenal__addison_disease_primary_adrenal_insufficiency": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__adrenal__adrenal_crisis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__adrenal__hyperaldosteronism_conn_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__adrenal__pheochromocytoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pituitary__acromegaly": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pituitary__gigantism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pituitary__prolactinoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pituitary__diabetes_insipidus_central": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pituitary__syndrome_of_inappropriate_adh_siadh": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pituitary__hypopituitarism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__calciumparathyroid__primary_hyperparathyroidism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__calciumparathyroid__secondary_hyperparathyroidism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__calciumparathyroid__hypoparathyroidism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__calciumparathyroid__hypercalcemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__calciumparathyroid__hypocalcemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__metabolicbone__osteoporosis_endocrine_related": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__metabolicbone__osteomalacia__vitamin_d_deficiency": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__metabolicbone__paget_disease_of_bone_endocrine": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__metabolic__hyperlipidemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__metabolic__metabolic_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__metabolic__obesity": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__reproductive_endocrinology__polycystic_ovary_syndrome_pcos": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__reproductive_endocrinology__amenorrhea__endocrine_causes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__reproductive_endocrinology__hypogonadism_male": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__reproductive_endocrinology__hypogonadism_female": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__reproductive_endocrinology__hirsutism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pediatrics__congenital_hypothyroidism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pediatrics__delayed_puberty": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pediatrics__precocious_puberty": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pediatrics__growth_hormone_deficiency": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__pediatrics__turner_syndrome__endocrine_manifestations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__endocrine_tumors__men_type_1": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__endocrine_tumors__men_type_2a__2b": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ENDO__endocrine_tumors__thyroid_medullary_carcinoma_menrelated": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__bacterial__cellulitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__bacterial__erysipelas": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__bacterial__impetigo": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__bacterial__folliculitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__bacterial__abscess_skin_and_soft_tissue": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__bacterial__necrotizing_fasciitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__bacterial__sepsis__septic_shock": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__bacterial__toxic_shock_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__respiratory__communityacquired_pneumonia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__respiratory__hospitalacquired_pneumonia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__respiratory__tuberculosis_active": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__respiratory__latent_tuberculosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__respiratory__pertussis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__respiratory__diphtheria": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__respiratory__epiglottitis_infectious": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__cns__meningitis_bacterial": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__cns__viral_meningitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__cns__encephalitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__cns__brain_abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__tickborne__lyme_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__tickborne__rocky_mountain_spotted_fever": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__tickborne__ehrlichiosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__tickborne__anaplasmosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__tickborne__babesiosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__sti__chlamydia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__sti__gonorrhea": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__sti__trichomoniasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__sti__syphilis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__sti__hiv_infection__aids": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__sti__pelvic_inflammatory_disease_pid": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__sti__chancroid": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__sti__genital_herpes_hsv2": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__sti__hpv_infection__genital_warts": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__influenza": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__covid19": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__measles": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__mumps": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__rubella": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__roseola": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__varicella_chickenpox": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__herpes_zoster_shingles": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__rabies": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__mononucleosis_ebv": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__cytomegalovirus_cmv": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral__parvovirus_b19": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__parasitic__malaria": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__parasitic__toxoplasmosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__parasitic__giardiasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__parasitic__amebiasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__parasitic__hookworm": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__parasitic__pinworm": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__parasitic__scabies_parasitic": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__parasitic__lice_pediculosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__fungal__candidiasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__fungal__cryptococcosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__fungal__histoplasmosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__fungal__blastomycosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__fungal__coccidioidomycosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__fungal__aspergillosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__fungal__tinea_infections": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__pediatrics__fifth_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__pediatrics__scarlet_fever": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__pediatrics__handfootmouth_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__gastrointestinal__c_difficile_infection": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__gastrointestinal__salmonella": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__gastrointestinal__shigella": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__gastrointestinal__campylobacter": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__gastrointestinal__vibrio_cholera__parahemolyticus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__gastrointestinal__norovirus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__gastrointestinal__rotavirus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__environmental__tetanus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__environmental__botulism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__environmental__anthrax": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__environmental__leptospirosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__immunocompromised__pneumocystis_jirovecii_pneumonia_pcp": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__immunocompromised__mycobacterium_avium_complex_mac": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__immunocompromised__cmv_retinitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__emergency__meningococcemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__emergency__epiglottitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__emergency__toxic_shock_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__emergency__septic_shock": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__anemia__iron_deficiency_anemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__anemia__anemia_of_chronic_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__anemia__vitamin_b12_deficiency_anemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__anemia__folate_deficiency_anemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__anemia__aplastic_anemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__anemia__acute_blood_loss_anemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__hemolytic__autoimmune_hemolytic_anemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__hemolytic__hereditary_spherocytosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__hemolytic__g6pd_deficiency": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__hemoglobinopathy__sickle_cell_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__hemoglobinopathy__sickle_cell_trait": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__hemoglobinopathy__alpha_thalassemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__hemoglobinopathy__beta_thalassemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__myeloproliferative__polycythemia_vera": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__myeloproliferative__essential_thrombocythemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__myeloproliferative__primary_myelofibrosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__myeloproliferative__secondary_polycythemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__platelet__immune_thrombocytopenic_purpura_itp": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__platelet__thrombotic_thrombocytopenic_purpura_ttp": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__platelet__hemolytic_uremic_syndrome_hus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__platelet__heparininduced_thrombocytopenia_hit": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__platelet__druginduced_thrombocytopenia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__coagulation__hemophilia_a": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__coagulation__hemophilia_b": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__coagulation__von_willebrand_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__coagulation__disseminated_intravascular_coagulation_dic": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__coagulation__vitamin_k_deficiency_coagulopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__coagulation__liver_disease_coagulopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__thrombosis__factor_v_leiden_mutation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__thrombosis__prothrombin_gene_mutation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__thrombosis__protein_c_deficiency": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__thrombosis__protein_s_deficiency": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__thrombosis__antithrombin_iii_deficiency": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__thrombosis__antiphospholipid_antibody_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__leukemia__acute_lymphoblastic_leukemia_all": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__leukemia__acute_myeloid_leukemia_aml": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__leukemia__chronic_lymphocytic_leukemia_cll": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__leukemia__chronic_myelogenous_leukemia_cml": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__leukemia__myelodysplastic_syndromes_mds": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__lymphoma__hodgkin_lymphoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__lymphoma__nonhodgkin_lymphoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__lymphoma__burkitt_lymphoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__lymphoma__mantle_cell_lymphoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__plasma_cell__multiple_myeloma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__plasma_cell__monoclonal_gammopathy_of_undetermined_significance_mgus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__plasma_cell__waldenstrm_macroglobulinemia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__other__neutropenia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__other__febrile_neutropenia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__other__disorders_of_spleen_hypersplenism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__transfusion__acute_hemolytic_transfusion_reaction": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__transfusion__delayed_hemolytic_transfusion_reaction": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__transfusion__febrile_nonhemolytic_transfusion_reaction": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__transfusion__transfusionrelated_acute_lung_injury_trali": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__transfusion__transfusionassociated_circulatory_overload_taco": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__pediatrics__sickle_cell_pain_crisis_pediatric": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__pediatrics__beta_thalassemia_major_pediatric": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEME__pediatrics__physiologic_anemia_of_infancy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__headache__tension_headache": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__headache__migraine_headache": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__headache__cluster_headache": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__headache__medication_overuse_rebound_headache": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__headache__idiopathic_intracranial_hypertension_pseudotumor_cerebri": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__headache__temporal_giant_cell_arteritis__neurologic_manifestations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__cerebrovascular__transient_ischemic_attack_tia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__cerebrovascular__ischemic_stroke": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__cerebrovascular__intracerebral_hemorrhage": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__cerebrovascular__subarachnoid_hemorrhage": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__cerebrovascular__cerebral_venous_sinus_thrombosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__seizure__focal_partial_seizure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__seizure__generalized_tonicclonic_seizure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__seizure__absence_seizure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__seizure__status_epilepticus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__seizure__febrile_seizures_pediatric": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__demyelinating__multiple_sclerosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__demyelinating__acute_disseminated_encephalomyelitis_adem": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__neuromuscular_junction__myasthenia_gravis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__neuromuscular_junction__lamberteaton_myasthenic_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__motor_neuron__amyotrophic_lateral_sclerosis_als": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__peripheral_neuropathy__peripheral_polyneuropathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__peripheral_neuropathy__diabetic_peripheral_neuropathy__neurologic_manifestations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__peripheral_neuropathy__carpal_tunnel_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__peripheral_neuropathy__ulnar_neuropathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__peripheral_neuropathy__meralgia_paresthetica": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__peripheral_neuropathy__bell_palsy_idiopathic_facial_nerve_palsy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__peripheral_neuropathy__trigeminal_neuralgia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__neuromuscular__guillainbarr_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__neuromuscular__chronic_inflammatory_demyelinating_polyneuropathy_cidp": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__neuromuscular__muscular_dystrophy_duchennebecker": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__movement_disorder__parkinson_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__movement_disorder__essential_tremor": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__movement_disorder__huntington_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__movement_disorder__restless_legs_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__movement_disorder__tourette_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__spine__cervical_radiculopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__spine__lumbar_radiculopathy_sciatica": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__spine__cauda_equina_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__spine__spinal_cord_compression": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__spine__cervical_spondylotic_myelopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__spine__spinal_stenosis__neurologic_manifestations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__infectious__bacterial_meningitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__infectious__viral_meningitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__infectious__encephalitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__infectious__brain_abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__trauma__concussion_mild_traumatic_brain_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__trauma__diffuse_axonal_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__trauma__epidural_hematoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__trauma__subdural_hematoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__trauma__increased_intracranial_pressure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__neurodegenerative__alzheimer_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__neurodegenerative__vascular_dementia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__neurodegenerative__lewy_body_dementia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__neurodegenerative__frontotemporal_dementia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__pediatrics__cerebral_palsy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__pediatrics__neural_tube_defects_spina_bifida_anencephaly": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__pediatrics__hydrocephalus_pediatric": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__other__syncope__neurologic_evaluation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__other__vertigo__central_vs_peripheral_causes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__acneiform__acne_vulgaris": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__acneiform__rosacea": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__bullous__bullous_pemphigoid": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__bullous__pemphigus_vulgaris": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__lipoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__epidermal_inclusion_cyst": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__seborrheic_keratosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__cherry_angioma__hemangioma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__strawberry_hemangioma_infantile_hemangioma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__acrochordon_skin_tag": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__dermatofibroma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__solar_purpura": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__common_melanocytic_nevus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__atypical_dysplastic_nevus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__congenital_nevus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__portwine_stain_capillary_malformation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__benign_lesions__telangiectasia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__papulosquamous__plaque_psoriasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__papulosquamous__guttate_psoriasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__papulosquamous__pustular_psoriasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__papulosquamous__erythrodermic_psoriasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__papulosquamous__pityriasis_rosea": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__papulosquamous__lichen_planus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__papulosquamous__lichen_simplex_chronicus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__papulosquamous__dermatitis_herpetiformis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__connective_tissue__lupus__acute_cutaneous_lupus_erythematosus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__connective_tissue__lupus__subacute_cutaneous_lupus_erythematosus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__connective_tissue__lupus__discoid_lupus_erythematosus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__papulosquamous__granuloma_annulare": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__pigmentary__melasma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__pigmentary__vitiligo": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__pigmentary__postinflammatory_hyperpigmentation__hypopigmentation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__pigmentary__acanthosis_nigricans": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__dermatitis__eczema__atopic_dermatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__dermatitis__eczema__contact_dermatitis_irritantallergic": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__dermatitis__eczema__nummular_dermatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__dermatitis__eczema__seborrheic_dermatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__dermatitis__eczema__dyshidrotic_eczema_pompholyx": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__dermatitis__eczema__perioral_dermatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__dermatitis__eczema__diaper_dermatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__dermatitis__eczema__prurigo_nodularis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__dermatitis__eczema__hidradenitis_suppurativa": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__reactive__hypersensitivity__urticaria": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__reactive__hypersensitivity__angioedema": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__reactive__hypersensitivity__erythema_multiforme": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__reactive__hypersensitivity__erythema_nodosum": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__reactive__hypersensitivity__acute_generalized_exanthematous_pustulosis_agep": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__reactive__hypersensitivity__henochschnlein_purpura_iga_vasculitis__cutaneous_findings": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__drug_eruptions__scars__simple_exanthematous_drug_eruption": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__drug_eruptions__scars__urticarial_drug_eruption": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__drug_eruptions__scars__lichenoid_drug_eruption": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__drug_eruptions__scars__erythroderma_exfoliative_dermatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__drug_eruptions__scars__stevensjohnson_syndrome_sjs": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__drug_eruptions__scars__toxic_epidermal_necrolysis_ten": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__drug_eruptions__scars__drug_reaction_with_eosinophilia_and_systemic_symptoms_dressdihs": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__bacterial__impetigo": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__bacterial__erysipelas": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__bacterial__cellulitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__bacterial__folliculitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__bacterial__furuncle__carbuncle": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__bacterial__abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__bacterial__necrotizing_fasciitis__cutaneous_manifestations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__fungal__tinea_corporis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__fungal__tinea_capitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__fungal__tinea_cruris": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__fungal__tinea_pedis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__fungal__tinea_manuum": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__fungal__tinea_versicolor": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__fungal__onychomycosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__fungal__cutaneous_candidiasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__viral__herpes_simplex_virus_hsv__cutaneous": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__viral__varicella_chickenpox": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__viral__herpes_zoster_shingles": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__viral__molluscum_contagiosum": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__viral__verruca_vulgaris_common_warts": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__viral__plantar_warts": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__viral__condyloma_acuminata_genital_warts": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__parasitic__scabies": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__parasitic__pediculosis_capitis_head_lice": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__parasitic__pediculosis_corporis_body_lice": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__parasitic__pediculosis_pubis_pubic_lice": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__infectious__parasitic__bedbug_bites": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__hair_disorders__alopecia_areata": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__hair_disorders__androgenetic_alopecia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__hair_disorders__telogen_effluvium": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__hair_disorders__anagen_effluvium": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__hair_disorders__hirsutism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__nail_disorders__onychomycosis__nail_involvement": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__nail_disorders__paronychia_acutechronic": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__nail_disorders__felon": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__nail_disorders__psoriatic_nail_changes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__ulcers__wounds__pressure_decubitus_ulcer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__ulcers__wounds__venous_stasis_ulcer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__ulcers__wounds__arterial_insufficiency_ulcer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__ulcers__wounds__diabetic_foot_ulcer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__ulcers__wounds__mixedetiology_ulcer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__ulcers__wounds__stasis_dermatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__ulcers__wounds__pyoderma_gangrenosum": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__burns__superficial_firstdegree_burn": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__burns__partialthickness_seconddegree_burn": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__burns__fullthickness_thirdfourthdegree_burn": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__burns__burn_shock__fluid_resuscitation_principles": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__malignancy__actinic_keratosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__malignancy__basal_cell_carcinoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__malignancy__squamous_cell_carcinoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__malignancy__melanoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__malignancy__merkel_cell_carcinoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__malignancy__cutaneous_tcell_lymphoma_mycosis_fungoides": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__biologic_therapy__biologic_therapy_for_plaque_psoriasis_tnf_il17_il23_inhibitors": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__biologic_therapy__dupilumab_therapy_for_moderatetosevere_atopic_dermatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__biologic_therapy__adalimumab_for_hidradenitis_suppurativa": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__aki__acute_kidney_injury_general": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__aki__prerenal_aki": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__aki__intrinsic_aki": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__aki__postrenal_aki": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__aki__acute_tubular_necrosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__aki__acute_interstitial_nephritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__aki__acute_glomerulonephritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__ckd__chronic_kidney_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__ckd__endstage_renal_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__ckd__diabetic_nephropathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__ckd__hypertensive_nephrosclerosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__glomerular__nephritic_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__glomerular__nephrotic_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__glomerular__iga_nephropathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__glomerular__poststreptococcal_glomerulonephritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__glomerular__antigbm_disease_goodpasture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__glomerular__membranous_nephropathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__glomerular__minimal_change_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__glomerular__focal_segmental_glomerulosclerosis_fsgs": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__tubulointerstitial__acute_interstitial_nephritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__tubulointerstitial__chronic_interstitial_nephritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__tubulointerstitial__papillary_necrosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__tubulointerstitial__analgesic_nephropathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__vascular__renal_artery_stenosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__vascular__renal_vein_thrombosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__vascular__hypertensive_emergency_with_renal_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__vascular__thrombotic_microangiopathy_husttp__renal_manifestations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__infectious__acute_pyelonephritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__infectious__chronic_pyelonephritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__infectious__renal_abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__infectious__xanthogranulomatous_pyelonephritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__stones__calcium_oxalate_stones": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__stones__uric_acid_stones": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__stones__struvite_stones": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__stones__cystine_stones": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__stones__nephrolithiasis_general_evaluation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__congenital__polycystic_kidney_disease_autosomal_dominant": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__congenital__polycystic_kidney_disease_autosomal_recessive": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__congenital__medullary_sponge_kidney": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__congenital__horseshoe_kidney": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__acidbase__metabolic_acidosis_renal_causes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__acidbase__metabolic_alkalosis_renal_causes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__acidbase__renal_tubular_acidosis_type_i_distal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__acidbase__renal_tubular_acidosis_type_ii_proximal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__acidbase__renal_tubular_acidosis_type_iv_hyperkalemic": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__electrolytes__hyperkalemia_renal_causes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__electrolytes__hypokalemia_renal_causes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__electrolytes__hypernatremia_renal_causes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__electrolytes__hyponatremia_renal_causes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__electrolytes__hyperphosphatemia_ckd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__electrolytes__hypophosphatemia_renal_loss": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__oncology__renal_cell_carcinoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__oncology__wilms_tumor_nephroblastoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__oncology__oncocytoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__oncology__angiomyolipoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__emergency__rhabdomyolysis__renal_complications": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__emergency__postobstructive_diuresis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__emergency__acute_kidney_injury_in_shock_states": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__pediatrics__hemolytic_uremic_syndrome_pediatric_primary": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "RENAL__pediatrics__minimal_change_disease_pediatric_predominant": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__prostate__benign_prostatic_hyperplasia_bph": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__prostate__acute_prostatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__prostate__chronic_prostatitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__prostate__prostate_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__testicular__testicular_torsion": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__testicular__epididymitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__testicular__orchitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__testicular__hydrocele": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__testicular__varicocele": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__testicular__spermatocele": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__testicular__testicular_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__penile__phimosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__penile__paraphimosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__penile__priapism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__penile__peyronie_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__penile__penile_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__bladder__acute_cystitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__bladder__hemorrhagic_cystitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__bladder__interstitial_cystitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__bladder__bladder_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__bladder__neurogenic_bladder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__urethra__urethritis_general": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__urethra__gonococcal_urethritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__urethra__nongonococcal_urethritis_chlamydia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__urethra__urethral_stricture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__infectious__epididymoorchitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__infectious__prostatitis_acute_and_chronic": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__infectious__urethritis_sti_related": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__incontinence__stress_incontinence": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__incontinence__urge_incontinence": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__incontinence__overflow_incontinence": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__incontinence__mixed_incontinence": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__pelvic_floor__pelvic_organ_prolapse_cystocelerectocele": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__pelvic_floor__pelvic_floor_dysfunction": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__femalegu__urethral_diverticulum": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__femalegu__urethral_prolapse": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__femalegu__bladder_pain_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__oncology__bladder_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__oncology__prostate_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__oncology__testicular_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__oncology__penile_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__trauma__urethral_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__trauma__bladder_rupture": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GU__trauma__testicular_trauma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__menstrual_disorders__primary_amenorrhea": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__menstrual_disorders__secondary_amenorrhea": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__menstrual_disorders__oligomenorrhea": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__menstrual_disorders__polymenorrhea": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__menstrual_disorders__dysmenorrhea": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__abnormal_uterine_bleeding__abnormal_uterine_bleeding_aub": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__menstrual_disorders__premenstrual_syndrome_pms": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__menstrual_disorders__premenstrual_dysphoric_disorder_pmdd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__gynecology__endometriosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__gynecology__adenomyosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__gynecology__uterine_leiomyomas_fibroids": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__gynecology__chronic_pelvic_pain": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__gynecology__pelvic_inflammatory_disease_pid": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__gynecology__tuboovarian_abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__gynecology__acute_pelvic_pain__ovarian_torsion": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__gynecology__functional_ovarian_cysts": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__gynecology__polycystic_ovary_syndrome_pcos": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__vulvar_disorders__lichen_sclerosus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__vulvar_disorders__lichen_simplex_chronicus_vulvar": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__vulvar_disorders__vulvodynia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__vaginal_disorders__vulvovaginal_candidiasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__vaginal_disorders__bacterial_vaginosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__vaginal_disorders__trichomoniasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__cervix__sti__chlamydial_cervicitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__cervix__sti__gonococcal_cervicitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__cervix__sti__human_papillomavirus_hpv__genital_warts": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__cervix__sti__cervical_dysplasia_lsilhsil": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__contraception__combined_hormonal_contraception_pillpatchring": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__contraception__progestinonly_contraception_pillinjectionimplant": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__contraception__intrauterine_devices_copper_and_hormonal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__contraception__emergency_contraception": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__sterilization__female_sterilization_tubal_ligationsalpingectomy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__sterilization__male_sterilization_vasectomy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__infertility__female_infertility__anovulation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__infertility__female_infertility__tubal_factor": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__infertility__male_factor_infertility": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__reproductive_endocrine__hyperprolactinemia_reproductive_effects": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__reproductive_endocrine__premature_ovarian_insufficiency": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__male_reproductive__erectile_dysfunction": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__male_reproductive__male_hypogonadism_reproductive_impact": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__male_reproductive__male_infertility_sperm_abnormalities": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__early_pregnancy__normal_firsttrimester_pregnancy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__early_pregnancy__ectopic_pregnancy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__early_pregnancy__threatened_abortion": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__early_pregnancy__inevitable__incomplete__complete_abortion": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__early_pregnancy__missed_abortion": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__early_pregnancy__gestational_trophoblastic_disease_molar_pregnancy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__gestational_diabetes_mellitus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__chronic_hypertension_in_pregnancy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__gestational_hypertension": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__preeclampsia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__severe_preeclampsia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__eclampsia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__hellp_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__hyperemesis_gravidarum": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__intrauterine_growth_restriction_iugr": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__fetal_macrosomia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__placenta_previa": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__placental_abruption": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__placenta_accreta_spectrum": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__multiple_gestation_twin_pregnancy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__antepartum__postterm_pregnancy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__normal_labor_and_delivery": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__preterm_labor": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__premature_rupture_of_membranes_prom": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__preterm_premature_rupture_of_membranes_pprom": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__chorioamnionitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__labor_dystocia_failure_to_progress": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__shoulder_dystocia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__umbilical_cord_prolapse": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__operative_vaginal_delivery_forcepsvacuum": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__intrapartum__cesarean_delivery_indicationscomplications": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__postpartum__postpartum_hemorrhage": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__postpartum__postpartum_endometritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__postpartum__postpartum_mastitis__breast_abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__postpartum__postpartum_blues": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__postpartum__postpartum_depression": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__postpartum__postpartum_psychosis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__breast__fibrocystic_breast_changes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__breast__breast_fibroadenoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__breast__mastitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__breast__breast_abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__breast__galactorrhea": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__breast__gynecomastia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__oncology__cervical_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__oncology__endometrial_uterine_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__oncology__ovarian_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__oncology__vulvar_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__oncology__vaginal_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__oncology__gestational_trophoblastic_neoplasia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "REPRO__oncology__breast_cancer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__lids__lacrimal__blepharitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__lids__lacrimal__hordeolum_stye": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__lids__lacrimal__chalazion": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__lids__lacrimal__entropion": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__lids__lacrimal__ectropion": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__lids__lacrimal__dacryocystitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__lids__lacrimal__dacryoadenitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__conjunctiva__viral_conjunctivitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__conjunctiva__bacterial_conjunctivitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__conjunctiva__allergic_conjunctivitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__conjunctiva__pterygium": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__conjunctiva__pinguecula": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__cornea__anterior_segment__keratitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__cornea__anterior_segment__corneal_ulcer": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__cornea__anterior_segment__herpes_simplex_keratitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__cornea__anterior_segment__herpes_zoster_ophthalmicus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__uvea__anterior_uveitis__iritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__uvea__episcleritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__uvea__scleritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__lens__cataract": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__glaucoma__primary_openangle_glaucoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__glaucoma__acute_angleclosure_glaucoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__glaucoma__ocular_hypertension": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__retina__agerelated_macular_degeneration__dry": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__retina__agerelated_macular_degeneration__wet": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__retina__retinal_detachment": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__retina__central_retinal_artery_occlusion_crao": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__retina__central_retinal_vein_occlusion_crvo": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__retina__diabetic_retinopathy__nonproliferative": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__retina__diabetic_retinopathy__proliferative": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__retina__hypertensive_retinopathy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__retina__retinitis_pigmentosa": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__optic_nerve__optic_neuritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__optic_nerve__papilledema": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__visual_symptoms__amaurosis_fugax": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__pediatrics__strabismus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__pediatrics__amblyopia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__pediatrics__congenital_cataract": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__orbit__preseptal_periorbital_cellulitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__orbit__orbital_cellulitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__orbit__hyphema": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__eye__orbit__blunt_ocular_trauma__globe_injury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__external__otitis_externa": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__external__malignant_necrotizing_otitis_externa": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__external__cerumen_impaction": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__external__foreign_body_in_external_auditory_canal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__middle__acute_otitis_media": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__middle__recurrent_otitis_media": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__middle__otitis_media_with_effusion_serous_otitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__middle__chronic_suppurative_otitis_media": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__middle__tympanic_membrane_perforation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__middle__mastoiditis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__middle__cholesteatoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__inner__vestibular__labyrinthitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__inner__vestibular__vestibular_neuritis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__inner__vestibular__mnire_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__inner__vestibular__tinnitus": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__inner__vestibular__noiseinduced_hearing_loss": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__inner__vestibular__presbycusis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__ear__inner__vestibular__acoustic_neuroma_vestibular_schwannoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__viral_rhinitis_common_cold": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__allergic_rhinitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__nonallergic_rhinitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__acute_bacterial_rhinosinusitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__chronic_rhinosinusitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__nasal_polyps": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__deviated_nasal_septum": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__epistaxis__anterior": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__epistaxis__posterior": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__nose__sinus__nasal_foreign_body": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__throat__pharynx__viral_pharyngitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__throat__pharynx__group_a_streptococcal_pharyngitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__throat__pharynx__chronic_tonsillitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__throat__pharynx__peritonsillar_abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__throat__pharynx__retropharyngeal_abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__throat__pharynx__infectious_mononucleosis_oropharyngeal_manifestations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__larynx__upper_airway__acute_laryngitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__larynx__upper_airway__chronic_laryngitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__larynx__upper_airway__epiglottitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__larynx__upper_airway__croup_laryngotracheobronchitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__larynx__upper_airway__vocal_cord_nodules__polyps": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__larynx__upper_airway__laryngopharyngeal_reflux_lpr": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oral_cavity__aphthous_ulcers": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oral_cavity__herpes_labialis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oral_cavity__oral_candidiasis_thrush": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oral_cavity__leukoplakia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oral_cavity__erythroplakia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oral_cavity__temporomandibular_joint_disorder_tmj": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oral_cavity__dental_abscess": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__salivary_glands__acute_bacterial_sialadenitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__salivary_glands__chronic_sialadenitis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__salivary_glands__sialolithiasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__salivary_glands__parotitis_nonmumps": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__sleepdisordered_breathing__obstructive_sleep_apnea_ent_perspective": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oncology__head__neck__oral_cavity_squamous_cell_carcinoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oncology__head__neck__oropharyngeal_carcinoma_including_hpvassociated": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oncology__head__neck__laryngeal_carcinoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oncology__head__neck__nasopharyngeal_carcinoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oncology__head__neck__salivary_gland_tumors": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "HEENT__oncology__eye__retinoblastoma": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__mood_disorders__major_depressive_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__mood_disorders__persistent_depressive_disorder_dysthymia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__mood_disorders__bipolar_i_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__mood_disorders__bipolar_ii_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__mood_disorders__cyclothymic_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__mood_disorders__premenstrual_dysphoric_disorder_pmdd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__mood_disorders__depression_with_peripartum_onset": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__anxiety_disorders__generalized_anxiety_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__anxiety_disorders__panic_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__anxiety_disorders__agoraphobia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__anxiety_disorders__social_anxiety_disorder_social_phobia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__anxiety_disorders__specific_phobia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__anxiety_disorders__separation_anxiety_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__anxiety_disorders__selective_mutism": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__trauma_and_stressorrelated_disorders__posttraumatic_stress_disorder_ptsd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__trauma_and_stressorrelated_disorders__acute_stress_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__trauma_and_stressorrelated_disorders__adjustment_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__trauma_and_stressorrelated_disorders__reactive_attachment_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__obsessivecompulsive__related_disorders__obsessivecompulsive_disorder_ocd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__obsessivecompulsive__related_disorders__body_dysmorphic_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__obsessivecompulsive__related_disorders__hoarding_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__obsessivecompulsive__related_disorders__trichotillomania_hairpulling_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__obsessivecompulsive__related_disorders__excoriation_skinpicking_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__psychotic_disorders__schizophrenia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__psychotic_disorders__schizoaffective_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__psychotic_disorders__schizophreniform_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__psychotic_disorders__brief_psychotic_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__psychotic_disorders__delusional_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__psychotic_disorders__substanceinduced_psychotic_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__somatic_symptom__related_disorders__somatic_symptom_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__somatic_symptom__related_disorders__illness_anxiety_disorder_hypochondriasis": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__somatic_symptom__related_disorders__conversion_disorder_functional_neurological_symptom_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__somatic_symptom__related_disorders__factitious_disorder_imposed_on_self": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__somatic_symptom__related_disorders__factitious_disorder_imposed_on_another": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__somatic_symptom__related_disorders__malingering": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__disruptive_impulsecontrol__conduct_disorders__oppositional_defiant_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__disruptive_impulsecontrol__conduct_disorders__conduct_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__disruptive_impulsecontrol__conduct_disorders__intermittent_explosive_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__disruptive_impulsecontrol__conduct_disorders__kleptomania": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__disruptive_impulsecontrol__conduct_disorders__pyromania": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__neurodevelopmental_disorders__attentiondeficithyperactivity_disorder_adhd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__neurodevelopmental_disorders__autism_spectrum_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__neurodevelopmental_disorders__intellectual_disability_intellectual_developmental_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__neurodevelopmental_disorders__specific_learning_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__neurodevelopmental_disorders__tourette_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__neurodevelopmental_disorders__persistent_chronic_motor_or_vocal_tic_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__feeding__eating_disorders__anorexia_nervosa": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__feeding__eating_disorders__bulimia_nervosa": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__feeding__eating_disorders__bingeeating_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__feeding__eating_disorders__avoidantrestrictive_food_intake_disorder_arfid": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__paranoid_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__schizoid_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__schizotypal_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__antisocial_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__borderline_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__histrionic_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__narcissistic_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__avoidant_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__dependent_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__personality_disorders__obsessivecompulsive_personality_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__sleepwake_disorders__insomnia_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__sleepwake_disorders__hypersomnolence_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__sleepwake_disorders__narcolepsy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__sleepwake_disorders__parasomnias_nightmares_night_terrors_sleepwalking": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__alcohol__alcohol_use_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__alcohol__alcohol_intoxication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__alcohol__alcohol_withdrawal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__alcohol__delirium_tremens": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__alcohol__wernickekorsakoff_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__opioids__opioid_use_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__opioids__opioid_intoxication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__opioids__opioid_withdrawal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__stimulants__stimulant_use_disorder_cocaine_amphetamines": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__stimulants__stimulant_intoxication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__stimulants__stimulant_withdrawal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__sedativehypnotics__sedativehypnotic_or_anxiolytic_use_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__sedativehypnotics__benzodiazepine_intoxication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__sedativehypnotics__benzodiazepine_withdrawal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__sedativehypnotics__barbiturate_intoxication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__sedativehypnotics__barbiturate_withdrawal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__cannabis__hallucinogens__cannabis_use_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__cannabis__hallucinogens__cannabis_intoxication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__cannabis__hallucinogens__cannabis_withdrawal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__cannabis__hallucinogens__hallucinogen_use_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__cannabis__hallucinogens__hallucinogen_intoxication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__cannabis__hallucinogens__phencyclidine_pcp_intoxication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__tobacco__tobacco_use_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__substance_use__tobacco__nicotine_withdrawal": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__emergency_psychiatry__suicidality__suicidal_ideation__suicide_risk_assessment": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__emergency_psychiatry__suicidality__nonsuicidal_selfinjury": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__emergency_psychiatry__suicidality__violent_or_agitated_patient_management": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__emergency_psychiatry__suicidality__serotonin_syndrome_psychiatric_perspective": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__emergency_psychiatry__suicidality__neuroleptic_malignant_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__professionalism__ethics__professional_behavior__accountability": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__professionalism__ethics__informed_consent__shared_decisionmaking": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__professionalism__ethics__confidentiality__hipaa": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__professionalism__ethics__managing_conflicts_of_interest": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__professionalism__ethics__boundary_issues__dual_relationships": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__professionalism__ethics__ethical_decisionmaking_in_complex_cases": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__professionalism__ethics__endoflife_care__advance_directives": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__professionalism__ethics__allocation_of_scarce_resources__justice_in_care": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__legal__regulatory_practice__scope_of_practice_for_physician_assistants": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__legal__regulatory_practice__licensure_certification_and_credentialing": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__legal__regulatory_practice__mandatory_reporting_abuse_neglect_public_health": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__legal__regulatory_practice__duty_to_warn__tarasofftype_situations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__legal__regulatory_practice__medical_malpractice__negligence_elements": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__legal__regulatory_practice__standard_of_care__expert_testimony": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__legal__regulatory_practice__informed_refusal__patient_autonomy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__risk_management__patient_safety__adverse_event_recognition__disclosure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__risk_management__patient_safety__near_misses__error_reporting_systems": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__risk_management__patient_safety__root_cause_analysis__systems_thinking": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__risk_management__patient_safety__highrisk_medications__prescribing_safety": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__risk_management__patient_safety__medication_reconciliation__transitions_of_care": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__risk_management__patient_safety__safe_handoffs__signout_communication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__infection_control__occupational_safety__standard_precautions__transmissionbased_precautions": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__infection_control__occupational_safety__hand_hygiene__environmental_infection_control": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__infection_control__occupational_safety__needlestick__bloodborne_pathogen_exposure_management": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__infection_control__occupational_safety__personal_protective_equipment_ppe_use": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__infection_control__occupational_safety__occupational_health_screening__immunizations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__communication__interprofessional_practice__effective_patientcentered_communication": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__communication__interprofessional_practice__breaking_bad_news__difficult_conversations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__communication__interprofessional_practice__health_literacy__teachback_method": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__communication__interprofessional_practice__shared_decisionmaking_with_patients__families": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__communication__interprofessional_practice__interprofessional_team_communication__collaboration": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__communication__interprofessional_practice__managing_conflict_within_the_healthcare_team": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__cultural_competence__health_equity__cultural_humility__respect_for_diversity": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__cultural_competence__health_equity__addressing_health_disparities__social_determinants_of_health": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__cultural_competence__health_equity__implicit_bias__its_impact_on_care": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__cultural_competence__health_equity__use_of_medical_interpreters__language_access": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__cultural_competence__health_equity__lgbtq_inclusive_care__genderaffirming_practices": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__evidencebased_practice__research__formulating_clinical_questions_picopicot": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__evidencebased_practice__research__levels_of_evidence__study_design_hierarchy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__evidencebased_practice__research__understanding_sensitivity_specificity_and_predictive_values": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__evidencebased_practice__research__interpreting_relative_risk_odds_ratio_and_confidence_intervals": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__evidencebased_practice__research__number_needed_to_treat_nnt_and_number_needed_to_harm_nnh": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__evidencebased_practice__research__critical_appraisal_of_clinical_guidelines__literature": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_promotion__disease_prevention__preventive_screening_recommendations_uspstf_concepts": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_promotion__disease_prevention__lifestyle_counseling_diet_exercise_tobacco_alcohol": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_promotion__disease_prevention__vaccination_principles__population_health": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_promotion__disease_prevention__behavior_change_models__motivational_interviewing": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_promotion__disease_prevention__chronic_disease_management__selfmanagement_support": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_policy__healthcare_systems__healthcare_delivery_models_primary_care_pcmh_aco": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_policy__healthcare_systems__insurance_basics_medicare_medicaid_private_uninsured": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_policy__healthcare_systems__quality_metrics__performance_measurement": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_policy__healthcare_systems__valuebased_care__payforperformance_concepts": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__health_policy__healthcare_systems__advocacy_roles_of_pas_in_healthcare_policy": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__documentation_billing__coding__accurate__legible_clinical_documentation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__documentation_billing__coding__problemoriented_medical_records__soap_notes": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__documentation_billing__coding__icd10__cpt_coding_principles_conceptual": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__documentation_billing__coding__medical_necessity__justification_for_services": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__documentation_billing__coding__avoiding_upcoding_fraud_and_abuse": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__practice_management__systemsbased_care__care_coordination__case_management": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__practice_management__systemsbased_care__transitions_of_care__hospital_discharge_planning": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__practice_management__systemsbased_care__chronic_care_models__teambased_care": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__practice_management__systemsbased_care__time_management__panel_management_for_pas": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__practice_management__systemsbased_care__quality_improvement_cycles_pdsa_lean_six_sigma_concepts": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__technology_telemedicine__informatics__electronic_health_records_ehr_best_practices": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__technology_telemedicine__informatics__telemedicine_etiquette_consent_and_limitations": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__technology_telemedicine__informatics__data_privacy__security_in_digital_health": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__technology_telemedicine__informatics__clinical_decision_support_tools__order_sets": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__impaired_provider__disruptive_behavior__recognition_of_impaired_colleague_substance_use_cognitive_decline": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__impaired_provider__disruptive_behavior__reporting_impaired_or_unsafe_colleagues": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__impaired_provider__disruptive_behavior__disruptive_behavior__its_impact_on_team_and_patient_safety": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PRO__impaired_provider__disruptive_behavior__institutional_policies_for_fitnessforduty__remediation": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__general_pediatrics__trisomy_21": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__general_pediatrics__turner_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__general_pediatrics__klinefelter_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__general_pediatrics__fragile_x_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__general_medicine__dehydration": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__developmental__autism_spectrum_disorder": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__developmental__adhd": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__genetic__marfan_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__genetic__ehlersdanlos_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__pediatrics__failure_to_thrive": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__general_medicine__fatigue": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "OTHER__general_medicine__generalized_weakness": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "DERM__other_dermatologic_disorders__photosensitivity_reactions": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__metabolic_disorders__phenylketonuria_pku": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "GI__nutrition__refeeding_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PULM__sleeprelated_breathing_disorders__obesity_hypoventilation_syndrome": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "NEURO__movement_disorders__tardive_dyskinesia": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__sexuality__gender__human_sexuality_and_gender_dysphoria": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__trauma_and_stressorrelated_disorders__adjustment_disorders": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "PSYCH__somatic_symptom__conversion__psychogenic_nonepileptic_seizure": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__prion_diseases__prion_diseases_eg_creutzfeldtjakob_disease": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__viral_diseases__coronavirus_infections": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  },
+  "ID__perinatal_infections__perinatal_group_b_streptococcus_infection": {
+    "overview": "",
+    "keyPoints": [],
+    "redFlags": [],
+    "treatmentPearls": []
+  }
+}
