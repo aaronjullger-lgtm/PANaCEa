@@ -2,8 +2,13 @@ import {
   CONDITION_REGISTRY,
   buildConditionDefinition,
   type ConditionMeta,
-} from "../../conditionRegistry";
-import type { SystemCode } from "../../types";
+} from "../../conditionRegistry.ts";
+import type { SystemCode } from "../../types.ts";
+
+export interface ConditionSearchFilters {
+  system?: SystemCode;
+  subcategory?: string;
+}
 
 export interface ConditionSearchResult {
   id: string;
@@ -53,8 +58,20 @@ function bestTermScore(query: string, term: string): number {
   );
 }
 
+export function getSystemOptions(): SystemCode[] {
+  return Array.from(new Set(CONDITION_REGISTRY.map((c) => c.system)));
+}
+
+export function getSubcategoryOptions(system?: SystemCode): string[] {
+  const filtered = system
+    ? CONDITION_REGISTRY.filter((c) => c.system === system)
+    : CONDITION_REGISTRY;
+  return Array.from(new Set(filtered.map((c) => c.subcategory)));
+}
+
 export function searchConditions(
-  rawQuery: string
+  rawQuery: string,
+  filters: ConditionSearchFilters = {}
 ): ConditionSearchResult[] {
   const query = rawQuery.trim();
   if (!query) return [];
@@ -62,6 +79,9 @@ export function searchConditions(
   const results: ConditionSearchResult[] = [];
 
   for (const meta of CONDITION_REGISTRY) {
+    if (filters.system && meta.system !== filters.system) continue;
+    if (filters.subcategory && meta.subcategory !== filters.subcategory) continue;
+
     const aliases = meta.aliases ?? [];
     const terms = [meta.condition, ...aliases];
     let bestScore = 0;

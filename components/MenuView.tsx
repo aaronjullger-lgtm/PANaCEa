@@ -146,11 +146,10 @@ const MenuView: React.FC<MenuViewProps> = ({
     });
   };
 
-  const searchResults = useMemo(() => {
-    const trimmed = searchQuery.trim();
-    if (!trimmed) return [];
-    return searchConditions(trimmed);
-  }, [searchQuery]);
+  const searchResults = useMemo(
+    () => searchConditions(searchQuery),
+    [searchQuery]
+  );
 
   return (
     <>
@@ -204,6 +203,37 @@ const MenuView: React.FC<MenuViewProps> = ({
 
         {/* Condition search */}
         <div className="w-full max-w-md mx-auto mb-6 relative">
+          <div className="flex gap-2 mb-2">
+            <select
+              value={systemFilter}
+              onChange={(e) => {
+                const value = e.target.value as SystemCode | "";
+                setSystemFilter(value);
+                setSubcategoryFilter("");
+              }}
+              className="w-1/2 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+            >
+              <option value="">All systems</option>
+              {systemOptions.map((sys) => (
+                <option key={sys} value={sys}>
+                  {sys}
+                </option>
+              ))}
+            </select>
+            <select
+              value={subcategoryFilter}
+              onChange={(e) => setSubcategoryFilter(e.target.value)}
+              className="w-1/2 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+              disabled={!subcategoryOptions.length}
+            >
+              <option value="">All subcategories</option>
+              {subcategoryOptions.map((sub) => (
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
+              ))}
+            </select>
+          </div>
           <input
             type="text"
             value={searchQuery}
