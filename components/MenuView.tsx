@@ -66,6 +66,24 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(
     null
   );
+  const [systemFilter, setSystemFilter] = useState<SystemCode | "">("");
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("");
+
+  const systemOptions = useMemo<SystemCode[]>(
+    () => Array.from(new Set(CONDITION_REGISTRY.map((condition) => condition.system))),
+    []
+  );
+
+  const subcategoryOptions = useMemo<string[]>(
+    () => {
+      if (!systemFilter) return [];
+      const subcategories = CONDITION_REGISTRY
+        .filter((condition) => condition.system === systemFilter)
+        .map((condition) => condition.subcategory);
+      return Array.from(new Set(subcategories));
+    },
+    [systemFilter]
+  );
 
   const stats = useMemo(() => {
     // Overall score = last 360 questions (any mode) as before
@@ -148,8 +166,16 @@ const MenuView: React.FC<MenuViewProps> = ({
   };
 
   const searchResults = useMemo(
-    () => searchConditions(searchQuery),
-    [searchQuery]
+    () => {
+      const results = searchConditions(searchQuery);
+      return results.filter((result) => {
+        if (systemFilter && result.system !== systemFilter) return false;
+        if (subcategoryFilter && result.subcategory !== subcategoryFilter)
+          return false;
+        return true;
+      });
+    },
+    [searchQuery, systemFilter, subcategoryFilter]
   );
 
   return (
