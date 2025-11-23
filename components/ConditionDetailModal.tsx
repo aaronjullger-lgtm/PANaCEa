@@ -1,6 +1,6 @@
 // src/components/ConditionDetailModal.tsx
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
@@ -30,26 +30,14 @@ interface ContentSection {
   accent?: "danger" | "default";
 }
 
-const markdownComponents = {
-  ul: ({ node, ...props }: any) => (
-    <ul className="list-disc pl-6 space-y-2" {...props} />
-  ),
-  li: ({ node, ...props }: any) => (
-    <li className="ml-2">
-      <span {...props} />
-    </li>
-  ),
-};
-
 const MarkdownBlock = ({ value }: { value: string }) => {
   const formatted = value ? preprocessMarkdown(value) : "";
 
   return (
     <ReactMarkdown
-      className="condition-content text-sm text-slate-700 leading-relaxed"
+      className="condition-content text-sm text-slate-800 leading-relaxed space-y-3"
       remarkPlugins={[remarkGfm, normalizeMarkdown]}
       rehypePlugins={[rehypeRaw]}
-      components={markdownComponents}
     >
       {formatted}
     </ReactMarkdown>
@@ -61,10 +49,10 @@ const InlineMarkdown = ({ value }: { value: string }) => {
 
   return (
     <ReactMarkdown
-      className="condition-content text-sm text-slate-700 leading-relaxed"
+      className="condition-content text-sm text-slate-800 leading-relaxed"
       remarkPlugins={[remarkGfm, normalizeMarkdown]}
       rehypePlugins={[rehypeRaw]}
-      components={{ ...markdownComponents, p: ({ children }) => <>{children}</> }}
+      components={{ p: ({ children }) => <>{children}</> }}
     >
       {formatted}
     </ReactMarkdown>
@@ -77,10 +65,6 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   onDrillCondition,
 }) => {
   const [mediaIndex, setMediaIndex] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-  const [activeSection, setActiveSection] = useState<string | null>(null);
   const conditionId = useMemo(
     () => buildConditionDefinition(condition).id,
     [condition]
@@ -92,29 +76,6 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
       {}
     );
   }, [condition.condition, conditionId]);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(`condition:${conditionId}:collapsed`);
-    if (stored) {
-      try {
-        setCollapsedSections(JSON.parse(stored));
-      } catch (e) {
-        console.error("Failed to parse collapsed state", e);
-        setCollapsedSections({});
-      }
-    } else {
-      setCollapsedSections({});
-    }
-  }, [conditionId]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      `condition:${conditionId}:collapsed`,
-      JSON.stringify(collapsedSections)
-    );
-  }, [collapsedSections, conditionId]);
-
-  const mediaIds = content.mediaIds ?? [];
 
   const sections: ContentSection[] = useMemo(() => {
     return [
@@ -224,62 +185,41 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     });
   }, [content]);
 
-  const tocItems = useMemo(
-    () =>
-      [
-        { key: "overview", label: "Overview" },
-        { key: "epidemiology", label: "Epidemiology" },
-        { key: "examFindings", label: "Exam" },
-        { key: "management", label: "Management" },
-        { key: "complications", label: "Complications" },
-        { key: "prognosis", label: "Prognosis" },
-      ].filter((item) => sections.some((section) => section.key === item.key)),
-    [sections]
-  );
-
-  const hasAnyContent = sections.length > 0;
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-
-        if (visible.length > 0) {
-          setActiveSection(visible[0].target.getAttribute("data-section-key"));
-        }
-      },
-      { root: container, threshold: [0.15, 0.35, 0.6] }
-    );
-
-    sections.forEach((section) => {
-      const el = sectionRefs.current[section.key];
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
+  const defaultCollapsed = useMemo(() => {
+    return sections.reduce((acc, section) => {
+      acc[section.key] = section.key !== "overview";
+      return acc;
+    }, {} as Record<string, boolean>);
   }, [sections]);
 
-  const scrollToSection = (key: string) => {
-    const container = scrollContainerRef.current;
-    const target = sectionRefs.current[key];
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(
+    () => defaultCollapsed
+  );
 
-    if (!container || !target) return;
+  useEffect(() => {
+    const stored = localStorage.getItem(`condition:${conditionId}:collapsed`);
+    if (stored) {
+      try {
+        setCollapsedSections(JSON.parse(stored));
+        return;
+      } catch (e) {
+        console.error("Failed to parse collapsed state", e);
+      }
+    }
 
-    const containerRect = container.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
-    const top = targetRect.top - containerRect.top + container.scrollTop - 8;
+    setCollapsedSections(defaultCollapsed);
+  }, [conditionId, defaultCollapsed]);
 
-    container.scrollTo({ top, behavior: "smooth" });
-  };
+  useEffect(() => {
+    localStorage.setItem(
+      `condition:${conditionId}:collapsed`,
+      JSON.stringify(collapsedSections)
+    );
+  }, [collapsedSections, conditionId]);
 
-  const registerSectionRef = (key: string) => (el: HTMLDivElement | null) => {
-    sectionRefs.current[key] = el;
-  };
+  const mediaIds = content.mediaIds ?? [];
+
+  const hasAnyContent = sections.length > 0;
 
   const toggleSection = (key: string) => {
     setCollapsedSections((prev) => ({
@@ -291,8 +231,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
       <div
-        ref={scrollContainerRef}
-        className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-8"
+        className="bg-[#FCF9F6] border border-[#D0C7BF] rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-8"
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
@@ -311,27 +250,6 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             Close
           </button>
         </div>
-
-        {tocItems.length > 0 && (
-          <div className="sticky top-0 z-10 bg-white pt-4 pb-3 border-b border-slate-200">
-            <div className="flex gap-2 overflow-x-auto pb-1 text-sm font-medium text-slate-700">
-              {tocItems.map((item) => (
-                <button
-                  key={item.key}
-                  onClick={() => scrollToSection(item.key)}
-                  className={`whitespace-nowrap px-3 py-1.5 rounded-full border transition-colors ${
-                    activeSection === item.key
-                      ? "bg-[#3D1B0E] text-white border-[#3D1B0E] shadow-sm"
-                      : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
-                  }`}
-                  aria-pressed={activeSection === item.key}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {mediaIds.length > 0 && (
           <section className="py-5 border-b border-slate-100">
@@ -387,35 +305,35 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           </section>
         )}
 
-        {sections.map((section) => {
-          const isCollapsed = collapsedSections[section.key] ?? false;
+          {sections.map((section) => {
+            const isCollapsed = collapsedSections[section.key] ?? false;
 
-          return (
-            <section
-              key={section.key}
-              ref={registerSectionRef(section.key)}
-              data-section-key={section.key}
-              id={section.key}
-              className="rounded-xl bg-white shadow-sm p-6 my-5 border border-slate-200"
-            >
-              <button
-                onClick={() => toggleSection(section.key)}
-                className="w-full flex items-center justify-between text-left"
-                aria-expanded={!isCollapsed}
-                aria-controls={`${section.key}-content`}
+            return (
+              <section
+                key={section.key}
+                id={section.key}
+                className="rounded-2xl bg-white shadow-md border border-[#E6DFD8] my-5 overflow-hidden"
               >
-                <h3 className="text-lg font-semibold text-slate-900 leading-tight">
+              <div className="flex items-center justify-between px-5 py-4 bg-[#F6F0E8] border-b border-[#E6DFD8]">
+                <h3 className="text-lg font-semibold text-[#2D1B12] tracking-tight">
                   {section.title}
                 </h3>
-                <span
-                  className={`text-sm text-slate-500 transition-transform duration-300 ${
-                    isCollapsed ? "-rotate-90" : "rotate-0"
-                  }`}
-                  aria-hidden
+                <button
+                  onClick={() => toggleSection(section.key)}
+                  className="flex items-center justify-center h-9 w-9 rounded-full bg-white shadow-sm border border-[#E6DFD8] text-sm text-slate-700 transition-transform duration-300"
+                  aria-expanded={!isCollapsed}
+                  aria-controls={`${section.key}-content`}
                 >
-                  ▾
-                </span>
-              </button>
+                  <span
+                    className={`transition-transform duration-300 ${
+                      isCollapsed ? "rotate-180" : "rotate-0"
+                    }`}
+                    aria-hidden
+                  >
+                    ▾
+                  </span>
+                </button>
+              </div>
 
               <div
                 id={`${section.key}-content`}
@@ -425,21 +343,21 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                     : "max-h-[2400px] opacity-100 translate-y-0"
                 }`}
               >
-                <div className="mt-4 space-y-3">
+                <div className="px-5 pb-6 pt-5 space-y-3 text-[#333333]">
                   {section.type === "markdown" && section.value && (
                     <MarkdownBlock value={section.value} />
                   )}
 
                   {section.type === "list" && section.items && (
                     <ul
-                      className={`condition-content list-disc pl-6 text-sm space-y-2 leading-relaxed ${
+                      className={`condition-content text-sm space-y-2 leading-relaxed ${
                         section.accent === "danger"
                           ? "text-red-700"
                           : "text-slate-700"
                       }`}
                     >
                       {section.items.map((pt: string) => (
-                        <li key={pt} className="ml-2">
+                        <li key={pt}>
                           <InlineMarkdown value={pt} />
                         </li>
                       ))}
