@@ -30,17 +30,17 @@ interface ContentSection {
 }
 
 const markdownComponents = {
-  ul: ({ children }: { children: React.ReactNode }) => (
-    <ul className="list-disc ml-6 space-y-1">{children}</ul>
+  ul: ({ node, className, ...props }: any) => (
+    <ul className={`list-disc ml-6 space-y-1 ${className ?? ""}`} {...props} />
   ),
-  ol: ({ children }: { children: React.ReactNode }) => (
-    <ol className="list-decimal ml-6 space-y-1">{children}</ol>
+  ol: ({ node, className, ...props }: any) => (
+    <ol className={`list-decimal ml-6 space-y-1 ${className ?? ""}`} {...props} />
   ),
-  li: ({ children }: { children: React.ReactNode }) => (
-    <li className="leading-relaxed">{children}</li>
+  li: ({ node, className, ...props }: any) => (
+    <li className={`leading-relaxed ${className ?? ""}`} {...props} />
   ),
-  strong: ({ children }: { children: React.ReactNode }) => (
-    <strong className="font-semibold">{children}</strong>
+  strong: ({ node, className, ...props }: any) => (
+    <strong className={`font-semibold ${className ?? ""}`} {...props} />
   ),
 };
 

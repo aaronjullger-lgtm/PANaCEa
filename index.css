@@ -189,7 +189,7 @@
 .condition-scrollable {
   height: 100%;
   overflow-y: auto;
-  padding: 24px 28px 48px 24px;
+  padding: 24px 36px 48px 24px; /* right padding +12px to offset scrollbar */
 }
 
 .condition-media {
