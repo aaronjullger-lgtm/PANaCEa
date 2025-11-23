@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "sync:condition-content": "ts-node ./scripts/convertMdToJson.ts",
-    "build": "npm run sync:condition-content && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
