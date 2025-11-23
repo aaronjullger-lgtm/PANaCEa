@@ -1,12 +1,12 @@
 import fs from "fs";
 import path from "path";
 
-import { SECTION_BREAK_TOKEN } from "../src/lib/markdown.ts";
+export const SECTION_BREAK_TOKEN = "__SECTION_BREAK__";
 
 const INPUT_JSON = path.resolve("src/conditionContent.generated.json");
 const OUTPUT_JSON = INPUT_JSON;
 
-export function asciiClean(str: string = ""): string {
+function asciiClean(str = "") {
   return str
     .normalize("NFKC")
     .replace(/[“”„‟]/g, '"')
@@ -16,7 +16,7 @@ export function asciiClean(str: string = ""): string {
     .replace(/[^\x00-\x7F]/g, "");
 }
 
-function normalizeWhitespace(value: string): string {
+function normalizeWhitespace(value) {
   const unixNewlines = value.replace(/\r\n/g, "\n");
   const lines = unixNewlines.split("\n");
   const cleaned = lines.map((line) =>
@@ -27,7 +27,7 @@ function normalizeWhitespace(value: string): string {
   return cleaned.join("\n");
 }
 
-export function normalizeSeparators(value: string): string {
+function normalizeSeparators(value) {
   const lines = value.split(/\r?\n/);
   const processed = lines.map((line) => {
     if (/^\s*\*{3}\s*$/.test(line)) {
@@ -42,12 +42,12 @@ export function normalizeSeparators(value: string): string {
   return processed.join("\n");
 }
 
-export function cleanMultilineString(value: string): string {
+function cleanMultilineString(value) {
   const withWhitespace = normalizeWhitespace(value);
   return normalizeSeparators(withWhitespace);
 }
 
-function cleanValue(value: any): any {
+function cleanValue(value) {
   if (typeof value === "string") {
     return cleanMultilineString(value);
   }
@@ -55,7 +55,7 @@ function cleanValue(value: any): any {
     return value.map((entry) => cleanValue(entry));
   }
   if (value && typeof value === "object") {
-    const next: Record<string, any> = {};
+    const next = {};
     for (const [k, v] of Object.entries(value)) {
       next[k] = cleanValue(v);
     }
@@ -75,11 +75,12 @@ export function run() {
   fs.writeFileSync(OUTPUT_JSON, JSON.stringify(cleaned, null, 2));
   console.log(`Updated ${OUTPUT_JSON} with cleaned markdown separators.`);
 }
+
 const executedDirectly =
   (typeof require !== "undefined" &&
     typeof module !== "undefined" &&
     require.main === module) ||
-  process.argv[1]?.endsWith("convertMdToJson.ts");
+  process.argv[1]?.endsWith("convertMdToJson.js");
 
 if (executedDirectly) {
   run();

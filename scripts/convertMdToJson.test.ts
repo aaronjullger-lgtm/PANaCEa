@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { SECTION_BREAK_TOKEN } from "../src/lib/markdown.ts";
-import { cleanMultilineString } from "./convertMdToJson.ts";
+import { SECTION_BREAK_TOKEN, cleanMultilineString } from "./convertMdToJson.js";
 
 test("preserves newlines while cleaning", () => {
   const input = "Line one with **bold**\nSecond line follows\n\nThird line";
