@@ -1,9 +1,6 @@
 // src/components/ConditionDetailModal.tsx
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 import {
   CONDITION_CONTENT,
   type ConditionContent,
@@ -13,9 +10,9 @@ import {
   type ConditionMeta,
 } from "../conditionRegistry";
 import {
-  fixNestedBullets,
-  formatConditionMarkdown,
-} from "../src/utils/markdownFormat";
+  buildParsedSections,
+  type ParsedSection,
+} from "../services/markdownParser";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -31,53 +28,6 @@ interface ContentSection {
   items?: string[];
   accent?: "danger" | "default";
 }
-
-const MarkdownBlock = ({
-  value,
-  accent,
-}: {
-  value: string;
-  accent?: "danger" | "default";
-}) => {
-  const formatted = fixNestedBullets(formatConditionMarkdown(value));
-  const className = `condition-content text-base leading-relaxed ${
-    accent === "danger" ? "condition-content-danger" : ""
-  }`;
-
-  return (
-    <ReactMarkdown
-      className={className}
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeRaw]}
-      components={{
-        li: ({ children }) => (
-          <li className="ml-6 leading-relaxed">{children}</li>
-        ),
-      }}
-    >
-      {formatted}
-    </ReactMarkdown>
-  );
-};
-
-const InlineMarkdown = ({ value }: { value: string }) => {
-  const formatted = fixNestedBullets(formatConditionMarkdown(value));
-  return (
-    <ReactMarkdown
-      className="condition-content"
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeRaw]}
-      components={{
-        p: ({ children }) => <>{children}</>,
-        li: ({ children }) => (
-          <li className="ml-6 leading-relaxed">{children}</li>
-        ),
-      }}
-    >
-      {formatted}
-    </ReactMarkdown>
-  );
-};
 
 const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   condition,
@@ -212,6 +162,11 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     });
   }, [content]);
 
+  const parsedSections: ParsedSection[] = useMemo(
+    () => buildParsedSections(sections),
+    [sections]
+  );
+
   useEffect(() => {
     const container = contentRef.current;
     if (!container) return;
@@ -234,7 +189,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           setActiveSection(visible[0].target.id);
         }
       },
-      { root: container, threshold: 0.25, rootMargin: "-10% 0px -55% 0px" }
+      { root: container, threshold: 0.2, rootMargin: "-10% 0px -60% 0px" }
     );
 
     sections.forEach((section) => {
@@ -255,35 +210,49 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   }, []);
 
   const mediaIds = content.mediaIds ?? [];
-  const hasAnyContent = sections.length > 0;
+  const hasAnyContent = parsedSections.length > 0;
 
   const scrollToSection = (key: string) => {
     const el = sectionRefs.current[key];
+    const container = contentRef.current;
 
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (el && container) {
+      const offset = 80;
+      const top = el.offsetTop - container.offsetTop - offset;
+      container.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
     }
   };
 
-  const renderSectionContent = (
-    input?: string | string[],
-    accent?: "danger" | "default"
-  ) => {
-    if (!input || (Array.isArray(input) && input.length === 0)) return null;
+  const renderSectionContent = (section: ParsedSection) => {
+    if (section.items.length === 0) return null;
 
-    if (Array.isArray(input)) {
-      return (
-        <ul className={`condition-list ${accent === "danger" ? "condition-content-danger" : ""}`}>
-          {input.map((pt, idx) => (
-            <li key={idx} className="condition-list-item">
-              <InlineMarkdown value={pt} />
+    return (
+      <ul
+        className={`condition-bullet-root ${
+          section.accent === "danger" ? "condition-content-danger" : ""
+        }`}
+      >
+        {section.items.map((item, idx) => {
+          if (item.type === "mnemonic-header") {
+            return (
+              <li key={`${section.title}-mnemonic-${idx}`} className="condition-mnemonic-header">
+                <span dangerouslySetInnerHTML={{ __html: item.text }} />
+              </li>
+            );
+          }
+
+          return (
+            <li
+              key={`${section.title}-bullet-${idx}`}
+              className="condition-bullet-item"
+              style={{ marginLeft: `${item.level * 16}px` }}
+            >
+              <span dangerouslySetInnerHTML={{ __html: item.text }} />
             </li>
-          ))}
-        </ul>
-      );
-    }
-
-    return <MarkdownBlock value={input} accent={accent} />;
+          );
+        })}
+      </ul>
+    );
   };
 
   return (
@@ -303,10 +272,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
         <div className="condition-layout">
           <aside className="section-nav condition-sidebar">
-            <div className="section-nav-header">
-              <p className="section-nav-label">Sections</p>
-              <h4 className="section-nav-title">{condition.condition}</h4>
-            </div>
+            <p className="section-nav-label">Sections</p>
             <div className="section-nav-list">
               {sections.map((section) => {
                 const isActive = activeSection === section.key;
@@ -325,10 +291,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           </aside>
 
           <div className="condition-content-panel">
-            <div
-              className="condition-scrollable condition-scrollable-padded"
-              ref={contentRef}
-            >
+            <div className="condition-scrollable condition-scrollable-padded" ref={contentRef}>
               {mediaIds.length > 0 && (
                 <section className="condition-media">
                   <div className="condition-media-frame">
@@ -381,22 +344,21 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               )}
 
               <div className="condition-sections">
-                {sections.map((section) => {
-                  const contentValue =
-                    section.type === "markdown" ? section.value : section.items;
-
-                  return (
-                    <section
-                      key={section.key}
-                      id={section.key}
-                      ref={(el) => (sectionRefs.current[section.key] = el)}
-                      className="condition-card scroll-mt-24"
-                    >
-                      <h3 className="condition-section-title">{section.title}</h3>
-                      {renderSectionContent(contentValue, section.accent)}
-                    </section>
-                  );
-                })}
+                {parsedSections.map((section) => (
+                  <section
+                    key={section.id ?? section.title}
+                    id={section.id ?? section.title}
+                    ref={(el) => {
+                      if (section.id) {
+                        sectionRefs.current[section.id] = el;
+                      }
+                    }}
+                    className="condition-card scroll-mt-24"
+                  >
+                    <h3 className="condition-section-title">{section.title}</h3>
+                    {renderSectionContent(section)}
+                  </section>
+                ))}
               </div>
 
               {!hasAnyContent && (
