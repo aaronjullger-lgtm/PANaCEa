@@ -1,6 +1,9 @@
 import assert from "assert";
 import type { List } from "mdast";
-import { normalizeMarkdownTree, prepareMarkdown } from "./normalizeMarkdown";
+import { normalizeMarkdown, normalizeMarkdownTree } from "./normalizeMarkdown";
+import { unified } from "unified";
+import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
 
 describe("normalizeMarkdown", () => {
   it("nests subsequent items under bold parents", () => {
@@ -36,14 +39,16 @@ describe("normalizeMarkdown", () => {
     assert.ok(list.children.every((item) => item.type === "listItem"));
   });
 
-  it("returns a string suitable for ReactMarkdown consumption", () => {
-    const prepared = prepareMarkdown(
-      "- **Important** detail\n- follow up\n- another\n- **Next** item\n- child"
+  it("integrates as a remark plugin without removing text content", () => {
+    const processor = unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(normalizeMarkdown);
+
+    const processed = processor.processSync(
+      "- **Bold** parent\n- child text continues"
     );
 
-    assert.equal(typeof prepared, "string");
-    assert.ok(prepared.includes("<ul>"));
-    assert.ok(prepared.includes("<strong>Important</strong>"));
-    assert.ok(prepared.includes("Next</strong>"));
+    assert.ok(processed.value.toString().includes("child text"));
   });
 });

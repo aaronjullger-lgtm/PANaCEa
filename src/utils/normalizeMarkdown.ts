@@ -1,9 +1,7 @@
 import type { Content, List, ListItem, Parent, Root } from "mdast";
-import rehypeStringify from "rehype-stringify";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
-import { unified } from "unified";
+import { Plugin, unified } from "unified";
 
 const isStrongLeadingItem = (item: ListItem): boolean => {
   const firstChild = item.children[0];
@@ -41,6 +39,10 @@ const ensureNestedList = (parent: ListItem, sourceList: List): List => {
   return nestedList;
 };
 
+const isParentNode = (node: Content): node is Parent => {
+  return typeof (node as Parent).children !== "undefined";
+};
+
 const normalizeList = (list: List) => {
   const normalizedItems: ListItem[] = [];
   let currentParent: ListItem | null = null;
@@ -74,39 +76,30 @@ const normalizeList = (list: List) => {
   }
 };
 
-const isParentNode = (node: Content): node is Parent => {
-  return typeof (node as Parent).children !== "undefined";
-};
-
 const normalizeLists = (tree: Parent | Root) => {
   for (const child of tree.children) {
     if (child.type === "list") {
-      normalizeList(child);
+      normalizeList(child as List);
     } else if (isParentNode(child)) {
       normalizeLists(child);
     }
   }
 };
 
+export const normalizeMarkdown: Plugin<[], Root> = function () {
+  return (tree) => {
+    normalizeLists(tree);
+  };
+};
+
 export const normalizeMarkdownTree = (text: string): Root => {
-  const tree = unified().use(remarkParse).use(remarkGfm).parse(text) as Root;
-
-  normalizeLists(tree);
-
-  return tree;
-};
-
-export const prepareMarkdown = (text: string): string => {
-  const tree = normalizeMarkdownTree(text);
   const processor = unified()
+    .use(remarkParse)
     .use(remarkGfm)
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeStringify, { allowDangerousHtml: true });
+    .use(normalizeMarkdown);
 
-  const transformed = processor.runSync(tree);
-  return processor.stringify(transformed) as string;
+  const tree = processor.parse(text) as Root;
+  return processor.runSync(tree) as Root;
 };
-
-export const normalizeMarkdown = (text: string): string => prepareMarkdown(text);
 
 export default normalizeMarkdown;
