@@ -26,17 +26,17 @@ const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }
   };
 
   return (
-    <div className="grid grid-cols-5 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
       {PANCE_TOPIC_ABBREVIATIONS.map(abbr => {
         const stats = topicStatsMap.get(abbr);
         const hasData = !!stats;
 
         return (
-          <button 
-            key={abbr} 
+          <button
+            key={abbr}
             onClick={() => { if (stats) onTopicClick(stats); }}
             disabled={!hasData}
-            className={`p-2 rounded-lg text-center font-semibold text-xs h-16 flex items-center justify-center transition-all duration-200 
+            className={`p-3 rounded-xl text-center font-semibold text-xs h-20 flex items-center justify-center transition-all duration-200 shadow-sm
               ${getTileColor(abbr)}
               ${hasData ? 'hover:scale-105 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3D1B0E]' : ''}
               disabled:cursor-not-allowed disabled:opacity-70`}
