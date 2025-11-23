@@ -43,6 +43,8 @@ const renderList = (level = 0) => (props: any) => {
 const renderListItem = (props: any) => <li>{props.children}</li>;
 
 const MarkdownBlock = ({ value }: { value: string }) => {
+  const formatted = preprocessMarkdown(value);
+
   return (
     <ReactMarkdown
       className="condition-content text-sm text-slate-700 leading-relaxed"
@@ -50,12 +52,14 @@ const MarkdownBlock = ({ value }: { value: string }) => {
       rehypePlugins={[rehypeRaw]}
       components={{ ul: renderList(0), li: renderListItem }}
     >
-      {preprocessMarkdown(value)}
+      {formatted}
     </ReactMarkdown>
   );
 };
 
 const InlineMarkdown = ({ value }: { value: string }) => {
+  const formatted = preprocessMarkdown(value);
+
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm, normalizeMarkdown]}
@@ -66,7 +70,7 @@ const InlineMarkdown = ({ value }: { value: string }) => {
         li: renderListItem,
       }}
     >
-      {preprocessMarkdown(value)}
+      {formatted}
     </ReactMarkdown>
   );
 };
