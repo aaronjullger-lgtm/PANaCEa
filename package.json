@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "sync:condition-content": "node --require ./scripts/register-ts.cjs ./scripts/convertMdToJson.ts",
+    "sync:condition-content": "ts-node ./scripts/convertMdToJson.ts",
     "build": "npm run sync:condition-content && vite build",
     "preview": "vite preview"
   },
@@ -17,6 +17,7 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
