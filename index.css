@@ -49,17 +49,17 @@
 
 .condition-content ul {
   list-style: disc;
-  margin-left: 1.25rem;
+  padding-left: 1.25rem;
   margin-bottom: 0.75rem;
 }
 
 .condition-content ul ul {
-  margin-left: 1.5rem;
+  padding-left: 1.5rem;
   list-style-type: circle;
 }
 
 .condition-content ul ul ul {
-  margin-left: 1.75rem;
+  padding-left: 1.75rem;
   list-style-type: square;
 }
 

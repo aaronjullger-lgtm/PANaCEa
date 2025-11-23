@@ -1,154 +1,73 @@
-import type { Content, List, ListItem, Parent, Paragraph, Root } from "mdast";
+import type { List, ListItem, Paragraph, Root } from "mdast";
+import { toMarkdown } from "mdast-util-to-markdown";
+import { toString } from "mdast-util-to-string";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
-import { Plugin, unified } from "unified";
+import { unified } from "unified";
+import preprocessMarkdown from "./preprocessMarkdown";
 
-const isStrongLeadingItem = (item: ListItem): boolean => {
-  const firstChild = item.children[0];
+const processor = unified().use(remarkParse).use(remarkGfm);
 
-  if (!firstChild) {
-    return false;
-  }
+const toParagraph = (value: string): Paragraph => ({
+  type: "paragraph",
+  children: [{ type: "text", value }],
+});
 
-  if (firstChild.type === "paragraph") {
-    const firstInline = firstChild.children.find((child) =>
-      child.type !== "text" ? true : (child.value?.trim() ?? "") !== ""
-    );
-
-    return firstInline?.type === "strong";
-  }
-
-  return firstChild.type === "strong";
-};
-
-const ensureNestedList = (parent: ListItem, sourceList: List): List => {
-  let nestedList = parent.children.find(
+const parseListItem = (value: string): ListItem => {
+  const normalizedValue = preprocessMarkdown(value ?? "");
+  const parsed = processor.parse(`- ${normalizedValue}`) as Root;
+  const processed = processor.runSync(parsed) as Root;
+  const listNode = processed.children.find(
     (child): child is List => child.type === "list"
   );
 
-  if (!nestedList) {
-    nestedList = {
-      type: "list",
-      ordered: sourceList.ordered,
-      spread: false,
-      children: [],
-    };
-    parent.children.push(nestedList);
-  }
+  if (listNode?.children?.length) {
+    const [firstItem] = listNode.children;
 
-  return nestedList;
-};
-
-const isParentNode = (node: Content): node is Parent => {
-  return typeof (node as Parent).children !== "undefined";
-};
-
-const applyColonBolding = (paragraph: Paragraph) => {
-  const firstChild = paragraph.children[0];
-
-  if (!firstChild || firstChild.type === "strong") {
-    return;
-  }
-
-  if (firstChild.type === "text") {
-    const value = firstChild.value ?? "";
-    const colonIndex = value.indexOf(":");
-
-    if (colonIndex === -1) {
-      return;
-    }
-
-    const leading = value.slice(0, colonIndex).trim();
-
-    if (!leading) {
-      return;
-    }
-
-    const afterColon = value.slice(colonIndex + 1);
-    const rest = afterColon.replace(/^\s+/, " ");
-
-    const newChildren: Paragraph["children"] = [
-      {
-        type: "strong",
-        children: [{ type: "text", value: `${leading}:` }],
-      },
-    ];
-
-    if (rest.length > 0) {
-      newChildren.push({ type: "text", value: rest });
-    }
-
-    newChildren.push(...paragraph.children.slice(1));
-    paragraph.children = newChildren;
-  }
-};
-
-const normalizeList = (list: List) => {
-  const normalizedItems: ListItem[] = [];
-  let currentParent: ListItem | null = null;
-
-  for (const item of list.children) {
-    if (isStrongLeadingItem(item)) {
-      normalizedItems.push(item);
-      currentParent = item;
-      continue;
-    }
-
-    if (currentParent) {
-      const nested = ensureNestedList(currentParent, list);
-      nested.children.push(item);
-      continue;
-    }
-
-    normalizedItems.push(item);
-  }
-
-  list.children = normalizedItems;
-
-  for (const item of list.children) {
-    for (const child of item.children) {
-      if (child.type === "paragraph") {
-        applyColonBolding(child);
-      } else if (child.type === "list") {
-        normalizeList(child);
-      } else if (isParentNode(child)) {
-        traverseTree(child);
-      }
+    if (firstItem) {
+      firstItem.spread = false;
+      return firstItem;
     }
   }
-};
 
-const traverseTree = (tree: Parent | Root) => {
-  for (const child of tree.children) {
-    if (child.type === "paragraph") {
-      applyColonBolding(child);
-    }
+  const textValue = toString(processed).trim() || normalizedValue;
 
-    if (child.type === "list") {
-      normalizeList(child as List);
-      continue;
-    }
-
-    if (isParentNode(child)) {
-      traverseTree(child);
-    }
-  }
-};
-
-export const normalizeMarkdown: Plugin<[], Root> = function () {
-  return (tree) => {
-    traverseTree(tree);
+  return {
+    type: "listItem",
+    spread: false,
+    children: [toParagraph(textValue)],
   };
 };
 
-export const normalizeMarkdownTree = (text: string): Root => {
-  const processor = unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(normalizeMarkdown);
+const buildListFromArray = (items: string[]): Root => ({
+  type: "root",
+  children: [
+    {
+      type: "list",
+      ordered: false,
+      spread: false,
+      children: items.map((item) => parseListItem(item)),
+    },
+  ],
+});
 
-  const tree = processor.parse(text) as Root;
-  return processor.runSync(tree) as Root;
+const normalizeTree = (input: string | string[]): Root => {
+  if (Array.isArray(input)) {
+    return buildListFromArray(input);
+  }
+
+  const preprocessed = preprocessMarkdown(input ?? "");
+  const parsed = processor.parse(preprocessed) as Root;
+  return processor.runSync(parsed) as Root;
+};
+
+export const normalizeMarkdown = (input: string | string[]): string => {
+  const tree = normalizeTree(input);
+  return toMarkdown(tree).trim();
+};
+
+export const normalizeMarkdownTree = (input: string | string[]): Root => {
+  return normalizeTree(input);
 };
 
 export default normalizeMarkdown;
