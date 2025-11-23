@@ -53,6 +53,16 @@
   margin-bottom: 0.75rem;
 }
 
+.condition-content ul ul {
+  margin-left: 1.25rem;
+  list-style-type: circle;
+}
+
+.condition-content ul ul ul {
+  margin-left: 1.25rem;
+  list-style-type: square;
+}
+
 .condition-content li {
   margin-bottom: 0.35rem;
 }

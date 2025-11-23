@@ -30,39 +30,15 @@ interface ContentSection {
   accent?: "danger" | "default";
 }
 
-const renderList = (level = 0) => (props: any) => {
-  const currentLevel = typeof props.level === "number" ? props.level : level;
-
-  const style =
-    currentLevel === 0
-      ? "list-disc pl-5"
-      : currentLevel === 1
-        ? "list-[circle] pl-7"
-        : "list-[square] pl-9";
-
-  return (
-    <ul className={`${style} text-sm text-slate-700 space-y-1 leading-relaxed`}>
-      {React.Children.toArray(props.children).map((child: any) =>
-        React.isValidElement(child)
-          ? React.cloneElement(child, { level: currentLevel + 1 })
-          : child
-      )}
-    </ul>
-  );
-};
-
-const renderListItem = (props: any) => {
-  const level = props.level ?? 0;
-
-  return (
-    <li>
-      {React.Children.toArray(props.children).map((child: any) =>
-        React.isValidElement(child)
-          ? React.cloneElement(child, { level })
-          : child
-      )}
+const markdownComponents = {
+  ul: ({ node, ...props }: any) => (
+    <ul className="list-disc pl-6 space-y-2" {...props} />
+  ),
+  li: ({ node, ...props }: any) => (
+    <li className="ml-2">
+      <span {...props} />
     </li>
-  );
+  ),
 };
 
 const MarkdownBlock = ({ value }: { value: string }) => {
@@ -73,7 +49,7 @@ const MarkdownBlock = ({ value }: { value: string }) => {
       className="condition-content text-sm text-slate-700 leading-relaxed"
       remarkPlugins={[remarkGfm, normalizeMarkdown]}
       rehypePlugins={[rehypeRaw]}
-      components={{ ul: renderList(0), li: renderListItem }}
+      components={markdownComponents}
     >
       {formatted}
     </ReactMarkdown>
@@ -85,13 +61,10 @@ const InlineMarkdown = ({ value }: { value: string }) => {
 
   return (
     <ReactMarkdown
+      className="condition-content text-sm text-slate-700 leading-relaxed"
       remarkPlugins={[remarkGfm, normalizeMarkdown]}
       rehypePlugins={[rehypeRaw]}
-      components={{
-        p: ({ children }) => <>{children}</>,
-        ul: renderList(0),
-        li: renderListItem,
-      }}
+      components={{ ...markdownComponents, p: ({ children }) => <>{children}</> }}
     >
       {formatted}
     </ReactMarkdown>
@@ -423,50 +396,57 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               ref={registerSectionRef(section.key)}
               data-section-key={section.key}
               id={section.key}
-              className="mt-5 pt-5 border-t border-slate-200"
+              className="rounded-xl bg-white shadow-sm p-6 my-5 border border-slate-200"
             >
               <button
                 onClick={() => toggleSection(section.key)}
-                className="w-full flex items-center justify-between gap-3 px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200"
+                className="w-full flex items-center justify-between text-left"
                 aria-expanded={!isCollapsed}
                 aria-controls={`${section.key}-content`}
               >
-                <h3 className="text-base font-semibold text-slate-800 text-left">
+                <h3 className="text-lg font-semibold text-slate-900 leading-tight">
                   {section.title}
                 </h3>
                 <span
-                  className={`text-xs text-slate-500 transition-transform duration-200 ${
-                    isCollapsed ? "-rotate-90" : "rotate-90"
+                  className={`text-sm text-slate-500 transition-transform duration-300 ${
+                    isCollapsed ? "-rotate-90" : "rotate-0"
                   }`}
                   aria-hidden
                 >
-                  ▶
+                  ▾
                 </span>
               </button>
 
-              {!isCollapsed && (
-                <div id={`${section.key}-content`} className="mt-3">
+              <div
+                id={`${section.key}-content`}
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                  isCollapsed
+                    ? "max-h-0 opacity-0 -translate-y-1"
+                    : "max-h-[2400px] opacity-100 translate-y-0"
+                }`}
+              >
+                <div className="mt-4 space-y-3">
                   {section.type === "markdown" && section.value && (
                     <MarkdownBlock value={section.value} />
                   )}
 
                   {section.type === "list" && section.items && (
                     <ul
-                      className={`condition-content list-disc pl-5 text-sm space-y-2 leading-relaxed ${
+                      className={`condition-content list-disc pl-6 text-sm space-y-2 leading-relaxed ${
                         section.accent === "danger"
                           ? "text-red-700"
                           : "text-slate-700"
                       }`}
                     >
                       {section.items.map((pt: string) => (
-                        <li key={pt}>
+                        <li key={pt} className="ml-2">
                           <InlineMarkdown value={pt} />
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
-              )}
+              </div>
             </section>
           );
         })}
