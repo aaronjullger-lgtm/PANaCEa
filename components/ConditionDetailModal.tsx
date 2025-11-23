@@ -1,6 +1,9 @@
 // src/components/ConditionDetailModal.tsx
 
 import React, { useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 import {
   CONDITION_CONTENT,
   type ConditionContent,
@@ -9,7 +12,7 @@ import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
-import { inlineFormat, renderMarkdownHtml } from "../src/lib/markdown";
+import formatContent from "../src/utils/formatContent";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -17,12 +20,37 @@ interface ConditionDetailModalProps {
   onDrillCondition?: (meta: ConditionMeta) => void;
 }
 
-const MarkdownBlock = ({ value }: { value: string }) => (
-  <div
-    className="condition-content text-sm text-slate-700 leading-relaxed"
-    dangerouslySetInnerHTML={{ __html: renderMarkdownHtml(value) }}
-  />
-);
+const MarkdownBlock = ({ value }: { value: string }) => {
+  // Apply formatting at render time so the generated condition content source remains untouched.
+  const formatted = formatContent(value);
+
+  return (
+    <ReactMarkdown
+      className="condition-content text-sm text-slate-700 leading-relaxed"
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
+    >
+      {formatted}
+    </ReactMarkdown>
+  );
+};
+
+const InlineMarkdown = ({ value }: { value: string }) => {
+  // Preserve source data as-is and only normalize formatting while rendering.
+  const formatted = formatContent(value);
+
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
+      components={{
+        p: ({ children }) => <>{children}</>,
+      }}
+    >
+      {formatted}
+    </ReactMarkdown>
+  );
+};
 
 const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   condition,
@@ -184,10 +212,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </h3>
             <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
               {content.riskFactors.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
+                <li key={pt}>
+                  <InlineMarkdown value={pt} />
+                </li>
               ))}
             </ul>
           </section>
@@ -211,10 +238,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </h3>
             <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
               {content.symptoms.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
+                <li key={pt}>
+                  <InlineMarkdown value={pt} />
+                </li>
               ))}
             </ul>
           </section>
@@ -229,7 +255,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               </h3>
               <ul className="list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
                 {content.examFindings.map((pt: string) => (
-                  <li key={pt}>{pt}</li>
+                  <li key={pt}>
+                    <InlineMarkdown value={pt} />
+                  </li>
                 ))}
               </ul>
             </section>
@@ -243,10 +271,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </h3>
             <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
               {content.keyPoints.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
+                <li key={pt}>
+                  <InlineMarkdown value={pt} />
+                </li>
               ))}
             </ul>
           </section>
@@ -260,10 +287,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </h3>
             <ul className="condition-content list-disc pl-5 text-sm text-red-700 space-y-2 leading-relaxed">
               {content.redFlags.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
+                <li key={pt}>
+                  <InlineMarkdown value={pt} />
+                </li>
               ))}
             </ul>
           </section>
@@ -278,10 +304,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               </h3>
               <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
                 {content.treatmentPearls.map((pt: string) => (
-                  <li
-                    key={pt}
-                    dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                  />
+                  <li key={pt}>
+                    <InlineMarkdown value={pt} />
+                  </li>
                 ))}
               </ul>
             </section>
@@ -295,10 +320,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </h3>
             <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
               {content.treatment.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
+                <li key={pt}>
+                  <InlineMarkdown value={pt} />
+                </li>
               ))}
             </ul>
           </section>
@@ -312,10 +336,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </h3>
             <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
               {content.management.map((pt: string) => (
-                <li
-                  key={pt}
-                  dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                />
+                <li key={pt}>
+                  <InlineMarkdown value={pt} />
+                </li>
               ))}
             </ul>
           </section>
@@ -330,10 +353,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               </h3>
               <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
                 {content.complications.map((pt: string) => (
-                  <li
-                    key={pt}
-                    dangerouslySetInnerHTML={{ __html: inlineFormat(pt) }}
-                  />
+                  <li key={pt}>
+                    <InlineMarkdown value={pt} />
+                  </li>
                 ))}
               </ul>
             </section>
