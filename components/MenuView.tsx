@@ -14,7 +14,7 @@ import TopicHeatmap from "./TopicHeatmap";
 import SystemDrilldownModal from "./SystemDrilldownModal";
 import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
 import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
-import { CONDITION_REGISTRY, type ConditionMeta } from "../conditionRegistry";
+import type { ConditionMeta } from "../conditionRegistry";
 import ConditionDetailModal from "./ConditionDetailModal";
 import { findConditionMetaById, searchConditions } from "../src/lib/conditionSearch";
 
@@ -65,24 +65,6 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(
     null
-  );
-  const [systemFilter, setSystemFilter] = useState<SystemCode | "">("");
-  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("");
-
-  const systemOptions = useMemo<SystemCode[]>(
-    () => Array.from(new Set(CONDITION_REGISTRY.map((condition) => condition.system))),
-    []
-  );
-
-  const subcategoryOptions = useMemo<string[]>(
-    () => {
-      if (!systemFilter) return [];
-      const subcategories = CONDITION_REGISTRY
-        .filter((condition) => condition.system === systemFilter)
-        .map((condition) => condition.subcategory);
-      return Array.from(new Set(subcategories));
-    },
-    [systemFilter]
   );
 
   const stats = useMemo(() => {
@@ -168,14 +150,9 @@ const MenuView: React.FC<MenuViewProps> = ({
   const searchResults = useMemo(
     () => {
       const results = searchConditions(searchQuery);
-      return results.filter((result) => {
-        if (systemFilter && result.system !== systemFilter) return false;
-        if (subcategoryFilter && result.subcategory !== subcategoryFilter)
-          return false;
-        return true;
-      });
+      return results;
     },
-    [searchQuery, systemFilter, subcategoryFilter]
+    [searchQuery]
   );
 
   return (
@@ -223,53 +200,24 @@ const MenuView: React.FC<MenuViewProps> = ({
         />
       )}
 
-      <div className="flex flex-col">
-        <h1 className="text-3xl font-bold text-[#3D1B0E] mb-4 text-center">
+      <div className="flex flex-col max-w-5xl mx-auto px-4">
+        <h1 className="text-3xl font-bold text-[#3D1B0E] mb-3 text-center">
           PANaCEa
         </h1>
 
         {/* Condition search */}
-        <div className="w-full max-w-md mx-auto mb-6 relative">
-          <div className="flex gap-2 mb-2">
-            <select
-              value={systemFilter}
-              onChange={(e) => {
-                const value = e.target.value as SystemCode | "";
-                setSystemFilter(value);
-                setSubcategoryFilter("");
-              }}
-              className="w-1/2 px-3 py-2 border border-slate-300 rounded-lg text-sm"
-            >
-              <option value="">All systems</option>
-              {systemOptions.map((sys) => (
-                <option key={sys} value={sys}>
-                  {sys}
-                </option>
-              ))}
-            </select>
-            <select
-              value={subcategoryFilter}
-              onChange={(e) => setSubcategoryFilter(e.target.value)}
-              className="w-1/2 px-3 py-2 border border-slate-300 rounded-lg text-sm"
-              disabled={!subcategoryOptions.length}
-            >
-              <option value="">All subcategories</option>
-              {subcategoryOptions.map((sub) => (
-                <option key={sub} value={sub}>
-                  {sub}
-                </option>
-              ))}
-            </select>
+        <div className="w-full max-w-2xl mx-auto mb-10 relative">
+          <div className="flex justify-center">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search conditions (e.g., ACS, Diverticulitis, DKA)..."
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3D1B0E]/70 focus:border-[#3D1B0E]"
+            />
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search conditions (e.g., ACS, Diverticulitis, DKA)..."
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3D1B0E]/60 focus:border-[#3D1B0E]"
-          />
           {searchResults.length > 0 && (
-            <div className="absolute z-30 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+            <div className="absolute z-30 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
               {searchResults.map((result) => (
                 <button
                   key={result.id}
@@ -281,13 +229,13 @@ const MenuView: React.FC<MenuViewProps> = ({
                     }
                     setSearchQuery("");
                   }}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
+                  className="w-full text-left px-4 py-3 text-sm hover:bg-slate-50"
                 >
-                  <div className="flex flex-col">
-                    <span className="font-medium text-slate-800">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-slate-800">
                       {result.condition}
                     </span>
-                    <span className="text-[11px] text-slate-500">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-500">
                       {result.system} • {result.subcategory}
                     </span>
                   </div>
@@ -297,13 +245,13 @@ const MenuView: React.FC<MenuViewProps> = ({
           )}
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-10">
           {/* Session controls */}
-          <section className="text-center">
+          <section className="text-center space-y-3">
             {hasActiveSession && (
               <button
                 onClick={onBackToQuiz}
-                className="w-full mb-4 px-6 py-3 bg-[#3D1B0E] text-white font-bold rounded-lg hover:bg-[#2b130a] transition-colors shadow-md"
+                className="w-full px-6 py-3 bg-[#3D1B0E] text-white font-bold rounded-lg hover:bg-[#2b130a] transition-colors shadow-md"
               >
                 Continue Study Session
               </button>
@@ -317,13 +265,13 @@ const MenuView: React.FC<MenuViewProps> = ({
           </section>
 
           {/* Overall performance ring */}
-          <section>
-            <h2 className="text-xl font-bold text-[#3D1B0E] mb-4 text-center">
+          <section className="pt-2">
+            <h2 className="text-xl font-bold text-[#3D1B0E] mb-5 text-center">
               Overall Score
             </h2>
-            <div className="flex flex-col items-center p-4 bg-slate-50 rounded-lg">
+            <div className="flex flex-col items-center p-5 bg-slate-50 rounded-xl shadow-sm gap-2">
               <ProgressRing score={stats.overallScore} />
-              <p className="text-sm font-normal text-slate-500 mt-2">
+              <p className="text-sm font-normal text-slate-500">
                 Based on the last {stats.total360} questions (
                 {stats.correct360}/{stats.total360})
               </p>
@@ -332,7 +280,7 @@ const MenuView: React.FC<MenuViewProps> = ({
 
           {/* Knowledge map – now by PANCE system */}
           <section>
-            <h2 className="text-xl font-bold text-[#3D1B0E] mb-4">
+            <h2 className="text-xl font-bold text-[#3D1B0E] mb-5">
               Knowledge Map (PANCE Systems)
             </h2>
             <TopicHeatmap
