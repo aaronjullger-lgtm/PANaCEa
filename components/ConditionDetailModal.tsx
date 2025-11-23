@@ -31,10 +31,12 @@ interface ContentSection {
 }
 
 const renderList = (level = 0) => (props: any) => {
+  const currentLevel = typeof props.level === "number" ? props.level : level;
+
   const style =
-    level === 0
+    currentLevel === 0
       ? "list-disc pl-5"
-      : level === 1
+      : currentLevel === 1
         ? "list-[circle] pl-7"
         : "list-[square] pl-9";
 
@@ -42,14 +44,26 @@ const renderList = (level = 0) => (props: any) => {
     <ul className={`${style} text-sm text-slate-700 space-y-1 leading-relaxed`}>
       {React.Children.toArray(props.children).map((child: any) =>
         React.isValidElement(child)
-          ? React.cloneElement(child, { level: level + 1 })
+          ? React.cloneElement(child, { level: currentLevel + 1 })
           : child
       )}
     </ul>
   );
 };
 
-const renderListItem = (props: any) => <li>{props.children}</li>;
+const renderListItem = (props: any) => {
+  const level = props.level ?? 0;
+
+  return (
+    <li>
+      {React.Children.toArray(props.children).map((child: any) =>
+        React.isValidElement(child)
+          ? React.cloneElement(child, { level })
+          : child
+      )}
+    </li>
+  );
+};
 
 const MarkdownBlock = ({ value }: { value: string }) => {
   const formatted = value ? preprocessMarkdown(value) : "";
@@ -326,17 +340,18 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
         </div>
 
         {tocItems.length > 0 && (
-          <div className="sticky top-0 z-10 bg-white pt-4 pb-2 border-b border-slate-100">
-            <div className="flex flex-wrap gap-2 text-sm font-medium text-slate-600">
+          <div className="sticky top-0 z-10 bg-white pt-4 pb-3 border-b border-slate-200">
+            <div className="flex gap-2 overflow-x-auto pb-1 text-sm font-medium text-slate-700">
               {tocItems.map((item) => (
                 <button
                   key={item.key}
                   onClick={() => scrollToSection(item.key)}
-                  className={`px-3 py-1 rounded-full border transition-colors ${
+                  className={`whitespace-nowrap px-3 py-1.5 rounded-full border transition-colors ${
                     activeSection === item.key
-                      ? "bg-[#3D1B0E] text-white border-[#3D1B0E]"
-                      : "bg-white text-slate-700 border-slate-200 hover:border-slate-300"
+                      ? "bg-[#3D1B0E] text-white border-[#3D1B0E] shadow-sm"
+                      : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
                   }`}
+                  aria-pressed={activeSection === item.key}
                 >
                   {item.label}
                 </button>
@@ -408,24 +423,29 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               ref={registerSectionRef(section.key)}
               data-section-key={section.key}
               id={section.key}
-              className="py-5 border-b border-slate-100"
+              className="mt-5 pt-5 border-t border-slate-200"
             >
-              <div className="flex items-center justify-between gap-4 mb-2">
-                <h3 className="text-base font-semibold text-slate-800">
+              <button
+                onClick={() => toggleSection(section.key)}
+                className="w-full flex items-center justify-between gap-3 px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200"
+                aria-expanded={!isCollapsed}
+                aria-controls={`${section.key}-content`}
+              >
+                <h3 className="text-base font-semibold text-slate-800 text-left">
                   {section.title}
                 </h3>
-                <button
-                  onClick={() => toggleSection(section.key)}
-                  className="text-xs px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-                  aria-expanded={!isCollapsed}
-                  aria-controls={`${section.key}-content`}
+                <span
+                  className={`text-xs text-slate-500 transition-transform duration-200 ${
+                    isCollapsed ? "-rotate-90" : "rotate-90"
+                  }`}
+                  aria-hidden
                 >
-                  {isCollapsed ? "Show" : "Hide"}
-                </button>
-              </div>
+                  ▶
+                </span>
+              </button>
 
               {!isCollapsed && (
-                <div id={`${section.key}-content`}>
+                <div id={`${section.key}-content`} className="mt-3">
                   {section.type === "markdown" && section.value && (
                     <MarkdownBlock value={section.value} />
                   )}
