@@ -1,11 +1,6 @@
 // src/components/ConditionDetailModal.tsx
 
-import React, {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
@@ -18,8 +13,6 @@ import {
   type ConditionMeta,
 } from "../conditionRegistry";
 import normalizeMarkdown from "../src/utils/normalizeMarkdown";
-import ChevronDownIcon from "./icons/ChevronDownIcon";
-import ChevronUpIcon from "./icons/ChevronUpIcon";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -188,38 +181,6 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     });
   }, [content]);
 
-  const defaultCollapsed = useMemo(() => {
-    return sections.reduce((acc, section) => {
-      acc[section.key] = section.key !== "overview";
-      return acc;
-    }, {} as Record<string, boolean>);
-  }, [sections]);
-
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(
-    () => defaultCollapsed
-  );
-
-  useEffect(() => {
-    const stored = localStorage.getItem(`condition:${conditionId}:collapsed`);
-    if (stored) {
-      try {
-        setCollapsedSections(JSON.parse(stored));
-        return;
-      } catch (e) {
-        console.error("Failed to parse collapsed state", e);
-      }
-    }
-
-    setCollapsedSections(defaultCollapsed);
-  }, [conditionId, defaultCollapsed]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      `condition:${conditionId}:collapsed`,
-      JSON.stringify(collapsedSections)
-    );
-  }, [collapsedSections, conditionId]);
-
   useEffect(() => {
     const container = contentRef.current;
     if (!container) return;
@@ -250,20 +211,11 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   const mediaIds = content.mediaIds ?? [];
   const hasAnyContent = sections.length > 0;
 
-  const toggleSection = (key: string) => {
-    setCollapsedSections((prev) => ({
-      ...prev,
-      [key]: !(prev[key] ?? false),
-    }));
-  };
-
   const scrollToSection = (key: string) => {
-    const container = contentRef.current;
     const el = sectionRefs.current[key];
 
-    if (container && el) {
-      const top = el.offsetTop - 16;
-      container.scrollTo({ top, behavior: "smooth" });
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -284,8 +236,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
     return (
       <ReactMarkdown
-        className={`condition-content prose prose-slate max-w-none leading-7 text-[17px] ${tone}`}
-        remarkPlugins={[remarkGfm]}
+        className={`condition-content prose prose-slate max-w-none text-[18px] leading-[1.65] ${tone}`}
+        remarkPlugins={[remarkGfm, normalizeMarkdown]}
         rehypePlugins={[rehypeRaw]}
         components={markdownComponents}
       >
@@ -297,27 +249,16 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
       <div className="bg-[#FCF9F6] border border-[#D0C7BF] rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex h-full">
-          <aside className="hidden md:flex w-64 shrink-0 flex-col bg-[#F6F1EA] border-r border-[#E6DFD8] px-5 py-6 sticky top-0 self-start h-full">
-            <div className="flex items-center justify-between text-slate-800">
-              <div>
-                <p className="text-xs uppercase tracking-[0.08em] text-slate-500">
-                  Sections
-                </p>
-                <h4 className="text-lg font-semibold leading-tight text-[#2D1B12]">
-                  {condition.condition}
-                </h4>
-              </div>
-              <button
-                onClick={onClose}
-                className="h-9 w-9 flex items-center justify-center rounded-full border border-[#D0C7BF] bg-white shadow-sm hover:bg-slate-50"
-                aria-label="Close condition details"
-              >
-                ×
-              </button>
+        <div className="flex h-full gap-6">
+          <aside className="hidden md:flex w-[260px] shrink-0 flex-col bg-[#F6F1EA] border-r border-[#E6DFD8] px-5 py-6 sticky top-0 self-start max-h-[90vh] overflow-y-auto condition-sidebar">
+            <div className="mb-5">
+              <p className="text-xs uppercase tracking-[0.08em] text-slate-500">Sections</p>
+              <h4 className="text-xl font-semibold leading-tight text-[#2D1B12]">
+                {condition.condition}
+              </h4>
             </div>
 
-            <div className="mt-5 space-y-2 pr-1 overflow-y-auto">
+            <div className="space-y-2">
               {sections.map((section) => {
                 const isActive = activeSection === section.key;
                 return (
@@ -326,9 +267,10 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                     onClick={() => scrollToSection(section.key)}
                     className={`w-full text-left px-3 py-2 rounded-lg border transition-colors text-sm font-semibold ${
                       isActive
-                        ? "bg-[#3D1B0E] text-white border-[#3D1B0E] shadow-sm"
+                        ? "bg-[#3D1B0E] text-white border-[#3D1B0E] shadow-sm active"
                         : "bg-white text-slate-700 border-[#E6DFD8] hover:border-[#CBB7A4]"
                     }`}
+                    type="button"
                   >
                     {section.title}
                   </button>
@@ -337,29 +279,32 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </div>
           </aside>
 
-          <div ref={contentRef} className="flex-1 overflow-y-auto">
-            <div className="px-5 py-6 sm:px-8">
-              <div className="max-w-3xl mx-auto">
-                <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
+          <div className="flex-1 overflow-hidden">
+            <div
+              ref={contentRef}
+              className="h-full overflow-y-auto pr-1"
+            >
+              <div className="px-8 py-6 min-h-full">
+                <div className="flex items-start justify-between gap-4 pb-6 border-b border-slate-200">
                   <div>
-                    <h2 className="text-2xl font-bold text-[#3D1B0E] leading-tight">
+                    <h2 className="text-3xl font-bold text-[#3B2718] leading-tight">
                       {condition.condition}
                     </h2>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-base text-slate-500 mt-1 leading-relaxed">
                       {condition.system} • {condition.subcategory}
                     </p>
                   </div>
                   <button
                     onClick={onClose}
-                    className="text-xs px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    className="text-sm px-4 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
                   >
                     Close
                   </button>
                 </div>
 
                 {mediaIds.length > 0 && (
-                  <section className="py-5 border-b border-slate-100">
-                    <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                  <section className="py-6">
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-white">
                       <img
                         src={`/media/${
                           mediaIds[mediaIndex].includes(".")
@@ -411,58 +356,34 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                   </section>
                 )}
 
-                {sections.map((section) => {
-                  const isCollapsed = collapsedSections[section.key] ?? false;
+                <div className="flex flex-col gap-8 pb-10">
+                  {sections.map((section) => {
+                    const contentValue =
+                      section.type === "markdown" ? section.value : section.items;
 
-                  const contentValue =
-                    section.type === "markdown" ? section.value : section.items;
-
-                  return (
-                    <section
-                      key={section.key}
-                      id={section.key}
-                      ref={(el) => (sectionRefs.current[section.key] = el)}
-                      className="rounded-2xl bg-white shadow-sm border border-[#E6DFD8] my-5 overflow-hidden"
-                    >
-                      <button
-                        onClick={() => toggleSection(section.key)}
-                        className="w-full flex items-center justify-between px-5 py-4 bg-[#F6F0E8] hover:bg-[#EFE6DC] transition-colors"
-                        aria-expanded={!isCollapsed}
-                        aria-controls={`${section.key}-content`}
+                    return (
+                      <section
+                        key={section.key}
+                        id={section.key}
+                        ref={(el) => (sectionRefs.current[section.key] = el)}
+                        className="bg-[#FAF7F2] rounded-[14px] border border-[#E6DFD8] shadow-sm p-6"
                       >
-                        <h3 className="text-lg font-semibold text-[#2D1B12] tracking-tight">
+                        <h3 className="text-2xl font-bold text-[#3B2718] mb-4 leading-tight">
                           {section.title}
                         </h3>
-                        {isCollapsed ? (
-                          <ChevronDownIcon className="h-5 w-5 text-slate-700" />
-                        ) : (
-                          <ChevronUpIcon className="h-5 w-5 text-slate-700" />
-                        )}
-                      </button>
-
-                      <div
-                        id={`${section.key}-content`}
-                        className={`transition-[max-height,opacity,transform] duration-300 ease-in-out overflow-hidden ${
-                          isCollapsed
-                            ? "max-h-0 opacity-0 -translate-y-1"
-                            : "max-h-[2400px] opacity-100 translate-y-0"
-                        }`}
-                      >
-                        <div className="px-5 pb-6 pt-5">
-                          {renderMarkdownContent(contentValue, section.accent)}
-                        </div>
-                      </div>
-                    </section>
-                  );
-                })}
+                        {renderMarkdownContent(contentValue, section.accent)}
+                      </section>
+                    );
+                  })}
+                </div>
 
                 {!hasAnyContent && (
-                  <p className="text-sm text-slate-500 mb-4 leading-relaxed">
+                  <p className="text-base text-slate-500 mb-4 leading-relaxed">
                     Detailed notes for this condition haven&apos;t been added yet.
                   </p>
                 )}
 
-                <div className="mt-8 flex justify-end gap-3 pb-2">
+                <div className="mt-6 flex justify-end gap-3 pb-2">
                   <button
                     onClick={onClose}
                     className="px-4 py-2 text-sm rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
