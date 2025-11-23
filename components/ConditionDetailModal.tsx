@@ -39,7 +39,7 @@ const markdownComponents = {
     </ul>
   ),
   li: ({ children, ...props }: { children: React.ReactNode }) => (
-    <li className="leading-relaxed ml-1" {...props}>
+    <li className="leading-relaxed" {...props}>
       {children}
     </li>
   ),
@@ -250,7 +250,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
       <div className="bg-[#FCF9F6] border border-[#D0C7BF] rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex h-full gap-6">
-          <aside className="hidden md:flex w-[260px] shrink-0 flex-col bg-[#F6F1EA] border-r border-[#E6DFD8] px-5 py-6 sticky top-0 self-start max-h-[90vh] overflow-y-auto condition-sidebar">
+          <aside className="section-nav bg-[#F6F1EA] border-r border-[#E6DFD8] px-5 py-6 condition-sidebar">
             <div className="mb-5">
               <p className="text-xs uppercase tracking-[0.08em] text-slate-500">Sections</p>
               <h4 className="text-xl font-semibold leading-tight text-[#2D1B12]">
@@ -265,10 +265,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                   <button
                     key={section.key}
                     onClick={() => scrollToSection(section.key)}
-                    className={`w-full text-left px-3 py-2 rounded-lg border transition-colors text-sm font-semibold ${
-                      isActive
-                        ? "bg-[#3D1B0E] text-white border-[#3D1B0E] shadow-sm active"
-                        : "bg-white text-slate-700 border-[#E6DFD8] hover:border-[#CBB7A4]"
+                    className={`w-full text-left text-sm font-semibold ${
+                      isActive ? "active" : ""
                     }`}
                     type="button"
                   >
@@ -279,29 +277,26 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </div>
           </aside>
 
-          <div className="flex-1 overflow-hidden">
-            <div
-              ref={contentRef}
-              className="h-full overflow-y-auto pr-1"
-            >
-              <div className="px-8 py-6 min-h-full">
-                <div className="flex items-start justify-between gap-4 pb-6 border-b border-slate-200">
-                  <div>
-                    <h2 className="text-3xl font-bold text-[#3B2718] leading-tight">
-                      {condition.condition}
-                    </h2>
-                    <p className="text-base text-slate-500 mt-1 leading-relaxed">
-                      {condition.system} • {condition.subcategory}
-                    </p>
-                  </div>
-                  <button
-                    onClick={onClose}
-                    className="text-sm px-4 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-                  >
-                    Close
-                  </button>
-                </div>
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="flex items-start justify-between gap-4 px-8 pt-6 pb-4 border-b border-slate-200">
+              <div>
+                <h2 className="text-3xl font-bold text-[#3B2718] leading-tight">
+                  {condition.condition}
+                </h2>
+                <p className="text-base text-slate-500 mt-1 leading-relaxed">
+                  {condition.system} • {condition.subcategory}
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-sm px-4 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
+              >
+                Close
+              </button>
+            </div>
 
+            <div ref={contentRef} className="flex-1 overflow-y-auto pr-1">
+              <div className="px-8 py-6 min-h-full">
                 {mediaIds.length > 0 && (
                   <section className="py-6">
                     <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-white">
@@ -356,7 +351,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                   </section>
                 )}
 
-                <div className="flex flex-col gap-8 pb-10">
+                <div className="flex flex-col gap-8 pb-8">
                   {sections.map((section) => {
                     const contentValue =
                       section.type === "markdown" ? section.value : section.items;
@@ -366,7 +361,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                         key={section.key}
                         id={section.key}
                         ref={(el) => (sectionRefs.current[section.key] = el)}
-                        className="bg-[#FAF7F2] rounded-[14px] border border-[#E6DFD8] shadow-sm p-6"
+                        className="condition-card"
                       >
                         <h3 className="text-2xl font-bold text-[#3B2718] mb-4 leading-tight">
                           {section.title}
@@ -382,24 +377,24 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                     Detailed notes for this condition haven&apos;t been added yet.
                   </p>
                 )}
-
-                <div className="mt-6 flex justify-end gap-3 pb-2">
-                  <button
-                    onClick={onClose}
-                    className="px-4 py-2 text-sm rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-                  >
-                    Close
-                  </button>
-                  {onDrillCondition && (
-                    <button
-                      onClick={() => onDrillCondition(condition)}
-                      className="px-4 py-2 text-sm rounded-md bg-[#3D1B0E] text-white hover:bg-[#2A130A] shadow"
-                    >
-                      Drill this condition
-                    </button>
-                  )}
-                </div>
               </div>
+            </div>
+
+            <div className="border-t border-slate-200 px-8 py-4 flex justify-end gap-3 bg-[#FCF9F6]">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-sm rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
+              >
+                Close
+              </button>
+              {onDrillCondition && (
+                <button
+                  onClick={() => onDrillCondition(condition)}
+                  className="px-4 py-2 text-sm rounded-md bg-[#3D1B0E] text-white hover:bg-[#2A130A] shadow"
+                >
+                  Drill this condition
+                </button>
+              )}
             </div>
           </div>
         </div>
