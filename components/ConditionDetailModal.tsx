@@ -33,8 +33,10 @@ const renderList = (level = 0) => (props: any) => {
     <ul
       className={`${style} text-sm text-slate-700 space-y-1 leading-relaxed`}
     >
-      {React.Children.map(props.children, (child) =>
-        React.cloneElement(child, { level: level + 1 })
+      {React.Children.toArray(props.children).map((child: any) =>
+        React.isValidElement(child)
+          ? React.cloneElement(child, { level: level + 1 })
+          : child
       )}
     </ul>
   );
@@ -43,7 +45,7 @@ const renderList = (level = 0) => (props: any) => {
 const renderListItem = (props: any) => <li>{props.children}</li>;
 
 const MarkdownBlock = ({ value }: { value: string }) => {
-  const formatted = preprocessMarkdown(value);
+  const formatted = value ? preprocessMarkdown(value) : "";
 
   return (
     <ReactMarkdown
@@ -58,7 +60,7 @@ const MarkdownBlock = ({ value }: { value: string }) => {
 };
 
 const InlineMarkdown = ({ value }: { value: string }) => {
-  const formatted = preprocessMarkdown(value);
+  const formatted = value ? preprocessMarkdown(value) : "";
 
   return (
     <ReactMarkdown
