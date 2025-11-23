@@ -13,4 +13,8 @@ describe("preprocessMarkdown", () => {
   it("collapses multiple spaces", () => {
     assert.equal(preprocessMarkdown("too   many   spaces"), "too many spaces");
   });
+
+  it("returns falsy values unchanged", () => {
+    assert.equal(preprocessMarkdown(""), "");
+  });
 });

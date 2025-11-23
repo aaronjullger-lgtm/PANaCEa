@@ -1,4 +1,6 @@
 export const preprocessMarkdown = (text: string): string => {
+  if (!text) return text;
+
   return text
     .replace(/–|—/g, "-")
     .replace(/(^|\n)-(?=\S)/g, "$1- ")
