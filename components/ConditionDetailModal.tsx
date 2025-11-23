@@ -2,8 +2,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
+import rehypeFormat from "rehype-format";
 import {
   CONDITION_CONTENT,
   type ConditionContent,
@@ -12,7 +13,6 @@ import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
-import normalizeMarkdown from "../src/utils/normalizeMarkdown";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -30,21 +30,17 @@ interface ContentSection {
 }
 
 const markdownComponents = {
-  p: ({ children }: { children: React.ReactNode }) => (
-    <p className="condition-paragraph">{children}</p>
+  ul: ({ children }: { children: React.ReactNode }) => (
+    <ul className="list-disc ml-6 space-y-1">{children}</ul>
   ),
-  ul: ({ children, ...props }: { children: React.ReactNode }) => (
-    <ul className="condition-list" {...props}>
-      {children}
-    </ul>
+  ol: ({ children }: { children: React.ReactNode }) => (
+    <ol className="list-decimal ml-6 space-y-1">{children}</ol>
   ),
-  li: ({ children, ...props }: { children: React.ReactNode }) => (
-    <li className="condition-list-item" {...props}>
-      {children}
-    </li>
+  li: ({ children }: { children: React.ReactNode }) => (
+    <li className="leading-relaxed">{children}</li>
   ),
   strong: ({ children }: { children: React.ReactNode }) => (
-    <strong className="condition-strong">{children}</strong>
+    <strong className="font-semibold">{children}</strong>
   ),
 };
 
@@ -195,7 +191,11 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           setActiveSection(visible[0].target.id);
         }
       },
-      { root: container, threshold: [0.25, 0.5, 0.75], rootMargin: "0px 0px -20% 0px" }
+      {
+        root: container,
+        threshold: [0.25, 0.5, 0.75],
+        rootMargin: "0px 0px -20% 0px",
+      }
     );
 
     sections.forEach((section) => {
@@ -207,6 +207,13 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
     return () => observer.disconnect();
   }, [sections]);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
 
   const mediaIds = content.mediaIds ?? [];
   const hasAnyContent = sections.length > 0;
@@ -225,18 +232,20 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   ) => {
     if (!input || (Array.isArray(input) && input.length === 0)) return null;
 
-    const normalized = normalizeMarkdown(input);
+    const markdownText = Array.isArray(input)
+      ? input.map((item) => `- ${item}`).join("\n")
+      : input;
 
-    if (!normalized) return null;
+    if (!markdownText) return null;
 
     return (
       <ReactMarkdown
         className={`condition-content ${accent === "danger" ? "condition-content-danger" : ""}`}
-        remarkPlugins={[remarkGfm, normalizeMarkdown]}
-        rehypePlugins={[rehypeRaw]}
+        remarkPlugins={[remarkGfm, remarkBreaks]}
+        rehypePlugins={[rehypeFormat]}
         components={markdownComponents}
       >
-        {normalized}
+        {markdownText}
       </ReactMarkdown>
     );
   };
@@ -279,8 +288,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </div>
           </aside>
 
-          <div className="condition-content-panel" ref={contentRef}>
-            <div className="condition-scrollable">
+          <div className="condition-content-panel">
+            <div className="condition-scrollable" ref={contentRef}>
               {mediaIds.length > 0 && (
                 <section className="condition-media">
                   <div className="condition-media-frame">
