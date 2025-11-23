@@ -12,7 +12,7 @@ import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
-import normalizeMarkdown from "../src/utils/normalizeMarkdown";
+import { prepareMarkdown } from "../src/utils/normalizeMarkdown";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -22,7 +22,7 @@ interface ConditionDetailModalProps {
 
 const MarkdownBlock = ({ value }: { value: string }) => {
   // Apply structural normalization at render time so the generated condition content source remains untouched.
-  const formatted = normalizeMarkdown(value);
+  const formatted = prepareMarkdown(value);
 
   return (
     <ReactMarkdown
@@ -37,7 +37,7 @@ const MarkdownBlock = ({ value }: { value: string }) => {
 
 const InlineMarkdown = ({ value }: { value: string }) => {
   // Preserve source data as-is and only normalize formatting while rendering.
-  const formatted = normalizeMarkdown(value);
+  const formatted = prepareMarkdown(value);
 
   return (
     <ReactMarkdown

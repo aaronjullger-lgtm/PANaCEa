@@ -1,10 +1,12 @@
 import assert from "assert";
 import type { List } from "mdast";
-import { normalizeMarkdown } from "./normalizeMarkdown";
+import { normalizeMarkdownTree, prepareMarkdown } from "./normalizeMarkdown";
 
 describe("normalizeMarkdown", () => {
   it("nests subsequent items under bold parents", () => {
-    const tree = normalizeMarkdown("- **Important** detail\n- follow up\n- another\n- **Next** item\n- child");
+    const tree = normalizeMarkdownTree(
+      "- **Important** detail\n- follow up\n- another\n- **Next** item\n- child"
+    );
     const list = tree.children[0] as List;
 
     assert.equal(list.children.length, 2);
@@ -27,10 +29,21 @@ describe("normalizeMarkdown", () => {
   });
 
   it("keeps standalone bullets when no bold headers are present", () => {
-    const tree = normalizeMarkdown("- first point\n- second point");
+    const tree = normalizeMarkdownTree("- first point\n- second point");
     const list = tree.children[0] as List;
 
     assert.equal(list.children.length, 2);
     assert.ok(list.children.every((item) => item.type === "listItem"));
+  });
+
+  it("returns a string suitable for ReactMarkdown consumption", () => {
+    const prepared = prepareMarkdown(
+      "- **Important** detail\n- follow up\n- another\n- **Next** item\n- child"
+    );
+
+    assert.equal(typeof prepared, "string");
+    assert.ok(prepared.includes("<ul>"));
+    assert.ok(prepared.includes("<strong>Important</strong>"));
+    assert.ok(prepared.includes("Next</strong>"));
   });
 });

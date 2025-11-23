@@ -1,6 +1,8 @@
 import type { Content, List, ListItem, Parent, Root } from "mdast";
+import rehypeStringify from "rehype-stringify";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
 const isStrongLeadingItem = (item: ListItem): boolean => {
@@ -86,12 +88,25 @@ const normalizeLists = (tree: Parent | Root) => {
   }
 };
 
-export const normalizeMarkdown = (text: string): Root => {
+export const normalizeMarkdownTree = (text: string): Root => {
   const tree = unified().use(remarkParse).use(remarkGfm).parse(text) as Root;
 
   normalizeLists(tree);
 
   return tree;
 };
+
+export const prepareMarkdown = (text: string): string => {
+  const tree = normalizeMarkdownTree(text);
+  const processor = unified()
+    .use(remarkGfm)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeStringify, { allowDangerousHtml: true });
+
+  const transformed = processor.runSync(tree);
+  return processor.stringify(transformed) as string;
+};
+
+export const normalizeMarkdown = (text: string): string => prepareMarkdown(text);
 
 export default normalizeMarkdown;
