@@ -192,6 +192,10 @@
   padding: 24px 36px 48px 24px; /* right padding +12px to offset scrollbar */
 }
 
+.condition-scrollable-padded {
+  padding-right: calc(36px + 12px);
+}
+
 .condition-media {
   margin-bottom: 24px;
 }

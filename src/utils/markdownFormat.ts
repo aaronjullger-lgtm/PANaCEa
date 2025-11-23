@@ -1,3 +1,9 @@
+export function fixNestedBullets(md: string): string {
+  return md
+    .replace(/:\s*\n-\s/g, ":\n - ")
+    .replace(/- \*\*([^:]+):\*\*/g, "\n- $1:");
+}
+
 export function formatConditionMarkdown(text: string | undefined | null): string {
   if (!text) return "";
 
@@ -12,6 +18,8 @@ export function formatConditionMarkdown(text: string | undefined | null): string
       return header + nestedBlock;
     }
   );
+
+  formatted = fixNestedBullets(formatted);
 
   return formatted;
 }

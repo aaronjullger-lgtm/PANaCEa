@@ -12,7 +12,10 @@ import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
-import formatConditionMarkdown from "../src/utils/markdownFormat";
+import {
+  fixNestedBullets,
+  formatConditionMarkdown,
+} from "../src/utils/markdownFormat";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -36,7 +39,7 @@ const MarkdownBlock = ({
   value: string;
   accent?: "danger" | "default";
 }) => {
-  const formatted = formatConditionMarkdown(value);
+  const formatted = fixNestedBullets(formatConditionMarkdown(value));
   const className = `condition-content text-base leading-relaxed ${
     accent === "danger" ? "condition-content-danger" : ""
   }`;
@@ -46,6 +49,11 @@ const MarkdownBlock = ({
       className={className}
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeRaw]}
+      components={{
+        li: ({ children }) => (
+          <li className="ml-6 leading-relaxed">{children}</li>
+        ),
+      }}
     >
       {formatted}
     </ReactMarkdown>
@@ -53,13 +61,18 @@ const MarkdownBlock = ({
 };
 
 const InlineMarkdown = ({ value }: { value: string }) => {
-  const formatted = formatConditionMarkdown(value);
+  const formatted = fixNestedBullets(formatConditionMarkdown(value));
   return (
     <ReactMarkdown
       className="condition-content"
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeRaw]}
-      components={{ p: ({ children }) => <>{children}</> }}
+      components={{
+        p: ({ children }) => <>{children}</>,
+        li: ({ children }) => (
+          <li className="ml-6 leading-relaxed">{children}</li>
+        ),
+      }}
     >
       {formatted}
     </ReactMarkdown>
@@ -207,6 +220,11 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
       (entries) => {
         const visible = entries.filter((entry) => entry.isIntersecting);
 
+        if (container.scrollTop <= 0) {
+          setActiveSection("overview");
+          return;
+        }
+
         if (visible.length > 0) {
           visible.sort(
             (a, b) =>
@@ -214,11 +232,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               b.target.getBoundingClientRect().top
           );
           setActiveSection(visible[0].target.id);
-        } else if (container.scrollTop === 0) {
-          setActiveSection("overview");
         }
       },
-      { root: container, threshold: 0.25 }
+      { root: container, threshold: 0.25, rootMargin: "-10% 0px -55% 0px" }
     );
 
     sections.forEach((section) => {
@@ -243,14 +259,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
   const scrollToSection = (key: string) => {
     const el = sectionRefs.current[key];
-    const container = contentRef.current;
 
-    if (el && container) {
-      const offset = 80;
-      const containerTop = container.getBoundingClientRect().top;
-      const elementTop = el.getBoundingClientRect().top;
-      const top = elementTop - containerTop + container.scrollTop - offset;
-      container.scrollTo({ top, behavior: "smooth" });
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
@@ -314,7 +325,10 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           </aside>
 
           <div className="condition-content-panel">
-            <div className="condition-scrollable" ref={contentRef}>
+            <div
+              className="condition-scrollable condition-scrollable-padded"
+              ref={contentRef}
+            >
               {mediaIds.length > 0 && (
                 <section className="condition-media">
                   <div className="condition-media-frame">
