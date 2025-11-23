@@ -51,12 +51,21 @@ const buildListFromArray = (items: string[]): Root => ({
   ],
 });
 
+const normalizeHyphens = (text: string): string =>
+  text
+    .replace(/-\s{0,1}–/g, "- ")
+    .replace(/(?<!\n)-\s+/g, "\n- ")
+    .replace(/\n\s*-\s{2,}/g, "\n  - ")
+    .replace(/\n\s{4,}-\s+/g, "\n    - ");
+
 const normalizeTree = (input: string | string[]): Root => {
   if (Array.isArray(input)) {
     return buildListFromArray(input);
   }
 
-  const preprocessed = preprocessMarkdown(input ?? "");
+  // Normalize incorrectly formatted hyphens into valid list markdown before parsing
+  const hyphenNormalized = normalizeHyphens(input ?? "");
+  const preprocessed = preprocessMarkdown(hyphenNormalized);
   const parsed = processor.parse(preprocessed) as Root;
   return processor.runSync(parsed) as Root;
 };

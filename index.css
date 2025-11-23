@@ -291,16 +291,25 @@
 .condition-list {
   list-style: disc;
   margin: 0 0 0.85rem 1.25rem;
-  padding: 0;
+  padding-left: 1.25rem;
 }
 
 .condition-list-item {
   margin-bottom: 0.35rem;
 }
 
-.condition-content ul ul,
-.condition-content li li {
-  padding-left: 20px;
+.condition-content ul {
+  list-style: disc;
+  margin: 0 0 0.85rem 1.25rem;
+  padding-left: 1.25rem;
+}
+
+.condition-content li {
+  margin-bottom: 0.35rem;
+}
+
+.condition-content ul ul {
+  margin-left: 1.25rem;
   list-style-type: circle;
 }
 
