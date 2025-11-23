@@ -2,9 +2,8 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
-import rehypeFormat from "rehype-format";
+import rehypeRaw from "rehype-raw";
 import {
   CONDITION_CONTENT,
   type ConditionContent,
@@ -13,6 +12,7 @@ import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
+import formatConditionMarkdown from "../src/utils/markdownFormat";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -29,19 +29,41 @@ interface ContentSection {
   accent?: "danger" | "default";
 }
 
-const markdownComponents = {
-  ul: ({ node, className, ...props }: any) => (
-    <ul className={`list-disc ml-6 space-y-1 ${className ?? ""}`} {...props} />
-  ),
-  ol: ({ node, className, ...props }: any) => (
-    <ol className={`list-decimal ml-6 space-y-1 ${className ?? ""}`} {...props} />
-  ),
-  li: ({ node, className, ...props }: any) => (
-    <li className={`leading-relaxed ${className ?? ""}`} {...props} />
-  ),
-  strong: ({ node, className, ...props }: any) => (
-    <strong className={`font-semibold ${className ?? ""}`} {...props} />
-  ),
+const MarkdownBlock = ({
+  value,
+  accent,
+}: {
+  value: string;
+  accent?: "danger" | "default";
+}) => {
+  const formatted = formatConditionMarkdown(value);
+  const className = `condition-content text-base leading-relaxed ${
+    accent === "danger" ? "condition-content-danger" : ""
+  }`;
+
+  return (
+    <ReactMarkdown
+      className={className}
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
+    >
+      {formatted}
+    </ReactMarkdown>
+  );
+};
+
+const InlineMarkdown = ({ value }: { value: string }) => {
+  const formatted = formatConditionMarkdown(value);
+  return (
+    <ReactMarkdown
+      className="condition-content"
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
+      components={{ p: ({ children }) => <>{children}</> }}
+    >
+      {formatted}
+    </ReactMarkdown>
+  );
 };
 
 const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
@@ -183,19 +205,20 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        const visible = entries.filter((entry) => entry.isIntersecting);
 
         if (visible.length > 0) {
+          visible.sort(
+            (a, b) =>
+              a.target.getBoundingClientRect().top -
+              b.target.getBoundingClientRect().top
+          );
           setActiveSection(visible[0].target.id);
+        } else if (container.scrollTop === 0) {
+          setActiveSection("overview");
         }
       },
-      {
-        root: container,
-        threshold: [0.25, 0.5, 0.75],
-        rootMargin: "0px 0px -20% 0px",
-      }
+      { root: container, threshold: 0.25 }
     );
 
     sections.forEach((section) => {
@@ -220,34 +243,36 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
   const scrollToSection = (key: string) => {
     const el = sectionRefs.current[key];
+    const container = contentRef.current;
 
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el && container) {
+      const offset = 80;
+      const containerTop = container.getBoundingClientRect().top;
+      const elementTop = el.getBoundingClientRect().top;
+      const top = elementTop - containerTop + container.scrollTop - offset;
+      container.scrollTo({ top, behavior: "smooth" });
     }
   };
 
-  const renderMarkdownContent = (
+  const renderSectionContent = (
     input?: string | string[],
     accent?: "danger" | "default"
   ) => {
     if (!input || (Array.isArray(input) && input.length === 0)) return null;
 
-    const markdownText = Array.isArray(input)
-      ? input.map((item) => `- ${item}`).join("\n")
-      : input;
+    if (Array.isArray(input)) {
+      return (
+        <ul className={`condition-list ${accent === "danger" ? "condition-content-danger" : ""}`}>
+          {input.map((pt, idx) => (
+            <li key={idx} className="condition-list-item">
+              <InlineMarkdown value={pt} />
+            </li>
+          ))}
+        </ul>
+      );
+    }
 
-    if (!markdownText) return null;
-
-    return (
-      <ReactMarkdown
-        className={`condition-content ${accent === "danger" ? "condition-content-danger" : ""}`}
-        remarkPlugins={[remarkGfm, remarkBreaks]}
-        rehypePlugins={[rehypeFormat]}
-        components={markdownComponents}
-      >
-        {markdownText}
-      </ReactMarkdown>
-    );
+    return <MarkdownBlock value={input} accent={accent} />;
   };
 
   return (
@@ -354,7 +379,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                       className="condition-card scroll-mt-24"
                     >
                       <h3 className="condition-section-title">{section.title}</h3>
-                      {renderMarkdownContent(contentValue, section.accent)}
+                      {renderSectionContent(contentValue, section.accent)}
                     </section>
                   );
                 })}
