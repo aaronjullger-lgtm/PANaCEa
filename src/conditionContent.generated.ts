@@ -21,6 +21,37 @@ export interface ConditionContent {
   prognosis?: string;
 }
 
-import data from "./conditionContent.generated.json";
+import baseContent from "./conditionContent.generated.json";
+import updatedContent from "../conditionContent.generated.json";
 
-export const CONDITION_CONTENT = data as Record<string, ConditionContent>;
+type ConditionContentPatch =
+  | ConditionContent
+  | string
+  | undefined
+  | null;
+
+function mergeConditionContent(
+  base: Record<string, ConditionContent>,
+  patch: Record<string, ConditionContentPatch>
+): Record<string, ConditionContent> {
+  const merged: Record<string, ConditionContent> = { ...base };
+
+  for (const [id, override] of Object.entries(patch)) {
+    if (!override) continue;
+
+    const baseEntry = merged[id] ?? {};
+
+    if (typeof override === "string") {
+      merged[id] = { ...baseEntry, overview: override };
+    } else {
+      merged[id] = { ...baseEntry, ...override };
+    }
+  }
+
+  return merged;
+}
+
+export const CONDITION_CONTENT = mergeConditionContent(
+  baseContent as Record<string, ConditionContent>,
+  updatedContent as Record<string, ConditionContentPatch>
+);
