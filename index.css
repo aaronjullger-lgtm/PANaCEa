@@ -189,7 +189,7 @@
 .condition-scrollable {
   height: 100%;
   overflow-y: auto;
-  padding: 24px 16px 32px 16px;
+  padding: 24px 28px 48px 24px;
 }
 
 .condition-media {
@@ -255,8 +255,8 @@
 .condition-sections {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding-top: 12px;
+  gap: 32px;
+  padding-top: 24px;
 }
 
 .condition-card {
@@ -266,7 +266,11 @@
   margin-bottom: 0;
   border: 1px solid #e6e1d8;
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.05);
-  scroll-margin-top: 80px;
+  scroll-margin-top: 96px;
+}
+
+.scroll-mt-24 {
+  scroll-margin-top: 96px;
 }
 
 .condition-section-title {

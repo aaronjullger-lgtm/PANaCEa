@@ -351,7 +351,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                       key={section.key}
                       id={section.key}
                       ref={(el) => (sectionRefs.current[section.key] = el)}
-                      className="condition-card"
+                      className="condition-card scroll-mt-24"
                     >
                       <h3 className="condition-section-title">{section.title}</h3>
                       {renderMarkdownContent(contentValue, section.accent)}
