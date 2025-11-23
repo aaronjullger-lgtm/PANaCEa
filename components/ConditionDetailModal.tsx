@@ -31,20 +31,20 @@ interface ContentSection {
 
 const markdownComponents = {
   p: ({ children }: { children: React.ReactNode }) => (
-    <p className="mb-3 last:mb-0 text-slate-800">{children}</p>
+    <p className="condition-paragraph">{children}</p>
   ),
   ul: ({ children, ...props }: { children: React.ReactNode }) => (
-    <ul className="space-y-2" {...props}>
+    <ul className="condition-list" {...props}>
       {children}
     </ul>
   ),
   li: ({ children, ...props }: { children: React.ReactNode }) => (
-    <li className="leading-relaxed" {...props}>
+    <li className="condition-list-item" {...props}>
       {children}
     </li>
   ),
   strong: ({ children }: { children: React.ReactNode }) => (
-    <strong className="text-slate-900">{children}</strong>
+    <strong className="condition-strong">{children}</strong>
   ),
 };
 
@@ -229,14 +229,9 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
     if (!normalized) return null;
 
-    const tone =
-      accent === "danger"
-        ? "text-red-800 [&_*]:text-red-800"
-        : "text-slate-800";
-
     return (
       <ReactMarkdown
-        className={`condition-content prose prose-slate max-w-none text-[18px] leading-[1.65] ${tone}`}
+        className={`condition-content ${accent === "danger" ? "condition-content-danger" : ""}`}
         remarkPlugins={[remarkGfm, normalizeMarkdown]}
         rehypePlugins={[rehypeRaw]}
         components={markdownComponents}
@@ -247,27 +242,34 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-      <div className="bg-[#FCF9F6] border border-[#D0C7BF] rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex h-full gap-6">
-          <aside className="section-nav bg-[#F6F1EA] border-r border-[#E6DFD8] px-5 py-6 condition-sidebar">
-            <div className="mb-5">
-              <p className="text-xs uppercase tracking-[0.08em] text-slate-500">Sections</p>
-              <h4 className="text-xl font-semibold leading-tight text-[#2D1B12]">
-                {condition.condition}
-              </h4>
-            </div>
+    <div className="condition-modal-overlay">
+      <div className="condition-modal">
+        <header className="condition-modal-header">
+          <div>
+            <h2 className="condition-title">{condition.condition}</h2>
+            <p className="condition-meta">
+              {condition.system} • {condition.subcategory}
+            </p>
+          </div>
+          <button onClick={onClose} className="condition-close">
+            Close
+          </button>
+        </header>
 
-            <div className="space-y-2">
+        <div className="condition-layout">
+          <aside className="section-nav condition-sidebar">
+            <div className="section-nav-header">
+              <p className="section-nav-label">Sections</p>
+              <h4 className="section-nav-title">{condition.condition}</h4>
+            </div>
+            <div className="section-nav-list">
               {sections.map((section) => {
                 const isActive = activeSection === section.key;
                 return (
                   <button
                     key={section.key}
                     onClick={() => scrollToSection(section.key)}
-                    className={`w-full text-left text-sm font-semibold ${
-                      isActive ? "active" : ""
-                    }`}
+                    className={`section-nav-button ${isActive ? "active" : ""}`}
                     type="button"
                   >
                     {section.title}
@@ -277,127 +279,100 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
             </div>
           </aside>
 
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <div className="flex items-start justify-between gap-4 px-8 pt-6 pb-4 border-b border-slate-200">
-              <div>
-                <h2 className="text-3xl font-bold text-[#3B2718] leading-tight">
-                  {condition.condition}
-                </h2>
-                <p className="text-base text-slate-500 mt-1 leading-relaxed">
-                  {condition.system} • {condition.subcategory}
-                </p>
-              </div>
-              <button
-                onClick={onClose}
-                className="text-sm px-4 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-              >
-                Close
-              </button>
-            </div>
-
-            <div ref={contentRef} className="flex-1 overflow-y-auto pr-1">
-              <div className="px-8 py-6 min-h-full">
-                {mediaIds.length > 0 && (
-                  <section className="py-6">
-                    <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-white">
-                      <img
-                        src={`/media/${
-                          mediaIds[mediaIndex].includes(".")
-                            ? mediaIds[mediaIndex]
-                            : `${mediaIds[mediaIndex]}.png`
-                        }`}
-                        alt={`${condition.condition} media ${mediaIndex + 1}`}
-                        className="w-full h-64 object-cover bg-slate-50"
-                      />
-                      {mediaIds.length > 1 && (
-                        <div className="absolute inset-0 flex items-center justify-between px-3">
-                          <button
-                            className="bg-white/80 rounded-full p-2 text-xs shadow"
-                            onClick={() =>
-                              setMediaIndex(
-                                (mediaIndex - 1 + mediaIds.length) % mediaIds.length
-                              )
-                            }
-                            aria-label="Previous media"
-                          >
-                            ‹
-                          </button>
-                          <button
-                            className="bg-white/80 rounded-full p-2 text-xs shadow"
-                            onClick={() =>
-                              setMediaIndex((mediaIndex + 1) % mediaIds.length)
-                            }
-                            aria-label="Next media"
-                          >
-                            ›
-                          </button>
-                        </div>
-                      )}
-                    </div>
+          <div className="condition-content-panel" ref={contentRef}>
+            <div className="condition-scrollable">
+              {mediaIds.length > 0 && (
+                <section className="condition-media">
+                  <div className="condition-media-frame">
+                    <img
+                      src={`/media/${
+                        mediaIds[mediaIndex].includes(".")
+                          ? mediaIds[mediaIndex]
+                          : `${mediaIds[mediaIndex]}.png`
+                      }`}
+                      alt={`${condition.condition} media ${mediaIndex + 1}`}
+                    />
                     {mediaIds.length > 1 && (
-                      <div className="flex justify-center gap-2 mt-3">
-                        {mediaIds.map((_, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setMediaIndex(idx)}
-                            className={`h-2.5 w-2.5 rounded-full ${
-                              idx === mediaIndex ? "bg-[#3D1B0E]" : "bg-slate-300"
-                            }`}
-                            aria-label={`View media ${idx + 1}`}
-                          />
-                        ))}
+                      <div className="condition-media-controls">
+                        <button
+                          className="media-button"
+                          onClick={() =>
+                            setMediaIndex(
+                              (mediaIndex - 1 + mediaIds.length) % mediaIds.length
+                            )
+                          }
+                          aria-label="Previous media"
+                        >
+                          ‹
+                        </button>
+                        <button
+                          className="media-button"
+                          onClick={() =>
+                            setMediaIndex((mediaIndex + 1) % mediaIds.length)
+                          }
+                          aria-label="Next media"
+                        >
+                          ›
+                        </button>
                       </div>
                     )}
-                  </section>
-                )}
+                  </div>
+                  {mediaIds.length > 1 && (
+                    <div className="condition-media-dots">
+                      {mediaIds.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setMediaIndex(idx)}
+                          className={`dot ${idx === mediaIndex ? "active" : ""}`}
+                          aria-label={`View media ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
 
-                <div className="flex flex-col gap-8 pb-8">
-                  {sections.map((section) => {
-                    const contentValue =
-                      section.type === "markdown" ? section.value : section.items;
+              <div className="condition-sections">
+                {sections.map((section) => {
+                  const contentValue =
+                    section.type === "markdown" ? section.value : section.items;
 
-                    return (
-                      <section
-                        key={section.key}
-                        id={section.key}
-                        ref={(el) => (sectionRefs.current[section.key] = el)}
-                        className="condition-card"
-                      >
-                        <h3 className="text-2xl font-bold text-[#3B2718] mb-4 leading-tight">
-                          {section.title}
-                        </h3>
-                        {renderMarkdownContent(contentValue, section.accent)}
-                      </section>
-                    );
-                  })}
-                </div>
-
-                {!hasAnyContent && (
-                  <p className="text-base text-slate-500 mb-4 leading-relaxed">
-                    Detailed notes for this condition haven&apos;t been added yet.
-                  </p>
-                )}
+                  return (
+                    <section
+                      key={section.key}
+                      id={section.key}
+                      ref={(el) => (sectionRefs.current[section.key] = el)}
+                      className="condition-card"
+                    >
+                      <h3 className="condition-section-title">{section.title}</h3>
+                      {renderMarkdownContent(contentValue, section.accent)}
+                    </section>
+                  );
+                })}
               </div>
-            </div>
 
-            <div className="border-t border-slate-200 px-8 py-4 flex justify-end gap-3 bg-[#FCF9F6]">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-sm rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-              >
-                Close
-              </button>
-              {onDrillCondition && (
-                <button
-                  onClick={() => onDrillCondition(condition)}
-                  className="px-4 py-2 text-sm rounded-md bg-[#3D1B0E] text-white hover:bg-[#2A130A] shadow"
-                >
-                  Drill this condition
-                </button>
+              {!hasAnyContent && (
+                <p className="condition-empty">
+                  Detailed notes for this condition haven&apos;t been added yet.
+                </p>
               )}
             </div>
           </div>
         </div>
+
+        <footer className="condition-footer">
+          <button onClick={onClose} className="condition-close">
+            Close
+          </button>
+          {onDrillCondition && (
+            <button
+              onClick={() => onDrillCondition(condition)}
+              className="condition-drill"
+            >
+              Drill this condition
+            </button>
+          )}
+        </footer>
       </div>
     </div>
   );
