@@ -13,6 +13,7 @@ import {
   type ConditionMeta,
 } from "../conditionRegistry";
 import normalizeMarkdown from "../src/utils/normalizeMarkdown";
+import preprocessMarkdown from "../src/utils/preprocessMarkdown";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -20,14 +21,36 @@ interface ConditionDetailModalProps {
   onDrillCondition?: (meta: ConditionMeta) => void;
 }
 
+const renderList = (level = 0) => (props: any) => {
+  const style =
+    level === 0
+      ? "list-disc pl-5"
+      : level === 1
+        ? "list-[circle] pl-7"
+        : "list-[square] pl-9";
+
+  return (
+    <ul
+      className={`${style} text-sm text-slate-700 space-y-1 leading-relaxed`}
+    >
+      {React.Children.map(props.children, (child) =>
+        React.cloneElement(child, { level: level + 1 })
+      )}
+    </ul>
+  );
+};
+
+const renderListItem = (props: any) => <li>{props.children}</li>;
+
 const MarkdownBlock = ({ value }: { value: string }) => {
   return (
     <ReactMarkdown
       className="condition-content text-sm text-slate-700 leading-relaxed"
       remarkPlugins={[remarkGfm, normalizeMarkdown]}
       rehypePlugins={[rehypeRaw]}
+      components={{ ul: renderList(0), li: renderListItem }}
     >
-      {value}
+      {preprocessMarkdown(value)}
     </ReactMarkdown>
   );
 };
@@ -39,9 +62,11 @@ const InlineMarkdown = ({ value }: { value: string }) => {
       rehypePlugins={[rehypeRaw]}
       components={{
         p: ({ children }) => <>{children}</>,
+        ul: renderList(0),
+        li: renderListItem,
       }}
     >
-      {value}
+      {preprocessMarkdown(value)}
     </ReactMarkdown>
   );
 };

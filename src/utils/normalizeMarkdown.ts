@@ -1,4 +1,4 @@
-import type { Content, List, ListItem, Parent, Root } from "mdast";
+import type { Content, List, ListItem, Parent, Paragraph, Root } from "mdast";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { Plugin, unified } from "unified";
@@ -43,6 +43,46 @@ const isParentNode = (node: Content): node is Parent => {
   return typeof (node as Parent).children !== "undefined";
 };
 
+const applyColonBolding = (paragraph: Paragraph) => {
+  const firstChild = paragraph.children[0];
+
+  if (!firstChild || firstChild.type === "strong") {
+    return;
+  }
+
+  if (firstChild.type === "text") {
+    const value = firstChild.value ?? "";
+    const colonIndex = value.indexOf(":");
+
+    if (colonIndex === -1) {
+      return;
+    }
+
+    const leading = value.slice(0, colonIndex).trim();
+
+    if (!leading) {
+      return;
+    }
+
+    const afterColon = value.slice(colonIndex + 1);
+    const rest = afterColon.replace(/^\s+/, " ");
+
+    const newChildren: Paragraph["children"] = [
+      {
+        type: "strong",
+        children: [{ type: "text", value: `${leading}:` }],
+      },
+    ];
+
+    if (rest.length > 0) {
+      newChildren.push({ type: "text", value: rest });
+    }
+
+    newChildren.push(...paragraph.children.slice(1));
+    paragraph.children = newChildren;
+  }
+};
+
 const normalizeList = (list: List) => {
   const normalizedItems: ListItem[] = [];
   let currentParent: ListItem | null = null;
@@ -67,28 +107,37 @@ const normalizeList = (list: List) => {
 
   for (const item of list.children) {
     for (const child of item.children) {
-      if (child.type === "list") {
+      if (child.type === "paragraph") {
+        applyColonBolding(child);
+      } else if (child.type === "list") {
         normalizeList(child);
       } else if (isParentNode(child)) {
-        normalizeLists(child);
+        traverseTree(child);
       }
     }
   }
 };
 
-const normalizeLists = (tree: Parent | Root) => {
+const traverseTree = (tree: Parent | Root) => {
   for (const child of tree.children) {
+    if (child.type === "paragraph") {
+      applyColonBolding(child);
+    }
+
     if (child.type === "list") {
       normalizeList(child as List);
-    } else if (isParentNode(child)) {
-      normalizeLists(child);
+      continue;
+    }
+
+    if (isParentNode(child)) {
+      traverseTree(child);
     }
   }
 };
 
 export const normalizeMarkdown: Plugin<[], Root> = function () {
   return (tree) => {
-    normalizeLists(tree);
+    traverseTree(tree);
   };
 };
 

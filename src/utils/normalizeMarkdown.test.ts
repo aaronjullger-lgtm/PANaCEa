@@ -51,4 +51,15 @@ describe("normalizeMarkdown", () => {
 
     assert.ok(processed.value.toString().includes("child text"));
   });
+
+  it("auto-bolds colon-prefixed paragraphs", () => {
+    const tree = normalizeMarkdownTree("Leading phrase: details follow");
+    const paragraph = tree.children[0];
+
+    assert.equal(paragraph.type, "paragraph");
+    const [firstChild] = (paragraph as any).children;
+
+    assert.equal(firstChild.type, "strong");
+    assert.equal(firstChild.children[0].value, "Leading phrase:");
+  });
 });
