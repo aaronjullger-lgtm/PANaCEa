@@ -1,7 +1,6 @@
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks";
 import { toString } from "mdast-util-to-string";
 import type { Content, List, ListItem, Parent, Root } from "mdast";
 
@@ -112,7 +111,6 @@ export function parseMarkdownToItems(text: string | undefined | null): ParsedIte
   const tree = unified()
     .use(remarkParse)
     .use(remarkGfm)
-    .use(remarkBreaks)
     .parse(normalizedText) as Root;
 
   const items: ParsedItem[] = [];

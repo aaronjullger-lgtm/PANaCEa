@@ -1,6 +1,9 @@
 // src/components/ConditionDetailModal.tsx
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import {
   CONDITION_CONTENT,
   type ConditionContent,
@@ -9,10 +12,7 @@ import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
-import {
-  buildParsedSections,
-  type ParsedSection,
-} from "../services/markdownParser";
+import formatConditionMarkdown from "../src/utils/markdownFormat";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -28,6 +28,24 @@ interface ContentSection {
   items?: string[];
   accent?: "danger" | "default";
 }
+
+const markdownComponents: Components = {
+  ul: ({ children }: { children: React.ReactNode }) => (
+    <ul className="condition-content-list">{children}</ul>
+  ),
+  ol: ({ children }: { children: React.ReactNode }) => (
+    <ol className="condition-content-olist">{children}</ol>
+  ),
+  li: ({ children }: { children: React.ReactNode }) => (
+    <li className="condition-content-item">{children}</li>
+  ),
+  strong: ({ children }: { children: React.ReactNode }) => (
+    <strong className="condition-strong">{children}</strong>
+  ),
+  p: ({ children }: { children: React.ReactNode }) => (
+    <p className="condition-paragraph">{children}</p>
+  ),
+};
 
 const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   condition,
@@ -162,45 +180,21 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     });
   }, [content]);
 
-  const parsedSections: ParsedSection[] = useMemo(
-    () => buildParsedSections(sections),
+  const renderedSections = useMemo(
+    () =>
+      sections.map((section) => {
+        const baseMarkdown =
+          section.type === "markdown"
+            ? section.value ?? ""
+            : (section.items ?? []).map((item) => `- ${item}`).join("\n");
+
+        return {
+          ...section,
+          markdown: formatConditionMarkdown(baseMarkdown),
+        };
+      }),
     [sections]
   );
-
-  useEffect(() => {
-    const container = contentRef.current;
-    if (!container) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((entry) => entry.isIntersecting);
-
-        if (container.scrollTop <= 0) {
-          setActiveSection("overview");
-          return;
-        }
-
-        if (visible.length > 0) {
-          visible.sort(
-            (a, b) =>
-              a.target.getBoundingClientRect().top -
-              b.target.getBoundingClientRect().top
-          );
-          setActiveSection(visible[0].target.id);
-        }
-      },
-      { root: container, threshold: 0.2, rootMargin: "-10% 0px -60% 0px" }
-    );
-
-    sections.forEach((section) => {
-      const el = sectionRefs.current[section.key];
-      if (el) {
-        observer.observe(el);
-      }
-    });
-
-    return () => observer.disconnect();
-  }, [sections]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -209,50 +203,58 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container || sections.length === 0) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const bottomGap =
+        container.scrollHeight - (scrollTop + container.clientHeight);
+
+      if (scrollTop <= 10) {
+        setActiveSection(sections[0].key);
+        return;
+      }
+
+      if (bottomGap < 10) {
+        setActiveSection(sections[sections.length - 1].key);
+        return;
+      }
+
+      const offset = 120;
+      let currentKey = sections[0].key;
+
+      sections.forEach((section) => {
+        const el = sectionRefs.current[section.key];
+        if (!el) return;
+        const top = el.offsetTop - container.offsetTop;
+        if (top - offset <= scrollTop) {
+          currentKey = section.key;
+        }
+      });
+
+      setActiveSection(currentKey);
+    };
+
+    handleScroll();
+    container.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [sections]);
+
   const mediaIds = content.mediaIds ?? [];
-  const hasAnyContent = parsedSections.length > 0;
+  const hasAnyContent = renderedSections.length > 0;
 
   const scrollToSection = (key: string) => {
-    const el = sectionRefs.current[key];
     const container = contentRef.current;
+    const target = sectionRefs.current[key];
 
-    if (el && container) {
+    if (container && target) {
       const offset = 80;
-      const top = el.offsetTop - container.offsetTop - offset;
+      const top = target.offsetTop - container.offsetTop - offset;
       container.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
     }
-  };
-
-  const renderSectionContent = (section: ParsedSection) => {
-    if (section.items.length === 0) return null;
-
-    return (
-      <ul
-        className={`condition-bullet-root ${
-          section.accent === "danger" ? "condition-content-danger" : ""
-        }`}
-      >
-        {section.items.map((item, idx) => {
-          if (item.type === "mnemonic-header") {
-            return (
-              <li key={`${section.title}-mnemonic-${idx}`} className="condition-mnemonic-header">
-                <span dangerouslySetInnerHTML={{ __html: item.text }} />
-              </li>
-            );
-          }
-
-          return (
-            <li
-              key={`${section.title}-bullet-${idx}`}
-              className="condition-bullet-item"
-              style={{ marginLeft: `${item.level * 16}px` }}
-            >
-              <span dangerouslySetInnerHTML={{ __html: item.text }} />
-            </li>
-          );
-        })}
-      </ul>
-    );
   };
 
   return (
@@ -274,7 +276,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           <aside className="section-nav condition-sidebar">
             <p className="section-nav-label">Sections</p>
             <div className="section-nav-list">
-              {sections.map((section) => {
+              {renderedSections.map((section) => {
                 const isActive = activeSection === section.key;
                 return (
                   <button
@@ -291,7 +293,10 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           </aside>
 
           <div className="condition-content-panel">
-            <div className="condition-scrollable condition-scrollable-padded" ref={contentRef}>
+            <div
+              className="condition-scrollable condition-scrollable-padded"
+              ref={contentRef}
+            >
               {mediaIds.length > 0 && (
                 <section className="condition-media">
                   <div className="condition-media-frame">
@@ -344,19 +349,26 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               )}
 
               <div className="condition-sections">
-                {parsedSections.map((section) => (
+                {renderedSections.map((section) => (
                   <section
-                    key={section.id ?? section.title}
-                    id={section.id ?? section.title}
+                    key={section.key}
+                    id={section.key}
                     ref={(el) => {
-                      if (section.id) {
-                        sectionRefs.current[section.id] = el;
-                      }
+                      sectionRefs.current[section.key] = el;
                     }}
                     className="condition-card scroll-mt-24"
                   >
                     <h3 className="condition-section-title">{section.title}</h3>
-                    {renderSectionContent(section)}
+                    <ReactMarkdown
+                      className={`condition-content ${
+                        section.accent === "danger" ? "condition-content-danger" : ""
+                      }`}
+                      remarkPlugins={[remarkGfm]}
+                      rehypePlugins={[rehypeRaw]}
+                      components={markdownComponents}
+                    >
+                      {section.markdown}
+                    </ReactMarkdown>
                   </section>
                 ))}
               </div>

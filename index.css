@@ -171,8 +171,8 @@
 }
 
 .section-nav-button.active {
-  background: #e8dccf;
-  color: #4a2e1e;
+  background: #e5d9c8;
+  color: #4b2e0f;
   font-weight: 700;
   border-color: #d9c8b7;
 }
@@ -259,7 +259,7 @@
 .condition-sections {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 0;
   padding-top: 24px;
 }
 
@@ -267,7 +267,7 @@
   background: #f9f8f5;
   padding: 24px;
   border-radius: 14px;
-  margin-bottom: 0;
+  margin-bottom: 32px;
   border: 1px solid #e6e1d8;
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.05);
   scroll-margin-top: 96px;
@@ -288,6 +288,22 @@
   font-size: 1.05rem;
   line-height: 1.6;
   color: #1f2937;
+}
+
+.condition-content-list,
+.condition-content-olist {
+  list-style: disc;
+  margin: 0 0 0.85rem 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.condition-content-olist {
+  list-style: decimal;
+}
+
+.condition-content-item {
+  margin-bottom: 0.35rem;
+  line-height: 1.6;
 }
 
 .condition-bullet-root {
