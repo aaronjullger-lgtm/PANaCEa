@@ -1,7 +1,7 @@
 // src/components/ConditionDetailModal.tsx
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import ReactMarkdown, { type Components } from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import {
@@ -12,7 +12,9 @@ import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
-import formatConditionMarkdown from "../src/utils/markdownFormat";
+import ConditionSidebar from "./ConditionSidebar";
+import type { BulletNode, ParsedSection } from "../services/markdownParser";
+import { buildParsedSections } from "../services/markdownParser";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -29,22 +31,42 @@ interface ContentSection {
   accent?: "danger" | "default";
 }
 
-const markdownComponents: Components = {
-  ul: ({ children }: { children: React.ReactNode }) => (
-    <ul className="condition-content-list">{children}</ul>
-  ),
-  ol: ({ children }: { children: React.ReactNode }) => (
-    <ol className="condition-content-olist">{children}</ol>
-  ),
-  li: ({ children }: { children: React.ReactNode }) => (
-    <li className="condition-content-item">{children}</li>
-  ),
-  strong: ({ children }: { children: React.ReactNode }) => (
-    <strong className="condition-strong">{children}</strong>
-  ),
-  p: ({ children }: { children: React.ReactNode }) => (
-    <p className="condition-paragraph">{children}</p>
-  ),
+const BulletText = ({ text }: { text: string }) => (
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    rehypePlugins={[rehypeRaw]}
+    components={{
+      p: ({ children }) => <>{children}</>,
+      strong: ({ children }) => (
+        <strong className="condition-strong">{children}</strong>
+      ),
+      ul: ({ children }) => <>{children}</>,
+      ol: ({ children }) => <>{children}</>,
+      li: ({ children }) => <>{children}</>,
+    }}
+  >
+    {text}
+  </ReactMarkdown>
+);
+
+const BulletedList: React.FC<{ items: BulletNode[]; level?: number }> = ({
+  items,
+  level = 0,
+}) => {
+  if (!items.length) return null;
+
+  return (
+    <ul className={`condition-bullet-list level-${level}`}>
+      {items.map((item, index) => (
+        <li key={`${item.text}-${index}`} className="condition-bullet-item">
+          <BulletText text={item.text} />
+          {item.children.length > 0 && (
+            <BulletedList items={item.children} level={Math.min(level + 1, 2)} />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
 };
 
 const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
@@ -180,19 +202,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     });
   }, [content]);
 
-  const renderedSections = useMemo(
-    () =>
-      sections.map((section) => {
-        const baseMarkdown =
-          section.type === "markdown"
-            ? section.value ?? ""
-            : (section.items ?? []).map((item) => `- ${item}`).join("\n");
-
-        return {
-          ...section,
-          markdown: formatConditionMarkdown(baseMarkdown),
-        };
-      }),
+  const parsedSections: ParsedSection[] = useMemo(
+    () => buildParsedSections(sections),
     [sections]
   );
 
@@ -205,46 +216,49 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
   useEffect(() => {
     const container = contentRef.current;
-    if (!container || sections.length === 0) return;
+    if (!container || parsedSections.length === 0) return;
 
-    const handleScroll = () => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id);
+        }
+      },
+      { root: container, threshold: 0.35 }
+    );
+
+    parsedSections.forEach((section) => {
+      const target = sectionRefs.current[section.id];
+      if (target) observer.observe(target);
+    });
+
+    const handleEdges = () => {
       const scrollTop = container.scrollTop;
       const bottomGap =
         container.scrollHeight - (scrollTop + container.clientHeight);
 
-      if (scrollTop <= 10) {
-        setActiveSection(sections[0].key);
-        return;
+      if (scrollTop <= 5 && parsedSections.length > 0) {
+        setActiveSection(parsedSections[0].id);
+      } else if (bottomGap <= 5 && parsedSections.length > 0) {
+        setActiveSection(parsedSections[parsedSections.length - 1].id);
       }
-
-      if (bottomGap < 10) {
-        setActiveSection(sections[sections.length - 1].key);
-        return;
-      }
-
-      const offset = 120;
-      let currentKey = sections[0].key;
-
-      sections.forEach((section) => {
-        const el = sectionRefs.current[section.key];
-        if (!el) return;
-        const top = el.offsetTop - container.offsetTop;
-        if (top - offset <= scrollTop) {
-          currentKey = section.key;
-        }
-      });
-
-      setActiveSection(currentKey);
     };
 
-    handleScroll();
-    container.addEventListener("scroll", handleScroll, { passive: true });
+    container.addEventListener("scroll", handleEdges, { passive: true });
+    handleEdges();
 
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [sections]);
+    return () => {
+      observer.disconnect();
+      container.removeEventListener("scroll", handleEdges);
+    };
+  }, [parsedSections]);
 
   const mediaIds = content.mediaIds ?? [];
-  const hasAnyContent = renderedSections.length > 0;
+  const hasAnyContent = parsedSections.length > 0;
 
   const scrollToSection = (key: string) => {
     const container = contentRef.current;
@@ -273,24 +287,14 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
         </header>
 
         <div className="condition-layout">
-          <aside className="section-nav condition-sidebar">
-            <p className="section-nav-label">Sections</p>
-            <div className="section-nav-list">
-              {renderedSections.map((section) => {
-                const isActive = activeSection === section.key;
-                return (
-                  <button
-                    key={section.key}
-                    onClick={() => scrollToSection(section.key)}
-                    className={`section-nav-button ${isActive ? "active" : ""}`}
-                    type="button"
-                  >
-                    {section.title}
-                  </button>
-                );
-              })}
-            </div>
-          </aside>
+          <ConditionSidebar
+            sections={parsedSections.map((section) => ({
+              key: section.id,
+              title: section.title,
+            }))}
+            activeSection={activeSection}
+            onSelect={scrollToSection}
+          />
 
           <div className="condition-content-panel">
             <div
@@ -349,26 +353,29 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               )}
 
               <div className="condition-sections">
-                {renderedSections.map((section) => (
+                {parsedSections.map((section) => (
                   <section
-                    key={section.key}
-                    id={section.key}
+                    key={section.id}
+                    id={section.id}
                     ref={(el) => {
-                      sectionRefs.current[section.key] = el;
+                      sectionRefs.current[section.id] = el;
                     }}
                     className="condition-card scroll-mt-24"
                   >
                     <h3 className="condition-section-title">{section.title}</h3>
-                    <ReactMarkdown
+                    <div
                       className={`condition-content ${
                         section.accent === "danger" ? "condition-content-danger" : ""
                       }`}
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeRaw]}
-                      components={markdownComponents}
                     >
-                      {section.markdown}
-                    </ReactMarkdown>
+                      {section.bullets.length > 0 ? (
+                        <BulletedList items={section.bullets} />
+                      ) : (
+                        <p className="condition-empty">
+                          Detailed notes for this condition haven&apos;t been added yet.
+                        </p>
+                      )}
+                    </div>
                   </section>
                 ))}
               </div>
