@@ -1,9 +1,6 @@
 // src/components/ConditionDetailModal.tsx
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 import {
   CONDITION_CONTENT,
   type ConditionContent,
@@ -13,7 +10,7 @@ import {
   type ConditionMeta,
 } from "../conditionRegistry";
 import ConditionSidebar from "./ConditionSidebar";
-import type { BulletNode, ParsedSection } from "../services/markdownParser";
+import type { BulletNode, ParsedSection, TextPart } from "../services/markdownParser";
 import { buildParsedSections } from "../services/markdownParser";
 
 interface ConditionDetailModalProps {
@@ -31,23 +28,26 @@ interface ContentSection {
   accent?: "danger" | "default";
 }
 
-const BulletText = ({ text }: { text: string }) => (
-  <ReactMarkdown
-    remarkPlugins={[remarkGfm]}
-    rehypePlugins={[rehypeRaw]}
-    components={{
-      p: ({ children }) => <>{children}</>,
-      strong: ({ children }) => (
-        <strong className="condition-strong">{children}</strong>
-      ),
-      ul: ({ children }) => <>{children}</>,
-      ol: ({ children }) => <>{children}</>,
-      li: ({ children }) => <>{children}</>,
-    }}
-  >
-    {text}
-  </ReactMarkdown>
-);
+const renderParts = (parts: TextPart[]) =>
+  parts.map((part, index) => {
+    if (part.type === "strong") {
+      return (
+        <strong key={`${part.value}-${index}`} className="condition-strong">
+          {part.value}
+        </strong>
+      );
+    }
+
+    if (part.type === "em") {
+      return (
+        <em key={`${part.value}-${index}`} className="condition-emphasis">
+          {part.value}
+        </em>
+      );
+    }
+
+    return <React.Fragment key={`${part.value}-${index}`}>{part.value}</React.Fragment>;
+  });
 
 const BulletedList: React.FC<{ items: BulletNode[]; level?: number }> = ({
   items,
@@ -58,8 +58,11 @@ const BulletedList: React.FC<{ items: BulletNode[]; level?: number }> = ({
   return (
     <ul className={`condition-bullet-list level-${level}`}>
       {items.map((item, index) => (
-        <li key={`${item.text}-${index}`} className="condition-bullet-item">
-          <BulletText text={item.text} />
+        <li
+          key={`${level}-${index}-${item.parts.map((p) => p.value).join("-")}`}
+          className="condition-bullet-item"
+        >
+          <span className="condition-bullet-text">{renderParts(item.parts)}</span>
           {item.children.length > 0 && (
             <BulletedList items={item.children} level={Math.min(level + 1, 2)} />
           )}

@@ -296,6 +296,15 @@
   padding-left: 1.75rem;
 }
 
+.condition-bullet-text {
+  display: inline;
+}
+
+.condition-emphasis {
+  font-style: italic;
+  color: #2c2c2c;
+}
+
 .condition-bullet-list.level-1 {
   list-style-type: circle;
   margin-left: 2.25rem;

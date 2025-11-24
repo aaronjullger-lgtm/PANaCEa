@@ -1,5 +1,7 @@
+export type TextPart = { type: "text" | "strong" | "em"; value: string };
+
 export interface BulletNode {
-  text: string;
+  parts: TextPart[];
   children: BulletNode[];
 }
 
@@ -28,17 +30,11 @@ const KEYWORD_LABELS = [
   "Risk Factors",
 ];
 
-const keywordPatterns = KEYWORD_LABELS.map(
-  (label) => new RegExp(`^${label.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}\b:?`, "i")
-);
-
 const clinicalTerms = [
   /\b(Aspirin|Metoprolol|Labetalol|Carvedilol|Hydralazine|Nitroglycerin|Furosemide|Lasix|Insulin|Dextrose|Calcium gluconate|Albuterol|Heparin|Warfarin|Apixaban|Rivaroxaban|Patiromer|Kayexalate)\b/gi,
   /\b(Cr|BUN|K\+|Na\+|BNP|pH|ABG|HCO3|PaO2|PaCO2|TSH|T4|T3|B12|Folate|ANA|RF|ESR|CRP|ALT|AST|ALP|GGT|LDH)\b/gi,
   /\b(ACE|ARB|ACEi|ARBs|DO NOT|Emergent|Urgent)\b/gi,
 ];
-
-const mnemonicLetters = new Set(["A", "E", "I", "O", "U"]);
 
 interface RawBullet {
   text: string;
@@ -47,89 +43,122 @@ interface RawBullet {
   keywordMatch?: string;
 }
 
-function boldSpecialTokens(text: string): string {
-  let result = text;
-
-  result = result.replace(/\*\*([^*]+)\*\*:/g, "**$1:**");
-
-  result = result.replace(/\*([A-Za-z0-9+/()'\-\s]{2,})\*/g, (_match, term: string) => {
-    const cleaned = term.trim();
-    return cleaned.length > 1 ? `**${cleaned}**` : cleaned;
-  });
-
-  clinicalTerms.forEach((pattern) => {
-    result = result.replace(pattern, "**$1**");
-  });
-
-  result = result.replace(/(^|\s)([A-Z][A-Za-z0-9 /+()'\-]{2,40}?):/g, (_match, prefix: string, label: string) => {
-    if (/^\*\*/.test(label)) return `${prefix}${label}:`;
-    return `${prefix}**${label}:**`;
-  });
-
-  return result;
-}
-
-function emphasizeKeyword(text: string, keyword?: string): string {
-  if (!keyword) return boldSpecialTokens(text);
-  const escaped = keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
-  const pattern = new RegExp(`^${escaped}:?\s*(.*)$`, "i");
-  const match = text.match(pattern);
-  if (!match) return boldSpecialTokens(text);
-
-  const [, trailing] = match;
-  const dash = trailing ? " — " : "";
-  return `**${keyword}**${dash}${boldSpecialTokens(trailing)}`.trim();
-}
-
-function normalizeDenseParagraphs(text: string): string {
-  const paragraphs = text.split(/\n{2,}/);
-  const expanded = paragraphs.flatMap((para) => {
-    const starCount = (para.match(/\*/g) || []).length;
-    if (starCount > 4) {
-      return para
-        .split(/\s*\*\s+/)
-        .map((part) => part.trim())
-        .filter(Boolean)
-        .map((part) => `- ${part}`);
-    }
-    return [para];
-  });
-
-  return expanded.join("\n");
+function stripFormatting(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .trim();
 }
 
 function preprocess(text: string): string {
   let formatted = text.replace(/\r\n/g, "\n");
 
-  formatted = normalizeDenseParagraphs(formatted);
-  formatted = formatted.replace(/([.!?])\s+-\s+/g, "$1\n- ");
-  formatted = formatted.replace(/\s--\s+/g, "\n- ");
   formatted = formatted.replace(/(^|\n)\*\s+/g, "$1- ");
-  formatted = formatted.replace(/(^|\n)\s*-\s*\*\s+/g, "$1  - ");
 
   return formatted;
 }
 
+function applyClinicalBolding(text: string): string {
+  let result = text;
+
+  clinicalTerms.forEach((pattern) => {
+    result = result.replace(pattern, "**$1**");
+  });
+
+  return result.replace(
+    /^(\s*)([A-Z][A-Za-z0-9 /+()'\-]{2,40}?)(:\s+|\s+—\s+)?/,
+    (_match, prefix: string, label: string, delimiter: string | undefined) => {
+      return `${prefix}**${label.trim()}**${delimiter ?? " "}`;
+    }
+  );
+}
+
+function emphasizeLeadingKeyword(text: string, keyword: string): string {
+  const escaped = keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+  const pattern = new RegExp(`^${escaped}\b:?\s*(.*)$`, "i");
+  const match = text.match(pattern);
+  if (!match) return applyClinicalBolding(text);
+
+  const rest = match[1].trim();
+  const dash = rest ? " — " : "";
+  return `**${keyword}**${dash}${applyClinicalBolding(rest)}`.trim();
+}
+
+function formatTextParts(
+  raw: string,
+  keyword?: string
+): { parts: TextPart[]; isHeader: boolean } {
+  const cleaned = stripFormatting(raw);
+  const colonMatch = cleaned.match(/^([^:]+):\s*(.*)$/);
+  const parts: TextPart[] = [];
+
+  const isSecondaryLabel = colonMatch
+    ? /\b(Prevalence|Type\s*\d|Stage|Classification|Category)\b/i.test(
+        colonMatch[1]
+      )
+    : false;
+
+  if (colonMatch) {
+    const label = colonMatch[1].trim();
+    const rest = colonMatch[2].trim();
+    parts.push({ type: isSecondaryLabel ? "em" : "strong", value: `${label}:` });
+    if (rest) {
+      parts.push(...toParts(` ${applyClinicalBolding(rest)}`));
+    }
+    return { parts, isHeader: true };
+  }
+
+  const emphasized = keyword
+    ? emphasizeLeadingKeyword(cleaned, keyword)
+    : applyClinicalBolding(cleaned);
+  const textParts = toParts(emphasized);
+  return { parts: textParts, isHeader: false };
+}
+
+function toParts(text: string): TextPart[] {
+  const parts: TextPart[] = [];
+  const boldPattern = /\*\*([^*]+)\*\*/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = boldPattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: "text", value: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: "strong", value: match[1] });
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push({ type: "text", value: text.slice(lastIndex) });
+  }
+
+  return parts;
+}
+
 function extractLines(text: string): RawBullet[] {
   const normalized = preprocess(text);
-  const lines = normalized.split(/\n+/).map((line) => line.trimEnd());
+  const lines = normalized.split(/\n+/);
 
   const rawBullets: RawBullet[] = [];
 
   lines.forEach((line) => {
-    if (!line) return;
+    if (!line.trim()) return;
 
-    const indentMatch = line.match(/^\s*/);
+    const indentMatch = line.match(/^(\s*)/);
     const indentLevel = Math.min(Math.floor((indentMatch?.[0].length ?? 0) / 2), 2);
 
-    const cleaned = line.replace(/^[-*]\s*/, "").trim();
+    const cleaned = line.replace(/^\s*[-*]\s*/, "").trim();
     if (!cleaned) return;
 
-    const keywordMatch = KEYWORD_LABELS.find((label, index) =>
-      keywordPatterns[index].test(cleaned)
+    const keywordMatch = KEYWORD_LABELS.find((label) =>
+      new RegExp(`^${label.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}\b:?`, "i").test(
+        cleaned
+      )
     );
 
-    const isHeader = Boolean(keywordMatch && /:\s*/.test(cleaned));
+    const isHeader = /:\s*$/.test(cleaned) || Boolean(keywordMatch);
 
     rawBullets.push({
       text: cleaned,
@@ -145,27 +174,23 @@ function extractLines(text: string): RawBullet[] {
 function buildHierarchy(rawBullets: RawBullet[]): BulletNode[] {
   const roots: BulletNode[] = [];
   const stack: BulletNode[] = [];
-  let headerParent: BulletNode | null = null;
+  let headerParent: { node: BulletNode; level: number } | null = null;
 
   rawBullets.forEach((raw) => {
     while (stack.length > raw.indentLevel) {
       stack.pop();
     }
 
-    const parentFromIndent = stack[stack.length - 1];
-    let parent: BulletNode | undefined;
+    const baseParent = stack[stack.length - 1];
+    const headerLevel = headerParent?.level ?? null;
+    const useHeaderParent =
+      headerParent && (raw.indentLevel <= (headerLevel ?? 0) || !baseParent);
 
-    if (parentFromIndent) {
-      parent = parentFromIndent;
-    } else if (
-      headerParent &&
-      (!raw.isHeader || mnemonicLetters.has((raw.keywordMatch || "").toUpperCase()))
-    ) {
-      parent = headerParent;
-    }
+    const parent = useHeaderParent ? headerParent?.node : baseParent;
 
+    const { parts, isHeader } = formatTextParts(raw.text, raw.keywordMatch);
     const node: BulletNode = {
-      text: emphasizeKeyword(raw.text, raw.keywordMatch),
+      parts,
       children: [],
     };
 
@@ -175,11 +200,15 @@ function buildHierarchy(rawBullets: RawBullet[]): BulletNode[] {
       roots.push(node);
     }
 
-    if (raw.isHeader) {
-      headerParent = node;
-    }
+    const computedLevel = useHeaderParent
+      ? Math.min((headerLevel ?? 0) + 1, 2)
+      : Math.min(stack.length, 2);
 
     stack.push(node);
+
+    if (isHeader) {
+      headerParent = { node, level: computedLevel };
+    }
   });
 
   return roots;
