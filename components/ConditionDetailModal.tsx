@@ -1,9 +1,6 @@
 // src/components/ConditionDetailModal.tsx
 
-import React, { useMemo, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
-import remarkGfm from "remark-gfm";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   CONDITION_CONTENT,
   type ConditionContent,
@@ -12,7 +9,9 @@ import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
-import formatContent from "../src/utils/formatContent";
+import ConditionSidebar from "./ConditionSidebar";
+import type { BulletNode, ParsedSection, TextPart } from "../services/markdownParser";
+import { buildParsedSections } from "../services/markdownParser";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -20,35 +19,56 @@ interface ConditionDetailModalProps {
   onDrillCondition?: (meta: ConditionMeta) => void;
 }
 
-const MarkdownBlock = ({ value }: { value: string }) => {
-  // Apply formatting at render time so the generated condition content source remains untouched.
-  const formatted = formatContent(value);
+interface ContentSection {
+  key: string;
+  title: string;
+  type: "markdown" | "list";
+  value?: string;
+  items?: string[];
+  accent?: "danger" | "default";
+}
+
+const renderParts = (parts: TextPart[]) =>
+  parts.map((part, index) => {
+    if (part.type === "strong") {
+      return (
+        <strong key={`${part.value}-${index}`} className="condition-strong">
+          {part.value}
+        </strong>
+      );
+    }
+
+    if (part.type === "em") {
+      return (
+        <em key={`${part.value}-${index}`} className="condition-emphasis">
+          {part.value}
+        </em>
+      );
+    }
+
+    return <React.Fragment key={`${part.value}-${index}`}>{part.value}</React.Fragment>;
+  });
+
+const BulletedList: React.FC<{ items: BulletNode[]; level?: number }> = ({
+  items,
+  level = 0,
+}) => {
+  if (!items.length) return null;
 
   return (
-    <ReactMarkdown
-      className="condition-content text-sm text-slate-700 leading-relaxed"
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeRaw]}
-    >
-      {formatted}
-    </ReactMarkdown>
-  );
-};
-
-const InlineMarkdown = ({ value }: { value: string }) => {
-  // Preserve source data as-is and only normalize formatting while rendering.
-  const formatted = formatContent(value);
-
-  return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      rehypePlugins={[rehypeRaw]}
-      components={{
-        p: ({ children }) => <>{children}</>,
-      }}
-    >
-      {formatted}
-    </ReactMarkdown>
+    <ul className={`condition-bullet-list level-${level}`}>
+      {items.map((item, index) => (
+        <li
+          key={`${level}-${index}-${item.parts.map((p) => p.value).join("-")}`}
+          className="condition-bullet-item"
+        >
+          <span className="condition-bullet-text">{renderParts(item.parts)}</span>
+          {item.children.length > 0 && (
+            <BulletedList items={item.children} level={Math.min(level + 1, 2)} />
+          )}
+        </li>
+      ))}
+    </ul>
   );
 };
 
@@ -58,343 +78,333 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   onDrillCondition,
 }) => {
   const [mediaIndex, setMediaIndex] = useState(0);
+  const [activeSection, setActiveSection] = useState<string>("overview");
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+
+  const conditionId = useMemo(
+    () => buildConditionDefinition(condition).id,
+    [condition]
+  );
+
   const content: ConditionContent = useMemo(() => {
-    const id = buildConditionDefinition(condition).id;
     return (
-      CONDITION_CONTENT[id] ||
+      CONDITION_CONTENT[conditionId] ||
       CONDITION_CONTENT[condition.condition] ||
       {}
     );
-  }, [condition]);
+  }, [condition.condition, conditionId]);
 
-  const mediaIds = content.mediaIds ?? [];
+  const sections: ContentSection[] = useMemo(() => {
+    return [
+      {
+        key: "overview",
+        title: "Overview",
+        type: "markdown",
+        value: content.overview,
+      },
+      {
+        key: "etiologyPathophysiology",
+        title: "Etiology & Pathophysiology",
+        type: "markdown",
+        value: content.etiologyPathophysiology,
+      },
+      {
+        key: "epidemiology",
+        title: "Epidemiology",
+        type: "markdown",
+        value: content.epidemiology,
+      },
+      {
+        key: "clinicalPresentation",
+        title: "Clinical Presentation",
+        type: "markdown",
+        value: content.clinicalPresentation,
+      },
+      {
+        key: "diagnostics",
+        title: "Diagnostics",
+        type: "markdown",
+        value: content.diagnostics?.notes,
+      },
+      {
+        key: "riskFactors",
+        title: "Risk Factors",
+        type: "list",
+        items: Array.isArray(content.riskFactors)
+          ? content.riskFactors
+          : undefined,
+      },
+      {
+        key: "symptoms",
+        title: "Symptoms",
+        type: "list",
+        items: Array.isArray(content.symptoms) ? content.symptoms : undefined,
+      },
+      {
+        key: "examFindings",
+        title: "Exam Findings",
+        type: "list",
+        items: Array.isArray(content.examFindings)
+          ? content.examFindings
+          : undefined,
+      },
+      {
+        key: "keyPoints",
+        title: "Key Points",
+        type: "list",
+        items: Array.isArray(content.keyPoints) ? content.keyPoints : undefined,
+      },
+      {
+        key: "redFlags",
+        title: "Red Flags",
+        type: "list",
+        items: Array.isArray(content.redFlags) ? content.redFlags : undefined,
+        accent: "danger",
+      },
+      {
+        key: "treatmentPearls",
+        title: "Treatment Pearls",
+        type: "list",
+        items: Array.isArray(content.treatmentPearls)
+          ? content.treatmentPearls
+          : undefined,
+      },
+      {
+        key: "treatment",
+        title: "Treatment",
+        type: "list",
+        items: Array.isArray(content.treatment) ? content.treatment : undefined,
+      },
+      {
+        key: "management",
+        title: "Management",
+        type: "list",
+        items: Array.isArray(content.management) ? content.management : undefined,
+      },
+      {
+        key: "complications",
+        title: "Complications",
+        type: "list",
+        items: Array.isArray(content.complications)
+          ? content.complications
+          : undefined,
+      },
+      {
+        key: "prognosis",
+        title: "Prognosis",
+        type: "markdown",
+        value: content.prognosis,
+      },
+    ].filter((section) => {
+      if (section.type === "markdown") {
+        return !!section.value;
+      }
 
-  const hasAnyContent = useMemo(() => {
-    return (
-      !!content.overview ||
-      !!content.etiologyPathophysiology ||
-      !!content.epidemiology ||
-      !!content.clinicalPresentation ||
-      !!content.prognosis ||
-      !!content.diagnostics?.notes ||
-      (content.keyPoints?.length ?? 0) > 0 ||
-      (content.redFlags?.length ?? 0) > 0 ||
-      (content.treatmentPearls?.length ?? 0) > 0 ||
-      (content.riskFactors?.length ?? 0) > 0 ||
-      (content.symptoms?.length ?? 0) > 0 ||
-      (content.examFindings?.length ?? 0) > 0 ||
-      (content.treatment?.length ?? 0) > 0 ||
-      (content.management?.length ?? 0) > 0 ||
-      (content.complications?.length ?? 0) > 0
-    );
+      return (section.items?.length ?? 0) > 0;
+    });
   }, [content]);
 
+  const parsedSections: ParsedSection[] = useMemo(
+    () => buildParsedSections(sections),
+    [sections]
+  );
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container || parsedSections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+        if (visible.length > 0) {
+          setActiveSection(visible[0].target.id);
+        }
+      },
+      { root: container, threshold: [0.2, 0.45, 0.65], rootMargin: "0px 0px -25% 0px" }
+    );
+
+    parsedSections.forEach((section) => {
+      const target = sectionRefs.current[section.id];
+      if (target) observer.observe(target);
+    });
+
+    const handleEdges = () => {
+      const scrollTop = container.scrollTop;
+      const bottomGap =
+        container.scrollHeight - (scrollTop + container.clientHeight);
+
+      if (scrollTop <= 5 && parsedSections.length > 0) {
+        setActiveSection(parsedSections[0].id);
+      } else if (bottomGap <= 5 && parsedSections.length > 0) {
+        setActiveSection(parsedSections[parsedSections.length - 1].id);
+      }
+    };
+
+    container.addEventListener("scroll", handleEdges, { passive: true });
+    handleEdges();
+
+    return () => {
+      observer.disconnect();
+      container.removeEventListener("scroll", handleEdges);
+    };
+  }, [parsedSections]);
+
+  const mediaIds = content.mediaIds ?? [];
+  const hasAnyContent = parsedSections.length > 0;
+
+  const scrollToSection = (key: string) => {
+    const container = contentRef.current;
+    const target = sectionRefs.current[key];
+
+    if (container && target) {
+      const offset = 80;
+      const top = target.offsetTop - container.offsetTop - offset;
+      container.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto p-8">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-200">
+    <div className="condition-modal-overlay">
+      <div className="condition-modal">
+        <header className="condition-modal-header">
           <div>
-            <h2 className="text-2xl font-bold text-[#3D1B0E] leading-tight">
-              {condition.condition}
-            </h2>
-            <p className="text-sm text-slate-500 mt-1">
+            <h2 className="condition-title">{condition.condition}</h2>
+            <p className="condition-meta">
               {condition.system} • {condition.subcategory}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-xs px-3 py-2 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-          >
+          <button onClick={onClose} className="condition-close">
             Close
           </button>
-        </div>
+        </header>
 
-        {mediaIds.length > 0 && (
-          <section className="py-5 border-b border-slate-100">
-            <div className="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-              <img
-                src={`/media/${
-                  mediaIds[mediaIndex].includes(".")
-                    ? mediaIds[mediaIndex]
-                    : `${mediaIds[mediaIndex]}.png`
-                }`}
-                alt={`${condition.condition} media ${mediaIndex + 1}`}
-                className="w-full h-64 object-cover bg-slate-50"
-              />
-              {mediaIds.length > 1 && (
-                <div className="absolute inset-0 flex items-center justify-between px-3">
-                  <button
-                    className="bg-white/80 rounded-full p-2 text-xs shadow"
-                    onClick={() =>
-                      setMediaIndex(
-                        (mediaIndex - 1 + mediaIds.length) % mediaIds.length
-                      )
-                    }
-                    aria-label="Previous media"
-                  >
-                    ‹
-                  </button>
-                  <button
-                    className="bg-white/80 rounded-full p-2 text-xs shadow"
-                    onClick={() =>
-                      setMediaIndex((mediaIndex + 1) % mediaIds.length)
-                    }
-                    aria-label="Next media"
-                  >
-                    ›
-                  </button>
-                </div>
+        <div className="condition-layout">
+          <ConditionSidebar
+            sections={parsedSections.map((section) => ({
+              key: section.id,
+              title: section.title,
+            }))}
+            activeSection={activeSection}
+            onSelect={scrollToSection}
+          />
+
+          <div className="condition-content-panel">
+            <div
+              className="condition-scrollable condition-scrollable-padded"
+              ref={contentRef}
+            >
+              {mediaIds.length > 0 && (
+                <section className="condition-media">
+                  <div className="condition-media-frame">
+                    <img
+                      src={`/media/${
+                        mediaIds[mediaIndex].includes(".")
+                          ? mediaIds[mediaIndex]
+                          : `${mediaIds[mediaIndex]}.png`
+                      }`}
+                      alt={`${condition.condition} media ${mediaIndex + 1}`}
+                    />
+                    {mediaIds.length > 1 && (
+                      <div className="condition-media-controls">
+                        <button
+                          className="media-button"
+                          onClick={() =>
+                            setMediaIndex(
+                              (mediaIndex - 1 + mediaIds.length) % mediaIds.length
+                            )
+                          }
+                          aria-label="Previous media"
+                        >
+                          ‹
+                        </button>
+                        <button
+                          className="media-button"
+                          onClick={() =>
+                            setMediaIndex((mediaIndex + 1) % mediaIds.length)
+                          }
+                          aria-label="Next media"
+                        >
+                          ›
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {mediaIds.length > 1 && (
+                    <div className="condition-media-dots">
+                      {mediaIds.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setMediaIndex(idx)}
+                          className={`dot ${idx === mediaIndex ? "active" : ""}`}
+                          aria-label={`View media ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </section>
               )}
-            </div>
-            {mediaIds.length > 1 && (
-              <div className="flex justify-center gap-2 mt-3">
-                {mediaIds.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setMediaIndex(idx)}
-                    className={`h-2.5 w-2.5 rounded-full ${
-                      idx === mediaIndex ? "bg-[#3D1B0E]" : "bg-slate-300"
-                    }`}
-                    aria-label={`View media ${idx + 1}`}
-                  />
+
+              <div className="condition-sections">
+                {parsedSections.map((section) => (
+                  <section
+                    key={section.id}
+                    id={section.id}
+                    ref={(el) => {
+                      sectionRefs.current[section.id] = el;
+                    }}
+                    className="condition-card scroll-mt-24"
+                  >
+                    <h3 className="condition-section-title">{section.title}</h3>
+                    <div
+                      className={`condition-content ${
+                        section.accent === "danger" ? "condition-content-danger" : ""
+                      }`}
+                    >
+                      {section.bullets.length > 0 ? (
+                        <BulletedList items={section.bullets} />
+                      ) : (
+                        <p className="condition-empty">
+                          Detailed notes for this condition haven&apos;t been added yet.
+                        </p>
+                      )}
+                    </div>
+                  </section>
                 ))}
               </div>
-            )}
-          </section>
-        )}
 
-        {/* Overview */}
-        {content.overview && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Overview
-            </h3>
-            <MarkdownBlock value={content.overview} />
-          </section>
-        )}
+              {!hasAnyContent && (
+                <p className="condition-empty">
+                  Detailed notes for this condition haven&apos;t been added yet.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
 
-        {/* Diagnostics */}
-        {content.diagnostics?.notes && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Diagnostics
-            </h3>
-            <MarkdownBlock value={content.diagnostics.notes} />
-          </section>
-        )}
-
-        {/* Etiology / Pathophysiology */}
-        {content.etiologyPathophysiology && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Etiology &amp; Pathophysiology
-            </h3>
-            <MarkdownBlock value={content.etiologyPathophysiology} />
-          </section>
-        )}
-
-        {/* Epidemiology */}
-        {content.epidemiology && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Epidemiology
-            </h3>
-            <MarkdownBlock value={content.epidemiology} />
-          </section>
-        )}
-
-        {/* Risk factors */}
-        {Array.isArray(content.riskFactors) && content.riskFactors.length > 0 && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Risk Factors
-            </h3>
-            <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
-              {content.riskFactors.map((pt: string) => (
-                <li key={pt}>
-                  <InlineMarkdown value={pt} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Clinical presentation */}
-        {content.clinicalPresentation && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Clinical Presentation
-            </h3>
-            <MarkdownBlock value={content.clinicalPresentation} />
-          </section>
-        )}
-
-        {/* Symptoms */}
-        {Array.isArray(content.symptoms) && content.symptoms.length > 0 && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Symptoms
-            </h3>
-            <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
-              {content.symptoms.map((pt: string) => (
-                <li key={pt}>
-                  <InlineMarkdown value={pt} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Exam findings */}
-        {Array.isArray(content.examFindings) &&
-          content.examFindings.length > 0 && (
-            <section className="py-5 border-b border-slate-100">
-              <h3 className="text-base font-semibold text-slate-800 mb-2">
-                Exam Findings
-              </h3>
-              <ul className="list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
-                {content.examFindings.map((pt: string) => (
-                  <li key={pt}>
-                    <InlineMarkdown value={pt} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-        {/* Key points */}
-        {Array.isArray(content.keyPoints) && content.keyPoints.length > 0 && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Key Points
-            </h3>
-            <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
-              {content.keyPoints.map((pt: string) => (
-                <li key={pt}>
-                  <InlineMarkdown value={pt} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Red flags */}
-        {Array.isArray(content.redFlags) && content.redFlags.length > 0 && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Red Flags
-            </h3>
-            <ul className="condition-content list-disc pl-5 text-sm text-red-700 space-y-2 leading-relaxed">
-              {content.redFlags.map((pt: string) => (
-                <li key={pt}>
-                  <InlineMarkdown value={pt} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Treatment pearls */}
-        {Array.isArray(content.treatmentPearls) &&
-          content.treatmentPearls.length > 0 && (
-            <section className="py-5 border-b border-slate-100">
-              <h3 className="text-base font-semibold text-slate-800 mb-2">
-                Treatment Pearls
-              </h3>
-              <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
-                {content.treatmentPearls.map((pt: string) => (
-                  <li key={pt}>
-                    <InlineMarkdown value={pt} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-        {/* Treatment */}
-        {Array.isArray(content.treatment) && content.treatment.length > 0 && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Treatment
-            </h3>
-            <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
-              {content.treatment.map((pt: string) => (
-                <li key={pt}>
-                  <InlineMarkdown value={pt} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Management */}
-        {Array.isArray(content.management) && content.management.length > 0 && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Management
-            </h3>
-            <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
-              {content.management.map((pt: string) => (
-                <li key={pt}>
-                  <InlineMarkdown value={pt} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Complications */}
-        {Array.isArray(content.complications) &&
-          content.complications.length > 0 && (
-            <section className="py-5 border-b border-slate-100">
-              <h3 className="text-base font-semibold text-slate-800 mb-2">
-                Complications
-              </h3>
-              <ul className="condition-content list-disc pl-5 text-sm text-slate-700 space-y-2 leading-relaxed">
-                {content.complications.map((pt: string) => (
-                  <li key={pt}>
-                    <InlineMarkdown value={pt} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-        {/* Prognosis */}
-        {content.prognosis && (
-          <section className="py-5 border-b border-slate-100">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">
-              Prognosis
-            </h3>
-            <MarkdownBlock value={content.prognosis} />
-          </section>
-        )}
-
-        {/* Fallback if no content yet */}
-        {!hasAnyContent && (
-          <p className="text-sm text-slate-500 mb-4 leading-relaxed">
-            Detailed notes for this condition haven&apos;t been added yet.
-          </p>
-        )}
-
-        {/* Footer buttons */}
-        <div className="mt-8 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700"
-          >
+        <footer className="condition-footer">
+          <button onClick={onClose} className="condition-close">
             Close
           </button>
           {onDrillCondition && (
             <button
               onClick={() => onDrillCondition(condition)}
-              className="px-4 py-2 text-sm rounded-md bg-[#3D1B0E] text-white hover:bg-[#2A130A] shadow"
+              className="condition-drill"
             >
               Drill this condition
             </button>
           )}
-        </div>
+        </footer>
       </div>
     </div>
   );
