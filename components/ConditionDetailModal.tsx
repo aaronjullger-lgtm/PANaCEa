@@ -228,7 +228,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           setActiveSection(visible[0].target.id);
         }
       },
-      { root: container, threshold: 0.35 }
+      { root: container, threshold: [0.2, 0.45, 0.65], rootMargin: "0px 0px -25% 0px" }
     );
 
     parsedSections.forEach((section) => {

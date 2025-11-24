@@ -1,9 +1,3 @@
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
-import { toString } from "mdast-util-to-string";
-import type { Content, List, ListItem, Root } from "mdast";
-
 export interface BulletNode {
   text: string;
   children: BulletNode[];
@@ -16,16 +10,41 @@ export interface ParsedSection {
   bullets: BulletNode[];
 }
 
+const KEYWORD_LABELS = [
+  "General",
+  "Volume Overload",
+  "Volume Depletion",
+  "Specific Clues to Etiology",
+  "Hyperkalemia",
+  "Indications (Mnemonic: AEIOU)",
+  "A",
+  "E",
+  "I",
+  "O",
+  "U",
+  "Gold Standard",
+  "Screening",
+  "Race",
+  "Risk Factors",
+];
+
+const keywordPatterns = KEYWORD_LABELS.map(
+  (label) => new RegExp(`^${label.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}\b:?`, "i")
+);
+
 const clinicalTerms = [
   /\b(Aspirin|Metoprolol|Labetalol|Carvedilol|Hydralazine|Nitroglycerin|Furosemide|Lasix|Insulin|Dextrose|Calcium gluconate|Albuterol|Heparin|Warfarin|Apixaban|Rivaroxaban|Patiromer|Kayexalate)\b/gi,
   /\b(Cr|BUN|K\+|Na\+|BNP|pH|ABG|HCO3|PaO2|PaCO2|TSH|T4|T3|B12|Folate|ANA|RF|ESR|CRP|ALT|AST|ALP|GGT|LDH)\b/gi,
+  /\b(ACE|ARB|ACEi|ARBs|DO NOT|Emergent|Urgent)\b/gi,
 ];
 
-const mnemonicLetter = /^\s*[AEIOU]:/i;
+const mnemonicLetters = new Set(["A", "E", "I", "O", "U"]);
 
-function shouldBoldTerm(term: string): boolean {
-  if (!term) return false;
-  return /[A-Z]/.test(term) || /\d/.test(term) || term.length >= 5;
+interface RawBullet {
+  text: string;
+  indentLevel: number;
+  isHeader: boolean;
+  keywordMatch?: string;
 }
 
 function boldSpecialTokens(text: string): string {
@@ -34,14 +53,13 @@ function boldSpecialTokens(text: string): string {
   result = result.replace(/\*\*([^*]+)\*\*:/g, "**$1:**");
 
   result = result.replace(/\*([A-Za-z0-9+/()'\-\s]{2,})\*/g, (_match, term: string) => {
-    return shouldBoldTerm(term.trim()) ? `**${term.trim()}**` : term;
+    const cleaned = term.trim();
+    return cleaned.length > 1 ? `**${cleaned}**` : cleaned;
   });
 
   clinicalTerms.forEach((pattern) => {
     result = result.replace(pattern, "**$1**");
   });
-
-  result = result.replace(/\b([AEIOU]):/g, "**$1:**");
 
   result = result.replace(/(^|\s)([A-Z][A-Za-z0-9 /+()'\-]{2,40}?):/g, (_match, prefix: string, label: string) => {
     if (/^\*\*/.test(label)) return `${prefix}${label}:`;
@@ -51,145 +69,140 @@ function boldSpecialTokens(text: string): string {
   return result;
 }
 
+function emphasizeKeyword(text: string, keyword?: string): string {
+  if (!keyword) return boldSpecialTokens(text);
+  const escaped = keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+  const pattern = new RegExp(`^${escaped}:?\s*(.*)$`, "i");
+  const match = text.match(pattern);
+  if (!match) return boldSpecialTokens(text);
+
+  const [, trailing] = match;
+  const dash = trailing ? " — " : "";
+  return `**${keyword}**${dash}${boldSpecialTokens(trailing)}`.trim();
+}
+
+function normalizeDenseParagraphs(text: string): string {
+  const paragraphs = text.split(/\n{2,}/);
+  const expanded = paragraphs.flatMap((para) => {
+    const starCount = (para.match(/\*/g) || []).length;
+    if (starCount > 4) {
+      return para
+        .split(/\s*\*\s+/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .map((part) => `- ${part}`);
+    }
+    return [para];
+  });
+
+  return expanded.join("\n");
+}
+
 function preprocess(text: string): string {
   let formatted = text.replace(/\r\n/g, "\n");
 
+  formatted = normalizeDenseParagraphs(formatted);
   formatted = formatted.replace(/([.!?])\s+-\s+/g, "$1\n- ");
   formatted = formatted.replace(/\s--\s+/g, "\n- ");
-  formatted = formatted.replace(/:\s*\n-\s/g, ":\n - ");
-  formatted = formatted.replace(/(^|\n)-\s*\*\s+/g, "$1  - ");
-  formatted = formatted.replace(/- \*\*([^:]+):\*\*/g, "- **$1:**");
+  formatted = formatted.replace(/(^|\n)\*\s+/g, "$1- ");
+  formatted = formatted.replace(/(^|\n)\s*-\s*\*\s+/g, "$1  - ");
 
   return formatted;
 }
 
-function extractText(node: Content): string {
-  return boldSpecialTokens(toString(node).trim());
-}
+function extractLines(text: string): RawBullet[] {
+  const normalized = preprocess(text);
+  const lines = normalized.split(/\n+/).map((line) => line.trimEnd());
 
-function parseList(list: List, level: number): BulletNode[] {
-  return list.children.map((item) => parseListItem(item as ListItem, level)).filter(Boolean) as BulletNode[];
-}
+  const rawBullets: RawBullet[] = [];
 
-function parseListItem(listItem: ListItem, level: number): BulletNode | null {
-  const texts: string[] = [];
-  const childLists: List[] = [];
+  lines.forEach((line) => {
+    if (!line) return;
 
-  listItem.children.forEach((child) => {
-    if (child.type === "list") {
-      childLists.push(child as List);
-      return;
-    }
+    const indentMatch = line.match(/^\s*/);
+    const indentLevel = Math.min(Math.floor((indentMatch?.[0].length ?? 0) / 2), 2);
 
-    if ((child as Content).type) {
-      const value = extractText(child as Content);
-      if (value) texts.push(value);
-    }
+    const cleaned = line.replace(/^[-*]\s*/, "").trim();
+    if (!cleaned) return;
+
+    const keywordMatch = KEYWORD_LABELS.find((label, index) =>
+      keywordPatterns[index].test(cleaned)
+    );
+
+    const isHeader = Boolean(keywordMatch && /:\s*/.test(cleaned));
+
+    rawBullets.push({
+      text: cleaned,
+      indentLevel,
+      isHeader,
+      keywordMatch,
+    });
   });
 
-  const combined = texts.join(" ").replace(/\s+/g, " ").trim();
-  if (!combined) return null;
-
-  const isMnemonic = mnemonicLetter.test(combined);
-  const node: BulletNode = {
-    text: boldSpecialTokens(combined),
-    children: childLists.flatMap((child) => parseList(child, Math.min(level + 1, 2))),
-  };
-
-  if (isMnemonic && node.children.length === 0) {
-    node.children = [];
-  }
-
-  return node;
+  return rawBullets;
 }
 
-function paragraphToBullets(content: Content): BulletNode[] {
-  const text = boldSpecialTokens(toString(content).trim());
-  if (!text) return [];
+function buildHierarchy(rawBullets: RawBullet[]): BulletNode[] {
+  const roots: BulletNode[] = [];
+  const stack: BulletNode[] = [];
+  let headerParent: BulletNode | null = null;
 
-  const sentences = text.split(/(?<=[.!?])\s+(?=[A-Z(])/);
-  if (sentences.length === 1) {
-    return [
-      {
-        text,
-        children: [],
-      },
-    ];
-  }
-
-  return sentences
-    .map((sentence) => sentence.trim())
-    .filter(Boolean)
-    .map((sentence) => ({ text: sentence, children: [] }));
-}
-
-function nestHeaders(nodes: BulletNode[]): BulletNode[] {
-  const result: BulletNode[] = [];
-  let currentHeader: BulletNode | null = null;
-
-  nodes.forEach((node) => {
-    const hasHeaderCue =
-      /:\s*$/.test(node.text) || /^\*\*[^*]+:\*\*/.test(node.text);
-    const normalizedChildren = node.children.length
-      ? nestHeaders(node.children)
-      : [];
-
-    if (hasHeaderCue) {
-      const headerNode: BulletNode = {
-        ...node,
-        text: boldSpecialTokens(node.text),
-        children: normalizedChildren,
-      };
-      result.push(headerNode);
-      currentHeader = headerNode;
-      return;
+  rawBullets.forEach((raw) => {
+    while (stack.length > raw.indentLevel) {
+      stack.pop();
     }
 
-    if (currentHeader) {
-      currentHeader.children.push({ ...node, children: normalizedChildren });
-      return;
+    const parentFromIndent = stack[stack.length - 1];
+    let parent: BulletNode | undefined;
+
+    if (parentFromIndent) {
+      parent = parentFromIndent;
+    } else if (
+      headerParent &&
+      (!raw.isHeader || mnemonicLetters.has((raw.keywordMatch || "").toUpperCase()))
+    ) {
+      parent = headerParent;
     }
 
-    result.push({ ...node, children: normalizedChildren });
-    currentHeader = null;
+    const node: BulletNode = {
+      text: emphasizeKeyword(raw.text, raw.keywordMatch),
+      children: [],
+    };
+
+    if (parent) {
+      parent.children.push(node);
+    } else {
+      roots.push(node);
+    }
+
+    if (raw.isHeader) {
+      headerParent = node;
+    }
+
+    stack.push(node);
   });
 
-  return result;
+  return roots;
 }
 
 export function parseMarkdownToBullets(text: string | undefined | null): BulletNode[] {
   if (!text) return [];
-  const normalizedText = preprocess(text);
-  const tree = unified().use(remarkParse).use(remarkGfm).parse(normalizedText) as Root;
 
-  const bullets: BulletNode[] = [];
+  const rawBullets = extractLines(text);
+  if (rawBullets.length === 0) return [];
 
-  tree.children.forEach((node) => {
-    if (node.type === "list") {
-      bullets.push(...parseList(node as List, 0));
-    } else if (node.type === "paragraph") {
-      bullets.push(...paragraphToBullets(node as Content));
-    }
-  });
-
-  if (bullets.length === 0 && normalizedText.trim()) {
-    return normalizedText
-      .split(/\n+/)
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => ({ text: boldSpecialTokens(line), children: [] }));
-  }
-
-  return nestHeaders(bullets);
+  return buildHierarchy(rawBullets);
 }
 
 export function parseArrayToBullets(values: string[] | undefined | null): BulletNode[] {
   if (!values) return [];
-  const initial = values
-    .filter(Boolean)
-    .map((entry) => ({ text: boldSpecialTokens(entry.trim()), children: [] }));
 
-  return nestHeaders(initial);
+  const text = values
+    .filter(Boolean)
+    .map((entry) => `- ${entry.trim()}`)
+    .join("\n");
+
+  return parseMarkdownToBullets(text);
 }
 
 export function buildParsedSections(
