@@ -34,11 +34,7 @@ function toBoldParts(text: string): React.ReactNode[] {
 }
 
 function buildBulletTree(content: string): BulletNode[] {
-  const lines = content
-    .replace(/\t/g, "    ")  // Convert tabs to 4 spaces
-    .replace(/\r\n/g, "\n")
-    .split("\n");
-
+  const lines = content.replace(/\t/g, "    ").replace(/\r\n/g, "\n").split("\n");
   const roots: BulletNode[] = [];
   const stack: { level: number; node: BulletNode }[] = [];
 
@@ -54,7 +50,6 @@ function buildBulletTree(content: string): BulletNode[] {
     const levelFromSymbol = BULLET_LEVEL_BY_SYMBOL[bulletSymbol];
     const levelFromIndent = Math.round(leadingSpaces / 4);
 
-    // Level resolution
     const level = Math.min(
       2,
       Number.isFinite(levelFromSymbol) ? (levelFromSymbol as number) : levelFromIndent
@@ -66,7 +61,6 @@ function buildBulletTree(content: string): BulletNode[] {
 
     const node: BulletNode = { parts: toBoldParts(text), children: [] };
 
-    // Manual backward lookup (replaces findLast for ES2022)
     let parent: { level: number; node: BulletNode } | null = null;
     for (let i = stack.length - 1; i >= 0; i--) {
       if (stack[i].level < level) {
@@ -84,37 +78,25 @@ function buildBulletTree(content: string): BulletNode[] {
   return roots;
 }
 
-const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
-  nodes,
-  level,
-}) => {
-  if (!nodes.length) return null;
-
-  return (
-    <ul className={`condition-bullet-list level-${level}`}>
-      {nodes.map((node, index) => (
-        <li key={`${level}-${index}`} className="condition-bullet-item">
-          <span className="condition-bullet-text">{node.parts}</span>
-          {node.children.length > 0 && (
-            <BulletList
-              nodes={node.children}
-              level={Math.min(level + 1, 2)}
-            />
-          )}
-        </li>
-      ))}
-    </ul>
-  );
-};
-
 interface FormattedSectionProps {
-  content?: string | null;
+  content?: string | string[] | null;
 }
 
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
-  if (!isMeaningfulContent(content)) return null;
+  if (content == null) return null;
 
-  const bullets = buildBulletTree(content ?? "");
+  let text: string;
+
+  if (Array.isArray(content)) {
+    if (content.length === 0) return null;
+    text = content.join("\n");
+  } else {
+    text = typeof content === "string" ? content : String(content);
+  }
+
+  if (!isMeaningfulContent(text)) return null;
+
+  const bullets = buildBulletTree(text);
 
   if (bullets.length === 0) {
     return <p className="condition-empty">No details available for this section.</p>;
