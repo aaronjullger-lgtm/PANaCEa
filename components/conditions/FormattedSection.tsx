@@ -34,11 +34,7 @@ function toBoldParts(text: string): React.ReactNode[] {
 }
 
 function buildBulletTree(content: string): BulletNode[] {
-  const lines = content
-    .replace(/\t/g, "    ")
-    .replace(/\r\n/g, "\n")
-    .split("\n");
-
+  const lines = content.replace(/\r\n/g, "\n").split("\n");
   const roots: BulletNode[] = [];
   const stack: { level: number; node: BulletNode }[] = [];
 
@@ -52,10 +48,12 @@ function buildBulletTree(content: string): BulletNode[] {
     if (!text) return;
 
     const levelFromSymbol = BULLET_LEVEL_BY_SYMBOL[bulletSymbol];
-    const levelFromIndent = Math.round(leadingSpaces / 4);
+    const levelFromIndent = Math.floor(leadingSpaces / 4);
     const level = Math.min(
       2,
-      Number.isFinite(levelFromSymbol) ? levelFromSymbol : levelFromIndent
+      Number.isFinite(levelFromSymbol)
+        ? (levelFromSymbol as number)
+        : levelFromIndent
     );
 
     while (stack.length && stack[stack.length - 1].level >= level) {
@@ -64,6 +62,7 @@ function buildBulletTree(content: string): BulletNode[] {
 
     const node: BulletNode = { parts: toBoldParts(text), children: [] };
 
+    // ES2022-safe replacement for findLast
     let parent: { level: number; node: BulletNode } | null = null;
     for (let i = stack.length - 1; i >= 0; i--) {
       if (stack[i].level < level) {
@@ -72,8 +71,11 @@ function buildBulletTree(content: string): BulletNode[] {
       }
     }
 
-    if (parent) parent.node.children.push(node);
-    else roots.push(node);
+    if (parent) {
+      parent.node.children.push(node);
+    } else {
+      roots.push(node);
+    }
 
     stack.push({ level, node });
   });
@@ -105,24 +107,13 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
 };
 
 interface FormattedSectionProps {
-  content?: string | string[] | null;
+  content?: string | null;
 }
 
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
-  if (content == null) return null;
+  if (!isMeaningfulContent(content)) return null;
 
-  let text: string;
-
-  if (Array.isArray(content)) {
-    if (content.length === 0) return null;
-    text = content.join("\n");
-  } else {
-    text = typeof content === "string" ? content : String(content);
-  }
-
-  if (!isMeaningfulContent(text)) return null;
-
-  const bullets = buildBulletTree(text);
+  const bullets = buildBulletTree(content ?? "");
 
   if (bullets.length === 0) {
     return <p className="condition-empty">No details available for this section.</p>;
