@@ -19,7 +19,7 @@ import {
   findConditionMeta,
   type ConditionMeta,
 } from "../conditionRegistry";
-import { CONDITION_CONTENT } from "../src/conditionContent.generated";
+import { getConditionById, isMeaningfulContent } from "../lib/loadConditions";
 
 // --- Helper: call Netlify serverless function, which talks to Gemini ---
 
@@ -62,20 +62,24 @@ const slugify = (value: string): string =>
 
 function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
   const id = buildConditionDefinition(meta).id;
-  const content = CONDITION_CONTENT[id];
+  const content = getConditionById(id)?.sections;
   if (!content) return undefined;
 
   const pieces: string[] = [];
-  if (content.overview) pieces.push(`Overview: ${content.overview}`);
-  if (content.etiologyPathophysiology)
-    pieces.push(`Etiology/Pathophysiology: ${content.etiologyPathophysiology}`);
-  if (content.diagnostics?.notes)
-    pieces.push(`Diagnostics: ${content.diagnostics.notes}`);
-  if (content.clinicalPresentation)
-    pieces.push(`Clinical Presentation: ${content.clinicalPresentation}`);
-  if (content.riskFactors?.length)
-    pieces.push(`Risk Factors: ${content.riskFactors.join("; ")}`);
-  if (content.prognosis) pieces.push(`Prognosis: ${content.prognosis}`);
+
+  const maybeAdd = (key: string, label: string) => {
+    const value = content[key];
+    if (isMeaningfulContent(value)) {
+      pieces.push(`${label}: ${value}`);
+    }
+  };
+
+  maybeAdd("overview", "Overview");
+  maybeAdd("etiology", "Etiology");
+  maybeAdd("diagnostics", "Diagnostics");
+  maybeAdd("clinicalPresentation", "Clinical Presentation");
+  maybeAdd("riskFactors", "Risk Factors");
+  maybeAdd("prognosis", "Prognosis");
 
   return pieces.join("\n");
 }

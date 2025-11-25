@@ -2,16 +2,16 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  CONDITION_CONTENT,
-  type ConditionContent,
-} from "../src/conditionContent.generated";
-import {
   buildConditionDefinition,
   type ConditionMeta,
 } from "../conditionRegistry";
+import {
+  getConditionById,
+  isMeaningfulContent,
+  type ConditionEntry,
+} from "../lib/loadConditions";
 import ConditionSidebar from "./ConditionSidebar";
-import type { BulletNode, ParsedSection, TextPart } from "../services/markdownParser";
-import { buildParsedSections } from "../services/markdownParser";
+import FormattedSection from "./conditions/FormattedSection";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -22,55 +22,27 @@ interface ConditionDetailModalProps {
 interface ContentSection {
   key: string;
   title: string;
-  type: "markdown" | "list";
-  value?: string;
-  items?: string[];
+  content?: string;
   accent?: "danger" | "default";
 }
 
-const renderParts = (parts: TextPart[]) =>
-  parts.map((part, index) => {
-    if (part.type === "strong") {
-      return (
-        <strong key={`${part.value}-${index}`} className="condition-strong">
-          {part.value}
-        </strong>
-      );
-    }
+const SCROLL_OFFSET = 96;
 
-    if (part.type === "em") {
-      return (
-        <em key={`${part.value}-${index}`} className="condition-emphasis">
-          {part.value}
-        </em>
-      );
-    }
-
-    return <React.Fragment key={`${part.value}-${index}`}>{part.value}</React.Fragment>;
-  });
-
-const BulletedList: React.FC<{ items: BulletNode[]; level?: number }> = ({
-  items,
-  level = 0,
-}) => {
-  if (!items.length) return null;
-
-  return (
-    <ul className={`condition-bullet-list level-${level}`}>
-      {items.map((item, index) => (
-        <li
-          key={`${level}-${index}-${item.parts.map((p) => p.value).join("-")}`}
-          className="condition-bullet-item"
-        >
-          <span className="condition-bullet-text">{renderParts(item.parts)}</span>
-          {item.children.length > 0 && (
-            <BulletedList items={item.children} level={Math.min(level + 1, 2)} />
-          )}
-        </li>
-      ))}
-    </ul>
-  );
-};
+const SECTION_ORDER: { key: string; title: string; accent?: "danger" | "default" }[] = [
+  { key: "overview", title: "Overview" },
+  { key: "etiology", title: "Etiology" },
+  { key: "epidemiology", title: "Epidemiology" },
+  { key: "riskFactors", title: "Risk Factors" },
+  { key: "clinicalPresentation", title: "Clinical Presentation" },
+  { key: "physicalExam", title: "Physical Exam" },
+  { key: "diagnostics", title: "Diagnostics" },
+  { key: "differentialDiagnosis", title: "Differential Diagnosis" },
+  { key: "management", title: "Management" },
+  { key: "treatment", title: "Treatment" },
+  { key: "complications", title: "Complications" },
+  { key: "prognosis", title: "Prognosis" },
+  { key: "preventionEducation", title: "Prevention & Education" },
+];
 
 const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   condition,
@@ -78,7 +50,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   onDrillCondition,
 }) => {
   const [mediaIndex, setMediaIndex] = useState(0);
-  const [activeSection, setActiveSection] = useState<string>("overview");
+  const [activeSection, setActiveSection] = useState<string>("");
   const contentRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
@@ -87,128 +59,18 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     [condition]
   );
 
-  const content: ConditionContent = useMemo(() => {
-    return (
-      CONDITION_CONTENT[conditionId] ||
-      CONDITION_CONTENT[condition.condition] ||
-      {}
-    );
+  const content: ConditionEntry | undefined = useMemo(() => {
+    return getConditionById(conditionId) ?? getConditionById(condition.condition);
   }, [condition.condition, conditionId]);
 
   const sections: ContentSection[] = useMemo(() => {
-    return [
-      {
-        key: "overview",
-        title: "Overview",
-        type: "markdown",
-        value: content.overview,
-      },
-      {
-        key: "etiologyPathophysiology",
-        title: "Etiology & Pathophysiology",
-        type: "markdown",
-        value: content.etiologyPathophysiology,
-      },
-      {
-        key: "epidemiology",
-        title: "Epidemiology",
-        type: "markdown",
-        value: content.epidemiology,
-      },
-      {
-        key: "clinicalPresentation",
-        title: "Clinical Presentation",
-        type: "markdown",
-        value: content.clinicalPresentation,
-      },
-      {
-        key: "diagnostics",
-        title: "Diagnostics",
-        type: "markdown",
-        value: content.diagnostics?.notes,
-      },
-      {
-        key: "riskFactors",
-        title: "Risk Factors",
-        type: "list",
-        items: Array.isArray(content.riskFactors)
-          ? content.riskFactors
-          : undefined,
-      },
-      {
-        key: "symptoms",
-        title: "Symptoms",
-        type: "list",
-        items: Array.isArray(content.symptoms) ? content.symptoms : undefined,
-      },
-      {
-        key: "examFindings",
-        title: "Exam Findings",
-        type: "list",
-        items: Array.isArray(content.examFindings)
-          ? content.examFindings
-          : undefined,
-      },
-      {
-        key: "keyPoints",
-        title: "Key Points",
-        type: "list",
-        items: Array.isArray(content.keyPoints) ? content.keyPoints : undefined,
-      },
-      {
-        key: "redFlags",
-        title: "Red Flags",
-        type: "list",
-        items: Array.isArray(content.redFlags) ? content.redFlags : undefined,
-        accent: "danger",
-      },
-      {
-        key: "treatmentPearls",
-        title: "Treatment Pearls",
-        type: "list",
-        items: Array.isArray(content.treatmentPearls)
-          ? content.treatmentPearls
-          : undefined,
-      },
-      {
-        key: "treatment",
-        title: "Treatment",
-        type: "list",
-        items: Array.isArray(content.treatment) ? content.treatment : undefined,
-      },
-      {
-        key: "management",
-        title: "Management",
-        type: "list",
-        items: Array.isArray(content.management) ? content.management : undefined,
-      },
-      {
-        key: "complications",
-        title: "Complications",
-        type: "list",
-        items: Array.isArray(content.complications)
-          ? content.complications
-          : undefined,
-      },
-      {
-        key: "prognosis",
-        title: "Prognosis",
-        type: "markdown",
-        value: content.prognosis,
-      },
-    ].filter((section) => {
-      if (section.type === "markdown") {
-        return !!section.value;
-      }
+    if (!content?.sections) return [];
 
-      return (section.items?.length ?? 0) > 0;
-    });
-  }, [content]);
-
-  const parsedSections: ParsedSection[] = useMemo(
-    () => buildParsedSections(sections),
-    [sections]
-  );
+    return SECTION_ORDER.map((config) => ({
+      ...config,
+      content: content.sections?.[config.key],
+    })).filter((section) => isMeaningfulContent(section.content));
+  }, [content?.sections]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -219,57 +81,77 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
   useEffect(() => {
     const container = contentRef.current;
-    if (!container || parsedSections.length === 0) return;
+    if (!container || sections.length === 0) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+    let frame: number | null = null;
 
-        if (visible.length > 0) {
-          setActiveSection(visible[0].target.id);
-        }
-      },
-      { root: container, threshold: [0.2, 0.45, 0.65], rootMargin: "0px 0px -25% 0px" }
-    );
+    const computeNearestSection = () => {
+      frame = null;
+      if (!container || sections.length === 0) return;
 
-    parsedSections.forEach((section) => {
-      const target = sectionRefs.current[section.id];
-      if (target) observer.observe(target);
-    });
-
-    const handleEdges = () => {
-      const scrollTop = container.scrollTop;
-      const bottomGap =
-        container.scrollHeight - (scrollTop + container.clientHeight);
-
-      if (scrollTop <= 5 && parsedSections.length > 0) {
-        setActiveSection(parsedSections[0].id);
-      } else if (bottomGap <= 5 && parsedSections.length > 0) {
-        setActiveSection(parsedSections[parsedSections.length - 1].id);
+      if (container.scrollTop <= 0) {
+        setActiveSection(sections[0].key);
+        return;
       }
+
+      const bottomGap =
+        container.scrollHeight - (container.scrollTop + container.clientHeight);
+      if (bottomGap <= 2) {
+        setActiveSection(sections[sections.length - 1].key);
+        return;
+      }
+
+      const containerTop = container.getBoundingClientRect().top;
+      let closestKey = sections[0].key;
+      let smallestDistance = Number.POSITIVE_INFINITY;
+
+      sections.forEach((section) => {
+        const el = sectionRefs.current[section.key];
+        if (!el) return;
+
+        const offsetTop = el.getBoundingClientRect().top - containerTop;
+        const distance = Math.abs(offsetTop - SCROLL_OFFSET);
+
+        if (distance < smallestDistance) {
+          smallestDistance = distance;
+          closestKey = section.key;
+        }
+      });
+
+      setActiveSection(closestKey);
     };
 
-    container.addEventListener("scroll", handleEdges, { passive: true });
-    handleEdges();
+    const handleScroll = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(computeNearestSection);
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    computeNearestSection();
 
     return () => {
-      observer.disconnect();
-      container.removeEventListener("scroll", handleEdges);
+      container.removeEventListener("scroll", handleScroll);
+      if (frame !== null) {
+        window.cancelAnimationFrame(frame);
+      }
     };
-  }, [parsedSections]);
+  }, [sections]);
 
-  const mediaIds = content.mediaIds ?? [];
-  const hasAnyContent = parsedSections.length > 0;
+  useEffect(() => {
+    if (sections.length > 0) {
+      setActiveSection(sections[0].key);
+    }
+  }, [sections]);
+
+  const mediaIds: string[] = [];
+  const hasAnyContent = sections.length > 0;
 
   const scrollToSection = (key: string) => {
     const container = contentRef.current;
     const target = sectionRefs.current[key];
 
     if (container && target) {
-      const offset = 80;
-      const top = target.offsetTop - container.offsetTop - offset;
+      const top = target.offsetTop - container.offsetTop - SCROLL_OFFSET;
       container.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
     }
   };
@@ -291,8 +173,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
         <div className="condition-layout">
           <ConditionSidebar
-            sections={parsedSections.map((section) => ({
-              key: section.id,
+            sections={sections.map((section) => ({
+              key: section.key,
               title: section.title,
             }))}
             activeSection={activeSection}
@@ -356,12 +238,12 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               )}
 
               <div className="condition-sections">
-                {parsedSections.map((section) => (
+                {sections.map((section) => (
                   <section
-                    key={section.id}
-                    id={section.id}
+                    key={section.key}
+                    id={section.key}
                     ref={(el) => {
-                      sectionRefs.current[section.id] = el;
+                      sectionRefs.current[section.key] = el;
                     }}
                     className="condition-card scroll-mt-24"
                   >
@@ -371,13 +253,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                         section.accent === "danger" ? "condition-content-danger" : ""
                       }`}
                     >
-                      {section.bullets.length > 0 ? (
-                        <BulletedList items={section.bullets} />
-                      ) : (
-                        <p className="condition-empty">
-                          Detailed notes for this condition haven&apos;t been added yet.
-                        </p>
-                      )}
+                      <FormattedSection content={section.content} />
                     </div>
                   </section>
                 ))}
