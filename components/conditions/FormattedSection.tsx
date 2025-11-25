@@ -61,7 +61,15 @@ function buildBulletTree(content: string): BulletNode[] {
     }
 
     const node: BulletNode = { parts: toBoldParts(text), children: [] };
-    const parent = stack.findLast((entry) => entry.level < level);
+
+    // ES2022-safe replacement for findLast
+    let parent: { level: number; node: BulletNode } | null = null;
+    for (let i = stack.length - 1; i >= 0; i--) {
+      if (stack[i].level < level) {
+        parent = stack[i];
+        break;
+      }
+    }
 
     if (parent) {
       parent.node.children.push(node);
