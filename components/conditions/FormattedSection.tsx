@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  isMeaningfulContent,
-  normalizeConditionContent,
-  type ConditionContent,
-} from "../../lib/loadConditions";
+import { isMeaningfulContent } from "../../lib/loadConditions";
 
 interface BulletNode {
   parts: React.ReactNode[];
@@ -103,16 +99,13 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
 };
 
 interface FormattedSectionProps {
-  content?: ConditionContent;
+  content?: string | null;
 }
 
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   if (!isMeaningfulContent(content)) return null;
 
-  const text = normalizeConditionContent(content);
-  if (!text) return null;
-
-  const bullets = buildBulletTree(text);
+  const bullets = buildBulletTree(content ?? "");
 
   if (bullets.length === 0) {
     return <p className="condition-empty">No details available for this section.</p>;
