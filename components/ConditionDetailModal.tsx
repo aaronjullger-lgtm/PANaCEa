@@ -8,6 +8,7 @@ import {
 import {
   getConditionById,
   isMeaningfulContent,
+  type ConditionContent,
   type ConditionEntry,
 } from "../lib/loadConditions";
 import ConditionSidebar from "./ConditionSidebar";
@@ -22,7 +23,7 @@ interface ConditionDetailModalProps {
 interface ContentSection {
   key: string;
   title: string;
-  content?: string;
+  content?: ConditionContent;
   accent?: "danger" | "default";
 }
 
@@ -83,32 +84,48 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     const container = contentRef.current;
     if (!container || sections.length === 0) return;
 
-    let frame: number | null = null;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const containerRect = container.getBoundingClientRect();
+        let closestKey = "";
+        let smallestDistance = Number.POSITIVE_INFINITY;
 
-    const computeNearestSection = () => {
-      frame = null;
-      if (!container || sections.length === 0) return;
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
 
-      if (container.scrollTop <= 0) {
+          const target = entry.target as HTMLElement;
+          const distance = Math.abs(
+            target.getBoundingClientRect().top - containerRect.top - SCROLL_OFFSET
+          );
+
+          if (distance < smallestDistance) {
+            smallestDistance = distance;
+            closestKey = target.id;
+          }
+        });
+
+        if (closestKey) {
+          setActiveSection(closestKey);
+        }
+      },
+      {
+        root: container,
+        rootMargin: `-${SCROLL_OFFSET}px 0px -60% 0px`,
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      }
+    );
+
+    const handleScroll = () => {
+      if (container.scrollTop <= 5) {
         setActiveSection(sections[0].key);
         return;
       }
-    sections.forEach((section) => {
-      const target = sectionRefs.current[section.key];
-      if (target) observer.observe(target);
-    });
 
       const bottomGap =
         container.scrollHeight - (container.scrollTop + container.clientHeight);
       if (bottomGap <= 2) {
         setActiveSection(sections[sections.length - 1].key);
         return;
-        container.scrollHeight - (scrollTop + container.clientHeight);
-
-      if (scrollTop <= 5 && sections.length > 0) {
-        setActiveSection(sections[0].key);
-      } else if (bottomGap <= 5 && sections.length > 0) {
-        setActiveSection(sections[sections.length - 1].key);
       }
 
       const containerTop = container.getBoundingClientRect().top;
@@ -131,19 +148,19 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
       setActiveSection(closestKey);
     };
 
-    const handleScroll = () => {
-      if (frame !== null) return;
-      frame = window.requestAnimationFrame(computeNearestSection);
-    };
+    sections.forEach((section) => {
+      const target = sectionRefs.current[section.key];
+      if (target) {
+        observer.observe(target);
+      }
+    });
 
     container.addEventListener("scroll", handleScroll, { passive: true });
-    computeNearestSection();
+    handleScroll();
 
     return () => {
       container.removeEventListener("scroll", handleScroll);
-      if (frame !== null) {
-        window.cancelAnimationFrame(frame);
-      }
+      observer.disconnect();
     };
   }, [sections]);
 
