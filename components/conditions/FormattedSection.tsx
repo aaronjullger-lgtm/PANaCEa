@@ -34,7 +34,11 @@ function toBoldParts(text: string): React.ReactNode[] {
 }
 
 function buildBulletTree(content: string): BulletNode[] {
-  const lines = content.replace(/\r\n/g, "\n").split("\n");
+  const lines = content
+    .replace(/\t/g, "    ") // convert tabs to 4 spaces
+    .replace(/\r\n/g, "\n")
+    .split("\n");
+
   const roots: BulletNode[] = [];
   const stack: { level: number; node: BulletNode }[] = [];
 
@@ -48,7 +52,8 @@ function buildBulletTree(content: string): BulletNode[] {
     if (!text) return;
 
     const levelFromSymbol = BULLET_LEVEL_BY_SYMBOL[bulletSymbol];
-    const levelFromIndent = Math.floor(leadingSpaces / 4);
+    const levelFromIndent = Math.round(leadingSpaces / 4);
+
     const level = Math.min(
       2,
       Number.isFinite(levelFromSymbol)
@@ -57,30 +62,28 @@ function buildBulletTree(content: string): BulletNode[] {
     );
 
     while (stack.length && stack[stack.length - 1].level >= level) {
-  stack.pop();
+      stack.pop();
     }
-    
-    const node: BulletNode = { parts: toBoldParts(text), children: [] };
-    
-    const parent = (() => {
-      for (let i = stack.length - 1; i >= 0; i--) {
-        if (stack[i].level < level) return stack[i];
-      }
-      return null;
-    })();
-    
-    if (parent) {
-      parent.node.children.push(node);
-    } else {
-      roots.push(node);
-    }
-    
-    stack.push({ level, node });
 
+    const node: BulletNode = { parts: toBoldParts(text), children: [] };
+
+    let parent: { level: number; node: BulletNode } | null = null;
+    for (let i = stack.length - 1; i >= 0; i--) {
+      if (stack[i].level < level) {
+        parent = stack[i];
+        break;
+      }
+    }
+
+    if (parent) parent.node.children.push(node);
+    else roots.push(node);
+
+    stack.push({ level, node });
   });
 
   return roots;
 }
+
 
 const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
   nodes,
