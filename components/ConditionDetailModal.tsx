@@ -93,12 +93,22 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
         setActiveSection(sections[0].key);
         return;
       }
+    sections.forEach((section) => {
+      const target = sectionRefs.current[section.key];
+      if (target) observer.observe(target);
+    });
 
       const bottomGap =
         container.scrollHeight - (container.scrollTop + container.clientHeight);
       if (bottomGap <= 2) {
         setActiveSection(sections[sections.length - 1].key);
         return;
+        container.scrollHeight - (scrollTop + container.clientHeight);
+
+      if (scrollTop <= 5 && sections.length > 0) {
+        setActiveSection(sections[0].key);
+      } else if (bottomGap <= 5 && sections.length > 0) {
+        setActiveSection(sections[sections.length - 1].key);
       }
 
       const containerTop = container.getBoundingClientRect().top;
