@@ -24,18 +24,20 @@ function normalizeEntry(raw: unknown, id: string): ConditionEntry | undefined {
 
   const rawSections = entry.sections;
 
-const sections: ConditionSections = {};
+  const sections: ConditionSections = {};
 
-if (rawSections && typeof rawSections === "object") {
-  for (const [key, val] of Object.entries(rawSections as Record<string, unknown>)) {
-    if (typeof val === "string") {
-      sections[key] = val;
+  if (rawSections && typeof rawSections === "object") {
+    for (const [key, val] of Object.entries(rawSections as Record<string, unknown>)) {
+      if (typeof val === "string") {
+        sections[key] = val;
+      }
     }
   }
-}
 
-return { condition: conditionId, sections };
+  return { condition: conditionId, sections };
+} // <-- function closes here
 
+// ===== Top-level export (must be outside of the function) =====
 export const CONDITIONS = Object.fromEntries(
   Object.entries(conditions as Record<string, unknown>).map(([id, raw]) => [
     id,
