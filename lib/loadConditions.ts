@@ -67,12 +67,12 @@ export function normalizeConditionContent(
   return null;
 }
 
-export function isMeaningfulContent(value?: ConditionContent): boolean {
-  const normalizedValue = normalizeConditionContent(value);
-  if (!normalizedValue) return false;
+export function isMeaningfulContent(value?: unknown): boolean {
+  if (typeof value !== "string") return false;
 
-  const normalized = normalizedValue.replace(/\s+/g, " ").trim();
+  const normalized = value.replace(/\s+/g, " ").trim();
   if (!normalized) return false;
+
   return normalized.toUpperCase() !== PLACEHOLDER_TEXT;
 }
 
