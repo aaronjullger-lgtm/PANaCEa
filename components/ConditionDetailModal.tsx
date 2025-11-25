@@ -127,6 +127,25 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
         setActiveSection(sections[sections.length - 1].key);
         return;
       }
+
+      const containerTop = container.getBoundingClientRect().top;
+      let closestKey = sections[0].key;
+      let smallestDistance = Number.POSITIVE_INFINITY;
+
+      sections.forEach((section) => {
+        const el = sectionRefs.current[section.key];
+        if (!el) return;
+
+        const offsetTop = el.getBoundingClientRect().top - containerTop;
+        const distance = Math.abs(offsetTop - SCROLL_OFFSET);
+
+        if (distance < smallestDistance) {
+          smallestDistance = distance;
+          closestKey = section.key;
+        }
+      });
+
+      setActiveSection(closestKey);
     };
 
     sections.forEach((section) => {
