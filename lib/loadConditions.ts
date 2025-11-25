@@ -1,7 +1,9 @@
 import conditions from "../conditionContent.generated.json";
 
+export type ConditionContent = string | string[] | { notes?: string } | null;
+
 export interface ConditionSections {
-  [sectionKey: string]: string;
+  [sectionKey: string]: ConditionContent;
 }
 
 export interface ConditionEntry {
@@ -36,9 +38,40 @@ export const CONDITIONS = Object.fromEntries(
   ])
 ) as Record<string, ConditionEntry | undefined>;
 
-export function isMeaningfulContent(value?: string | null): boolean {
-  if (!value) return false;
-  const normalized = value.replace(/\s+/g, " ").trim();
+export function normalizeConditionContent(
+  value?: ConditionContent
+): string | null {
+  if (value == null) return null;
+
+  if (typeof value === "string") return value;
+
+  if (Array.isArray(value)) {
+    const parts = value
+      .map((item) =>
+        typeof item === "string"
+          ? item
+          : item != null
+            ? String(item)
+            : ""
+      )
+      .filter(Boolean);
+
+    return parts.length ? parts.join("\n") : null;
+  }
+
+  if (typeof value === "object" && "notes" in value) {
+    const notes = (value as { notes?: unknown }).notes;
+    return typeof notes === "string" ? notes : null;
+  }
+
+  return null;
+}
+
+export function isMeaningfulContent(value?: ConditionContent): boolean {
+  const normalizedValue = normalizeConditionContent(value);
+  if (!normalizedValue) return false;
+
+  const normalized = normalizedValue.replace(/\s+/g, " ").trim();
   if (!normalized) return false;
   return normalized.toUpperCase() !== PLACEHOLDER_TEXT;
 }

@@ -19,7 +19,11 @@ import {
   findConditionMeta,
   type ConditionMeta,
 } from "../conditionRegistry";
-import { getConditionById, isMeaningfulContent } from "../lib/loadConditions";
+import {
+  getConditionById,
+  isMeaningfulContent,
+  normalizeConditionContent,
+} from "../lib/loadConditions";
 
 // --- Helper: call Netlify serverless function, which talks to Gemini ---
 
@@ -70,7 +74,10 @@ function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
   const maybeAdd = (key: string, label: string) => {
     const value = content[key];
     if (isMeaningfulContent(value)) {
-      pieces.push(`${label}: ${value}`);
+      const normalized = normalizeConditionContent(value);
+      if (normalized) {
+        pieces.push(`${label}: ${normalized}`);
+      }
     }
   };
 

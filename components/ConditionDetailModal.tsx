@@ -8,6 +8,7 @@ import {
 import {
   getConditionById,
   isMeaningfulContent,
+  type ConditionContent,
   type ConditionEntry,
 } from "../lib/loadConditions";
 import ConditionSidebar from "./ConditionSidebar";
@@ -22,7 +23,7 @@ interface ConditionDetailModalProps {
 interface ContentSection {
   key: string;
   title: string;
-  content?: string;
+  content?: ConditionContent;
   accent?: "danger" | "default";
 }
 
