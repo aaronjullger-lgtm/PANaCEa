@@ -7,7 +7,8 @@ test("fuzzy search matches minor typos", () => {
   const results = searchConditions("fibrilation");
   const top = results[0];
   assert.ok(top, "Expected at least one result");
-  assert.equal(top.condition, "Atrial Fibrillation");
+  assert.equal(top.type, "condition");
+  assert.equal(top.term, "Atrial Fibrillation");
 });
 
 test("returns empty array on blank query", () => {

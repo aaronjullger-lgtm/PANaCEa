@@ -1,0 +1,41 @@
+[
+  {
+    "term": "Aspirin",
+    "class": "NSAID",
+    "subclass": "Salicylate",
+    "overview": "Analgesic and antiplatelet agent used for pain, fever, and cardiovascular prevention.",
+    "MOA": "Irreversibly inhibits COX-1 and COX-2 to decrease prostaglandin and thromboxane synthesis.",
+    "ADEs": "Gastritis or ulceration; bleeding risk; tinnitus at high doses; renal perfusion impairment.",
+    "contraindications": "Active bleeding, aspirin-sensitive asthma, children with viral illness (Reye syndrome risk).",
+    "interactions": "Additive bleeding with anticoagulants/antiplatelets; reduced antihypertensive effect of ACEi/diuretics.",
+    "pharmacokinetics": "Rapid oral absorption; hepatic metabolism with active metabolites; renal elimination of salicylate.",
+    "antidote": "Supportive care; sodium bicarbonate for toxicity; consider hemodialysis in severe overdose.",
+    "clinicalNotes": "Low-dose (81 mg) for secondary prevention; avoid in third-trimester pregnancy; stop before surgery when possible."
+  },
+  {
+    "term": "Warfarin",
+    "class": "Anticoagulant",
+    "subclass": "Vitamin K antagonist",
+    "overview": "Oral anticoagulant for venous thromboembolism prevention and atrial fibrillation stroke prophylaxis.",
+    "MOA": "Inhibits vitamin K epoxide reductase to reduce synthesis of factors II, VII, IX, X and proteins C/S.",
+    "ADEs": "Bleeding; skin necrosis (protein C deficiency); purple toe syndrome; teratogenicity.",
+    "contraindications": "Pregnancy; active bleeding; recent major surgery; uncontrolled hypertension; poor adherence.",
+    "interactions": "CYP2C9/CYP3A4 interactions (amiodarone, azoles, antibiotics) can raise INR; vitamin K intake lowers effect.",
+    "pharmacokinetics": "High oral bioavailability; albumin bound; hepatic metabolism; long half-life with delayed onset/offset.",
+    "antidote": "Vitamin K; 4-factor PCC or FFP for major bleeding; hold doses and monitor INR closely.",
+    "clinicalNotes": "Monitor INR goal 2-3 in most indications; bridge with heparin when starting for acute VTE; educate on diet stability."
+  },
+  {
+    "term": "Metformin",
+    "class": "Antihyperglycemic",
+    "subclass": "Biguanide",
+    "overview": "First-line therapy for type 2 diabetes improving glycemic control without hypoglycemia.",
+    "MOA": "Decreases hepatic gluconeogenesis, increases insulin sensitivity, and enhances peripheral glucose uptake.",
+    "ADEs": "GI upset (nausea, diarrhea); vitamin B12 deficiency; rare lactic acidosis risk in renal/hepatic impairment.",
+    "contraindications": "eGFR <30 mL/min/1.73 m²; unstable heart failure; severe liver disease; history of lactic acidosis.",
+    "interactions": "Cationic drugs (cimetidine) may increase levels; contrast dye may increase lactic acidosis risk.",
+    "pharmacokinetics": "Not metabolized; renal elimination unchanged; half-life ~6 hours; take with meals to improve tolerance.",
+    "antidote": "Supportive care; consider hemodialysis for severe lactic acidosis or overdose.",
+    "clinicalNotes": "Continue unless hospitalized for acute illness; reassess renal function regularly; promotes modest weight loss."
+  }
+]

@@ -16,7 +16,13 @@ import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
 import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
 import type { ConditionMeta } from "../conditionRegistry";
 import ConditionDetailModal from "./ConditionDetailModal";
-import { findConditionMetaById, searchConditions } from "../src/lib/conditionSearch";
+import {
+  findConditionMetaById,
+  searchConditions,
+  type SearchResult,
+} from "../src/lib/conditionSearch";
+import DrugModal from "../src/components/modals/DrugModal";
+import { findPharmacologyEntryById } from "../src/services/pharmacologyRegistry";
 
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
@@ -66,6 +72,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(
     null
   );
+  const [selectedDrugId, setSelectedDrugId] = useState<string | null>(null);
 
   const stats = useMemo(() => {
     // Overall score = last 360 questions (any mode) as before
@@ -147,7 +154,21 @@ const MenuView: React.FC<MenuViewProps> = ({
     });
   };
 
-  const searchResults = useMemo(
+  const openConditionModal = (conditionId: string) => {
+    const meta = findConditionMetaById(conditionId);
+    if (meta) {
+      setSelectedCondition(meta);
+    }
+  };
+
+  const openDrugModal = (drugId: string) => {
+    const entry = findPharmacologyEntryById(drugId);
+    if (entry) {
+      setSelectedDrugId(entry.id);
+    }
+  };
+
+  const searchResults: SearchResult[] = useMemo(
     () => {
       const results = searchConditions(searchQuery);
       return results;
@@ -200,6 +221,13 @@ const MenuView: React.FC<MenuViewProps> = ({
         />
       )}
 
+      {selectedDrugId && (
+        <DrugModal
+          drugId={selectedDrugId}
+          onClose={() => setSelectedDrugId(null)}
+        />
+      )}
+
       <div className="flex flex-col max-w-5xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-[#3D1B0E] mb-3 text-center">
           PANaCEa
@@ -212,7 +240,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search conditions (e.g., ACS, Diverticulitis, DKA)..."
+              placeholder="Search conditions or drugs (e.g., ACS, metformin)..."
               className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3D1B0E]/70 focus:border-[#3D1B0E]"
             />
           </div>
@@ -223,9 +251,10 @@ const MenuView: React.FC<MenuViewProps> = ({
                   key={result.id}
                   type="button"
                   onClick={() => {
-                    const meta = findConditionMetaById(result.id);
-                    if (meta) {
-                      setSelectedCondition(meta);
+                    if (result.type === "condition") {
+                      openConditionModal(result.id);
+                    } else {
+                      openDrugModal(result.id);
                     }
                     setSearchQuery("");
                   }}
@@ -233,10 +262,12 @@ const MenuView: React.FC<MenuViewProps> = ({
                 >
                   <div className="flex flex-col gap-0.5">
                     <span className="font-semibold text-slate-800">
-                      {result.condition}
+                      {result.term}
                     </span>
                     <span className="text-[11px] uppercase tracking-wide text-slate-500">
-                      {result.system} • {result.subcategory}
+                      {result.type === "condition"
+                        ? `${result.system} • ${result.subcategory}`
+                        : `${result.class}${result.subclass ? ` • ${result.subclass}` : ""}`}
                     </span>
                   </div>
                 </button>

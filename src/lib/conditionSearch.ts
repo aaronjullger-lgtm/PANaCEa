@@ -4,20 +4,34 @@ import {
   type ConditionMeta,
 } from "../../conditionRegistry.ts";
 import type { SystemCode } from "../../types.ts";
+import type { PharmacologyEntry } from "../types/pharmacology";
+import { PHARMACOLOGY_REGISTRY } from "../services/pharmacologyRegistry";
 
 export interface ConditionSearchFilters {
   system?: SystemCode;
   subcategory?: string;
 }
 
-export interface ConditionSearchResult {
+interface BaseSearchResult {
   id: string;
+  term: string;
+  type: "condition" | "drug";
+  score: number;
+}
+
+export interface ConditionSearchResult extends BaseSearchResult {
+  type: "condition";
   condition: string;
   system: SystemCode;
   subcategory: string;
   aliases: string[];
-  score: number;
 }
+
+export interface DrugSearchResult extends PharmacologyEntry, BaseSearchResult {
+  type: "drug";
+}
+
+export type SearchResult = ConditionSearchResult | DrugSearchResult;
 
 function levenshtein(a: string, b: string): number {
   const dp = Array.from({ length: a.length + 1 }, () =>
@@ -72,7 +86,7 @@ export function getSubcategoryOptions(system?: SystemCode): string[] {
 export function searchConditions(
   rawQuery: string,
   filters: ConditionSearchFilters = {}
-): ConditionSearchResult[] {
+): SearchResult[] {
   const query = rawQuery.trim();
   if (!query) return [];
 
@@ -95,6 +109,8 @@ export function searchConditions(
       const id = buildConditionDefinition(meta).id;
       results.push({
         id,
+        term: meta.condition,
+        type: "condition",
         condition: meta.condition,
         system: meta.system,
         subcategory: meta.subcategory,
@@ -104,8 +120,35 @@ export function searchConditions(
     }
   }
 
-  return results
-    .sort((a, b) => b.score - a.score || a.condition.localeCompare(b.condition))
+  const drugResults: DrugSearchResult[] = [];
+
+  for (const entry of PHARMACOLOGY_REGISTRY) {
+    const searchableFields = [entry.term, entry.class, entry.subclass].filter(
+      Boolean
+    ) as string[];
+
+    let bestScore = 0;
+    for (const term of searchableFields) {
+      const score = bestTermScore(query, term);
+      if (score > bestScore) bestScore = score;
+    }
+
+    if (bestScore > 0.1) {
+      drugResults.push({
+        ...entry,
+        score: bestScore,
+        term: entry.term,
+        type: "drug",
+      });
+    }
+  }
+
+  return [...results, ...drugResults]
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        a.term.localeCompare(b.term)
+    )
     .slice(0, 30);
 }
 
