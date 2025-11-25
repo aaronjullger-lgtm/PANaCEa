@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Condition {
+  id        String     @id @default(uuid())
+  name      String
+  system    String
+  questions Question[]
+  @@index([name])
+}
+
+model Question {
+  id           String             @id @default(uuid())
+  conditionId  String
+  text         String
+  difficulty   Float
+  condition    Condition          @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  progress     QuestionProgress[]
+  queueEntries LearningQueueEntry[]
+
+  @@index([conditionId])
+}
+
+model QuestionProgress {
+  id           String    @id @default(uuid())
+  userId       String
+  questionId   String
+  attempts     Int       @default(0)
+  correct      Int       @default(0)
+  streak       Int       @default(0)
+  weight       Float     @default(1)
+  nextReview   DateTime?
+  lastAnswered DateTime?
+  question     Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId])
+}
+
+model LearningQueueEntry {
+  id            String    @id @default(uuid())
+  userId        String
+  questionId    String
+  priorityScore Float
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  question      Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId])
+}
