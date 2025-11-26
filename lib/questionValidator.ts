@@ -1,0 +1,61 @@
+import { GeneratedQuestion, ConditionData } from '../types/question';
+
+export interface ValidationResult {
+  isValid: boolean;
+  score: number;
+  errors: string[];
+}
+
+/**
+ * Validates that the question's answer is supported by the provided source text.
+ * Uses a keyword density and semantic overlap heuristic.
+ */
+export function validateQuestion(question: GeneratedQuestion, sourceData: ConditionData): ValidationResult {
+  const errors: string[] = [];
+  let score = 1.0;
+
+  // 1. Check if source sections actually exist in the data
+  question.sourceSections.forEach(sectionKey => {
+    if (!sourceData.sections[sectionKey]) {
+      errors.push(`Cited section '${sectionKey}' does not exist in source data.`);
+      score -= 0.2;
+    }
+  });
+
+  // 2. Content Grounding Check
+  // Combine text from cited sections
+  const sourceText = question.sourceSections
+    .map(key => sourceData.sections[key] || '')
+    .join(' ')
+    .toLowerCase();
+  
+  const answerKeywords = question.correctAnswer.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  
+  // Calculate how many significant words from the answer appear in the source
+  const foundKeywords = answerKeywords.filter(word => sourceText.includes(word));
+  const coverage = answerKeywords.length > 0 ? foundKeywords.length / answerKeywords.length : 0;
+
+  // Strict threshold: if answer is totally alien to the text, reject it.
+  if (coverage < 0.3 && answerKeywords.length > 0) {
+    errors.push("Answer appears unsupported by the cited source sections (low keyword overlap).");
+    score -= 0.5;
+  }
+
+  // 3. Structure Check
+  if (question.type === 'mcq' || question.type === 'vignette') {
+    if (!question.options || question.options.length !== 4) {
+      errors.push("MCQ/Vignette must have exactly 4 options.");
+      score -= 1.0; // Critical failure
+    }
+    if (question.options && !question.options.includes(question.correctAnswer)) {
+      errors.push("Correct answer is not listed among the options.");
+      score -= 1.0;
+    }
+  }
+
+  return {
+    isValid: score > 0.6 && errors.length === 0, // Threshold for acceptance
+    score: Math.max(0, score),
+    errors
+  };
+}
