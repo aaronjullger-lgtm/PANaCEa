@@ -54,7 +54,7 @@ const MEDIA_LINKS_PATH = path.join(OUTPUT_DIR, "media_links.json");
 const MEDIA_AUDIT_PATH = path.join(OUTPUT_DIR, "media_audit.json");
 
 const MATCHING_CONFIG: MatchingConfig = {
-  autoMatchThreshold: 0.55,  // Lowered from 0.65 to catch more valid matches
+  autoMatchThreshold: 0.55,  // Lower threshold to catch more valid matches with clear gaps
   ambiguityGap: 0.15,
   maxCandidates: 5,
 };
@@ -92,6 +92,13 @@ interface MatchCandidate {
 // ============================================================
 // UTILITY FUNCTIONS
 // ============================================================
+
+/**
+ * Rounds a score to two decimal places.
+ */
+function roundScore(score: number): number {
+  return Math.round(score * 100) / 100;
+}
 
 /**
  * Recursively scans a directory for media files.
@@ -302,7 +309,7 @@ function determineMatch(
         possibleMatches: candidates.map((c) => ({
           conditionId: c.conditionId,
           conditionName: c.conditionName,
-          score: Math.round(c.score * 100) / 100,
+          score: roundScore(c.score),
         })),
         tags: media.tags,
       },
@@ -325,7 +332,7 @@ function determineMatch(
           possibleMatches: candidates.map((c) => ({
             conditionId: c.conditionId,
             conditionName: c.conditionName,
-            score: Math.round(c.score * 100) / 100,
+            score: roundScore(c.score),
           })),
           tags: media.tags,
         },
@@ -340,7 +347,7 @@ function determineMatch(
       filepath: media.filepath,
       conditionId: topCandidate.conditionId,
       type: media.type,
-      confidence: Math.round(topCandidate.score * 100) / 100,
+      confidence: roundScore(topCandidate.score),
       tags: media.tags,
     },
     audit: null,
