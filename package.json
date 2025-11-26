@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "sync:condition-content": "ts-node ./scripts/convertMdToJson.ts",
+    "sync:condition-content": "tsx scripts/convertMdToJson.ts",
+    "media:integrate": "tsx scripts/mediaIntegrator.ts",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
@@ -27,6 +29,7 @@
     "@types/uuid": "^9.0.8",
     "@vitejs/plugin-react": "^5.0.0",
     "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vitest": "^4.0.14"
