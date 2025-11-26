@@ -3,10 +3,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { ConditionData, GeneratedQuestion, QuestionType } from "../types/question";
 import { validateQuestion } from "./questionValidator";
 
-// Initialize Gemini
-const API_KEY = process.env.GEMINI_API_KEY || "YOUR_API_KEY";
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+// Initialize Gemini - API key must be provided via environment variable
+const API_KEY = process.env.GEMINI_API_KEY;
+
+function getModel() {
+  if (!API_KEY) {
+    throw new Error("GEMINI_API_KEY environment variable is not set. Please provide a valid API key.");
+  }
+  const genAI = new GoogleGenerativeAI(API_KEY);
+  return genAI.getGenerativeModel({ model: "gemini-pro" });
+}
 
 const SYSTEM_INSTRUCTION = `
 You are a strict medical education assistant for the PANaCEa platform. 
@@ -46,6 +52,7 @@ export async function generateSingleQuestion(
   `;
 
   try {
+    const model = getModel();
     const result = await model.generateContent([SYSTEM_INSTRUCTION, prompt]);
     const response = result.response;
     const text = response.text();

@@ -6,11 +6,28 @@ export interface ValidationResult {
   errors: string[];
 }
 
+export interface ValidationOptions {
+  /** Minimum score threshold for acceptance (default: 0.6) */
+  scoreThreshold?: number;
+  /** Minimum keyword coverage required (default: 0.3) */
+  minKeywordCoverage?: number;
+}
+
+const DEFAULT_OPTIONS: Required<ValidationOptions> = {
+  scoreThreshold: 0.6,
+  minKeywordCoverage: 0.3,
+};
+
 /**
  * Validates that the question's answer is supported by the provided source text.
  * Uses a keyword density and semantic overlap heuristic.
  */
-export function validateQuestion(question: GeneratedQuestion, sourceData: ConditionData): ValidationResult {
+export function validateQuestion(
+  question: GeneratedQuestion, 
+  sourceData: ConditionData,
+  options: ValidationOptions = {}
+): ValidationResult {
+  const { scoreThreshold, minKeywordCoverage } = { ...DEFAULT_OPTIONS, ...options };
   const errors: string[] = [];
   let score = 1.0;
 
@@ -36,7 +53,7 @@ export function validateQuestion(question: GeneratedQuestion, sourceData: Condit
   const coverage = answerKeywords.length > 0 ? foundKeywords.length / answerKeywords.length : 0;
 
   // Strict threshold: if answer is totally alien to the text, reject it.
-  if (coverage < 0.3 && answerKeywords.length > 0) {
+  if (coverage < minKeywordCoverage && answerKeywords.length > 0) {
     errors.push("Answer appears unsupported by the cited source sections (low keyword overlap).");
     score -= 0.5;
   }
@@ -54,7 +71,7 @@ export function validateQuestion(question: GeneratedQuestion, sourceData: Condit
   }
 
   return {
-    isValid: score > 0.6 && errors.length === 0, // Threshold for acceptance
+    isValid: score > scoreThreshold && errors.length === 0, // Threshold for acceptance
     score: Math.max(0, score),
     errors
   };
