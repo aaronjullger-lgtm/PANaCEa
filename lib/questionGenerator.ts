@@ -4,8 +4,11 @@ import { ConditionData, GeneratedQuestion, QuestionType } from "../types/questio
 import { validateQuestion } from "./questionValidator";
 
 // Initialize Gemini
-const API_KEY = process.env.GEMINI_API_KEY || "YOUR_API_KEY";
-const genAI = new GoogleGenerativeAI(API_KEY);
+const API_KEY = process.env.GEMINI_API_KEY;
+if (!API_KEY) {
+  console.warn("GEMINI_API_KEY environment variable is not set. Question generation will fail.");
+}
+const genAI = new GoogleGenerativeAI(API_KEY || "");
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 const SYSTEM_INSTRUCTION = `
@@ -52,7 +55,14 @@ export async function generateSingleQuestion(
     
     // Sanitize markdown code blocks if present
     const jsonString = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(jsonString);
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(jsonString);
+    } catch (parseError) {
+      console.error("Failed to parse AI response as JSON. Response was:", jsonString.substring(0, 200));
+      return null;
+    }
 
     const question: GeneratedQuestion = {
       id: uuidv4(),

@@ -7,6 +7,16 @@ export interface ValidationResult {
 }
 
 /**
+ * Minimum acceptable validation score for a question to be considered valid.
+ * Questions must score above this threshold AND have no errors to pass validation.
+ * Score starts at 1.0 and is reduced by penalties for various issues:
+ * - 0.2 for each missing cited section
+ * - 0.5 for low keyword overlap with source
+ * - 1.0 for structural issues (wrong option count, answer not in options)
+ */
+const VALIDATION_SCORE_THRESHOLD = 0.6;
+
+/**
  * Validates that the question's answer is supported by the provided source text.
  * Uses a keyword density and semantic overlap heuristic.
  */
@@ -54,7 +64,7 @@ export function validateQuestion(question: GeneratedQuestion, sourceData: Condit
   }
 
   return {
-    isValid: score > 0.6 && errors.length === 0, // Threshold for acceptance
+    isValid: score > VALIDATION_SCORE_THRESHOLD && errors.length === 0,
     score: Math.max(0, score),
     errors
   };
