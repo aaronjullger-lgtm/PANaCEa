@@ -31,16 +31,22 @@ const SCROLL_OFFSET = 96;
 
 const SECTION_ORDER: { key: string; title: string; accent?: "danger" | "default" }[] = [
   { key: "overview", title: "Overview" },
+  { key: "keyPoints", title: "Key Points" },
   { key: "etiology", title: "Etiology" },
+  { key: "etiologyPathophysiology", title: "Etiology & Pathophysiology" },
   { key: "epidemiology", title: "Epidemiology" },
   { key: "riskFactors", title: "Risk Factors" },
   { key: "clinicalPresentation", title: "Clinical Presentation" },
+  { key: "symptoms", title: "Symptoms" },
   { key: "physicalExam", title: "Physical Exam" },
+  { key: "examFindings", title: "Exam Findings" },
   { key: "diagnostics", title: "Diagnostics" },
   { key: "differentialDiagnosis", title: "Differential Diagnosis" },
   { key: "management", title: "Management" },
   { key: "treatment", title: "Treatment" },
+  { key: "treatmentPearls", title: "Treatment Pearls" },
   { key: "complications", title: "Complications" },
+  { key: "redFlags", title: "Red Flags", accent: "danger" },
   { key: "prognosis", title: "Prognosis" },
   { key: "preventionEducation", title: "Prevention & Education" },
 ];

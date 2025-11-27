@@ -3,6 +3,7 @@ import FormattedSection from "../../components/conditions/FormattedSection";
 import {
   getConditionById,
   isMeaningfulContent,
+  type ConditionContent,
   type ConditionEntry,
 } from "../../lib/loadConditions";
 
@@ -12,14 +13,38 @@ const getConditionIdFromPath = (): string => {
   return decodeURIComponent(parts[parts.length - 1] ?? "");
 };
 
-const formatSectionTitle = (key: string): string => {
-  return key
-    .replace(/([A-Z])/g, " $1")
-    .replace(/_/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/^./, (char) => char.toUpperCase());
-};
+/**
+ * Canonical ordering for condition page sections.
+ * Includes all fields from ConditionContent interface.
+ * Sections without content are automatically filtered out by isMeaningfulContent().
+ */
+const SECTION_ORDER: { key: string; title: string }[] = [
+  { key: "overview", title: "Overview" },
+  { key: "keyPoints", title: "Key Points" },
+  { key: "etiology", title: "Etiology" },
+  { key: "etiologyPathophysiology", title: "Etiology & Pathophysiology" },
+  { key: "epidemiology", title: "Epidemiology" },
+  { key: "riskFactors", title: "Risk Factors" },
+  { key: "clinicalPresentation", title: "Clinical Presentation" },
+  { key: "symptoms", title: "Symptoms" },
+  { key: "physicalExam", title: "Physical Exam" },
+  { key: "examFindings", title: "Exam Findings" },
+  { key: "diagnostics", title: "Diagnostics" },
+  { key: "differentialDiagnosis", title: "Differential Diagnosis" },
+  { key: "management", title: "Management" },
+  { key: "treatment", title: "Treatment" },
+  { key: "treatmentPearls", title: "Treatment Pearls" },
+  { key: "complications", title: "Complications" },
+  { key: "redFlags", title: "Red Flags" },
+  { key: "prognosis", title: "Prognosis" },
+  { key: "preventionEducation", title: "Prevention & Education" },
+];
+
+interface ContentSection {
+  key: string;
+  title: string;
+  content?: ConditionContent;
+}
 
 const ConditionPage: React.FC = () => {
   const conditionId = useMemo(() => getConditionIdFromPath(), []);
@@ -28,11 +53,13 @@ const ConditionPage: React.FC = () => {
     [conditionId]
   );
 
-  const sections = useMemo(() => {
-    const entries = conditionContent?.sections ?? {};
-    return Object.entries(entries)
-      .filter(([, value]) => isMeaningfulContent(value))
-      .map(([key, value]) => ({ key, value, title: formatSectionTitle(key) }));
+  const sections: ContentSection[] = useMemo(() => {
+    if (!conditionContent?.sections) return [];
+
+    return SECTION_ORDER.map((config) => ({
+      ...config,
+      content: conditionContent.sections?.[config.key],
+    })).filter((section) => isMeaningfulContent(section.content));
   }, [conditionContent?.sections]);
 
   return (
@@ -56,7 +83,7 @@ const ConditionPage: React.FC = () => {
           <section key={section.key} className="condition-card">
             <h3 className="condition-section-title">{section.title}</h3>
             <div className="condition-content">
-              <FormattedSection content={section.value} />
+              <FormattedSection content={section.content} />
             </div>
           </section>
         ))}
