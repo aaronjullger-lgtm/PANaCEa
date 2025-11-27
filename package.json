@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "sync:condition-content": "tsx scripts/convertMdToJson.ts",
+    "sync:condition-content": "ts-node ./scripts/convertMdToJson.ts",
     "media:integrate": "tsx scripts/mediaIntegrator.ts",
     "build": "vite build",
     "preview": "vite preview",
