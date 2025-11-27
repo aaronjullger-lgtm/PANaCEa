@@ -68,7 +68,7 @@ function normalizeEntry(raw: unknown, id: string): ConditionEntry | undefined {
 
   // Check if this is the new format (sections directly) or old format (with condition/sections wrapper)
   const hasConditionKey = "condition" in entry && typeof entry.condition === "string";
-  const hasSectionsKey = "sections" in entry && typeof entry.sections === "object";
+  const hasSectionsKey = "sections" in entry && entry.sections !== null && typeof entry.sections === "object";
   
   let conditionId: string;
   let rawSections: Record<string, unknown>;
