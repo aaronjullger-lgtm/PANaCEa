@@ -223,6 +223,9 @@ export function parseMarkdownToBullets(text: string | undefined | null): BulletN
   return buildHierarchy(rawBullets);
 }
 
+// Regex pattern to match sub-bullet entries that start with "* " or "*   "
+const STRAY_ASTERISK_PATTERN = /^\*\s+/;
+
 export function parseArrayToBullets(values: string[] | undefined | null): BulletNode[] {
   if (!values) return [];
 
@@ -230,11 +233,12 @@ export function parseArrayToBullets(values: string[] | undefined | null): Bullet
     .filter(Boolean)
     .map((entry) => {
       const trimmed = entry.trim();
-      // Detect entries that start with "* " or "*   " (sub-bullets from original markdown)
-      // and convert them to indented bullet points for proper nesting
-      if (/^\*\s+/.test(trimmed)) {
+      // Detect entries that start with "* " or "*   " (sub-bullets from original markdown
+      // that were stored as array elements with their markdown prefix intact).
+      // Convert them to indented bullet points for proper nesting.
+      if (STRAY_ASTERISK_PATTERN.test(trimmed)) {
         // Remove the leading "* " or "*   " and add proper indentation
-        const cleaned = trimmed.replace(/^\*\s+/, "").trim();
+        const cleaned = trimmed.replace(STRAY_ASTERISK_PATTERN, "").trim();
         return `  - ${cleaned}`;
       }
       return `- ${trimmed}`;

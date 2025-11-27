@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseArrayToBullets } from "./markdownParser";
+import { parseArrayToBullets, BulletNode, TextPart } from "./markdownParser";
 
 describe("parseArrayToBullets", () => {
   it("should not have stray * prefixes in parsed output", () => {
@@ -13,9 +13,9 @@ describe("parseArrayToBullets", () => {
     const result = parseArrayToBullets(testData);
 
     // Check that no stray asterisks appear in any bullet text
-    function checkForStrayAsterisks(nodes: any[]): boolean {
+    function checkForStrayAsterisks(nodes: BulletNode[]): boolean {
       for (const node of nodes) {
-        const text = node.parts.map((p: any) => p.value).join("");
+        const text = node.parts.map((p: TextPart) => p.value).join("");
         if (/^\*\s+/.test(text)) {
           return false;
         }
@@ -43,7 +43,7 @@ describe("parseArrayToBullets", () => {
     
     // Check no stray asterisks
     for (const bullet of result) {
-      const text = bullet.parts.map((p: any) => p.value).join("");
+      const text = bullet.parts.map((p: TextPart) => p.value).join("");
       expect(text.startsWith("*")).toBe(false);
     }
   });
@@ -63,7 +63,7 @@ describe("parseArrayToBullets", () => {
     
     // Sub-items should not have stray asterisks
     for (const child of result[0].children) {
-      const text = child.parts.map((p: any) => p.value).join("");
+      const text = child.parts.map((p: TextPart) => p.value).join("");
       expect(text.startsWith("*")).toBe(false);
     }
   });
