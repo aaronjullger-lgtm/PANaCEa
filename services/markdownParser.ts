@@ -228,7 +228,17 @@ export function parseArrayToBullets(values: string[] | undefined | null): Bullet
 
   const text = values
     .filter(Boolean)
-    .map((entry) => `- ${entry.trim()}`)
+    .map((entry) => {
+      const trimmed = entry.trim();
+      // Detect entries that start with "* " or "*   " (sub-bullets from original markdown)
+      // and convert them to indented bullet points for proper nesting
+      if (/^\*\s+/.test(trimmed)) {
+        // Remove the leading "* " or "*   " and add proper indentation
+        const cleaned = trimmed.replace(/^\*\s+/, "").trim();
+        return `  - ${cleaned}`;
+      }
+      return `- ${trimmed}`;
+    })
     .join("\n");
 
   return parseMarkdownToBullets(text);
