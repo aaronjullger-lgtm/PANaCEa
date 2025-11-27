@@ -64,19 +64,34 @@ export function normalizeConditionContent(
 
 function normalizeEntry(raw: unknown, id: string): ConditionEntry | undefined {
   if (!raw || typeof raw !== "object") return undefined;
-  const entry = raw as { condition?: unknown; sections?: unknown };
+  const entry = raw as Record<string, unknown>;
 
-  const conditionId =
-    typeof entry.condition === "string" && entry.condition.trim().length > 0
-      ? entry.condition
+  // Check if this is the new format (sections directly) or old format (with condition/sections wrapper)
+  const hasConditionKey = "condition" in entry && typeof entry.condition === "string";
+  const hasSectionsKey = "sections" in entry && typeof entry.sections === "object";
+  
+  let conditionId: string;
+  let rawSections: Record<string, unknown>;
+  
+  if (hasSectionsKey) {
+    // Old format: { condition: "...", sections: { ... } }
+    conditionId = hasConditionKey && (entry.condition as string).trim().length > 0
+      ? (entry.condition as string)
       : id;
-
-  const rawSections = entry.sections;
+    rawSections = entry.sections as Record<string, unknown>;
+  } else {
+    // New format: sections are directly on the object
+    conditionId = id;
+    rawSections = entry;
+  }
 
   const sections: ConditionSections = {};
 
   if (rawSections && typeof rawSections === "object") {
-    for (const [key, val] of Object.entries(rawSections as Record<string, unknown>)) {
+    for (const [key, val] of Object.entries(rawSections)) {
+      // Skip the "condition" key if it exists in the new format
+      if (key === "condition") continue;
+      
       // Normalize all value types (strings, arrays, objects with notes/imaging/labs)
       const normalized = normalizeConditionContent(val as ConditionContent);
       if (normalized !== null) {
