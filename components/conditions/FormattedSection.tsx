@@ -50,12 +50,10 @@ function buildBulletTree(content: string): BulletNode[] {
       return `__BOLD_${boldPlaceholders.length - 1}__`;
     });
     
-    // Now split by bullet patterns: " *   " or " * " (with spaces around)
-    // This handles patterns like: "text *   **Item:** description *   **Item2:**"
+    // Split by bullet patterns - all bullets start at same level initially
     normalized = normalized
       .replace(/^\s*\*\s+/g, "• ")  // Start of string
-      .replace(/\s+\*\s{2,}/g, "\n◦ ")  // " *   " pattern (3+ spaces) -> nested bullet
-      .replace(/\s+\*\s+/g, "\n• ");  // " * " pattern -> regular bullet
+      .replace(/\s+\*\s+/g, "\n• ");  // " * " or " *   " pattern -> bullet
     
     // Handle numbered items like "1.  " or "2.  "
     normalized = normalized.replace(/\s+(\d+)\.\s{2,}/g, "\n▪ ");
@@ -70,8 +68,14 @@ function buildBulletTree(content: string): BulletNode[] {
   const finalLines = normalized.split("\n");
   const roots: BulletNode[] = [];
   const stack: { level: number; node: BulletNode }[] = [];
+  
+  // Track parent headers that indicate nesting context
+  // An item ending with "**HeaderText:**" means subsequent items are its children
+  // until we see another similar pattern without a preceding header-only line
+  let currentNestLevel = 0;
+  let inNestedContext = false;
 
-  finalLines.forEach((line) => {
+  finalLines.forEach((line, lineIndex) => {
     if (!line.trim()) return;
 
     const match = line.match(/^(\s*)([•◦▪])?\s*(.*)$/);
@@ -80,14 +84,50 @@ function buildBulletTree(content: string): BulletNode[] {
     const text = (match?.[3] ?? line).trim();
     if (!text) return;
 
-    const levelFromSymbol = BULLET_LEVEL_BY_SYMBOL[bulletSymbol];
-    const levelFromIndent = Math.floor(leadingSpaces / 4);
-    const level = Math.min(
-      2,
-      Number.isFinite(levelFromSymbol)
-        ? (levelFromSymbol as number)
-        : levelFromIndent
-    );
+    // Check if this line is ONLY a header (bold text ending with colon, with minimal other text)
+    // Pattern: starts with optional text, then **Header:** and ends there
+    const isHeaderOnly = /\*\*[^*]+:\*\*\s*$/.test(text);
+    
+    // Check if this line ENDS with a header pattern (could have text before)
+    const endsWithHeader = /\*\*[^*]+:\*\*\s*$/.test(text);
+    
+    // Check if this is an item that starts with a bold term (like **Paroxysmal:**)
+    const startsWithBoldTerm = /^\*\*[^*]+:\*\*/.test(text);
+
+    // Determine level
+    let level = 0;
+    
+    if (bulletSymbol === "▪") {
+      // Numbered items are always deeply nested
+      level = 2;
+    } else if (bulletSymbol === "◦") {
+      level = 1;
+    } else {
+      // For regular bullets, check context
+      if (inNestedContext && !isHeaderOnly) {
+        // We're in a nested context (after a header-only line)
+        // Items that start with bold terms are nested
+        if (startsWithBoldTerm) {
+          level = currentNestLevel + 1;
+        } else {
+          // Non-bold items might break the nesting
+          level = 0;
+          inNestedContext = false;
+        }
+      } else {
+        level = Math.floor(leadingSpaces / 4);
+      }
+    }
+    
+    level = Math.min(2, level);
+    
+    // If this is a header-only line, the next items should be nested under it
+    if (endsWithHeader && !startsWithBoldTerm) {
+      // This is a header line like "... **Types of Atrial Fibrillation:**"
+      // The next items should be nested
+      inNestedContext = true;
+      currentNestLevel = level;
+    }
 
     while (stack.length && stack[stack.length - 1].level >= level) {
       stack.pop();
@@ -111,6 +151,13 @@ function buildBulletTree(content: string): BulletNode[] {
     }
 
     stack.push({ level, node });
+    
+    // If this line is a header-only line (like **Valvular vs. Non-valvular:**)
+    // start a new nested context
+    if (isHeaderOnly) {
+      inNestedContext = true;
+      currentNestLevel = level;
+    }
   });
 
   return roots;
