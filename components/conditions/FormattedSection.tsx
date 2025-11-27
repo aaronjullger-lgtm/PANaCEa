@@ -34,7 +34,21 @@ function toBoldParts(text: string): React.ReactNode[] {
 }
 
 function buildBulletTree(content: string): BulletNode[] {
-  const lines = content.replace(/\r\n/g, "\n").split("\n");
+  // Normalize content: convert " * " pattern (bullets on single line) to newlines
+  // Be careful not to affect **bold** markers
+  let normalized = content.replace(/\r\n/g, "\n");
+  
+  // If content has no newlines but has " * " pattern, split by " * "
+  // This handles data like: "* Item1 * Item2 * Item3"
+  if (!normalized.includes("\n") || normalized.split("\n").length === 1) {
+    // First, split by asterisk bullet markers
+    // Look for patterns like "* text" at start or " * text" in middle
+    normalized = normalized
+      .replace(/^\s*\*\s+/g, "• ")  // Start of string: "* text" -> "• text"
+      .replace(/\s+\*\s+/g, "\n• "); // Middle: " * text" -> "\n• text"
+  }
+  
+  const lines = normalized.split("\n");
   const roots: BulletNode[] = [];
   const stack: { level: number; node: BulletNode }[] = [];
 
