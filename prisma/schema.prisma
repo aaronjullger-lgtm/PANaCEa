@@ -1,0 +1,58 @@
+// This is the Prisma schema file for the PANaCEa medical learning platform.
+// It defines the database models for managing conditions and their associated media assets.
+//
+// Learn more about Prisma at: https://www.prisma.io/docs
+//
+// To apply migrations:
+// 1. Run: npx prisma migrate dev --name init_media_assets
+// 2. Run: npx prisma generate
+//
+// Note: Prisma is not yet installed in this project. To add Prisma support:
+// 1. npm install prisma --save-dev
+// 2. npm install @prisma/client
+// 3. npx prisma init (if starting fresh, skip if using this file)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Represents a medical condition in the learning platform.
+/// Conditions are the primary educational content unit.
+model Condition {
+  id        String       @id @default(uuid())
+  name      String
+  system    String       // Organ system (e.g., "cardiovascular", "respiratory")
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  
+  /// Associated media assets for this condition
+  media     MediaAsset[]
+  
+  @@index([system])
+  @@index([name])
+}
+
+/// Represents a media asset (EKG, imaging, lab table, diagram, etc.)
+/// linked to a medical condition.
+model MediaAsset {
+  id          String     @id @default(uuid())
+  conditionId String?
+  type        String     // "ekg" | "imaging" | "labs" | "diagram" | "other"
+  filename    String
+  tags        String[]   // Keywords extracted from filename and metadata
+  confidence  Float      // Matching confidence score (0-1)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  /// The condition this media asset is associated with
+  condition   Condition? @relation(fields: [conditionId], references: [id])
+  
+  @@index([conditionId])
+  @@index([type])
+  @@index([filename])
+}
