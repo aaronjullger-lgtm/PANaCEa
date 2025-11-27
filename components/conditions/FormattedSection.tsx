@@ -78,10 +78,25 @@ function buildBulletTree(content: string): BulletNode[] {
   finalLines.forEach((line, lineIndex) => {
     if (!line.trim()) return;
 
-    const match = line.match(/^(\s*)([•◦▪])?\s*(.*)$/);
-    const leadingSpaces = match?.[1]?.length ?? 0;
-    const bulletSymbol = match?.[2] ?? "";
-    const text = (match?.[3] ?? line).trim();
+    // Check if line starts with asterisk bullet pattern: "* " or "*   " (1-4 spaces)
+    // This indicates a nested bullet point (not bold marker which is "**")
+    const asteriskBulletMatch = line.match(/^(\*\s{1,4})(.*)$/);
+    let text: string;
+    let isAsteriskBullet = false;
+    let leadingSpaces = 0;
+    let bulletSymbol = "";
+
+    if (asteriskBulletMatch) {
+      // This is a nested bullet using asterisk syntax like "* **Text**:" or "*   **Text**:"
+      isAsteriskBullet = true;
+      text = asteriskBulletMatch[2].trim();
+    } else {
+      const match = line.match(/^(\s*)([•◦▪])?\s*(.*)$/);
+      leadingSpaces = match?.[1]?.length ?? 0;
+      bulletSymbol = match?.[2] ?? "";
+      text = (match?.[3] ?? line).trim();
+    }
+    
     if (!text) return;
 
     // Check if this line is ONLY a header (bold text ending with colon, with minimal other text)
@@ -97,7 +112,10 @@ function buildBulletTree(content: string): BulletNode[] {
     // Determine level
     let level = 0;
     
-    if (bulletSymbol === "▪") {
+    if (isAsteriskBullet) {
+      // Lines starting with "* " or "*   " are nested bullets (level 1)
+      level = 1;
+    } else if (bulletSymbol === "▪") {
       // Numbered items are always deeply nested
       level = 2;
     } else if (bulletSymbol === "◦") {
