@@ -38,9 +38,10 @@ function buildBulletTree(content: string): BulletNode[] {
   // Be careful not to affect **bold** markers
   let normalized = content.replace(/\r\n/g, "\n");
   
-  // If content has no newlines but has " * " pattern, split by " * "
+  // If content has no newlines or only one line, convert asterisk bullets
   // This handles data like: "* Item1 * Item2 * Item3"
-  if (!normalized.includes("\n") || normalized.split("\n").length === 1) {
+  const lines = normalized.split("\n");
+  if (lines.length <= 1) {
     // First, split by asterisk bullet markers
     // Look for patterns like "* text" at start or " * text" in middle
     normalized = normalized
@@ -48,11 +49,11 @@ function buildBulletTree(content: string): BulletNode[] {
       .replace(/\s+\*\s+/g, "\n• "); // Middle: " * text" -> "\n• text"
   }
   
-  const lines = normalized.split("\n");
+  const finalLines = normalized.split("\n");
   const roots: BulletNode[] = [];
   const stack: { level: number; node: BulletNode }[] = [];
 
-  lines.forEach((line) => {
+  finalLines.forEach((line) => {
     if (!line.trim()) return;
 
     const match = line.match(/^(\s*)([•◦▪])?\s*(.*)$/);
