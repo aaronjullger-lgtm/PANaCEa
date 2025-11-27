@@ -38,7 +38,8 @@ function buildBulletTree(content: string): BulletNode[] {
   let normalized = content.replace(/\r\n/g, "\n");
   
   // If content is on a single line, split by bullet markers
-  const hasNewlines = normalized.includes("\n") && normalized.split("\n").filter(l => l.trim()).length > 1;
+  const lines = normalized.split("\n");
+  const hasNewlines = lines.filter(l => l.trim()).length > 1;
   
   if (!hasNewlines) {
     // Split by bullet markers: "* " or "*   " patterns
@@ -59,8 +60,11 @@ function buildBulletTree(content: string): BulletNode[] {
     // Handle numbered items like "1.  " or "2.  "
     normalized = normalized.replace(/\s+(\d+)\.\s{2,}/g, "\n▪ ");
     
-    // Restore bold markers
-    normalized = normalized.replace(/__BOLD_(\d+)__/g, (_, index) => boldPlaceholders[parseInt(index)]);
+    // Restore bold markers with bounds checking
+    normalized = normalized.replace(/__BOLD_(\d+)__/g, (match, index) => {
+      const idx = parseInt(index);
+      return idx < boldPlaceholders.length ? boldPlaceholders[idx] : match;
+    });
   }
   
   const finalLines = normalized.split("\n");
