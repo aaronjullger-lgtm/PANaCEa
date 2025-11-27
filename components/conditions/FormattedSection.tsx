@@ -34,19 +34,33 @@ function toBoldParts(text: string): React.ReactNode[] {
 }
 
 function buildBulletTree(content: string): BulletNode[] {
-  // Normalize content: convert " * " pattern (bullets on single line) to newlines
-  // Be careful not to affect **bold** markers
+  // Normalize content: convert various bullet patterns to standardized format
   let normalized = content.replace(/\r\n/g, "\n");
   
-  // If content has no newlines or only one line, convert asterisk bullets
-  // This handles data like: "* Item1 * Item2 * Item3"
-  const lines = normalized.split("\n");
-  if (lines.length <= 1) {
-    // First, split by asterisk bullet markers
-    // Look for patterns like "* text" at start or " * text" in middle
+  // If content is on a single line, split by bullet markers
+  const hasNewlines = normalized.includes("\n") && normalized.split("\n").filter(l => l.trim()).length > 1;
+  
+  if (!hasNewlines) {
+    // Split by bullet markers: "* " or "*   " patterns
+    // First, protect **bold** markers by replacing them temporarily
+    const boldPlaceholders: string[] = [];
+    normalized = normalized.replace(/\*\*([^*]+)\*\*/g, (match) => {
+      boldPlaceholders.push(match);
+      return `__BOLD_${boldPlaceholders.length - 1}__`;
+    });
+    
+    // Now split by bullet patterns: " *   " or " * " (with spaces around)
+    // This handles patterns like: "text *   **Item:** description *   **Item2:**"
     normalized = normalized
-      .replace(/^\s*\*\s+/g, "• ")  // Start of string: "* text" -> "• text"
-      .replace(/\s+\*\s+/g, "\n• "); // Middle: " * text" -> "\n• text"
+      .replace(/^\s*\*\s+/g, "• ")  // Start of string
+      .replace(/\s+\*\s{2,}/g, "\n◦ ")  // " *   " pattern (3+ spaces) -> nested bullet
+      .replace(/\s+\*\s+/g, "\n• ");  // " * " pattern -> regular bullet
+    
+    // Handle numbered items like "1.  " or "2.  "
+    normalized = normalized.replace(/\s+(\d+)\.\s{2,}/g, "\n▪ ");
+    
+    // Restore bold markers
+    normalized = normalized.replace(/__BOLD_(\d+)__/g, (_, index) => boldPlaceholders[parseInt(index)]);
   }
   
   const finalLines = normalized.split("\n");
