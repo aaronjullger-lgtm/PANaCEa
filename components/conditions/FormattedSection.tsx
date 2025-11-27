@@ -78,16 +78,16 @@ function buildBulletTree(content: string): BulletNode[] {
   finalLines.forEach((line, lineIndex) => {
     if (!line.trim()) return;
 
-    // Check if line starts with asterisk bullet pattern: "*   " or "* "
+    // Check if line starts with asterisk bullet pattern: "* " or "*   " (1-4 spaces)
     // This indicates a nested bullet point (not bold marker which is "**")
-    const asteriskBulletMatch = line.match(/^(\*\s{1,})(.*)$/);
+    const asteriskBulletMatch = line.match(/^(\*\s{1,4})(.*)$/);
     let text: string;
     let isAsteriskBullet = false;
     let leadingSpaces = 0;
     let bulletSymbol = "";
 
     if (asteriskBulletMatch) {
-      // This is a nested bullet using asterisk syntax like "*   **Text**:"
+      // This is a nested bullet using asterisk syntax like "* **Text**:" or "*   **Text**:"
       isAsteriskBullet = true;
       text = asteriskBulletMatch[2].trim();
     } else {
