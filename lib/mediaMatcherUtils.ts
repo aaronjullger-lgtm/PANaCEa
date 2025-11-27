@@ -132,7 +132,7 @@ export function extractTags(filename: string): string[] {
       // Filter out trivial tokens
       if (TRIVIAL_TOKENS.has(token)) return false;
 
-      // Filter out very short tokens (1-2 characters)
+      // Filter out single character tokens
       if (token.length < 2) return false;
 
       return true;

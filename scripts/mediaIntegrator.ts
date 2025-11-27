@@ -18,7 +18,7 @@ import {
   extractTags,
   detectMediaTypeFromFolder,
   MediaType,
-} from "../lib/mediaMatcherUtils.ts";
+} from "../lib/mediaMatcherUtils.js";
 
 // Configuration
 const MEDIA_DIRECTORIES = [
