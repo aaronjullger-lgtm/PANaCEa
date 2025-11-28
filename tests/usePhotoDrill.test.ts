@@ -49,12 +49,14 @@ describe("Photo Drill System", () => {
     });
 
     it("should track confusion patterns correctly", () => {
-      // Simulate a confusion entry
-      const confusionMap: Record<string, { mistakenId: string; mistakenName: string }[]> = {};
+      // Simulate a confusion entry using the ConfusionMap interface pattern
+      const confusionMap: { [realId: string]: Array<{ mistakenId: string; mistakenName: string; timestamp: number; questionId: string }> } = {};
       const correctDiagnosisId = "afib";
       const mistakenDiagnosis = {
         mistakenId: "aflutter",
         mistakenName: "Atrial Flutter",
+        timestamp: Date.now(),
+        questionId: "test-question-1",
       };
 
       // Add confusion entry

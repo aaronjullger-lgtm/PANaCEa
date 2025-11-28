@@ -232,12 +232,15 @@ const GlobalPhotoMode: React.FC<GlobalPhotoModeProps> = ({
                 <span>System:</span>
                 <select
                   value={filters.system || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const validSystems: SystemCode[] = ["CV", "DERM", "PULM", "MSK", "HEENT", "NEURO", "ENDO", "GI", "GU", "HEME", "ID", "PSYCH", "RENAL", "REPRO", "PRO", "OTHER"];
+                    const system = validSystems.includes(value as SystemCode) ? (value as SystemCode) : undefined;
                     setFilters({
                       ...filters,
-                      system: (e.target.value as SystemCode) || undefined,
-                    })
-                  }
+                      system,
+                    });
+                  }}
                   className="bg-gray-800 border border-gray-700 rounded px-2 py-1 text-white text-sm"
                 >
                   <option value="">All Systems</option>
