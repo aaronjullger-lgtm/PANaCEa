@@ -3,13 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoDrill } from '@/hooks/game/use-photo-drill';
 import { Flame, X, ArrowRight, RotateCcw } from 'lucide-react';
 
+interface PhotoDrillSessionProps {
+  /** Callback to navigate back to the menu */
+  onExit?: () => void;
+}
+
 /**
  * PhotoDrillSession - Global Photo Mode UI
  * 
  * A radiology-style dark mode interface for medical image diagnosis training.
  * Consumes the usePhotoDrill hook for state management.
  */
-const PhotoDrillSession: React.FC = () => {
+const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
   const {
     currentCase,
     currentCaseIndex,
@@ -50,6 +55,14 @@ const PhotoDrillSession: React.FC = () => {
     setInputValue('');
   };
 
+  const handleExit = () => {
+    reset();
+    setInputValue('');
+    if (onExit) {
+      onExit();
+    }
+  };
+
   // Animation variants
   const imageVariants = {
     initial: { opacity: 0, scale: 0.95 },
@@ -68,7 +81,7 @@ const PhotoDrillSession: React.FC = () => {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
         <button
-          onClick={handleReset}
+          onClick={handleExit}
           className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
           aria-label="Exit session"
         >

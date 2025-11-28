@@ -34,6 +34,8 @@ interface MenuViewProps {
   onCloseModal: () => void;
   onConfirmSession: (settings: SessionSettings) => void;
   growthAreas: string[];
+  /** Callback for navigating to dedicated drill mode views */
+  onNavigateToDrillMode?: (modeId: string) => void;
 }
 
 // For the heatmap: one row per PANCE system
@@ -59,6 +61,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   onCloseModal,
   onConfirmSession,
   growthAreas,
+  onNavigateToDrillMode,
 }) => {
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
 
@@ -190,6 +193,12 @@ const MenuView: React.FC<MenuViewProps> = ({
                   focus: sessionFocus,
                   difficulty: 'same',
                 });
+              }}
+              onNavigateToMode={(route, mode) => {
+                // Navigate to the dedicated drill mode view
+                if (onNavigateToDrillMode) {
+                  onNavigateToDrillMode(mode.id);
+                }
               }}
               onClose={onCloseModal}
               dueQuestionsCount={dueQuestionsCount}

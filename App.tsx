@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import QuizView from "./components/QuizView";
 import MenuView from "./components/MenuView";
 import Loader from "./components/Loader";
+import PhotoDrillSession from "./components/PhotoDrillSession";
 import { prefetchQuestions } from "./services/geminiService";
 import type {
   Question,
@@ -10,12 +11,16 @@ import type {
   SessionSettings,
   SystemCode,
 } from "./types";
+import type { TrainingModeId } from "./config/training-modes";
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
 const FLAGGED_KEY = "panceai_flagged_v2";
 
-type View = "menu" | "quiz";
+/** Drill mode IDs that have dedicated view implementations */
+const DRILL_MODE_PHOTO: TrainingModeId = 'photo_drill';
+
+type View = "menu" | "quiz" | "photo_drill";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -268,6 +273,14 @@ const App: React.FC = () => {
   const hasActiveSession =
     !!sessionSettings && questionQueue && questionQueue.length > 0;
 
+  // Handler for navigating to drill modes with dedicated routes
+  const handleNavigateToDrillMode = (modeId: string) => {
+    if (modeId === DRILL_MODE_PHOTO) {
+      setView('photo_drill');
+    }
+    // Additional drill modes can be added here as they are implemented
+  };
+
   return (
     <div className="min-h-screen bg-[#F6F1EC] text-[#1F2933]">
       <div className="max-w-4xl mx-auto px-4 py-6 md:py-10">
@@ -295,6 +308,7 @@ const App: React.FC = () => {
             onCloseModal={() => setIsModalOpen(false)}
             onConfirmSession={handleConfirmSession}
             growthAreas={growthAreas}
+            onNavigateToDrillMode={handleNavigateToDrillMode}
           />
         )}
 
@@ -319,6 +333,10 @@ const App: React.FC = () => {
             removeFlaggedQuestion={removeFlaggedQuestion}
             updateQuestionNote={updateQuestionNote}
           />
+        )}
+
+        {view === "photo_drill" && (
+          <PhotoDrillSession onExit={() => setView("menu")} />
         )}
       </div>
     </div>
