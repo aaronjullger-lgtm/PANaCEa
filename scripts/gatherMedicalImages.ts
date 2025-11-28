@@ -4,15 +4,12 @@
  * This script uses Gemini 2.5 Pro API and Google Custom Search Engine (CSE)
  * to gather high-quality medical diagnostic images for conditions.
  *
- * Supports:
- * - EKG/ECG images for cardiac conditions
- * - X-ray images (chest, skeletal, etc.)
+ * Supports high-yield, recognizable modalities only:
+ * - EKG/ECG images for cardiac arrhythmias
+ * - X-ray images (chest XR and skeletal XR)
  * - CT scans
  * - MRI scans
- * - Echocardiograms
- * - Lab results/tables
  * - Dermatology clinical photographs
- * - Endoscopy images
  *
  * Run with: npx tsx scripts/gatherMedicalImages.ts
  * Or with: npm run media:gather
@@ -69,6 +66,7 @@ interface CSEResponse {
 
 /**
  * Diagnostic modality types for medical conditions
+ * Limited to high-yield, easily recognizable modalities
  */
 type DiagnosticModality =
   | "EKG"
@@ -76,16 +74,13 @@ type DiagnosticModality =
   | "XR"
   | "CT"
   | "MRI"
-  | "ECHO"
-  | "ULTRASOUND"
-  | "LABS"
-  | "ENDOSCOPY"
   | "DERM"
-  | "FUNDOSCOPY"
-  | "ANGIOGRAPHY"
-  | "PET"
-  | "BIOPSY"
   | "NONE";
+
+/**
+ * Supported modalities (excludes NONE)
+ */
+const SUPPORTED_MODALITIES: DiagnosticModality[] = ["EKG", "CXR", "XR", "CT", "MRI", "DERM"];
 
 /**
  * Strategy for finding diagnostic images
@@ -108,38 +103,29 @@ const MODALITY_SOURCES: Record<DiagnosticModality, string> = {
   XR: "site:radiopaedia.org OR site:orthobullets.com OR site:learningradiology.com",
   CT: "site:radiopaedia.org OR site:radiologyassistant.nl OR site:ctisus.com",
   MRI: "site:radiopaedia.org OR site:radiologyassistant.nl OR site:mrimaster.com",
-  ECHO: "site:echocardiographer.org OR site:123sonography.com OR site:asecho.org",
-  ULTRASOUND:
-    "site:radiopaedia.org OR site:123sonography.com OR site:sonoworld.com",
-  LABS: "site:labcorp.com OR site:mayoclinic.org OR site:nih.gov",
-  ENDOSCOPY: "site:endoscopy-campus.com OR site:gastrointestinalatlas.com",
   DERM: "site:dermnetnz.org OR site:dermis.net OR site:visualdx.com OR site:aad.org",
-  FUNDOSCOPY:
-    "site:eyewiki.org OR site:aao.org OR site:retinalphysician.com",
-  ANGIOGRAPHY: "site:radiopaedia.org OR site:radiologyassistant.nl",
-  PET: "site:radiopaedia.org OR site:snmmi.org",
-  BIOPSY: "site:pathologyoutlines.com OR site:webpathology.com",
   NONE: "",
 };
 
 /**
  * Medical category to typical modality mapping
+ * Only includes supported modalities (EKG, CXR, XR, CT, MRI, DERM)
  */
 const CATEGORY_DEFAULT_MODALITIES: Record<string, DiagnosticModality[]> = {
-  CV: ["EKG", "ECHO", "CXR", "CT", "ANGIOGRAPHY"],
-  PULM: ["CXR", "CT", "MRI"],
-  GI: ["CT", "ENDOSCOPY", "ULTRASOUND"],
+  CV: ["EKG", "CXR", "CT"],
+  PULM: ["CXR", "CT"],
+  GI: ["CT"],
   NEURO: ["CT", "MRI"],
   MSK: ["XR", "MRI", "CT"],
   DERM: ["DERM"],
-  ENDO: ["LABS", "ULTRASOUND"],
-  HEME: ["LABS"],
-  RENAL: ["LABS", "ULTRASOUND", "CT"],
-  GU: ["ULTRASOUND", "CT", "MRI"],
-  EENT: ["CT", "MRI", "FUNDOSCOPY"],
-  REPRO: ["ULTRASOUND"],
+  ENDO: ["NONE"],
+  HEME: ["NONE"],
+  RENAL: ["CT"],
+  GU: ["CT", "MRI"],
+  EENT: ["CT", "MRI"],
+  REPRO: ["NONE"],
   PSYCH: ["NONE"],
-  ID: ["CXR", "CT", "LABS"],
+  ID: ["CXR", "CT"],
 };
 
 // ================= INITIALIZATION =================
@@ -234,25 +220,26 @@ Overview: ${overview.slice(0, 500)}
 
 Analyze this condition and determine the PRIMARY diagnostic imaging modality used for diagnosis.
 
+ONLY choose from these HIGH-YIELD modalities:
+- EKG: For cardiac arrhythmias (atrial fibrillation, flutter, SVT, VT, heart blocks, etc.)
+- CXR: For chest X-ray findings (pneumonia, COPD, pneumothorax, cardiomegaly, etc.)
+- XR: For bone/skeletal X-rays (fractures, dislocations, arthritis, etc.)
+- CT: For cross-sectional imaging (stroke, abdominal pathology, trauma, tumors, etc.)
+- MRI: For soft tissue/neurological imaging (ACL tear, brain tumors, MS, disc herniation, etc.)
+- DERM: For dermatologic conditions (rashes, lesions, skin findings, clinical photographs)
+- NONE: For conditions without visual/imaging diagnosis (lab-only, psychiatric, symptoms only)
+
 RULES:
-1. For cardiac arrhythmias (atrial fibrillation, flutter, SVT, VT, heart blocks, etc.), the answer is EKG
-2. For pulmonary conditions (pneumonia, COPD, etc.), the answer is usually CXR
-3. For dermatologic conditions (rashes, lesions, skin findings), the answer is DERM (clinical photo)
-4. For fractures and bone conditions, the answer is XR
-5. For soft tissue injuries (ACL tear, meniscus), the answer is MRI
-6. For abdominal conditions, consider CT or ULTRASOUND
-7. For stroke, head trauma, or brain conditions, the answer is CT or MRI
-8. For conditions without visual diagnosis (pure lab diagnosis, psychiatric conditions), answer NONE
-9. For eye conditions with fundoscopic findings, answer FUNDOSCOPY
+1. Only output one of: EKG, CXR, XR, CT, MRI, DERM, or NONE
+2. Choose the most recognizable and educational image type
+3. If unsure or the condition is diagnosed primarily by labs/history, choose NONE
 
 Output EXACTLY in this JSON format (no markdown, no code blocks):
 {
-  "modality": "<EKG|CXR|XR|CT|MRI|ECHO|ULTRASOUND|LABS|ENDOSCOPY|DERM|FUNDOSCOPY|ANGIOGRAPHY|PET|BIOPSY|NONE>",
+  "modality": "<EKG|CXR|XR|CT|MRI|DERM|NONE>",
   "searchQuery": "<specific search query for finding this type of diagnostic image>",
   "verificationCriteria": "<what makes a good diagnostic image for this condition>"
-}
-
-If the condition is primarily non-visual (no imaging used), set modality to "NONE".`;
+}`;
 
   try {
     const response = await model.generateContent(prompt);
@@ -268,11 +255,12 @@ If the condition is primarily non-visual (no imaging used), set modality to "NON
 
     const parsed = JSON.parse(jsonText);
 
-    if (parsed.modality === "NONE") {
+    // Check if modality is supported (NONE means skip this condition)
+    const modality = parsed.modality as DiagnosticModality;
+    if (modality === "NONE" || !SUPPORTED_MODALITIES.includes(modality)) {
       return null;
     }
 
-    const modality = parsed.modality as DiagnosticModality;
     const sourceSites = MODALITY_SOURCES[modality] || "";
 
     return {
@@ -286,16 +274,19 @@ If the condition is primarily non-visual (no imaging used), set modality to "NON
   } catch (error) {
     console.error(`   [AI Analysis Error] ${error}`);
 
-    // Fallback to category-based defaults
+    // Fallback to category-based defaults - find first supported modality
     const defaultModalities = CATEGORY_DEFAULT_MODALITIES[category];
-    if (defaultModalities && defaultModalities[0] !== "NONE") {
-      const modality = defaultModalities[0];
-      return {
-        modality,
-        searchQuery: `${conditionName} ${modality} diagnostic image`,
-        sourceSites: MODALITY_SOURCES[modality] || "",
-        verificationCriteria: `Clear ${modality} showing ${conditionName}`,
-      };
+    if (defaultModalities) {
+      for (const modality of defaultModalities) {
+        if (modality !== "NONE" && SUPPORTED_MODALITIES.includes(modality)) {
+          return {
+            modality,
+            searchQuery: `${conditionName} ${modality} diagnostic image`,
+            sourceSites: MODALITY_SOURCES[modality] || "",
+            verificationCriteria: `Clear ${modality} showing ${conditionName}`,
+          };
+        }
+      }
     }
 
     return null;
@@ -463,22 +454,6 @@ async function verifyImageQuality(
       case "DERM":
         modalityPrompt =
           "This should be a real clinical photograph of a skin condition. REJECT illustrations, microscopy, or histology slides.";
-        break;
-      case "ECHO":
-        modalityPrompt =
-          "This should be a real echocardiogram image. REJECT diagrams or cartoons.";
-        break;
-      case "ULTRASOUND":
-        modalityPrompt =
-          "This should be a real ultrasound image. REJECT diagrams or illustrations.";
-        break;
-      case "ENDOSCOPY":
-        modalityPrompt =
-          "This should be a real endoscopy image showing the GI tract. REJECT diagrams.";
-        break;
-      case "FUNDOSCOPY":
-        modalityPrompt =
-          "This should be a real fundoscopic/retinal photograph. REJECT diagrams.";
         break;
       default:
         modalityPrompt =
