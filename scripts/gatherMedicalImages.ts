@@ -541,17 +541,54 @@ async function processCondition(
 
   await sleep(REQUEST_DELAY_MS);
 
-  // Search for images - first try with source sites
+  // Search for images - try multiple strategies
+  // Strategy 1: Use AI-generated query without site restrictions (most flexible)
   let searchResults = await searchImages(
     strategy.searchQuery,
-    strategy.sourceSites,
+    "", // No site restrictions for better results
     5
   );
 
-  // Fallback: broader search if no results
+  // Strategy 2: Try with trusted source sites
   if (searchResults.length === 0) {
-    console.log(`   -> Tier 1 empty, trying broader search...`);
-    const broadQuery = `${conditionName} ${strategy.modality} medical diagnostic -cartoon -diagram -illustration`;
+    console.log(`   -> Tier 1 empty, trying trusted sources...`);
+    searchResults = await searchImages(
+      strategy.searchQuery,
+      strategy.sourceSites,
+      5
+    );
+  }
+
+  // Strategy 3: Broader search with modality-specific terms
+  if (searchResults.length === 0) {
+    console.log(`   -> Tier 2 empty, trying broader search...`);
+    let modalityTerms = "";
+    switch (strategy.modality) {
+      case "EKG":
+        modalityTerms = "ECG EKG electrocardiogram strip rhythm";
+        break;
+      case "CXR":
+        modalityTerms = "chest x-ray xray radiograph";
+        break;
+      case "XR":
+        modalityTerms = "x-ray xray radiograph";
+        break;
+      case "CT":
+        modalityTerms = "CT scan computed tomography axial";
+        break;
+      case "MRI":
+        modalityTerms = "MRI magnetic resonance imaging";
+        break;
+      case "DERM":
+        modalityTerms = "clinical photo dermatology skin lesion";
+        break;
+      case "FUNDOSCOPY":
+        modalityTerms = "fundoscopy fundus ophthalmoscopy retina";
+        break;
+      default:
+        modalityTerms = "medical diagnostic image";
+    }
+    const broadQuery = `${conditionName} ${modalityTerms} -cartoon -diagram -illustration -icon`;
     searchResults = await searchImages(broadQuery, "", 5);
   }
 
