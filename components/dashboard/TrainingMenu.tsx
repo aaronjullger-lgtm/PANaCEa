@@ -13,7 +13,7 @@ import {
   Trophy,
   LucideIcon,
 } from 'lucide-react';
-import { MODE_REGISTRY, TrainingModeConfig } from '@/config/training-modes';
+import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
 
 /**
  * Icon mapping helper to map string names from the config to Lucide React components.
@@ -34,6 +34,8 @@ type FocusOption = 'all' | 'growth' | 'flagged' | 'due';
 
 interface TrainingMenuProps {
   onStartSession?: (modeId: string, focus?: FocusOption) => void;
+  /** Callback for navigating to a dedicated mode route */
+  onNavigateToMode?: (route: string, mode: TrainingModeConfig) => void;
   onClose?: () => void;
   /** Number of questions due for spaced repetition review */
   dueQuestionsCount?: number;
@@ -51,7 +53,8 @@ interface TrainingMenuProps {
  * - Section B: A Bento-style grid for specific Drill Modes
  */
 const TrainingMenu: React.FC<TrainingMenuProps> = ({ 
-  onStartSession, 
+  onStartSession,
+  onNavigateToMode,
   onClose,
   dueQuestionsCount = 0,
   flaggedQuestionsCount = 0,
@@ -121,6 +124,23 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
    */
   const handleDrillClick = (mode: TrainingModeConfig) => {
     if (mode.isComingSoon) return;
+    
+    // Debug logging to help troubleshoot routing issues
+    console.log('[TrainingMenu] handleDrillClick:', {
+      modeId: mode.id,
+      route: mode.route,
+      hasDedicatedRoute: MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId),
+    });
+
+    // Check if this mode has a dedicated route
+    if (MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId)) {
+      console.log(`[TrainingMenu] Navigating to dedicated route: ${mode.route}`);
+      onNavigateToMode?.(mode.route, mode);
+      onClose?.();
+      return;
+    }
+
+    // Fall back to standard session start
     onStartSession?.(mode.id);
     onClose?.();
   };

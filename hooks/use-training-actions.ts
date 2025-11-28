@@ -1,0 +1,93 @@
+/**
+ * useTrainingActions - Hook for handling training mode navigation and actions.
+ * 
+ * This hook provides functions to navigate to different training modes
+ * based on their configuration in the MODE_REGISTRY.
+ */
+
+import { useCallback } from 'react';
+import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
+
+export interface UseTrainingActionsOptions {
+  /** Callback when a mode with a route is selected */
+  onNavigate?: (route: string, mode: TrainingModeConfig) => void;
+  /** Callback when core session should be started (fallback for modes without special handling) */
+  onStartCoreSession?: (focus?: string) => void;
+}
+
+export interface UseTrainingActionsReturn {
+  /** Navigate to a specific training mode by its ID */
+  navigateToMode: (modeId: TrainingModeId, focus?: string) => void;
+  /** Get the mode configuration by ID */
+  getModeById: (modeId: TrainingModeId) => TrainingModeConfig | undefined;
+  /** Check if a mode has a dedicated route */
+  hasDedicatedRoute: (modeId: TrainingModeId) => boolean;
+}
+
+/**
+ * Hook for handling training mode navigation and actions.
+ */
+export function useTrainingActions(
+  options: UseTrainingActionsOptions = {}
+): UseTrainingActionsReturn {
+  const { onNavigate, onStartCoreSession } = options;
+
+  /**
+   * Get the mode configuration by ID.
+   */
+  const getModeById = useCallback((modeId: TrainingModeId): TrainingModeConfig | undefined => {
+    return MODE_REGISTRY.find((mode) => mode.id === modeId);
+  }, []);
+
+  /**
+   * Check if a mode has a dedicated route.
+   */
+  const hasDedicatedRoute = useCallback((modeId: TrainingModeId): boolean => {
+    return MODES_WITH_DEDICATED_ROUTES.includes(modeId);
+  }, []);
+
+  /**
+   * Navigate to a specific training mode.
+   * 
+   * - If the mode has a dedicated route, calls onNavigate with the route.
+   * - Otherwise, falls back to onStartCoreSession for quiz-based modes.
+   */
+  const navigateToMode = useCallback(
+    (modeId: TrainingModeId, focus?: string) => {
+      const mode = getModeById(modeId);
+      
+      // Debug logging to help troubleshoot routing issues
+      console.log('[useTrainingActions] navigateToMode called:', {
+        modeId,
+        focus,
+        mode: mode ? { id: mode.id, route: mode.route, label: mode.label } : null,
+        hasDedicatedRoute: hasDedicatedRoute(modeId),
+      });
+
+      if (!mode) {
+        console.warn(`[useTrainingActions] Mode not found in registry: ${modeId}`);
+        return;
+      }
+
+      // Check if this mode has a dedicated route
+      if (hasDedicatedRoute(modeId)) {
+        console.log(`[useTrainingActions] Navigating to dedicated route: ${mode.route}`);
+        onNavigate?.(mode.route, mode);
+        return;
+      }
+
+      // Fall back to core session for modes without dedicated pages
+      console.log(`[useTrainingActions] Starting core session for mode: ${modeId}`);
+      onStartCoreSession?.(focus);
+    },
+    [getModeById, hasDedicatedRoute, onNavigate, onStartCoreSession]
+  );
+
+  return {
+    navigateToMode,
+    getModeById,
+    hasDedicatedRoute,
+  };
+}
+
+export default useTrainingActions;
