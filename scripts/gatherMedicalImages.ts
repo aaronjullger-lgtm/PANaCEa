@@ -40,8 +40,6 @@ const IMAGE_OUTPUT_DIR = "public/media";
 const MODEL_NAME = "gemini-2.5-pro";
 
 // Image Settings
-const TARGET_WIDTH = 1200;
-const MAX_RETRIES = 3;
 const REQUEST_DELAY_MS = 1500; // Delay between API requests to avoid rate limiting
 
 // ================= TYPES =================
