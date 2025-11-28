@@ -4,12 +4,13 @@
  * This script uses Gemini 2.5 Pro API and Google Custom Search Engine (CSE)
  * to gather high-quality medical diagnostic images for conditions.
  *
- * Supports high-yield, recognizable modalities only:
+ * Supports gold standard, recognizable modalities for PA student education:
  * - EKG/ECG images for cardiac arrhythmias
  * - X-ray images (chest XR and skeletal XR)
  * - CT scans
  * - MRI scans
  * - Dermatology clinical photographs
+ * - Fundoscopy/ophthalmoscopy images (retinal findings)
  *
  * Run with: npx tsx scripts/gatherMedicalImages.ts
  * Or with: npm run media:gather
@@ -66,7 +67,7 @@ interface CSEResponse {
 
 /**
  * Diagnostic modality types for medical conditions
- * Limited to high-yield, easily recognizable modalities
+ * Gold standard modalities that PA students should recognize
  */
 type DiagnosticModality =
   | "EKG"
@@ -75,12 +76,13 @@ type DiagnosticModality =
   | "CT"
   | "MRI"
   | "DERM"
+  | "FUNDOSCOPY"
   | "NONE";
 
 /**
  * Supported modalities (excludes NONE)
  */
-const SUPPORTED_MODALITIES: DiagnosticModality[] = ["EKG", "CXR", "XR", "CT", "MRI", "DERM"];
+const SUPPORTED_MODALITIES: DiagnosticModality[] = ["EKG", "CXR", "XR", "CT", "MRI", "DERM", "FUNDOSCOPY"];
 
 /**
  * Strategy for finding diagnostic images
@@ -104,12 +106,13 @@ const MODALITY_SOURCES: Record<DiagnosticModality, string> = {
   CT: "site:radiopaedia.org OR site:radiologyassistant.nl OR site:ctisus.com",
   MRI: "site:radiopaedia.org OR site:radiologyassistant.nl OR site:mrimaster.com",
   DERM: "site:dermnetnz.org OR site:dermis.net OR site:visualdx.com OR site:aad.org",
+  FUNDOSCOPY: "site:eyewiki.org OR site:aao.org OR site:retinalphysician.com OR site:webeye.ophth.uiowa.edu",
   NONE: "",
 };
 
 /**
  * Medical category to typical modality mapping
- * Only includes supported modalities (EKG, CXR, XR, CT, MRI, DERM)
+ * Includes gold standard modalities for PA student recognition
  */
 const CATEGORY_DEFAULT_MODALITIES: Record<string, DiagnosticModality[]> = {
   CV: ["EKG", "CXR", "CT"],
@@ -122,7 +125,7 @@ const CATEGORY_DEFAULT_MODALITIES: Record<string, DiagnosticModality[]> = {
   HEME: ["NONE"],
   RENAL: ["CT"],
   GU: ["CT", "MRI"],
-  EENT: ["CT", "MRI"],
+  EENT: ["FUNDOSCOPY", "CT", "MRI"],
   REPRO: ["NONE"],
   PSYCH: ["NONE"],
   ID: ["CXR", "CT"],
@@ -218,25 +221,29 @@ Category: ${category}
 Diagnostic Information: ${diagnosticNotes.slice(0, 1500)}
 Overview: ${overview.slice(0, 500)}
 
-Analyze this condition and determine the PRIMARY diagnostic imaging modality used for diagnosis.
+Analyze this condition and determine the GOLD STANDARD diagnostic imaging modality that a PA student should be able to recognize.
 
-ONLY choose from these HIGH-YIELD modalities:
-- EKG: For cardiac arrhythmias (atrial fibrillation, flutter, SVT, VT, heart blocks, etc.)
-- CXR: For chest X-ray findings (pneumonia, COPD, pneumothorax, cardiomegaly, etc.)
-- XR: For bone/skeletal X-rays (fractures, dislocations, arthritis, etc.)
-- CT: For cross-sectional imaging (stroke, abdominal pathology, trauma, tumors, etc.)
-- MRI: For soft tissue/neurological imaging (ACL tear, brain tumors, MS, disc herniation, etc.)
-- DERM: For dermatologic conditions (rashes, lesions, skin findings, clinical photographs)
-- NONE: For conditions without visual/imaging diagnosis (lab-only, psychiatric, symptoms only)
+Choose from these modalities:
+- EKG: For cardiac arrhythmias, MI, heart blocks (atrial fibrillation, flutter, SVT, VT, STEMI, Afib with RVR, etc.)
+- CXR: For chest X-ray findings (pneumonia, COPD, pneumothorax, cardiomegaly, pleural effusion, etc.)
+- XR: For bone/skeletal X-rays (fractures, dislocations, arthritis, osteomyelitis, etc.)
+- CT: For cross-sectional imaging (stroke, PE, appendicitis, diverticulitis, abdominal trauma, tumors, etc.)
+- MRI: For soft tissue/neurological imaging (ACL tear, brain tumors, MS plaques, disc herniation, spinal cord lesions, etc.)
+- DERM: For dermatologic conditions visible on skin (rashes, lesions, melanoma, psoriasis, eczema, skin infections, etc.)
+- FUNDOSCOPY: For retinal/eye findings visible on ophthalmoscopy (CRAO, papilledema, diabetic retinopathy, hypertensive retinopathy, optic neuritis, etc.)
+- NONE: For conditions diagnosed primarily by labs, history, or physical exam without a recognizable image
 
 RULES:
-1. Only output one of: EKG, CXR, XR, CT, MRI, DERM, or NONE
-2. Choose the most recognizable and educational image type
-3. If unsure or the condition is diagnosed primarily by labs/history, choose NONE
+1. Choose the modality that produces the MOST RECOGNIZABLE diagnostic image for this condition
+2. If there is a classic/pathognomonic finding on imaging, choose that modality
+3. For eye conditions with fundoscopic findings (CRAO, CRVO, papilledema, retinopathy), choose FUNDOSCOPY
+4. For skin conditions, always choose DERM
+5. For cardiac arrhythmias, always choose EKG
+6. If the condition is diagnosed primarily by labs/symptoms/history without imaging, choose NONE
 
 Output EXACTLY in this JSON format (no markdown, no code blocks):
 {
-  "modality": "<EKG|CXR|XR|CT|MRI|DERM|NONE>",
+  "modality": "<EKG|CXR|XR|CT|MRI|DERM|FUNDOSCOPY|NONE>",
   "searchQuery": "<specific search query for finding this type of diagnostic image>",
   "verificationCriteria": "<what makes a good diagnostic image for this condition>"
 }`;
@@ -454,6 +461,10 @@ async function verifyImageQuality(
       case "DERM":
         modalityPrompt =
           "This should be a real clinical photograph of a skin condition. REJECT illustrations, microscopy, or histology slides.";
+        break;
+      case "FUNDOSCOPY":
+        modalityPrompt =
+          "This should be a real fundoscopic/ophthalmoscopic photograph showing the retina. REJECT diagrams, illustrations, or cartoons.";
         break;
       default:
         modalityPrompt =
