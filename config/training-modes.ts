@@ -59,7 +59,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     category: 'visual',
     iconName: 'Image',
     theme: 'slate',
-    route: '/session/photo-drill',
+    route: '/drill/photo',
   },
   {
     id: 'rapid_recall',
@@ -98,3 +98,9 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     route: '/session/mastery-drill',
   },
 ];
+
+/**
+ * Mode IDs that have dedicated routes/pages and should not fall back to core session.
+ * Export this to maintain a single source of truth across components.
+ */
+export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = ['photo_drill'];
