@@ -11,10 +11,14 @@ import type {
   SessionSettings,
   SystemCode,
 } from "./types";
+import type { TrainingModeId } from "./config/training-modes";
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
 const FLAGGED_KEY = "panceai_flagged_v2";
+
+/** Drill mode IDs that have dedicated view implementations */
+const DRILL_MODE_PHOTO: TrainingModeId = 'photo_drill';
 
 type View = "menu" | "quiz" | "photo_drill";
 
@@ -271,7 +275,7 @@ const App: React.FC = () => {
 
   // Handler for navigating to drill modes with dedicated routes
   const handleNavigateToDrillMode = (modeId: string) => {
-    if (modeId === 'photo_drill') {
+    if (modeId === DRILL_MODE_PHOTO) {
       setView('photo_drill');
     }
     // Additional drill modes can be added here as they are implemented
