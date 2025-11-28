@@ -29,6 +29,7 @@ type FocusOption = 'all' | 'growth' | 'flagged';
 
 interface TrainingMenuProps {
   onStartSession?: (modeId: string, focus?: FocusOption) => void;
+  onClose?: () => void;
 }
 
 /**
@@ -38,7 +39,7 @@ interface TrainingMenuProps {
  * - Section A: A prominent Hero card for the Core Adaptive session
  * - Section B: A Bento-style grid for specific Drill Modes
  */
-const TrainingMenu: React.FC<TrainingMenuProps> = ({ onStartSession }) => {
+const TrainingMenu: React.FC<TrainingMenuProps> = ({ onStartSession, onClose }) => {
   // Localized state for the Core Adaptive focus toggle
   const [focus, setFocus] = useState<FocusOption>('all');
 
@@ -69,6 +70,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onStartSession }) => {
   const handleDrillClick = (mode: TrainingModeConfig) => {
     if (mode.isComingSoon) return;
     onStartSession?.(mode.id);
+    onClose?.();
   };
 
   /**
@@ -77,6 +79,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onStartSession }) => {
   const handleCoreStart = () => {
     if (coreMode) {
       onStartSession?.(coreMode.id, focus);
+      onClose?.();
     }
   };
 
