@@ -123,7 +123,11 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
    * Handle drill mode card click
    */
   const handleDrillClick = (mode: TrainingModeConfig) => {
-    if (mode.isComingSoon) return;
+    // Check if mode is blocked due to "coming soon" status
+    if (mode.isComingSoon) {
+      console.warn(`[TrainingMenu] Mode "${mode.label}" is marked as coming soon. Check config to enable.`);
+      return;
+    }
     
     // Debug logging to help troubleshoot routing issues
     console.log('[TrainingMenu] handleDrillClick:', {
@@ -132,16 +136,27 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       hasDedicatedRoute: MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId),
     });
 
+    // Log the route we're attempting to navigate to (for debugging)
+    console.log('Attempting nav to:', mode.route);
+
     // Check if this mode has a dedicated route
     if (MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId)) {
       console.log(`[TrainingMenu] Navigating to dedicated route: ${mode.route}`);
-      onNavigateToMode?.(mode.route, mode);
+      if (onNavigateToMode) {
+        onNavigateToMode(mode.route, mode);
+      } else {
+        console.warn('[TrainingMenu] onNavigateToMode callback not provided. Navigation will not occur.');
+      }
       onClose?.();
       return;
     }
 
     // Fall back to standard session start
-    onStartSession?.(mode.id);
+    if (onStartSession) {
+      onStartSession(mode.id);
+    } else {
+      console.warn('[TrainingMenu] onStartSession callback not provided. Session will not start.');
+    }
     onClose?.();
   };
 
@@ -170,6 +185,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <button
+            type="button"
             key={option.value}
             onClick={() => !option.disabled && setFocus(option.value)}
             disabled={option.disabled}
@@ -271,6 +287,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
     return (
       <button
+        type="button"
         key={mode.id}
         onClick={() => handleDrillClick(mode)}
         disabled={isDisabled}
@@ -350,6 +367,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             {/* Right side: Start button */}
             <div className="flex items-center">
               <button
+                type="button"
                 onClick={handleCoreStart}
                 className="w-full md:w-auto px-8 py-3.5 bg-[#3D1B0E] text-white font-semibold rounded-xl hover:bg-[#2b130a] transition-colors shadow-md hover:shadow-lg"
               >

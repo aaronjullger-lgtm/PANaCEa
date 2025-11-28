@@ -69,16 +69,33 @@ export function useTrainingActions(
         return;
       }
 
+      // Check if mode is blocked due to "coming soon" status
+      if (mode.isComingSoon) {
+        console.warn(`[useTrainingActions] Mode "${mode.label}" is marked as coming soon. Check config to enable.`);
+        return;
+      }
+
+      // Log the route we're attempting to navigate to (for debugging)
+      console.log('Attempting nav to:', mode.route);
+
       // Check if this mode has a dedicated route
       if (hasDedicatedRoute(modeId)) {
         console.log(`[useTrainingActions] Navigating to dedicated route: ${mode.route}`);
-        onNavigate?.(mode.route, mode);
+        if (onNavigate) {
+          onNavigate(mode.route, mode);
+        } else {
+          console.warn('[useTrainingActions] onNavigate callback not provided. Navigation will not occur.');
+        }
         return;
       }
 
       // Fall back to core session for modes without dedicated pages
       console.log(`[useTrainingActions] Starting core session for mode: ${modeId}`);
-      onStartCoreSession?.(focus);
+      if (onStartCoreSession) {
+        onStartCoreSession(focus);
+      } else {
+        console.warn('[useTrainingActions] onStartCoreSession callback not provided. Session will not start.');
+      }
     },
     [getModeById, hasDedicatedRoute, onNavigate, onStartCoreSession]
   );
