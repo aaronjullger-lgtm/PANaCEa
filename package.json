@@ -7,6 +7,7 @@
     "dev": "vite",
     "sync:condition-content": "tsx ./scripts/convertMdToJson.ts",
     "media:integrate": "tsx ./scripts/mediaIntegrator.ts",
+    "media:gather": "tsx ./scripts/gatherMedicalImages.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run"
