@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Brain,
   Image,
@@ -9,6 +9,8 @@ import {
   FileText,
   Flame,
   HelpCircle,
+  Clock,
+  Trophy,
   LucideIcon,
 } from 'lucide-react';
 import { MODE_REGISTRY, TrainingModeConfig } from '@/config/training-modes';
@@ -25,11 +27,20 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Flame,
 };
 
-type FocusOption = 'all' | 'growth' | 'flagged';
+/** Storage key for streak high score */
+const STREAK_HIGH_SCORE_KEY = 'panceai_streak_high_score';
+
+type FocusOption = 'all' | 'growth' | 'flagged' | 'due';
 
 interface TrainingMenuProps {
   onStartSession?: (modeId: string, focus?: FocusOption) => void;
   onClose?: () => void;
+  /** Number of questions due for spaced repetition review */
+  dueQuestionsCount?: number;
+  /** Number of flagged questions */
+  flaggedQuestionsCount?: number;
+  /** Number of growth areas identified */
+  growthAreasCount?: number;
 }
 
 /**
@@ -39,15 +50,56 @@ interface TrainingMenuProps {
  * - Section A: A prominent Hero card for the Core Adaptive session
  * - Section B: A Bento-style grid for specific Drill Modes
  */
-const TrainingMenu: React.FC<TrainingMenuProps> = ({ onStartSession, onClose }) => {
+const TrainingMenu: React.FC<TrainingMenuProps> = ({ 
+  onStartSession, 
+  onClose,
+  dueQuestionsCount = 0,
+  flaggedQuestionsCount = 0,
+  growthAreasCount = 0,
+}) => {
   // Localized state for the Core Adaptive focus toggle
   const [focus, setFocus] = useState<FocusOption>('all');
+  
+  // Streak high score from localStorage
+  const [streakHighScore, setStreakHighScore] = useState<number>(0);
+  
+  // Load streak high score on mount
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = window.localStorage.getItem(STREAK_HIGH_SCORE_KEY);
+        if (saved) {
+          setStreakHighScore(parseInt(saved, 10) || 0);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load streak high score from localStorage:', error);
+    }
+  }, []);
 
   // Get the core adaptive mode from registry
   const coreMode = MODE_REGISTRY.find((mode) => mode.category === 'core' && mode.id === 'core_adaptive');
 
   // Filter out the core category for the Bento grid
   const drillModes = MODE_REGISTRY.filter((mode) => mode.category !== 'core');
+
+  /**
+   * Get focus-specific description text
+   */
+  const getFocusDescription = (): string => {
+    switch (focus) {
+      case 'all':
+        return 'The gold standard adaptive quiz engine. Practice PANCE-level questions tailored to your knowledge gaps and performance history.';
+      case 'growth':
+        return `Focus on your ${growthAreasCount} identified weak areas. Target the topics where you need the most improvement.`;
+      case 'flagged':
+        return `Review your ${flaggedQuestionsCount} flagged questions. Revisit concepts you marked for extra practice.`;
+      case 'due':
+        return `${dueQuestionsCount} questions are due for spaced repetition review. Strengthen long-term retention with timed reviews.`;
+      default:
+        return 'Practice PANCE-level questions tailored to your needs.';
+    }
+  };
 
   /**
    * Get background color class based on theme
@@ -87,25 +139,37 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onStartSession, onClose }) 
    * Render focus toggle (segmented control)
    */
   const renderFocusToggle = () => {
-    const options: { value: FocusOption; label: string }[] = [
+    const options: { value: FocusOption; label: string; count?: number; disabled?: boolean }[] = [
       { value: 'all', label: 'All Topics' },
-      { value: 'growth', label: 'Growth Areas' },
-      { value: 'flagged', label: 'Flagged' },
+      { value: 'growth', label: 'Growth Areas', count: growthAreasCount, disabled: growthAreasCount === 0 },
+      { value: 'flagged', label: 'Flagged', count: flaggedQuestionsCount, disabled: flaggedQuestionsCount === 0 },
+      { value: 'due', label: 'Due', count: dueQuestionsCount, disabled: dueQuestionsCount === 0 },
     ];
 
     return (
-      <div className="flex rounded-full bg-stone-200 p-1">
+      <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <button
             key={option.value}
-            onClick={() => setFocus(option.value)}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
+            onClick={() => !option.disabled && setFocus(option.value)}
+            disabled={option.disabled}
+            className={`px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
               focus === option.value
-                ? 'bg-white text-stone-900 shadow-sm'
-                : 'text-stone-600 hover:text-stone-900'
+                ? 'bg-[#3D1B0E] text-white shadow-sm'
+                : option.disabled
+                ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                : 'bg-stone-200 text-stone-700 hover:bg-stone-300'
             }`}
           >
+            {option.value === 'due' && <Clock className="w-3.5 h-3.5" />}
             {option.label}
+            {option.count !== undefined && option.count > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                focus === option.value ? 'bg-white/20' : 'bg-stone-300'
+              }`}>
+                {option.count}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -113,11 +177,77 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onStartSession, onClose }) 
   };
 
   /**
-   * Render drill mode card
+   * Get special styling for specific drill modes
+   */
+  const getDrillModeStyles = (modeId: string): { 
+    background: string; 
+    border: string;
+    overlay?: string;
+    iconBg: string;
+  } => {
+    switch (modeId) {
+      case 'photo_drill':
+        return {
+          background: 'bg-gradient-to-br from-slate-100 to-slate-200',
+          border: 'border-slate-300',
+          overlay: 'before:absolute before:inset-0 before:bg-[url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Cpath d=\'M10 50 Q25 30 40 50 T70 50 T100 50\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'0.5\' opacity=\'0.3\'/%3E%3Cpath d=\'M10 60 Q25 40 40 60 T70 60 T100 60\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'0.5\' opacity=\'0.2\'/%3E%3C/svg%3E")] before:opacity-30 before:rounded-2xl',
+          iconBg: 'bg-white/80',
+        };
+      case 'rapid_recall':
+        return {
+          background: 'bg-gradient-to-br from-amber-50 to-amber-100',
+          border: 'border-amber-200',
+          iconBg: 'bg-white/80',
+        };
+      case 'ddx_compare':
+        return {
+          background: 'bg-gradient-to-br from-blue-50 to-blue-100',
+          border: 'border-blue-200',
+          iconBg: 'bg-white/80',
+        };
+      case 'mastery_drill':
+        return {
+          background: streakHighScore > 0 
+            ? 'bg-gradient-to-br from-orange-100 via-red-100 to-orange-100' 
+            : 'bg-gradient-to-br from-red-50 to-red-100',
+          border: streakHighScore > 0 ? 'border-orange-300 ring-2 ring-orange-400/50' : 'border-red-200',
+          iconBg: 'bg-white/80',
+        };
+      default:
+        return {
+          background: getThemeBackground(MODE_REGISTRY.find(m => m.id === modeId)?.theme || 'stone'),
+          border: 'border-stone-200',
+          iconBg: 'bg-white/60',
+        };
+    }
+  };
+
+  /**
+   * Get custom description for drill modes
+   */
+  const getDrillDescription = (mode: TrainingModeConfig): string => {
+    switch (mode.id) {
+      case 'ddx_compare':
+        return 'Confusing Appendicitis vs. Diverticulitis? Master the differences.';
+      case 'mastery_drill':
+        return 'Answer until you miss. How long can you survive?';
+      case 'photo_drill':
+        return 'ECG rhythms, derm lesions, and imaging findings. Train your visual diagnosis.';
+      case 'rapid_recall':
+        return 'Lightning-fast buzzwords and flashcard drills.';
+      default:
+        return mode.description;
+    }
+  };
+
+  /**
+   * Render drill mode card with unique styling per mode
    */
   const renderDrillCard = (mode: TrainingModeConfig) => {
     const IconComponent = ICON_MAP[mode.iconName] ?? HelpCircle;
     const isDisabled = mode.isComingSoon;
+    const styles = getDrillModeStyles(mode.id);
+    const isStreakMode = mode.id === 'mastery_drill';
 
     return (
       <button
@@ -125,27 +255,44 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onStartSession, onClose }) 
         onClick={() => handleDrillClick(mode)}
         disabled={isDisabled}
         className={`
-          relative p-5 rounded-2xl border border-stone-200
-          text-left transition-transform
-          ${getThemeBackground(mode.theme)}
+          relative p-5 rounded-2xl border overflow-hidden
+          text-left transition-all duration-200
+          ${styles.background}
+          ${styles.border}
+          ${styles.overlay || ''}
           ${isDisabled 
             ? 'opacity-50 cursor-not-allowed grayscale' 
-            : 'hover:scale-[1.02] cursor-pointer shadow-sm hover:shadow-md'
+            : 'hover:scale-[1.02] cursor-pointer shadow-sm hover:shadow-lg'
           }
+          ${isStreakMode && streakHighScore > 0 ? 'animate-pulse-subtle' : ''}
         `}
       >
         {isDisabled && (
-          <span className="absolute top-2 right-2 text-xs font-medium text-stone-500 bg-stone-200 px-2 py-0.5 rounded-full">
+          <span className="absolute top-2 right-2 text-xs font-medium text-stone-500 bg-stone-200 px-2 py-0.5 rounded-full z-10">
             Coming Soon
           </span>
         )}
-        <div className="flex flex-col gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/60 flex items-center justify-center shadow-sm">
-            <IconComponent className="w-5 h-5 text-stone-700" />
+        
+        {/* Streak high score badge */}
+        {isStreakMode && streakHighScore > 0 && (
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold z-10">
+            <Trophy className="w-3 h-3" />
+            {streakHighScore}
+          </div>
+        )}
+        
+        <div className="flex flex-col gap-3 relative z-[1]">
+          <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shadow-sm`}>
+            <IconComponent className={`w-5 h-5 ${isStreakMode && streakHighScore > 0 ? 'text-orange-600' : 'text-stone-700'}`} />
           </div>
           <div>
-            <h3 className="font-semibold text-stone-900 text-base">{mode.label}</h3>
-            <p className="text-sm text-stone-600 mt-1 line-clamp-2">{mode.description}</p>
+            <h3 className="font-semibold text-stone-900 text-base flex items-center gap-2">
+              {mode.label}
+              {isStreakMode && streakHighScore > 0 && (
+                <Flame className="w-4 h-4 text-orange-500" />
+              )}
+            </h3>
+            <p className="text-sm text-stone-600 mt-1 line-clamp-2">{getDrillDescription(mode)}</p>
           </div>
         </div>
       </button>
@@ -168,9 +315,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({ onStartSession, onClose }) 
                   <h2 className="text-xl font-bold text-stone-900">
                     Core PANCE Simulation
                   </h2>
-                  <p className="text-stone-600 mt-1">
-                    The gold standard adaptive quiz engine. Practice PANCE-level questions
-                    tailored to your knowledge gaps and performance history.
+                  <p className="text-stone-600 mt-1 min-h-[3rem] transition-all duration-200">
+                    {getFocusDescription()}
                   </p>
                 </div>
               </div>

@@ -181,13 +181,20 @@ const MenuView: React.FC<MenuViewProps> = ({
             <TrainingMenu
               onStartSession={(modeId, focus) => {
                 // Map TrainingMenu focus to SessionSettings format
-                const sessionFocus = focus === 'flagged' ? 'reviewFlagged' : focus || 'all';
+                let sessionFocus: SessionSettings['focus'] = 'all';
+                if (focus === 'flagged') sessionFocus = 'reviewFlagged';
+                else if (focus === 'due') sessionFocus = 'review';
+                else if (focus === 'growth') sessionFocus = 'growth';
+                
                 onConfirmSession({
-                  focus: sessionFocus as SessionSettings['focus'],
+                  focus: sessionFocus,
                   difficulty: 'same',
                 });
               }}
               onClose={onCloseModal}
+              dueQuestionsCount={dueQuestionsCount}
+              flaggedQuestionsCount={flaggedQuestions.length}
+              growthAreasCount={growthAreas.length}
             />
           </div>
         </div>
