@@ -349,12 +349,24 @@ async function searchImages(
 // ================= IMAGE DOWNLOAD =================
 
 /**
+ * Check if a URL has a supported protocol (http or https)
+ */
+function isValidImageUrl(url: string): boolean {
+  return url.startsWith("http://") || url.startsWith("https://");
+}
+
+/**
  * Download an image from a URL
  */
 async function downloadImage(
   imageUrl: string,
   outputPath: string
 ): Promise<boolean> {
+  // Validate URL protocol before attempting download
+  if (!isValidImageUrl(imageUrl)) {
+    return false;
+  }
+
   return new Promise((resolve) => {
     const protocol = imageUrl.startsWith("https") ? https : http;
 
@@ -366,7 +378,13 @@ async function downloadImage(
         response.statusCode < 400 &&
         response.headers.location
       ) {
-        downloadImage(response.headers.location, outputPath)
+        const redirectUrl = response.headers.location;
+        // Validate redirect URL has a supported protocol
+        if (!isValidImageUrl(redirectUrl)) {
+          resolve(false);
+          return;
+        }
+        downloadImage(redirectUrl, outputPath)
           .then(resolve)
           .catch(() => resolve(false));
         return;
@@ -559,6 +577,12 @@ async function processCondition(
   for (let i = 0; i < searchResults.length; i++) {
     const candidate = searchResults[i];
     console.log(`   -> Candidate ${i + 1}/${searchResults.length}...`);
+
+    // Skip URLs with unsupported protocols (e.g., x-raw-image:)
+    if (!isValidImageUrl(candidate.link)) {
+      console.log(`      Skipped (unsupported URL protocol)`);
+      continue;
+    }
 
     // Download image to temp location
     const tempPath = path.join(outputDir, `temp_${sanitizedKey}.jpg`);
