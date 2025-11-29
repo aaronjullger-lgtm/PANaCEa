@@ -19,6 +19,7 @@ export interface ConditionContent {
   management?: string[];
   complications?: string[];
   prognosis?: string;
+  aliases?: string[];
 }
 
 import baseContent from "./conditionContent.generated.json";
