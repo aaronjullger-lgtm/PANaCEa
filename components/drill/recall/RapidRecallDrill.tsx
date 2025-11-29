@@ -94,9 +94,28 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
     }
   }, [currentBuzzword, getNextBuzzword]);
 
+  /**
+   * Normalize a diagnosis string for comparison.
+   * Handles common variations in medical terminology.
+   */
+  const normalizeDiagnosis = (str: string): string => {
+    return str
+      .toLowerCase()
+      .trim()
+      // Remove possessive 's (e.g., "Crohn's" → "Crohn")
+      .replace(/['']s\b/g, '')
+      // Remove common articles and connectors
+      .replace(/\b(the|a|an|of|and)\b/g, ' ')
+      // Normalize whitespace
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
   const handleSubmit = useCallback((answer: string) => {
     const correctAnswer = BUZZWORD_DICTIONARY[currentBuzzword];
-    const isAnswerCorrect = answer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+    const normalizedAnswer = normalizeDiagnosis(answer);
+    const normalizedCorrect = normalizeDiagnosis(correctAnswer);
+    const isAnswerCorrect = normalizedAnswer === normalizedCorrect;
     
     setUserAnswer(answer);
     setIsCorrect(isAnswerCorrect);

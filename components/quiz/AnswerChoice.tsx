@@ -47,7 +47,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     ref
   ) => {
     const handleMainClick = (e: React.MouseEvent) => {
-      // Don't select if clicking the X icon area or if eliminated
+      // Don't select if the answer is eliminated or already answered
       if (isAnswered || isEliminated) return;
       onSelect(index);
     };

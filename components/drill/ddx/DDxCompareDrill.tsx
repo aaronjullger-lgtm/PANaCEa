@@ -229,9 +229,7 @@ const DDxCompareDrill: React.FC<DDxCompareDrillProps> = ({ onExit }) => {
     initial: { opacity: 0, y: 50, scale: 0.9 },
     animate: { opacity: 1, y: 0, scale: 1 },
     exit: { opacity: 0, y: -50, scale: 0.9 },
-  };
-
-  const swipeVariants = {
+    // Swipe animations for left/right choices
     left: { x: -200, opacity: 0, rotate: -15 },
     right: { x: 200, opacity: 0, rotate: 15 },
   };
