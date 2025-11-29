@@ -3,7 +3,7 @@
 
 import fs from "fs";
 import path from "path";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 
 // ======================================================
 // CONFIG
@@ -12,8 +12,8 @@ const MODEL_NAME = "gemini-2.5-flash-preview-05-20";
 const INPUT_FILE = path.resolve("conditionContent.generated.json");
 const OUTPUT_FILE = path.resolve("conditionContent.generated.json");
 const MAX_RETRIES = 3;
-const MAX_CONCURRENCY = 2;
 const DELAY_BETWEEN_REQUESTS = 1000; // 1 second delay
+const PLACEHOLDER_VALUE = "--";
 
 // ======================================================
 // REQUIRED SECTIONS
@@ -41,7 +41,7 @@ type SectionName = (typeof REQUIRED_SECTIONS)[number];
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
 
 let client: GoogleGenerativeAI | null = null;
-let model: any = null;
+let model: GenerativeModel | null = null;
 
 if (apiKey) {
   client = new GoogleGenerativeAI(apiKey);
@@ -168,25 +168,25 @@ function generatePlaceholderSections(
         result.epidemiology = `Epidemiology of ${conditionName}. Content to be generated.`;
         break;
       case "riskFactors":
-        result.riskFactors = ["--"];
+        result.riskFactors = [PLACEHOLDER_VALUE];
         break;
       case "clinicalPresentation":
         result.clinicalPresentation = `Clinical presentation of ${conditionName}. Content to be generated.`;
         break;
       case "symptoms":
-        result.symptoms = ["--"];
+        result.symptoms = [PLACEHOLDER_VALUE];
         break;
       case "examFindings":
-        result.examFindings = ["--"];
+        result.examFindings = [PLACEHOLDER_VALUE];
         break;
       case "treatment":
-        result.treatment = ["--"];
+        result.treatment = [PLACEHOLDER_VALUE];
         break;
       case "management":
-        result.management = ["--"];
+        result.management = [PLACEHOLDER_VALUE];
         break;
       case "complications":
-        result.complications = ["--"];
+        result.complications = [PLACEHOLDER_VALUE];
         break;
       case "prognosis":
         result.prognosis = `Prognosis for ${conditionName}. Content to be generated.`;
@@ -278,9 +278,10 @@ IMPORTANT: Return ONLY the JSON object with the missing sections, no markdown fo
 
       const content = JSON.parse(text) as Partial<ConditionContent>;
       return content;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
       console.error(
-        `  ❌ Attempt ${attempt} failed for ${conditionId}: ${err.message}`
+        `  ❌ Attempt ${attempt} failed for ${conditionId}: ${errorMessage}`
       );
       if (attempt === MAX_RETRIES) {
         return null;
