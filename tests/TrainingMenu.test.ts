@@ -38,7 +38,7 @@ describe('TrainingMenu Component Logic', () => {
 
   describe('Icon Mapping', () => {
     // Icon names used in MODE_REGISTRY
-    const expectedIconNames = ['Brain', 'Image', 'Zap', 'GitCompare', 'FileText', 'Flame'];
+    const expectedIconNames = ['Brain', 'Image', 'Zap', 'GitCompare', 'FileText', 'Flame', 'ClipboardList'];
     
     it('should have valid icon names for all modes', () => {
       MODE_REGISTRY.forEach((mode) => {

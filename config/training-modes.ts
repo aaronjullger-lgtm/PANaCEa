@@ -84,9 +84,10 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Guideline Mode',
     description: 'Criteria & Standards.',
     category: 'core',
-    iconName: 'FileText',
+    iconName: 'ClipboardList',
     theme: 'teal',
-    route: '/session/guideline-drill',
+    route: '/guidelines',
+    isComingSoon: false,
   },
   {
     id: 'mastery_drill',
@@ -103,4 +104,4 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
  * Mode IDs that have dedicated routes/pages and should not fall back to core session.
  * Export this to maintain a single source of truth across components.
  */
-export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = ['photo_drill'];
+export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = ['photo_drill', 'rapid_recall', 'ddx_compare'];

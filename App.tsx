@@ -5,6 +5,8 @@ import QuizView from "./components/QuizView";
 import MenuView from "./components/MenuView";
 import Loader from "./components/Loader";
 import PhotoDrillSession from "./components/PhotoDrillSession";
+import RapidRecallDrill from "./components/drill/recall/RapidRecallDrill";
+import DDxCompareDrill from "./components/drill/ddx/DDxCompareDrill";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import { prefetchQuestions } from "./services/geminiService";
 import type {
@@ -21,8 +23,10 @@ const FLAGGED_KEY = "panceai_flagged_v2";
 
 /** Drill mode IDs that have dedicated view implementations */
 const DRILL_MODE_PHOTO: TrainingModeId = 'photo_drill';
+const DRILL_MODE_RAPID_RECALL: TrainingModeId = 'rapid_recall';
+const DRILL_MODE_DDX_COMPARE: TrainingModeId = 'ddx_compare';
 
-type View = "menu" | "quiz" | "photo_drill";
+type View = "menu" | "quiz" | "photo_drill" | "rapid_recall" | "ddx_compare";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -279,8 +283,11 @@ const App: React.FC = () => {
   const handleNavigateToDrillMode = (modeId: string) => {
     if (modeId === DRILL_MODE_PHOTO) {
       setView('photo_drill');
+    } else if (modeId === DRILL_MODE_RAPID_RECALL) {
+      setView('rapid_recall');
+    } else if (modeId === DRILL_MODE_DDX_COMPARE) {
+      setView('ddx_compare');
     }
-    // Additional drill modes can be added here as they are implemented
   };
 
   // Animation variants for page transitions
@@ -384,6 +391,14 @@ const App: React.FC = () => {
 
           {view === "photo_drill" && (
             <PhotoDrillSession onExit={() => setView("menu")} />
+          )}
+
+          {view === "rapid_recall" && (
+            <RapidRecallDrill onExit={() => setView("menu")} />
+          )}
+
+          {view === "ddx_compare" && (
+            <DDxCompareDrill onExit={() => setView("menu")} />
           )}
         </AnimatePresence>
       </div>
