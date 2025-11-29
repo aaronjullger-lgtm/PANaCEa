@@ -1105,12 +1105,7 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   { system: "DERM", subcategory: "Malignancy", condition: "Squamous Cell Carcinoma" , aliases: ["SCC"] },
   { system: "DERM", subcategory: "Malignancy", condition: "Melanoma" , aliases: ["Malignant Melanoma"] },
   { system: "DERM", subcategory: "Malignancy", condition: "Merkel Cell Carcinoma" },
-  { system: "DERM", subcategory: "Malignancy", condition: "Cutaneous T-Cell Lymphoma (Mycosis Fungoides)" },
-
-  // Biologic Therapy & Advanced Tx
-  { system: "DERM", subcategory: "Biologic Therapy", condition: "Biologic Therapy for Plaque Psoriasis (TNF, IL-17, IL-23 Inhibitors)" },
-  { system: "DERM", subcategory: "Biologic Therapy", condition: "Dupilumab Therapy for Moderate-to-Severe Atopic Dermatitis" },
-  { system: "DERM", subcategory: "Biologic Therapy", condition: "Adalimumab for Hidradenitis Suppurativa" }
+  { system: "DERM", subcategory: "Malignancy", condition: "Cutaneous T-Cell Lymphoma (Mycosis Fungoides)" }
 ];
 
 // -------------------------------------------
@@ -1316,14 +1311,6 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
   { system: "REPRO", subcategory: "Cervix / STI", condition: "Gonococcal Cervicitis" },
   { system: "REPRO", subcategory: "Cervix / STI", condition: "Human Papillomavirus (HPV) – Genital Warts" },
   { system: "REPRO", subcategory: "Cervix / STI", condition: "Cervical Dysplasia (LSIL/HSIL)" },
-
-  // CONTRACEPTION & FAMILY PLANNING
-  { system: "REPRO", subcategory: "Contraception", condition: "Combined Hormonal Contraception (Pill/Patch/Ring)" },
-  { system: "REPRO", subcategory: "Contraception", condition: "Progestin-Only Contraception (Pill/Injection/Implant)" },
-  { system: "REPRO", subcategory: "Contraception", condition: "Intrauterine Devices (Copper and Hormonal)" },
-  { system: "REPRO", subcategory: "Contraception", condition: "Emergency Contraception" },
-  { system: "REPRO", subcategory: "Sterilization", condition: "Female Sterilization (Tubal Ligation/Salpingectomy)" },
-  { system: "REPRO", subcategory: "Sterilization", condition: "Male Sterilization (Vasectomy)" },
 
   // INFERTILITY & REPRODUCTIVE ENDOCRINE
   { system: "REPRO", subcategory: "Infertility", condition: "Female Infertility – Anovulation" },
@@ -1675,109 +1662,6 @@ export const CONDITION_REGISTRY_PSYCH: ConditionMeta[] = [
   { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Neuroleptic Malignant Syndrome" }
 ];
 
-// -------------------------------------------
-// PRO REGISTRY (Professional Practice)
-// -------------------------------------------
-
-export const CONDITION_REGISTRY_PRO: ConditionMeta[] = [
-  // PROFESSIONALISM & ETHICS
-  { system: "PRO", subcategory: "Professionalism & Ethics", condition: "Professional Behavior & Accountability" },
-  { system: "PRO", subcategory: "Professionalism & Ethics", condition: "Informed Consent & Shared Decision-Making" },
-  { system: "PRO", subcategory: "Professionalism & Ethics", condition: "Confidentiality & HIPAA" },
-  { system: "PRO", subcategory: "Professionalism & Ethics", condition: "Managing Conflicts of Interest" },
-  { system: "PRO", subcategory: "Professionalism & Ethics", condition: "Boundary Issues & Dual Relationships" },
-  { system: "PRO", subcategory: "Professionalism & Ethics", condition: "Ethical Decision-Making in Complex Cases" },
-  { system: "PRO", subcategory: "Professionalism & Ethics", condition: "End-of-Life Care & Advance Directives" },
-  { system: "PRO", subcategory: "Professionalism & Ethics", condition: "Allocation of Scarce Resources & Justice in Care" },
-
-  // LEGAL & REGULATORY PRACTICE
-  { system: "PRO", subcategory: "Legal & Regulatory Practice", condition: "Scope of Practice for Physician Assistants" },
-  { system: "PRO", subcategory: "Legal & Regulatory Practice", condition: "Licensure, Certification, and Credentialing" },
-  { system: "PRO", subcategory: "Legal & Regulatory Practice", condition: "Mandatory Reporting (Abuse, Neglect, Public Health)" },
-  { system: "PRO", subcategory: "Legal & Regulatory Practice", condition: "Duty to Warn & Tarasoff-Type Situations" },
-  { system: "PRO", subcategory: "Legal & Regulatory Practice", condition: "Medical Malpractice & Negligence Elements" },
-  { system: "PRO", subcategory: "Legal & Regulatory Practice", condition: "Standard of Care & Expert Testimony" },
-  { system: "PRO", subcategory: "Legal & Regulatory Practice", condition: "Informed Refusal & Patient Autonomy" },
-
-  // RISK MANAGEMENT & PATIENT SAFETY
-  { system: "PRO", subcategory: "Risk Management & Patient Safety", condition: "Adverse Event Recognition & Disclosure" },
-  { system: "PRO", subcategory: "Risk Management & Patient Safety", condition: "Near Misses & Error Reporting Systems" },
-  { system: "PRO", subcategory: "Risk Management & Patient Safety", condition: "Root Cause Analysis & Systems Thinking" },
-  { system: "PRO", subcategory: "Risk Management & Patient Safety", condition: "High-Risk Medications & Prescribing Safety" },
-  { system: "PRO", subcategory: "Risk Management & Patient Safety", condition: "Medication Reconciliation & Transitions of Care" },
-  { system: "PRO", subcategory: "Risk Management & Patient Safety", condition: "Safe Handoffs & Sign-Out Communication" },
-
-  // INFECTION CONTROL & OCCUPATIONAL SAFETY
-  { system: "PRO", subcategory: "Infection Control & Occupational Safety", condition: "Standard Precautions & Transmission-Based Precautions" },
-  { system: "PRO", subcategory: "Infection Control & Occupational Safety", condition: "Hand Hygiene & Environmental Infection Control" },
-  { system: "PRO", subcategory: "Infection Control & Occupational Safety", condition: "Needlestick & Bloodborne Pathogen Exposure Management" },
-  { system: "PRO", subcategory: "Infection Control & Occupational Safety", condition: "Personal Protective Equipment (PPE) Use" },
-  { system: "PRO", subcategory: "Infection Control & Occupational Safety", condition: "Occupational Health Screening & Immunizations" },
-
-  // COMMUNICATION & INTERPROFESSIONAL PRACTICE
-  { system: "PRO", subcategory: "Communication & Interprofessional Practice", condition: "Effective Patient-Centered Communication" },
-  { system: "PRO", subcategory: "Communication & Interprofessional Practice", condition: "Breaking Bad News & Difficult Conversations" },
-  { system: "PRO", subcategory: "Communication & Interprofessional Practice", condition: "Health Literacy & Teach-Back Method" },
-  { system: "PRO", subcategory: "Communication & Interprofessional Practice", condition: "Shared Decision-Making with Patients & Families" },
-  { system: "PRO", subcategory: "Communication & Interprofessional Practice", condition: "Interprofessional Team Communication & Collaboration" },
-  { system: "PRO", subcategory: "Communication & Interprofessional Practice", condition: "Managing Conflict Within the Healthcare Team" },
-
-  // CULTURAL COMPETENCE & HEALTH EQUITY
-  { system: "PRO", subcategory: "Cultural Competence & Health Equity", condition: "Cultural Humility & Respect for Diversity" },
-  { system: "PRO", subcategory: "Cultural Competence & Health Equity", condition: "Addressing Health Disparities & Social Determinants of Health" },
-  { system: "PRO", subcategory: "Cultural Competence & Health Equity", condition: "Implicit Bias & Its Impact on Care" },
-  { system: "PRO", subcategory: "Cultural Competence & Health Equity", condition: "Use of Medical Interpreters & Language Access" },
-  { system: "PRO", subcategory: "Cultural Competence & Health Equity", condition: "LGBTQ+ Inclusive Care & Gender-Affirming Practices" },
-
-  // EVIDENCE-BASED PRACTICE & RESEARCH
-  { system: "PRO", subcategory: "Evidence-Based Practice & Research", condition: "Formulating Clinical Questions (PICO/PICOT)" },
-  { system: "PRO", subcategory: "Evidence-Based Practice & Research", condition: "Levels of Evidence & Study Design Hierarchy" },
-  { system: "PRO", subcategory: "Evidence-Based Practice & Research", condition: "Understanding Sensitivity, Specificity, and Predictive Values" },
-  { system: "PRO", subcategory: "Evidence-Based Practice & Research", condition: "Interpreting Relative Risk, Odds Ratio, and Confidence Intervals" },
-  { system: "PRO", subcategory: "Evidence-Based Practice & Research", condition: "Number Needed to Treat (NNT) and Number Needed to Harm (NNH)" },
-  { system: "PRO", subcategory: "Evidence-Based Practice & Research", condition: "Critical Appraisal of Clinical Guidelines & Literature" },
-
-  // HEALTH PROMOTION & DISEASE PREVENTION
-  { system: "PRO", subcategory: "Health Promotion & Disease Prevention", condition: "Preventive Screening Recommendations (USPSTF Concepts)" },
-  { system: "PRO", subcategory: "Health Promotion & Disease Prevention", condition: "Lifestyle Counseling (Diet, Exercise, Tobacco, Alcohol)" },
-  { system: "PRO", subcategory: "Health Promotion & Disease Prevention", condition: "Vaccination Principles & Population Health" },
-  { system: "PRO", subcategory: "Health Promotion & Disease Prevention", condition: "Behavior Change Models & Motivational Interviewing" },
-  { system: "PRO", subcategory: "Health Promotion & Disease Prevention", condition: "Chronic Disease Management & Self-Management Support" },
-
-  // HEALTH POLICY & HEALTHCARE SYSTEMS
-  { system: "PRO", subcategory: "Health Policy & Healthcare Systems", condition: "Healthcare Delivery Models (Primary Care, PCMH, ACO)" },
-  { system: "PRO", subcategory: "Health Policy & Healthcare Systems", condition: "Insurance Basics (Medicare, Medicaid, Private, Uninsured)" },
-  { system: "PRO", subcategory: "Health Policy & Healthcare Systems", condition: "Quality Metrics & Performance Measurement" },
-  { system: "PRO", subcategory: "Health Policy & Healthcare Systems", condition: "Value-Based Care & Pay-for-Performance Concepts" },
-  { system: "PRO", subcategory: "Health Policy & Healthcare Systems", condition: "Advocacy Roles of PAs in Healthcare Policy" },
-
-  // DOCUMENTATION, BILLING, & CODING
-  { system: "PRO", subcategory: "Documentation, Billing, & Coding", condition: "Accurate & Legible Clinical Documentation" },
-  { system: "PRO", subcategory: "Documentation, Billing, & Coding", condition: "Problem-Oriented Medical Records & SOAP Notes" },
-  { system: "PRO", subcategory: "Documentation, Billing, & Coding", condition: "ICD-10 & CPT Coding Principles (Conceptual)" },
-  { system: "PRO", subcategory: "Documentation, Billing, & Coding", condition: "Medical Necessity & Justification for Services" },
-  { system: "PRO", subcategory: "Documentation, Billing, & Coding", condition: "Avoiding Upcoding, Fraud, and Abuse" },
-
-  // PRACTICE MANAGEMENT & SYSTEMS-BASED CARE
-  { system: "PRO", subcategory: "Practice Management & Systems-Based Care", condition: "Care Coordination & Case Management" },
-  { system: "PRO", subcategory: "Practice Management & Systems-Based Care", condition: "Transitions of Care & Hospital Discharge Planning" },
-  { system: "PRO", subcategory: "Practice Management & Systems-Based Care", condition: "Chronic Care Models & Team-Based Care" },
-  { system: "PRO", subcategory: "Practice Management & Systems-Based Care", condition: "Time Management & Panel Management for PAs" },
-  { system: "PRO", subcategory: "Practice Management & Systems-Based Care", condition: "Quality Improvement Cycles (PDSA, Lean, Six Sigma Concepts)" },
-
-  // TECHNOLOGY, TELEMEDICINE, & INFORMATICS
-  { system: "PRO", subcategory: "Technology, Telemedicine, & Informatics", condition: "Electronic Health Records (EHR) Best Practices" },
-  { system: "PRO", subcategory: "Technology, Telemedicine, & Informatics", condition: "Telemedicine Etiquette, Consent, and Limitations" },
-  { system: "PRO", subcategory: "Technology, Telemedicine, & Informatics", condition: "Data Privacy & Security in Digital Health" },
-  { system: "PRO", subcategory: "Technology, Telemedicine, & Informatics", condition: "Clinical Decision Support Tools & Order Sets" },
-
-  // IMPAIRED PROVIDER & DISRUPTIVE BEHAVIOR
-  { system: "PRO", subcategory: "Impaired Provider & Disruptive Behavior", condition: "Recognition of Impaired Colleague (Substance Use, Cognitive Decline)" },
-  { system: "PRO", subcategory: "Impaired Provider & Disruptive Behavior", condition: "Reporting Impaired or Unsafe Colleagues" },
-  { system: "PRO", subcategory: "Impaired Provider & Disruptive Behavior", condition: "Disruptive Behavior & Its Impact on Team and Patient Safety" },
-  { system: "PRO", subcategory: "Impaired Provider & Disruptive Behavior", condition: "Institutional Policies for Fitness-for-Duty & Remediation" }
-];
-
 // ============================================
 // OTHER (Non-blueprint, uncategorizable items)
 // Not shown on heatmap
@@ -1943,7 +1827,6 @@ export const CONDITION_REGISTRY: ConditionMeta[] = [
   ...CONDITION_REGISTRY_REPRO,
   ...CONDITION_REGISTRY_HEENT,
   ...CONDITION_REGISTRY_PSYCH,
-  ...CONDITION_REGISTRY_PRO,
   ...CONDITION_REGISTRY_OTHER,
 ];
 
