@@ -466,7 +466,7 @@ const QuizView: React.FC<QuizViewProps> = ({
             </button>
             <button
               onClick={onEndSession}
-              className="px-6 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] font-semibold rounded-lg hover:bg-slate-300 transition-colors"
+              className="px-6 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] font-semibold rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors border border-[var(--color-border)]"
             >
               End Session
             </button>
@@ -485,10 +485,10 @@ const QuizView: React.FC<QuizViewProps> = ({
             {/* Back to dashboard */}
             <button
               onClick={onShowMenu}
-              className="p-2 rounded-full bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)] transition-colors flex-shrink-0 flex items-center justify-center"
+              className="p-2 rounded-full bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors flex-shrink-0 flex items-center justify-center border border-[var(--color-border)]"
               aria-label="Back to Menu"
             >
-              <ArrowLeftIcon className="w-6 h-6 text-slate-600" />
+              <ArrowLeftIcon className="w-6 h-6 text-[var(--color-text-secondary)]" />
             </button>
             <p className="text-sm font-medium text-[var(--color-text-muted)] truncate">
               Question {questionNumber}

@@ -6,13 +6,13 @@ type Theme = 'light' | 'dark';
 export function useTheme(): [Theme, Dispatch<SetStateAction<Theme>>] {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === 'undefined') {
-      return 'light';
+      return 'dark';
     }
     const savedTheme = window.localStorage.getItem('pance-ai-theme') as Theme;
     if (savedTheme) {
       return savedTheme;
     }
-    // Default to dark mode for modern aesthetic
+    // Default to dark mode for modern aesthetic, but respect system preference
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'dark';
   });
 
