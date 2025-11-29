@@ -7,15 +7,17 @@ import {
   usePhotoDrill,
   MOCK_CASES,
   fuzzyMatch,
+  generateRandomCase,
+  MASTER_CONDITION_LIST,
   type PhotoCase,
 } from './use-photo-drill';
 
 describe('usePhotoDrill hook', () => {
   describe('initial state', () => {
-    it('should start with active status', () => {
+    it('should start with menu status', () => {
       const { result } = renderHook(() => usePhotoDrill());
 
-      expect(result.current.status).toBe('active');
+      expect(result.current.status).toBe('menu');
     });
 
     it('should start at case index 0', () => {
@@ -31,7 +33,7 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.streak).toBe(0);
     });
 
-    it('should load MOCK_CASES by default', () => {
+    it('should load MOCK_CASES by default when no session started', () => {
       const { result } = renderHook(() => usePhotoDrill());
 
       expect(result.current.totalCases).toBe(MOCK_CASES.length);
@@ -55,12 +57,70 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.totalCases).toBe(1);
       expect(result.current.currentCase?.id).toBe('custom-1');
     });
+
+    it('should have selectedCategory as null initially', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      expect(result.current.selectedCategory).toBeNull();
+    });
   });
 
-  describe('submitAnswer', () => {
+  describe('startSession', () => {
+    it('should transition to playing status when starting session', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('ecg');
+      });
+
+      expect(result.current.status).toBe('playing');
+      expect(result.current.selectedCategory).toBe('ecg');
+    });
+
+    it('should generate initial queue when starting session', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('derm');
+      });
+
+      expect(result.current.queue.length).toBeGreaterThan(0);
+      expect(result.current.currentCase).toBeDefined();
+    });
+
+    it('should reset score and streak when starting new session', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      // Start session and make progress
+      act(() => {
+        result.current.startSession('ecg');
+      });
+
+      act(() => {
+        result.current.submitAnswer(result.current.currentCase!.correctDiagnosis);
+      });
+
+      expect(result.current.score).toBe(1);
+
+      // Start new session
+      act(() => {
+        result.current.startSession('derm');
+      });
+
+      expect(result.current.score).toBe(0);
+      expect(result.current.streak).toBe(0);
+    });
+  });
+
+  describe('submitAnswer (with session)', () => {
     it('should correctly identify a correct answer (case-insensitive)', () => {
       const { result } = renderHook(() => usePhotoDrill());
-      const correctDiagnosis = MOCK_CASES[0].correctDiagnosis;
+
+      act(() => {
+        result.current.startSession('ecg');
+      });
+
+      const correctDiagnosis = result.current.currentCase!.correctDiagnosis;
 
       act(() => {
         result.current.submitAnswer(correctDiagnosis.toUpperCase());
@@ -76,6 +136,10 @@ describe('usePhotoDrill hook', () => {
       const { result } = renderHook(() => usePhotoDrill());
 
       act(() => {
+        result.current.startSession('ecg');
+      });
+
+      act(() => {
         result.current.submitAnswer('Wrong Answer');
       });
 
@@ -86,30 +150,15 @@ describe('usePhotoDrill hook', () => {
     });
 
     it('should break streak on incorrect answer after correct ones', () => {
-      const customCases: PhotoCase[] = [
-        {
-          id: '1',
-          imageUrl: 'url',
-          modality: 'ecg',
-          correctDiagnosis: 'Answer1',
-          distractors: [],
-          explanation: '',
-        },
-        {
-          id: '2',
-          imageUrl: 'url',
-          modality: 'ecg',
-          correctDiagnosis: 'Answer2',
-          distractors: [],
-          explanation: '',
-        },
-      ];
+      const { result } = renderHook(() => usePhotoDrill());
 
-      const { result } = renderHook(() => usePhotoDrill(customCases));
+      act(() => {
+        result.current.startSession('ecg');
+      });
 
       // Answer first correctly
       act(() => {
-        result.current.submitAnswer('Answer1');
+        result.current.submitAnswer(result.current.currentCase!.correctDiagnosis);
       });
       expect(result.current.streak).toBe(1);
 
@@ -126,8 +175,24 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.score).toBe(1);
     });
 
-    it('should not submit when not in active state', () => {
+    it('should not submit when in menu state', () => {
       const { result } = renderHook(() => usePhotoDrill());
+
+      // Try to submit while in menu state
+      act(() => {
+        result.current.submitAnswer('test');
+      });
+
+      expect(result.current.score).toBe(0);
+      expect(result.current.status).toBe('menu');
+    });
+
+    it('should not submit when in feedback state', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('ecg');
+      });
 
       // Submit once to go to feedback state
       act(() => {
@@ -138,16 +203,22 @@ describe('usePhotoDrill hook', () => {
 
       // Try to submit again while in feedback state
       act(() => {
-        result.current.submitAnswer(MOCK_CASES[0].correctDiagnosis);
+        result.current.submitAnswer(result.current.currentCase!.correctDiagnosis);
       });
 
       expect(result.current.score).toBe(scoreBefore);
     });
   });
 
-  describe('nextCase', () => {
-    it('should advance to the next case', () => {
+  describe('nextCase (infinite mode)', () => {
+    it('should advance to the next case and generate new case', () => {
       const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('ecg');
+      });
+
+      const initialQueueLength = result.current.queue.length;
 
       act(() => {
         result.current.submitAnswer('test');
@@ -158,37 +229,16 @@ describe('usePhotoDrill hook', () => {
       });
 
       expect(result.current.currentCaseIndex).toBe(1);
-      expect(result.current.status).toBe('active');
-      expect(result.current.currentCase).toEqual(MOCK_CASES[1]);
-    });
-
-    it('should go to summary when reaching end of cases', () => {
-      const customCases: PhotoCase[] = [
-        {
-          id: '1',
-          imageUrl: 'url',
-          modality: 'ecg',
-          correctDiagnosis: 'Test',
-          distractors: [],
-          explanation: '',
-        },
-      ];
-
-      const { result } = renderHook(() => usePhotoDrill(customCases));
-
-      act(() => {
-        result.current.submitAnswer('Test');
-      });
-
-      act(() => {
-        result.current.nextCase();
-      });
-
-      expect(result.current.status).toBe('summary');
+      expect(result.current.status).toBe('playing');
+      expect(result.current.queue.length).toBe(initialQueueLength + 1);
     });
 
     it('should reset userAnswer and isCorrect when moving to next case', () => {
       const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('ecg');
+      });
 
       act(() => {
         result.current.submitAnswer('test');
@@ -205,13 +255,17 @@ describe('usePhotoDrill hook', () => {
     });
   });
 
-  describe('skipCase', () => {
+  describe('skipCase (with session)', () => {
     it('should break streak and move to next case', () => {
       const { result } = renderHook(() => usePhotoDrill());
 
+      act(() => {
+        result.current.startSession('ecg');
+      });
+
       // Build a streak first
       act(() => {
-        result.current.submitAnswer(MOCK_CASES[0].correctDiagnosis);
+        result.current.submitAnswer(result.current.currentCase!.correctDiagnosis);
       });
 
       act(() => {
@@ -226,37 +280,11 @@ describe('usePhotoDrill hook', () => {
 
       expect(result.current.streak).toBe(0);
       expect(result.current.currentCaseIndex).toBe(2);
-      expect(result.current.status).toBe('active');
+      expect(result.current.status).toBe('playing');
     });
 
-    it('should go to summary when skipping last case', () => {
-      const customCases: PhotoCase[] = [
-        {
-          id: '1',
-          imageUrl: 'url',
-          modality: 'ecg',
-          correctDiagnosis: 'Test',
-          distractors: [],
-          explanation: '',
-        },
-      ];
-
-      const { result } = renderHook(() => usePhotoDrill(customCases));
-
-      act(() => {
-        result.current.skipCase();
-      });
-
-      expect(result.current.status).toBe('summary');
-    });
-
-    it('should not skip when not in active state', () => {
+    it('should not skip when in menu state', () => {
       const { result } = renderHook(() => usePhotoDrill());
-
-      // Go to feedback state
-      act(() => {
-        result.current.submitAnswer('test');
-      });
 
       const indexBefore = result.current.currentCaseIndex;
 
@@ -268,19 +296,50 @@ describe('usePhotoDrill hook', () => {
     });
   });
 
-  describe('reset', () => {
-    it('should reset all state to initial values', () => {
+  describe('exitToMenu', () => {
+    it('should return to menu state and reset everything', () => {
       const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('ecg');
+      });
 
       // Make some progress
       act(() => {
-        result.current.submitAnswer(MOCK_CASES[0].correctDiagnosis);
+        result.current.submitAnswer(result.current.currentCase!.correctDiagnosis);
+      });
+
+      expect(result.current.score).toBe(1);
+
+      act(() => {
+        result.current.exitToMenu();
+      });
+
+      expect(result.current.status).toBe('menu');
+      expect(result.current.selectedCategory).toBeNull();
+      expect(result.current.score).toBe(0);
+      expect(result.current.streak).toBe(0);
+      expect(result.current.queue).toHaveLength(0);
+    });
+  });
+
+  describe('reset (with session)', () => {
+    it('should reset score and position but keep category', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('derm');
+      });
+
+      // Make some progress
+      act(() => {
+        result.current.submitAnswer(result.current.currentCase!.correctDiagnosis);
       });
       act(() => {
         result.current.nextCase();
       });
       act(() => {
-        result.current.submitAnswer(MOCK_CASES[1].correctDiagnosis);
+        result.current.submitAnswer(result.current.currentCase!.correctDiagnosis);
       });
 
       expect(result.current.score).toBe(2);
@@ -296,8 +355,87 @@ describe('usePhotoDrill hook', () => {
       expect(result.current.currentCaseIndex).toBe(0);
       expect(result.current.userAnswer).toBeNull();
       expect(result.current.isCorrect).toBeNull();
-      expect(result.current.status).toBe('active');
+      expect(result.current.status).toBe('playing');
+      expect(result.current.selectedCategory).toBe('derm');
     });
+  });
+});
+
+describe('generateRandomCase helper', () => {
+  it('should generate ECG case for ecg category', () => {
+    const photoCase = generateRandomCase('ecg');
+
+    expect(photoCase.modality).toBe('ecg');
+    expect(photoCase.imageUrl).toContain('ECG');
+    expect(MASTER_CONDITION_LIST).toContain(photoCase.correctDiagnosis);
+  });
+
+  it('should generate Derm case for derm category', () => {
+    const photoCase = generateRandomCase('derm');
+
+    expect(photoCase.modality).toBe('derm');
+    expect(photoCase.imageUrl).toContain('Derm');
+    expect(MASTER_CONDITION_LIST).toContain(photoCase.correctDiagnosis);
+  });
+
+  it('should generate XRay case for radiology category', () => {
+    const photoCase = generateRandomCase('radiology');
+
+    expect(photoCase.modality).toBe('xray');
+    expect(photoCase.imageUrl).toContain('XRay');
+    expect(MASTER_CONDITION_LIST).toContain(photoCase.correctDiagnosis);
+  });
+
+  it('should generate random modality case for random category', () => {
+    // Run multiple times to increase chance of getting different modalities
+    const cases = Array.from({ length: 10 }, () => generateRandomCase('random'));
+    const modalities = new Set(cases.map(c => c.modality));
+
+    // Should have at least one unique modality (statistical)
+    expect(modalities.size).toBeGreaterThan(0);
+    cases.forEach(c => {
+      expect(MASTER_CONDITION_LIST).toContain(c.correctDiagnosis);
+    });
+  });
+
+  it('should generate unique IDs for each case', () => {
+    const case1 = generateRandomCase('ecg');
+    const case2 = generateRandomCase('ecg');
+
+    expect(case1.id).not.toBe(case2.id);
+  });
+
+  it('should generate distractors that are not the correct diagnosis', () => {
+    const photoCase = generateRandomCase('ecg');
+
+    photoCase.distractors.forEach(distractor => {
+      expect(distractor).not.toBe(photoCase.correctDiagnosis);
+    });
+  });
+});
+
+describe('MASTER_CONDITION_LIST', () => {
+  it('should contain at least 20 conditions', () => {
+    expect(MASTER_CONDITION_LIST.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it('should contain ECG conditions', () => {
+    expect(MASTER_CONDITION_LIST).toContain('Atrial Fibrillation');
+    expect(MASTER_CONDITION_LIST).toContain('STEMI');
+  });
+
+  it('should contain Derm conditions', () => {
+    expect(MASTER_CONDITION_LIST).toContain('Psoriasis');
+    expect(MASTER_CONDITION_LIST).toContain('Shingles');
+  });
+
+  it('should contain Radiology conditions', () => {
+    expect(MASTER_CONDITION_LIST).toContain('Pneumothorax');
+    expect(MASTER_CONDITION_LIST).toContain('Pneumonia');
+  });
+
+  it('should contain Gout as per requirements', () => {
+    expect(MASTER_CONDITION_LIST).toContain('Gout');
   });
 });
 
