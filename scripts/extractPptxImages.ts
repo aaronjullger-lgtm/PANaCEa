@@ -433,9 +433,16 @@ async function classifyImageWithAI(
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     
-    // Convert image to base64
-    const base64Image = imageData.toString("base64");
-    const mimeType = "image/jpeg"; // We'll convert all images to JPEG
+    // Convert image to JPEG first for consistent handling, then to base64
+    let processedImage: Buffer;
+    try {
+      processedImage = await sharp(imageData).jpeg({ quality: 85 }).toBuffer();
+    } catch {
+      // If sharp fails, use original image
+      processedImage = imageData;
+    }
+    const base64Image = processedImage.toString("base64");
+    const mimeType = "image/jpeg";
     
     const prompt = `You are a medical education image classifier. Analyze this image and determine if it is suitable for PA (Physician Assistant) student visual diagnosis training.
 
