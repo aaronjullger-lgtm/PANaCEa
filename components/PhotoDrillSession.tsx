@@ -67,6 +67,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
     reset,
     startSession,
     exitToMenu,
+    validDiagnoses,
   } = usePhotoDrill();
 
   const handleExit = () => {
@@ -274,6 +275,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
                   <DiagnosisInput
                     onSubmit={handleDiagnosisSubmit}
                     autoFocus
+                    options={validDiagnoses}
                   />
                 </div>
               </motion.div>

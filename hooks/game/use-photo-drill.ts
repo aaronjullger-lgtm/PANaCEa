@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 // ============================================================================
 // INTERFACES
@@ -127,13 +127,25 @@ const RADIOLOGY_CONDITIONS = [
 let caseCounter = 0;
 
 /**
+ * Options for generating a random case.
+ */
+export interface GenerateCaseOptions {
+  /** Custom educational caption/explanation from manifest data */
+  educationalCaption?: string;
+}
+
+/**
  * Generates a random PhotoCase based on the selected category.
  * Diagnoses are strictly selected from MASTER_CONDITION_LIST.
  *
  * @param category - The category to generate a case for
+ * @param options - Optional configuration including educational caption
  * @returns A new PhotoCase object
  */
-export function generateRandomCase(category: CategoryType): PhotoCase {
+export function generateRandomCase(
+  category: CategoryType,
+  options?: GenerateCaseOptions
+): PhotoCase {
   caseCounter++;
   const id = `case-${Date.now()}-${caseCounter}`;
 
@@ -185,13 +197,17 @@ export function generateRandomCase(category: CategoryType): PhotoCase {
   const shuffled = otherConditions.sort(() => Math.random() - 0.5);
   const distractors = shuffled.slice(0, Math.min(3, shuffled.length));
 
+  // Use educational caption from manifest if provided, otherwise fallback to generic
+  const explanation =
+    options?.educationalCaption ?? 'Key features support this diagnosis.';
+
   return {
     id,
     imageUrl,
     modality,
     correctDiagnosis: diagnosis,
     distractors,
-    explanation: `This is a ${modality.toUpperCase()} case demonstrating ${diagnosis}. Key features support this diagnosis.`,
+    explanation,
   };
 }
 
@@ -297,6 +313,8 @@ export interface UsePhotoDrillReturn {
   selectedCategory: CategoryType;
   /** The current queue of cases */
   queue: PhotoCase[];
+  /** Valid diagnoses filtered by selected category (for type-ahead search) */
+  validDiagnoses: string[];
   /** Submit an answer for the current case */
   submitAnswer: (answer: string) => void;
   /** Move to the next case (generates new case for infinite loop) */
@@ -336,6 +354,25 @@ export function usePhotoDrill(
   const activeCases = queue.length > 0 ? queue : cases;
   const currentCase = activeCases.length > 0 ? activeCases[currentCaseIndex] ?? null : null;
   const totalCases = activeCases.length;
+
+  /**
+   * Derive valid diagnoses based on selectedCategory.
+   * When a specific category is selected, only show conditions for that modality.
+   * For 'random' or null, show all conditions.
+   */
+  const validDiagnoses = useMemo(() => {
+    switch (selectedCategory) {
+      case 'ecg':
+        return ECG_CONDITIONS;
+      case 'derm':
+        return DERM_CONDITIONS;
+      case 'radiology':
+        return RADIOLOGY_CONDITIONS;
+      case 'random':
+      default:
+        return MASTER_CONDITION_LIST;
+    }
+  }, [selectedCategory]);
 
   /**
    * Start a new session with the specified category.
@@ -495,6 +532,7 @@ export function usePhotoDrill(
     gameStatus: status, // Alias for backwards compatibility
     selectedCategory,
     queue,
+    validDiagnoses,
     submitAnswer,
     nextCase,
     skipCase,

@@ -15,6 +15,8 @@ interface DiagnosisInputProps {
   onSubmit: (value: string) => void;
   disabled?: boolean;
   autoFocus?: boolean;
+  /** Optional list of valid diagnoses to filter against. Defaults to MASTER_CONDITION_LIST. */
+  options?: string[];
 }
 
 /**
@@ -27,6 +29,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
   onSubmit,
   disabled = false,
   autoFocus = false,
+  options = MASTER_CONDITION_LIST,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +39,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
 
   // Filter conditions based on input (case-insensitive)
   const filteredConditions = inputValue.trim()
-    ? MASTER_CONDITION_LIST.filter((condition) =>
+    ? options.filter((condition) =>
         condition.toLowerCase().includes(inputValue.toLowerCase())
       )
     : [];
