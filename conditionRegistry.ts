@@ -28,24 +28,24 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   { system: "CV", subcategory: "ECG", condition: "Sinus Tachycardia" },
   { system: "CV", subcategory: "ECG", condition: "Premature Atrial Complexes (PACs)" },
   { system: "CV", subcategory: "ECG", condition: "Premature Ventricular Complexes (PVCs)" },
-  { system: "CV", subcategory: "ECG", condition: "Atrial Fibrillation" },
-  { system: "CV", subcategory: "ECG", condition: "Atrial Flutter" },
+  { system: "CV", subcategory: "ECG", condition: "Atrial Fibrillation" , aliases: ["AFib", "AF", "A-Fib"] },
+  { system: "CV", subcategory: "ECG", condition: "Atrial Flutter" , aliases: ["AFL", "A-Flutter"] },
   { system: "CV", subcategory: "ECG", condition: "AV Nodal Re-entry Tachycardia (AVNRT)" },
-  { system: "CV", subcategory: "ECG", condition: "Ventricular Tachycardia" },
-  { system: "CV", subcategory: "ECG", condition: "Ventricular Fibrillation" },
+  { system: "CV", subcategory: "ECG", condition: "Ventricular Tachycardia" , aliases: ["VT", "V-Tach"] },
+  { system: "CV", subcategory: "ECG", condition: "Ventricular Fibrillation" , aliases: ["VF", "V-Fib"] },
 
   // -------------------------
   // Ischemic Heart Disease
   // -------------------------
-  { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Acute Coronary Syndrome (ACS)" },
-  { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Stable Angina" },
-  { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Prinzmetal (Variant) Angina" },
+  { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Acute Coronary Syndrome (ACS)" , aliases: ["ACS", "Heart Attack"] },
+  { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Stable Angina" , aliases: ["Angina Pectoris", "Exertional Angina"] },
+  { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Prinzmetal (Variant) Angina" , aliases: ["Variant Angina", "Vasospastic Angina"] },
   { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Silent Ischemia" },
 
   // -------------------------
   // Blood Pressure Disorders
   // -------------------------
-  { system: "CV", subcategory: "Blood Pressure", condition: "Essential Hypertension" },
+  { system: "CV", subcategory: "Blood Pressure", condition: "Essential Hypertension" , aliases: ["Primary Hypertension", "High Blood Pressure"] },
   { system: "CV", subcategory: "Blood Pressure", condition: "Secondary Hypertension" },
   { system: "CV", subcategory: "Blood Pressure", condition: "Malignant Hypertension" },
   { system: "CV", subcategory: "Blood Pressure", condition: "Orthostatic Hypotension" },
@@ -61,10 +61,10 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   // -------------------------
   // Valvular Disease
   // -------------------------
-  { system: "CV", subcategory: "Valvular Disease", condition: "Aortic Stenosis" },
-  { system: "CV", subcategory: "Valvular Disease", condition: "Aortic Regurgitation" },
-  { system: "CV", subcategory: "Valvular Disease", condition: "Mitral Stenosis" },
-  { system: "CV", subcategory: "Valvular Disease", condition: "Mitral Regurgitation" },
+  { system: "CV", subcategory: "Valvular Disease", condition: "Aortic Stenosis" , aliases: ["AS", "Aortic Valve Stenosis"] },
+  { system: "CV", subcategory: "Valvular Disease", condition: "Aortic Regurgitation" , aliases: ["AR", "Aortic Insufficiency"] },
+  { system: "CV", subcategory: "Valvular Disease", condition: "Mitral Stenosis" , aliases: ["MS", "Mitral Valve Stenosis"] },
+  { system: "CV", subcategory: "Valvular Disease", condition: "Mitral Regurgitation" , aliases: ["MR", "Mitral Insufficiency"] },
   { system: "CV", subcategory: "Valvular Disease", condition: "Tricuspid Regurgitation" },
   { system: "CV", subcategory: "Valvular Disease", condition: "Pulmonic Stenosis" },
 
@@ -80,7 +80,7 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   // -------------------------
   { system: "CV", subcategory: "Carditis", condition: "Endocarditis" },
   { system: "CV", subcategory: "Carditis", condition: "Myocarditis" },
-  { system: "CV", subcategory: "Carditis", condition: "Pericarditis" },
+  { system: "CV", subcategory: "Carditis", condition: "Pericarditis" , aliases: ["Pericardial Inflammation"] },
 
   // -------------------------
   // Arrhythmias / Conduction Disorders
@@ -97,7 +97,7 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   { system: "CV", subcategory: "Vascular Disease", condition: "Peripheral Arterial Disease (PAD)" },
   { system: "CV", subcategory: "Vascular Disease", condition: "Peripheral Venous Disease" },
   { system: "CV", subcategory: "Vascular Disease", condition: "Superficial Venous Thrombosis (SVT)" },
-  { system: "CV", subcategory: "Vascular Disease", condition: "Deep Venous Thrombosis (DVT)" },
+  { system: "CV", subcategory: "Vascular Disease", condition: "Deep Venous Thrombosis (DVT)" , aliases: ["DVT", "Deep Vein Thrombosis"] },
   { system: "CV", subcategory: "Vascular Disease", condition: "Chronic Arterial Occlusive Disease" },
   { system: "CV", subcategory: "Vascular Disease", condition: "Acute Arterial Occlusive Disease" },
   { system: "CV", subcategory: "Vascular Disease", condition: "Raynaud’s Disease" },
@@ -105,7 +105,7 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   { system: "CV", subcategory: "Vascular Disease", condition: "Varicose Veins" },
   { system: "CV", subcategory: "Vascular Disease", condition: "Venous Ulceration" },
   { system: "CV", subcategory: "Vascular Disease", condition: "Giant Cell Arteritis (Temporal Arteritis)" },
-  { system: "CV", subcategory: "Vascular Disease", condition: "Aortic Aneurysm" },
+  { system: "CV", subcategory: "Vascular Disease", condition: "Aortic Aneurysm" , aliases: ["AAA", "Abdominal Aortic Aneurysm"] },
 
   // -------------------------
   // Pediatric & Congenital Cardiology
@@ -482,31 +482,31 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
 
 export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
   // Arthritis & Crystal Disease
-  { system: "MSK", subcategory: "Arthritis", condition: "Osteoarthritis" },
-  { system: "MSK", subcategory: "Arthritis", condition: "Rheumatoid Arthritis" },
+  { system: "MSK", subcategory: "Arthritis", condition: "Osteoarthritis" , aliases: ["OA", "Degenerative Joint Disease"] },
+  { system: "MSK", subcategory: "Arthritis", condition: "Rheumatoid Arthritis" , aliases: ["RA"] },
   { system: "MSK", subcategory: "Arthritis", condition: "Juvenile Idiopathic Arthritis" },
-  { system: "MSK", subcategory: "Arthritis", condition: "Psoriatic Arthritis" },
+  { system: "MSK", subcategory: "Arthritis", condition: "Psoriatic Arthritis" , aliases: ["PsA"] },
   { system: "MSK", subcategory: "Arthritis", condition: "Reactive Arthritis (Reiter Syndrome)" },
-  { system: "MSK", subcategory: "Crystal Disease", condition: "Gout" },
+  { system: "MSK", subcategory: "Crystal Disease", condition: "Gout" , aliases: ["Gouty Arthritis", "Crystal Arthropathy"] },
   { system: "MSK", subcategory: "Crystal Disease", condition: "Pseudogout (Calcium Pyrophosphate Deposition)" },
   { system: "MSK", subcategory: "Arthritis", condition: "Septic Arthritis" },
   { system: "MSK", subcategory: "Arthritis", condition: "Lyme Arthritis" },
-  { system: "MSK", subcategory: "Seronegative Spondyloarthropathy", condition: "Ankylosing Spondylitis" },
+  { system: "MSK", subcategory: "Seronegative Spondyloarthropathy", condition: "Ankylosing Spondylitis" , aliases: ["AS", "Bechterew's Disease"] },
   { system: "MSK", subcategory: "Seronegative Spondyloarthropathy", condition: "Enteropathic Arthritis" },
 
   // Soft Tissue / Overuse Syndromes
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Rotator Cuff Tendinopathy" },
-  { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Rotator Cuff Tear" },
+  { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Rotator Cuff Tear" , aliases: ["RCT", "Rotator Cuff Injury"] },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Adhesive Capsulitis" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Subacromial Bursitis" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Lateral Epicondylitis (Tennis Elbow)" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Medial Epicondylitis (Golfer Elbow)" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "De Quervain Tenosynovitis" },
-  { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Plantar Fasciitis" },
+  { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Plantar Fasciitis" , aliases: ["Heel Spur Syndrome"] },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Trochanteric Bursitis" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Patellar Tendinopathy (Jumper Knee)" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Iliotibial Band Syndrome" },
-  { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Carpal Tunnel Syndrome" },
+  { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Carpal Tunnel Syndrome" , aliases: ["CTS"] },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Ulnar Neuropathy at the Elbow (Cubital Tunnel)" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Trigger Finger (Stenosing Tenosynovitis)" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Ganglion Cyst" },
@@ -514,7 +514,7 @@ export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
   // Back & Spine
   { system: "MSK", subcategory: "Back & Spine", condition: "Mechanical Low Back Pain" },
   { system: "MSK", subcategory: "Back & Spine", condition: "Lumbar Radiculopathy (Herniated Disc)" },
-  { system: "MSK", subcategory: "Back & Spine", condition: "Spinal Stenosis" },
+  { system: "MSK", subcategory: "Back & Spine", condition: "Spinal Stenosis" , aliases: ["Lumbar Stenosis"] },
   { system: "MSK", subcategory: "Back & Spine", condition: "Cauda Equina Syndrome" },
   { system: "MSK", subcategory: "Back & Spine", condition: "Compression Vertebral Fracture" },
   { system: "MSK", subcategory: "Back & Spine", condition: "Spondylolisthesis" },
@@ -561,11 +561,11 @@ export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
   { system: "MSK", subcategory: "Ankle Sprain", condition: "High Ankle (Syndesmotic) Sprain" },
 
   // Bone & Metabolic
-  { system: "MSK", subcategory: "Metabolic/Bone", condition: "Osteoporosis" },
+  { system: "MSK", subcategory: "Metabolic/Bone", condition: "Osteoporosis" , aliases: ["Bone Loss", "Porous Bones"] },
   { system: "MSK", subcategory: "Metabolic/Bone", condition: "Osteopenia" },
   { system: "MSK", subcategory: "Metabolic/Bone", condition: "Osteomalacia" },
   { system: "MSK", subcategory: "Metabolic/Bone", condition: "Paget Disease of Bone" },
-  { system: "MSK", subcategory: "Metabolic/Bone", condition: "Osteomyelitis" },
+  { system: "MSK", subcategory: "Metabolic/Bone", condition: "Osteomyelitis" , aliases: ["Bone Infection"] },
   { system: "MSK", subcategory: "Metabolic/Bone", condition: "Avascular Necrosis of the Femoral Head" },
 
   // Rheumatologic / Systemic MSK
@@ -600,16 +600,16 @@ export const CONDITION_REGISTRY_ENDO: ConditionMeta[] = [
   { system: "ENDO", subcategory: "Thyroid", condition: "Hyperthyroidism (Graves Disease)" },
   { system: "ENDO", subcategory: "Thyroid", condition: "Subacute Thyroiditis (De Quervain)" },
   { system: "ENDO", subcategory: "Thyroid", condition: "Postpartum Thyroiditis" },
-  { system: "ENDO", subcategory: "Thyroid", condition: "Hashimoto Thyroiditis" },
-  { system: "ENDO", subcategory: "Thyroid", condition: "Thyroid Nodule" },
+  { system: "ENDO", subcategory: "Thyroid", condition: "Hashimoto Thyroiditis" , aliases: ["Hashimoto's Thyroiditis", "Chronic Lymphocytic Thyroiditis"] },
+  { system: "ENDO", subcategory: "Thyroid", condition: "Thyroid Nodule" , aliases: ["Thyroid Mass"] },
   { system: "ENDO", subcategory: "Thyroid", condition: "Thyroid Cancer" },
   { system: "ENDO", subcategory: "Thyroid", condition: "Myxedema Coma" },
   { system: "ENDO", subcategory: "Thyroid", condition: "Thyroid Storm" },
 
   // Diabetes Mellitus
-  { system: "ENDO", subcategory: "Diabetes", condition: "Type 1 Diabetes Mellitus" },
-  { system: "ENDO", subcategory: "Diabetes", condition: "Type 2 Diabetes Mellitus" },
-  { system: "ENDO", subcategory: "Diabetes", condition: "Gestational Diabetes" },
+  { system: "ENDO", subcategory: "Diabetes", condition: "Type 1 Diabetes Mellitus" , aliases: ["T1DM", "Type 1 Diabetes", "Juvenile Diabetes"] },
+  { system: "ENDO", subcategory: "Diabetes", condition: "Type 2 Diabetes Mellitus" , aliases: ["T2DM", "Type 2 Diabetes", "Adult-Onset Diabetes"] },
+  { system: "ENDO", subcategory: "Diabetes", condition: "Gestational Diabetes" , aliases: ["GDM"] },
   { system: "ENDO", subcategory: "Diabetes", condition: "Diabetic Ketoacidosis (DKA)" },
   { system: "ENDO", subcategory: "Diabetes", condition: "Hyperosmolar Hyperglycemic State (HHS)" },
   { system: "ENDO", subcategory: "Diabetes", condition: "Diabetic Foot Infection" },
@@ -618,8 +618,8 @@ export const CONDITION_REGISTRY_ENDO: ConditionMeta[] = [
   { system: "ENDO", subcategory: "Diabetes", condition: "Diabetic Retinopathy" },
 
   // Adrenal Disorders
-  { system: "ENDO", subcategory: "Adrenal", condition: "Cushing Syndrome" },
-  { system: "ENDO", subcategory: "Adrenal", condition: "Addison Disease (Primary Adrenal Insufficiency)" },
+  { system: "ENDO", subcategory: "Adrenal", condition: "Cushing Syndrome" , aliases: ["Cushing's Syndrome", "Hypercortisolism"] },
+  { system: "ENDO", subcategory: "Adrenal", condition: "Addison Disease (Primary Adrenal Insufficiency)" , aliases: ["Addison's Disease", "Primary Adrenal Insufficiency"] },
   { system: "ENDO", subcategory: "Adrenal", condition: "Adrenal Crisis" },
   { system: "ENDO", subcategory: "Adrenal", condition: "Hyperaldosteronism (Conn Syndrome)" },
   { system: "ENDO", subcategory: "Adrenal", condition: "Pheochromocytoma" },
@@ -633,9 +633,9 @@ export const CONDITION_REGISTRY_ENDO: ConditionMeta[] = [
   { system: "ENDO", subcategory: "Pituitary", condition: "Hypopituitarism" },
 
   // Calcium, Bone, and Metabolic
-  { system: "ENDO", subcategory: "Calcium/Parathyroid", condition: "Primary Hyperparathyroidism" },
+  { system: "ENDO", subcategory: "Calcium/Parathyroid", condition: "Primary Hyperparathyroidism" , aliases: ["Hyperparathyroidism"] },
   { system: "ENDO", subcategory: "Calcium/Parathyroid", condition: "Secondary Hyperparathyroidism" },
-  { system: "ENDO", subcategory: "Calcium/Parathyroid", condition: "Hypoparathyroidism" },
+  { system: "ENDO", subcategory: "Calcium/Parathyroid", condition: "Hypoparathyroidism" , aliases: ["Low Parathyroid"] },
   { system: "ENDO", subcategory: "Calcium/Parathyroid", condition: "Hypercalcemia" },
   { system: "ENDO", subcategory: "Calcium/Parathyroid", condition: "Hypocalcemia" },
   { system: "ENDO", subcategory: "Metabolic/Bone", condition: "Osteoporosis (Endocrine Related)" },
@@ -674,9 +674,9 @@ export const CONDITION_REGISTRY_ENDO: ConditionMeta[] = [
 export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
 
   // Bacterial Infections
-  { system: "ID", subcategory: "Bacterial", condition: "Cellulitis" },
+  { system: "ID", subcategory: "Bacterial", condition: "Cellulitis" , aliases: ["Skin Infection"] },
   { system: "ID", subcategory: "Bacterial", condition: "Erysipelas" },
-  { system: "ID", subcategory: "Bacterial", condition: "Impetigo" },
+  { system: "ID", subcategory: "Bacterial", condition: "Impetigo" , aliases: ["School Sores"] },
   { system: "ID", subcategory: "Bacterial", condition: "Folliculitis" },
   { system: "ID", subcategory: "Bacterial", condition: "Abscess (Skin and Soft Tissue)" },
   { system: "ID", subcategory: "Bacterial", condition: "Necrotizing Fasciitis" },
@@ -694,8 +694,8 @@ export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
 
   // CNS Infections
   { system: "ID", subcategory: "CNS", condition: "Meningitis (Bacterial)" },
-  { system: "ID", subcategory: "CNS", condition: "Viral Meningitis" },
-  { system: "ID", subcategory: "CNS", condition: "Encephalitis" },
+  { system: "ID", subcategory: "CNS", condition: "Viral Meningitis" , aliases: ["Aseptic Meningitis"] },
+  { system: "ID", subcategory: "CNS", condition: "Encephalitis" , aliases: ["Brain Inflammation"] },
   { system: "ID", subcategory: "CNS", condition: "Brain Abscess" },
 
   // Tick-borne
@@ -717,14 +717,14 @@ export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
   { system: "ID", subcategory: "STI", condition: "HPV Infection / Genital Warts" },
 
   // Viral Infections
-  { system: "ID", subcategory: "Viral", condition: "Influenza" },
-  { system: "ID", subcategory: "Viral", condition: "COVID-19" },
+  { system: "ID", subcategory: "Viral", condition: "Influenza" , aliases: ["Flu", "Seasonal Flu"] },
+  { system: "ID", subcategory: "Viral", condition: "COVID-19" , aliases: ["Coronavirus", "SARS-CoV-2"] },
   { system: "ID", subcategory: "Viral", condition: "Measles" },
   { system: "ID", subcategory: "Viral", condition: "Mumps" },
   { system: "ID", subcategory: "Viral", condition: "Rubella" },
   { system: "ID", subcategory: "Viral", condition: "Roseola" },
   { system: "ID", subcategory: "Viral", condition: "Varicella (Chickenpox)" },
-  { system: "ID", subcategory: "Viral", condition: "Herpes Zoster (Shingles)" },
+  { system: "ID", subcategory: "Viral", condition: "Herpes Zoster (Shingles)" , aliases: ["Shingles", "Zoster"] },
   { system: "ID", subcategory: "Viral", condition: "Rabies" },
   { system: "ID", subcategory: "Viral", condition: "Mononucleosis (EBV)" },
   { system: "ID", subcategory: "Viral", condition: "Cytomegalovirus (CMV)" },
@@ -787,24 +787,24 @@ export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
 
 export const CONDITION_REGISTRY_HEME: ConditionMeta[] = [
   // Anemias – Production Problems
-  { system: "HEME", subcategory: "Anemia", condition: "Iron Deficiency Anemia" },
+  { system: "HEME", subcategory: "Anemia", condition: "Iron Deficiency Anemia" , aliases: ["IDA", "Iron Deficiency"] },
   { system: "HEME", subcategory: "Anemia", condition: "Anemia of Chronic Disease" },
-  { system: "HEME", subcategory: "Anemia", condition: "Vitamin B12 Deficiency Anemia" },
-  { system: "HEME", subcategory: "Anemia", condition: "Folate Deficiency Anemia" },
-  { system: "HEME", subcategory: "Anemia", condition: "Aplastic Anemia" },
+  { system: "HEME", subcategory: "Anemia", condition: "Vitamin B12 Deficiency Anemia" , aliases: ["B12 Deficiency", "Cobalamin Deficiency"] },
+  { system: "HEME", subcategory: "Anemia", condition: "Folate Deficiency Anemia" , aliases: ["Folic Acid Deficiency"] },
+  { system: "HEME", subcategory: "Anemia", condition: "Aplastic Anemia" , aliases: ["Bone Marrow Failure"] },
   { system: "HEME", subcategory: "Anemia", condition: "Acute Blood Loss Anemia" },
 
   // Hemolytic Anemias / Hemoglobinopathies
   { system: "HEME", subcategory: "Hemolytic", condition: "Autoimmune Hemolytic Anemia" },
-  { system: "HEME", subcategory: "Hemolytic", condition: "Hereditary Spherocytosis" },
-  { system: "HEME", subcategory: "Hemolytic", condition: "G6PD Deficiency" },
-  { system: "HEME", subcategory: "Hemoglobinopathy", condition: "Sickle Cell Disease" },
+  { system: "HEME", subcategory: "Hemolytic", condition: "Hereditary Spherocytosis" , aliases: ["HS"] },
+  { system: "HEME", subcategory: "Hemolytic", condition: "G6PD Deficiency" , aliases: ["Glucose-6-Phosphate Dehydrogenase Deficiency", "Favism"] },
+  { system: "HEME", subcategory: "Hemoglobinopathy", condition: "Sickle Cell Disease" , aliases: ["SCD", "Sickle Cell Anemia"] },
   { system: "HEME", subcategory: "Hemoglobinopathy", condition: "Sickle Cell Trait" },
   { system: "HEME", subcategory: "Hemoglobinopathy", condition: "Alpha Thalassemia" },
   { system: "HEME", subcategory: "Hemoglobinopathy", condition: "Beta Thalassemia" },
 
   // Polycythemia & Myeloproliferative Disorders
-  { system: "HEME", subcategory: "Myeloproliferative", condition: "Polycythemia Vera" },
+  { system: "HEME", subcategory: "Myeloproliferative", condition: "Polycythemia Vera" , aliases: ["PV", "Primary Polycythemia"] },
   { system: "HEME", subcategory: "Myeloproliferative", condition: "Essential Thrombocythemia" },
   { system: "HEME", subcategory: "Myeloproliferative", condition: "Primary Myelofibrosis" },
   { system: "HEME", subcategory: "Myeloproliferative", condition: "Secondary Polycythemia" },
@@ -876,16 +876,16 @@ export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
   // Headache Disorders
   { system: "NEURO", subcategory: "Headache", condition: "Tension Headache" },
   { system: "NEURO", subcategory: "Headache", condition: "Migraine Headache" },
-  { system: "NEURO", subcategory: "Headache", condition: "Cluster Headache" },
+  { system: "NEURO", subcategory: "Headache", condition: "Cluster Headache" , aliases: ["Histamine Headache"] },
   { system: "NEURO", subcategory: "Headache", condition: "Medication Overuse (Rebound) Headache" },
   { system: "NEURO", subcategory: "Headache", condition: "Idiopathic Intracranial Hypertension (Pseudotumor Cerebri)" },
   { system: "NEURO", subcategory: "Headache", condition: "Temporal (Giant Cell) Arteritis – Neurologic Manifestations" },
 
   // Cerebrovascular Disease
   { system: "NEURO", subcategory: "Cerebrovascular", condition: "Transient Ischemic Attack (TIA)" },
-  { system: "NEURO", subcategory: "Cerebrovascular", condition: "Ischemic Stroke" },
+  { system: "NEURO", subcategory: "Cerebrovascular", condition: "Ischemic Stroke" , aliases: ["CVA", "Cerebrovascular Accident"] },
   { system: "NEURO", subcategory: "Cerebrovascular", condition: "Intracerebral Hemorrhage" },
-  { system: "NEURO", subcategory: "Cerebrovascular", condition: "Subarachnoid Hemorrhage" },
+  { system: "NEURO", subcategory: "Cerebrovascular", condition: "Subarachnoid Hemorrhage" , aliases: ["SAH"] },
   { system: "NEURO", subcategory: "Cerebrovascular", condition: "Cerebral Venous Sinus Thrombosis" },
 
   // Seizure Disorders
@@ -896,28 +896,28 @@ export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
   { system: "NEURO", subcategory: "Seizure", condition: "Febrile Seizures (Pediatric)" },
 
   // Demyelinating Disease
-  { system: "NEURO", subcategory: "Demyelinating", condition: "Multiple Sclerosis" },
+  { system: "NEURO", subcategory: "Demyelinating", condition: "Multiple Sclerosis" , aliases: ["MS"] },
   { system: "NEURO", subcategory: "Demyelinating", condition: "Acute Disseminated Encephalomyelitis (ADEM)" },
 
   // Neuromuscular Junction & Motor Neuron
   { system: "NEURO", subcategory: "Neuromuscular Junction", condition: "Myasthenia Gravis" },
   { system: "NEURO", subcategory: "Neuromuscular Junction", condition: "Lambert-Eaton Myasthenic Syndrome" },
-  { system: "NEURO", subcategory: "Motor Neuron", condition: "Amyotrophic Lateral Sclerosis (ALS)" },
+  { system: "NEURO", subcategory: "Motor Neuron", condition: "Amyotrophic Lateral Sclerosis (ALS)" , aliases: ["ALS", "Lou Gehrig's Disease"] },
 
   // Neuromuscular & Peripheral Nerve
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Peripheral Polyneuropathy" },
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Diabetic Peripheral Neuropathy – Neurologic Manifestations" },
-  { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Carpal Tunnel Syndrome" },
+  { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Carpal Tunnel Syndrome" , aliases: ["CTS"] },
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Ulnar Neuropathy" },
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Meralgia Paresthetica" },
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Bell Palsy (Idiopathic Facial Nerve Palsy)" },
-  { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Trigeminal Neuralgia" },
+  { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Trigeminal Neuralgia" , aliases: ["Tic Douloureux"] },
   { system: "NEURO", subcategory: "Neuromuscular", condition: "Guillain-Barré Syndrome" },
   { system: "NEURO", subcategory: "Neuromuscular", condition: "Chronic Inflammatory Demyelinating Polyneuropathy (CIDP)" },
   { system: "NEURO", subcategory: "Neuromuscular", condition: "Muscular Dystrophy (Duchenne/Becker)" },
 
   // Movement Disorders
-  { system: "NEURO", subcategory: "Movement Disorder", condition: "Parkinson Disease" },
+  { system: "NEURO", subcategory: "Movement Disorder", condition: "Parkinson Disease" , aliases: ["Parkinson's Disease", "PD"] },
   { system: "NEURO", subcategory: "Movement Disorder", condition: "Essential Tremor" },
   { system: "NEURO", subcategory: "Movement Disorder", condition: "Huntington Disease" },
   { system: "NEURO", subcategory: "Movement Disorder", condition: "Restless Legs Syndrome" },
@@ -932,20 +932,20 @@ export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
   { system: "NEURO", subcategory: "Spine", condition: "Spinal Stenosis – Neurologic Manifestations" },
 
   // Neurologic Infections (cross-listed conceptually with ID, but neurologic here)
-  { system: "NEURO", subcategory: "Infectious", condition: "Bacterial Meningitis" },
-  { system: "NEURO", subcategory: "Infectious", condition: "Viral Meningitis" },
-  { system: "NEURO", subcategory: "Infectious", condition: "Encephalitis" },
+  { system: "NEURO", subcategory: "Infectious", condition: "Bacterial Meningitis" , aliases: ["Meningitis"] },
+  { system: "NEURO", subcategory: "Infectious", condition: "Viral Meningitis" , aliases: ["Aseptic Meningitis"] },
+  { system: "NEURO", subcategory: "Infectious", condition: "Encephalitis" , aliases: ["Brain Inflammation"] },
   { system: "NEURO", subcategory: "Infectious", condition: "Brain Abscess" },
 
   // Trauma & ICP
   { system: "NEURO", subcategory: "Trauma", condition: "Concussion (Mild Traumatic Brain Injury)" },
   { system: "NEURO", subcategory: "Trauma", condition: "Diffuse Axonal Injury" },
-  { system: "NEURO", subcategory: "Trauma", condition: "Epidural Hematoma" },
-  { system: "NEURO", subcategory: "Trauma", condition: "Subdural Hematoma" },
+  { system: "NEURO", subcategory: "Trauma", condition: "Epidural Hematoma" , aliases: ["EDH"] },
+  { system: "NEURO", subcategory: "Trauma", condition: "Subdural Hematoma" , aliases: ["SDH"] },
   { system: "NEURO", subcategory: "Trauma", condition: "Increased Intracranial Pressure" },
 
   // Neurodegenerative / Cognitive
-  { system: "NEURO", subcategory: "Neurodegenerative", condition: "Alzheimer Disease" },
+  { system: "NEURO", subcategory: "Neurodegenerative", condition: "Alzheimer Disease" , aliases: ["Alzheimer's Disease", "AD"] },
   { system: "NEURO", subcategory: "Neurodegenerative", condition: "Vascular Dementia" },
   { system: "NEURO", subcategory: "Neurodegenerative", condition: "Lewy Body Dementia" },
   { system: "NEURO", subcategory: "Neurodegenerative", condition: "Frontotemporal Dementia" },
@@ -966,8 +966,8 @@ export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
 
 export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   // Acneiform Disorders
-  { system: "DERM", subcategory: "Acneiform", condition: "Acne Vulgaris" },
-  { system: "DERM", subcategory: "Acneiform", condition: "Rosacea" },
+  { system: "DERM", subcategory: "Acneiform", condition: "Acne Vulgaris" , aliases: ["Acne", "Pimples"] },
+  { system: "DERM", subcategory: "Acneiform", condition: "Rosacea" , aliases: ["Acne Rosacea"] },
 
   // Bullous Disorders
   { system: "DERM", subcategory: "Bullous", condition: "Bullous Pemphigoid" },
@@ -1009,10 +1009,10 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   { system: "DERM", subcategory: "Pigmentary", condition: "Acanthosis Nigricans" },
 
   // Dermatitis & Eczema (DDD core)
-  { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Atopic Dermatitis" },
-  { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Contact Dermatitis (Irritant/Allergic)" },
+  { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Atopic Dermatitis" , aliases: ["Eczema", "Atopic Eczema"] },
+  { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Contact Dermatitis (Irritant/Allergic)" , aliases: ["Contact Dermatitis", "Allergic Contact Dermatitis"] },
   { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Nummular Dermatitis" },
-  { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Seborrheic Dermatitis" },
+  { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Seborrheic Dermatitis" , aliases: ["Dandruff", "Cradle Cap"] },
   { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Dyshidrotic Eczema (Pompholyx)" },
   { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Perioral Dermatitis" },
   { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Diaper Dermatitis" },
@@ -1020,7 +1020,7 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   { system: "DERM", subcategory: "Dermatitis & Eczema", condition: "Hidradenitis Suppurativa" },
 
   // Urticaria, Angioedema, and Reactive Skin Disorders
-  { system: "DERM", subcategory: "Reactive / Hypersensitivity", condition: "Urticaria" },
+  { system: "DERM", subcategory: "Reactive / Hypersensitivity", condition: "Urticaria" , aliases: ["Hives", "Wheals"] },
   { system: "DERM", subcategory: "Reactive / Hypersensitivity", condition: "Angioedema" },
   { system: "DERM", subcategory: "Reactive / Hypersensitivity", condition: "Erythema Multiforme" },
   { system: "DERM", subcategory: "Reactive / Hypersensitivity", condition: "Erythema Nodosum" },
@@ -1032,24 +1032,24 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Urticarial Drug Eruption" },
   { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Lichenoid Drug Eruption" },
   { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Erythroderma (Exfoliative Dermatitis)" },
-  { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Stevens-Johnson Syndrome (SJS)" },
-  { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Toxic Epidermal Necrolysis (TEN)" },
+  { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Stevens-Johnson Syndrome (SJS)" , aliases: ["SJS"] },
+  { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Toxic Epidermal Necrolysis (TEN)" , aliases: ["TEN", "Lyell Syndrome"] },
   { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Drug Reaction with Eosinophilia and Systemic Symptoms (DRESS/DIHS)" },
 
   // Infectious – Bacterial
-  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Impetigo" },
+  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Impetigo" , aliases: ["School Sores"] },
   { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Erysipelas" },
-  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Cellulitis" },
+  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Cellulitis" , aliases: ["Skin Infection"] },
   { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Folliculitis" },
   { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Furuncle / Carbuncle" },
   { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Abscess" },
   { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Necrotizing Fasciitis – Cutaneous Manifestations" },
 
   // Infectious – Fungal
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Corporis" },
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Capitis" },
+  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Corporis" , aliases: ["Ringworm", "Body Ringworm"] },
+  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Capitis" , aliases: ["Scalp Ringworm"] },
   { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Cruris" },
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Pedis" },
+  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Pedis" , aliases: ["Athlete's Foot"] },
   { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Manuum" },
   { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Versicolor" },
   { system: "DERM", subcategory: "Infectious – Fungal", condition: "Onychomycosis" },
@@ -1058,14 +1058,14 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   // Infectious – Viral
   { system: "DERM", subcategory: "Infectious – Viral", condition: "Herpes Simplex Virus (HSV) – Cutaneous" },
   { system: "DERM", subcategory: "Infectious – Viral", condition: "Varicella (Chickenpox)" },
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Herpes Zoster (Shingles)" },
+  { system: "DERM", subcategory: "Infectious – Viral", condition: "Herpes Zoster (Shingles)" , aliases: ["Shingles", "Zoster"] },
   { system: "DERM", subcategory: "Infectious – Viral", condition: "Molluscum Contagiosum" },
   { system: "DERM", subcategory: "Infectious – Viral", condition: "Verruca Vulgaris (Common Warts)" },
   { system: "DERM", subcategory: "Infectious – Viral", condition: "Plantar Warts" },
   { system: "DERM", subcategory: "Infectious – Viral", condition: "Condyloma Acuminata (Genital Warts)" },
 
   // Infectious – Parasitic / Arthropod
-  { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Scabies" },
+  { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Scabies" , aliases: ["Sarcoptes scabiei", "Itch Mite"] },
   { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Pediculosis Capitis (Head Lice)" },
   { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Pediculosis Corporis (Body Lice)" },
   { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Pediculosis Pubis (Pubic Lice)" },
@@ -1101,9 +1101,9 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
 
   // Malignant Dermatology
   { system: "DERM", subcategory: "Malignancy", condition: "Actinic Keratosis" },
-  { system: "DERM", subcategory: "Malignancy", condition: "Basal Cell Carcinoma" },
-  { system: "DERM", subcategory: "Malignancy", condition: "Squamous Cell Carcinoma" },
-  { system: "DERM", subcategory: "Malignancy", condition: "Melanoma" },
+  { system: "DERM", subcategory: "Malignancy", condition: "Basal Cell Carcinoma" , aliases: ["BCC"] },
+  { system: "DERM", subcategory: "Malignancy", condition: "Squamous Cell Carcinoma" , aliases: ["SCC"] },
+  { system: "DERM", subcategory: "Malignancy", condition: "Melanoma" , aliases: ["Malignant Melanoma"] },
   { system: "DERM", subcategory: "Malignancy", condition: "Merkel Cell Carcinoma" },
   { system: "DERM", subcategory: "Malignancy", condition: "Cutaneous T-Cell Lymphoma (Mycosis Fungoides)" },
 
@@ -1119,7 +1119,7 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
 
 export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
   // Acute Kidney Injury (AKI)
-  { system: "RENAL", subcategory: "AKI", condition: "Acute Kidney Injury (General)" },
+  { system: "RENAL", subcategory: "AKI", condition: "Acute Kidney Injury (General)" , aliases: ["AKI", "Acute Renal Failure"] },
   { system: "RENAL", subcategory: "AKI", condition: "Prerenal AKI" },
   { system: "RENAL", subcategory: "AKI", condition: "Intrinsic AKI" },
   { system: "RENAL", subcategory: "AKI", condition: "Postrenal AKI" },
@@ -1129,7 +1129,7 @@ export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
 
   ,
   // Chronic Kidney Disease
-  { system: "RENAL", subcategory: "CKD", condition: "Chronic Kidney Disease" },
+  { system: "RENAL", subcategory: "CKD", condition: "Chronic Kidney Disease" , aliases: ["CKD", "Chronic Renal Failure"] },
   { system: "RENAL", subcategory: "CKD", condition: "End-Stage Renal Disease" },
   { system: "RENAL", subcategory: "CKD", condition: "Diabetic Nephropathy" },
   { system: "RENAL", subcategory: "CKD", condition: "Hypertensive Nephrosclerosis" },
@@ -1191,7 +1191,7 @@ export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
   { system: "RENAL", subcategory: "Electrolytes", condition: "Hypophosphatemia (Renal Loss)" },
 
   // Oncology (RENAL portion)
-  { system: "RENAL", subcategory: "Oncology", condition: "Renal Cell Carcinoma" },
+  { system: "RENAL", subcategory: "Oncology", condition: "Renal Cell Carcinoma" , aliases: ["RCC", "Kidney Cancer"] },
   { system: "RENAL", subcategory: "Oncology", condition: "Wilms Tumor (Nephroblastoma)" },
   { system: "RENAL", subcategory: "Oncology", condition: "Oncocytoma" },
   { system: "RENAL", subcategory: "Oncology", condition: "Angiomyolipoma" },
@@ -1214,16 +1214,16 @@ export const CONDITION_REGISTRY_GU: ConditionMeta[] = [
 
   // PROSTATE
   { system: "GU", subcategory: "Prostate", condition: "Benign Prostatic Hyperplasia (BPH)" },
-  { system: "GU", subcategory: "Prostate", condition: "Acute Prostatitis" },
+  { system: "GU", subcategory: "Prostate", condition: "Acute Prostatitis" , aliases: ["Prostatitis"] },
   { system: "GU", subcategory: "Prostate", condition: "Chronic Prostatitis" },
   { system: "GU", subcategory: "Prostate", condition: "Prostate Cancer" },
 
   // TESTICULAR / SCROTAL
-  { system: "GU", subcategory: "Testicular", condition: "Testicular Torsion" },
-  { system: "GU", subcategory: "Testicular", condition: "Epididymitis" },
+  { system: "GU", subcategory: "Testicular", condition: "Testicular Torsion" , aliases: ["Torsion of Testis"] },
+  { system: "GU", subcategory: "Testicular", condition: "Epididymitis" , aliases: ["Epididymal Infection"] },
   { system: "GU", subcategory: "Testicular", condition: "Orchitis" },
-  { system: "GU", subcategory: "Testicular", condition: "Hydrocele" },
-  { system: "GU", subcategory: "Testicular", condition: "Varicocele" },
+  { system: "GU", subcategory: "Testicular", condition: "Hydrocele" , aliases: ["Scrotal Swelling"] },
+  { system: "GU", subcategory: "Testicular", condition: "Varicocele" , aliases: ["Scrotal Varicose Veins"] },
   { system: "GU", subcategory: "Testicular", condition: "Spermatocele" },
   { system: "GU", subcategory: "Testicular", condition: "Testicular Cancer" },
 
@@ -1292,10 +1292,10 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
   { system: "REPRO", subcategory: "Menstrual Disorders", condition: "Dysmenorrhea" },
   { system: "REPRO", subcategory: "Abnormal Uterine Bleeding", condition: "Abnormal Uterine Bleeding (AUB)" },
   { system: "REPRO", subcategory: "Menstrual Disorders", condition: "Premenstrual Syndrome (PMS)" },
-  { system: "REPRO", subcategory: "Menstrual Disorders", condition: "Premenstrual Dysphoric Disorder (PMDD)" },
+  { system: "REPRO", subcategory: "Menstrual Disorders", condition: "Premenstrual Dysphoric Disorder (PMDD)" , aliases: ["PMDD"] },
 
   // GYNECOLOGY – UTERUS / OVARIES / PELVIS
-  { system: "REPRO", subcategory: "Gynecology", condition: "Endometriosis" },
+  { system: "REPRO", subcategory: "Gynecology", condition: "Endometriosis" , aliases: ["Endo"] },
   { system: "REPRO", subcategory: "Gynecology", condition: "Adenomyosis" },
   { system: "REPRO", subcategory: "Gynecology", condition: "Uterine Leiomyomas (Fibroids)" },
   { system: "REPRO", subcategory: "Gynecology", condition: "Chronic Pelvic Pain" },
@@ -1339,7 +1339,7 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
 
   // EARLY PREGNANCY
   { system: "REPRO", subcategory: "Early Pregnancy", condition: "Normal First-Trimester Pregnancy" },
-  { system: "REPRO", subcategory: "Early Pregnancy", condition: "Ectopic Pregnancy" },
+  { system: "REPRO", subcategory: "Early Pregnancy", condition: "Ectopic Pregnancy" , aliases: ["Tubal Pregnancy"] },
   { system: "REPRO", subcategory: "Early Pregnancy", condition: "Threatened Abortion" },
   { system: "REPRO", subcategory: "Early Pregnancy", condition: "Inevitable / Incomplete / Complete Abortion" },
   { system: "REPRO", subcategory: "Early Pregnancy", condition: "Missed Abortion" },
@@ -1349,17 +1349,17 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
   { system: "REPRO", subcategory: "Antepartum", condition: "Gestational Diabetes Mellitus" },
   { system: "REPRO", subcategory: "Antepartum", condition: "Chronic Hypertension in Pregnancy" },
   { system: "REPRO", subcategory: "Antepartum", condition: "Gestational Hypertension" },
-  { system: "REPRO", subcategory: "Antepartum", condition: "Preeclampsia" },
+  { system: "REPRO", subcategory: "Antepartum", condition: "Preeclampsia" , aliases: ["Toxemia", "Pregnancy-Induced Hypertension"] },
   { system: "REPRO", subcategory: "Antepartum", condition: "Severe Preeclampsia" },
-  { system: "REPRO", subcategory: "Antepartum", condition: "Eclampsia" },
+  { system: "REPRO", subcategory: "Antepartum", condition: "Eclampsia" , aliases: ["Seizures in Pregnancy"] },
   { system: "REPRO", subcategory: "Antepartum", condition: "HELLP Syndrome" },
   { system: "REPRO", subcategory: "Antepartum", condition: "Hyperemesis Gravidarum" },
 
   // ANTEPARTUM – FETAL GROWTH / PLACENTAL ISSUES
   { system: "REPRO", subcategory: "Antepartum", condition: "Intrauterine Growth Restriction (IUGR)" },
   { system: "REPRO", subcategory: "Antepartum", condition: "Fetal Macrosomia" },
-  { system: "REPRO", subcategory: "Antepartum", condition: "Placenta Previa" },
-  { system: "REPRO", subcategory: "Antepartum", condition: "Placental Abruption" },
+  { system: "REPRO", subcategory: "Antepartum", condition: "Placenta Previa" , aliases: ["Low-Lying Placenta"] },
+  { system: "REPRO", subcategory: "Antepartum", condition: "Placental Abruption" , aliases: ["Abruptio Placentae"] },
   { system: "REPRO", subcategory: "Antepartum", condition: "Placenta Accreta Spectrum" },
   { system: "REPRO", subcategory: "Antepartum", condition: "Multiple Gestation (Twin Pregnancy)" },
   { system: "REPRO", subcategory: "Antepartum", condition: "Post-term Pregnancy" },
@@ -1387,7 +1387,7 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
   // BREAST DISORDERS
   { system: "REPRO", subcategory: "Breast", condition: "Fibrocystic Breast Changes" },
   { system: "REPRO", subcategory: "Breast", condition: "Breast Fibroadenoma" },
-  { system: "REPRO", subcategory: "Breast", condition: "Mastitis" },
+  { system: "REPRO", subcategory: "Breast", condition: "Mastitis" , aliases: ["Breast Infection"] },
   { system: "REPRO", subcategory: "Breast", condition: "Breast Abscess" },
   { system: "REPRO", subcategory: "Breast", condition: "Galactorrhea" },
   { system: "REPRO", subcategory: "Breast", condition: "Gynecomastia" },
@@ -1419,12 +1419,12 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
   { system: "HEENT", subcategory: "Eye – Conjunctiva", condition: "Viral Conjunctivitis" },
   { system: "HEENT", subcategory: "Eye – Conjunctiva", condition: "Bacterial Conjunctivitis" },
   { system: "HEENT", subcategory: "Eye – Conjunctiva", condition: "Allergic Conjunctivitis" },
-  { system: "HEENT", subcategory: "Eye – Conjunctiva", condition: "Pterygium" },
+  { system: "HEENT", subcategory: "Eye – Conjunctiva", condition: "Pterygium" , aliases: ["Surfer's Eye"] },
   { system: "HEENT", subcategory: "Eye – Conjunctiva", condition: "Pinguecula" },
 
   { system: "HEENT", subcategory: "Eye – Cornea & Anterior Segment", condition: "Keratitis" },
   { system: "HEENT", subcategory: "Eye – Cornea & Anterior Segment", condition: "Corneal Ulcer" },
-  { system: "HEENT", subcategory: "Eye – Cornea & Anterior Segment", condition: "Herpes Simplex Keratitis" },
+  { system: "HEENT", subcategory: "Eye – Cornea & Anterior Segment", condition: "Herpes Simplex Keratitis" , aliases: ["HSV Keratitis", "Dendritic Ulcer"] },
   { system: "HEENT", subcategory: "Eye – Cornea & Anterior Segment", condition: "Herpes Zoster Ophthalmicus" },
   { system: "HEENT", subcategory: "Eye – Uvea", condition: "Anterior Uveitis / Iritis" },
   { system: "HEENT", subcategory: "Eye – Uvea", condition: "Episcleritis" },
@@ -1434,13 +1434,13 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
   { system: "HEENT", subcategory: "Eye – Lens", condition: "Cataract" },
 
   { system: "HEENT", subcategory: "Eye – Glaucoma", condition: "Primary Open-Angle Glaucoma" },
-  { system: "HEENT", subcategory: "Eye – Glaucoma", condition: "Acute Angle-Closure Glaucoma" },
+  { system: "HEENT", subcategory: "Eye – Glaucoma", condition: "Acute Angle-Closure Glaucoma" , aliases: ["Angle Closure Glaucoma", "Closed Angle Glaucoma"] },
   { system: "HEENT", subcategory: "Eye – Glaucoma", condition: "Ocular Hypertension" },
 
   // EYE – RETINA / OPTIC NERVE
-  { system: "HEENT", subcategory: "Eye – Retina", condition: "Age-Related Macular Degeneration – Dry" },
-  { system: "HEENT", subcategory: "Eye – Retina", condition: "Age-Related Macular Degeneration – Wet" },
-  { system: "HEENT", subcategory: "Eye – Retina", condition: "Retinal Detachment" },
+  { system: "HEENT", subcategory: "Eye – Retina", condition: "Age-Related Macular Degeneration – Dry" , aliases: ["Dry AMD", "Dry Macular Degeneration"] },
+  { system: "HEENT", subcategory: "Eye – Retina", condition: "Age-Related Macular Degeneration – Wet" , aliases: ["Wet AMD", "Wet Macular Degeneration"] },
+  { system: "HEENT", subcategory: "Eye – Retina", condition: "Retinal Detachment" , aliases: ["Detached Retina"] },
   { system: "HEENT", subcategory: "Eye – Retina", condition: "Central Retinal Artery Occlusion (CRAO)" },
   { system: "HEENT", subcategory: "Eye – Retina", condition: "Central Retinal Vein Occlusion (CRVO)" },
   { system: "HEENT", subcategory: "Eye – Retina", condition: "Diabetic Retinopathy – Nonproliferative" },
@@ -1479,20 +1479,20 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
   { system: "HEENT", subcategory: "Ear – Middle", condition: "Cholesteatoma" },
 
   // EAR – INNER / VESTIBULAR
-  { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Labyrinthitis" },
-  { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Vestibular Neuritis" },
+  { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Labyrinthitis" , aliases: ["Vestibular Labyrinthitis"] },
+  { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Vestibular Neuritis" , aliases: ["Vestibular Neuronitis"] },
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Ménière Disease" },
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Tinnitus" },
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Noise-Induced Hearing Loss" },
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Presbycusis" },
-  { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Acoustic Neuroma (Vestibular Schwannoma)" },
+  { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Acoustic Neuroma (Vestibular Schwannoma)" , aliases: ["Vestibular Schwannoma", "Acoustic Neuroma"] },
 
   // NOSE & SINUSES
   { system: "HEENT", subcategory: "Nose & Sinus", condition: "Viral Rhinitis (Common Cold)" },
-  { system: "HEENT", subcategory: "Nose & Sinus", condition: "Allergic Rhinitis" },
+  { system: "HEENT", subcategory: "Nose & Sinus", condition: "Allergic Rhinitis" , aliases: ["Hay Fever", "Seasonal Allergies"] },
   { system: "HEENT", subcategory: "Nose & Sinus", condition: "Nonallergic Rhinitis" },
-  { system: "HEENT", subcategory: "Nose & Sinus", condition: "Acute Bacterial Rhinosinusitis" },
-  { system: "HEENT", subcategory: "Nose & Sinus", condition: "Chronic Rhinosinusitis" },
+  { system: "HEENT", subcategory: "Nose & Sinus", condition: "Acute Bacterial Rhinosinusitis" , aliases: ["Acute Sinusitis", "Sinus Infection"] },
+  { system: "HEENT", subcategory: "Nose & Sinus", condition: "Chronic Rhinosinusitis" , aliases: ["Chronic Sinusitis"] },
   { system: "HEENT", subcategory: "Nose & Sinus", condition: "Nasal Polyps" },
   { system: "HEENT", subcategory: "Nose & Sinus", condition: "Deviated Nasal Septum" },
   { system: "HEENT", subcategory: "Nose & Sinus", condition: "Epistaxis – Anterior" },
@@ -1503,7 +1503,7 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
   { system: "HEENT", subcategory: "Throat & Pharynx", condition: "Viral Pharyngitis" },
   { system: "HEENT", subcategory: "Throat & Pharynx", condition: "Group A Streptococcal Pharyngitis" },
   { system: "HEENT", subcategory: "Throat & Pharynx", condition: "Chronic Tonsillitis" },
-  { system: "HEENT", subcategory: "Throat & Pharynx", condition: "Peritonsillar Abscess" },
+  { system: "HEENT", subcategory: "Throat & Pharynx", condition: "Peritonsillar Abscess" , aliases: ["Quinsy", "PTA"] },
   { system: "HEENT", subcategory: "Throat & Pharynx", condition: "Retropharyngeal Abscess" },
   { system: "HEENT", subcategory: "Throat & Pharynx", condition: "Infectious Mononucleosis (Oropharyngeal Manifestations)" },
 
@@ -1517,7 +1517,7 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
   // ORAL CAVITY & SALIVARY GLANDS
   { system: "HEENT", subcategory: "Oral Cavity", condition: "Aphthous Ulcers" },
   { system: "HEENT", subcategory: "Oral Cavity", condition: "Herpes Labialis" },
-  { system: "HEENT", subcategory: "Oral Cavity", condition: "Oral Candidiasis (Thrush)" },
+  { system: "HEENT", subcategory: "Oral Cavity", condition: "Oral Candidiasis (Thrush)" , aliases: ["Thrush", "Oral Thrush"] },
   { system: "HEENT", subcategory: "Oral Cavity", condition: "Leukoplakia" },
   { system: "HEENT", subcategory: "Oral Cavity", condition: "Erythroplakia" },
   { system: "HEENT", subcategory: "Oral Cavity", condition: "Temporomandibular Joint Disorder (TMJ)" },
@@ -1546,50 +1546,50 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
 
 export const CONDITION_REGISTRY_PSYCH: ConditionMeta[] = [
   // MOOD DISORDERS
-  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Major Depressive Disorder" },
-  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Persistent Depressive Disorder (Dysthymia)" },
-  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Bipolar I Disorder" },
-  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Bipolar II Disorder" },
-  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Cyclothymic Disorder" },
-  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Premenstrual Dysphoric Disorder (PMDD)" },
-  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Depression with Peripartum Onset" },
+  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Major Depressive Disorder" , aliases: ["MDD", "Clinical Depression", "Unipolar Depression"] },
+  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Persistent Depressive Disorder (Dysthymia)" , aliases: ["Dysthymia", "Chronic Depression"] },
+  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Bipolar I Disorder" , aliases: ["Bipolar I", "Manic Depression"] },
+  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Bipolar II Disorder" , aliases: ["Bipolar II"] },
+  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Cyclothymic Disorder" , aliases: ["Cyclothymia"] },
+  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Premenstrual Dysphoric Disorder (PMDD)" , aliases: ["PMDD"] },
+  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Depression with Peripartum Onset" , aliases: ["Postpartum Depression", "Peripartum Depression"] },
 
   // ANXIETY DISORDERS
-  { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Generalized Anxiety Disorder" },
-  { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Panic Disorder" },
+  { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Generalized Anxiety Disorder" , aliases: ["GAD"] },
+  { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Panic Disorder" , aliases: ["Panic Attack Disorder"] },
   { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Agoraphobia" },
-  { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Social Anxiety Disorder (Social Phobia)" },
-  { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Specific Phobia" },
+  { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Social Anxiety Disorder (Social Phobia)" , aliases: ["Social Phobia", "Social Anxiety"] },
+  { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Specific Phobia" , aliases: ["Simple Phobia"] },
   { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Separation Anxiety Disorder" },
   { system: "PSYCH", subcategory: "Anxiety Disorders", condition: "Selective Mutism" },
 
   // TRAUMA & STRESSOR-RELATED DISORDERS
-  { system: "PSYCH", subcategory: "Trauma- and Stressor-Related Disorders", condition: "Posttraumatic Stress Disorder (PTSD)" },
-  { system: "PSYCH", subcategory: "Trauma- and Stressor-Related Disorders", condition: "Acute Stress Disorder" },
-  { system: "PSYCH", subcategory: "Trauma- and Stressor-Related Disorders", condition: "Adjustment Disorder" },
+  { system: "PSYCH", subcategory: "Trauma- and Stressor-Related Disorders", condition: "Posttraumatic Stress Disorder (PTSD)" , aliases: ["PTSD", "Post-Traumatic Stress"] },
+  { system: "PSYCH", subcategory: "Trauma- and Stressor-Related Disorders", condition: "Acute Stress Disorder" , aliases: ["ASD"] },
+  { system: "PSYCH", subcategory: "Trauma- and Stressor-Related Disorders", condition: "Adjustment Disorder" , aliases: ["Adjustment Reaction"] },
   { system: "PSYCH", subcategory: "Trauma- and Stressor-Related Disorders", condition: "Reactive Attachment Disorder" },
 
   // OBSESSIVE-COMPULSIVE & RELATED DISORDERS
-  { system: "PSYCH", subcategory: "Obsessive-Compulsive & Related Disorders", condition: "Obsessive-Compulsive Disorder (OCD)" },
-  { system: "PSYCH", subcategory: "Obsessive-Compulsive & Related Disorders", condition: "Body Dysmorphic Disorder" },
+  { system: "PSYCH", subcategory: "Obsessive-Compulsive & Related Disorders", condition: "Obsessive-Compulsive Disorder (OCD)" , aliases: ["OCD"] },
+  { system: "PSYCH", subcategory: "Obsessive-Compulsive & Related Disorders", condition: "Body Dysmorphic Disorder" , aliases: ["BDD", "Dysmorphophobia"] },
   { system: "PSYCH", subcategory: "Obsessive-Compulsive & Related Disorders", condition: "Hoarding Disorder" },
   { system: "PSYCH", subcategory: "Obsessive-Compulsive & Related Disorders", condition: "Trichotillomania (Hair-Pulling Disorder)" },
   { system: "PSYCH", subcategory: "Obsessive-Compulsive & Related Disorders", condition: "Excoriation (Skin-Picking) Disorder" },
 
   // PSYCHOTIC DISORDERS
-  { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Schizophrenia" },
-  { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Schizoaffective Disorder" },
+  { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Schizophrenia" , aliases: ["Paranoid Schizophrenia", "Schizophrenic Disorder"] },
+  { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Schizoaffective Disorder" , aliases: ["Schizoaffective"] },
   { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Schizophreniform Disorder" },
-  { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Brief Psychotic Disorder" },
-  { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Delusional Disorder" },
+  { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Brief Psychotic Disorder" , aliases: ["Brief Reactive Psychosis"] },
+  { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Delusional Disorder" , aliases: ["Paranoid Disorder"] },
   { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Substance-Induced Psychotic Disorder" },
 
   // SOMATIC SYMPTOM & RELATED DISORDERS
-  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Somatic Symptom Disorder" },
-  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Illness Anxiety Disorder (Hypochondriasis)" },
-  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Conversion Disorder (Functional Neurological Symptom Disorder)" },
-  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Factitious Disorder Imposed on Self" },
-  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Factitious Disorder Imposed on Another" },
+  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Somatic Symptom Disorder" , aliases: ["Somatization Disorder"] },
+  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Illness Anxiety Disorder (Hypochondriasis)" , aliases: ["Hypochondriasis", "Health Anxiety"] },
+  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Conversion Disorder (Functional Neurological Symptom Disorder)" , aliases: ["Conversion Disorder", "Functional Neurological Disorder"] },
+  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Factitious Disorder Imposed on Self" , aliases: ["Munchausen Syndrome"] },
+  { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Factitious Disorder Imposed on Another" , aliases: ["Munchausen by Proxy"] },
   { system: "PSYCH", subcategory: "Somatic Symptom & Related Disorders", condition: "Malingering" },
 
   // DISRUPTIVE, IMPULSE-CONTROL, & CONDUCT DISORDERS
@@ -1600,30 +1600,30 @@ export const CONDITION_REGISTRY_PSYCH: ConditionMeta[] = [
   { system: "PSYCH", subcategory: "Disruptive, Impulse-Control, & Conduct Disorders", condition: "Pyromania" },
 
   // NEURODEVELOPMENTAL DISORDERS (PSYCH-LEANING)
-  { system: "PSYCH", subcategory: "Neurodevelopmental Disorders", condition: "Attention-Deficit/Hyperactivity Disorder (ADHD)" },
-  { system: "PSYCH", subcategory: "Neurodevelopmental Disorders", condition: "Autism Spectrum Disorder" },
-  { system: "PSYCH", subcategory: "Neurodevelopmental Disorders", condition: "Intellectual Disability (Intellectual Developmental Disorder)" },
+  { system: "PSYCH", subcategory: "Neurodevelopmental Disorders", condition: "Attention-Deficit/Hyperactivity Disorder (ADHD)" , aliases: ["ADHD", "ADD", "Attention Deficit Disorder"] },
+  { system: "PSYCH", subcategory: "Neurodevelopmental Disorders", condition: "Autism Spectrum Disorder" , aliases: ["ASD", "Autism"] },
+  { system: "PSYCH", subcategory: "Neurodevelopmental Disorders", condition: "Intellectual Disability (Intellectual Developmental Disorder)" , aliases: ["Mental Retardation", "Intellectual Developmental Disorder"] },
   { system: "PSYCH", subcategory: "Neurodevelopmental Disorders", condition: "Specific Learning Disorder" },
   { system: "PSYCH", subcategory: "Neurodevelopmental Disorders", condition: "Tourette Syndrome" },
   { system: "PSYCH", subcategory: "Neurodevelopmental Disorders", condition: "Persistent (Chronic) Motor or Vocal Tic Disorder" },
 
   // FEEDING & EATING DISORDERS
-  { system: "PSYCH", subcategory: "Feeding & Eating Disorders", condition: "Anorexia Nervosa" },
-  { system: "PSYCH", subcategory: "Feeding & Eating Disorders", condition: "Bulimia Nervosa" },
-  { system: "PSYCH", subcategory: "Feeding & Eating Disorders", condition: "Binge-Eating Disorder" },
+  { system: "PSYCH", subcategory: "Feeding & Eating Disorders", condition: "Anorexia Nervosa" , aliases: ["Anorexia"] },
+  { system: "PSYCH", subcategory: "Feeding & Eating Disorders", condition: "Bulimia Nervosa" , aliases: ["Bulimia"] },
+  { system: "PSYCH", subcategory: "Feeding & Eating Disorders", condition: "Binge-Eating Disorder" , aliases: ["BED"] },
   { system: "PSYCH", subcategory: "Feeding & Eating Disorders", condition: "Avoidant/Restrictive Food Intake Disorder (ARFID)" },
 
   // PERSONALITY DISORDERS
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Paranoid Personality Disorder" },
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Schizoid Personality Disorder" },
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Schizotypal Personality Disorder" },
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Antisocial Personality Disorder" },
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Borderline Personality Disorder" },
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Histrionic Personality Disorder" },
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Narcissistic Personality Disorder" },
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Avoidant Personality Disorder" },
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Dependent Personality Disorder" },
-  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Obsessive-Compulsive Personality Disorder" },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Paranoid Personality Disorder" , aliases: ["Paranoid PD"] },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Schizoid Personality Disorder" , aliases: ["Schizoid PD"] },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Schizotypal Personality Disorder" , aliases: ["Schizotypal PD"] },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Antisocial Personality Disorder" , aliases: ["ASPD", "Sociopathy"] },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Borderline Personality Disorder" , aliases: ["BPD"] },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Histrionic Personality Disorder" , aliases: ["Histrionic PD"] },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Narcissistic Personality Disorder" , aliases: ["NPD"] },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Avoidant Personality Disorder" , aliases: ["Avoidant PD"] },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Dependent Personality Disorder" , aliases: ["Dependent PD"] },
+  { system: "PSYCH", subcategory: "Personality Disorders", condition: "Obsessive-Compulsive Personality Disorder" , aliases: ["OCPD"] },
 
   // SLEEP-WAKE DISORDERS (PSYCH-RELATED)
   { system: "PSYCH", subcategory: "Sleep-Wake Disorders", condition: "Insomnia Disorder" },
@@ -1632,14 +1632,14 @@ export const CONDITION_REGISTRY_PSYCH: ConditionMeta[] = [
   { system: "PSYCH", subcategory: "Sleep-Wake Disorders", condition: "Parasomnias (Nightmares, Night Terrors, Sleepwalking)" },
 
   // SUBSTANCE USE – ALCOHOL
-  { system: "PSYCH", subcategory: "Substance Use – Alcohol", condition: "Alcohol Use Disorder" },
+  { system: "PSYCH", subcategory: "Substance Use – Alcohol", condition: "Alcohol Use Disorder" , aliases: ["Alcoholism", "Alcohol Dependence"] },
   { system: "PSYCH", subcategory: "Substance Use – Alcohol", condition: "Alcohol Intoxication" },
   { system: "PSYCH", subcategory: "Substance Use – Alcohol", condition: "Alcohol Withdrawal" },
-  { system: "PSYCH", subcategory: "Substance Use – Alcohol", condition: "Delirium Tremens" },
+  { system: "PSYCH", subcategory: "Substance Use – Alcohol", condition: "Delirium Tremens" , aliases: ["DTs", "Alcohol Withdrawal Delirium"] },
   { system: "PSYCH", subcategory: "Substance Use – Alcohol", condition: "Wernicke–Korsakoff Syndrome" },
 
   // SUBSTANCE USE – OPIOIDS
-  { system: "PSYCH", subcategory: "Substance Use – Opioids", condition: "Opioid Use Disorder" },
+  { system: "PSYCH", subcategory: "Substance Use – Opioids", condition: "Opioid Use Disorder" , aliases: ["Opioid Addiction", "Opioid Dependence"] },
   { system: "PSYCH", subcategory: "Substance Use – Opioids", condition: "Opioid Intoxication" },
   { system: "PSYCH", subcategory: "Substance Use – Opioids", condition: "Opioid Withdrawal" },
 
@@ -1664,7 +1664,7 @@ export const CONDITION_REGISTRY_PSYCH: ConditionMeta[] = [
   { system: "PSYCH", subcategory: "Substance Use – Cannabis & Hallucinogens", condition: "Phencyclidine (PCP) Intoxication" },
 
   // SUBSTANCE USE – TOBACCO
-  { system: "PSYCH", subcategory: "Substance Use – Tobacco", condition: "Tobacco Use Disorder" },
+  { system: "PSYCH", subcategory: "Substance Use – Tobacco", condition: "Tobacco Use Disorder" , aliases: ["Nicotine Dependence", "Smoking Addiction"] },
   { system: "PSYCH", subcategory: "Substance Use – Tobacco", condition: "Nicotine Withdrawal" },
 
   // EMERGENCY PSYCHIATRY & SUICIDALITY
@@ -1815,7 +1815,7 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
     system: "OTHER",
     subcategory: "Developmental",
     condition: "Autism Spectrum Disorder"
-  },
+  , aliases: ["ASD", "Autism"] },
   {
     system: "OTHER",
     subcategory: "Developmental",

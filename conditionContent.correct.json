@@ -24012,5 +24012,4675 @@
     "epidemiology": " *   **Maternal Carrier Rate:** Approximately 10-30% of pregnant individuals are colonized with GBS. *   **Transmission Rate:** Without IAP, ~50% of infants born to GBS-positive mothers become colonized, and 1-2% of those develop invasive EOD. *   **Impact of IAP:** Since the implementation of universal screening and IAP in the 1990s, the incidence of EOD has decreased by over 80%. *   **Incidence:** *   **EOD:** ~0.2 cases per 1,000 live births. *   **LOD:** Incidence has remained stable at ~0.3 cases per 1,000 live births, as it is not preventable by IAP. ",
     "clinicalPresentation": " *   **Maternal:** *   Usually **asymptomatic colonization**. *   Can cause urinary tract infections (UTIs), chorioamnionitis, and postpartum endometritis. *   **Neonate: Early-Onset Disease (EOD)** *   Presents acutely, typically within the first 24-48 hours of life. *   **Respiratory distress** is the most common presenting sign (grunting, tachypnea, nasal flaring, retractions), often mimicking Respiratory Distress Syndrome (RDS). *   Signs of systemic illness (sepsis): lethargy, temperature instability (fever or hypothermia), poor feeding, hypotonia. *   Cardiovascular collapse: hypotension, poor perfusion, pallor, cyanosis. *   **Neonate: Late-Onset Disease (LOD)** *   Presents more insidiously. *   Fever without a source is common. *   Poor feeding, irritability, lethargy. *   **Meningitis** is more common in LOD than EOD and may present with a bulging fontanelle, altered mental status, or seizures. ",
     "prognosis": " *   Mortality from EOD in term infants is now 2-3%. *   Mortality remains high in preterm infants (20-30%). *   Up to 50% of infants who survive GBS meningitis suffer from long-term neurologic impairments. *   Prognosis for LOD is generally better than for EOD, except in cases of severe meningitis. "
+  },
+  "PSYCH__trauma_and_stressorrelated_disorders__grief_and_bereavement": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Grief and Bereavement. Content to be generated."
+    },
+    "overview": "Grief and Bereavement is a condition in the PSYCH system, Trauma- and Stressor-Related Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Grief and Bereavement. Content to be generated.",
+    "epidemiology": "Epidemiology of Grief and Bereavement. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Grief and Bereavement. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Grief and Bereavement. Content to be generated.",
+    "aliases": [
+      "Bereavement",
+      "Grief Disorder",
+      "Prolonged Grief Disorder"
+    ]
+  },
+  "PSYCH__abuse__neglect__child_abuse_and_neglect": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Child Abuse and Neglect. Content to be generated."
+    },
+    "overview": "Child Abuse and Neglect is a condition in the PSYCH system, Abuse & Neglect category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Child Abuse and Neglect. Content to be generated.",
+    "epidemiology": "Epidemiology of Child Abuse and Neglect. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Child Abuse and Neglect. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Child Abuse and Neglect. Content to be generated.",
+    "aliases": [
+      "Child Maltreatment",
+      "Pediatric Abuse"
+    ]
+  },
+  "PSYCH__abuse__neglect__intimate_partner_violence": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Intimate Partner Violence. Content to be generated."
+    },
+    "overview": "Intimate Partner Violence is a condition in the PSYCH system, Abuse & Neglect category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Intimate Partner Violence. Content to be generated.",
+    "epidemiology": "Epidemiology of Intimate Partner Violence. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Intimate Partner Violence. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Intimate Partner Violence. Content to be generated.",
+    "aliases": [
+      "Domestic Violence",
+      "Domestic Abuse",
+      "IPV",
+      "Spousal Abuse"
+    ]
+  },
+  "PSYCH__abuse__neglect__elder_abuse_and_neglect": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Elder Abuse and Neglect. Content to be generated."
+    },
+    "overview": "Elder Abuse and Neglect is a condition in the PSYCH system, Abuse & Neglect category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Elder Abuse and Neglect. Content to be generated.",
+    "epidemiology": "Epidemiology of Elder Abuse and Neglect. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Elder Abuse and Neglect. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Elder Abuse and Neglect. Content to be generated.",
+    "aliases": [
+      "Elder Maltreatment",
+      "Geriatric Abuse"
+    ]
+  },
+  "PSYCH__abuse__neglect__sexual_assault": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Sexual Assault. Content to be generated."
+    },
+    "overview": "Sexual Assault is a condition in the PSYCH system, Abuse & Neglect category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Sexual Assault. Content to be generated.",
+    "epidemiology": "Epidemiology of Sexual Assault. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Sexual Assault. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Sexual Assault. Content to be generated.",
+    "aliases": [
+      "Rape",
+      "Sexual Violence"
+    ]
+  },
+  "PSYCH__substance_use__opioids__opioid_overdose": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Opioid Overdose. Content to be generated."
+    },
+    "overview": "Opioid Overdose is a condition in the PSYCH system, Substance Use - Opioids category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Opioid Overdose. Content to be generated.",
+    "epidemiology": "Epidemiology of Opioid Overdose. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Opioid Overdose. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Opioid Overdose. Content to be generated.",
+    "aliases": [
+      "Opioid Toxicity",
+      "Narcotic Overdose"
+    ]
+  },
+  "PSYCH__somatic_symptom__related_disorders__psychogenic_nonepileptic_seizures": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Psychogenic Nonepileptic Seizures. Content to be generated."
+    },
+    "overview": "Psychogenic Nonepileptic Seizures is a condition in the PSYCH system, Somatic Symptom & Related Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Psychogenic Nonepileptic Seizures. Content to be generated.",
+    "epidemiology": "Epidemiology of Psychogenic Nonepileptic Seizures. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Psychogenic Nonepileptic Seizures. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Psychogenic Nonepileptic Seizures. Content to be generated.",
+    "aliases": [
+      "PNES",
+      "Pseudoseizures",
+      "Nonepileptic Seizures",
+      "Functional Seizures"
+    ]
+  },
+  "HEENT__eye__cornea__anterior_segment__corneal_abrasion": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Corneal Abrasion. Content to be generated."
+    },
+    "overview": "Corneal Abrasion is a condition in the HEENT system, Eye - Cornea & Anterior Segment category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Corneal Abrasion. Content to be generated.",
+    "epidemiology": "Epidemiology of Corneal Abrasion. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Corneal Abrasion. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Corneal Abrasion. Content to be generated.",
+    "aliases": [
+      "Scratched Cornea",
+      "Corneal Scratch"
+    ]
+  },
+  "HEENT__eye__cornea__anterior_segment__corneal_foreign_body": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Corneal Foreign Body. Content to be generated."
+    },
+    "overview": "Corneal Foreign Body is a condition in the HEENT system, Eye - Cornea & Anterior Segment category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Corneal Foreign Body. Content to be generated.",
+    "epidemiology": "Epidemiology of Corneal Foreign Body. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Corneal Foreign Body. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Corneal Foreign Body. Content to be generated.",
+    "aliases": [
+      "Foreign Body in Eye",
+      "Eye Foreign Body"
+    ]
+  },
+  "HEENT__eye__conjunctiva__scleritis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Scleritis. Content to be generated."
+    },
+    "overview": "Scleritis is a condition in the HEENT system, Eye - Conjunctiva category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Scleritis. Content to be generated.",
+    "epidemiology": "Epidemiology of Scleritis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Scleritis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Scleritis. Content to be generated.",
+    "aliases": [
+      "Scleral Inflammation"
+    ]
+  },
+  "HEENT__eye__retina__retinal_vascular_occlusion": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Retinal Vascular Occlusion. Content to be generated."
+    },
+    "overview": "Retinal Vascular Occlusion is a condition in the HEENT system, Eye - Retina category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Retinal Vascular Occlusion. Content to be generated.",
+    "epidemiology": "Epidemiology of Retinal Vascular Occlusion. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Retinal Vascular Occlusion. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Retinal Vascular Occlusion. Content to be generated.",
+    "aliases": [
+      "Retinal Artery Occlusion",
+      "Retinal Vein Occlusion",
+      "Eye Stroke"
+    ]
+  },
+  "HEENT__eye__optic_nerve__nystagmus": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Nystagmus. Content to be generated."
+    },
+    "overview": "Nystagmus is a condition in the HEENT system, Eye - Optic Nerve category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Nystagmus. Content to be generated.",
+    "epidemiology": "Epidemiology of Nystagmus. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Nystagmus. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Nystagmus. Content to be generated.",
+    "aliases": [
+      "Involuntary Eye Movement",
+      "Dancing Eyes"
+    ]
+  },
+  "HEENT__ear__middle__eustachian_tube_dysfunction": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Eustachian Tube Dysfunction. Content to be generated."
+    },
+    "overview": "Eustachian Tube Dysfunction is a condition in the HEENT system, Ear - Middle category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Eustachian Tube Dysfunction. Content to be generated.",
+    "epidemiology": "Epidemiology of Eustachian Tube Dysfunction. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Eustachian Tube Dysfunction. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Eustachian Tube Dysfunction. Content to be generated.",
+    "aliases": [
+      "ETD",
+      "Blocked Eustachian Tube"
+    ]
+  },
+  "HEENT__ear__middle__barotrauma": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Barotrauma. Content to be generated."
+    },
+    "overview": "Barotrauma is a condition in the HEENT system, Ear - Middle category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Barotrauma. Content to be generated.",
+    "epidemiology": "Epidemiology of Barotrauma. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Barotrauma. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Barotrauma. Content to be generated.",
+    "aliases": [
+      "Ear Barotrauma",
+      "Pressure Injury to Ear",
+      "Airplane Ear"
+    ]
+  },
+  "HEENT__ear__middle__otosclerosis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Otosclerosis. Content to be generated."
+    },
+    "overview": "Otosclerosis is a condition in the HEENT system, Ear - Middle category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Otosclerosis. Content to be generated.",
+    "epidemiology": "Epidemiology of Otosclerosis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Otosclerosis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Otosclerosis. Content to be generated.",
+    "aliases": [
+      "Otospongiosis",
+      "Stapes Fixation"
+    ]
+  },
+  "HEENT__ear__inner__vestibular__benign_paroxysmal_positional_vertigo": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Benign Paroxysmal Positional Vertigo. Content to be generated."
+    },
+    "overview": "Benign Paroxysmal Positional Vertigo is a condition in the HEENT system, Ear - Inner / Vestibular category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Benign Paroxysmal Positional Vertigo. Content to be generated.",
+    "epidemiology": "Epidemiology of Benign Paroxysmal Positional Vertigo. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Benign Paroxysmal Positional Vertigo. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Benign Paroxysmal Positional Vertigo. Content to be generated.",
+    "aliases": [
+      "BPPV",
+      "Positional Vertigo"
+    ]
+  },
+  "HEENT__nose__sinus__vasomotor_rhinitis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Vasomotor Rhinitis. Content to be generated."
+    },
+    "overview": "Vasomotor Rhinitis is a condition in the HEENT system, Nose & Sinus category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Vasomotor Rhinitis. Content to be generated.",
+    "epidemiology": "Epidemiology of Vasomotor Rhinitis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Vasomotor Rhinitis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Vasomotor Rhinitis. Content to be generated.",
+    "aliases": [
+      "Non-Allergic Rhinitis",
+      "Idiopathic Rhinitis"
+    ]
+  },
+  "HEENT__throat__pharynx__deep_neck_infection": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Deep Neck Infection. Content to be generated."
+    },
+    "overview": "Deep Neck Infection is a condition in the HEENT system, Throat & Pharynx category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Deep Neck Infection. Content to be generated.",
+    "epidemiology": "Epidemiology of Deep Neck Infection. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Deep Neck Infection. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Deep Neck Infection. Content to be generated.",
+    "aliases": [
+      "Ludwig's Angina",
+      "Ludwigs Angina",
+      "Submandibular Space Infection"
+    ]
+  },
+  "HEENT__salivary_glands__mumps_parotitis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Mumps Parotitis. Content to be generated."
+    },
+    "overview": "Mumps Parotitis is a condition in the HEENT system, Salivary Glands category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Mumps Parotitis. Content to be generated.",
+    "epidemiology": "Epidemiology of Mumps Parotitis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Mumps Parotitis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Mumps Parotitis. Content to be generated.",
+    "aliases": [
+      "Mumps",
+      "Epidemic Parotitis"
+    ]
+  },
+  "REPRO__gynecology__uterine_prolapse": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Uterine Prolapse. Content to be generated."
+    },
+    "overview": "Uterine Prolapse is a condition in the REPRO system, Gynecology category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Uterine Prolapse. Content to be generated.",
+    "epidemiology": "Epidemiology of Uterine Prolapse. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Uterine Prolapse. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Uterine Prolapse. Content to be generated.",
+    "aliases": [
+      "Prolapsed Uterus",
+      "Pelvic Organ Prolapse"
+    ]
+  },
+  "REPRO__gynecology__cystocele": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Cystocele. Content to be generated."
+    },
+    "overview": "Cystocele is a condition in the REPRO system, Gynecology category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Cystocele. Content to be generated.",
+    "epidemiology": "Epidemiology of Cystocele. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Cystocele. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Cystocele. Content to be generated.",
+    "aliases": [
+      "Bladder Prolapse",
+      "Anterior Vaginal Wall Prolapse"
+    ]
+  },
+  "REPRO__gynecology__rectocele": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Rectocele. Content to be generated."
+    },
+    "overview": "Rectocele is a condition in the REPRO system, Gynecology category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Rectocele. Content to be generated.",
+    "epidemiology": "Epidemiology of Rectocele. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Rectocele. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Rectocele. Content to be generated.",
+    "aliases": [
+      "Rectal Prolapse",
+      "Posterior Vaginal Wall Prolapse"
+    ]
+  },
+  "REPRO__vaginal_disorders__vaginitis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Vaginitis. Content to be generated."
+    },
+    "overview": "Vaginitis is a condition in the REPRO system, Vaginal Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Vaginitis. Content to be generated.",
+    "epidemiology": "Epidemiology of Vaginitis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Vaginitis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Vaginitis. Content to be generated.",
+    "aliases": [
+      "Vaginal Infection",
+      "Vaginal Inflammation"
+    ]
+  },
+  "REPRO__cervix__sti__cervical_cancer": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Cervical Cancer. Content to be generated."
+    },
+    "overview": "Cervical Cancer is a condition in the REPRO system, Cervix / STI category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Cervical Cancer. Content to be generated.",
+    "epidemiology": "Epidemiology of Cervical Cancer. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Cervical Cancer. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Cervical Cancer. Content to be generated.",
+    "aliases": [
+      "Cervical Carcinoma",
+      "Cancer of the Cervix"
+    ]
+  },
+  "REPRO__gynecology__endometrial_hyperplasia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Endometrial Hyperplasia. Content to be generated."
+    },
+    "overview": "Endometrial Hyperplasia is a condition in the REPRO system, Gynecology category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Endometrial Hyperplasia. Content to be generated.",
+    "epidemiology": "Epidemiology of Endometrial Hyperplasia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Endometrial Hyperplasia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Endometrial Hyperplasia. Content to be generated.",
+    "aliases": [
+      "Thickened Uterine Lining",
+      "Uterine Hyperplasia"
+    ]
+  },
+  "REPRO__breast__breast_cancer": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Breast Cancer. Content to be generated."
+    },
+    "overview": "Breast Cancer is a condition in the REPRO system, Breast category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Breast Cancer. Content to be generated.",
+    "epidemiology": "Epidemiology of Breast Cancer. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Breast Cancer. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Breast Cancer. Content to be generated.",
+    "aliases": [
+      "Mammary Carcinoma",
+      "Breast Carcinoma",
+      "Carcinoma of the Breast"
+    ]
+  },
+  "REPRO__menstrual_disorders__menopause": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Menopause. Content to be generated."
+    },
+    "overview": "Menopause is a condition in the REPRO system, Menstrual Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Menopause. Content to be generated.",
+    "epidemiology": "Epidemiology of Menopause. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Menopause. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Menopause. Content to be generated.",
+    "aliases": [
+      "Climacteric",
+      "Change of Life"
+    ]
+  },
+  "REPRO__menstrual_disorders__atrophic_vaginitis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Atrophic Vaginitis. Content to be generated."
+    },
+    "overview": "Atrophic Vaginitis is a condition in the REPRO system, Menstrual Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Atrophic Vaginitis. Content to be generated.",
+    "epidemiology": "Epidemiology of Atrophic Vaginitis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Atrophic Vaginitis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Atrophic Vaginitis. Content to be generated.",
+    "aliases": [
+      "Vaginal Atrophy",
+      "Genitourinary Syndrome of Menopause",
+      "GSM"
+    ]
+  },
+  "REPRO__antepartum__molar_pregnancy": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Molar Pregnancy. Content to be generated."
+    },
+    "overview": "Molar Pregnancy is a condition in the REPRO system, Antepartum category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Molar Pregnancy. Content to be generated.",
+    "epidemiology": "Epidemiology of Molar Pregnancy. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Molar Pregnancy. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Molar Pregnancy. Content to be generated.",
+    "aliases": [
+      "Hydatidiform Mole",
+      "Gestational Trophoblastic Disease"
+    ]
+  },
+  "REPRO__antepartum__rh_incompatibility": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Rh Incompatibility. Content to be generated."
+    },
+    "overview": "Rh Incompatibility is a condition in the REPRO system, Antepartum category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Rh Incompatibility. Content to be generated.",
+    "epidemiology": "Epidemiology of Rh Incompatibility. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Rh Incompatibility. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Rh Incompatibility. Content to be generated.",
+    "aliases": [
+      "Rh Disease",
+      "Rhesus Incompatibility",
+      "Hemolytic Disease of the Newborn"
+    ]
+  },
+  "REPRO__early_pregnancy__spontaneous_abortion": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Spontaneous Abortion. Content to be generated."
+    },
+    "overview": "Spontaneous Abortion is a condition in the REPRO system, Early Pregnancy category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Spontaneous Abortion. Content to be generated.",
+    "epidemiology": "Epidemiology of Spontaneous Abortion. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Spontaneous Abortion. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Spontaneous Abortion. Content to be generated.",
+    "aliases": [
+      "Miscarriage",
+      "Pregnancy Loss"
+    ]
+  },
+  "GU__penile__erectile_dysfunction": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Erectile Dysfunction. Content to be generated."
+    },
+    "overview": "Erectile Dysfunction is a condition in the GU system, Penile category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Erectile Dysfunction. Content to be generated.",
+    "epidemiology": "Epidemiology of Erectile Dysfunction. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Erectile Dysfunction. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Erectile Dysfunction. Content to be generated.",
+    "aliases": [
+      "ED",
+      "Impotence",
+      "Male Sexual Dysfunction"
+    ]
+  },
+  "GU__testicular__cryptorchidism": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Cryptorchidism. Content to be generated."
+    },
+    "overview": "Cryptorchidism is a condition in the GU system, Testicular category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Cryptorchidism. Content to be generated.",
+    "epidemiology": "Epidemiology of Cryptorchidism. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Cryptorchidism. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Cryptorchidism. Content to be generated.",
+    "aliases": [
+      "Undescended Testicle",
+      "Undescended Testis"
+    ]
+  },
+  "HEME__anemia__sideroblastic_anemia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Sideroblastic Anemia. Content to be generated."
+    },
+    "overview": "Sideroblastic Anemia is a condition in the HEME system, Anemia category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Sideroblastic Anemia. Content to be generated.",
+    "epidemiology": "Epidemiology of Sideroblastic Anemia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Sideroblastic Anemia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Sideroblastic Anemia. Content to be generated.",
+    "aliases": [
+      "Refractory Anemia with Ring Sideroblasts"
+    ]
+  },
+  "HEME__anemia__lead_poisoning_anemia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Lead Poisoning Anemia. Content to be generated."
+    },
+    "overview": "Lead Poisoning Anemia is a condition in the HEME system, Anemia category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Lead Poisoning Anemia. Content to be generated.",
+    "epidemiology": "Epidemiology of Lead Poisoning Anemia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Lead Poisoning Anemia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Lead Poisoning Anemia. Content to be generated.",
+    "aliases": [
+      "Lead Toxicity Anemia",
+      "Plumbism"
+    ]
+  },
+  "HEME__hemolytic__pernicious_anemia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Pernicious Anemia. Content to be generated."
+    },
+    "overview": "Pernicious Anemia is a condition in the HEME system, Hemolytic category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Pernicious Anemia. Content to be generated.",
+    "epidemiology": "Epidemiology of Pernicious Anemia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Pernicious Anemia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Pernicious Anemia. Content to be generated.",
+    "aliases": [
+      "Vitamin B12 Deficiency Anemia",
+      "Megaloblastic Anemia"
+    ]
+  },
+  "HEME__thrombosis__factor_v_leiden": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Factor V Leiden. Content to be generated."
+    },
+    "overview": "Factor V Leiden is a condition in the HEME system, Thrombosis category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Factor V Leiden. Content to be generated.",
+    "epidemiology": "Epidemiology of Factor V Leiden. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Factor V Leiden. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Factor V Leiden. Content to be generated.",
+    "aliases": [
+      "Factor V Leiden Mutation",
+      "Activated Protein C Resistance"
+    ]
+  },
+  "HEME__platelet__idiopathic_thrombocytopenic_purpura": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Idiopathic Thrombocytopenic Purpura. Content to be generated."
+    },
+    "overview": "Idiopathic Thrombocytopenic Purpura is a condition in the HEME system, Platelet category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Idiopathic Thrombocytopenic Purpura. Content to be generated.",
+    "epidemiology": "Epidemiology of Idiopathic Thrombocytopenic Purpura. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Idiopathic Thrombocytopenic Purpura. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Idiopathic Thrombocytopenic Purpura. Content to be generated.",
+    "aliases": [
+      "ITP",
+      "Immune Thrombocytopenic Purpura",
+      "Immune Thrombocytopenia"
+    ]
+  },
+  "HEME__platelet__thrombotic_thrombocytopenic_purpura": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Thrombotic Thrombocytopenic Purpura. Content to be generated."
+    },
+    "overview": "Thrombotic Thrombocytopenic Purpura is a condition in the HEME system, Platelet category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Thrombotic Thrombocytopenic Purpura. Content to be generated.",
+    "epidemiology": "Epidemiology of Thrombotic Thrombocytopenic Purpura. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Thrombotic Thrombocytopenic Purpura. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Thrombotic Thrombocytopenic Purpura. Content to be generated.",
+    "aliases": [
+      "TTP",
+      "Moschcowitz Disease"
+    ]
+  },
+  "HEME__platelet__hemolytic_uremic_syndrome": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hemolytic Uremic Syndrome. Content to be generated."
+    },
+    "overview": "Hemolytic Uremic Syndrome is a condition in the HEME system, Platelet category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hemolytic Uremic Syndrome. Content to be generated.",
+    "epidemiology": "Epidemiology of Hemolytic Uremic Syndrome. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hemolytic Uremic Syndrome. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hemolytic Uremic Syndrome. Content to be generated.",
+    "aliases": [
+      "HUS",
+      "Atypical HUS"
+    ]
+  },
+  "HEME__platelet__heparininduced_thrombocytopenia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Heparin-Induced Thrombocytopenia. Content to be generated."
+    },
+    "overview": "Heparin-Induced Thrombocytopenia is a condition in the HEME system, Platelet category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Heparin-Induced Thrombocytopenia. Content to be generated.",
+    "epidemiology": "Epidemiology of Heparin-Induced Thrombocytopenia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Heparin-Induced Thrombocytopenia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Heparin-Induced Thrombocytopenia. Content to be generated.",
+    "aliases": [
+      "HIT",
+      "Heparin-Induced Thrombocytopenia and Thrombosis"
+    ]
+  },
+  "HEME__leukemia__acute_lymphoblastic_leukemia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Acute Lymphoblastic Leukemia. Content to be generated."
+    },
+    "overview": "Acute Lymphoblastic Leukemia is a condition in the HEME system, Leukemia category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Acute Lymphoblastic Leukemia. Content to be generated.",
+    "epidemiology": "Epidemiology of Acute Lymphoblastic Leukemia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Acute Lymphoblastic Leukemia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Acute Lymphoblastic Leukemia. Content to be generated.",
+    "aliases": [
+      "ALL",
+      "Acute Lymphocytic Leukemia"
+    ]
+  },
+  "HEME__leukemia__acute_myeloid_leukemia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Acute Myeloid Leukemia. Content to be generated."
+    },
+    "overview": "Acute Myeloid Leukemia is a condition in the HEME system, Leukemia category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Acute Myeloid Leukemia. Content to be generated.",
+    "epidemiology": "Epidemiology of Acute Myeloid Leukemia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Acute Myeloid Leukemia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Acute Myeloid Leukemia. Content to be generated.",
+    "aliases": [
+      "AML",
+      "Acute Myelogenous Leukemia"
+    ]
+  },
+  "HEME__leukemia__chronic_lymphocytic_leukemia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Chronic Lymphocytic Leukemia. Content to be generated."
+    },
+    "overview": "Chronic Lymphocytic Leukemia is a condition in the HEME system, Leukemia category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Chronic Lymphocytic Leukemia. Content to be generated.",
+    "epidemiology": "Epidemiology of Chronic Lymphocytic Leukemia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Chronic Lymphocytic Leukemia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Chronic Lymphocytic Leukemia. Content to be generated.",
+    "aliases": [
+      "CLL",
+      "Chronic Lymphoid Leukemia"
+    ]
+  },
+  "HEME__leukemia__chronic_myelogenous_leukemia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Chronic Myelogenous Leukemia. Content to be generated."
+    },
+    "overview": "Chronic Myelogenous Leukemia is a condition in the HEME system, Leukemia category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Chronic Myelogenous Leukemia. Content to be generated.",
+    "epidemiology": "Epidemiology of Chronic Myelogenous Leukemia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Chronic Myelogenous Leukemia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Chronic Myelogenous Leukemia. Content to be generated.",
+    "aliases": [
+      "CML",
+      "Chronic Myeloid Leukemia"
+    ]
+  },
+  "RENAL__acute_kidney_injury__prerenal_acute_kidney_injury": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Prerenal Acute Kidney Injury. Content to be generated."
+    },
+    "overview": "Prerenal Acute Kidney Injury is a condition in the RENAL system, Acute Kidney Injury category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Prerenal Acute Kidney Injury. Content to be generated.",
+    "epidemiology": "Epidemiology of Prerenal Acute Kidney Injury. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Prerenal Acute Kidney Injury. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Prerenal Acute Kidney Injury. Content to be generated.",
+    "aliases": [
+      "Prerenal AKI",
+      "Prerenal Azotemia"
+    ]
+  },
+  "RENAL__acute_kidney_injury__intrinsic_acute_kidney_injury": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Intrinsic Acute Kidney Injury. Content to be generated."
+    },
+    "overview": "Intrinsic Acute Kidney Injury is a condition in the RENAL system, Acute Kidney Injury category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Intrinsic Acute Kidney Injury. Content to be generated.",
+    "epidemiology": "Epidemiology of Intrinsic Acute Kidney Injury. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Intrinsic Acute Kidney Injury. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Intrinsic Acute Kidney Injury. Content to be generated.",
+    "aliases": [
+      "Intrinsic AKI",
+      "Intrarenal AKI"
+    ]
+  },
+  "RENAL__acute_kidney_injury__postrenal_acute_kidney_injury": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Postrenal Acute Kidney Injury. Content to be generated."
+    },
+    "overview": "Postrenal Acute Kidney Injury is a condition in the RENAL system, Acute Kidney Injury category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Postrenal Acute Kidney Injury. Content to be generated.",
+    "epidemiology": "Epidemiology of Postrenal Acute Kidney Injury. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Postrenal Acute Kidney Injury. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Postrenal Acute Kidney Injury. Content to be generated.",
+    "aliases": [
+      "Postrenal AKI",
+      "Obstructive AKI"
+    ]
+  },
+  "GU__bladder__urinary_incontinence": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Urinary Incontinence. Content to be generated."
+    },
+    "overview": "Urinary Incontinence is a condition in the GU system, Bladder category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Urinary Incontinence. Content to be generated.",
+    "epidemiology": "Epidemiology of Urinary Incontinence. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Urinary Incontinence. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Urinary Incontinence. Content to be generated.",
+    "aliases": [
+      "Incontinence",
+      "Bladder Leakage"
+    ]
+  },
+  "GU__emergency__fournier_gangrene": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Fournier Gangrene. Content to be generated."
+    },
+    "overview": "Fournier Gangrene is a condition in the GU system, Emergency category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Fournier Gangrene. Content to be generated.",
+    "epidemiology": "Epidemiology of Fournier Gangrene. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Fournier Gangrene. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Fournier Gangrene. Content to be generated.",
+    "aliases": [
+      "Fournier's Gangrene",
+      "Necrotizing Fasciitis of Perineum"
+    ]
+  },
+  "RENAL__oncology__wilms_tumor": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Wilms Tumor. Content to be generated."
+    },
+    "overview": "Wilms Tumor is a condition in the RENAL system, Oncology category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Wilms Tumor. Content to be generated.",
+    "epidemiology": "Epidemiology of Wilms Tumor. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Wilms Tumor. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Wilms Tumor. Content to be generated.",
+    "aliases": [
+      "Nephroblastoma",
+      "Wilms' Tumor"
+    ]
+  },
+  "CV__cardiomyopathy__stress_cardiomyopathy": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Stress Cardiomyopathy. Content to be generated."
+    },
+    "overview": "Stress Cardiomyopathy is a condition in the CV system, Cardiomyopathy category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Stress Cardiomyopathy. Content to be generated.",
+    "epidemiology": "Epidemiology of Stress Cardiomyopathy. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Stress Cardiomyopathy. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Stress Cardiomyopathy. Content to be generated.",
+    "aliases": [
+      "Takotsubo Cardiomyopathy",
+      "Broken Heart Syndrome",
+      "Apical Ballooning Syndrome"
+    ]
+  },
+  "CV__ecg__junctional_rhythm": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Junctional Rhythm. Content to be generated."
+    },
+    "overview": "Junctional Rhythm is a condition in the CV system, ECG category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Junctional Rhythm. Content to be generated.",
+    "epidemiology": "Epidemiology of Junctional Rhythm. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Junctional Rhythm. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Junctional Rhythm. Content to be generated.",
+    "aliases": [
+      "Junctional Escape Rhythm",
+      "AV Junctional Rhythm"
+    ]
+  },
+  "CV__ecg__idioventricular_rhythm": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Idioventricular Rhythm. Content to be generated."
+    },
+    "overview": "Idioventricular Rhythm is a condition in the CV system, ECG category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Idioventricular Rhythm. Content to be generated.",
+    "epidemiology": "Epidemiology of Idioventricular Rhythm. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Idioventricular Rhythm. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Idioventricular Rhythm. Content to be generated.",
+    "aliases": [
+      "Ventricular Escape Rhythm",
+      "Accelerated Idioventricular Rhythm",
+      "AIVR"
+    ]
+  },
+  "CV__traumatic_heart_conditions__myocardial_contusion": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Myocardial Contusion. Content to be generated."
+    },
+    "overview": "Myocardial Contusion is a condition in the CV system, Traumatic Heart Conditions category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Myocardial Contusion. Content to be generated.",
+    "epidemiology": "Epidemiology of Myocardial Contusion. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Myocardial Contusion. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Myocardial Contusion. Content to be generated.",
+    "aliases": [
+      "Cardiac Contusion",
+      "Bruised Heart"
+    ]
+  },
+  "CV__traumatic_heart_conditions__cardiac_tamponade": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Cardiac Tamponade. Content to be generated."
+    },
+    "overview": "Cardiac Tamponade is a condition in the CV system, Traumatic Heart Conditions category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Cardiac Tamponade. Content to be generated.",
+    "epidemiology": "Epidemiology of Cardiac Tamponade. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Cardiac Tamponade. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Cardiac Tamponade. Content to be generated.",
+    "aliases": [
+      "Pericardial Tamponade",
+      "Tamponade"
+    ]
+  },
+  "CV__heart_failure__cor_pulmonale": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Cor Pulmonale. Content to be generated."
+    },
+    "overview": "Cor Pulmonale is a condition in the CV system, Heart Failure category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Cor Pulmonale. Content to be generated.",
+    "epidemiology": "Epidemiology of Cor Pulmonale. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Cor Pulmonale. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Cor Pulmonale. Content to be generated.",
+    "aliases": [
+      "Right Heart Failure",
+      "Pulmonary Heart Disease"
+    ]
+  },
+  "CV__shock__cardiogenic_shock": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Cardiogenic Shock. Content to be generated."
+    },
+    "overview": "Cardiogenic Shock is a condition in the CV system, Shock category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Cardiogenic Shock. Content to be generated.",
+    "epidemiology": "Epidemiology of Cardiogenic Shock. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Cardiogenic Shock. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Cardiogenic Shock. Content to be generated.",
+    "aliases": [
+      "Cardiac Shock",
+      "Pump Failure"
+    ]
+  },
+  "CV__shock__hypovolemic_shock": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hypovolemic Shock. Content to be generated."
+    },
+    "overview": "Hypovolemic Shock is a condition in the CV system, Shock category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hypovolemic Shock. Content to be generated.",
+    "epidemiology": "Epidemiology of Hypovolemic Shock. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hypovolemic Shock. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hypovolemic Shock. Content to be generated.",
+    "aliases": [
+      "Hemorrhagic Shock",
+      "Volume Depletion Shock"
+    ]
+  },
+  "CV__shock__distributive_shock": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Distributive Shock. Content to be generated."
+    },
+    "overview": "Distributive Shock is a condition in the CV system, Shock category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Distributive Shock. Content to be generated.",
+    "epidemiology": "Epidemiology of Distributive Shock. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Distributive Shock. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Distributive Shock. Content to be generated.",
+    "aliases": [
+      "Vasodilatory Shock",
+      "Septic Shock",
+      "Anaphylactic Shock",
+      "Neurogenic Shock"
+    ]
+  },
+  "CV__metabolic__hyperlipidemia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hyperlipidemia. Content to be generated."
+    },
+    "overview": "Hyperlipidemia is a condition in the CV system, Metabolic category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hyperlipidemia. Content to be generated.",
+    "epidemiology": "Epidemiology of Hyperlipidemia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hyperlipidemia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hyperlipidemia. Content to be generated.",
+    "aliases": [
+      "Dyslipidemia",
+      "High Cholesterol",
+      "Hypercholesterolemia"
+    ]
+  },
+  "PULM__pediatric__acute_bronchiolitis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Acute Bronchiolitis. Content to be generated."
+    },
+    "overview": "Acute Bronchiolitis is a condition in the PULM system, Pediatric category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Acute Bronchiolitis. Content to be generated.",
+    "epidemiology": "Epidemiology of Acute Bronchiolitis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Acute Bronchiolitis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Acute Bronchiolitis. Content to be generated.",
+    "aliases": [
+      "RSV Bronchiolitis",
+      "Respiratory Syncytial Virus Bronchiolitis"
+    ]
+  },
+  "PULM__neonatal__hyaline_membrane_disease": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hyaline Membrane Disease. Content to be generated."
+    },
+    "overview": "Hyaline Membrane Disease is a condition in the PULM system, Neonatal category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hyaline Membrane Disease. Content to be generated.",
+    "epidemiology": "Epidemiology of Hyaline Membrane Disease. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hyaline Membrane Disease. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hyaline Membrane Disease. Content to be generated.",
+    "aliases": [
+      "Neonatal RDS",
+      "Respiratory Distress Syndrome of Newborn",
+      "Surfactant Deficiency"
+    ]
+  },
+  "PULM__acute_respiratory_failure__acute_respiratory_distress_syndrome": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Acute Respiratory Distress Syndrome. Content to be generated."
+    },
+    "overview": "Acute Respiratory Distress Syndrome is a condition in the PULM system, Acute Respiratory Failure category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Acute Respiratory Distress Syndrome. Content to be generated.",
+    "epidemiology": "Epidemiology of Acute Respiratory Distress Syndrome. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Acute Respiratory Distress Syndrome. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Acute Respiratory Distress Syndrome. Content to be generated.",
+    "aliases": [
+      "ARDS",
+      "Adult Respiratory Distress Syndrome"
+    ]
+  },
+  "PULM__airway__foreign_body_aspiration": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Foreign Body Aspiration. Content to be generated."
+    },
+    "overview": "Foreign Body Aspiration is a condition in the PULM system, Airway category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Foreign Body Aspiration. Content to be generated.",
+    "epidemiology": "Epidemiology of Foreign Body Aspiration. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Foreign Body Aspiration. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Foreign Body Aspiration. Content to be generated.",
+    "aliases": [
+      "Aspirated Foreign Body",
+      "Choking"
+    ]
+  },
+  "PULM__sleepdisordered_breathing__obstructive_sleep_apnea": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Obstructive Sleep Apnea. Content to be generated."
+    },
+    "overview": "Obstructive Sleep Apnea is a condition in the PULM system, Sleep-Disordered Breathing category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Obstructive Sleep Apnea. Content to be generated.",
+    "epidemiology": "Epidemiology of Obstructive Sleep Apnea. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Obstructive Sleep Apnea. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Obstructive Sleep Apnea. Content to be generated.",
+    "aliases": [
+      "OSA",
+      "Sleep Apnea",
+      "Obstructive Sleep Apnea Syndrome"
+    ]
+  },
+  "PULM__occupational__silicosis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Silicosis. Content to be generated."
+    },
+    "overview": "Silicosis is a condition in the PULM system, Occupational category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Silicosis. Content to be generated.",
+    "epidemiology": "Epidemiology of Silicosis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Silicosis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Silicosis. Content to be generated.",
+    "aliases": [
+      "Silica Pneumoconiosis"
+    ]
+  },
+  "PULM__occupational__asbestosis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Asbestosis. Content to be generated."
+    },
+    "overview": "Asbestosis is a condition in the PULM system, Occupational category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Asbestosis. Content to be generated.",
+    "epidemiology": "Epidemiology of Asbestosis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Asbestosis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Asbestosis. Content to be generated.",
+    "aliases": [
+      "Asbestos-Related Lung Disease"
+    ]
+  },
+  "PULM__occupational__coal_workers_pneumoconiosis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Coal Workers Pneumoconiosis. Content to be generated."
+    },
+    "overview": "Coal Workers Pneumoconiosis is a condition in the PULM system, Occupational category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Coal Workers Pneumoconiosis. Content to be generated.",
+    "epidemiology": "Epidemiology of Coal Workers Pneumoconiosis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Coal Workers Pneumoconiosis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Coal Workers Pneumoconiosis. Content to be generated.",
+    "aliases": [
+      "Black Lung Disease",
+      "Coal Miners Lung"
+    ]
+  },
+  "NEURO__trauma__postconcussion_syndrome": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Post-Concussion Syndrome. Content to be generated."
+    },
+    "overview": "Post-Concussion Syndrome is a condition in the NEURO system, Trauma category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Post-Concussion Syndrome. Content to be generated.",
+    "epidemiology": "Epidemiology of Post-Concussion Syndrome. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Post-Concussion Syndrome. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Post-Concussion Syndrome. Content to be generated.",
+    "aliases": [
+      "Postconcussive Syndrome",
+      "Persistent Postconcussive Symptoms"
+    ]
+  },
+  "NEURO__trauma__traumatic_brain_injury": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Traumatic Brain Injury. Content to be generated."
+    },
+    "overview": "Traumatic Brain Injury is a condition in the NEURO system, Trauma category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Traumatic Brain Injury. Content to be generated.",
+    "epidemiology": "Epidemiology of Traumatic Brain Injury. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Traumatic Brain Injury. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Traumatic Brain Injury. Content to be generated.",
+    "aliases": [
+      "TBI",
+      "Head Injury",
+      "Brain Trauma"
+    ]
+  },
+  "NEURO__demyelinating_disease__guillainbarre_syndrome": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Guillain-Barre Syndrome. Content to be generated."
+    },
+    "overview": "Guillain-Barre Syndrome is a condition in the NEURO system, Demyelinating Disease category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Guillain-Barre Syndrome. Content to be generated.",
+    "epidemiology": "Epidemiology of Guillain-Barre Syndrome. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Guillain-Barre Syndrome. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Guillain-Barre Syndrome. Content to be generated.",
+    "aliases": [
+      "GBS",
+      "Acute Inflammatory Demyelinating Polyneuropathy",
+      "AIDP"
+    ]
+  },
+  "NEURO__pediatric_neurology__cerebral_palsy": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Cerebral Palsy. Content to be generated."
+    },
+    "overview": "Cerebral Palsy is a condition in the NEURO system, Pediatric Neurology category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Cerebral Palsy. Content to be generated.",
+    "epidemiology": "Epidemiology of Cerebral Palsy. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Cerebral Palsy. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Cerebral Palsy. Content to be generated.",
+    "aliases": [
+      "CP",
+      "Spastic Paralysis"
+    ]
+  },
+  "NEURO__pain_disorders__complex_regional_pain_syndrome": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Complex Regional Pain Syndrome. Content to be generated."
+    },
+    "overview": "Complex Regional Pain Syndrome is a condition in the NEURO system, Pain Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Complex Regional Pain Syndrome. Content to be generated.",
+    "epidemiology": "Epidemiology of Complex Regional Pain Syndrome. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Complex Regional Pain Syndrome. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Complex Regional Pain Syndrome. Content to be generated.",
+    "aliases": [
+      "CRPS",
+      "Reflex Sympathetic Dystrophy",
+      "RSD",
+      "Causalgia"
+    ]
+  },
+  "NEURO__peripheral_neuropathy__diabetic_neuropathy": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Diabetic Neuropathy. Content to be generated."
+    },
+    "overview": "Diabetic Neuropathy is a condition in the NEURO system, Peripheral Neuropathy category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Diabetic Neuropathy. Content to be generated.",
+    "epidemiology": "Epidemiology of Diabetic Neuropathy. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Diabetic Neuropathy. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Diabetic Neuropathy. Content to be generated.",
+    "aliases": [
+      "Diabetic Peripheral Neuropathy",
+      "DPN"
+    ]
+  },
+  "NEURO__peripheral_neuropathy__alcoholic_neuropathy": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Alcoholic Neuropathy. Content to be generated."
+    },
+    "overview": "Alcoholic Neuropathy is a condition in the NEURO system, Peripheral Neuropathy category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Alcoholic Neuropathy. Content to be generated.",
+    "epidemiology": "Epidemiology of Alcoholic Neuropathy. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Alcoholic Neuropathy. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Alcoholic Neuropathy. Content to be generated.",
+    "aliases": [
+      "Alcohol-Related Neuropathy"
+    ]
+  },
+  "NEURO__syncope__syncope": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Syncope. Content to be generated."
+    },
+    "overview": "Syncope is a condition in the NEURO system, Syncope category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Syncope. Content to be generated.",
+    "epidemiology": "Epidemiology of Syncope. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Syncope. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Syncope. Content to be generated.",
+    "aliases": [
+      "Fainting",
+      "Vasovagal Syncope",
+      "Neurocardiogenic Syncope"
+    ]
+  },
+  "NEURO__encephalopathy__wernicke_encephalopathy": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Wernicke Encephalopathy. Content to be generated."
+    },
+    "overview": "Wernicke Encephalopathy is a condition in the NEURO system, Encephalopathy category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Wernicke Encephalopathy. Content to be generated.",
+    "epidemiology": "Epidemiology of Wernicke Encephalopathy. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Wernicke Encephalopathy. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Wernicke Encephalopathy. Content to be generated.",
+    "aliases": [
+      "Wernicke-Korsakoff Syndrome",
+      "Thiamine Deficiency Encephalopathy"
+    ]
+  },
+  "DERM__hair_disorders__alopecia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Alopecia. Content to be generated."
+    },
+    "overview": "Alopecia is a condition in the DERM system, Hair Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Alopecia. Content to be generated.",
+    "epidemiology": "Epidemiology of Alopecia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Alopecia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Alopecia. Content to be generated.",
+    "aliases": [
+      "Hair Loss",
+      "Baldness"
+    ]
+  },
+  "DERM__nail_disorders__onychomycosis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Onychomycosis. Content to be generated."
+    },
+    "overview": "Onychomycosis is a condition in the DERM system, Nail Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Onychomycosis. Content to be generated.",
+    "epidemiology": "Epidemiology of Onychomycosis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Onychomycosis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Onychomycosis. Content to be generated.",
+    "aliases": [
+      "Toenail Fungus",
+      "Nail Fungal Infection",
+      "Tinea Unguium"
+    ]
+  },
+  "DERM__nail_disorders__paronychia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Paronychia. Content to be generated."
+    },
+    "overview": "Paronychia is a condition in the DERM system, Nail Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Paronychia. Content to be generated.",
+    "epidemiology": "Epidemiology of Paronychia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Paronychia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Paronychia. Content to be generated.",
+    "aliases": [
+      "Nail Infection",
+      "Whitlow"
+    ]
+  },
+  "DERM__infectious__viral__condyloma_acuminatum": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Condyloma Acuminatum. Content to be generated."
+    },
+    "overview": "Condyloma Acuminatum is a condition in the DERM system, Infectious - Viral category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Condyloma Acuminatum. Content to be generated.",
+    "epidemiology": "Epidemiology of Condyloma Acuminatum. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Condyloma Acuminatum. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Condyloma Acuminatum. Content to be generated.",
+    "aliases": [
+      "Genital Warts",
+      "HPV Warts",
+      "Venereal Warts"
+    ]
+  },
+  "DERM__infectious__viral__verrucae": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Verrucae. Content to be generated."
+    },
+    "overview": "Verrucae is a condition in the DERM system, Infectious - Viral category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Verrucae. Content to be generated.",
+    "epidemiology": "Epidemiology of Verrucae. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Verrucae. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Verrucae. Content to be generated.",
+    "aliases": [
+      "Warts",
+      "Common Warts",
+      "Verruca Vulgaris"
+    ]
+  },
+  "DERM__benign_lesions__epithelial_inclusion_cyst": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Epithelial Inclusion Cyst. Content to be generated."
+    },
+    "overview": "Epithelial Inclusion Cyst is a condition in the DERM system, Benign Lesions category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Epithelial Inclusion Cyst. Content to be generated.",
+    "epidemiology": "Epidemiology of Epithelial Inclusion Cyst. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Epithelial Inclusion Cyst. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Epithelial Inclusion Cyst. Content to be generated.",
+    "aliases": [
+      "Epidermal Cyst",
+      "Sebaceous Cyst"
+    ]
+  },
+  "DERM__inflammatory__hidradenitis_suppurativa": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hidradenitis Suppurativa. Content to be generated."
+    },
+    "overview": "Hidradenitis Suppurativa is a condition in the DERM system, Inflammatory category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hidradenitis Suppurativa. Content to be generated.",
+    "epidemiology": "Epidemiology of Hidradenitis Suppurativa. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hidradenitis Suppurativa. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hidradenitis Suppurativa. Content to be generated.",
+    "aliases": [
+      "HS",
+      "Acne Inversa"
+    ]
+  },
+  "DERM__cysts__abscesses__pilonidal_disease": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Pilonidal Disease. Content to be generated."
+    },
+    "overview": "Pilonidal Disease is a condition in the DERM system, Cysts & Abscesses category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Pilonidal Disease. Content to be generated.",
+    "epidemiology": "Epidemiology of Pilonidal Disease. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Pilonidal Disease. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Pilonidal Disease. Content to be generated.",
+    "aliases": [
+      "Pilonidal Cyst",
+      "Pilonidal Sinus"
+    ]
+  },
+  "DERM__ulcers__wounds__decubitus_ulcer": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Decubitus Ulcer. Content to be generated."
+    },
+    "overview": "Decubitus Ulcer is a condition in the DERM system, Ulcers & Wounds category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Decubitus Ulcer. Content to be generated.",
+    "epidemiology": "Epidemiology of Decubitus Ulcer. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Decubitus Ulcer. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Decubitus Ulcer. Content to be generated.",
+    "aliases": [
+      "Pressure Ulcer",
+      "Pressure Sore",
+      "Bedsore"
+    ]
+  },
+  "DERM__burns__burns": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Burns. Content to be generated."
+    },
+    "overview": "Burns is a condition in the DERM system, Burns category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Burns. Content to be generated.",
+    "epidemiology": "Epidemiology of Burns. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Burns. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Burns. Content to be generated.",
+    "aliases": [
+      "Thermal Burns",
+      "First Degree Burn",
+      "Second Degree Burn",
+      "Third Degree Burn"
+    ]
+  },
+  "DERM__ulcers__wounds__pressure_injuries": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Pressure Injuries. Content to be generated."
+    },
+    "overview": "Pressure Injuries is a condition in the DERM system, Ulcers & Wounds category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Pressure Injuries. Content to be generated.",
+    "epidemiology": "Epidemiology of Pressure Injuries. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Pressure Injuries. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Pressure Injuries. Content to be generated.",
+    "aliases": [
+      "Pressure Ulcers",
+      "Pressure Sores",
+      "Decubitus Ulcers"
+    ]
+  },
+  "OTHER__environmental__hypothermia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hypothermia. Content to be generated."
+    },
+    "overview": "Hypothermia is a condition in the OTHER system, Environmental category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hypothermia. Content to be generated.",
+    "epidemiology": "Epidemiology of Hypothermia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hypothermia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hypothermia. Content to be generated.",
+    "aliases": [
+      "Cold Exposure",
+      "Accidental Hypothermia"
+    ]
+  },
+  "OTHER__environmental__hyperthermia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hyperthermia. Content to be generated."
+    },
+    "overview": "Hyperthermia is a condition in the OTHER system, Environmental category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hyperthermia. Content to be generated.",
+    "epidemiology": "Epidemiology of Hyperthermia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hyperthermia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hyperthermia. Content to be generated.",
+    "aliases": [
+      "Heat Stroke",
+      "Heat Exhaustion",
+      "Heat Illness"
+    ]
+  },
+  "GI__colon__fecal_impaction": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Fecal Impaction. Content to be generated."
+    },
+    "overview": "Fecal Impaction is a condition in the GI system, Colon category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Fecal Impaction. Content to be generated.",
+    "epidemiology": "Epidemiology of Fecal Impaction. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Fecal Impaction. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Fecal Impaction. Content to be generated.",
+    "aliases": [
+      "Impacted Stool",
+      "Constipation"
+    ]
+  },
+  "GI__metabolic_disorders__phenylketonuria": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Phenylketonuria. Content to be generated."
+    },
+    "overview": "Phenylketonuria is a condition in the GI system, Metabolic Disorders category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Phenylketonuria. Content to be generated.",
+    "epidemiology": "Epidemiology of Phenylketonuria. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Phenylketonuria. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Phenylketonuria. Content to be generated.",
+    "aliases": [
+      "PKU",
+      "Phenylalanine Hydroxylase Deficiency"
+    ]
+  },
+  "GI__nutrition__vitamin_a_deficiency": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Vitamin A Deficiency. Content to be generated."
+    },
+    "overview": "Vitamin A Deficiency is a condition in the GI system, Nutrition category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Vitamin A Deficiency. Content to be generated.",
+    "epidemiology": "Epidemiology of Vitamin A Deficiency. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Vitamin A Deficiency. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Vitamin A Deficiency. Content to be generated.",
+    "aliases": [
+      "Night Blindness",
+      "Xerophthalmia"
+    ]
+  },
+  "GI__nutrition__vitamin_d_deficiency": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Vitamin D Deficiency. Content to be generated."
+    },
+    "overview": "Vitamin D Deficiency is a condition in the GI system, Nutrition category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Vitamin D Deficiency. Content to be generated.",
+    "epidemiology": "Epidemiology of Vitamin D Deficiency. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Vitamin D Deficiency. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Vitamin D Deficiency. Content to be generated.",
+    "aliases": [
+      "Rickets",
+      "Osteomalacia"
+    ]
+  },
+  "GI__nutrition__vitamin_e_deficiency": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Vitamin E Deficiency. Content to be generated."
+    },
+    "overview": "Vitamin E Deficiency is a condition in the GI system, Nutrition category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Vitamin E Deficiency. Content to be generated.",
+    "epidemiology": "Epidemiology of Vitamin E Deficiency. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Vitamin E Deficiency. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Vitamin E Deficiency. Content to be generated.",
+    "aliases": [
+      "Tocopherol Deficiency"
+    ]
+  },
+  "GI__nutrition__vitamin_k_deficiency": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Vitamin K Deficiency. Content to be generated."
+    },
+    "overview": "Vitamin K Deficiency is a condition in the GI system, Nutrition category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Vitamin K Deficiency. Content to be generated.",
+    "epidemiology": "Epidemiology of Vitamin K Deficiency. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Vitamin K Deficiency. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Vitamin K Deficiency. Content to be generated.",
+    "aliases": [
+      "Bleeding Disorder",
+      "Hemorrhagic Disease of Newborn"
+    ]
+  },
+  "GI__nutrition__vitamin_c_deficiency": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Vitamin C Deficiency. Content to be generated."
+    },
+    "overview": "Vitamin C Deficiency is a condition in the GI system, Nutrition category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Vitamin C Deficiency. Content to be generated.",
+    "epidemiology": "Epidemiology of Vitamin C Deficiency. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Vitamin C Deficiency. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Vitamin C Deficiency. Content to be generated.",
+    "aliases": [
+      "Scurvy",
+      "Ascorbic Acid Deficiency"
+    ]
+  },
+  "GI__nutrition__thiamine_deficiency": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Thiamine Deficiency. Content to be generated."
+    },
+    "overview": "Thiamine Deficiency is a condition in the GI system, Nutrition category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Thiamine Deficiency. Content to be generated.",
+    "epidemiology": "Epidemiology of Thiamine Deficiency. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Thiamine Deficiency. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Thiamine Deficiency. Content to be generated.",
+    "aliases": [
+      "Beriberi",
+      "Vitamin B1 Deficiency",
+      "Wernicke-Korsakoff"
+    ]
+  },
+  "GI__nutrition__niacin_deficiency": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Niacin Deficiency. Content to be generated."
+    },
+    "overview": "Niacin Deficiency is a condition in the GI system, Nutrition category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Niacin Deficiency. Content to be generated.",
+    "epidemiology": "Epidemiology of Niacin Deficiency. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Niacin Deficiency. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Niacin Deficiency. Content to be generated.",
+    "aliases": [
+      "Pellagra",
+      "Vitamin B3 Deficiency"
+    ]
+  },
+  "GI__esophagus__zenkers_diverticulum": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Zenkers Diverticulum. Content to be generated."
+    },
+    "overview": "Zenkers Diverticulum is a condition in the GI system, Esophagus category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Zenkers Diverticulum. Content to be generated.",
+    "epidemiology": "Epidemiology of Zenkers Diverticulum. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Zenkers Diverticulum. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Zenkers Diverticulum. Content to be generated.",
+    "aliases": [
+      "Zenker Diverticulum",
+      "Pharyngeal Pouch",
+      "Pharyngoesophageal Diverticulum"
+    ]
+  },
+  "GI__esophagus__esophageal_perforation": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Esophageal Perforation. Content to be generated."
+    },
+    "overview": "Esophageal Perforation is a condition in the GI system, Esophagus category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Esophageal Perforation. Content to be generated.",
+    "epidemiology": "Epidemiology of Esophageal Perforation. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Esophageal Perforation. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Esophageal Perforation. Content to be generated.",
+    "aliases": [
+      "Boerhaave Syndrome",
+      "Esophageal Rupture"
+    ]
+  },
+  "GI__biliary__primary_sclerosing_cholangitis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Primary Sclerosing Cholangitis. Content to be generated."
+    },
+    "overview": "Primary Sclerosing Cholangitis is a condition in the GI system, Biliary category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Primary Sclerosing Cholangitis. Content to be generated.",
+    "epidemiology": "Epidemiology of Primary Sclerosing Cholangitis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Primary Sclerosing Cholangitis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Primary Sclerosing Cholangitis. Content to be generated.",
+    "aliases": [
+      "PSC",
+      "Sclerosing Cholangitis"
+    ]
+  },
+  "GI__biliary__primary_biliary_cholangitis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Primary Biliary Cholangitis. Content to be generated."
+    },
+    "overview": "Primary Biliary Cholangitis is a condition in the GI system, Biliary category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Primary Biliary Cholangitis. Content to be generated.",
+    "epidemiology": "Epidemiology of Primary Biliary Cholangitis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Primary Biliary Cholangitis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Primary Biliary Cholangitis. Content to be generated.",
+    "aliases": [
+      "PBC",
+      "Primary Biliary Cirrhosis"
+    ]
+  },
+  "GI__hernias__inguinal_hernia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Inguinal Hernia. Content to be generated."
+    },
+    "overview": "Inguinal Hernia is a condition in the GI system, Hernias category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Inguinal Hernia. Content to be generated.",
+    "epidemiology": "Epidemiology of Inguinal Hernia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Inguinal Hernia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Inguinal Hernia. Content to be generated.",
+    "aliases": [
+      "Groin Hernia",
+      "Direct Inguinal Hernia",
+      "Indirect Inguinal Hernia"
+    ]
+  },
+  "GI__hernias__femoral_hernia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Femoral Hernia. Content to be generated."
+    },
+    "overview": "Femoral Hernia is a condition in the GI system, Hernias category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Femoral Hernia. Content to be generated.",
+    "epidemiology": "Epidemiology of Femoral Hernia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Femoral Hernia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Femoral Hernia. Content to be generated.",
+    "aliases": [
+      "Crural Hernia"
+    ]
+  },
+  "GI__hernias__umbilical_hernia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Umbilical Hernia. Content to be generated."
+    },
+    "overview": "Umbilical Hernia is a condition in the GI system, Hernias category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Umbilical Hernia. Content to be generated.",
+    "epidemiology": "Epidemiology of Umbilical Hernia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Umbilical Hernia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Umbilical Hernia. Content to be generated.",
+    "aliases": [
+      "Belly Button Hernia"
+    ]
+  },
+  "GI__hernias__incisional_hernia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Incisional Hernia. Content to be generated."
+    },
+    "overview": "Incisional Hernia is a condition in the GI system, Hernias category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Incisional Hernia. Content to be generated.",
+    "epidemiology": "Epidemiology of Incisional Hernia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Incisional Hernia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Incisional Hernia. Content to be generated.",
+    "aliases": [
+      "Ventral Hernia",
+      "Post-Surgical Hernia"
+    ]
+  },
+  "GI__hernias__hiatal_hernia": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hiatal Hernia. Content to be generated."
+    },
+    "overview": "Hiatal Hernia is a condition in the GI system, Hernias category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hiatal Hernia. Content to be generated.",
+    "epidemiology": "Epidemiology of Hiatal Hernia. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hiatal Hernia. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hiatal Hernia. Content to be generated.",
+    "aliases": [
+      "Hiatus Hernia",
+      "Diaphragmatic Hernia"
+    ]
+  },
+  "GI__pediatric_gi__pyloric_stenosis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Pyloric Stenosis. Content to be generated."
+    },
+    "overview": "Pyloric Stenosis is a condition in the GI system, Pediatric GI category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Pyloric Stenosis. Content to be generated.",
+    "epidemiology": "Epidemiology of Pyloric Stenosis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Pyloric Stenosis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Pyloric Stenosis. Content to be generated.",
+    "aliases": [
+      "Infantile Hypertrophic Pyloric Stenosis",
+      "IHPS"
+    ]
+  },
+  "GI__pediatric_gi__intussusception": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Intussusception. Content to be generated."
+    },
+    "overview": "Intussusception is a condition in the GI system, Pediatric GI category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Intussusception. Content to be generated.",
+    "epidemiology": "Epidemiology of Intussusception. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Intussusception. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Intussusception. Content to be generated.",
+    "aliases": [
+      "Intestinal Intussusception"
+    ]
+  },
+  "GI__pediatric_gi__hirschsprung_disease": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hirschsprung Disease. Content to be generated."
+    },
+    "overview": "Hirschsprung Disease is a condition in the GI system, Pediatric GI category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hirschsprung Disease. Content to be generated.",
+    "epidemiology": "Epidemiology of Hirschsprung Disease. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hirschsprung Disease. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hirschsprung Disease. Content to be generated.",
+    "aliases": [
+      "Congenital Megacolon",
+      "Aganglionic Megacolon"
+    ]
+  },
+  "GI__pediatric_gi__meckels_diverticulum": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Meckels Diverticulum. Content to be generated."
+    },
+    "overview": "Meckels Diverticulum is a condition in the GI system, Pediatric GI category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Meckels Diverticulum. Content to be generated.",
+    "epidemiology": "Epidemiology of Meckels Diverticulum. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Meckels Diverticulum. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Meckels Diverticulum. Content to be generated.",
+    "aliases": [
+      "Meckel Diverticulum",
+      "Ileal Diverticulum"
+    ]
+  },
+  "GI__infectious_diarrhea__giardiasis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Giardiasis. Content to be generated."
+    },
+    "overview": "Giardiasis is a condition in the GI system, Infectious Diarrhea category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Giardiasis. Content to be generated.",
+    "epidemiology": "Epidemiology of Giardiasis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Giardiasis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Giardiasis. Content to be generated.",
+    "aliases": [
+      "Giardia Infection",
+      "Beaver Fever"
+    ]
+  },
+  "GI__infectious_diarrhea__cholera": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Cholera. Content to be generated."
+    },
+    "overview": "Cholera is a condition in the GI system, Infectious Diarrhea category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Cholera. Content to be generated.",
+    "epidemiology": "Epidemiology of Cholera. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Cholera. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Cholera. Content to be generated.",
+    "aliases": [
+      "Vibrio Cholerae Infection",
+      "Asiatic Cholera"
+    ]
+  },
+  "GI__colorectal__anal_fissure": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Anal Fissure. Content to be generated."
+    },
+    "overview": "Anal Fissure is a condition in the GI system, Colorectal category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Anal Fissure. Content to be generated.",
+    "epidemiology": "Epidemiology of Anal Fissure. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Anal Fissure. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Anal Fissure. Content to be generated.",
+    "aliases": [
+      "Fissure in Ano"
+    ]
+  },
+  "GI__colorectal__anorectal_abscess": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Anorectal Abscess. Content to be generated."
+    },
+    "overview": "Anorectal Abscess is a condition in the GI system, Colorectal category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Anorectal Abscess. Content to be generated.",
+    "epidemiology": "Epidemiology of Anorectal Abscess. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Anorectal Abscess. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Anorectal Abscess. Content to be generated.",
+    "aliases": [
+      "Perianal Abscess",
+      "Perirectal Abscess"
+    ]
+  },
+  "GI__colorectal__hemorrhoids": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hemorrhoids. Content to be generated."
+    },
+    "overview": "Hemorrhoids is a condition in the GI system, Colorectal category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hemorrhoids. Content to be generated.",
+    "epidemiology": "Epidemiology of Hemorrhoids. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hemorrhoids. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hemorrhoids. Content to be generated.",
+    "aliases": [
+      "Piles",
+      "Internal Hemorrhoids",
+      "External Hemorrhoids"
+    ]
+  },
+  "MSK__back__spine__kyphosis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Kyphosis. Content to be generated."
+    },
+    "overview": "Kyphosis is a condition in the MSK system, Back & Spine category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Kyphosis. Content to be generated.",
+    "epidemiology": "Epidemiology of Kyphosis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Kyphosis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Kyphosis. Content to be generated.",
+    "aliases": [
+      "Hunchback",
+      "Roundback"
+    ]
+  },
+  "MSK__back__spine__torticollis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Torticollis. Content to be generated."
+    },
+    "overview": "Torticollis is a condition in the MSK system, Back & Spine category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Torticollis. Content to be generated.",
+    "epidemiology": "Epidemiology of Torticollis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Torticollis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Torticollis. Content to be generated.",
+    "aliases": [
+      "Wry Neck",
+      "Twisted Neck"
+    ]
+  },
+  "MSK__pediatrics__leggcalveperthes_disease": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Legg-Calve-Perthes Disease. Content to be generated."
+    },
+    "overview": "Legg-Calve-Perthes Disease is a condition in the MSK system, Pediatrics category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Legg-Calve-Perthes Disease. Content to be generated.",
+    "epidemiology": "Epidemiology of Legg-Calve-Perthes Disease. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Legg-Calve-Perthes Disease. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Legg-Calve-Perthes Disease. Content to be generated.",
+    "aliases": [
+      "Perthes Disease",
+      "Avascular Necrosis of Hip in Children"
+    ]
+  },
+  "MSK__traumafracture__nursemaids_elbow": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Nursemaids Elbow. Content to be generated."
+    },
+    "overview": "Nursemaids Elbow is a condition in the MSK system, Trauma/Fracture category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Nursemaids Elbow. Content to be generated.",
+    "epidemiology": "Epidemiology of Nursemaids Elbow. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Nursemaids Elbow. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Nursemaids Elbow. Content to be generated.",
+    "aliases": [
+      "Nursemaid's Elbow",
+      "Radial Head Subluxation",
+      "Pulled Elbow"
+    ]
+  },
+  "MSK__neoplasm__osteosarcoma": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Osteosarcoma. Content to be generated."
+    },
+    "overview": "Osteosarcoma is a condition in the MSK system, Neoplasm category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Osteosarcoma. Content to be generated.",
+    "epidemiology": "Epidemiology of Osteosarcoma. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Osteosarcoma. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Osteosarcoma. Content to be generated.",
+    "aliases": [
+      "Osteogenic Sarcoma",
+      "Bone Cancer"
+    ]
+  },
+  "MSK__neoplasm__ewing_sarcoma": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Ewing Sarcoma. Content to be generated."
+    },
+    "overview": "Ewing Sarcoma is a condition in the MSK system, Neoplasm category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Ewing Sarcoma. Content to be generated.",
+    "epidemiology": "Epidemiology of Ewing Sarcoma. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Ewing Sarcoma. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Ewing Sarcoma. Content to be generated.",
+    "aliases": [
+      "Ewing's Sarcoma",
+      "Bone Cancer"
+    ]
+  },
+  "MSK__neoplasm__chondrosarcoma": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Chondrosarcoma. Content to be generated."
+    },
+    "overview": "Chondrosarcoma is a condition in the MSK system, Neoplasm category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Chondrosarcoma. Content to be generated.",
+    "epidemiology": "Epidemiology of Chondrosarcoma. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Chondrosarcoma. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Chondrosarcoma. Content to be generated.",
+    "aliases": [
+      "Cartilage Cancer"
+    ]
+  },
+  "MSK__emergency__compartment_syndrome": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Compartment Syndrome. Content to be generated."
+    },
+    "overview": "Compartment Syndrome is a condition in the MSK system, Emergency category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Compartment Syndrome. Content to be generated.",
+    "epidemiology": "Epidemiology of Compartment Syndrome. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Compartment Syndrome. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Compartment Syndrome. Content to be generated.",
+    "aliases": [
+      "Acute Compartment Syndrome"
+    ]
+  },
+  "MSK__emergency__rhabdomyolysis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Rhabdomyolysis. Content to be generated."
+    },
+    "overview": "Rhabdomyolysis is a condition in the MSK system, Emergency category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Rhabdomyolysis. Content to be generated.",
+    "epidemiology": "Epidemiology of Rhabdomyolysis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Rhabdomyolysis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Rhabdomyolysis. Content to be generated.",
+    "aliases": [
+      "Muscle Breakdown",
+      "Myoglobinuria"
+    ]
+  },
+  "MSK__rheumatologic__polyarteritis_nodosa": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Polyarteritis Nodosa. Content to be generated."
+    },
+    "overview": "Polyarteritis Nodosa is a condition in the MSK system, Rheumatologic category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Polyarteritis Nodosa. Content to be generated.",
+    "epidemiology": "Epidemiology of Polyarteritis Nodosa. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Polyarteritis Nodosa. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Polyarteritis Nodosa. Content to be generated.",
+    "aliases": [
+      "PAN",
+      "Periarteritis Nodosa"
+    ]
+  },
+  "MSK__handupper_extremity__dupuytren_contracture": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Dupuytren Contracture. Content to be generated."
+    },
+    "overview": "Dupuytren Contracture is a condition in the MSK system, Hand/Upper Extremity category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Dupuytren Contracture. Content to be generated.",
+    "epidemiology": "Epidemiology of Dupuytren Contracture. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Dupuytren Contracture. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Dupuytren Contracture. Content to be generated.",
+    "aliases": [
+      "Dupuytren's Contracture",
+      "Palmar Fibromatosis"
+    ]
+  },
+  "MSK__handupper_extremity__mallet_finger": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Mallet Finger. Content to be generated."
+    },
+    "overview": "Mallet Finger is a condition in the MSK system, Hand/Upper Extremity category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Mallet Finger. Content to be generated.",
+    "epidemiology": "Epidemiology of Mallet Finger. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Mallet Finger. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Mallet Finger. Content to be generated.",
+    "aliases": [
+      "Baseball Finger",
+      "Drop Finger"
+    ]
+  },
+  "MSK__handupper_extremity__boutonniere_deformity": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Boutonniere Deformity. Content to be generated."
+    },
+    "overview": "Boutonniere Deformity is a condition in the MSK system, Hand/Upper Extremity category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Boutonniere Deformity. Content to be generated.",
+    "epidemiology": "Epidemiology of Boutonniere Deformity. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Boutonniere Deformity. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Boutonniere Deformity. Content to be generated.",
+    "aliases": [
+      "Buttonhole Deformity"
+    ]
+  },
+  "MSK__handupper_extremity__swan_neck_deformity": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Swan Neck Deformity. Content to be generated."
+    },
+    "overview": "Swan Neck Deformity is a condition in the MSK system, Hand/Upper Extremity category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Swan Neck Deformity. Content to be generated.",
+    "epidemiology": "Epidemiology of Swan Neck Deformity. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Swan Neck Deformity. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Swan Neck Deformity. Content to be generated.",
+    "aliases": [
+      "Swan-Neck Deformity"
+    ]
+  },
+  "ENDO__pituitary__diabetes_insipidus": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Diabetes Insipidus. Content to be generated."
+    },
+    "overview": "Diabetes Insipidus is a condition in the ENDO system, Pituitary category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Diabetes Insipidus. Content to be generated.",
+    "epidemiology": "Epidemiology of Diabetes Insipidus. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Diabetes Insipidus. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Diabetes Insipidus. Content to be generated.",
+    "aliases": [
+      "DI",
+      "Central Diabetes Insipidus",
+      "Nephrogenic Diabetes Insipidus"
+    ]
+  },
+  "ENDO__adrenal__addisons_disease": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Addisons Disease. Content to be generated."
+    },
+    "overview": "Addisons Disease is a condition in the ENDO system, Adrenal category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Addisons Disease. Content to be generated.",
+    "epidemiology": "Epidemiology of Addisons Disease. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Addisons Disease. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Addisons Disease. Content to be generated.",
+    "aliases": [
+      "Addison Disease",
+      "Primary Adrenal Insufficiency",
+      "Adrenal Insufficiency"
+    ]
+  },
+  "ENDO__adrenal__hyperaldosteronism": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hyperaldosteronism. Content to be generated."
+    },
+    "overview": "Hyperaldosteronism is a condition in the ENDO system, Adrenal category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hyperaldosteronism. Content to be generated.",
+    "epidemiology": "Epidemiology of Hyperaldosteronism. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hyperaldosteronism. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hyperaldosteronism. Content to be generated.",
+    "aliases": [
+      "Conn Syndrome",
+      "Primary Aldosteronism"
+    ]
+  },
+  "ID__parasitic__pinworm_infection": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Pinworm Infection. Content to be generated."
+    },
+    "overview": "Pinworm Infection is a condition in the ID system, Parasitic category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Pinworm Infection. Content to be generated.",
+    "epidemiology": "Epidemiology of Pinworm Infection. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Pinworm Infection. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Pinworm Infection. Content to be generated.",
+    "aliases": [
+      "Enterobiasis",
+      "Enterobius vermicularis",
+      "Threadworm"
+    ]
+  },
+  "ID__parasitic__tapeworm_infection": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Tapeworm Infection. Content to be generated."
+    },
+    "overview": "Tapeworm Infection is a condition in the ID system, Parasitic category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Tapeworm Infection. Content to be generated.",
+    "epidemiology": "Epidemiology of Tapeworm Infection. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Tapeworm Infection. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Tapeworm Infection. Content to be generated.",
+    "aliases": [
+      "Cestode Infection",
+      "Taeniasis"
+    ]
+  },
+  "ID__parasitic__hookworm_infection": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hookworm Infection. Content to be generated."
+    },
+    "overview": "Hookworm Infection is a condition in the ID system, Parasitic category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hookworm Infection. Content to be generated.",
+    "epidemiology": "Epidemiology of Hookworm Infection. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hookworm Infection. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hookworm Infection. Content to be generated.",
+    "aliases": [
+      "Ancylostomiasis",
+      "Necatoriasis"
+    ]
+  },
+  "ID__spirochetal__syphilis": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Syphilis. Content to be generated."
+    },
+    "overview": "Syphilis is a condition in the ID system, Spirochetal category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Syphilis. Content to be generated.",
+    "epidemiology": "Epidemiology of Syphilis. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Syphilis. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Syphilis. Content to be generated.",
+    "aliases": [
+      "Lues",
+      "Treponema pallidum Infection"
+    ]
+  },
+  "ID__viral__epsteinbarr_virus_infection": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Epstein-Barr Virus Infection. Content to be generated."
+    },
+    "overview": "Epstein-Barr Virus Infection is a condition in the ID system, Viral category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Epstein-Barr Virus Infection. Content to be generated.",
+    "epidemiology": "Epidemiology of Epstein-Barr Virus Infection. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Epstein-Barr Virus Infection. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Epstein-Barr Virus Infection. Content to be generated.",
+    "aliases": [
+      "EBV",
+      "Mononucleosis",
+      "Mono",
+      "Kissing Disease"
+    ]
+  },
+  "ID__viral__cytomegalovirus_infection": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Cytomegalovirus Infection. Content to be generated."
+    },
+    "overview": "Cytomegalovirus Infection is a condition in the ID system, Viral category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Cytomegalovirus Infection. Content to be generated.",
+    "epidemiology": "Epidemiology of Cytomegalovirus Infection. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Cytomegalovirus Infection. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Cytomegalovirus Infection. Content to be generated.",
+    "aliases": [
+      "CMV",
+      "CMV Infection"
+    ]
+  },
+  "ID__viral__erythema_infectiosum": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Erythema Infectiosum. Content to be generated."
+    },
+    "overview": "Erythema Infectiosum is a condition in the ID system, Viral category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Erythema Infectiosum. Content to be generated.",
+    "epidemiology": "Epidemiology of Erythema Infectiosum. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Erythema Infectiosum. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Erythema Infectiosum. Content to be generated.",
+    "aliases": [
+      "Fifth Disease",
+      "Parvovirus B19 Infection",
+      "Slapped Cheek Disease"
+    ]
+  },
+  "ID__viral__hand_foot_and_mouth_disease": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Hand Foot and Mouth Disease. Content to be generated."
+    },
+    "overview": "Hand Foot and Mouth Disease is a condition in the ID system, Viral category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Hand Foot and Mouth Disease. Content to be generated.",
+    "epidemiology": "Epidemiology of Hand Foot and Mouth Disease. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Hand Foot and Mouth Disease. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Hand Foot and Mouth Disease. Content to be generated.",
+    "aliases": [
+      "HFMD",
+      "Coxsackie Virus Infection"
+    ]
+  },
+  "ID__systemic__rheumatic_fever": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Rheumatic Fever. Content to be generated."
+    },
+    "overview": "Rheumatic Fever is a condition in the ID system, Systemic category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Rheumatic Fever. Content to be generated.",
+    "epidemiology": "Epidemiology of Rheumatic Fever. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Rheumatic Fever. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Rheumatic Fever. Content to be generated.",
+    "aliases": [
+      "Acute Rheumatic Fever",
+      "ARF"
+    ]
+  },
+  "ID__viral__zika_virus_infection": {
+    "diagnostics": {
+      "notes": "Diagnostic workup for Zika Virus Infection. Content to be generated."
+    },
+    "overview": "Zika Virus Infection is a condition in the ID system, Viral category. Detailed overview to be generated.",
+    "etiologyPathophysiology": "Etiology and pathophysiology of Zika Virus Infection. Content to be generated.",
+    "epidemiology": "Epidemiology of Zika Virus Infection. Content to be generated.",
+    "riskFactors": [
+      "--"
+    ],
+    "clinicalPresentation": "Clinical presentation of Zika Virus Infection. Content to be generated.",
+    "symptoms": [
+      "--"
+    ],
+    "examFindings": [
+      "--"
+    ],
+    "treatment": [
+      "--"
+    ],
+    "management": [
+      "--"
+    ],
+    "complications": [
+      "--"
+    ],
+    "prognosis": "Prognosis for Zika Virus Infection. Content to be generated.",
+    "aliases": [
+      "Zika",
+      "Zika Fever"
+    ]
   }
 }
