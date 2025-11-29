@@ -11,6 +11,7 @@ import {
   HelpCircle,
   Clock,
   Trophy,
+  ClipboardList,
   LucideIcon,
 } from 'lucide-react';
 import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
@@ -25,6 +26,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   GitCompare,
   FileText,
   Flame,
+  ClipboardList,
 };
 
 /** Storage key for streak high score */

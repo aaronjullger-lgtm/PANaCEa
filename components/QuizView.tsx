@@ -20,6 +20,7 @@ import { CloseIcon } from "./icons/CloseIcon";
 import { FlagIcon } from "./icons/FlagIcon";
 import { ArrowLeftIcon } from "./icons/ArrowLeftIcon";
 import { ClearHighlightIcon } from "./icons/ClearHighlightIcon";
+import AnswerChoice from "./quiz/AnswerChoice";
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -217,6 +218,9 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   const [localNote, setLocalNote] = useState<string>("");
 
+  // Track eliminated answers (by index) for the current question
+  const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
+
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -281,6 +285,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     setAlternateRationale(null);
     setIsExplainerLoading(false);
     setQuestionNumber((prev) => prev + 1);
+    setEliminatedAnswers(new Set()); // Reset eliminated answers for new question
 
     setQueue((prev) => {
       if (prev.length === 0) return prev;
@@ -315,7 +320,22 @@ const QuizView: React.FC<QuizViewProps> = ({
       setCurrentQuestion(initialQueue[0]);
     }
     setLocalNote(initialQueue[0]?.userNote || "");
+    setEliminatedAnswers(new Set()); // Reset when new question loaded
   }, [initialQueue, currentQuestion]);
+
+  // Handler for toggling elimination state
+  const handleToggleEliminate = useCallback((index: number) => {
+    if (isAnswered) return;
+    setEliminatedAnswers((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  }, [isAnswered]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -326,10 +346,33 @@ const QuizView: React.FC<QuizViewProps> = ({
         return;
       }
 
-      if (!isAnswered && ["1", "2", "3", "4"].includes(event.key)) {
+      // Map letter keys to indices (A=0, B=1, C=2, D=3)
+      const letterToIndex: Record<string, number> = { a: 0, b: 1, c: 2, d: 3 };
+
+      // Shift + 1/2/3/4 or Shift + A/B/C/D to toggle elimination
+      if (!isAnswered && event.shiftKey) {
+        let eliminateIndex: number | null = null;
+
+        if (["1", "2", "3", "4"].includes(event.key)) {
+          eliminateIndex = parseInt(event.key) - 1;
+        } else if (letterToIndex[event.key.toLowerCase()] !== undefined) {
+          eliminateIndex = letterToIndex[event.key.toLowerCase()];
+        }
+
+        if (eliminateIndex !== null && currentQuestion?.options[eliminateIndex]) {
+          event.preventDefault();
+          handleToggleEliminate(eliminateIndex);
+          return;
+        }
+      }
+
+      // Regular 1/2/3/4 to select (only if not eliminated)
+      if (!isAnswered && !event.shiftKey && ["1", "2", "3", "4"].includes(event.key)) {
         event.preventDefault();
         const index = parseInt(event.key) - 1;
-        optionButtonsRef.current[index]?.click();
+        if (!eliminatedAnswers.has(index)) {
+          optionButtonsRef.current[index]?.click();
+        }
       }
 
       if (isAnswered && (event.key === "Enter" || event.key === " ")) {
@@ -342,10 +385,11 @@ const QuizView: React.FC<QuizViewProps> = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isAnswered]);
+  }, [isAnswered, handleToggleEliminate, eliminatedAnswers, currentQuestion]);
 
   const handleOptionClick = (index: number) => {
-    if (isAnswered || !currentQuestion) return;
+    // Guard against selecting eliminated answers
+    if (isAnswered || !currentQuestion || eliminatedAnswers.has(index)) return;
 
     setSelectedAnswerIndex(index);
     setIsAnswered(true);
@@ -574,41 +618,22 @@ const QuizView: React.FC<QuizViewProps> = ({
           const isCorrect = index === currentQuestion.correctAnswerIndex;
           const isSelected = index === selectedAnswerIndex;
 
-          let buttonClasses =
-            "w-full text-left p-4 rounded-xl transition-all duration-200 ease-in-out disabled:cursor-not-allowed active:scale-[0.98] font-medium";
-          let animationClass = "";
-
-          if (isAnswered) {
-            if (isCorrect) {
-              buttonClasses +=
-                " !bg-green-600 !text-white !border-transparent font-bold shadow-md";
-            } else if (isSelected) {
-              buttonClasses +=
-                " !bg-red-600 !text-white !border-transparent font-bold shadow-md";
-              animationClass = "animate-shake";
-            } else {
-              buttonClasses +=
-                " bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] opacity-60 shadow-sm";
-            }
-          } else {
-            buttonClasses +=
-              " bg-[var(--color-card-bg)] border border-[var(--color-border)] shadow-sm text-[var(--color-text-primary)] hover:bg-white hover:border-[var(--color-accent)] hover:shadow-lg hover:-translate-y-px";
-          }
-
           return (
-            <button
+            <AnswerChoice
               key={index}
               ref={(el) => {
                 optionButtonsRef.current[index] = el;
               }}
-              onClick={() => handleOptionClick(index)}
-              disabled={isAnswered}
-              className={`${buttonClasses} ${animationClass}`}
-              style={{ fontSize: `calc(1rem + var(--font-size-adj))` }}
-            >
-              <span className="font-bold mr-2">{index + 1}.</span>
-              {option}
-            </button>
+              text={option}
+              index={index}
+              isSelected={isSelected}
+              isCorrect={isCorrect}
+              isAnswered={isAnswered}
+              isEliminated={eliminatedAnswers.has(index)}
+              onSelect={handleOptionClick}
+              onToggleEliminate={handleToggleEliminate}
+              fontSizeAdjustment={fontSizeAdjustment}
+            />
           );
         })}
       </div>
