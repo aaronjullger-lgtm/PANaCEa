@@ -1,9 +1,11 @@
 // App.tsx
 import React, { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import QuizView from "./components/QuizView";
 import MenuView from "./components/MenuView";
 import Loader from "./components/Loader";
 import PhotoDrillSession from "./components/PhotoDrillSession";
+import ThemeToggleButton from "./components/ThemeToggleButton";
 import { prefetchQuestions } from "./services/geminiService";
 import type {
   Question,
@@ -281,63 +283,109 @@ const App: React.FC = () => {
     // Additional drill modes can be added here as they are implemented
   };
 
+  // Animation variants for page transitions
+  const pageVariants = {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -10 }
+  };
+
+  const pageTransition = {
+    duration: 0.3,
+    ease: "easeInOut"
+  };
+
   return (
-    <div className="min-h-screen bg-[#F6F1EC] text-[#1F2933]">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+      {/* Header with theme toggle */}
+      <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)] transition-colors duration-300">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-[var(--color-accent)]">PANaCEa</span>
+          </div>
+          <ThemeToggleButton />
+        </div>
+      </header>
+
       <div className="max-w-4xl mx-auto px-4 py-6 md:py-10">
         {isLoading && <Loader />}
         {error && (
-          <div className="mb-4 p-3 rounded-md bg-red-100 text-red-700 text-sm">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-4 p-3 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm border border-red-200 dark:border-red-800"
+          >
             {error}
-          </div>
+          </motion.div>
         )}
 
-        {view === "menu" && (
-          <MenuView
-            performanceData={heatmapPerformance}
-            missedQuestions={missedQuestions}
-            flaggedQuestions={flaggedQuestions}
-            onBackToQuiz={handleBackToQuiz}
-            hasActiveSession={hasActiveSession}
-            clearPerformanceData={clearPerformanceData}
-            clearMissedQuestionsData={clearMissedQuestionsData}
-            clearFlaggedQuestionsData={clearFlaggedQuestionsData}
-            setIsLoading={setIsLoading}
-            setError={setError}
-            onStartSession={handleStartSession}
-            isModalOpen={isModalOpen}
-            onCloseModal={() => setIsModalOpen(false)}
-            onConfirmSession={handleConfirmSession}
-            growthAreas={growthAreas}
-            onNavigateToDrillMode={handleNavigateToDrillMode}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {view === "menu" && (
+            <motion.div
+              key="menu"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <MenuView
+                performanceData={heatmapPerformance}
+                missedQuestions={missedQuestions}
+                flaggedQuestions={flaggedQuestions}
+                onBackToQuiz={handleBackToQuiz}
+                hasActiveSession={hasActiveSession}
+                clearPerformanceData={clearPerformanceData}
+                clearMissedQuestionsData={clearMissedQuestionsData}
+                clearFlaggedQuestionsData={clearFlaggedQuestionsData}
+                setIsLoading={setIsLoading}
+                setError={setError}
+                onStartSession={handleStartSession}
+                isModalOpen={isModalOpen}
+                onCloseModal={() => setIsModalOpen(false)}
+                onConfirmSession={handleConfirmSession}
+                growthAreas={growthAreas}
+                onNavigateToDrillMode={handleNavigateToDrillMode}
+              />
+            </motion.div>
+          )}
 
-        {view === "quiz" && sessionSettings && (
-          <QuizView
-            initialQueue={questionQueue}
-            setParentQueue={setQuestionQueue}
-            addPerformanceRecord={addPerformanceRecord}
-            addMissedQuestion={addMissedQuestion}
-            updateReviewQuestion={updateReviewQuestion}
-            setIsLoading={setIsLoading}
-            setError={setError}
-            sessionSettings={sessionSettings}
-            growthAreas={growthAreas}
-            onEndSession={handleEndSession}
-            onShowMenu={() => setView("menu")}
-            performanceData={heatmapPerformance}
-            fontSizeAdjustment={fontSizeAdjustment}
-            setFontSizeAdjustment={setFontSizeAdjustment}
-            flaggedQuestions={flaggedQuestions}
-            addFlaggedQuestion={addFlaggedQuestion}
-            removeFlaggedQuestion={removeFlaggedQuestion}
-            updateQuestionNote={updateQuestionNote}
-          />
-        )}
+          {view === "quiz" && sessionSettings && (
+            <motion.div
+              key="quiz"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <QuizView
+                initialQueue={questionQueue}
+                setParentQueue={setQuestionQueue}
+                addPerformanceRecord={addPerformanceRecord}
+                addMissedQuestion={addMissedQuestion}
+                updateReviewQuestion={updateReviewQuestion}
+                setIsLoading={setIsLoading}
+                setError={setError}
+                sessionSettings={sessionSettings}
+                growthAreas={growthAreas}
+                onEndSession={handleEndSession}
+                onShowMenu={() => setView("menu")}
+                performanceData={heatmapPerformance}
+                fontSizeAdjustment={fontSizeAdjustment}
+                setFontSizeAdjustment={setFontSizeAdjustment}
+                flaggedQuestions={flaggedQuestions}
+                addFlaggedQuestion={addFlaggedQuestion}
+                removeFlaggedQuestion={removeFlaggedQuestion}
+                updateQuestionNote={updateQuestionNote}
+              />
+            </motion.div>
+          )}
 
-        {view === "photo_drill" && (
-          <PhotoDrillSession onExit={() => setView("menu")} />
-        )}
+          {view === "photo_drill" && (
+            <PhotoDrillSession onExit={() => setView("menu")} />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

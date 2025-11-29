@@ -3,23 +3,31 @@ import { useState, useEffect, type Dispatch, type SetStateAction } from 'react';
 
 type Theme = 'light' | 'dark';
 
-// FIX: Import Dispatch and SetStateAction types from 'react' and use them.
 export function useTheme(): [Theme, Dispatch<SetStateAction<Theme>>] {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === 'undefined') {
-      return 'light';
+      return 'dark';
     }
     const savedTheme = window.localStorage.getItem('pance-ai-theme') as Theme;
-    return savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    if (savedTheme) {
+      return savedTheme;
+    }
+    // Default to dark mode for modern aesthetic, but respect system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'dark';
   });
 
   useEffect(() => {
+    const root = window.document.documentElement;
     const body = window.document.body;
+    
     if (theme === 'dark') {
+      root.classList.add('dark');
       body.classList.add('dark');
     } else {
+      root.classList.remove('dark');
       body.classList.remove('dark');
     }
+    
     try {
       window.localStorage.setItem('pance-ai-theme', theme);
     } catch (error) {

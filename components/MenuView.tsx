@@ -1,6 +1,7 @@
 // src/components/MenuView.tsx
 
 import React, { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import type {
   PerformanceRecord,
   SessionSettings,
@@ -160,54 +161,63 @@ const MenuView: React.FC<MenuViewProps> = ({
 
   return (
     <>
-      {isModalOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
-          onClick={onCloseModal}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto" 
-            onClick={e => e.stopPropagation()}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-50 p-4" 
+            onClick={onCloseModal}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#3D1B0E]">Training Command Center</h2>
-              <button
-                onClick={onCloseModal}
-                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-                aria-label="Close modal"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <TrainingMenu
-              onStartSession={(modeId, focus) => {
-                // Map TrainingMenu focus to SessionSettings format
-                let sessionFocus: SessionSettings['focus'] = 'all';
-                if (focus === 'flagged') sessionFocus = 'reviewFlagged';
-                else if (focus === 'due') sessionFocus = 'review';
-                else if (focus === 'growth') sessionFocus = 'growth';
-                
-                onConfirmSession({
-                  focus: sessionFocus,
-                  difficulty: 'same',
-                });
-              }}
-              onNavigateToMode={(route, mode) => {
-                // Navigate to the dedicated drill mode view
-                if (onNavigateToDrillMode) {
-                  onNavigateToDrillMode(mode.id);
-                }
-              }}
-              onClose={onCloseModal}
-              dueQuestionsCount={dueQuestionsCount}
-              flaggedQuestionsCount={flaggedQuestions.length}
-              growthAreasCount={growthAreas.length}
-            />
-          </div>
-        </div>
-      )}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]" 
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Training Command Center</h2>
+                <button
+                  onClick={onCloseModal}
+                  className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  aria-label="Close modal"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <TrainingMenu
+                onStartSession={(modeId, focus) => {
+                  // Map TrainingMenu focus to SessionSettings format
+                  let sessionFocus: SessionSettings['focus'] = 'all';
+                  if (focus === 'flagged') sessionFocus = 'reviewFlagged';
+                  else if (focus === 'due') sessionFocus = 'review';
+                  else if (focus === 'growth') sessionFocus = 'growth';
+                  
+                  onConfirmSession({
+                    focus: sessionFocus,
+                    difficulty: 'same',
+                  });
+                }}
+                onNavigateToMode={(route, mode) => {
+                  // Navigate to the dedicated drill mode view
+                  if (onNavigateToDrillMode) {
+                    onNavigateToDrillMode(mode.id);
+                  }
+                }}
+                onClose={onCloseModal}
+                dueQuestionsCount={dueQuestionsCount}
+                flaggedQuestionsCount={flaggedQuestions.length}
+                growthAreasCount={growthAreas.length}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {selectedSystem && (
         <SystemDrilldownModal
@@ -243,86 +253,120 @@ const MenuView: React.FC<MenuViewProps> = ({
       )}
 
       <div className="flex flex-col max-w-5xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-[#3D1B0E] mb-3 text-center">
+        <motion.h1 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-3xl font-bold text-[var(--color-accent)] mb-3 text-center sr-only"
+        >
           PANaCEa
-        </h1>
+        </motion.h1>
 
         {/* Condition search */}
-        <div className="w-full max-w-2xl mx-auto mb-10 relative">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="w-full max-w-2xl mx-auto mb-10 relative"
+        >
           <div className="flex justify-center">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search conditions (e.g., ACS, Diverticulitis, DKA)..."
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3D1B0E]/70 focus:border-[#3D1B0E]"
+              className="w-full px-4 py-3 border border-[var(--color-border)] bg-[var(--color-input-bg)] text-[var(--color-text-primary)] rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:border-[var(--color-accent)] transition-all placeholder:text-[var(--color-text-muted)]"
             />
           </div>
-          {searchResults.length > 0 && (
-            <div className="absolute z-30 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
-              {searchResults.map((result) => (
-                <button
-                  key={result.id}
-                  type="button"
-                  onClick={() => {
-                    const meta = findConditionMetaById(result.id);
-                    if (meta) {
-                      setSelectedCondition(meta);
-                    }
-                    setSearchQuery("");
-                  }}
-                  className="w-full text-left px-4 py-3 text-sm hover:bg-slate-50"
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-semibold text-slate-800">
-                      {result.condition}
-                    </span>
-                    <span className="text-[11px] uppercase tracking-wide text-slate-500">
-                      {result.system} • {result.subcategory}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          <AnimatePresence>
+            {searchResults.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute z-30 mt-2 w-full bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-xl shadow-lg max-h-64 overflow-y-auto"
+              >
+                {searchResults.map((result) => (
+                  <button
+                    key={result.id}
+                    type="button"
+                    onClick={() => {
+                      const meta = findConditionMetaById(result.id);
+                      if (meta) {
+                        setSelectedCondition(meta);
+                      }
+                      setSearchQuery("");
+                    }}
+                    className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-semibold text-[var(--color-text-primary)]">
+                        {result.condition}
+                      </span>
+                      <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                        {result.system} • {result.subcategory}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         <div className="space-y-10">
           {/* Session controls */}
-          <section className="text-center space-y-3">
+          <motion.section 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="text-center space-y-3"
+          >
             {hasActiveSession && (
-              <button
+              <motion.button
                 onClick={onBackToQuiz}
-                className="w-full px-6 py-3 bg-[#3D1B0E] text-white font-bold rounded-lg hover:bg-[#2b130a] transition-colors shadow-md"
+                className="w-full px-6 py-3 bg-[var(--color-accent)] text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
               >
                 Continue Study Session
-              </button>
+              </motion.button>
             )}
-            <button
+            <motion.button
               onClick={onStartSession}
-              className="w-full px-6 py-4 bg-[#3D1B0E] text-white text-lg font-bold rounded-lg hover:bg-[#2b130a] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="w-full px-6 py-4 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] text-white text-lg font-bold rounded-xl hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
+              whileHover={{ scale: 1.01, y: -2 }}
+              whileTap={{ scale: 0.99 }}
             >
               {hasActiveSession ? "Start New Session" : "Start Study Session"}
-            </button>
-          </section>
+            </motion.button>
+          </motion.section>
 
           {/* Overall performance ring */}
-          <section className="pt-2">
-            <h2 className="text-xl font-bold text-[#3D1B0E] mb-5 text-center">
+          <motion.section 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="pt-2"
+          >
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-5 text-center">
               Overall Score
             </h2>
-            <div className="flex flex-col items-center p-5 bg-slate-50 rounded-xl shadow-sm gap-2">
+            <div className="flex flex-col items-center p-5 bg-[var(--color-card-bg)] rounded-xl shadow-sm gap-2 border border-[var(--color-border)]">
               <ProgressRing score={stats.overallScore} />
-              <p className="text-sm font-normal text-slate-500">
+              <p className="text-sm font-normal text-[var(--color-text-muted)]">
                 Based on the last {stats.total360} questions (
                 {stats.correct360}/{stats.total360})
               </p>
             </div>
-          </section>
+          </motion.section>
 
           {/* Knowledge map – now by PANCE system */}
-          <section>
-            <h2 className="text-xl font-bold text-[#3D1B0E] mb-5">
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-5">
               Knowledge Map (PANCE Systems)
             </h2>
             <TopicHeatmap
@@ -332,24 +376,28 @@ const MenuView: React.FC<MenuViewProps> = ({
                 setSelectedSystem(topicStats.topic as SystemCode);
               }}
             />
-          </section>
+          </motion.section>
 
           {/* Data management */}
-          <section>
-            <h2 className="text-xl font-bold text-[#3D1B0E] mb-3">
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-3">
               Manage Data
             </h2>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={clearPerformanceData}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 text-sm"
+                className="px-4 py-2 bg-red-500/90 dark:bg-red-600/80 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-500 text-sm transition-colors"
               >
                 Clear All Performance Data
               </button>
               <button
                 onClick={clearMissedQuestionsData}
                 disabled={missedQuestions.length === 0}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm"
+                className="px-4 py-2 bg-red-500/90 dark:bg-red-600/80 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-500 disabled:bg-[var(--color-text-muted)] disabled:cursor-not-allowed text-sm transition-colors"
                 title={
                   missedQuestions.length === 0
                     ? "No missed questions to clear"
@@ -361,7 +409,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               <button
                 onClick={clearFlaggedQuestionsData}
                 disabled={flaggedQuestions.length === 0}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-slate-400 disabled:cursor-not-allowed text-sm"
+                className="px-4 py-2 bg-red-500/90 dark:bg-red-600/80 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-500 disabled:bg-[var(--color-text-muted)] disabled:cursor-not-allowed text-sm transition-colors"
                 title={
                   flaggedQuestions.length === 0
                     ? "No flagged questions to clear"
@@ -371,7 +419,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 Clear Flagged Qs ({flaggedQuestions.length})
               </button>
             </div>
-          </section>
+          </motion.section>
         </div>
       </div>
     </>

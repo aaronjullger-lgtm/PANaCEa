@@ -109,7 +109,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
    */
   const getThemeBackground = (theme: string): string => {
     const themeMap: Record<string, string> = {
-      stone: 'bg-stone-100',
+      stone: 'bg-[var(--color-bg-secondary)]',
       slate: 'bg-slate-100',
       amber: 'bg-amber-100',
       blue: 'bg-blue-100',
@@ -191,10 +191,10 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             disabled={option.disabled}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
               focus === option.value
-                ? 'bg-[#3D1B0E] text-white shadow-sm'
+                ? 'bg-[var(--color-accent)] text-white shadow-sm'
                 : option.disabled
-                ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
-                : 'bg-stone-200 text-stone-700 hover:bg-stone-300'
+                ? 'bg-[var(--color-bg-secondary)] text-stone-400 cursor-not-allowed'
+                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             {option.value === 'due' && <Clock className="w-3.5 h-3.5" />}
@@ -252,7 +252,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       default:
         return {
           background: getThemeBackground(MODE_REGISTRY.find(m => m.id === modeId)?.theme || 'stone'),
-          border: 'border-stone-200',
+          border: 'border-[var(--color-border)]',
           iconBg: 'bg-white/60',
         };
     }
@@ -305,7 +305,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         `}
       >
         {isDisabled && (
-          <span className="absolute top-2 right-2 text-xs font-medium text-stone-500 bg-stone-200 px-2 py-0.5 rounded-full z-10">
+          <span className="absolute top-2 right-2 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-bg-tertiary)] px-2 py-0.5 rounded-full z-10">
             Coming Soon
           </span>
         )}
@@ -320,16 +320,16 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         
         <div className="flex flex-col gap-3 relative z-[1]">
           <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shadow-sm`}>
-            <IconComponent className={`w-5 h-5 ${isStreakMode && streakHighScore > 0 ? 'text-orange-600' : 'text-stone-700'}`} />
+            <IconComponent className={`w-5 h-5 ${isStreakMode && streakHighScore > 0 ? 'text-orange-600' : 'text-[var(--color-text-secondary)]'}`} />
           </div>
           <div>
-            <h3 className="font-semibold text-stone-900 text-base flex items-center gap-2">
+            <h3 className="font-semibold text-[var(--color-text-primary)] text-base flex items-center gap-2">
               {mode.label}
               {isStreakMode && streakHighScore > 0 && (
                 <Flame className="w-4 h-4 text-orange-500" />
               )}
             </h3>
-            <p className="text-sm text-stone-600 mt-1 line-clamp-2">{getDrillDescription(mode)}</p>
+            <p className="text-sm text-[var(--color-text-secondary)] mt-1 line-clamp-2">{getDrillDescription(mode)}</p>
           </div>
         </div>
       </button>
@@ -340,19 +340,19 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     <div className="space-y-6">
       {/* Section A: The Core Adaptive Card */}
       {coreMode && (
-        <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl border border-stone-200 p-6 shadow-sm">
+        <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl border border-[var(--color-border)] p-6 shadow-sm">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Left side: Icon and content */}
             <div className="flex-1">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-stone-200">
-                  <Brain className="w-7 h-7 text-stone-700" />
+                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-[var(--color-border)]">
+                  <Brain className="w-7 h-7 text-[var(--color-text-secondary)]" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-stone-900">
+                  <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
                     Core PANCE Simulation
                   </h2>
-                  <p className="text-stone-600 mt-1 min-h-[3rem] transition-all duration-200">
+                  <p className="text-[var(--color-text-secondary)] mt-1 min-h-[3rem] transition-all duration-200">
                     {getFocusDescription()}
                   </p>
                 </div>
@@ -369,7 +369,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               <button
                 type="button"
                 onClick={handleCoreStart}
-                className="w-full md:w-auto px-8 py-3.5 bg-[#3D1B0E] text-white font-semibold rounded-xl hover:bg-[#2b130a] transition-colors shadow-md hover:shadow-lg"
+                className="w-full md:w-auto px-8 py-3.5 bg-[var(--color-accent)] text-white font-semibold rounded-xl hover:bg-[#2b130a] transition-colors shadow-md hover:shadow-lg"
               >
                 Start Session
               </button>
@@ -380,7 +380,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
       {/* Section B: The Bento Grid */}
       <div>
-        <h3 className="text-lg font-semibold text-stone-800 mb-4">Drill Modes</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Drill Modes</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {drillModes.map((mode) => renderDrillCard(mode))}
         </div>

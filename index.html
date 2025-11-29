@@ -6,13 +6,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PANaCEa Prep</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      /* CSS Custom Properties for theming */
+      :root {
+        --color-bg-primary: #F6F1EC;
+        --color-bg-secondary: #FCF9F6;
+        --color-bg-tertiary: #ffffff;
+        --color-text-primary: #1F2933;
+        --color-text-secondary: #4A5568;
+        --color-text-muted: #718096;
+        --color-border: #D0C7BF;
+        --color-border-light: #E6E2DB;
+        --color-accent: #3D1B0E;
+        --color-accent-hover: #2b130a;
+        --color-accent-light: #E6A495;
+        --color-card-bg: #FCF9F6;
+        --color-input-bg: #ffffff;
+        --color-overlay: rgba(0, 0, 0, 0.5);
+      }
+
+      .dark {
+        --color-bg-primary: #0f172a;
+        --color-bg-secondary: #1e293b;
+        --color-bg-tertiary: #334155;
+        --color-text-primary: #f1f5f9;
+        --color-text-secondary: #cbd5e1;
+        --color-text-muted: #94a3b8;
+        --color-border: #475569;
+        --color-border-light: #334155;
+        --color-accent: #38bdf8;
+        --color-accent-hover: #7dd3fc;
+        --color-accent-light: #0ea5e9;
+        --color-card-bg: #1e293b;
+        --color-input-bg: #334155;
+        --color-overlay: rgba(0, 0, 0, 0.7);
+      }
+
       body {
         font-family: 'Inter', sans-serif;
+        background-color: var(--color-bg-primary);
+        color: var(--color-text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
+
       #question-container {
         white-space: pre-wrap !important;
       }
@@ -27,18 +71,18 @@
       }
       #question-container th, 
       #question-container td {
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--color-border);
         padding: 0.5rem 0.75rem;
         text-align: left;
         vertical-align: top;
       }
       #question-container th {
-        background-color: #f8fafc;
+        background-color: var(--color-bg-secondary);
         font-weight: 600;
-        color: #334155;
+        color: var(--color-text-primary);
       }
       #question-container tbody tr:nth-child(even) {
-          background-color: #f8fafc;
+        background-color: var(--color-bg-secondary);
       }
       @keyframes shake {
         10%, 90% { transform: translateX(-1px); }
@@ -76,16 +120,51 @@
       .animate-fade-in-down {
         animation: fade-in-down 0.4s ease-out forwards;
       }
+      @keyframes slide-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-slide-up {
+        animation: slide-up 0.4s ease-out forwards;
+      }
+      @keyframes scale-in {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-scale-in {
+        animation: scale-in 0.3s ease-out forwards;
+      }
       .user-highlight {
         background-color: #FFF176;
         color: #000;
       }
+      .dark .user-highlight {
+        background-color: #fbbf24;
+        color: #000;
+      }
       .feedback-content b {
         font-weight: 600;
-        color: #1e293b;
+        color: var(--color-text-primary);
       }
       .feedback-content i {
         font-style: italic;
+      }
+
+      /* Smooth transitions for interactive elements */
+      button, a, input, textarea, select {
+        transition: all 0.2s ease;
+      }
+
+      /* Card hover effects */
+      .card-hover {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+      .dark .card-hover:hover {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
       }
     </style>
     <script type="importmap">

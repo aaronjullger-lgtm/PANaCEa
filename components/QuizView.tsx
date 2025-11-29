@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useRef,
 } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   fetchNewQuestion,
   generateAlternateRationale,
@@ -110,7 +111,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       <div
         ref={containerRef}
         id="question-container"
-        className="text-xl md:text-2xl leading-relaxed text-[#333333] bg-[#FCF9F6] border border-[#D0C7BF] rounded-xl p-6 shadow-sm space-y-4"
+        className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm space-y-4"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {/* Text before the table */}
@@ -151,7 +152,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       <div
         ref={containerRef}
         id="question-container"
-        className="text-xl md:text-2xl font-semibold text-[#333333] whitespace-pre-wrap"
+        className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {normalizedText}
@@ -166,7 +167,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
     <div
       ref={containerRef}
       id="question-container"
-      className="text-xl md:text-2xl leading-relaxed text-[#333333]"
+      className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)]"
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>
@@ -453,19 +454,19 @@ const QuizView: React.FC<QuizViewProps> = ({
       return (
         <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
           <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
-          <p className="text-slate-600">
+          <p className="text-[var(--color-text-secondary)]">
             You’ve reached the end of this set of questions.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
             <button
               onClick={onShowMenu}
-              className="px-6 py-2 bg-slate-800 text-white font-semibold rounded-lg hover:bg-slate-900 transition-colors shadow-md"
+              className="px-6 py-2 bg-[var(--color-accent)] text-white font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
             >
               Back to Dashboard
             </button>
             <button
               onClick={onEndSession}
-              className="px-6 py-2 bg-slate-200 text-slate-800 font-semibold rounded-lg hover:bg-slate-300 transition-colors"
+              className="px-6 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] font-semibold rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors border border-[var(--color-border)]"
             >
               End Session
             </button>
@@ -484,12 +485,12 @@ const QuizView: React.FC<QuizViewProps> = ({
             {/* Back to dashboard */}
             <button
               onClick={onShowMenu}
-              className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors flex-shrink-0 flex items-center justify-center"
+              className="p-2 rounded-full bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors flex-shrink-0 flex items-center justify-center border border-[var(--color-border)]"
               aria-label="Back to Menu"
             >
-              <ArrowLeftIcon className="w-6 h-6 text-slate-600" />
+              <ArrowLeftIcon className="w-6 h-6 text-[var(--color-text-secondary)]" />
             </button>
-            <p className="text-sm font-medium text-slate-500 truncate">
+            <p className="text-sm font-medium text-[var(--color-text-muted)] truncate">
               Question {questionNumber}
             </p>
           </div>
@@ -502,7 +503,7 @@ const QuizView: React.FC<QuizViewProps> = ({
               className={`p-1.5 rounded-full transition-colors border ${
                 isFlagged
                   ? "bg-yellow-100 text-yellow-700 border-yellow-300"
-                  : "bg-[#FCF9F6] text-slate-600 border-[#D0C7BF] hover:bg-white hover:border-[#3D1B0E]"
+                  : "bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-white hover:border-[var(--color-accent)]"
               }`}
             >
               <FlagIcon className="w-5 h-5" />
@@ -526,18 +527,18 @@ const QuizView: React.FC<QuizViewProps> = ({
                 });
               }}
               title="Clear highlights"
-              className="p-1.5 rounded-full bg-[#FCF9F6] border border-[#D0C7BF] text-slate-600 hover:bg-white hover:border-[#3D1B0E] transition-colors"
+              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-slate-600 hover:bg-white hover:border-[var(--color-accent)] transition-colors"
             >
               <ClearHighlightIcon className="w-5 h-5" />
             </button>
 
             {/* Font size controls */}
-            <div className="flex items-center border border-[#D0C7BF] rounded-md bg-[#FCF9F6]">
+            <div className="flex items-center border border-[var(--color-border)] rounded-md bg-[var(--color-card-bg)]">
               <button
                 onClick={() =>
                   setFontSizeAdjustment((prev) => prev - 1)
                 }
-                className="px-2 py-0.5 text-slate-700 hover:bg-white rounded-l-md text-sm"
+                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white rounded-l-md text-sm"
                 aria-label="Decrease font size"
               >
                 A-
@@ -547,7 +548,7 @@ const QuizView: React.FC<QuizViewProps> = ({
                 onClick={() =>
                   setFontSizeAdjustment((prev) => prev + 1)
                 }
-                className="px-2 py-0.5 text-slate-700 hover:bg-white rounded-r-md text-sm"
+                className="px-2 py-0.5 text-[var(--color-text-secondary)] hover:bg-white rounded-r-md text-sm"
                 aria-label="Increase font size"
               >
                 A+
@@ -558,7 +559,7 @@ const QuizView: React.FC<QuizViewProps> = ({
             <button
               onClick={onEndSession}
               title="End Session"
-              className="p-1.5 rounded-full bg-[#FCF9F6] border border-[#D0C7BF] text-slate-600 hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-colors"
+              className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-slate-600 hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-colors"
             >
               <CloseIcon className="w-5 h-5" />
             </button>
@@ -587,11 +588,11 @@ const QuizView: React.FC<QuizViewProps> = ({
               animationClass = "animate-shake";
             } else {
               buttonClasses +=
-                " bg-[#FCF9F6] border border-[#D0C7BF] text-[#333333] opacity-60 shadow-sm";
+                " bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] opacity-60 shadow-sm";
             }
           } else {
             buttonClasses +=
-              " bg-[#FCF9F6] border border-[#D0C7BF] shadow-sm text-[#333333] hover:bg-white hover:border-[#3D1B0E] hover:shadow-lg hover:-translate-y-px";
+              " bg-[var(--color-card-bg)] border border-[var(--color-border)] shadow-sm text-[var(--color-text-primary)] hover:bg-white hover:border-[var(--color-accent)] hover:shadow-lg hover:-translate-y-px";
           }
 
           return (
@@ -616,17 +617,17 @@ const QuizView: React.FC<QuizViewProps> = ({
       {isAnswered && (
         <div className="mt-6 animate-fade-in space-y-4">
           {topicStats && (
-            <div className="p-4 bg-[#FCF9F6] border border-[#D0C7BF] rounded-lg">
+            <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg">
               <div className="flex justify-between items-center mb-1 text-sm">
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-[var(--color-text-secondary)]">
                   {currentQuestion.topic}
                 </span>
-                <span className="font-medium text-slate-500">
+                <span className="font-medium text-[var(--color-text-muted)]">
                   {topicStats.score.toFixed(0)}% (
                   {topicStats.correct}/{topicStats.total})
                 </span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2.5">
+              <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2.5">
                 <div
                   className={`h-2.5 rounded-full ${getBarColor(
                     topicStats.score
@@ -637,12 +638,12 @@ const QuizView: React.FC<QuizViewProps> = ({
             </div>
           )}
 
-          <div className="p-4 bg-[#FCF9F6] border border-[#D0C7BF] rounded-lg feedback-content">
-            <h3 className="font-bold text-lg mb-2 text-slate-800">
+          <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg feedback-content">
+            <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
               Rationale
             </h3>
             <div
-              className="text-slate-700 leading-relaxed"
+              className="text-[var(--color-text-secondary)] leading-relaxed"
               dangerouslySetInnerHTML={{ __html: currentQuestion.rationale }}
             />
 
@@ -652,7 +653,7 @@ const QuizView: React.FC<QuizViewProps> = ({
                 <button
                   onClick={handleExplainDifferently}
                   disabled={isExplainerLoading}
-                  className="px-4 py-2 bg-[#E6A495] text-[#3D1B0E] font-semibold rounded-lg hover:bg-[#d99282] transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
+                  className="px-4 py-2 bg-[#E6A495] text-[var(--color-accent)] font-semibold rounded-lg hover:bg-[#d99282] transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
                 >
                   {isExplainerLoading
                     ? "Thinking..."
@@ -662,7 +663,7 @@ const QuizView: React.FC<QuizViewProps> = ({
             )}
 
             {isExplainerLoading && (
-              <div className="mt-4 flex items-center space-x-2 text-slate-600">
+              <div className="mt-4 flex items-center space-x-2 text-[var(--color-text-secondary)]">
                 <div className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"></div>
                 <div
                   className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"
@@ -680,20 +681,20 @@ const QuizView: React.FC<QuizViewProps> = ({
 
             {alternateRationale && !isExplainerLoading && (
               <div className="mt-4 pt-4 border-t border-slate-200 animate-fade-in">
-                <h4 className="font-bold text-md mb-2 text-slate-800">
+                <h4 className="font-bold text-md mb-2 text-[var(--color-text-primary)]">
                   Alternate Explanation
                 </h4>
-                <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                <p className="text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
                   {alternateRationale}
                 </p>
               </div>
             )}
 
             <div className="mt-4 pt-4 border-t border-slate-200">
-              <h3 className="font-bold text-lg mb-2 text-slate-800">
+              <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
                 Key Pearls: {currentQuestion.condition}
               </h3>
-              <ul className="list-disc list-inside space-y-1 text-slate-700">
+              <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
                 {currentQuestion.pearls.map((pearl, index) => (
                   <li
                     key={index}
@@ -704,14 +705,14 @@ const QuizView: React.FC<QuizViewProps> = ({
             </div>
 
             <div className="mt-4 pt-4 border-t border-slate-200">
-              <h3 className="font-bold text-lg mb-2 text-slate-800">
+              <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
                 My Notes
               </h3>
               <textarea
                 value={localNote}
                 onChange={handleNoteChange}
                 placeholder="Type your notes here... They will be saved automatically."
-                className="w-full p-2 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-[#3D1B0E] focus:border-transparent"
+                className="w-full p-2 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent"
                 rows={3}
               />
             </div>
@@ -724,7 +725,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           <button
             ref={nextButtonRef}
             onClick={showNextQuestion}
-            className="px-8 py-3 bg-[#3D1B0E] text-white font-bold rounded-lg hover:bg-[#2b130a] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="px-8 py-3 bg-[var(--color-accent)] text-white font-bold rounded-lg hover:bg-[#2b130a] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Next Question
           </button>
