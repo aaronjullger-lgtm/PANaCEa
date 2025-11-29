@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoDrill, type CategoryType } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { Flame, X, ArrowRight, RotateCcw, Heart, Scan, Activity, Shuffle } from 'lucide-react';
+import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity, Shuffle } from 'lucide-react';
 
 interface PhotoDrillSessionProps {
   /** Callback to navigate back to the menu */
@@ -35,7 +35,7 @@ const CATEGORY_CARDS: Array<{
     id: 'radiology',
     title: 'Radiology',
     description: 'X-ray and imaging analysis',
-    icon: <Heart className="w-8 h-8" />,
+    icon: <FileImage className="w-8 h-8" />,
     gradient: 'from-sky-600 to-blue-700',
   },
   {

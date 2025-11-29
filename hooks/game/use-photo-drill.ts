@@ -31,7 +31,11 @@ export interface PhotoCase {
  */
 export type GameStatus = 'menu' | 'playing' | 'feedback' | 'summary';
 
-/** @deprecated Use GameStatus instead */
+/**
+ * @deprecated Use GameStatus instead.
+ * Migration: 'loading' → 'menu', 'active' → 'playing'.
+ * The 'feedback' and 'summary' states remain unchanged.
+ */
 export type GameState = 'loading' | 'active' | 'feedback' | 'summary';
 
 /** Category types for training modules */
@@ -66,14 +70,13 @@ export const MASTER_CONDITION_LIST: string[] = [
   'Melanoma',
   'Basal Cell Carcinoma',
   'Impetigo',
-  // Radiology
+  // Radiology (includes MSK imaging)
   'Pneumothorax',
   'Pneumonia',
   'Pulmonary Embolism',
   'Pleural Effusion',
   'Cardiomegaly',
   'Rib Fracture',
-  // Musculoskeletal
   'Gout',
   'Rheumatoid Arthritis',
 ];
@@ -113,6 +116,8 @@ const RADIOLOGY_CONDITIONS = [
   'Pleural Effusion',
   'Cardiomegaly',
   'Rib Fracture',
+  'Gout',
+  'Rheumatoid Arthritis',
 ];
 
 // ============================================================================
