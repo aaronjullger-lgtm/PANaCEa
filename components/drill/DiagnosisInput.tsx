@@ -1,43 +1,15 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MASTER_CONDITION_LIST } from '@/hooks/game/use-photo-drill';
 
 /** Delay in ms before closing dropdown on blur, allows click events to register */
 const BLUR_DELAY_MS = 150;
 
 /**
- * Mock database of medical conditions for autocomplete.
- * In production, this would come from a backend API or database.
+ * Re-export for backwards compatibility.
+ * @deprecated Use MASTER_CONDITION_LIST from use-photo-drill.ts instead.
  */
-export const ALL_CONDITIONS: string[] = [
-  // Cardiac
-  'Atrial Fibrillation',
-  'Atrial Flutter',
-  'Ventricular Tachycardia',
-  'Ventricular Fibrillation',
-  'Anterior STEMI',
-  'Inferior STEMI',
-  'NSTEMI',
-  'Sinus Bradycardia',
-  'Heart Block',
-  'Pericarditis',
-  // Pulmonary
-  'Pneumothorax',
-  'Tension Pneumothorax',
-  'Pneumonia',
-  'Pulmonary Embolism',
-  'Pleural Effusion',
-  // Dermatology
-  'Psoriasis',
-  'Eczema',
-  'Shingles',
-  'Contact Dermatitis',
-  'Cellulitis',
-  // Metabolic/Other
-  'Diabetic Ketoacidosis',
-  'Hyperkalemia',
-  'Hypoglycemia',
-  'Cardiomegaly',
-];
+export const ALL_CONDITIONS: string[] = MASTER_CONDITION_LIST;
 
 interface DiagnosisInputProps {
   onSubmit: (value: string) => void;
@@ -64,7 +36,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
 
   // Filter conditions based on input (case-insensitive)
   const filteredConditions = inputValue.trim()
-    ? ALL_CONDITIONS.filter((condition) =>
+    ? MASTER_CONDITION_LIST.filter((condition) =>
         condition.toLowerCase().includes(inputValue.toLowerCase())
       )
     : [];
