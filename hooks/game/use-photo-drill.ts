@@ -198,8 +198,8 @@ export function generateRandomCase(
   const distractors = shuffled.slice(0, Math.min(3, shuffled.length));
 
   // Use educational caption from manifest if provided, otherwise fallback to generic
-  const explanation = options?.educationalCaption 
-    ?? `Key features support this diagnosis.`;
+  const explanation =
+    options?.educationalCaption ?? 'Key features support this diagnosis.';
 
   return {
     id,
