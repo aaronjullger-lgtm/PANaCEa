@@ -323,6 +323,79 @@ describe('usePhotoDrill hook', () => {
     });
   });
 
+  describe('validDiagnoses', () => {
+    it('should return MASTER_CONDITION_LIST when no category is selected', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      expect(result.current.validDiagnoses).toEqual(MASTER_CONDITION_LIST);
+    });
+
+    it('should return only ECG conditions when ecg category is selected', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('ecg');
+      });
+
+      expect(result.current.validDiagnoses).toContain('Atrial Fibrillation');
+      expect(result.current.validDiagnoses).toContain('STEMI');
+      expect(result.current.validDiagnoses).not.toContain('Pneumonia');
+      expect(result.current.validDiagnoses).not.toContain('Psoriasis');
+    });
+
+    it('should return only Derm conditions when derm category is selected', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('derm');
+      });
+
+      expect(result.current.validDiagnoses).toContain('Psoriasis');
+      expect(result.current.validDiagnoses).toContain('Melanoma');
+      expect(result.current.validDiagnoses).not.toContain('STEMI');
+      expect(result.current.validDiagnoses).not.toContain('Pneumonia');
+    });
+
+    it('should return only Radiology conditions when radiology category is selected', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('radiology');
+      });
+
+      expect(result.current.validDiagnoses).toContain('Pneumonia');
+      expect(result.current.validDiagnoses).toContain('Pneumothorax');
+      expect(result.current.validDiagnoses).not.toContain('STEMI');
+      expect(result.current.validDiagnoses).not.toContain('Psoriasis');
+    });
+
+    it('should return all conditions when random category is selected', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('random');
+      });
+
+      expect(result.current.validDiagnoses).toEqual(MASTER_CONDITION_LIST);
+    });
+
+    it('should reset validDiagnoses when exiting to menu', () => {
+      const { result } = renderHook(() => usePhotoDrill());
+
+      act(() => {
+        result.current.startSession('ecg');
+      });
+
+      expect(result.current.validDiagnoses).not.toEqual(MASTER_CONDITION_LIST);
+
+      act(() => {
+        result.current.exitToMenu();
+      });
+
+      expect(result.current.validDiagnoses).toEqual(MASTER_CONDITION_LIST);
+    });
+  });
+
   describe('reset (with session)', () => {
     it('should reset score and position but keep category', () => {
       const { result } = renderHook(() => usePhotoDrill());
@@ -411,6 +484,31 @@ describe('generateRandomCase helper', () => {
     photoCase.distractors.forEach(distractor => {
       expect(distractor).not.toBe(photoCase.correctDiagnosis);
     });
+  });
+
+  it('should use default explanation when no educational caption provided', () => {
+    const photoCase = generateRandomCase('ecg');
+
+    expect(photoCase.explanation).toBe('Key features support this diagnosis.');
+  });
+
+  it('should use educational caption when provided', () => {
+    const customCaption = 'The irregularly irregular rhythm with absent P waves is characteristic of atrial fibrillation.';
+    const photoCase = generateRandomCase('ecg', { educationalCaption: customCaption });
+
+    expect(photoCase.explanation).toBe(customCaption);
+  });
+
+  it('should fallback to default explanation when educationalCaption is undefined', () => {
+    const photoCase = generateRandomCase('ecg', { educationalCaption: undefined });
+
+    expect(photoCase.explanation).toBe('Key features support this diagnosis.');
+  });
+
+  it('should fallback to default explanation when options is empty object', () => {
+    const photoCase = generateRandomCase('ecg', {});
+
+    expect(photoCase.explanation).toBe('Key features support this diagnosis.');
   });
 });
 
