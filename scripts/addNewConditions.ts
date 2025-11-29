@@ -8,7 +8,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.5-flash-preview-05-20";
+const MODEL_NAME = "gemini-2.5-pro";
 const OUTPUT_FILE = path.resolve("conditionContent.correct.json");
 const MAX_RETRIES = 3;
 const MAX_CONCURRENCY = 2;
