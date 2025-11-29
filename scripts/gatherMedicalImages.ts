@@ -317,7 +317,6 @@ async function searchImages(
     cx: CSE_ID,
     q: fullQuery,
     searchType: "image",
-    imgSize: "XLARGE",
     num: String(Math.min(numResults, 10)),
     safe: "off",
   });
@@ -331,14 +330,22 @@ async function searchImages(
         res.on("data", (chunk) => (data += chunk));
         res.on("end", () => {
           try {
-            const json = JSON.parse(data) as CSEResponse;
-            resolve(json.items || []);
-          } catch {
+            const json = JSON.parse(data);
+            // Check for API errors
+            if (json.error) {
+              console.error(`      [CSE API Error] ${json.error.message || JSON.stringify(json.error)}`);
+              resolve([]);
+              return;
+            }
+            resolve((json as CSEResponse).items || []);
+          } catch (e) {
+            console.error(`      [Parse Error] ${e}`);
             resolve([]);
           }
         });
       })
-      .on("error", () => {
+      .on("error", (e) => {
+        console.error(`      [Network Error] ${e.message}`);
         resolve([]);
       });
   });
