@@ -33,7 +33,7 @@ try:
     if not GOOGLE_API_KEY:
         raise ValueError("GOOGLE_API_KEY environment variable not set.")
     genai.configure(api_key=GOOGLE_API_KEY)
-    gemini_model = genai.GenerativeModel('gemini-1.5-pro-latest')
+    gemini_model = genai.GenerativeModel('gemini-2.5-pro')
 except Exception as e:
     print(f"Error configuring Gemini: {e}")
     gemini_model = None
