@@ -230,10 +230,9 @@
           scroll-margin-bottom: 200px;
         }
         
-        /* Add padding at the bottom of scrollable containers when keyboard might be open */
-        .condition-scrollable:has(input:focus),
-        .condition-scrollable:has(textarea:focus) {
-          padding-bottom: 250px;
+        /* Extra padding for scrollable containers to help with keyboard visibility */
+        .condition-scrollable {
+          padding-bottom: 100px;
         }
       }
       

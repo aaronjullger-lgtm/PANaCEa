@@ -103,7 +103,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
               <h3 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-3">
                 Mechanism of Action
               </h3>
-              <p className="text-[var(--color-text-primary)] text-sm leading-relaxed" style={{ lineHeight: '1.75' }}>
+              <p className="text-[var(--color-text-primary)] text-sm leading-loose">
                 {drug.MOA}
               </p>
             </section>
@@ -114,7 +114,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                 <h3 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-3">
                   Clinical Notes
                 </h3>
-                <p className="text-[var(--color-text-primary)] text-sm leading-relaxed" style={{ lineHeight: '1.75' }}>
+                <p className="text-[var(--color-text-primary)] text-sm leading-loose">
                   {drug.clinicalNotes}
                 </p>
               </section>
@@ -147,7 +147,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                 </h3>
                 <ul className="list-disc list-inside space-y-2">
                   {drug.ADEs.map((ade, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-primary)]" style={{ lineHeight: '1.6' }}>
+                    <li key={idx} className="text-sm text-[var(--color-text-primary)] leading-relaxed">
                       {ade}
                     </li>
                   ))}
@@ -163,7 +163,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                 </h3>
                 <ul className="list-disc list-inside space-y-2">
                   {drug.contraindications.map((ci, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-primary)]" style={{ lineHeight: '1.6' }}>
+                    <li key={idx} className="text-sm text-[var(--color-text-primary)] leading-relaxed">
                       {ci}
                     </li>
                   ))}
@@ -179,7 +179,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                 </h3>
                 <ul className="list-disc list-inside space-y-2">
                   {drug.interactions.map((interaction, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-primary)]" style={{ lineHeight: '1.6' }}>
+                    <li key={idx} className="text-sm text-[var(--color-text-primary)] leading-relaxed">
                       {formatInteraction(interaction)}
                     </li>
                   ))}
@@ -193,7 +193,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                 <h3 className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-3">
                   Antidote
                 </h3>
-                <p className="text-[var(--color-text-primary)] text-sm leading-relaxed" style={{ lineHeight: '1.75' }}>
+                <p className="text-[var(--color-text-primary)] text-sm leading-loose">
                   {drug.antidote}
                 </p>
               </section>
