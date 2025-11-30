@@ -11,6 +11,19 @@ interface DrugDetailModalProps {
   onDrillDrug?: (drug: DrugEntry) => void;
 }
 
+/**
+ * Convert a string to Title Case for proper drug name display.
+ * E.g., "duloxetine" -> "Duloxetine", "acetyl salicylic acid" -> "Acetyl Salicylic Acid"
+ */
+function toTitleCase(str: string): string {
+  if (!str) return str;
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
   drug,
   onClose,
@@ -22,13 +35,16 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
       return interaction;
     }
     if (interaction.drug && interaction.effect) {
-      return `${interaction.drug}: ${interaction.effect}`;
+      return `${toTitleCase(interaction.drug)}: ${interaction.effect}`;
     }
     if (interaction.category && interaction.effect) {
       return `${interaction.category} (${interaction.examples || ""}): ${interaction.effect}`;
     }
     return JSON.stringify(interaction);
   };
+
+  // Title case the drug name for display
+  const displayDrugName = toTitleCase(drug.term);
 
   return (
     <AnimatePresence>
@@ -51,7 +67,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
           <div className="flex items-start justify-between mb-6">
             <div>
               <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">
-                {drug.term}
+                {displayDrugName}
               </h2>
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
@@ -80,25 +96,25 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
             </button>
           </div>
 
-          {/* Content sections */}
-          <div className="space-y-6">
+          {/* Content sections with glass card styling */}
+          <div className="space-y-5">
             {/* Mechanism of Action */}
-            <section>
-              <h3 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-2">
+            <section className="card-glass p-4 rounded-xl">
+              <h3 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-3">
                 Mechanism of Action
               </h3>
-              <p className="text-[var(--color-text-primary)] text-sm leading-relaxed">
+              <p className="text-[var(--color-text-primary)] text-sm leading-loose">
                 {drug.MOA}
               </p>
             </section>
 
             {/* Clinical Notes */}
             {drug.clinicalNotes && (
-              <section>
-                <h3 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-2">
+              <section className="card-glass p-4 rounded-xl">
+                <h3 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-3">
                   Clinical Notes
                 </h3>
-                <p className="text-[var(--color-text-primary)] text-sm leading-relaxed">
+                <p className="text-[var(--color-text-primary)] text-sm leading-loose">
                   {drug.clinicalNotes}
                 </p>
               </section>
@@ -106,8 +122,8 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
 
             {/* Pharmacokinetics */}
             {drug.pharmacokinetics && (
-              <section>
-                <h3 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-2">
+              <section className="card-glass p-4 rounded-xl">
+                <h3 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-3">
                   Pharmacokinetics
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -125,13 +141,13 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
 
             {/* Adverse Drug Events */}
             {drug.ADEs && drug.ADEs.length > 0 && (
-              <section>
-                <h3 className="text-sm font-semibold text-red-500 uppercase tracking-wide mb-2">
+              <section className="card-glass p-4 rounded-xl">
+                <h3 className="text-sm font-semibold text-red-500 uppercase tracking-wide mb-3">
                   Adverse Drug Events (ADEs)
                 </h3>
-                <ul className="list-disc list-inside space-y-1">
+                <ul className="list-disc list-inside space-y-2">
                   {drug.ADEs.map((ade, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-primary)]">
+                    <li key={idx} className="text-sm text-[var(--color-text-primary)] leading-relaxed">
                       {ade}
                     </li>
                   ))}
@@ -141,13 +157,13 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
 
             {/* Contraindications */}
             {drug.contraindications && drug.contraindications.length > 0 && (
-              <section>
-                <h3 className="text-sm font-semibold text-orange-500 uppercase tracking-wide mb-2">
+              <section className="card-glass p-4 rounded-xl">
+                <h3 className="text-sm font-semibold text-orange-500 uppercase tracking-wide mb-3">
                   Contraindications
                 </h3>
-                <ul className="list-disc list-inside space-y-1">
+                <ul className="list-disc list-inside space-y-2">
                   {drug.contraindications.map((ci, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-primary)]">
+                    <li key={idx} className="text-sm text-[var(--color-text-primary)] leading-relaxed">
                       {ci}
                     </li>
                   ))}
@@ -157,13 +173,13 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
 
             {/* Drug Interactions */}
             {drug.interactions && drug.interactions.length > 0 && (
-              <section>
-                <h3 className="text-sm font-semibold text-yellow-600 uppercase tracking-wide mb-2">
+              <section className="card-glass p-4 rounded-xl">
+                <h3 className="text-sm font-semibold text-yellow-600 uppercase tracking-wide mb-3">
                   Drug Interactions
                 </h3>
-                <ul className="list-disc list-inside space-y-1">
+                <ul className="list-disc list-inside space-y-2">
                   {drug.interactions.map((interaction, idx) => (
-                    <li key={idx} className="text-sm text-[var(--color-text-primary)]">
+                    <li key={idx} className="text-sm text-[var(--color-text-primary)] leading-relaxed">
                       {formatInteraction(interaction)}
                     </li>
                   ))}
@@ -173,11 +189,11 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
 
             {/* Antidote */}
             {drug.antidote && drug.antidote !== "N/A" && (
-              <section>
-                <h3 className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-2">
+              <section className="card-glass p-4 rounded-xl">
+                <h3 className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-3">
                   Antidote
                 </h3>
-                <p className="text-[var(--color-text-primary)] text-sm leading-relaxed">
+                <p className="text-[var(--color-text-primary)] text-sm leading-loose">
                   {drug.antidote}
                 </p>
               </section>
@@ -185,17 +201,17 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
 
             {/* Ingredients/Brand Names */}
             {drug.ingredients && drug.ingredients.length > 0 && (
-              <section>
-                <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+              <section className="card-glass p-4 rounded-xl">
+                <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">
                   Related Names / Ingredients
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {drug.ingredients.map((ingredient, idx) => (
                     <span
                       key={idx}
-                      className="px-2 py-1 text-xs rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
+                      className="px-3 py-1.5 text-xs rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]"
                     >
-                      {ingredient}
+                      {toTitleCase(ingredient)}
                     </span>
                   ))}
                 </div>
@@ -214,7 +230,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
             {onDrillDrug && (
               <button
                 onClick={() => onDrillDrug(drug)}
-                className="px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-colors"
+                className="px-4 py-2 text-sm font-medium btn-glass rounded-lg"
               >
                 Practice Questions on {drug.class}
               </button>

@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
-      /* CSS Custom Properties for theming */
+      /* CSS Custom Properties for theming - Modern Medical Glassmorphism */
       :root {
         /* Fresh, modern light mode with soft blue-gray tones */
         --color-bg-primary: #f8fafc;
@@ -35,11 +35,12 @@
         /* Button text colors */
         --color-btn-primary-text: #ffffff;
         --color-btn-secondary-text: #1e40af;
-        /* Glass-like button effects for light mode - translucent white */
-        --color-glass-bg: rgba(255, 255, 255, 0.7);
-        --color-glass-border: rgba(255, 255, 255, 0.4);
-        --color-glass-shadow: rgba(0, 0, 0, 0.1);
-        --color-glass-hover: rgba(255, 255, 255, 0.85);
+        /* Glass-like button effects for light mode - "Dark Stained Glass" (semi-transparent dark blue/black) */
+        --color-glass-bg: rgba(15, 23, 42, 0.80);
+        --color-glass-border: rgba(15, 23, 42, 0.3);
+        --color-glass-shadow: rgba(0, 0, 0, 0.15);
+        --color-glass-hover: rgba(15, 23, 42, 0.90);
+        --color-glass-text: #f8fafc;
       }
 
       .dark {
@@ -51,22 +52,24 @@
         --color-text-muted: #94a3b8;
         --color-border: #475569;
         --color-border-light: #334155;
-        --color-accent: #3b82f6;
-        --color-accent-hover: #60a5fa;
-        --color-accent-light: rgba(59, 130, 246, 0.2);
+        /* Changed from Teal to Frosted White for high contrast */
+        --color-accent: rgba(248, 250, 252, 0.9);
+        --color-accent-hover: rgba(255, 255, 255, 1);
+        --color-accent-light: rgba(248, 250, 252, 0.15);
         --color-card-bg: #1e293b;
         --color-input-bg: #334155;
         --color-overlay: rgba(0, 0, 0, 0.7);
-        /* Button text colors - dark text on light accent backgrounds */
+        /* Button text colors - dark text on light frosted backgrounds */
         --color-btn-primary-text: #0f172a;
-        --color-btn-secondary-text: #3b82f6;
-        /* Mini mode tiles need dark text over light backgrounds */
-        --color-tile-text: #1e293b;
-        /* Glass-like button effects for dark mode - translucent dark */
-        --color-glass-bg: rgba(15, 23, 42, 0.6);
-        --color-glass-border: rgba(255, 255, 255, 0.1);
+        --color-btn-secondary-text: #f1f5f9;
+        /* Mini-Dashboard tiles - force light text for readability */
+        --color-tile-text: #f3f4f6;
+        /* Glass-like button effects for dark mode - "Frosted White" (semi-transparent white) */
+        --color-glass-bg: rgba(255, 255, 255, 0.10);
+        --color-glass-border: rgba(255, 255, 255, 0.15);
         --color-glass-shadow: rgba(0, 0, 0, 0.3);
-        --color-glass-hover: rgba(30, 41, 59, 0.8);
+        --color-glass-hover: rgba(255, 255, 255, 0.18);
+        --color-glass-text: #f1f5f9;
       }
 
       body {
@@ -186,15 +189,16 @@
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
       }
 
-      /* Glass button styling - Apple-inspired translucent effect */
+      /* Glass button styling - Modern Medical Glassmorphism */
       .btn-glass {
         background: var(--color-glass-bg);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid var(--color-glass-border);
+        color: var(--color-glass-text);
         box-shadow: 
           0 4px 16px var(--color-glass-shadow),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
         transition: all 0.2s ease;
       }
       .btn-glass:hover {
@@ -202,7 +206,7 @@
         transform: translateY(-1px);
         box-shadow: 
           0 6px 20px var(--color-glass-shadow),
-          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
       }
       .btn-glass:active {
         transform: translateY(0);
@@ -214,7 +218,32 @@
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         border: 1px solid var(--color-glass-border);
+        color: var(--color-glass-text);
         box-shadow: 0 4px 24px var(--color-glass-shadow);
+      }
+
+      /* Mobile Keyboard Fix - Ensure inputs remain visible when keyboard is open */
+      @media (max-width: 768px) {
+        input:focus,
+        textarea:focus,
+        select:focus {
+          scroll-margin-bottom: 200px;
+        }
+        
+        /* Extra padding for scrollable containers to help with keyboard visibility */
+        .condition-scrollable {
+          padding-bottom: 100px;
+        }
+      }
+      
+      /* Ensure proper viewport behavior on iOS */
+      @supports (-webkit-touch-callout: none) {
+        html {
+          height: -webkit-fill-available;
+        }
+        body {
+          min-height: -webkit-fill-available;
+        }
       }
     </style>
     <script type="importmap">
