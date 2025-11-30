@@ -13,7 +13,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
       /* CSS Custom Properties for theming */
       :root {
@@ -35,6 +35,11 @@
         /* Button text colors */
         --color-btn-primary-text: #ffffff;
         --color-btn-secondary-text: #1e40af;
+        /* Glass-like button effects for light mode - translucent white */
+        --color-glass-bg: rgba(255, 255, 255, 0.7);
+        --color-glass-border: rgba(255, 255, 255, 0.4);
+        --color-glass-shadow: rgba(0, 0, 0, 0.1);
+        --color-glass-hover: rgba(255, 255, 255, 0.85);
       }
 
       .dark {
@@ -57,6 +62,11 @@
         --color-btn-secondary-text: #3b82f6;
         /* Mini mode tiles need dark text over light backgrounds */
         --color-tile-text: #1e293b;
+        /* Glass-like button effects for dark mode - translucent dark */
+        --color-glass-bg: rgba(15, 23, 42, 0.6);
+        --color-glass-border: rgba(255, 255, 255, 0.1);
+        --color-glass-shadow: rgba(0, 0, 0, 0.3);
+        --color-glass-hover: rgba(30, 41, 59, 0.8);
       }
 
       body {
@@ -174,6 +184,37 @@
       }
       .dark .card-hover:hover {
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Glass button styling - Apple-inspired translucent effect */
+      .btn-glass {
+        background: var(--color-glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--color-glass-border);
+        box-shadow: 
+          0 4px 16px var(--color-glass-shadow),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transition: all 0.2s ease;
+      }
+      .btn-glass:hover {
+        background: var(--color-glass-hover);
+        transform: translateY(-1px);
+        box-shadow: 
+          0 6px 20px var(--color-glass-shadow),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+      .btn-glass:active {
+        transform: translateY(0);
+      }
+
+      /* Glass card styling */
+      .card-glass {
+        background: var(--color-glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--color-glass-border);
+        box-shadow: 0 4px 24px var(--color-glass-shadow);
       }
     </style>
     <script type="importmap">

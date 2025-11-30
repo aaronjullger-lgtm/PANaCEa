@@ -439,7 +439,7 @@ describe('generateRandomCase helper', () => {
     const photoCase = generateRandomCase('ecg');
 
     expect(photoCase.modality).toBe('ecg');
-    expect(photoCase.imageUrl).toContain('ECG');
+    expect(photoCase.imageUrl).toContain('1e293b'); // ECG color code
     expect(MASTER_CONDITION_LIST).toContain(photoCase.correctDiagnosis);
   });
 
@@ -447,7 +447,7 @@ describe('generateRandomCase helper', () => {
     const photoCase = generateRandomCase('derm');
 
     expect(photoCase.modality).toBe('derm');
-    expect(photoCase.imageUrl).toContain('Derm');
+    expect(photoCase.imageUrl).toContain('8b5cf6'); // Derm color code
     expect(MASTER_CONDITION_LIST).toContain(photoCase.correctDiagnosis);
   });
 
@@ -455,7 +455,7 @@ describe('generateRandomCase helper', () => {
     const photoCase = generateRandomCase('radiology');
 
     expect(photoCase.modality).toBe('xray');
-    expect(photoCase.imageUrl).toContain('XRay');
+    expect(photoCase.imageUrl).toContain('0ea5e9'); // Radiology color code
     expect(MASTER_CONDITION_LIST).toContain(photoCase.correctDiagnosis);
   });
 

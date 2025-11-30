@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { generatePharmQuestion, type PharmQuestion, type PharmQuestionType } from '@/data/pharmQuizData';
 
 export type PharmDrillStatus = 'menu' | 'playing' | 'feedback' | 'summary';
@@ -30,6 +30,7 @@ export interface UsePharmDrillReturn {
 }
 
 const INITIAL_QUEUE_SIZE = 3;
+const MAX_RECENT_DRUGS = 20; // Track last 20 drugs to avoid repetition
 
 export function usePharmDrill(): UsePharmDrillReturn {
   const [selectedCategory, setSelectedCategory] = useState<PharmCategory>('random');
@@ -41,6 +42,9 @@ export function usePharmDrill(): UsePharmDrillReturn {
   const [userAnswerIndex, setUserAnswerIndex] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<PharmDrillStatus>('menu');
+  
+  // Track recently used drugs to avoid repetition
+  const recentDrugsRef = useRef<Set<string>>(new Set());
 
   const currentQuestion = queue[currentIndex] ?? null;
 
@@ -51,11 +55,28 @@ export function usePharmDrill(): UsePharmDrillReturn {
 
   const generateNewQuestion = useCallback((category: PharmCategory): PharmQuestion => {
     const type = getQuestionType(category);
-    return generatePharmQuestion(type);
+    let attempts = 0;
+    let question: PharmQuestion;
+    
+    // Try to generate a question with a drug we haven't seen recently
+    do {
+      question = generatePharmQuestion(type);
+      attempts++;
+    } while (recentDrugsRef.current.has(question.drugName) && attempts < 10);
+    
+    // Add to recent drugs and maintain max size
+    recentDrugsRef.current.add(question.drugName);
+    if (recentDrugsRef.current.size > MAX_RECENT_DRUGS) {
+      const firstItem = recentDrugsRef.current.values().next().value;
+      if (firstItem) recentDrugsRef.current.delete(firstItem);
+    }
+    
+    return question;
   }, [getQuestionType]);
 
   const startSession = useCallback((category: PharmCategory) => {
     setSelectedCategory(category);
+    recentDrugsRef.current.clear(); // Clear history on new session
     
     const initialQueue: PharmQuestion[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
@@ -112,6 +133,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
   }, [selectedCategory, generateNewQuestion]);
 
   const reset = useCallback(() => {
+    recentDrugsRef.current.clear(); // Clear history on reset
     const newQueue: PharmQuestion[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
       newQueue.push(generateNewQuestion(selectedCategory));

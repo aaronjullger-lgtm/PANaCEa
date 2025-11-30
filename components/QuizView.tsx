@@ -350,28 +350,22 @@ const QuizView: React.FC<QuizViewProps> = ({
       // Map letter keys to indices (A=0, B=1, C=2, D=3)
       const letterToIndex: Record<string, number> = { a: 0, b: 1, c: 2, d: 3 };
 
-      // Shift + 1/2/3/4 or Shift + A/B/C/D to toggle elimination
+      // Shift + A/B/C/D to toggle elimination
       if (!isAnswered && event.shiftKey) {
-        let eliminateIndex: number | null = null;
+        const eliminateIndex = letterToIndex[event.key.toLowerCase()];
 
-        if (["1", "2", "3", "4"].includes(event.key)) {
-          eliminateIndex = parseInt(event.key) - 1;
-        } else if (letterToIndex[event.key.toLowerCase()] !== undefined) {
-          eliminateIndex = letterToIndex[event.key.toLowerCase()];
-        }
-
-        if (eliminateIndex !== null && currentQuestion?.options[eliminateIndex]) {
+        if (eliminateIndex !== undefined && currentQuestion?.options[eliminateIndex]) {
           event.preventDefault();
           handleToggleEliminate(eliminateIndex);
           return;
         }
       }
 
-      // Regular 1/2/3/4 to select (only if not eliminated)
-      if (!isAnswered && !event.shiftKey && ["1", "2", "3", "4"].includes(event.key)) {
-        event.preventDefault();
-        const index = parseInt(event.key) - 1;
-        if (!eliminatedAnswers.has(index)) {
+      // Regular A/B/C/D to select (only if not eliminated)
+      if (!isAnswered && !event.shiftKey) {
+        const index = letterToIndex[event.key.toLowerCase()];
+        if (index !== undefined && !eliminatedAnswers.has(index)) {
+          event.preventDefault();
           optionButtonsRef.current[index]?.click();
         }
       }
@@ -751,7 +745,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           <button
             ref={nextButtonRef}
             onClick={showNextQuestion}
-            className="px-8 py-3 bg-[var(--color-accent)] text-white font-bold rounded-lg hover:bg-[#2b130a] transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="px-8 py-3 btn-glass text-[var(--color-text-primary)] font-bold rounded-lg"
           >
             Next Question
           </button>
