@@ -397,7 +397,7 @@ const MenuView: React.FC<MenuViewProps> = ({
             {hasActiveSession && (
               <motion.button
                 onClick={onBackToQuiz}
-                className="w-full px-6 py-3 bg-[var(--color-accent)] text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                className="w-full px-6 py-3 btn-glass text-[var(--color-text-primary)] font-bold rounded-xl"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
@@ -406,7 +406,7 @@ const MenuView: React.FC<MenuViewProps> = ({
             )}
             <motion.button
               onClick={onStartSession}
-              className="w-full px-6 py-4 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] text-white text-lg font-bold rounded-xl hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
+              className="w-full px-6 py-4 btn-glass text-[var(--color-text-primary)] text-lg font-bold rounded-xl"
               whileHover={{ scale: 1.01, y: -2 }}
               whileTap={{ scale: 0.99 }}
             >

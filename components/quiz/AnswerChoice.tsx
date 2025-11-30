@@ -102,7 +102,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
           }`}
         >
           <span className="flex-1 pr-8">
-            <span className="font-bold mr-2">{index + 1}.</span>
+            <span className="font-bold mr-2">{String.fromCharCode(65 + index)}.</span>
             {text}
           </span>
 

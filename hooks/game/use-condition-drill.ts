@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { generateConditionQuestion, type ConditionQuestion, type ConditionQuestionType } from '@/data/conditionDrillData';
 
 export type ConditionDrillStatus = 'menu' | 'playing' | 'feedback' | 'summary';
@@ -27,6 +27,7 @@ export interface UseConditionDrillReturn {
 }
 
 const INITIAL_QUEUE_SIZE = 3;
+const MAX_RECENT_CONDITIONS = 20; // Track last 20 conditions to avoid repetition
 
 export function useConditionDrill(): UseConditionDrillReturn {
   const [selectedCategory, setSelectedCategory] = useState<ConditionCategory>('random');
@@ -38,6 +39,9 @@ export function useConditionDrill(): UseConditionDrillReturn {
   const [userAnswerIndex, setUserAnswerIndex] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<ConditionDrillStatus>('menu');
+  
+  // Track recently used conditions to avoid repetition
+  const recentConditionsRef = useRef<Set<string>>(new Set());
 
   const currentQuestion = queue[currentIndex] ?? null;
 
@@ -48,11 +52,28 @@ export function useConditionDrill(): UseConditionDrillReturn {
 
   const generateNewQuestion = useCallback((category: ConditionCategory): ConditionQuestion => {
     const type = getQuestionType(category);
-    return generateConditionQuestion(type);
+    let attempts = 0;
+    let question: ConditionQuestion;
+    
+    // Try to generate a question with a condition we haven't seen recently
+    do {
+      question = generateConditionQuestion(type);
+      attempts++;
+    } while (recentConditionsRef.current.has(question.conditionName) && attempts < 10);
+    
+    // Add to recent conditions and maintain max size
+    recentConditionsRef.current.add(question.conditionName);
+    if (recentConditionsRef.current.size > MAX_RECENT_CONDITIONS) {
+      const firstItem = recentConditionsRef.current.values().next().value;
+      if (firstItem) recentConditionsRef.current.delete(firstItem);
+    }
+    
+    return question;
   }, [getQuestionType]);
 
   const startSession = useCallback((category: ConditionCategory) => {
     setSelectedCategory(category);
+    recentConditionsRef.current.clear(); // Clear history on new session
     
     const initialQueue: ConditionQuestion[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
@@ -109,6 +130,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
   }, [selectedCategory, generateNewQuestion]);
 
   const reset = useCallback(() => {
+    recentConditionsRef.current.clear(); // Clear history on reset
     const newQueue: ConditionQuestion[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
       newQueue.push(generateNewQuestion(selectedCategory));

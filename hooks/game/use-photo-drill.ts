@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 
 // ============================================================================
 // INTERFACES
@@ -151,23 +151,19 @@ export function generateRandomCase(
 
   let modality: 'ecg' | 'xray' | 'derm';
   let conditionPool: string[];
-  let imageUrl: string;
 
   switch (category) {
     case 'ecg':
       modality = 'ecg';
       conditionPool = ECG_CONDITIONS;
-      imageUrl = `https://placehold.co/600x400/1e293b/FFF?text=ECG+${caseCounter}`;
       break;
     case 'derm':
       modality = 'derm';
       conditionPool = DERM_CONDITIONS;
-      imageUrl = `https://placehold.co/600x400/8b5cf6/FFF?text=Derm+${caseCounter}`;
       break;
     case 'radiology':
       modality = 'xray';
       conditionPool = RADIOLOGY_CONDITIONS;
-      imageUrl = `https://placehold.co/600x400/0ea5e9/FFF?text=XRay+${caseCounter}`;
       break;
     case 'random':
     default:
@@ -176,21 +172,27 @@ export function generateRandomCase(
       if (rand < 0.33) {
         modality = 'ecg';
         conditionPool = ECG_CONDITIONS;
-        imageUrl = `https://placehold.co/600x400/1e293b/FFF?text=ECG+${caseCounter}`;
       } else if (rand < 0.66) {
         modality = 'derm';
         conditionPool = DERM_CONDITIONS;
-        imageUrl = `https://placehold.co/600x400/8b5cf6/FFF?text=Derm+${caseCounter}`;
       } else {
         modality = 'xray';
         conditionPool = RADIOLOGY_CONDITIONS;
-        imageUrl = `https://placehold.co/600x400/0ea5e9/FFF?text=XRay+${caseCounter}`;
       }
       break;
   }
 
   // Randomly select a diagnosis from the condition pool
   const diagnosis = conditionPool[Math.floor(Math.random() * conditionPool.length)];
+
+  // Generate image URL - placeholder with condition name for easy matching later
+  const categoryColors: Record<string, string> = {
+    ecg: '1e293b',
+    derm: '8b5cf6',
+    xray: '0ea5e9',
+  };
+  const color = categoryColors[modality] || '64748b';
+  const imageUrl = `https://placehold.co/600x400/${color}/FFF?text=${encodeURIComponent(diagnosis)}`;
 
   // Generate distractors from the same pool (excluding the correct answer)
   const otherConditions = conditionPool.filter((c) => c !== diagnosis);
@@ -331,6 +333,7 @@ export interface UsePhotoDrillReturn {
 
 /** Initial queue size when starting a session */
 const INITIAL_QUEUE_SIZE = 3;
+const MAX_RECENT_DIAGNOSES = 15; // Track last 15 diagnoses to avoid repetition
 
 /**
  * Custom hook for managing a photo drill game session with category-aware infinite queue.
@@ -349,6 +352,9 @@ export function usePhotoDrill(
   const [userAnswer, setUserAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<GameStatus>('menu');
+  
+  // Track recently used diagnoses to avoid repetition
+  const recentDiagnosesRef = useRef<Set<string>>(new Set());
 
   // Use queue if we have a session, otherwise fall back to legacy cases
   const activeCases = queue.length > 0 ? queue : cases;
@@ -375,16 +381,40 @@ export function usePhotoDrill(
   }, [selectedCategory]);
 
   /**
+   * Generate a new case while avoiding recently seen diagnoses
+   */
+  const generateNewCase = useCallback((category: CategoryType): PhotoCase => {
+    let attempts = 0;
+    let newCase: PhotoCase;
+    
+    // Try to generate a case we haven't seen recently
+    do {
+      newCase = generateRandomCase(category);
+      attempts++;
+    } while (recentDiagnosesRef.current.has(newCase.correctDiagnosis) && attempts < 10);
+    
+    // Add to recent diagnoses and maintain max size
+    recentDiagnosesRef.current.add(newCase.correctDiagnosis);
+    if (recentDiagnosesRef.current.size > MAX_RECENT_DIAGNOSES) {
+      const firstItem = recentDiagnosesRef.current.values().next().value;
+      if (firstItem) recentDiagnosesRef.current.delete(firstItem);
+    }
+    
+    return newCase;
+  }, []);
+
+  /**
    * Start a new session with the specified category.
    * Generates initial queue and transitions to playing state.
    */
   const startSession = useCallback((category: CategoryType) => {
     setSelectedCategory(category);
+    recentDiagnosesRef.current.clear(); // Clear history on new session
     
     // Generate initial queue
     const initialQueue: PhotoCase[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      initialQueue.push(generateRandomCase(category));
+      initialQueue.push(generateNewCase(category));
     }
     
     setQueue(initialQueue);
@@ -394,7 +424,7 @@ export function usePhotoDrill(
     setUserAnswer(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, []);
+  }, [generateNewCase]);
 
   /**
    * Exit to the menu screen.
@@ -447,7 +477,7 @@ export function usePhotoDrill(
     // For infinite queue mode (when we have a selected category)
     if (selectedCategory !== null) {
       // Generate a new case and append to queue
-      const newCase = generateRandomCase(selectedCategory);
+      const newCase = generateNewCase(selectedCategory);
       setQueue((prev) => [...prev, newCase]);
       setCurrentCaseIndex((prev) => prev + 1);
       setUserAnswer(null);
@@ -464,7 +494,7 @@ export function usePhotoDrill(
         setStatus('active');
       }
     }
-  }, [currentCaseIndex, totalCases, selectedCategory]);
+  }, [currentCaseIndex, totalCases, selectedCategory, generateNewCase]);
 
   /**
    * Skip the current case (counts as incorrect).
@@ -481,7 +511,7 @@ export function usePhotoDrill(
 
     // For infinite queue mode
     if (selectedCategory !== null) {
-      const newCase = generateRandomCase(selectedCategory);
+      const newCase = generateNewCase(selectedCategory);
       setQueue((prev) => [...prev, newCase]);
       setCurrentCaseIndex((prev) => prev + 1);
       setStatus('playing');
@@ -494,13 +524,14 @@ export function usePhotoDrill(
         setStatus('active');
       }
     }
-  }, [currentCaseIndex, totalCases, status, selectedCategory]);
+  }, [currentCaseIndex, totalCases, status, selectedCategory, generateNewCase]);
 
   /**
    * Reset the game to start fresh (legacy support).
    * For new infinite mode, use startSession instead.
    */
   const reset = useCallback(() => {
+    recentDiagnosesRef.current.clear(); // Clear history on reset
     setCurrentCaseIndex(0);
     setScore(0);
     setStreak(0);
@@ -511,14 +542,14 @@ export function usePhotoDrill(
     if (selectedCategory !== null) {
       const newQueue: PhotoCase[] = [];
       for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-        newQueue.push(generateRandomCase(selectedCategory));
+        newQueue.push(generateNewCase(selectedCategory));
       }
       setQueue(newQueue);
       setStatus('playing');
     } else {
       setStatus('active');
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, generateNewCase]);
 
   return {
     currentCase,

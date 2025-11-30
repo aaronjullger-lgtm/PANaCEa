@@ -340,7 +340,12 @@ const App: React.FC = () => {
       <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)] transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-[var(--color-accent)]">PANaCEa</span>
+            <span 
+              className="text-xl font-semibold text-[var(--color-accent)] tracking-tight"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              PANaCEa
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <button
