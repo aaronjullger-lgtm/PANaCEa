@@ -163,6 +163,12 @@ function loadConditions(basePath: string): Condition[] {
   try {
     const data = JSON.parse(fs.readFileSync(fullPath, "utf8"));
 
+    // Define the expected shape of a condition value
+    interface ConditionValue {
+      condition?: string;
+      keywords?: string[];
+    }
+
     // The dataset is an object with condition IDs as keys
     return Object.entries(data).map(([id, value]) => {
       // Extract condition name from the value object
@@ -170,11 +176,12 @@ function loadConditions(basePath: string): Condition[] {
       let keywords: string[] = [];
 
       if (typeof value === "object" && value !== null) {
-        if ("condition" in value) {
-          name = (value as { condition: string }).condition;
+        const condValue = value as ConditionValue;
+        if (typeof condValue.condition === "string") {
+          name = condValue.condition;
         }
-        if ("keywords" in value && Array.isArray((value as { keywords: string[] }).keywords)) {
-          keywords = (value as { keywords: string[] }).keywords;
+        if (Array.isArray(condValue.keywords)) {
+          keywords = condValue.keywords;
         }
       }
 
@@ -196,10 +203,14 @@ function loadConditions(basePath: string): Condition[] {
  * 2. exact normalized name match
  * 3. substring inclusion score
  * 4. similarity score fallback
+ * @param filename The infographic filename
+ * @param condition The condition to match against
+ * @param filenameTags Pre-extracted tags from filename (optional, for caching)
  */
 function computeMatchScoreForCondition(
   filename: string,
-  condition: Condition
+  condition: Condition,
+  filenameTags?: string[]
 ): number {
   const baseName = extractBaseName(filename);
   const normalizedFilename = normalizeForMatch(baseName);
@@ -224,11 +235,11 @@ function computeMatchScoreForCondition(
     }
   }
 
-  // Extract tags from filename
-  const filenameTags = [...extractTags(filename), ...parseBracketTags(filename)];
+  // Use pre-extracted tags or extract them
+  const tags = filenameTags ?? [...extractTags(filename), ...parseBracketTags(filename)];
 
   // Check if any tag matches the condition ID or name
-  for (const tag of filenameTags) {
+  for (const tag of tags) {
     const normalizedTag = normalizeForMatch(tag);
     if (normalizedTag === normalizedId || normalizedTag === normalizedName) {
       return 0.9;
@@ -287,11 +298,14 @@ function findBestMatch(
     };
   }
 
-  // Score all conditions
+  // Pre-extract tags once for reuse
+  const tags = [...extractTags(filename), ...parseBracketTags(filename)];
+
+  // Score all conditions with cached tags
   const candidates: MatchCandidate[] = conditions.map((condition) => ({
     conditionId: condition.id,
     conditionName: condition.name,
-    score: computeMatchScoreForCondition(filename, condition),
+    score: computeMatchScoreForCondition(filename, condition, tags),
   }));
 
   // Sort by score descending
@@ -335,9 +349,7 @@ function findBestMatch(
     }
   }
 
-  // Successful match - extract tags
-  const tags = [...extractTags(filename), ...parseBracketTags(filename)];
-
+  // Successful match - use already extracted tags
   return {
     link: {
       conditionId: best.conditionId,
@@ -467,7 +479,7 @@ export function runInfographicMatcher(): {
 }
 
 // Run if executed directly
-const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+const isMainModule = process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop() || '');
 if (isMainModule) {
   runInfographicMatcher();
 }

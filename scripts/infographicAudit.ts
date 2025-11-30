@@ -373,7 +373,7 @@ export function runInfographicAudit(): void {
 }
 
 // Run if executed directly
-const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+const isMainModule = process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop() || '');
 if (isMainModule) {
   runInfographicAudit();
 }
