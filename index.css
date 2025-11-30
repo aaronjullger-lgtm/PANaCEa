@@ -281,24 +281,32 @@
   padding-top: 24px;
 }
 
+/* Glass Card styling for condition sections - Modern Medical Glassmorphism */
 .condition-card {
-  background: var(--color-card-bg);
-  padding: 24px;
-  border-radius: 14px;
-  margin-bottom: 32px;
-  border: 1px solid var(--color-border);
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.05);
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 28px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  border: 1px solid var(--color-glass-border);
+  box-shadow: 0 8px 32px var(--color-glass-shadow);
   scroll-margin-top: 96px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .condition-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.dark .condition-card {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dark .condition-card:hover {
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .scroll-mt-24 {
@@ -306,16 +314,18 @@
 }
 
 .condition-section-title {
-  margin: 0 0 12px;
+  margin: 0 0 16px;
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
+/* Improved content readability with better line-height and spacing */
 .condition-content {
   font-size: 1.05rem;
-  line-height: 1.6;
+  line-height: 1.75;
   color: var(--color-text-secondary);
+  letter-spacing: 0.01em;
 }
 
 .condition-bullet-list {
@@ -343,15 +353,16 @@
   margin-left: 2.75rem;
 }
 
+/* Improved bullet item spacing for better scanning */
 .condition-bullet-item {
-  margin-bottom: 0.6rem;
-  line-height: 1.65;
+  margin-bottom: 0.75rem;
+  line-height: 1.75;
 }
 
 .condition-content-list,
 .condition-content-olist {
   list-style: disc;
-  margin: 0 0 0.85rem 1.5rem;
+  margin: 0 0 1rem 1.5rem;
   padding-left: 1.5rem;
 }
 
@@ -360,12 +371,12 @@
 }
 
 .condition-content-item {
-  margin-bottom: 0.35rem;
-  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  line-height: 1.75;
 }
 
 .condition-mnemonic-header {
-  margin: 12px 0 8px;
+  margin: 16px 0 10px;
   font-weight: 700;
   list-style: none;
   color: var(--color-text-primary);
@@ -480,33 +491,53 @@
   
   .condition-layout {
     flex-direction: column;
-    padding: 16px;
-    gap: 16px;
+    padding: 0;
+    gap: 0;
   }
   
+  /* Convert sidebar to sticky top horizontal nav on mobile */
   .condition-sidebar {
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 10;
     width: 100%;
     max-height: none;
-    padding: 12px;
+    padding: 12px 16px;
     flex-shrink: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    background: var(--color-bg-secondary);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .section-nav-header {
+    display: none;
   }
   
   .section-nav-list {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
   }
   
   .section-nav-button {
-    padding: 8px 12px;
+    padding: 8px 14px;
     font-size: 0.75rem;
     flex: 0 0 auto;
+    white-space: nowrap;
   }
   
   .condition-content-panel {
     flex: 1;
     min-height: 0;
+    width: 100%;
+    border-radius: 0;
+    border: none;
   }
   
   .condition-scrollable {

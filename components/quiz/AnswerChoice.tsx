@@ -23,6 +23,15 @@ interface AnswerChoiceProps {
 }
 
 /**
+ * Capitalize the first letter of a string.
+ * Used for answer choices to ensure consistent formatting.
+ */
+function capitalizeFirst(str: string): string {
+  if (!str || str.length === 0) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
  * AnswerChoice - A multiple choice answer button with elimination support.
  * 
  * Features:
@@ -30,6 +39,7 @@ interface AnswerChoiceProps {
  * - Click X icon to eliminate the answer (toggle)
  * - Visual states for selected, correct, incorrect, and eliminated
  * - Keyboard shortcut hint (1-4 to select, Shift+1-4 to eliminate)
+ * - Auto-capitalizes answer text for consistent display
  */
 const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
   (
@@ -57,6 +67,9 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
       if (isAnswered) return; // Can't eliminate after answering
       onToggleEliminate(index);
     };
+
+    // Capitalize the first letter of the answer text
+    const displayText = capitalizeFirst(text);
 
     // Base button classes
     let buttonClasses =
@@ -94,7 +107,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
         disabled={isAnswered}
         className={`${buttonClasses} ${animationClass}`}
         style={{ fontSize: `calc(1rem + ${fontSizeAdjustment * 0.1}rem)` }}
-        aria-label={`Option ${index + 1}: ${text}${isEliminated ? ' (eliminated)' : ''}`}
+        aria-label={`Option ${index + 1}: ${displayText}${isEliminated ? ' (eliminated)' : ''}`}
       >
         <span
           className={`flex items-center justify-between ${
@@ -103,7 +116,7 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
         >
           <span className="flex-1 pr-8">
             <span className="font-bold mr-2">{String.fromCharCode(65 + index)}.</span>
-            {text}
+            {displayText}
           </span>
 
           {/* X icon for elimination - only show before answering */}

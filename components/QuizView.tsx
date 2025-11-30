@@ -745,7 +745,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           <button
             ref={nextButtonRef}
             onClick={showNextQuestion}
-            className="px-8 py-3 btn-glass text-[var(--color-text-primary)] font-bold rounded-lg"
+            className="px-8 py-3 btn-glass font-bold rounded-lg"
           >
             Next Question
           </button>
