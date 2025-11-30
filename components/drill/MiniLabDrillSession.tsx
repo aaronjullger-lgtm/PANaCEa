@@ -1,60 +1,142 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePhotoDrill, type CategoryType } from '@/hooks/game/use-photo-drill';
+import { useMiniLabDrill, type LabCategory, type LabPanel, type LabValue } from '@/hooks/game/use-mini-lab-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity, Shuffle } from 'lucide-react';
+import { Flame, X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity, Shuffle, AlertTriangle } from 'lucide-react';
 
-interface PhotoDrillSessionProps {
-  /** Callback to navigate back to the menu */
+interface MiniLabDrillSessionProps {
   onExit?: () => void;
 }
 
 /** Category card data for the lobby */
 const CATEGORY_CARDS: Array<{
-  id: CategoryType;
+  id: LabCategory;
   title: string;
   description: string;
   icon: React.ReactNode;
   gradient: string;
 }> = [
   {
-    id: 'ecg',
-    title: 'ECG',
-    description: 'Electrocardiogram interpretation',
+    id: 'hematology',
+    title: 'Hematology',
+    description: 'CBC, iron studies, coagulation',
+    icon: <Droplets className="w-8 h-8" />,
+    gradient: 'from-red-600 to-rose-700',
+  },
+  {
+    id: 'metabolic',
+    title: 'Metabolic',
+    description: 'BMP, ABG, acid-base',
+    icon: <FlaskConical className="w-8 h-8" />,
+    gradient: 'from-amber-600 to-orange-700',
+  },
+  {
+    id: 'endocrine',
+    title: 'Endocrine',
+    description: 'Thyroid, adrenal, glucose',
     icon: <Activity className="w-8 h-8" />,
-    gradient: 'from-emerald-600 to-teal-700',
+    gradient: 'from-purple-600 to-violet-700',
   },
   {
-    id: 'derm',
-    title: 'Clinical Presentation Mode',
-    description: 'Dermatology & clinical findings identification',
-    icon: <Scan className="w-8 h-8" />,
-    gradient: 'from-violet-600 to-purple-700',
+    id: 'renal',
+    title: 'Renal',
+    description: 'Kidney function, electrolytes',
+    icon: <Droplets className="w-8 h-8" />,
+    gradient: 'from-cyan-600 to-teal-700',
   },
   {
-    id: 'radiology',
-    title: 'Radiology',
-    description: 'X-ray and imaging analysis',
-    icon: <FileImage className="w-8 h-8" />,
-    gradient: 'from-sky-600 to-blue-700',
+    id: 'hepatic',
+    title: 'Hepatic',
+    description: 'LFTs, bilirubin, coagulation',
+    icon: <FlaskConical className="w-8 h-8" />,
+    gradient: 'from-emerald-600 to-green-700',
+  },
+  {
+    id: 'cardiac',
+    title: 'Cardiac',
+    description: 'Troponin, BNP, lipids',
+    icon: <Heart className="w-8 h-8" />,
+    gradient: 'from-pink-600 to-red-700',
   },
   {
     id: 'random',
     title: 'Random Mix',
     description: 'All categories combined',
     icon: <Shuffle className="w-8 h-8" />,
-    gradient: 'from-orange-600 to-red-700',
+    gradient: 'from-slate-600 to-gray-700',
   },
 ];
 
 /**
- * PhotoDrillSession - Global Photo Mode UI
- * 
- * A full-screen immersive interface with two stages:
- * - Lobby: Category selection
- * - Drill: Infinite photo drill with smart type-ahead search
+ * LabValueRow - Renders a single lab value with styling
  */
-const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
+const LabValueRow: React.FC<{ value: LabValue }> = ({ value }) => {
+  const getValueColor = () => {
+    if (value.isCritical) {
+      return 'text-red-500 font-bold';
+    }
+    if (value.isAbnormal) {
+      return value.abnormalDirection === 'high' 
+        ? 'text-orange-500 font-semibold' 
+        : 'text-blue-500 font-semibold';
+    }
+    return 'text-slate-300';
+  };
+
+  const getValueBg = () => {
+    if (value.isCritical) {
+      return 'bg-red-900/30 border-red-700';
+    }
+    if (value.isAbnormal) {
+      return value.abnormalDirection === 'high'
+        ? 'bg-orange-900/20 border-orange-700/50'
+        : 'bg-blue-900/20 border-blue-700/50';
+    }
+    return 'bg-slate-800/50 border-slate-700/50';
+  };
+
+  return (
+    <div className={`flex items-center justify-between px-4 py-2.5 border-b ${getValueBg()} last:border-b-0`}>
+      <div className="flex items-center gap-2">
+        {value.isCritical && (
+          <AlertTriangle className="w-4 h-4 text-red-500" />
+        )}
+        <span className="text-slate-300 font-medium">{value.name}</span>
+      </div>
+      <div className="flex items-center gap-4">
+        <span className={`${getValueColor()} tabular-nums`}>
+          {value.value} {value.unit}
+        </span>
+        <span className="text-slate-500 text-sm tabular-nums min-w-[80px] text-right">
+          ({value.referenceRange})
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * LabPanelCard - Renders a complete lab panel
+ */
+const LabPanelCard: React.FC<{ panel: LabPanel }> = ({ panel }) => {
+  return (
+    <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
+      <div className="px-4 py-3 bg-slate-800 border-b border-slate-700">
+        <h3 className="text-white font-semibold">{panel.name}</h3>
+      </div>
+      <div>
+        {panel.values.map((value, index) => (
+          <LabValueRow key={`${value.name}-${index}`} value={value} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * MiniLabDrillSession - Lab interpretation training mode
+ */
+const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => {
   const {
     currentCase,
     score,
@@ -68,7 +150,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
     startSession,
     exitToMenu,
     validDiagnoses,
-  } = usePhotoDrill();
+  } = useMiniLabDrill();
 
   const handleExit = () => {
     exitToMenu();
@@ -77,40 +159,22 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
     }
   };
 
-  const handleCategorySelect = (category: CategoryType) => {
+  const handleCategorySelect = (category: LabCategory) => {
     startSession(category);
   };
 
-  const handleDiagnosisSubmit = (diagnosis: string) => {
-    submitAnswer(diagnosis);
-  };
-
-  const handleNextCase = () => {
-    nextCase();
-  };
-
-  const handleReset = () => {
-    reset();
-  };
-
   // Animation variants
-  const imageVariants = {
-    initial: { opacity: 0, scale: 0.95 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.95 },
+  const cardVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    hover: { scale: 1.02, y: -4 },
+    tap: { scale: 0.98 },
   };
 
   const feedbackVariants = {
     initial: { opacity: 0, y: 20 },
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 },
-  };
-
-  const cardVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    hover: { scale: 1.02, y: -4 },
-    tap: { scale: 0.98 },
   };
 
   // =========================================================================
@@ -129,28 +193,28 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
             <X className="w-5 h-5" />
             <span className="text-sm font-medium">Exit</span>
           </button>
-          <h1 className="text-lg font-semibold text-slate-200">Photo Drill</h1>
-          <div className="w-16" /> {/* Spacer for centering */}
+          <h1 className="text-lg font-semibold text-slate-200">Mini Lab Mode</h1>
+          <div className="w-16" />
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col items-center justify-center p-6">
+        <main className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-center mb-12"
+            className="text-center mb-8"
           >
             <h2 className="text-3xl font-bold text-slate-100 mb-2">
-              Select Your Training Module
+              Select Lab Category
             </h2>
             <p className="text-slate-400">
-              Choose a category to start your infinite drill session
+              Diagnose conditions from structured lab results
             </p>
           </motion.div>
 
           {/* Category Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl">
             {CATEGORY_CARDS.map((card, index) => (
               <motion.button
                 key={card.id}
@@ -159,18 +223,17 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
                 animate="animate"
                 whileHover="hover"
                 whileTap="tap"
-                transition={{ duration: 0.3, delay: index * 0.1 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
                 onClick={() => handleCategorySelect(card.id)}
-                className={`relative p-6 rounded-2xl bg-gradient-to-br ${card.gradient} text-left shadow-xl overflow-hidden group`}
+                className={`relative p-5 rounded-2xl bg-gradient-to-br ${card.gradient} text-left shadow-xl overflow-hidden group`}
               >
-                {/* Background glow effect */}
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 <div className="relative z-10">
-                  <div className="mb-4 p-3 bg-white/20 rounded-xl w-fit">
+                  <div className="mb-3 p-2.5 bg-white/20 rounded-xl w-fit">
                     {card.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-1">
+                  <h3 className="text-lg font-bold text-white mb-1">
                     {card.title}
                   </h3>
                   <p className="text-white/80 text-sm">
@@ -178,7 +241,6 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
                   </p>
                 </div>
 
-                {/* Arrow indicator */}
                 <ArrowRight className="absolute bottom-4 right-4 w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </motion.button>
             ))}
@@ -195,7 +257,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
     return (
       <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
         {/* Floating Header */}
-        <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
+        <header className="flex items-center justify-between px-4 py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
           <button
             onClick={handleExit}
             className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
@@ -206,12 +268,9 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
           </button>
 
           <div className="flex items-center gap-4">
-            {/* Score */}
             <div className="text-sm text-slate-400">
               Score: <span className="text-slate-200 font-semibold">{score}</span>
             </div>
-
-            {/* Streak Counter */}
             <div className="flex items-center gap-1.5">
               <Flame
                 className={`w-5 h-5 ${
@@ -229,36 +288,44 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
           </div>
         </header>
 
-        {/* Main Stage - Image takes up full available height */}
-        <main className="flex-1 flex items-center justify-center p-4 pt-16 pb-32">
-          <AnimatePresence mode="wait">
-            {currentCase && (
-              <motion.div
-                key={currentCase.id}
-                variants={imageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.3 }}
-                className="w-full max-w-3xl h-full flex items-center justify-center"
-              >
-                <div className="relative bg-slate-900 rounded-lg overflow-hidden shadow-2xl w-full">
-                  <img
-                    src={currentCase.imageUrl}
-                    alt={`Medical ${currentCase.modality.toUpperCase()} case`}
-                    className="w-full aspect-[3/2] object-contain"
-                  />
-                  {/* Modality Badge */}
-                  <div className="absolute top-3 left-3 px-2.5 py-1 bg-slate-800/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-slate-300">
-                    {currentCase.modality}
-                  </div>
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto p-4 pb-32">
+          {currentCase && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="max-w-4xl mx-auto space-y-4"
+            >
+              {/* Clinical Context */}
+              <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
+                <div className="flex items-center gap-4 mb-3">
+                  <span className="px-2.5 py-1 bg-slate-800 rounded-lg text-xs font-semibold text-slate-300">
+                    {currentCase.patientAge}yo {currentCase.patientSex === 'M' ? 'Male' : 'Female'}
+                  </span>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <p className="text-slate-200 leading-relaxed">
+                  {currentCase.clinicalContext}
+                </p>
+              </div>
+
+              {/* Lab Panels */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {currentCase.panels.map((panel, index) => (
+                  <motion.div
+                    key={`${panel.name}-${index}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <LabPanelCard panel={panel} />
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </main>
 
-        {/* Fixed Bottom Bar with DiagnosisInput */}
+        {/* Fixed Bottom Bar */}
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800">
           <AnimatePresence mode="wait">
             {status === 'playing' && (
@@ -272,8 +339,11 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
                 className="p-4"
               >
                 <div className="max-w-2xl mx-auto">
+                  <p className="text-sm text-slate-400 mb-2 text-center">
+                    What is your diagnosis?
+                  </p>
                   <DiagnosisInput
-                    onSubmit={handleDiagnosisSubmit}
+                    onSubmit={submitAnswer}
                     autoFocus
                     options={validDiagnoses}
                   />
@@ -295,8 +365,8 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
                     : 'bg-red-950/50 border-t-2 border-red-500'
                 }`}
               >
-                <div className="max-w-2xl mx-auto">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="max-w-4xl mx-auto">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
                       <div
                         className={`text-lg font-bold ${
@@ -320,7 +390,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
                       )}
                     </div>
                     <button
-                      onClick={handleNextCase}
+                      onClick={nextCase}
                       className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
                         isCorrect
                           ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
@@ -332,8 +402,21 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
                     </button>
                   </div>
 
+                  {/* Key Findings */}
+                  <div className="text-sm bg-slate-900/50 rounded-lg p-4 mb-3">
+                    <h4 className="font-semibold text-slate-200 mb-2">Key Findings:</h4>
+                    <ul className="space-y-1">
+                      {currentCase.keyFindings.map((finding, idx) => (
+                        <li key={idx} className="text-slate-400 flex items-start gap-2">
+                          <span className="text-emerald-500 mt-1">•</span>
+                          <span>{finding}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
                   {/* Explanation */}
-                  <div className="text-sm text-slate-400 bg-slate-900/50 rounded-lg p-3 mt-2">
+                  <div className="text-sm text-slate-400 bg-slate-900/50 rounded-lg p-3">
                     <span className="font-medium text-slate-300">
                       Explanation:{' '}
                     </span>
@@ -364,7 +447,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
             Session Complete
           </h2>
           <p className="text-slate-400 mb-6">
-            Great work on your training session!
+            Great work on your lab interpretation training!
           </p>
 
           <div className="flex justify-center gap-8 mb-8">
@@ -378,8 +461,8 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
 
           <div className="flex flex-col gap-3">
             <button
-              onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-sky-600 hover:bg-sky-500 text-white rounded-lg font-medium transition-colors"
+              onClick={reset}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               Start New Session
@@ -396,7 +479,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
     );
   }
 
-  // Fallback for legacy 'active' status (backwards compatibility)
+  // Fallback
   return (
     <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex items-center justify-center">
       <div className="text-center">
@@ -412,4 +495,4 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
   );
 };
 
-export default PhotoDrillSession;
+export default MiniLabDrillSession;

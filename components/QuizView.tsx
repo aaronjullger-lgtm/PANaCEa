@@ -153,7 +153,7 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
       <div
         ref={containerRef}
         id="question-container"
-        className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap"
+        className="text-xl md:text-2xl font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
         style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
       >
         {normalizedText}
@@ -164,11 +164,12 @@ const QuestionDisplay: React.FC<{ text: string }> = ({ text }) => {
   const lastSentence = lastSentenceMatch[0].trim();
   const vignette = normalizedText.replace(lastSentenceMatch[0], "").trim();
 
+  // Add visual enhancement (shadowed block/border) around question text for better focus
   return (
     <div
       ref={containerRef}
       id="question-container"
-      className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)]"
+      className="text-xl md:text-2xl leading-relaxed text-[var(--color-text-primary)] bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl p-6 shadow-sm"
       style={{ fontSize: `calc(1em + var(--font-size-adj))` }}
     >
       <p className="whitespace-pre-wrap">{vignette}</p>

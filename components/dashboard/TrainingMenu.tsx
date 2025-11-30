@@ -117,6 +117,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       blue: 'bg-blue-100',
       teal: 'bg-teal-100',
       red: 'bg-red-100',
+      emerald: 'bg-emerald-100',
     };
     return themeMap[theme] || 'bg-gray-100';
   };
@@ -231,6 +232,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           overlay: 'before:absolute before:inset-0 before:bg-[url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Cpath d=\'M10 50 Q25 30 40 50 T70 50 T100 50\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'0.5\' opacity=\'0.3\'/%3E%3Cpath d=\'M10 60 Q25 40 40 60 T70 60 T100 60\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'0.5\' opacity=\'0.2\'/%3E%3C/svg%3E")] before:opacity-30 before:rounded-2xl',
           iconBg: 'bg-white/80',
         };
+      case 'mini_lab':
+        return {
+          background: 'bg-gradient-to-br from-emerald-50 to-emerald-100',
+          border: 'border-emerald-200',
+          iconBg: 'bg-white/80',
+        };
       case 'rapid_recall':
         return {
           background: 'bg-gradient-to-br from-amber-50 to-amber-100',
@@ -273,6 +280,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         return 'ECG rhythms, derm lesions, and imaging findings. Train your visual diagnosis.';
       case 'rapid_recall':
         return 'Lightning-fast buzzwords and flashcard drills.';
+      case 'mini_lab':
+        return 'Interpret lab panels and make the diagnosis.';
       default:
         return mode.description;
     }
@@ -307,7 +316,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         `}
       >
         {isDisabled && (
-          <span className="absolute top-2 right-2 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-bg-tertiary)] px-2 py-0.5 rounded-full z-10">
+          <span className="absolute top-2 right-2 text-xs font-medium text-slate-500 bg-white/80 px-2 py-0.5 rounded-full z-10">
             Coming Soon
           </span>
         )}
@@ -322,16 +331,17 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         
         <div className="flex flex-col gap-3 relative z-[1]">
           <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shadow-sm`}>
-            <IconComponent className={`w-5 h-5 ${isStreakMode && streakHighScore > 0 ? 'text-orange-600' : 'text-[var(--color-text-secondary)]'}`} />
+            <IconComponent className={`w-5 h-5 ${isStreakMode && streakHighScore > 0 ? 'text-orange-600' : 'text-slate-600'}`} />
           </div>
           <div>
-            <h3 className="font-semibold text-[var(--color-text-primary)] text-base flex items-center gap-2">
+            {/* Use dark text colors on light tile backgrounds for readability in dark mode */}
+            <h3 className="font-semibold text-slate-800 text-base flex items-center gap-2">
               {mode.label}
               {isStreakMode && streakHighScore > 0 && (
                 <Flame className="w-4 h-4 text-orange-500" />
               )}
             </h3>
-            <p className="text-sm text-[var(--color-text-secondary)] mt-1 line-clamp-2">{getDrillDescription(mode)}</p>
+            <p className="text-sm text-slate-600 mt-1 line-clamp-2">{getDrillDescription(mode)}</p>
           </div>
         </div>
       </button>

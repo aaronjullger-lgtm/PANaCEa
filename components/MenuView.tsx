@@ -1,6 +1,6 @@
 // src/components/MenuView.tsx
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type {
   PerformanceRecord,
@@ -70,6 +70,19 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(
     null
   );
+
+  // Prevent scrolling when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isModalOpen]);
 
   const stats = useMemo(() => {
     // Overall score = last 360 questions (any mode) as before
