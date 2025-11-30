@@ -17,7 +17,10 @@ import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
 import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
 import type { ConditionMeta } from "../conditionRegistry";
 import ConditionDetailModal from "./ConditionDetailModal";
+import DrugDetailModal from "./DrugDetailModal";
 import { findConditionMetaById, searchConditions } from "../src/lib/conditionSearch";
+import { searchDrugs, findDrugByName } from "../src/lib/drugSearch";
+import type { DrugEntry, DrugSearchResult } from "../pharm/drugTypes";
 
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
@@ -70,6 +73,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [selectedCondition, setSelectedCondition] = useState<ConditionMeta | null>(
     null
   );
+  const [selectedDrug, setSelectedDrug] = useState<DrugEntry | null>(null);
 
   // Prevent scrolling when modal is open
   useEffect(() => {
@@ -164,13 +168,18 @@ const MenuView: React.FC<MenuViewProps> = ({
     });
   };
 
-  const searchResults = useMemo(
+  // Combined search results for conditions and drugs
+  const { conditionResults, drugResults } = useMemo(
     () => {
-      const results = searchConditions(searchQuery);
-      return results;
+      const conditions = searchConditions(searchQuery);
+      const drugs = searchDrugs(searchQuery);
+      return { conditionResults: conditions, drugResults: drugs };
     },
     [searchQuery]
   );
+
+  // Check if we have any search results
+  const hasSearchResults = conditionResults.length > 0 || drugResults.length > 0;
 
   return (
     <>
@@ -265,6 +274,13 @@ const MenuView: React.FC<MenuViewProps> = ({
         />
       )}
 
+      {selectedDrug && (
+        <DrugDetailModal
+          drug={selectedDrug}
+          onClose={() => setSelectedDrug(null)}
+        />
+      )}
+
       <div className="flex flex-col max-w-5xl mx-auto px-4">
         <motion.h1 
           initial={{ opacity: 0, y: -10 }}
@@ -274,7 +290,7 @@ const MenuView: React.FC<MenuViewProps> = ({
           PANaCEa
         </motion.h1>
 
-        {/* Condition search */}
+        {/* Unified search for conditions and drugs */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -286,41 +302,85 @@ const MenuView: React.FC<MenuViewProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search conditions (e.g., ACS, Diverticulitis, DKA)..."
+              placeholder="Search conditions or medications (e.g., ACS, Fluoxetine, DKA, Metoprolol)..."
               className="w-full px-4 py-3 border border-[var(--color-border)] bg-[var(--color-input-bg)] text-[var(--color-text-primary)] rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:border-[var(--color-accent)] transition-all placeholder:text-[var(--color-text-muted)]"
             />
           </div>
           <AnimatePresence>
-            {searchResults.length > 0 && (
+            {hasSearchResults && (
               <motion.div 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute z-30 mt-2 w-full bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-xl shadow-lg max-h-64 overflow-y-auto"
+                className="absolute z-30 mt-2 w-full bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-xl shadow-lg max-h-80 overflow-y-auto"
               >
-                {searchResults.map((result) => (
-                  <button
-                    key={result.id}
-                    type="button"
-                    onClick={() => {
-                      const meta = findConditionMetaById(result.id);
-                      if (meta) {
-                        setSelectedCondition(meta);
-                      }
-                      setSearchQuery("");
-                    }}
-                    className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors"
-                  >
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-semibold text-[var(--color-text-primary)]">
-                        {result.condition}
-                      </span>
-                      <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
-                        {result.system} • {result.subcategory}
+                {/* Conditions section */}
+                {conditionResults.length > 0 && (
+                  <>
+                    <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
+                        Conditions
                       </span>
                     </div>
-                  </button>
-                ))}
+                    {conditionResults.slice(0, 10).map((result) => (
+                      <button
+                        key={result.id}
+                        type="button"
+                        onClick={() => {
+                          const meta = findConditionMetaById(result.id);
+                          if (meta) {
+                            setSelectedCondition(meta);
+                          }
+                          setSearchQuery("");
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
+                      >
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-semibold text-[var(--color-text-primary)]">
+                            {result.condition}
+                          </span>
+                          <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                            {result.system} • {result.subcategory}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
+                
+                {/* Drugs/Pharmacology section */}
+                {drugResults.length > 0 && (
+                  <>
+                    <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                        💊 Pharmacology
+                      </span>
+                    </div>
+                    {drugResults.slice(0, 10).map((result) => (
+                      <button
+                        key={result.id}
+                        type="button"
+                        onClick={() => {
+                          const drug = findDrugByName(result.drugName);
+                          if (drug) {
+                            setSelectedDrug(drug);
+                          }
+                          setSearchQuery("");
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
+                      >
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-semibold text-[var(--color-text-primary)]">
+                            {result.drugName}
+                          </span>
+                          <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                            {result.drugClass}{result.subclass ? ` • ${result.subclass}` : ""}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
