@@ -163,11 +163,12 @@ describe('Training Modes Configuration', () => {
       expect(masteryDrill?.category).toBe('mastery');
     });
 
-    it('should have pharmacology modes marked as coming soon', () => {
+    it('should have pharmacology modes available (not coming soon)', () => {
       const firstLine = MODE_REGISTRY.find((m) => m.id === 'first_line_treatment');
       const pharm = MODE_REGISTRY.find((m) => m.id === 'pharmacology');
-      expect(firstLine?.isComingSoon).toBe(true);
-      expect(pharm?.isComingSoon).toBe(true);
+      // Pharmacology modes are now implemented and available
+      expect(firstLine?.isComingSoon).toBeFalsy();
+      expect(pharm?.isComingSoon).toBeFalsy();
     });
   });
 });

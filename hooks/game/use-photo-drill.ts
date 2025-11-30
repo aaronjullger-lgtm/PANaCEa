@@ -5,6 +5,25 @@ import { useState, useCallback, useMemo, useRef } from 'react';
 // ============================================================================
 
 /**
+ * Clinical context for the "Clinical Presentation Mode" (formerly DERM).
+ * Provides initial clues before revealing visual media.
+ */
+export interface ClinicalContext {
+  /** Patient age */
+  age: number;
+  /** Patient sex */
+  sex: 'M' | 'F';
+  /** Chief complaint that brought the patient in */
+  chiefComplaint: string;
+  /** Key vital signs (formatted string) */
+  vitals: string;
+  /** Brief history */
+  history: string;
+  /** Optional additional clues */
+  additionalFindings?: string[];
+}
+
+/**
  * Represents a single photo case in the drill.
  */
 export interface PhotoCase {
@@ -20,6 +39,8 @@ export interface PhotoCase {
   distractors: string[];
   /** Explanation shown after answering */
   explanation: string;
+  /** Clinical context for Clinical Presentation Mode (optional, used for derm cases) */
+  clinicalContext?: ClinicalContext;
 }
 
 /**
@@ -121,6 +142,107 @@ const RADIOLOGY_CONDITIONS = [
 ];
 
 // ============================================================================
+// CLINICAL CONTEXT FOR CLINICAL PRESENTATION MODE
+// ============================================================================
+
+/**
+ * Clinical context templates for each derm condition.
+ * Used to generate realistic "patient chart" presentations.
+ */
+const DERM_CLINICAL_CONTEXTS: Record<string, Omit<ClinicalContext, 'age' | 'sex'> & { ageRange: [number, number] }> = {
+  'Psoriasis': {
+    ageRange: [20, 60],
+    chiefComplaint: 'Itchy, scaly patches on elbows and knees for 3 months',
+    vitals: 'BP 128/82, HR 76, Temp 98.4°F, RR 16',
+    history: 'Patient reports intermittent flares, worse in winter. Family history of autoimmune disease.',
+    additionalFindings: ['Nail pitting noted', 'No joint pain or swelling'],
+  },
+  'Eczema': {
+    ageRange: [5, 40],
+    chiefComplaint: 'Intensely itchy, red patches in flexural areas',
+    vitals: 'BP 118/76, HR 82, Temp 98.2°F, RR 14',
+    history: 'History of asthma and seasonal allergies. Symptoms worsen with stress and dry weather.',
+    additionalFindings: ['Dry, lichenified skin', 'Excoriations from scratching'],
+  },
+  'Shingles': {
+    ageRange: [50, 85],
+    chiefComplaint: 'Painful, burning rash on one side of trunk for 5 days',
+    vitals: 'BP 142/88, HR 88, Temp 99.8°F, RR 18',
+    history: 'Pain preceded the rash by 2-3 days. History of childhood chickenpox. No recent immunosuppression.',
+    additionalFindings: ['Rash follows dermatome', 'Allodynia in affected area'],
+  },
+  'Contact Dermatitis': {
+    ageRange: [18, 65],
+    chiefComplaint: 'Itchy, blistering rash after gardening 48 hours ago',
+    vitals: 'BP 120/78, HR 72, Temp 98.6°F, RR 14',
+    history: 'Was working in yard without gloves. Similar reaction to poison ivy 2 years ago.',
+    additionalFindings: ['Linear pattern of vesicles', 'Sharp demarcation at clothing line'],
+  },
+  'Cellulitis': {
+    ageRange: [30, 75],
+    chiefComplaint: 'Rapidly spreading red, warm, swollen area on lower leg',
+    vitals: 'BP 132/86, HR 98, Temp 101.2°F, RR 18',
+    history: 'Noticed small cut on leg 4 days ago. Diabetes with A1c of 8.2%. No recent hospitalization.',
+    additionalFindings: ['Tenderness to palpation', 'No fluctuance or drainage'],
+  },
+  'Melanoma': {
+    ageRange: [35, 70],
+    chiefComplaint: 'Changing mole on back noticed by spouse',
+    vitals: 'BP 124/80, HR 70, Temp 98.4°F, RR 14',
+    history: 'Mole has been present for years but recently changed color and became asymmetric. History of blistering sunburns.',
+    additionalFindings: ['Irregular borders', 'Multiple colors within lesion', 'Greater than 6mm diameter'],
+  },
+  'Basal Cell Carcinoma': {
+    ageRange: [55, 80],
+    chiefComplaint: 'Non-healing sore on nose for 6 months',
+    vitals: 'BP 138/84, HR 68, Temp 98.2°F, RR 14',
+    history: 'Outdoor occupation for 30 years. Fair skin with history of frequent sunburns.',
+    additionalFindings: ['Pearly, translucent appearance', 'Central ulceration', 'Telangiectasias visible'],
+  },
+  'Impetigo': {
+    ageRange: [2, 12],
+    chiefComplaint: 'Honey-colored crusted lesions around mouth and nose',
+    vitals: 'BP 90/60, HR 95, Temp 99.4°F, RR 20',
+    history: 'Lesions started as small blisters 4 days ago. Attends daycare. Several classmates have similar symptoms.',
+    additionalFindings: ['Easily rupturing vesicles', 'Satellite lesions spreading'],
+  },
+};
+
+/**
+ * Generate clinical context for a derm case
+ */
+function generateClinicalContext(diagnosis: string): ClinicalContext {
+  const template = DERM_CLINICAL_CONTEXTS[diagnosis];
+  
+  if (!template) {
+    // Fallback for conditions without specific templates
+    return {
+      age: 45,
+      sex: Math.random() > 0.5 ? 'M' : 'F',
+      chiefComplaint: 'Skin lesion requiring evaluation',
+      vitals: 'BP 120/80, HR 72, Temp 98.6°F, RR 14',
+      history: 'Patient presents for dermatological evaluation.',
+    };
+  }
+  
+  // Generate random age within range
+  const [minAge, maxAge] = template.ageRange;
+  const age = Math.floor(Math.random() * (maxAge - minAge + 1)) + minAge;
+  
+  // Random sex
+  const sex: 'M' | 'F' = Math.random() > 0.5 ? 'M' : 'F';
+  
+  return {
+    age,
+    sex,
+    chiefComplaint: template.chiefComplaint,
+    vitals: template.vitals,
+    history: template.history,
+    additionalFindings: template.additionalFindings,
+  };
+}
+
+// ============================================================================
 // HELPER: generateRandomCase
 // ============================================================================
 
@@ -203,6 +325,11 @@ export function generateRandomCase(
   const explanation =
     options?.educationalCaption ?? 'Key features support this diagnosis.';
 
+  // Generate clinical context for derm cases (Clinical Presentation Mode)
+  const clinicalContext = modality === 'derm' 
+    ? generateClinicalContext(diagnosis) 
+    : undefined;
+
   return {
     id,
     imageUrl,
@@ -210,6 +337,7 @@ export function generateRandomCase(
     correctDiagnosis: diagnosis,
     distractors,
     explanation,
+    clinicalContext,
   };
 }
 

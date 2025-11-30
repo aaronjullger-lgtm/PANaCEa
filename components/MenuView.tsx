@@ -168,12 +168,29 @@ const MenuView: React.FC<MenuViewProps> = ({
     });
   };
 
-  // Combined search results for conditions and drugs
-  const { conditionResults, drugResults } = useMemo(
+  // Combined search results for conditions and drugs with weighted ordering
+  // If a drug name closely matches the query, it should appear first (before conditions)
+  const { conditionResults, drugResults, drugsFirst } = useMemo(
     () => {
       const conditions = searchConditions(searchQuery);
       const drugs = searchDrugs(searchQuery);
-      return { conditionResults: conditions, drugResults: drugs };
+      
+      // Determine if drugs should be shown first based on weighted matching
+      // If any drug has a high score (exact or starts-with match on drug name), prioritize drugs
+      const normalizedQuery = searchQuery.trim().toLowerCase();
+      const hasDrugNameMatch = drugs.some(drug => {
+        const drugNameLower = drug.drugName.toLowerCase();
+        // Exact match or starts-with match on drug name = high priority
+        return drugNameLower === normalizedQuery || 
+               drugNameLower.startsWith(normalizedQuery) ||
+               drug.score >= 2.5; // Score >= 2.5 indicates exact or starts-with match
+      });
+      
+      return { 
+        conditionResults: conditions, 
+        drugResults: drugs,
+        drugsFirst: hasDrugNameMatch
+      };
     },
     [searchQuery]
   );
@@ -314,6 +331,40 @@ const MenuView: React.FC<MenuViewProps> = ({
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute z-30 mt-2 w-full bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-xl shadow-lg max-h-80 overflow-y-auto"
               >
+                {/* Weighted Search: Show Drugs first if query matches a drug name */}
+                {drugsFirst && drugResults.length > 0 && (
+                  <>
+                    <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                        💊 Pharmacology
+                      </span>
+                    </div>
+                    {drugResults.slice(0, 10).map((result) => (
+                      <button
+                        key={result.id}
+                        type="button"
+                        onClick={() => {
+                          const drug = findDrugByName(result.drugName);
+                          if (drug) {
+                            setSelectedDrug(drug);
+                          }
+                          setSearchQuery("");
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
+                      >
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-semibold text-[var(--color-text-primary)]">
+                            {result.drugName}
+                          </span>
+                          <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                            {result.drugClass}{result.subclass ? ` • ${result.subclass}` : ""}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
+
                 {/* Conditions section */}
                 {conditionResults.length > 0 && (
                   <>
@@ -348,8 +399,8 @@ const MenuView: React.FC<MenuViewProps> = ({
                   </>
                 )}
                 
-                {/* Drugs/Pharmacology section */}
-                {drugResults.length > 0 && (
+                {/* Drugs/Pharmacology section (shown after conditions if not drugsFirst) */}
+                {!drugsFirst && drugResults.length > 0 && (
                   <>
                     <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
                       <span className="text-xs font-semibold uppercase tracking-wide text-green-600">

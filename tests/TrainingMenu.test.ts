@@ -116,8 +116,8 @@ describe('TrainingMenu Component Logic', () => {
       const comingSoonModes = MODE_REGISTRY.filter((mode) => mode.isComingSoon === true);
       const availableModes = MODE_REGISTRY.filter((mode) => !mode.isComingSoon);
       
-      // Some modes are marked as coming soon (condition_drill, first_line_treatment, pharmacology)
-      expect(comingSoonModes.length).toBeGreaterThan(0);
+      // Currently all modes are implemented and available
+      // This test ensures the filtering logic works correctly
       expect(availableModes.length + comingSoonModes.length).toBe(MODE_REGISTRY.length);
     });
 
