@@ -83,3 +83,26 @@ export interface ConditionDefinition {
   /** Leaf-level condition name, e.g. "STEMI", "Pulmonary Embolism" */
   condition: string;
 }
+
+/** Dashboard stat widget IDs */
+export type DashboardStatId = 
+  | 'overallScore'
+  | 'totalQuestions'
+  | 'currentStreak'
+  | 'bestStreak'
+  | 'recentTrend'
+  | 'studyDays'
+  | 'avgQuestionsPerDay'
+  | 'todayProgress'
+  | 'weekProgress';
+
+/** Dashboard settings for customizable stats display */
+export interface DashboardSettings {
+  /** Which stat widgets to show on the main dashboard */
+  visibleStats: DashboardStatId[];
+}
+
+/** Default dashboard settings */
+export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
+  visibleStats: ['overallScore', 'totalQuestions', 'currentStreak', 'bestStreak'],
+};

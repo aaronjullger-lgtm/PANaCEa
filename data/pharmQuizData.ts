@@ -7,6 +7,7 @@
 
 import drugData from '@/pharm/drugData.json';
 import type { DrugEntry } from '@/pharm/drugTypes';
+import { capitalizeFirstLetter, capitalizeOptions } from '@/lib/textUtils';
 
 // Type assertion for the drug database
 const DRUG_DATABASE = drugData as Record<string, DrugEntry>;
@@ -133,8 +134,8 @@ function generateMechanismQuestion(drug: DrugEntry): PharmQuestion {
     ...distractors.map(d => d.MOA.split('.')[0] + '.')
   ];
   
-  const shuffledOptions = options.sort(() => Math.random() - 0.5);
-  const correctIndex = shuffledOptions.indexOf(options[0]);
+  const shuffledOptions = capitalizeOptions(options.sort(() => Math.random() - 0.5));
+  const correctIndex = shuffledOptions.indexOf(capitalizeFirstLetter(options[0]));
   
   return {
     id: `pharm-moa-${drug.term}-${Date.now()}`,
@@ -157,12 +158,12 @@ function generateSideEffectQuestion(drug: DrugEntry): PharmQuestion {
     return generateMechanismQuestion(drug); // Fallback
   }
   
-  const correctADE = drug.ADEs[Math.floor(Math.random() * drug.ADEs.length)];
+  const correctADE = capitalizeFirstLetter(drug.ADEs[Math.floor(Math.random() * drug.ADEs.length)]);
   const distractors = getSimilarDrugs(drug, 3);
   
   const options = [
     correctADE,
-    ...distractors.flatMap(d => d.ADEs || []).slice(0, 3)
+    ...distractors.flatMap(d => d.ADEs || []).map(capitalizeFirstLetter).slice(0, 3)
   ].slice(0, 4);
   
   // Ensure we have 4 options
@@ -194,12 +195,12 @@ function generateContraindicationQuestion(drug: DrugEntry): PharmQuestion {
     return generateSideEffectQuestion(drug); // Fallback
   }
   
-  const correctContra = drug.contraindications[Math.floor(Math.random() * drug.contraindications.length)];
+  const correctContra = capitalizeFirstLetter(drug.contraindications[Math.floor(Math.random() * drug.contraindications.length)]);
   const distractors = getRandomDrugs(3, [drug.term]);
   
   const options = [
     correctContra,
-    ...distractors.flatMap(d => d.contraindications || []).slice(0, 3)
+    ...distractors.flatMap(d => d.contraindications || []).map(capitalizeFirstLetter).slice(0, 3)
   ].slice(0, 4);
   
   while (options.length < 4) {
@@ -229,9 +230,10 @@ function generateDrugClassQuestion(drug: DrugEntry): PharmQuestion {
   const allClasses = [...new Set(Object.values(DRUG_DATABASE).map(d => d.class).filter(Boolean))];
   const distractorClasses = allClasses.filter(c => c !== drug.class).sort(() => Math.random() - 0.5).slice(0, 3);
   
-  const options = [drug.class, ...distractorClasses];
+  const options = capitalizeOptions([drug.class, ...distractorClasses]);
+  const capitalizedClass = capitalizeFirstLetter(drug.class);
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
-  const correctIndex = shuffledOptions.indexOf(drug.class);
+  const correctIndex = shuffledOptions.indexOf(capitalizedClass);
   
   return {
     id: `pharm-class-${drug.term}-${Date.now()}`,
@@ -270,10 +272,11 @@ function generateAntidoteQuestion(drug: DrugEntry): PharmQuestion {
   ].filter(a => a !== drug.antidote);
   
   const distractors = commonAntidotes.sort(() => Math.random() - 0.5).slice(0, 3);
-  const options = [drug.antidote.split('.')[0], ...distractors];
+  const correctAntidote = capitalizeFirstLetter(drug.antidote.split('.')[0]);
+  const options = [correctAntidote, ...distractors.map(capitalizeFirstLetter)];
   
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
-  const correctIndex = shuffledOptions.indexOf(drug.antidote.split('.')[0]);
+  const correctIndex = shuffledOptions.indexOf(correctAntidote);
   
   return {
     id: `pharm-antidote-${drug.term}-${Date.now()}`,
@@ -300,9 +303,9 @@ function generateInteractionQuestion(drug: DrugEntry): PharmQuestion {
   const interactionText = typeof interaction === 'string' ? interaction : interaction.drug || '';
   
   // Extract the interacting drug name
-  const interactingDrug = interactionText.split(':')[0].split('(')[0].trim();
+  const interactingDrug = capitalizeFirstLetter(interactionText.split(':')[0].split('(')[0].trim());
   
-  const distractorDrugs = getRandomDrugs(3, [drug.term]).map(d => d.term);
+  const distractorDrugs = getRandomDrugs(3, [drug.term]).map(d => capitalizeFirstLetter(d.term));
   const options = [interactingDrug, ...distractorDrugs].slice(0, 4);
   
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
@@ -330,12 +333,12 @@ function generateClinicalUseQuestion(drug: DrugEntry): PharmQuestion {
   }
   
   // Extract key clinical uses from notes
-  const clinicalUse = drug.clinicalNotes.split('.')[0] + '.';
+  const clinicalUse = capitalizeFirstLetter(drug.clinicalNotes.split('.')[0] + '.');
   const distractors = getRandomDrugs(3, [drug.term]);
   
   const options = [
     clinicalUse,
-    ...distractors.map(d => d.clinicalNotes?.split('.')[0] + '.' || 'Used for various conditions')
+    ...distractors.map(d => capitalizeFirstLetter(d.clinicalNotes?.split('.')[0] + '.' || 'Used for various conditions'))
   ].slice(0, 4);
   
   const shuffledOptions = options.sort(() => Math.random() - 0.5);

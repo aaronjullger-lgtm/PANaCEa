@@ -21,12 +21,15 @@ import type {
   PerformanceRecord,
   SessionSettings,
   SystemCode,
+  DashboardSettings,
 } from "./types";
+import { DEFAULT_DASHBOARD_SETTINGS } from "./types";
 import type { TrainingModeId } from "./config/training-modes";
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
 const FLAGGED_KEY = "panceai_flagged_v2";
+const DASHBOARD_SETTINGS_KEY = "panceai_dashboard_settings";
 
 /** Drill mode IDs that have dedicated view implementations */
 const DRILL_MODE_PHOTO: TrainingModeId = 'photo_drill';
@@ -90,6 +93,9 @@ const App: React.FC = () => {
   const [flaggedQuestions, setFlaggedQuestions] = useState<Question[]>(() =>
     safeParse<Question[]>(window.localStorage.getItem(FLAGGED_KEY), [])
   );
+  const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(() =>
+    safeParse<DashboardSettings>(window.localStorage.getItem(DASHBOARD_SETTINGS_KEY), DEFAULT_DASHBOARD_SETTINGS)
+  );
 
   const [fontSizeAdjustment, setFontSizeAdjustment] = useState<number>(0);
 
@@ -111,6 +117,10 @@ const App: React.FC = () => {
   useEffect(() => {
     window.localStorage.setItem(FLAGGED_KEY, JSON.stringify(flaggedQuestions));
   }, [flaggedQuestions]);
+
+  useEffect(() => {
+    window.localStorage.setItem(DASHBOARD_SETTINGS_KEY, JSON.stringify(dashboardSettings));
+  }, [dashboardSettings]);
 
   // ---- derived: “growth areas” and heatmap data ----
   // Heatmap must ONLY use PANCE-level all-topics sessions
@@ -341,8 +351,8 @@ const App: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span 
-              className="text-xl font-semibold text-[var(--color-accent)] tracking-tight"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              className="text-xl font-semibold text-[var(--color-accent)] tracking-wide"
+              style={{ fontFamily: "'Cormorant Garamond', 'Playfair Display', Georgia, serif", fontWeight: 600, letterSpacing: '0.02em' }}
             >
               PANaCEa
             </span>
@@ -370,6 +380,8 @@ const App: React.FC = () => {
         clearFlaggedQuestionsData={clearFlaggedQuestionsData}
         missedQuestionsCount={missedQuestions.length}
         flaggedQuestionsCount={flaggedQuestions.length}
+        dashboardSettings={dashboardSettings}
+        onUpdateDashboardSettings={setDashboardSettings}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-6 md:py-10">

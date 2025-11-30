@@ -16,10 +16,28 @@ import {
   Clock,
   Zap,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  LayoutDashboard,
+  Eye,
+  EyeOff,
+  GripVertical
 } from 'lucide-react';
-import type { PerformanceRecord, SystemCode } from '@/types';
+import type { PerformanceRecord, SystemCode, DashboardStatId, DashboardSettings } from '@/types';
+import { DEFAULT_DASHBOARD_SETTINGS } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+
+/** Available dashboard stat options with metadata */
+const DASHBOARD_STAT_OPTIONS: Array<{ id: DashboardStatId; label: string; description: string; icon: React.ReactNode }> = [
+  { id: 'overallScore', label: 'Overall Score', description: 'Your overall accuracy percentage', icon: <Target className="w-4 h-4" /> },
+  { id: 'totalQuestions', label: 'Total Questions', description: 'Total questions answered', icon: <BarChart3 className="w-4 h-4" /> },
+  { id: 'currentStreak', label: 'Current Streak', description: 'Your current correct answer streak', icon: <Zap className="w-4 h-4" /> },
+  { id: 'bestStreak', label: 'Best Streak', description: 'Your highest correct answer streak', icon: <Award className="w-4 h-4" /> },
+  { id: 'recentTrend', label: 'Recent Trend', description: 'Performance trend vs previous sessions', icon: <TrendingUp className="w-4 h-4" /> },
+  { id: 'studyDays', label: 'Study Days', description: 'Number of days studied', icon: <Calendar className="w-4 h-4" /> },
+  { id: 'avgQuestionsPerDay', label: 'Avg Questions/Day', description: 'Average questions per study day', icon: <Clock className="w-4 h-4" /> },
+  { id: 'todayProgress', label: "Today's Progress", description: "Today's correct/total questions", icon: <Clock className="w-4 h-4" /> },
+  { id: 'weekProgress', label: 'Week Progress', description: "This week's correct/total questions", icon: <Calendar className="w-4 h-4" /> },
+];
 
 interface SettingsStatsModalProps {
   isOpen: boolean;
@@ -32,9 +50,11 @@ interface SettingsStatsModalProps {
   flaggedQuestionsCount: number;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
+  dashboardSettings?: DashboardSettings;
+  onUpdateDashboardSettings?: (settings: DashboardSettings) => void;
 }
 
-type TabId = 'stats' | 'settings';
+type TabId = 'stats' | 'settings' | 'dashboard';
 
 /**
  * SettingsStatsModal - Comprehensive settings and statistics view
@@ -50,10 +70,32 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   flaggedQuestionsCount,
   theme = 'light',
   onToggleTheme,
+  dashboardSettings = DEFAULT_DASHBOARD_SETTINGS,
+  onUpdateDashboardSettings,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('stats');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
+
+  // Toggle stat visibility
+  const toggleStat = (statId: DashboardStatId) => {
+    if (!onUpdateDashboardSettings) return;
+    
+    const currentVisible = dashboardSettings.visibleStats;
+    const isVisible = currentVisible.includes(statId);
+    
+    let newVisible: DashboardStatId[];
+    if (isVisible) {
+      newVisible = currentVisible.filter(id => id !== statId);
+    } else {
+      newVisible = [...currentVisible, statId];
+    }
+    
+    onUpdateDashboardSettings({
+      ...dashboardSettings,
+      visibleStats: newVisible,
+    });
+  };
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -207,12 +249,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <div className="p-1.5 sm:p-2 bg-[var(--color-accent)]/10 rounded-lg">
                 {activeTab === 'stats' ? (
                   <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
+                ) : activeTab === 'dashboard' ? (
+                  <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 ) : (
                   <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 )}
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
-                {activeTab === 'stats' ? 'Statistics' : 'Settings'}
+                {activeTab === 'stats' ? 'Statistics' : activeTab === 'dashboard' ? 'Dashboard' : 'Settings'}
               </h2>
             </div>
             <button
@@ -237,6 +281,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               Statistics
             </button>
             <button
+              onClick={() => setActiveTab('dashboard')}
+              className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
+                activeTab === 'dashboard'
+                  ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4 inline-block mr-2" />
+              Dashboard
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
               className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
                 activeTab === 'settings'
@@ -251,7 +306,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
           {/* Content */}
           <div className="overflow-y-auto max-h-[calc(90vh-140px)] p-4 sm:p-6">
-            {activeTab === 'stats' ? (
+            {activeTab === 'stats' && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Quick Stats Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
@@ -386,7 +441,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </div>
                 )}
               </div>
-            ) : (
+            )}
+
+            {/* Settings Tab */}
+            {activeTab === 'settings' && (
               <div className="space-y-4 sm:space-y-6">
                 {/* Theme Toggle */}
                 {onToggleTheme && (
@@ -547,6 +605,76 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Version Info */}
                 <div className="text-center text-xs text-[var(--color-text-muted)]">
                   PANaCEa v1.0.0 • Built for PANCE Success
+                </div>
+              </div>
+            )}
+
+            {/* Dashboard Customization Tab */}
+            {activeTab === 'dashboard' && (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <h3 className="font-medium text-[var(--color-text-primary)] mb-2">Customize Dashboard Stats</h3>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-4">
+                    Choose which statistics to display on your main dashboard.
+                  </p>
+                  
+                  <div className="space-y-2">
+                    {DASHBOARD_STAT_OPTIONS.map((option) => {
+                      const isVisible = dashboardSettings.visibleStats.includes(option.id);
+                      return (
+                        <button
+                          key={option.id}
+                          onClick={() => toggleStat(option.id)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+                            isVisible
+                              ? 'bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30'
+                              : 'bg-[var(--color-bg-primary)] border border-[var(--color-border)] hover:border-[var(--color-accent)]/50'
+                          }`}
+                        >
+                          <div className={`p-1.5 rounded-md ${
+                            isVisible ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
+                          }`}>
+                            {option.icon}
+                          </div>
+                          <div className="flex-1 text-left">
+                            <div className={`text-sm font-medium ${isVisible ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-primary)]'}`}>
+                              {option.label}
+                            </div>
+                            <div className="text-xs text-[var(--color-text-muted)]">
+                              {option.description}
+                            </div>
+                          </div>
+                          <div className={`p-1 rounded-md ${isVisible ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'}`}>
+                            {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <h3 className="font-medium text-[var(--color-text-primary)] mb-2">Selected Stats ({dashboardSettings.visibleStats.length})</h3>
+                  {dashboardSettings.visibleStats.length === 0 ? (
+                    <p className="text-sm text-[var(--color-text-muted)]">
+                      No stats selected. Click on stats above to add them to your dashboard.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {dashboardSettings.visibleStats.map((statId) => {
+                        const stat = DASHBOARD_STAT_OPTIONS.find(s => s.id === statId);
+                        return stat ? (
+                          <span
+                            key={statId}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-xs font-medium rounded-full"
+                          >
+                            {stat.icon}
+                            {stat.label}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
