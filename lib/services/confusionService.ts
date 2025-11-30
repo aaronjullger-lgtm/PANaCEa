@@ -64,6 +64,21 @@ const CONFUSION_VERSION = 'v1';
 const MINIMUM_DISPLAY_THRESHOLD = 0.2; // Normalized weight threshold for displaying
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Format a condition ID into a human-readable name
+ * Converts snake_case or kebab-case to Title Case
+ */
+function formatConditionName(conditionId: string): string {
+  return conditionId
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .trim();
+}
+
+// ============================================================================
 // Storage Helpers
 // ============================================================================
 
@@ -189,7 +204,7 @@ export function getTopConfusionsForCondition(
   for (const [confusedId, times] of confusions.entries()) {
     results.push({
       conditionId: confusedId,
-      conditionName: confusedId, // TODO: Lookup actual condition name
+      conditionName: formatConditionName(confusedId),
       times,
       normalizedScore: maxTimes > 0 ? times / maxTimes : 0,
     });

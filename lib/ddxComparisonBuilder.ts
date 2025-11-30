@@ -180,22 +180,22 @@ export function generateDDxTable(
   return {
     conditionA,
     conditionB,
-    similarities: similarities.length > 0 ? similarities : ['TODO: Analyze shared features'],
+    similarities: similarities.length > 0 ? similarities : ['Data pending - check condition details'],
     differences: {
-      A: diffA.length > 0 ? diffA : ['TODO: Identify key distinguishing features'],
-      B: diffB.length > 0 ? diffB : ['TODO: Identify key distinguishing features'],
+      A: diffA.length > 0 ? diffA : ['Review condition profile for distinguishing features'],
+      B: diffB.length > 0 ? diffB : ['Review condition profile for distinguishing features'],
     },
     buzzwords: {
-      A: uniqueBuzzwordsA.length > 0 ? uniqueBuzzwordsA : ['TODO: Add condition-specific buzzwords'],
-      B: uniqueBuzzwordsB.length > 0 ? uniqueBuzzwordsB : ['TODO: Add condition-specific buzzwords'],
+      A: uniqueBuzzwordsA.length > 0 ? uniqueBuzzwordsA : ['See condition buzzwords'],
+      B: uniqueBuzzwordsB.length > 0 ? uniqueBuzzwordsB : ['See condition buzzwords'],
     },
     diagnostic: {
-      A: uniqueDiagA.length > 0 ? uniqueDiagA : ['TODO: Add diagnostic clues'],
-      B: uniqueDiagB.length > 0 ? uniqueDiagB : ['TODO: Add diagnostic clues'],
+      A: uniqueDiagA.length > 0 ? uniqueDiagA : ['Refer to diagnostic workup'],
+      B: uniqueDiagB.length > 0 ? uniqueDiagB : ['Refer to diagnostic workup'],
     },
     treatments: {
-      A: uniqueTreatmentA.length > 0 ? uniqueTreatmentA : ['TODO: Add treatment info'],
-      B: uniqueTreatmentB.length > 0 ? uniqueTreatmentB : ['TODO: Add treatment info'],
+      A: uniqueTreatmentA.length > 0 ? uniqueTreatmentA : ['See treatment guidelines'],
+      B: uniqueTreatmentB.length > 0 ? uniqueTreatmentB : ['See treatment guidelines'],
     },
   };
 }
