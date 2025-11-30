@@ -24,11 +24,14 @@ const FLAGGED_KEY = "panceai_flagged_v2";
 
 /** Drill mode IDs that have dedicated view implementations */
 const DRILL_MODE_PHOTO: TrainingModeId = 'photo_drill';
+const DRILL_MODE_ECG: TrainingModeId = 'ecg_drill';
+const DRILL_MODE_DERM: TrainingModeId = 'derm_drill';
+const DRILL_MODE_IMAGING: TrainingModeId = 'imaging_drill';
 const DRILL_MODE_RAPID_RECALL: TrainingModeId = 'rapid_recall';
 const DRILL_MODE_DDX_COMPARE: TrainingModeId = 'ddx_compare';
 const DRILL_MODE_MINI_LAB: TrainingModeId = 'mini_lab';
 
-type View = "menu" | "quiz" | "photo_drill" | "rapid_recall" | "ddx_compare" | "mini_lab";
+type View = "menu" | "quiz" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -285,6 +288,12 @@ const App: React.FC = () => {
   const handleNavigateToDrillMode = (modeId: string) => {
     if (modeId === DRILL_MODE_PHOTO) {
       setView('photo_drill');
+    } else if (modeId === DRILL_MODE_ECG) {
+      setView('ecg_drill');
+    } else if (modeId === DRILL_MODE_DERM) {
+      setView('derm_drill');
+    } else if (modeId === DRILL_MODE_IMAGING) {
+      setView('imaging_drill');
     } else if (modeId === DRILL_MODE_RAPID_RECALL) {
       setView('rapid_recall');
     } else if (modeId === DRILL_MODE_DDX_COMPARE) {
@@ -395,6 +404,19 @@ const App: React.FC = () => {
 
           {view === "photo_drill" && (
             <PhotoDrillSession onExit={() => setView("menu")} />
+          )}
+
+          {/* ECG, Derm, and Imaging drills use the same PhotoDrillSession component with different filters */}
+          {view === "ecg_drill" && (
+            <PhotoDrillSession onExit={() => setView("menu")} filterType="ecg" />
+          )}
+
+          {view === "derm_drill" && (
+            <PhotoDrillSession onExit={() => setView("menu")} filterType="derm" />
+          )}
+
+          {view === "imaging_drill" && (
+            <PhotoDrillSession onExit={() => setView("menu")} filterType="imaging" />
           )}
 
           {view === "rapid_recall" && (

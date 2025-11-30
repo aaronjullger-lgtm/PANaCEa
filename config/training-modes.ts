@@ -10,11 +10,17 @@
 export type TrainingModeId =
   | 'core_adaptive'
   | 'photo_drill'
+  | 'ecg_drill'
+  | 'derm_drill'
+  | 'imaging_drill'
   | 'rapid_recall'
   | 'ddx_compare'
   | 'guideline_drill'
   | 'mastery_drill'
-  | 'mini_lab';
+  | 'mini_lab'
+  | 'first_line_treatment'
+  | 'pharmacology'
+  | 'condition_drill';
 
 /**
  * Configuration interface for training mode cards.
@@ -28,7 +34,7 @@ export interface TrainingModeConfig {
   /** Subtext/description displayed below the title */
   description: string;
   /** Category grouping for the mode */
-  category: 'core' | 'visual' | 'recall' | 'mastery';
+  category: 'core' | 'visual' | 'recall' | 'mastery' | 'pharmacology';
   /** Icon name (mapped to Lucide-React icons) */
   iconName: string;
   /** Theme color for Tailwind styling */
@@ -53,14 +59,33 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     theme: 'stone',
     route: '/session/core-adaptive',
   },
+  // Visual Drill Modes - Split from Global Photo Mode
   {
-    id: 'photo_drill',
-    label: 'Global Photo Mode',
-    description: 'ECG, Derm, Imaging pattern recognition.',
+    id: 'ecg_drill',
+    label: 'ECG Interpretation',
+    description: 'Master rhythm strips and 12-lead ECG patterns.',
+    category: 'visual',
+    iconName: 'Activity',
+    theme: 'rose',
+    route: '/drill/ecg',
+  },
+  {
+    id: 'derm_drill',
+    label: 'Derm Recognition',
+    description: 'Identify skin lesions and dermatological findings.',
+    category: 'visual',
+    iconName: 'Scan',
+    theme: 'pink',
+    route: '/drill/derm',
+  },
+  {
+    id: 'imaging_drill',
+    label: 'Imaging Review',
+    description: 'X-ray, CT, and MRI pattern recognition.',
     category: 'visual',
     iconName: 'Image',
     theme: 'slate',
-    route: '/drill/photo',
+    route: '/drill/imaging',
   },
   {
     id: 'mini_lab',
@@ -71,6 +96,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     theme: 'emerald',
     route: '/drill/mini-lab',
   },
+  // Recall Modes
   {
     id: 'rapid_recall',
     label: 'Rapid Recall',
@@ -92,17 +118,49 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
   {
     id: 'guideline_drill',
     label: 'Guideline Mode',
-    description: 'Criteria & Standards.',
+    description: 'Scoring systems & clinical criteria.',
     category: 'core',
-    iconName: 'ClipboardList',
+    iconName: 'FileCheck',
     theme: 'teal',
     route: '/guidelines',
     isComingSoon: false,
   },
   {
+    id: 'condition_drill',
+    label: 'Condition Drill',
+    description: '5-stage progressive drills for any condition.',
+    category: 'recall',
+    iconName: 'Layers',
+    theme: 'violet',
+    route: '/drill/condition',
+    isComingSoon: true,
+  },
+  // Pharmacology Modes
+  {
+    id: 'first_line_treatment',
+    label: 'First Line Treatment',
+    description: 'What is the go-to treatment for each condition?',
+    category: 'pharmacology',
+    iconName: 'Pill',
+    theme: 'cyan',
+    route: '/drill/first-line',
+    isComingSoon: true,
+  },
+  {
+    id: 'pharmacology',
+    label: 'Pharmacology Quiz',
+    description: 'Drug mechanisms, side effects, and interactions.',
+    category: 'pharmacology',
+    iconName: 'Beaker',
+    theme: 'purple',
+    route: '/drill/pharm',
+    isComingSoon: true,
+  },
+  // Mastery Mode
+  {
     id: 'mastery_drill',
     label: 'Streak Challenge',
-    description: 'Survival mode.',
+    description: 'Answer until you miss. How long can you survive?',
     category: 'mastery',
     iconName: 'Flame',
     theme: 'red',
@@ -114,4 +172,12 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
  * Mode IDs that have dedicated routes/pages and should not fall back to core session.
  * Export this to maintain a single source of truth across components.
  */
-export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = ['photo_drill', 'rapid_recall', 'ddx_compare', 'mini_lab'];
+export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = [
+  'photo_drill', 
+  'ecg_drill',
+  'derm_drill',
+  'imaging_drill',
+  'rapid_recall', 
+  'ddx_compare', 
+  'mini_lab'
+];

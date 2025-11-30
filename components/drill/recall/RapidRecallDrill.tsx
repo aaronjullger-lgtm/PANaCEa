@@ -2,31 +2,18 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Flame, RotateCcw, ArrowRight } from 'lucide-react';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
+import { BUZZWORD_BANK, getBuzzwordDictionary, getAllBuzzwordConditions } from '@/data/buzzwordBank';
 
 /**
- * Mock dictionary of buzzwords to their correct diagnoses.
- * Format: { buzzword: correctDiagnosis }
+ * Get buzzword dictionary from the comprehensive bank
  */
-const BUZZWORD_DICTIONARY: Record<string, string> = {
-  'Apple core lesion': 'Colorectal Cancer',
-  'Currant jelly stool': 'Intussusception',
-  'Café-au-lait spots': 'Neurofibromatosis',
-  'Thumb printing sign': 'Ischemic Colitis',
-  'String sign': 'Crohn\'s Disease',
-  'Lead pipe colon': 'Ulcerative Colitis',
-  'Bird beak sign': 'Sigmoid Volvulus',
-  'Double bubble sign': 'Duodenal Atresia',
-  'Strawberry tongue': 'Kawasaki Disease',
-  'Owl eye inclusions': 'Cytomegalovirus',
-  'Boot-shaped heart': 'Tetralogy of Fallot',
-  'Auer rods': 'Acute Myeloid Leukemia',
-};
+const BUZZWORD_DICTIONARY = getBuzzwordDictionary();
 
 /** Get all buzzwords as an array */
 const BUZZWORDS = Object.keys(BUZZWORD_DICTIONARY);
 
 /** Get all diagnoses as options for autocomplete */
-const ALL_DIAGNOSES = [...new Set(Object.values(BUZZWORD_DICTIONARY))];
+const ALL_DIAGNOSES = getAllBuzzwordConditions();
 
 interface RapidRecallDrillProps {
   onExit?: () => void;

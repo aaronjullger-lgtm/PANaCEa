@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoDrill, type CategoryType } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity, Shuffle } from 'lucide-react';
 
+export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
+
 interface PhotoDrillSessionProps {
   /** Callback to navigate back to the menu */
   onExit?: () => void;
+  /** Optional filter to directly start a specific category (skips lobby) */
+  filterType?: PhotoDrillFilterType;
 }
 
 /** Category card data for the lobby */
@@ -51,10 +55,10 @@ const CATEGORY_CARDS: Array<{
  * PhotoDrillSession - Global Photo Mode UI
  * 
  * A full-screen immersive interface with two stages:
- * - Lobby: Category selection
+ * - Lobby: Category selection (skipped if filterType is provided)
  * - Drill: Infinite photo drill with smart type-ahead search
  */
-const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
+const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterType }) => {
   const {
     currentCase,
     score,
@@ -69,6 +73,19 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit }) => {
     exitToMenu,
     validDiagnoses,
   } = usePhotoDrill();
+
+  // Auto-start session if filterType is provided (direct access from split drill tiles)
+  useEffect(() => {
+    if (filterType && status === 'menu') {
+      const categoryMap: Record<PhotoDrillFilterType, CategoryType> = {
+        ecg: 'ecg',
+        derm: 'derm',
+        imaging: 'radiology',
+        all: 'random',
+      };
+      startSession(categoryMap[filterType]);
+    }
+  }, [filterType, status, startSession]);
 
   const handleExit = () => {
     exitToMenu();

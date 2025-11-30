@@ -12,6 +12,12 @@ import {
   Clock,
   Trophy,
   ClipboardList,
+  Activity,
+  Scan,
+  FileCheck,
+  Layers,
+  Pill,
+  Beaker,
   LucideIcon,
 } from 'lucide-react';
 import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
@@ -27,6 +33,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
   FileText,
   Flame,
   ClipboardList,
+  Activity,
+  Scan,
+  FileCheck,
+  Layers,
+  Pill,
+  Beaker,
 };
 
 /** Storage key for streak high score */
@@ -194,17 +206,17 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             disabled={option.disabled}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
               focus === option.value
-                ? 'bg-[var(--color-accent)] text-white shadow-sm'
+                ? 'bg-blue-600 text-white shadow-sm dark:bg-blue-500'
                 : option.disabled
-                ? 'bg-[var(--color-bg-secondary)] text-stone-400 cursor-not-allowed'
-                : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-tertiary)]'
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-700 dark:text-slate-500'
+                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-600'
             }`}
           >
             {option.value === 'due' && <Clock className="w-3.5 h-3.5" />}
             {option.label}
             {option.count !== undefined && option.count > 0 && (
               <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                focus === option.value ? 'bg-white/20' : 'bg-stone-300'
+                focus === option.value ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-300'
               }`}>
                 {option.count}
               </span>
@@ -232,6 +244,25 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           overlay: 'before:absolute before:inset-0 before:bg-[url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Cpath d=\'M10 50 Q25 30 40 50 T70 50 T100 50\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'0.5\' opacity=\'0.3\'/%3E%3Cpath d=\'M10 60 Q25 40 40 60 T70 60 T100 60\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'0.5\' opacity=\'0.2\'/%3E%3C/svg%3E")] before:opacity-30 before:rounded-2xl',
           iconBg: 'bg-white/80',
         };
+      case 'ecg_drill':
+        return {
+          background: 'bg-gradient-to-br from-rose-50 to-rose-100',
+          border: 'border-rose-200',
+          overlay: 'before:absolute before:inset-0 before:bg-[url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Cpath d=\'M0 50 L20 50 L25 30 L30 70 L35 40 L40 60 L45 50 L100 50\' fill=\'none\' stroke=\'%23fb7185\' stroke-width=\'1\' opacity=\'0.3\'/%3E%3C/svg%3E")] before:opacity-40 before:rounded-2xl',
+          iconBg: 'bg-white/80',
+        };
+      case 'derm_drill':
+        return {
+          background: 'bg-gradient-to-br from-pink-50 to-pink-100',
+          border: 'border-pink-200',
+          iconBg: 'bg-white/80',
+        };
+      case 'imaging_drill':
+        return {
+          background: 'bg-gradient-to-br from-slate-100 to-slate-200',
+          border: 'border-slate-300',
+          iconBg: 'bg-white/80',
+        };
       case 'mini_lab':
         return {
           background: 'bg-gradient-to-br from-emerald-50 to-emerald-100',
@@ -248,6 +279,30 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         return {
           background: 'bg-gradient-to-br from-blue-50 to-blue-100',
           border: 'border-blue-200',
+          iconBg: 'bg-white/80',
+        };
+      case 'guideline_drill':
+        return {
+          background: 'bg-gradient-to-br from-teal-50 to-teal-100',
+          border: 'border-teal-200',
+          iconBg: 'bg-white/80',
+        };
+      case 'condition_drill':
+        return {
+          background: 'bg-gradient-to-br from-violet-50 to-violet-100',
+          border: 'border-violet-200',
+          iconBg: 'bg-white/80',
+        };
+      case 'first_line_treatment':
+        return {
+          background: 'bg-gradient-to-br from-cyan-50 to-cyan-100',
+          border: 'border-cyan-200',
+          iconBg: 'bg-white/80',
+        };
+      case 'pharmacology':
+        return {
+          background: 'bg-gradient-to-br from-purple-50 to-purple-100',
+          border: 'border-purple-200',
           iconBg: 'bg-white/80',
         };
       case 'mastery_drill':
@@ -278,10 +333,24 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         return 'Answer until you miss. How long can you survive?';
       case 'photo_drill':
         return 'ECG rhythms, derm lesions, and imaging findings. Train your visual diagnosis.';
+      case 'ecg_drill':
+        return 'Master rhythm strips and 12-lead ECG interpretation.';
+      case 'derm_drill':
+        return 'Identify skin lesions, rashes, and dermatological findings.';
+      case 'imaging_drill':
+        return 'X-ray, CT, and MRI pattern recognition training.';
       case 'rapid_recall':
         return 'Lightning-fast buzzwords and flashcard drills.';
       case 'mini_lab':
         return 'Interpret lab panels and make the diagnosis.';
+      case 'guideline_drill':
+        return 'Glasgow coma, Light\'s criteria, JONES, and more.';
+      case 'condition_drill':
+        return '5-stage progressive questions for any condition.';
+      case 'first_line_treatment':
+        return 'What\'s the go-to treatment for each condition?';
+      case 'pharmacology':
+        return 'Drug mechanisms, side effects, and interactions.';
       default:
         return mode.description;
     }
@@ -352,19 +421,19 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     <div className="space-y-6">
       {/* Section A: The Core Adaptive Card */}
       {coreMode && (
-        <div className="bg-gradient-to-br from-stone-50 to-stone-100 rounded-2xl border border-[var(--color-border)] p-6 shadow-sm">
+        <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Left side: Icon and content */}
             <div className="flex-1">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-[var(--color-border)]">
-                  <Brain className="w-7 h-7 text-[var(--color-text-secondary)]" />
+                <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-600">
+                  <Brain className="w-7 h-7 text-slate-600 dark:text-slate-300" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                     Core PANCE Simulation
                   </h2>
-                  <p className="text-[var(--color-text-secondary)] mt-1 min-h-[3rem] transition-all duration-200">
+                  <p className="text-slate-600 dark:text-slate-300 mt-1 min-h-[3rem] transition-all duration-200">
                     {getFocusDescription()}
                   </p>
                 </div>
@@ -381,7 +450,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               <button
                 type="button"
                 onClick={handleCoreStart}
-                className="w-full md:w-auto px-8 py-3.5 bg-[var(--color-accent)] text-white font-semibold rounded-xl hover:bg-[#2b130a] transition-colors shadow-md hover:shadow-lg"
+                className="w-full md:w-auto px-8 py-3.5 bg-blue-600 dark:bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
               >
                 Start Session
               </button>
