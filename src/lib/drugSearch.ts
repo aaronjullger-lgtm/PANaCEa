@@ -1,7 +1,7 @@
 // src/lib/drugSearch.ts
 // Search functionality for pharmacological agents and treatments
 
-import type { DrugEntry, DrugSearchResult, DrugSearchFilters } from "../../pharm/drugTypes.ts";
+import type { DrugEntry, DrugSearchResult, DrugSearchFilters } from "../../pharm/drugTypes";
 
 // Import the drug data from JSON
 // Note: This will be loaded at build time by Vite
@@ -53,15 +53,15 @@ function similarityScore(query: string, target: string): number {
     return 3;
   }
   
+  // Starts with match gets higher score (checked before includes)
+  if (normalizedTarget.startsWith(normalizedQuery)) {
+    return 2.5;
+  }
+  
   // Contains match gets high score
   if (normalizedTarget.includes(normalizedQuery)) {
     const lengthBoost = normalizedQuery.length / Math.max(normalizedTarget.length, 1);
     return 2 + lengthBoost;
-  }
-  
-  // Starts with match gets good score
-  if (normalizedTarget.startsWith(normalizedQuery)) {
-    return 2.5;
   }
   
   // Fuzzy match based on Levenshtein distance
