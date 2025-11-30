@@ -7,6 +7,8 @@
     "dev": "vite",
     "sync:condition-content": "tsx ./scripts/convertMdToJson.ts",
     "media:integrate": "tsx ./scripts/mediaIntegrator.ts",
+    "infographic:match": "tsx ./scripts/infographicMatcher.ts",
+    "infographic:audit": "tsx ./scripts/infographicAudit.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run"
