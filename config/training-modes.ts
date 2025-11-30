@@ -119,7 +119,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     id: 'guideline_drill',
     label: 'Guideline Mode',
     description: 'Scoring systems & clinical criteria.',
-    category: 'core',
+    category: 'recall',
     iconName: 'FileCheck',
     theme: 'teal',
     route: '/guidelines',
