@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePhotoDrill, type CategoryType } from '@/hooks/game/use-photo-drill';
+import { usePhotoDrill, type CategoryType, type ClinicalContext } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity, Shuffle } from 'lucide-react';
+import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity, Shuffle, User, Heart, ClipboardList, Eye, EyeOff, Stethoscope } from 'lucide-react';
 
 export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
 
@@ -74,6 +74,17 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
     validDiagnoses,
   } = usePhotoDrill();
 
+  // State for Clinical Presentation Mode: controls when image is revealed
+  const [imageRevealed, setImageRevealed] = useState<boolean>(false);
+
+  // Reset imageRevealed when case changes
+  useEffect(() => {
+    if (currentCase) {
+      // For non-derm cases or cases without clinical context, auto-reveal
+      setImageRevealed(!currentCase.clinicalContext);
+    }
+  }, [currentCase?.id]);
+
   // Auto-start session if filterType is provided (direct access from split drill tiles)
   useEffect(() => {
     if (filterType && status === 'menu') {
@@ -103,11 +114,17 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
   };
 
   const handleNextCase = () => {
+    setImageRevealed(false); // Reset for next case
     nextCase();
   };
 
   const handleReset = () => {
+    setImageRevealed(false);
     reset();
+  };
+
+  const handleRevealImage = () => {
+    setImageRevealed(true);
   };
 
   // Animation variants
@@ -246,30 +263,133 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
           </div>
         </header>
 
-        {/* Main Stage - Image takes up full available height */}
-        <main className="flex-1 flex items-center justify-center p-4 pt-16 pb-32">
+        {/* Main Stage - Clinical Presentation Mode shows Patient Chart first, then Image */}
+        <main className="flex-1 flex items-center justify-center p-4 pt-16 pb-32 overflow-y-auto">
           <AnimatePresence mode="wait">
             {currentCase && (
               <motion.div
-                key={currentCase.id}
+                key={`${currentCase.id}-${imageRevealed ? 'image' : 'chart'}`}
                 variants={imageVariants}
                 initial="initial"
                 animate="animate"
                 exit="exit"
                 transition={{ duration: 0.3 }}
-                className="w-full max-w-3xl h-full flex items-center justify-center"
+                className="w-full max-w-3xl flex flex-col items-center justify-center gap-4"
               >
-                <div className="relative bg-slate-900 rounded-lg overflow-hidden shadow-2xl w-full">
-                  <img
-                    src={currentCase.imageUrl}
-                    alt={`Medical ${currentCase.modality.toUpperCase()} case`}
-                    className="w-full aspect-[3/2] object-contain"
-                  />
-                  {/* Modality Badge */}
-                  <div className="absolute top-3 left-3 px-2.5 py-1 bg-slate-800/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-slate-300">
-                    {currentCase.modality}
+                {/* Clinical Presentation Mode: Show Patient Chart before image */}
+                {currentCase.clinicalContext && !imageRevealed && (
+                  <div className="w-full space-y-4">
+                    {/* Patient Chart Header */}
+                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 overflow-hidden">
+                      <div className="px-4 py-3 bg-gradient-to-r from-violet-900/50 to-purple-900/50 border-b border-slate-700 flex items-center gap-3">
+                        <ClipboardList className="w-5 h-5 text-violet-400" />
+                        <h2 className="text-lg font-semibold text-slate-100">Patient Chart</h2>
+                        <span className="ml-auto px-2.5 py-1 bg-violet-600/30 rounded-lg text-xs font-medium text-violet-300 uppercase tracking-wide">
+                          Clinical Presentation Mode
+                        </span>
+                      </div>
+                      
+                      {/* Patient Demographics */}
+                      <div className="p-4 border-b border-slate-700/50">
+                        <div className="flex items-center gap-4">
+                          <div className="p-2.5 bg-slate-700/50 rounded-lg">
+                            <User className="w-5 h-5 text-slate-400" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-slate-400">Patient</div>
+                            <div className="text-slate-100 font-medium">
+                              {currentCase.clinicalContext.age}yo {currentCase.clinicalContext.sex === 'M' ? 'Male' : 'Female'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Vitals */}
+                      <div className="p-4 border-b border-slate-700/50">
+                        <div className="flex items-start gap-4">
+                          <div className="p-2.5 bg-slate-700/50 rounded-lg">
+                            <Heart className="w-5 h-5 text-red-400" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-slate-400 mb-1">Vital Signs</div>
+                            <div className="text-slate-100 text-sm font-mono">
+                              {currentCase.clinicalContext.vitals}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Chief Complaint */}
+                      <div className="p-4 border-b border-slate-700/50">
+                        <div className="flex items-start gap-4">
+                          <div className="p-2.5 bg-slate-700/50 rounded-lg">
+                            <Stethoscope className="w-5 h-5 text-emerald-400" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-slate-400 mb-1">Chief Complaint</div>
+                            <div className="text-slate-100">
+                              {currentCase.clinicalContext.chiefComplaint}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* History */}
+                      <div className="p-4">
+                        <div className="flex items-start gap-4">
+                          <div className="p-2.5 bg-slate-700/50 rounded-lg">
+                            <ClipboardList className="w-5 h-5 text-blue-400" />
+                          </div>
+                          <div>
+                            <div className="text-sm text-slate-400 mb-1">History</div>
+                            <div className="text-slate-100 text-sm leading-relaxed">
+                              {currentCase.clinicalContext.history}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Additional Findings (if present) */}
+                      {currentCase.clinicalContext.additionalFindings && currentCase.clinicalContext.additionalFindings.length > 0 && (
+                        <div className="p-4 bg-slate-800/30 border-t border-slate-700/50">
+                          <div className="text-sm text-slate-400 mb-2">Physical Exam Findings:</div>
+                          <ul className="space-y-1">
+                            {currentCase.clinicalContext.additionalFindings.map((finding, idx) => (
+                              <li key={idx} className="flex items-start gap-2 text-sm text-slate-300">
+                                <span className="text-violet-400 mt-1">•</span>
+                                <span>{finding}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Reveal Image Button */}
+                    <button
+                      onClick={handleRevealImage}
+                      className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 rounded-xl text-white font-semibold flex items-center justify-center gap-3 transition-all shadow-lg shadow-violet-900/30"
+                    >
+                      <Eye className="w-5 h-5" />
+                      View Clinical Findings
+                    </button>
                   </div>
-                </div>
+                )}
+                
+                {/* Image View (shown for non-derm cases or when revealed) */}
+                {(imageRevealed || !currentCase.clinicalContext) && (
+                  <div className="relative bg-slate-900 rounded-lg overflow-hidden shadow-2xl w-full">
+                    <img
+                      src={currentCase.imageUrl}
+                      alt={`Medical ${currentCase.modality.toUpperCase()} case`}
+                      className="w-full aspect-[3/2] object-contain"
+                    />
+                    {/* Modality Badge */}
+                    <div className="absolute top-3 left-3 px-2.5 py-1 bg-slate-800/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-slate-300">
+                      {currentCase.modality === 'derm' ? 'Clinical Presentation' : currentCase.modality}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
