@@ -81,9 +81,9 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
           ' bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] opacity-60 shadow-sm';
       }
     } else {
-      // Default hoverable state
+      // Default hoverable state - use CSS variable for hover background to work in both light and dark mode
       buttonClasses +=
-        ' bg-[var(--color-card-bg)] border border-[var(--color-border)] shadow-sm text-[var(--color-text-primary)] hover:bg-white hover:border-[var(--color-accent)] hover:shadow-lg hover:-translate-y-px';
+        ' bg-[var(--color-card-bg)] border border-[var(--color-border)] shadow-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)] hover:shadow-lg hover:-translate-y-px';
     }
 
     return (

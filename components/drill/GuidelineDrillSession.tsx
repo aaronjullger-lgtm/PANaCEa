@@ -1,0 +1,468 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  X, 
+  FileCheck, 
+  ChevronRight, 
+  Minus, 
+  Plus, 
+  CheckCircle, 
+  XCircle,
+  ArrowRight,
+  RotateCcw,
+  Flame,
+  Award,
+  BookOpen
+} from 'lucide-react';
+import { useGuidelineDrill } from '@/hooks/game/use-guideline-drill';
+
+interface GuidelineDrillSessionProps {
+  onExit?: () => void;
+}
+
+/**
+ * GuidelineDrillSession - Clinical guidelines scoring drill
+ * 
+ * Practice scoring systems like CURB-65, Wells Criteria, GCS, etc.
+ */
+const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit }) => {
+  const {
+    currentGuideline,
+    currentVignette,
+    currentVignetteIndex,
+    totalVignettes,
+    userScore,
+    isCorrect,
+    score,
+    streak,
+    status,
+    allGuidelines,
+    sessionResult,
+    selectGuideline,
+    submitScore,
+    nextVignette,
+    reset,
+    exitToMenu,
+    backToSelection,
+  } = useGuidelineDrill();
+
+  const [calculatedScore, setCalculatedScore] = useState(0);
+  const [selectedCriteria, setSelectedCriteria] = useState<Set<string>>(new Set());
+
+  const handleExit = () => {
+    exitToMenu();
+    if (onExit) onExit();
+  };
+
+  const handleSelectGuideline = (guidelineId: string) => {
+    setCalculatedScore(0);
+    setSelectedCriteria(new Set());
+    selectGuideline(guidelineId);
+  };
+
+  const toggleCriterion = (criterionId: string, pointValue: number) => {
+    const newSelected = new Set(selectedCriteria);
+    if (newSelected.has(criterionId)) {
+      newSelected.delete(criterionId);
+      setCalculatedScore(prev => prev - pointValue);
+    } else {
+      newSelected.add(criterionId);
+      setCalculatedScore(prev => prev + pointValue);
+    }
+    setSelectedCriteria(newSelected);
+  };
+
+  const handleSubmitScore = () => {
+    submitScore(calculatedScore);
+  };
+
+  const handleNextVignette = () => {
+    setCalculatedScore(0);
+    setSelectedCriteria(new Set());
+    nextVignette();
+  };
+
+  const handleReset = () => {
+    setCalculatedScore(0);
+    setSelectedCriteria(new Set());
+    reset();
+  };
+
+  // =========================================================================
+  // MENU VIEW - Guideline Selection
+  // =========================================================================
+  if (status === 'menu' || status === 'selecting') {
+    // Group guidelines by category
+    const guidelinesByCategory = allGuidelines.reduce((acc, g) => {
+      // Infer category from guideline characteristics
+      let category = 'General';
+      if (['wells-dvt', 'wells-pe', 'chadsvasc', 'timi-nstemi'].includes(g.id)) category = 'Cardiology';
+      else if (['curb-65'].includes(g.id)) category = 'Pulmonology';
+      else if (['ranson-pancreatitis', 'alvarado'].includes(g.id)) category = 'Gastroenterology';
+      else if (['sirs', 'qsofa', 'gcs'].includes(g.id)) category = 'Emergency';
+      else if (['sigecaps', 'cage'].includes(g.id)) category = 'Psychiatry';
+      else if (['ottawa-ankle', 'kocher'].includes(g.id)) category = 'MSK/Trauma';
+      else if (['amsel'].includes(g.id)) category = 'OB/GYN';
+      else if (['apgar', 'kawasaki'].includes(g.id)) category = 'Pediatrics';
+      
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(g);
+      return acc;
+    }, {} as Record<string, typeof allGuidelines>);
+
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+        {/* Header */}
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800">
+          <button
+            onClick={handleExit}
+            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            <X className="w-5 h-5" />
+            <span className="text-sm font-medium hidden sm:inline">Exit</span>
+          </button>
+          <div className="flex items-center gap-2">
+            <FileCheck className="w-5 h-5 text-teal-400" />
+            <h1 className="text-base sm:text-lg font-semibold">Guideline Mode</h1>
+          </div>
+          <div className="w-12 sm:w-16" />
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-6 sm:mb-8"
+            >
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+                Clinical Scoring Guidelines
+              </h2>
+              <p className="text-sm sm:text-base text-slate-400">
+                Practice PANCE high-yield criteria and scoring systems
+              </p>
+            </motion.div>
+
+            {/* Guidelines by Category */}
+            <div className="space-y-6">
+              {Object.entries(guidelinesByCategory).map(([category, guidelines]) => (
+                <div key={category}>
+                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                    {category}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {guidelines.map((g, index) => (
+                      <motion.button
+                        key={g.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => handleSelectGuideline(g.id)}
+                        className="p-4 bg-slate-900 border border-slate-700 rounded-xl text-left hover:bg-slate-800 hover:border-slate-600 transition-all group"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-slate-200 group-hover:text-white truncate">
+                              {g.name}
+                            </h4>
+                            <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                              {g.description}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-slate-400 flex-shrink-0 ml-2" />
+                        </div>
+                        <div className="mt-2 text-xs text-slate-500">
+                          {g.vignettes.length} case{g.vignettes.length !== 1 ? 's' : ''} • Max score: {g.maxScore}
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // PLAYING VIEW - Vignette with Criteria Checkboxes
+  // =========================================================================
+  if (status === 'playing' && currentGuideline && currentVignette) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+        {/* Header */}
+        <header className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
+          <button
+            onClick={handleExit}
+            className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 transition-colors"
+          >
+            <X className="w-5 h-5" />
+            <span className="text-sm font-medium hidden sm:inline">Exit</span>
+          </button>
+
+          <h1 className="text-base sm:text-lg font-semibold truncate max-w-[50%]">
+            {currentGuideline.name}
+          </h1>
+
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="text-xs sm:text-sm text-slate-400">
+              {currentVignetteIndex + 1}/{totalVignettes}
+            </div>
+            <div className="flex items-center gap-1">
+              <Flame className={`w-4 h-4 sm:w-5 sm:h-5 ${streak > 0 ? 'text-orange-500' : 'text-slate-600'}`} />
+              <span className={`text-xs sm:text-sm font-bold ${streak > 0 ? 'text-orange-500' : 'text-slate-600'}`}>
+                {streak}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto pt-4 pb-32 px-3 sm:px-4">
+          <div className="max-w-3xl mx-auto">
+            {/* Vignette */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-slate-900 rounded-xl border border-slate-700 p-4 sm:p-6 mb-4"
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <BookOpen className="w-4 h-4 text-slate-400" />
+                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  Clinical Vignette
+                </span>
+              </div>
+              <p className="text-base sm:text-lg text-slate-200 leading-relaxed">
+                {currentVignette.story}
+              </p>
+            </motion.div>
+
+            {/* Criteria Checklist */}
+            <div className="bg-slate-900/50 rounded-xl border border-slate-700 p-4 sm:p-6">
+              <h3 className="text-sm font-semibold text-slate-300 mb-4">
+                Select criteria that are met:
+              </h3>
+              <div className="space-y-2">
+                {currentGuideline.components.map((criterion, index) => (
+                  <motion.button
+                    key={criterion.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    onClick={() => toggleCriterion(criterion.id, criterion.pointValue)}
+                    className={`w-full p-3 rounded-lg text-left transition-all flex items-center gap-3 ${
+                      selectedCriteria.has(criterion.id)
+                        ? 'bg-teal-900/50 border border-teal-600'
+                        : 'bg-slate-800 border border-slate-700 hover:bg-slate-750'
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
+                      selectedCriteria.has(criterion.id)
+                        ? 'bg-teal-500 border-teal-500'
+                        : 'border-slate-500'
+                    }`}>
+                      {selectedCriteria.has(criterion.id) && (
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm text-slate-200">{criterion.label}</span>
+                      {criterion.description && (
+                        <span className="text-xs text-slate-500 ml-2">({criterion.description})</span>
+                      )}
+                    </div>
+                    <span className={`text-sm font-bold flex-shrink-0 ${
+                      criterion.pointValue >= 0 ? 'text-teal-400' : 'text-red-400'
+                    }`}>
+                      {criterion.pointValue >= 0 ? '+' : ''}{criterion.pointValue}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+
+        {/* Fixed Footer - Score Submission */}
+        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 p-3 sm:p-4">
+          <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-400">Your Score:</span>
+              <span className="text-2xl font-bold text-teal-400">{calculatedScore}</span>
+            </div>
+            <button
+              onClick={handleSubmitScore}
+              className="px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-lg transition-colors"
+            >
+              Submit Score
+            </button>
+          </div>
+        </div>
+
+        {/* Reset button */}
+        <button
+          onClick={handleReset}
+          className="fixed bottom-20 right-4 p-3 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-400 hover:text-slate-200 transition-colors shadow-lg z-20"
+        >
+          <RotateCcw className="w-5 h-5" />
+        </button>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // FEEDBACK VIEW
+  // =========================================================================
+  if (status === 'feedback' && currentGuideline && currentVignette) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+        {/* Flash overlay */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className={`absolute inset-0 pointer-events-none ${
+            isCorrect ? 'bg-emerald-500/20' : 'bg-red-500/20'
+          }`}
+        />
+
+        {/* Header */}
+        <header className="relative z-10 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
+          <button onClick={handleExit} className="text-slate-400 hover:text-slate-200">
+            <X className="w-5 h-5" />
+          </button>
+          <h1 className="text-base sm:text-lg font-semibold">{currentGuideline.name}</h1>
+          <div className="text-sm text-slate-400">{currentVignetteIndex + 1}/{totalVignettes}</div>
+        </header>
+
+        {/* Main Content */}
+        <main className="relative z-10 flex-1 overflow-y-auto pt-4 pb-32 px-3 sm:px-4">
+          <div className="max-w-3xl mx-auto">
+            {/* Result Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`p-6 rounded-xl border mb-4 ${
+                isCorrect 
+                  ? 'bg-emerald-900/30 border-emerald-600' 
+                  : 'bg-red-900/30 border-red-600'
+              }`}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                {isCorrect ? (
+                  <CheckCircle className="w-8 h-8 text-emerald-400" />
+                ) : (
+                  <XCircle className="w-8 h-8 text-red-400" />
+                )}
+                <div>
+                  <h2 className={`text-xl font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {isCorrect ? 'Correct!' : 'Incorrect'}
+                  </h2>
+                  <p className="text-sm text-slate-400">
+                    Your score: {userScore} | Correct score: {currentVignette.correctScore}
+                  </p>
+                </div>
+              </div>
+
+              {/* Explanation */}
+              <div className="bg-slate-900/50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-slate-300 mb-2">Explanation</h3>
+                <p className="text-sm text-slate-400">{currentVignette.explanation}</p>
+              </div>
+
+              {/* Correct Criteria */}
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-slate-300 mb-2">Criteria Met in This Case:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {currentVignette.metCriteriaIds.map(id => {
+                    const criterion = currentGuideline.components.find(c => c.id === id);
+                    return criterion ? (
+                      <span key={id} className="px-2 py-1 bg-slate-800 rounded text-xs text-slate-300">
+                        {criterion.label} (+{criterion.pointValue})
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 p-3 sm:p-4 z-10">
+          <div className="max-w-3xl mx-auto flex justify-end">
+            <button
+              onClick={handleNextVignette}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-500 text-white font-semibold rounded-lg transition-colors"
+            >
+              {currentVignetteIndex < totalVignettes - 1 ? 'Next Case' : 'View Summary'}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // SUMMARY VIEW
+  // =========================================================================
+  if (status === 'summary' && sessionResult) {
+    const percentage = sessionResult.totalAttempts > 0 
+      ? Math.round((sessionResult.totalCorrect / sessionResult.totalAttempts) * 100) 
+      : 0;
+
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800">
+          <button onClick={handleExit} className="text-slate-400 hover:text-slate-200">
+            <X className="w-5 h-5" />
+          </button>
+          <h1 className="text-base sm:text-lg font-semibold">Session Complete</h1>
+          <div className="w-12" />
+        </header>
+
+        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <Award className="w-16 h-16 text-teal-400 mx-auto mb-4" />
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">{sessionResult.guidelineName}</h2>
+            <p className="text-4xl font-bold text-teal-400 mb-2">
+              {sessionResult.totalCorrect}/{sessionResult.totalAttempts}
+            </p>
+            <p className="text-slate-400 mb-6">{percentage}% Accuracy</p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={handleReset}
+                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={backToSelection}
+                className="px-6 py-3 bg-teal-600 hover:bg-teal-500 rounded-lg font-medium transition-colors"
+              >
+                Choose Another Guideline
+              </button>
+            </div>
+          </motion.div>
+        </main>
+      </div>
+    );
+  }
+
+  // Fallback
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center">
+      <p className="text-slate-400">Loading...</p>
+    </div>
+  );
+};
+
+export default GuidelineDrillSession;

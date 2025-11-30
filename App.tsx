@@ -8,6 +8,10 @@ import PhotoDrillSession from "./components/PhotoDrillSession";
 import RapidRecallDrill from "./components/drill/recall/RapidRecallDrill";
 import DDxCompareDrill from "./components/drill/ddx/DDxCompareDrill";
 import MiniLabDrillSession from "./components/drill/MiniLabDrillSession";
+import PharmDrillSession from "./components/drill/PharmDrillSession";
+import FirstLineDrillSession from "./components/drill/FirstLineDrillSession";
+import ConditionDrillSession from "./components/drill/ConditionDrillSession";
+import GuidelineDrillSession from "./components/drill/GuidelineDrillSession";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import { prefetchQuestions } from "./services/geminiService";
 import type {
@@ -30,8 +34,12 @@ const DRILL_MODE_IMAGING: TrainingModeId = 'imaging_drill';
 const DRILL_MODE_RAPID_RECALL: TrainingModeId = 'rapid_recall';
 const DRILL_MODE_DDX_COMPARE: TrainingModeId = 'ddx_compare';
 const DRILL_MODE_MINI_LAB: TrainingModeId = 'mini_lab';
+const DRILL_MODE_PHARMACOLOGY: TrainingModeId = 'pharmacology';
+const DRILL_MODE_FIRST_LINE: TrainingModeId = 'first_line_treatment';
+const DRILL_MODE_CONDITION: TrainingModeId = 'condition_drill';
+const DRILL_MODE_GUIDELINE: TrainingModeId = 'guideline_drill';
 
-type View = "menu" | "quiz" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab";
+type View = "menu" | "quiz" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -300,6 +308,14 @@ const App: React.FC = () => {
       setView('ddx_compare');
     } else if (modeId === DRILL_MODE_MINI_LAB) {
       setView('mini_lab');
+    } else if (modeId === DRILL_MODE_PHARMACOLOGY) {
+      setView('pharmacology');
+    } else if (modeId === DRILL_MODE_FIRST_LINE) {
+      setView('first_line_treatment');
+    } else if (modeId === DRILL_MODE_CONDITION) {
+      setView('condition_drill');
+    } else if (modeId === DRILL_MODE_GUIDELINE) {
+      setView('guideline_drill');
     }
   };
 
@@ -429,6 +445,22 @@ const App: React.FC = () => {
 
           {view === "mini_lab" && (
             <MiniLabDrillSession onExit={() => setView("menu")} />
+          )}
+
+          {view === "pharmacology" && (
+            <PharmDrillSession onExit={() => setView("menu")} />
+          )}
+
+          {view === "first_line_treatment" && (
+            <FirstLineDrillSession onExit={() => setView("menu")} />
+          )}
+
+          {view === "condition_drill" && (
+            <ConditionDrillSession onExit={() => setView("menu")} />
+          )}
+
+          {view === "guideline_drill" && (
+            <GuidelineDrillSession onExit={() => setView("menu")} />
           )}
         </AnimatePresence>
       </div>
