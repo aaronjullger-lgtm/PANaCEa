@@ -7,8 +7,8 @@ import {
 
 describe('Training Modes Configuration', () => {
   describe('MODE_REGISTRY', () => {
-    it('should contain exactly 7 training modes', () => {
-      expect(MODE_REGISTRY).toHaveLength(7);
+    it('should contain exactly 12 training modes', () => {
+      expect(MODE_REGISTRY).toHaveLength(12);
     });
 
     it('should have unique ids for all modes', () => {
@@ -20,12 +20,17 @@ describe('Training Modes Configuration', () => {
     it('should have all required TrainingModeId values', () => {
       const expectedIds: TrainingModeId[] = [
         'core_adaptive',
-        'photo_drill',
+        'ecg_drill',
+        'derm_drill',
+        'imaging_drill',
         'rapid_recall',
         'ddx_compare',
         'guideline_drill',
         'mastery_drill',
         'mini_lab',
+        'first_line_treatment',
+        'pharmacology',
+        'condition_drill',
       ];
 
       const actualIds = MODE_REGISTRY.map((mode) => mode.id);
@@ -35,7 +40,7 @@ describe('Training Modes Configuration', () => {
     });
 
     it('should have valid category values for all modes', () => {
-      const validCategories = ['core', 'visual', 'recall', 'mastery'];
+      const validCategories = ['core', 'visual', 'recall', 'mastery', 'pharmacology'];
 
       MODE_REGISTRY.forEach((mode) => {
         expect(validCategories).toContain(mode.category);
@@ -83,7 +88,7 @@ describe('Training Modes Configuration', () => {
 
     it('should work without isComingSoon property', () => {
       const modeWithoutComingSoon: TrainingModeConfig = {
-        id: 'photo_drill',
+        id: 'ecg_drill',
         label: 'Test Mode',
         description: 'Test description',
         category: 'visual',
@@ -104,11 +109,25 @@ describe('Training Modes Configuration', () => {
       expect(coreAdaptive?.category).toBe('core');
     });
 
-    it('should have Global Photo Mode with slate theme', () => {
-      const photoDrill = MODE_REGISTRY.find((m) => m.id === 'photo_drill');
-      expect(photoDrill).toBeDefined();
-      expect(photoDrill?.theme).toBe('slate');
-      expect(photoDrill?.category).toBe('visual');
+    it('should have ECG Drill with rose theme', () => {
+      const ecgDrill = MODE_REGISTRY.find((m) => m.id === 'ecg_drill');
+      expect(ecgDrill).toBeDefined();
+      expect(ecgDrill?.theme).toBe('rose');
+      expect(ecgDrill?.category).toBe('visual');
+    });
+
+    it('should have Derm Drill with pink theme', () => {
+      const dermDrill = MODE_REGISTRY.find((m) => m.id === 'derm_drill');
+      expect(dermDrill).toBeDefined();
+      expect(dermDrill?.theme).toBe('pink');
+      expect(dermDrill?.category).toBe('visual');
+    });
+
+    it('should have Imaging Drill with slate theme', () => {
+      const imagingDrill = MODE_REGISTRY.find((m) => m.id === 'imaging_drill');
+      expect(imagingDrill).toBeDefined();
+      expect(imagingDrill?.theme).toBe('slate');
+      expect(imagingDrill?.category).toBe('visual');
     });
 
     it('should have Mini Lab Mode with emerald theme', () => {
@@ -142,6 +161,13 @@ describe('Training Modes Configuration', () => {
       expect(masteryDrill).toBeDefined();
       expect(masteryDrill?.theme).toBe('red');
       expect(masteryDrill?.category).toBe('mastery');
+    });
+
+    it('should have pharmacology modes marked as coming soon', () => {
+      const firstLine = MODE_REGISTRY.find((m) => m.id === 'first_line_treatment');
+      const pharm = MODE_REGISTRY.find((m) => m.id === 'pharmacology');
+      expect(firstLine?.isComingSoon).toBe(true);
+      expect(pharm?.isComingSoon).toBe(true);
     });
   });
 });

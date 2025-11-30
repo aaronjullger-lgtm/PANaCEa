@@ -37,8 +37,11 @@ describe('TrainingMenu Component Logic', () => {
   });
 
   describe('Icon Mapping', () => {
-    // Icon names used in MODE_REGISTRY
-    const expectedIconNames = ['Brain', 'Image', 'Zap', 'GitCompare', 'FileText', 'Flame', 'ClipboardList'];
+    // Icon names used in MODE_REGISTRY (expanded for new modes)
+    const expectedIconNames = [
+      'Brain', 'Image', 'Zap', 'GitCompare', 'FileText', 'Flame', 'ClipboardList',
+      'Activity', 'Scan', 'FileCheck', 'Layers', 'Pill', 'Beaker'
+    ];
     
     it('should have valid icon names for all modes', () => {
       MODE_REGISTRY.forEach((mode) => {
@@ -55,7 +58,10 @@ describe('TrainingMenu Component Logic', () => {
   });
 
   describe('Theme Background Mapping', () => {
-    const validThemes = ['stone', 'slate', 'amber', 'blue', 'teal', 'red', 'emerald'];
+    const validThemes = [
+      'stone', 'slate', 'amber', 'blue', 'teal', 'red', 'emerald',
+      'rose', 'pink', 'violet', 'cyan', 'purple'
+    ];
     
     it('should have valid theme values for all modes', () => {
       MODE_REGISTRY.forEach((mode) => {
@@ -72,6 +78,11 @@ describe('TrainingMenu Component Logic', () => {
         teal: 'bg-teal-100',
         red: 'bg-red-100',
         emerald: 'bg-emerald-100',
+        rose: 'bg-rose-100',
+        pink: 'bg-pink-100',
+        violet: 'bg-violet-100',
+        cyan: 'bg-cyan-100',
+        purple: 'bg-purple-100',
       };
 
       MODE_REGISTRY.forEach((mode) => {
@@ -105,9 +116,9 @@ describe('TrainingMenu Component Logic', () => {
       const comingSoonModes = MODE_REGISTRY.filter((mode) => mode.isComingSoon === true);
       const availableModes = MODE_REGISTRY.filter((mode) => !mode.isComingSoon);
       
-      // Currently all modes should be available (none marked as coming soon)
-      expect(availableModes.length).toBe(MODE_REGISTRY.length);
-      expect(comingSoonModes.length).toBe(0);
+      // Some modes are marked as coming soon (condition_drill, first_line_treatment, pharmacology)
+      expect(comingSoonModes.length).toBeGreaterThan(0);
+      expect(availableModes.length + comingSoonModes.length).toBe(MODE_REGISTRY.length);
     });
 
     it('should handle optional isComingSoon property', () => {
