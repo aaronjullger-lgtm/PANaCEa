@@ -336,7 +336,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       case 'ecg_drill':
         return 'Master rhythm strips and 12-lead ECG interpretation.';
       case 'derm_drill':
-        return 'Identify skin lesions, rashes, and dermatological findings.';
+        return 'Review patient charts, then diagnose from clinical findings.';
       case 'imaging_drill':
         return 'X-ray, CT, and MRI pattern recognition training.';
       case 'rapid_recall':

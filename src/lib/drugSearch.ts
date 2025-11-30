@@ -19,6 +19,199 @@ for (const [key, entry] of Object.entries(drugData)) {
 }
 
 /**
+ * Brand name lookup table for common generic drugs.
+ * Maps generic name (lowercase) to brand name.
+ */
+export const BRAND_NAME_LOOKUP: Record<string, string> = {
+  // Antidepressants / Psychiatric
+  'duloxetine': 'Cymbalta',
+  'fluoxetine': 'Prozac',
+  'sertraline': 'Zoloft',
+  'escitalopram': 'Lexapro',
+  'citalopram': 'Celexa',
+  'paroxetine': 'Paxil',
+  'venlafaxine': 'Effexor',
+  'bupropion': 'Wellbutrin',
+  'mirtazapine': 'Remeron',
+  'trazodone': 'Desyrel',
+  'amitriptyline': 'Elavil',
+  'nortriptyline': 'Pamelor',
+  'aripiprazole': 'Abilify',
+  'quetiapine': 'Seroquel',
+  'olanzapine': 'Zyprexa',
+  'risperidone': 'Risperdal',
+  'lithium': 'Lithobid',
+  'lamotrigine': 'Lamictal',
+  'alprazolam': 'Xanax',
+  'lorazepam': 'Ativan',
+  'diazepam': 'Valium',
+  'clonazepam': 'Klonopin',
+  'buspirone': 'BuSpar',
+  
+  // Cardiovascular
+  'metoprolol': 'Lopressor',
+  'atenolol': 'Tenormin',
+  'carvedilol': 'Coreg',
+  'propranolol': 'Inderal',
+  'lisinopril': 'Zestril',
+  'enalapril': 'Vasotec',
+  'ramipril': 'Altace',
+  'losartan': 'Cozaar',
+  'valsartan': 'Diovan',
+  'irbesartan': 'Avapro',
+  'amlodipine': 'Norvasc',
+  'nifedipine': 'Procardia',
+  'diltiazem': 'Cardizem',
+  'verapamil': 'Calan',
+  'atorvastatin': 'Lipitor',
+  'simvastatin': 'Zocor',
+  'rosuvastatin': 'Crestor',
+  'pravastatin': 'Pravachol',
+  'lovastatin': 'Mevacor',
+  'ezetimibe': 'Zetia',
+  'furosemide': 'Lasix',
+  'hydrochlorothiazide': 'Microzide',
+  'spironolactone': 'Aldactone',
+  'clopidogrel': 'Plavix',
+  'warfarin': 'Coumadin',
+  'apixaban': 'Eliquis',
+  'rivaroxaban': 'Xarelto',
+  'dabigatran': 'Pradaxa',
+  'digoxin': 'Lanoxin',
+  'amiodarone': 'Pacerone',
+  'nitroglycerin': 'Nitrostat',
+  
+  // Pain / Analgesics
+  'acetaminophen': 'Tylenol',
+  'ibuprofen': 'Advil',
+  'naproxen': 'Aleve',
+  'meloxicam': 'Mobic',
+  'celecoxib': 'Celebrex',
+  'tramadol': 'Ultram',
+  'hydrocodone': 'Vicodin',
+  'oxycodone': 'OxyContin',
+  'morphine': 'MS Contin',
+  'fentanyl': 'Duragesic',
+  'gabapentin': 'Neurontin',
+  'pregabalin': 'Lyrica',
+  'sumatriptan': 'Imitrex',
+  
+  // Diabetes
+  'metformin': 'Glucophage',
+  'glipizide': 'Glucotrol',
+  'glyburide': 'DiaBeta',
+  'pioglitazone': 'Actos',
+  'sitagliptin': 'Januvia',
+  'liraglutide': 'Victoza',
+  'semaglutide': 'Ozempic',
+  'empagliflozin': 'Jardiance',
+  'dapagliflozin': 'Farxiga',
+  'canagliflozin': 'Invokana',
+  
+  // GI
+  'omeprazole': 'Prilosec',
+  'esomeprazole': 'Nexium',
+  'pantoprazole': 'Protonix',
+  'lansoprazole': 'Prevacid',
+  'famotidine': 'Pepcid',
+  'ranitidine': 'Zantac',
+  'ondansetron': 'Zofran',
+  'metoclopramide': 'Reglan',
+  'loperamide': 'Imodium',
+  'docusate': 'Colace',
+  'polyethylene glycol': 'MiraLAX',
+  'lactulose': 'Enulose',
+  
+  // Respiratory
+  'albuterol': 'ProAir',
+  'fluticasone': 'Flovent',
+  'budesonide': 'Pulmicort',
+  'montelukast': 'Singulair',
+  'tiotropium': 'Spiriva',
+  'ipratropium': 'Atrovent',
+  'prednisone': 'Deltasone',
+  'prednisolone': 'Orapred',
+  'dexamethasone': 'Decadron',
+  'methylprednisolone': 'Medrol',
+  
+  // Antibiotics
+  'amoxicillin': 'Amoxil',
+  'azithromycin': 'Zithromax',
+  'ciprofloxacin': 'Cipro',
+  'levofloxacin': 'Levaquin',
+  'doxycycline': 'Vibramycin',
+  'metronidazole': 'Flagyl',
+  'clindamycin': 'Cleocin',
+  'trimethoprim-sulfamethoxazole': 'Bactrim',
+  'cephalexin': 'Keflex',
+  'ceftriaxone': 'Rocephin',
+  'vancomycin': 'Vancocin',
+  
+  // Thyroid
+  'levothyroxine': 'Synthroid',
+  'liothyronine': 'Cytomel',
+  'methimazole': 'Tapazole',
+  'propylthiouracil': 'PTU',
+  
+  // Other Common
+  'allopurinol': 'Zyloprim',
+  'colchicine': 'Colcrys',
+  'methotrexate': 'Trexall',
+  'hydroxychloroquine': 'Plaquenil',
+  'cyclosporine': 'Sandimmune',
+  'tacrolimus': 'Prograf',
+  'sildenafil': 'Viagra',
+  'tadalafil': 'Cialis',
+  'finasteride': 'Propecia',
+  'tamsulosin': 'Flomax',
+  'oxybutynin': 'Ditropan',
+  'zolpidem': 'Ambien',
+  'eszopiclone': 'Lunesta',
+  'modafinil': 'Provigil',
+  'methylphenidate': 'Ritalin',
+  'amphetamine': 'Adderall',
+  'atomoxetine': 'Strattera',
+  'donepezil': 'Aricept',
+  'memantine': 'Namenda',
+  'levodopa': 'Sinemet',
+  'pramipexole': 'Mirapex',
+  'ropinirole': 'Requip',
+};
+
+/**
+ * Get brand name for a drug by its generic name
+ * @param genericName - The generic drug name
+ * @returns The brand name if found, undefined otherwise
+ */
+export function getBrandName(genericName: string): string | undefined {
+  return BRAND_NAME_LOOKUP[genericName.toLowerCase()];
+}
+
+/**
+ * Format drug name with brand name if available
+ * @param genericName - The generic drug name
+ * @returns Formatted string like "Generic (Brand)" or just "Generic" if no brand found
+ */
+export function formatDrugNameWithBrand(genericName: string): string {
+  const brandName = getBrandName(genericName);
+  if (brandName) {
+    // Title case the generic name
+    const titleCaseGeneric = genericName
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+    return `${titleCaseGeneric} (${brandName})`;
+  }
+  // Just title case the generic name
+  return genericName
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
  * Levenshtein distance for fuzzy matching
  */
 function levenshtein(a: string, b: string): number {

@@ -19,7 +19,7 @@ import type { ConditionMeta } from "../conditionRegistry";
 import ConditionDetailModal from "./ConditionDetailModal";
 import DrugDetailModal from "./DrugDetailModal";
 import { findConditionMetaById, searchConditions } from "../src/lib/conditionSearch";
-import { searchDrugs, findDrugByName } from "../src/lib/drugSearch";
+import { searchDrugs, findDrugByName, formatDrugNameWithBrand } from "../src/lib/drugSearch";
 import type { DrugEntry, DrugSearchResult } from "../pharm/drugTypes";
 
 interface MenuViewProps {
@@ -169,11 +169,21 @@ const MenuView: React.FC<MenuViewProps> = ({
   };
 
   // Combined search results for conditions and drugs
-  const { conditionResults, drugResults } = useMemo(
+  const { conditionResults, drugResults, showDrugsFirst } = useMemo(
     () => {
       const conditions = searchConditions(searchQuery);
       const drugs = searchDrugs(searchQuery);
-      return { conditionResults: conditions, drugResults: drugs };
+      
+      // Implement weighted search: If query closely matches a drug name, show drugs first
+      // A high-confidence drug match is when the top drug result has a score >= 2.0
+      // (indicating either exact match or strong partial match)
+      const hasDrugNameMatch = drugs.length > 0 && drugs[0].score >= 2.0;
+      
+      return { 
+        conditionResults: conditions, 
+        drugResults: drugs,
+        showDrugsFirst: hasDrugNameMatch
+      };
     },
     [searchQuery]
   );
@@ -314,71 +324,146 @@ const MenuView: React.FC<MenuViewProps> = ({
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute z-30 mt-2 w-full bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-xl shadow-lg max-h-80 overflow-y-auto"
               >
-                {/* Conditions section */}
-                {conditionResults.length > 0 && (
+                {/* Weighted Search: Show drugs first when query matches a drug name */}
+                {showDrugsFirst ? (
                   <>
-                    <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
-                        Conditions
-                      </span>
-                    </div>
-                    {conditionResults.slice(0, 10).map((result) => (
-                      <button
-                        key={result.id}
-                        type="button"
-                        onClick={() => {
-                          const meta = findConditionMetaById(result.id);
-                          if (meta) {
-                            setSelectedCondition(meta);
-                          }
-                          setSearchQuery("");
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
-                      >
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-[var(--color-text-primary)]">
-                            {result.condition}
-                          </span>
-                          <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
-                            {result.system} • {result.subcategory}
+                    {/* Drugs/Pharmacology section - shown first when drug name match */}
+                    {drugResults.length > 0 && (
+                      <>
+                        <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                            💊 Pharmacology
                           </span>
                         </div>
-                      </button>
-                    ))}
+                        {drugResults.slice(0, 10).map((result) => (
+                          <button
+                            key={result.id}
+                            type="button"
+                            onClick={() => {
+                              const drug = findDrugByName(result.drugName);
+                              if (drug) {
+                                setSelectedDrug(drug);
+                              }
+                              setSearchQuery("");
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
+                          >
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-semibold text-[var(--color-text-primary)]">
+                                {formatDrugNameWithBrand(result.drugName)}
+                              </span>
+                              <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                                {result.drugClass}{result.subclass ? ` • ${result.subclass}` : ""}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    
+                    {/* Conditions section - shown second */}
+                    {conditionResults.length > 0 && (
+                      <>
+                        <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
+                            Conditions
+                          </span>
+                        </div>
+                        {conditionResults.slice(0, 10).map((result) => (
+                          <button
+                            key={result.id}
+                            type="button"
+                            onClick={() => {
+                              const meta = findConditionMetaById(result.id);
+                              if (meta) {
+                                setSelectedCondition(meta);
+                              }
+                              setSearchQuery("");
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
+                          >
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-semibold text-[var(--color-text-primary)]">
+                                {result.condition}
+                              </span>
+                              <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                                {result.system} • {result.subcategory}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
                   </>
-                )}
-                
-                {/* Drugs/Pharmacology section */}
-                {drugResults.length > 0 && (
+                ) : (
                   <>
-                    <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                        💊 Pharmacology
-                      </span>
-                    </div>
-                    {drugResults.slice(0, 10).map((result) => (
-                      <button
-                        key={result.id}
-                        type="button"
-                        onClick={() => {
-                          const drug = findDrugByName(result.drugName);
-                          if (drug) {
-                            setSelectedDrug(drug);
-                          }
-                          setSearchQuery("");
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
-                      >
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-[var(--color-text-primary)]">
-                            {result.drugName}
-                          </span>
-                          <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
-                            {result.drugClass}{result.subclass ? ` • ${result.subclass}` : ""}
+                    {/* Conditions section - shown first by default */}
+                    {conditionResults.length > 0 && (
+                      <>
+                        <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
+                            Conditions
                           </span>
                         </div>
-                      </button>
-                    ))}
+                        {conditionResults.slice(0, 10).map((result) => (
+                          <button
+                            key={result.id}
+                            type="button"
+                            onClick={() => {
+                              const meta = findConditionMetaById(result.id);
+                              if (meta) {
+                                setSelectedCondition(meta);
+                              }
+                              setSearchQuery("");
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
+                          >
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-semibold text-[var(--color-text-primary)]">
+                                {result.condition}
+                              </span>
+                              <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                                {result.system} • {result.subcategory}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    
+                    {/* Drugs/Pharmacology section */}
+                    {drugResults.length > 0 && (
+                      <>
+                        <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-green-600">
+                            💊 Pharmacology
+                          </span>
+                        </div>
+                        {drugResults.slice(0, 10).map((result) => (
+                          <button
+                            key={result.id}
+                            type="button"
+                            onClick={() => {
+                              const drug = findDrugByName(result.drugName);
+                              if (drug) {
+                                setSelectedDrug(drug);
+                              }
+                              setSearchQuery("");
+                            }}
+                            className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
+                          >
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-semibold text-[var(--color-text-primary)]">
+                                {formatDrugNameWithBrand(result.drugName)}
+                              </span>
+                              <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                                {result.drugClass}{result.subclass ? ` • ${result.subclass}` : ""}
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
                   </>
                 )}
               </motion.div>

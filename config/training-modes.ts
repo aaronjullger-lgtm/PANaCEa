@@ -71,8 +71,8 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
   },
   {
     id: 'derm_drill',
-    label: 'Derm Recognition',
-    description: 'Identify skin lesions and dermatological findings.',
+    label: 'Clinical Presentation',
+    description: 'Synthesize clinical clues to diagnose.',
     category: 'visual',
     iconName: 'Scan',
     theme: 'pink',

@@ -5,6 +5,30 @@ import { useState, useCallback, useMemo, useRef } from 'react';
 // ============================================================================
 
 /**
+ * Clinical presentation data for derm/clinical mode
+ */
+export interface ClinicalPresentationData {
+  /** Patient age */
+  age: number;
+  /** Patient sex */
+  sex: 'M' | 'F';
+  /** Chief complaint */
+  chiefComplaint: string;
+  /** Brief history */
+  history: string;
+  /** Vital signs */
+  vitals: {
+    bp: string;
+    hr: string;
+    temp: string;
+    rr: string;
+    o2: string;
+  };
+  /** Key physical exam findings (shown before image) */
+  physicalExam: string[];
+}
+
+/**
  * Represents a single photo case in the drill.
  */
 export interface PhotoCase {
@@ -20,6 +44,8 @@ export interface PhotoCase {
   distractors: string[];
   /** Explanation shown after answering */
   explanation: string;
+  /** Clinical presentation data for derm/clinical mode */
+  clinicalPresentation?: ClinicalPresentationData;
 }
 
 /**
@@ -121,6 +147,140 @@ const RADIOLOGY_CONDITIONS = [
 ];
 
 // ============================================================================
+// CLINICAL PRESENTATION DATA FOR DERM CONDITIONS
+// ============================================================================
+
+/**
+ * Clinical presentation templates for each derm condition.
+ * These provide realistic patient presentations to synthesize clinical clues.
+ */
+const CLINICAL_PRESENTATIONS: Record<string, ClinicalPresentationData> = {
+  'Psoriasis': {
+    age: 35,
+    sex: 'M',
+    chiefComplaint: 'Itchy, scaly patches on elbows and knees',
+    history: 'Symptoms worsened over past 2 months. Family history of psoriasis in mother. Recent stressful period at work. Tried OTC moisturizers without relief.',
+    vitals: { bp: '122/78', hr: '72', temp: '98.6°F', rr: '16', o2: '99%' },
+    physicalExam: [
+      'Well-demarcated erythematous plaques',
+      'Silvery-white scales on extensor surfaces',
+      'Nail pitting on several fingers',
+      'No joint swelling or tenderness',
+    ],
+  },
+  'Eczema': {
+    age: 8,
+    sex: 'F',
+    chiefComplaint: 'Intensely itchy rash in elbow and knee creases',
+    history: 'History of allergies and asthma. Symptoms worse in winter. Parents note child scratches frequently at night. Uses fragrance-free soap.',
+    vitals: { bp: '100/65', hr: '88', temp: '98.4°F', rr: '18', o2: '99%' },
+    physicalExam: [
+      'Erythematous, lichenified patches in flexural areas',
+      'Excoriations from scratching',
+      'Dry skin (xerosis) generalized',
+      'No vesicles or pustules',
+    ],
+  },
+  'Shingles': {
+    age: 68,
+    sex: 'F',
+    chiefComplaint: 'Painful rash on right side of chest for 3 days',
+    history: 'Burning pain preceded rash by 2 days. Had chickenpox as a child. Recently completed chemotherapy. Not vaccinated for shingles.',
+    vitals: { bp: '138/82', hr: '78', temp: '99.2°F', rr: '16', o2: '98%' },
+    physicalExam: [
+      'Grouped vesicles on erythematous base',
+      'Unilateral distribution following T4-T5 dermatome',
+      'Does not cross midline',
+      'Tender to light touch (allodynia)',
+    ],
+  },
+  'Contact Dermatitis': {
+    age: 42,
+    sex: 'M',
+    chiefComplaint: 'Itchy red rash on hands after gardening',
+    history: 'Rash developed 24-48 hours after pulling weeds in backyard. Similar episode last summer. Works as office manager, gardens on weekends.',
+    vitals: { bp: '118/74', hr: '68', temp: '98.4°F', rr: '14', o2: '99%' },
+    physicalExam: [
+      'Erythematous papules and vesicles in linear pattern',
+      'Sharp demarcation at wrist (glove line)',
+      'Weeping and crusting in some areas',
+      'Pruritus without systemic symptoms',
+    ],
+  },
+  'Cellulitis': {
+    age: 55,
+    sex: 'M',
+    chiefComplaint: 'Painful, red, swollen right leg for 2 days',
+    history: 'Diabetes mellitus type 2, poorly controlled (A1c 9.2%). Noticed small cut on foot last week. Increasing redness spreading up leg. Fever and chills.',
+    vitals: { bp: '142/88', hr: '98', temp: '101.2°F', rr: '18', o2: '97%' },
+    physicalExam: [
+      'Warm, erythematous area on anterior lower leg',
+      'Poorly demarcated borders with spreading erythema',
+      'Pitting edema of affected leg',
+      'Small healing wound on dorsum of foot',
+      'Tender inguinal lymphadenopathy',
+    ],
+  },
+  'Melanoma': {
+    age: 62,
+    sex: 'F',
+    chiefComplaint: 'Changing mole on upper back noticed by husband',
+    history: 'History of severe sunburns as teenager. Multiple nevi. Fair complexion. Mother had melanoma. Mole has grown and darkened over 6 months.',
+    vitals: { bp: '128/76', hr: '70', temp: '98.6°F', rr: '14', o2: '99%' },
+    physicalExam: [
+      'Asymmetric pigmented lesion 8mm diameter',
+      'Irregular, notched borders',
+      'Color variation: brown, black, and red areas',
+      'No satellite lesions',
+      'No palpable lymphadenopathy',
+    ],
+  },
+  'Basal Cell Carcinoma': {
+    age: 72,
+    sex: 'M',
+    chiefComplaint: 'Non-healing "pimple" on nose for 6 months',
+    history: 'Worked outdoors as farmer for 40 years. Fair skin, blue eyes. Never used sunscreen. Lesion bleeds with minor trauma and scabs over repeatedly.',
+    vitals: { bp: '134/80', hr: '66', temp: '98.4°F', rr: '14', o2: '98%' },
+    physicalExam: [
+      'Pearly, translucent papule with telangiectasias',
+      'Rolled borders',
+      'Central depression with crusting',
+      'Located on sun-exposed area (nose)',
+    ],
+  },
+  'Impetigo': {
+    age: 5,
+    sex: 'M',
+    chiefComplaint: 'Crusty sores around mouth and nose',
+    history: 'Started as small blisters 4 days ago, now spreading. Several classmates have similar lesions. Low-grade fever. Good appetite and activity level.',
+    vitals: { bp: '95/60', hr: '100', temp: '99.8°F', rr: '20', o2: '99%' },
+    physicalExam: [
+      'Honey-colored crusted lesions around nares and mouth',
+      'Erythematous base beneath crusts',
+      'Satellite lesions on cheeks',
+      'Mild regional lymphadenopathy',
+    ],
+  },
+};
+
+/**
+ * Generate clinical presentation data for a derm condition
+ */
+function generateClinicalPresentation(diagnosis: string): ClinicalPresentationData | undefined {
+  const template = CLINICAL_PRESENTATIONS[diagnosis];
+  if (!template) return undefined;
+  
+  // Add some random variation to age
+  const ageVariation = Math.floor(Math.random() * 10) - 5;
+  const age = Math.max(1, template.age + ageVariation);
+  
+  return {
+    ...template,
+    age,
+  };
+}
+
+// ============================================================================
 // HELPER: generateRandomCase
 // ============================================================================
 
@@ -203,6 +363,11 @@ export function generateRandomCase(
   const explanation =
     options?.educationalCaption ?? 'Key features support this diagnosis.';
 
+  // Generate clinical presentation for derm cases
+  const clinicalPresentation = modality === 'derm' 
+    ? generateClinicalPresentation(diagnosis) 
+    : undefined;
+
   return {
     id,
     imageUrl,
@@ -210,6 +375,7 @@ export function generateRandomCase(
     correctDiagnosis: diagnosis,
     distractors,
     explanation,
+    clinicalPresentation,
   };
 }
 

@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePhotoDrill, type CategoryType } from '@/hooks/game/use-photo-drill';
+import { usePhotoDrill, type CategoryType, type ClinicalPresentationData } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity, Shuffle } from 'lucide-react';
+import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity, Shuffle, Eye, User, Thermometer, Heart, Wind } from 'lucide-react';
 
 export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
 
@@ -12,6 +12,113 @@ interface PhotoDrillSessionProps {
   /** Optional filter to directly start a specific category (skips lobby) */
   filterType?: PhotoDrillFilterType;
 }
+
+/**
+ * Patient Chart component for Clinical Presentation Mode
+ * Displays clinical clues before revealing the visual media
+ */
+interface PatientChartProps {
+  presentation: ClinicalPresentationData;
+  onRevealImage: () => void;
+}
+
+const PatientChart: React.FC<PatientChartProps> = ({ presentation, onRevealImage }) => {
+  return (
+    <div className="w-full max-w-3xl mx-auto space-y-4">
+      {/* Patient Header - Pager/Chart aesthetic */}
+      <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+        <div className="bg-gradient-to-r from-violet-900/50 to-purple-900/50 px-4 py-3 border-b border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-slate-800 rounded-lg">
+              <User className="w-5 h-5 text-violet-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white">Patient Encounter</h3>
+              <p className="text-sm text-slate-400">
+                {presentation.age}yo {presentation.sex === 'M' ? 'Male' : 'Female'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Chief Complaint */}
+        <div className="px-4 py-3 border-b border-slate-700/50">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Chief Complaint</p>
+          <p className="text-slate-200">"{presentation.chiefComplaint}"</p>
+        </div>
+
+        {/* Vitals Grid */}
+        <div className="px-4 py-3 border-b border-slate-700/50">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Vital Signs</p>
+          <div className="grid grid-cols-5 gap-2">
+            <div className="text-center p-2 bg-slate-800/50 rounded-lg">
+              <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
+                <Heart className="w-3 h-3" />
+                <span className="text-xs">BP</span>
+              </div>
+              <p className="text-sm font-semibold text-slate-200">{presentation.vitals.bp}</p>
+            </div>
+            <div className="text-center p-2 bg-slate-800/50 rounded-lg">
+              <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
+                <Activity className="w-3 h-3" />
+                <span className="text-xs">HR</span>
+              </div>
+              <p className="text-sm font-semibold text-slate-200">{presentation.vitals.hr}</p>
+            </div>
+            <div className="text-center p-2 bg-slate-800/50 rounded-lg">
+              <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
+                <Thermometer className="w-3 h-3" />
+                <span className="text-xs">Temp</span>
+              </div>
+              <p className="text-sm font-semibold text-slate-200">{presentation.vitals.temp}</p>
+            </div>
+            <div className="text-center p-2 bg-slate-800/50 rounded-lg">
+              <div className="flex items-center justify-center gap-1 text-slate-400 mb-1">
+                <Wind className="w-3 h-3" />
+                <span className="text-xs">RR</span>
+              </div>
+              <p className="text-sm font-semibold text-slate-200">{presentation.vitals.rr}</p>
+            </div>
+            <div className="text-center p-2 bg-slate-800/50 rounded-lg">
+              <p className="text-xs text-slate-400 mb-1">SpO2</p>
+              <p className="text-sm font-semibold text-slate-200">{presentation.vitals.o2}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* History */}
+        <div className="px-4 py-3 border-b border-slate-700/50">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">History</p>
+          <p className="text-sm text-slate-300 leading-relaxed">{presentation.history}</p>
+        </div>
+
+        {/* Physical Exam Findings */}
+        <div className="px-4 py-3">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Physical Examination</p>
+          <ul className="space-y-1.5">
+            {presentation.physicalExam.map((finding, idx) => (
+              <li key={idx} className="text-sm text-slate-300 flex items-start gap-2">
+                <span className="text-violet-400 mt-0.5">•</span>
+                <span>{finding}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Reveal Image Button */}
+      <motion.button
+        onClick={onRevealImage}
+        className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white rounded-xl font-medium transition-all shadow-lg"
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+      >
+        <Eye className="w-5 h-5" />
+        Reveal Visual Finding
+      </motion.button>
+    </div>
+  );
+};
 
 /** Category card data for the lobby */
 const CATEGORY_CARDS: Array<{
@@ -57,6 +164,8 @@ const CATEGORY_CARDS: Array<{
  * A full-screen immersive interface with two stages:
  * - Lobby: Category selection (skipped if filterType is provided)
  * - Drill: Infinite photo drill with smart type-ahead search
+ * 
+ * Clinical Presentation Mode (derm): Shows patient chart before revealing image
  */
 const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterType }) => {
   const {
@@ -72,7 +181,18 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
     startSession,
     exitToMenu,
     validDiagnoses,
+    selectedCategory,
   } = usePhotoDrill();
+
+  // State for Clinical Presentation Mode - controls whether image is revealed
+  const [imageRevealed, setImageRevealed] = useState(false);
+
+  // Reset image revealed state when moving to next case
+  useEffect(() => {
+    if (status === 'playing') {
+      setImageRevealed(false);
+    }
+  }, [currentCase?.id, status]);
 
   // Auto-start session if filterType is provided (direct access from split drill tiles)
   useEffect(() => {
@@ -109,6 +229,17 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
   const handleReset = () => {
     reset();
   };
+
+  const handleRevealImage = () => {
+    setImageRevealed(true);
+  };
+
+  // Check if we should show clinical presentation mode
+  const showClinicalPresentation = 
+    currentCase?.modality === 'derm' && 
+    currentCase?.clinicalPresentation && 
+    !imageRevealed &&
+    status === 'playing';
 
   // Animation variants
   const imageVariants = {
@@ -246,12 +377,28 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
           </div>
         </header>
 
-        {/* Main Stage - Image takes up full available height */}
-        <main className="flex-1 flex items-center justify-center p-4 pt-16 pb-32">
+        {/* Main Stage - Clinical Presentation or Image */}
+        <main className="flex-1 flex items-center justify-center p-4 pt-16 pb-32 overflow-y-auto">
           <AnimatePresence mode="wait">
-            {currentCase && (
+            {currentCase && showClinicalPresentation && currentCase.clinicalPresentation && (
               <motion.div
-                key={currentCase.id}
+                key={`${currentCase.id}-clinical`}
+                variants={imageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ duration: 0.3 }}
+                className="w-full h-full flex items-center justify-center"
+              >
+                <PatientChart
+                  presentation={currentCase.clinicalPresentation}
+                  onRevealImage={handleRevealImage}
+                />
+              </motion.div>
+            )}
+            {currentCase && !showClinicalPresentation && (
+              <motion.div
+                key={`${currentCase.id}-image`}
                 variants={imageVariants}
                 initial="initial"
                 animate="animate"
@@ -278,7 +425,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
         {/* Fixed Bottom Bar with DiagnosisInput */}
         <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800">
           <AnimatePresence mode="wait">
-            {status === 'playing' && (
+            {status === 'playing' && !showClinicalPresentation && (
               <motion.div
                 key="playing-controls"
                 variants={feedbackVariants}

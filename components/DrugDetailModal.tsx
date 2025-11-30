@@ -4,6 +4,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DrugEntry, DrugInteraction } from "../pharm/drugTypes";
+import { formatDrugNameWithBrand } from "../src/lib/drugSearch";
 
 interface DrugDetailModalProps {
   drug: DrugEntry;
@@ -43,8 +44,8 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
     return JSON.stringify(interaction);
   };
 
-  // Title case the drug name for display
-  const displayDrugName = toTitleCase(drug.term);
+  // Format drug name with brand name (e.g., "Duloxetine (Cymbalta)")
+  const displayDrugName = formatDrugNameWithBrand(drug.term);
 
   return (
     <AnimatePresence>
