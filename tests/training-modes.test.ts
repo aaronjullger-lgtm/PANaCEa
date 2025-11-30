@@ -7,8 +7,8 @@ import {
 
 describe('Training Modes Configuration', () => {
   describe('MODE_REGISTRY', () => {
-    it('should contain exactly 6 training modes', () => {
-      expect(MODE_REGISTRY).toHaveLength(6);
+    it('should contain exactly 7 training modes', () => {
+      expect(MODE_REGISTRY).toHaveLength(7);
     });
 
     it('should have unique ids for all modes', () => {
@@ -25,6 +25,7 @@ describe('Training Modes Configuration', () => {
         'ddx_compare',
         'guideline_drill',
         'mastery_drill',
+        'mini_lab',
       ];
 
       const actualIds = MODE_REGISTRY.map((mode) => mode.id);
@@ -108,6 +109,13 @@ describe('Training Modes Configuration', () => {
       expect(photoDrill).toBeDefined();
       expect(photoDrill?.theme).toBe('slate');
       expect(photoDrill?.category).toBe('visual');
+    });
+
+    it('should have Mini Lab Mode with emerald theme', () => {
+      const miniLab = MODE_REGISTRY.find((m) => m.id === 'mini_lab');
+      expect(miniLab).toBeDefined();
+      expect(miniLab?.theme).toBe('emerald');
+      expect(miniLab?.category).toBe('visual');
     });
 
     it('should have Rapid Recall with amber theme', () => {

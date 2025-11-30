@@ -55,7 +55,7 @@ describe('TrainingMenu Component Logic', () => {
   });
 
   describe('Theme Background Mapping', () => {
-    const validThemes = ['stone', 'slate', 'amber', 'blue', 'teal', 'red'];
+    const validThemes = ['stone', 'slate', 'amber', 'blue', 'teal', 'red', 'emerald'];
     
     it('should have valid theme values for all modes', () => {
       MODE_REGISTRY.forEach((mode) => {
@@ -71,6 +71,7 @@ describe('TrainingMenu Component Logic', () => {
         blue: 'bg-blue-100',
         teal: 'bg-teal-100',
         red: 'bg-red-100',
+        emerald: 'bg-emerald-100',
       };
 
       MODE_REGISTRY.forEach((mode) => {

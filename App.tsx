@@ -7,6 +7,7 @@ import Loader from "./components/Loader";
 import PhotoDrillSession from "./components/PhotoDrillSession";
 import RapidRecallDrill from "./components/drill/recall/RapidRecallDrill";
 import DDxCompareDrill from "./components/drill/ddx/DDxCompareDrill";
+import MiniLabDrillSession from "./components/drill/MiniLabDrillSession";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import { prefetchQuestions } from "./services/geminiService";
 import type {
@@ -25,8 +26,9 @@ const FLAGGED_KEY = "panceai_flagged_v2";
 const DRILL_MODE_PHOTO: TrainingModeId = 'photo_drill';
 const DRILL_MODE_RAPID_RECALL: TrainingModeId = 'rapid_recall';
 const DRILL_MODE_DDX_COMPARE: TrainingModeId = 'ddx_compare';
+const DRILL_MODE_MINI_LAB: TrainingModeId = 'mini_lab';
 
-type View = "menu" | "quiz" | "photo_drill" | "rapid_recall" | "ddx_compare";
+type View = "menu" | "quiz" | "photo_drill" | "rapid_recall" | "ddx_compare" | "mini_lab";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -287,6 +289,8 @@ const App: React.FC = () => {
       setView('rapid_recall');
     } else if (modeId === DRILL_MODE_DDX_COMPARE) {
       setView('ddx_compare');
+    } else if (modeId === DRILL_MODE_MINI_LAB) {
+      setView('mini_lab');
     }
   };
 
@@ -399,6 +403,10 @@ const App: React.FC = () => {
 
           {view === "ddx_compare" && (
             <DDxCompareDrill onExit={() => setView("menu")} />
+          )}
+
+          {view === "mini_lab" && (
+            <MiniLabDrillSession onExit={() => setView("menu")} />
           )}
         </AnimatePresence>
       </div>

@@ -13,7 +13,8 @@ export type TrainingModeId =
   | 'rapid_recall'
   | 'ddx_compare'
   | 'guideline_drill'
-  | 'mastery_drill';
+  | 'mastery_drill'
+  | 'mini_lab';
 
 /**
  * Configuration interface for training mode cards.
@@ -62,6 +63,15 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     route: '/drill/photo',
   },
   {
+    id: 'mini_lab',
+    label: 'Mini Lab Mode',
+    description: 'Diagnose from structured lab results.',
+    category: 'visual',
+    iconName: 'ClipboardList',
+    theme: 'emerald',
+    route: '/drill/mini-lab',
+  },
+  {
     id: 'rapid_recall',
     label: 'Rapid Recall',
     description: 'High-yield buzzwords & flashcards.',
@@ -104,4 +114,4 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
  * Mode IDs that have dedicated routes/pages and should not fall back to core session.
  * Export this to maintain a single source of truth across components.
  */
-export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = ['photo_drill', 'rapid_recall', 'ddx_compare'];
+export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = ['photo_drill', 'rapid_recall', 'ddx_compare', 'mini_lab'];
