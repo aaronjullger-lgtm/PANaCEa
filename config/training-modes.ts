@@ -119,7 +119,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     id: 'guideline_drill',
     label: 'Guideline Mode',
     description: 'Scoring systems & clinical criteria.',
-    category: 'core',
+    category: 'recall',
     iconName: 'FileCheck',
     theme: 'teal',
     route: '/guidelines',
@@ -133,7 +133,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'Layers',
     theme: 'violet',
     route: '/drill/condition',
-    isComingSoon: true,
+    isComingSoon: false,
   },
   // Pharmacology Modes
   {
@@ -144,7 +144,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'Pill',
     theme: 'cyan',
     route: '/drill/first-line',
-    isComingSoon: true,
+    isComingSoon: false,
   },
   {
     id: 'pharmacology',
@@ -154,7 +154,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'Beaker',
     theme: 'purple',
     route: '/drill/pharm',
-    isComingSoon: true,
+    isComingSoon: false,
   },
   // Mastery Mode
   {
@@ -179,5 +179,9 @@ export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = [
   'imaging_drill',
   'rapid_recall', 
   'ddx_compare', 
-  'mini_lab'
+  'mini_lab',
+  'pharmacology',
+  'first_line_treatment',
+  'condition_drill',
+  'guideline_drill'
 ];

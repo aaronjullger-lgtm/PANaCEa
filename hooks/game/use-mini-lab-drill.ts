@@ -425,15 +425,62 @@ function getDiagnosesByCategory(category: LabCategory): string[] {
 
 let labCaseCounter = 0;
 
+/**
+ * Random variation multipliers to make lab values feel different each time
+ */
+function applyVariation(value: string, direction: 'high' | 'low' | undefined): string {
+  // Try to parse the value as a number
+  const numMatch = value.match(/^([\d.]+)/);
+  if (!numMatch) return value;
+  
+  const num = parseFloat(numMatch[1]);
+  if (isNaN(num)) return value;
+  
+  // Apply a small random variation (±10%)
+  const variation = 0.9 + Math.random() * 0.2;
+  const newNum = Math.round(num * variation * 10) / 10;
+  
+  // Replace the number in the original string
+  return value.replace(numMatch[1], newNum.toString());
+}
+
+/**
+ * Randomize patient demographics
+ */
+function randomizePatient(originalAge: number, originalSex: 'M' | 'F'): { age: number; sex: 'M' | 'F' } {
+  // Add some age variation
+  const ageVariation = Math.floor(Math.random() * 10) - 5;
+  const newAge = Math.max(18, Math.min(90, originalAge + ageVariation));
+  
+  return {
+    age: newAge,
+    sex: originalSex,
+  };
+}
+
 function generateRandomLabCase(category: LabCategory): LabCase {
   const availableCases = getCasesByCategory(category);
   const randomCase = availableCases[Math.floor(Math.random() * availableCases.length)];
   
   labCaseCounter++;
   
+  // Apply variations to lab values to make each case feel different
+  const variedPanels = randomCase.panels.map(panel => ({
+    ...panel,
+    values: panel.values.map(val => ({
+      ...val,
+      value: val.isAbnormal ? applyVariation(val.value, val.abnormalDirection) : val.value,
+    })),
+  }));
+  
+  const { age, sex } = randomizePatient(randomCase.patientAge, randomCase.patientSex);
+  
   return {
     ...randomCase,
     id: `lab-${Date.now()}-${labCaseCounter}`,
+    patientAge: age,
+    patientSex: sex,
+    panels: variedPanels,
   };
 }
 
