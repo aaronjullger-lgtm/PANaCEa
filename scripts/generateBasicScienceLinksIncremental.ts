@@ -13,7 +13,8 @@ const MODEL_NAME = "gemini-2.0-flash-exp";
 const CLINICAL_CASES_FILE = path.resolve("src/data/clinicalCases.json");
 const LAB_CASES_FILE = path.resolve("src/data/labCases.json");
 const REQUESTS_PER_MINUTE = 8; // Stay under 10/min limit
-const DELAY_BETWEEN_REQUESTS = Math.ceil(60000 / REQUESTS_PER_MINUTE); // ~7.5 seconds
+// Add 20% buffer to account for API call processing time
+const DELAY_BETWEEN_REQUESTS = Math.ceil((60000 / REQUESTS_PER_MINUTE) * 1.2); // ~9 seconds
 
 // ======================================================
 // API KEY
@@ -87,7 +88,13 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     const cleanedText = cleanJsonResponse(text);
-    const links = JSON.parse(cleanedText);
+    
+    let links;
+    try {
+      links = JSON.parse(cleanedText);
+    } catch (parseError) {
+      throw new Error(`JSON parse failed. Raw response: ${cleanedText.substring(0, 200)}...`);
+    }
 
     if (!Array.isArray(links)) {
       throw new Error("Response is not an array");

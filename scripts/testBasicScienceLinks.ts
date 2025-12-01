@@ -81,7 +81,13 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
     const result = await model.generateContent(prompt);
     const text = result.response.text();
     const cleanedText = cleanJsonResponse(text);
-    const links = JSON.parse(cleanedText);
+    
+    let links;
+    try {
+      links = JSON.parse(cleanedText);
+    } catch (parseError) {
+      throw new Error(`JSON parse failed for "${diagnosis}". Raw response: ${cleanedText.substring(0, 200)}...`);
+    }
 
     // Validate structure
     if (!Array.isArray(links)) {
