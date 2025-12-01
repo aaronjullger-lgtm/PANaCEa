@@ -56,6 +56,10 @@ export interface LabCase {
   explanation: string;
   /** Category for filtering */
   category: LabCategory;
+  /** Optional: Additional orderable tests that can be revealed */
+  orderableTests?: LabPanel[];
+  /** Optional: Tests that have been ordered by the user */
+  orderedTests?: string[];
 }
 
 /**
@@ -525,6 +529,10 @@ export interface UseMiniLabDrillReturn {
   startSession: (category: LabCategory) => void;
   /** Exit to menu */
   exitToMenu: () => void;
+  /** Order additional tests */
+  orderTest: (testName: string) => void;
+  /** Available orderable tests for current case */
+  availableTests: string[];
 }
 
 const INITIAL_QUEUE_SIZE = 3;
@@ -544,6 +552,15 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
 
   const currentCase = queue[currentIndex] ?? null;
+  
+  // Get available orderable tests for the current case
+  const availableTests = useMemo(() => {
+    if (!currentCase || !currentCase.orderableTests) return [];
+    const alreadyOrdered = new Set(currentCase.orderedTests || []);
+    return currentCase.orderableTests
+      .map(panel => panel.name)
+      .filter(name => !alreadyOrdered.has(name));
+  }, [currentCase]);
 
   const validDiagnoses = useMemo(() => {
     if (selectedCategory === 'random') {
@@ -635,6 +652,29 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setIsCorrect(null);
     setStatus('playing');
   }, [selectedCategory, generateNewCase]);
+  
+  const orderTest = useCallback((testName: string) => {
+    if (!currentCase || !currentCase.orderableTests) return;
+    
+    // Find the test panel
+    const testPanel = currentCase.orderableTests.find(panel => panel.name === testName);
+    if (!testPanel) return;
+    
+    // Update the queue with the ordered test
+    setQueue(prev => {
+      const newQueue = [...prev];
+      const updatedCase = { ...newQueue[currentIndex] };
+      
+      // Add to panels
+      updatedCase.panels = [...updatedCase.panels, testPanel];
+      
+      // Track ordered tests
+      updatedCase.orderedTests = [...(updatedCase.orderedTests || []), testName];
+      
+      newQueue[currentIndex] = updatedCase;
+      return newQueue;
+    });
+  }, [currentCase, currentIndex]);
 
   return {
     currentCase,
@@ -650,5 +690,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    orderTest,
+    availableTests,
   };
 }
