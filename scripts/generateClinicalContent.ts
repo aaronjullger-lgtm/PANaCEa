@@ -114,6 +114,9 @@ const ALL_CONDITIONS = [
 // GENERATE CLINICAL CASES
 // ======================================================
 async function generateClinicalCaseBatch(batchNumber: number, casesInBatch: number): Promise<ClinicalCase[]> {
+  const startId = batchNumber * casesInBatch + 1;
+  const endId = (batchNumber + 1) * casesInBatch;
+  
   const prompt = `You are a medical education expert generating clinical presentation cases for PANCE preparation.
 
 Generate exactly ${casesInBatch} unique, complex clinical cases in JSON format. Each case must:
@@ -128,7 +131,7 @@ Generate exactly ${casesInBatch} unique, complex clinical cases in JSON format. 
 Return ONLY a valid JSON array with the following structure (no markdown, no code blocks):
 [
   {
-    "id": "clinical_case_${batchNumber * casesInBatch + 1}",
+    "id": "clinical_case_${startId}",
     "correctDiagnosis": "Subarachnoid Hemorrhage",
     "vignette": "A 52-year-old woman presents to the ED with sudden-onset severe headache that began 2 hours ago while exercising. She describes it as 'the worst headache of my life' and reports associated nausea, vomiting, and photophobia. She has no prior history of migraines.",
     "presentationClues": [
@@ -161,7 +164,7 @@ Return ONLY a valid JSON array with the following structure (no markdown, no cod
 ]
 
 Generate ${casesInBatch} diverse cases covering different high-yield conditions from: ${ALL_CONDITIONS.slice(0, 15).join(", ")}, and similar conditions.
-Start IDs at clinical_case_${batchNumber * casesInBatch + 1}.
+Start IDs at clinical_case_${startId} and end at clinical_case_${endId}.
 Ensure each case has clinically accurate and distinctive presentation clues that would help a PA student recognize the pattern.`;
 
   try {

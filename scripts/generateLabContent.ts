@@ -81,6 +81,9 @@ const HIGH_YIELD_CONDITIONS = [
 // GENERATE LAB CASES
 // ======================================================
 async function generateLabCaseBatch(batchNumber: number, casesInBatch: number): Promise<LabCase[]> {
+  const startId = batchNumber * casesInBatch + 1;
+  const endId = (batchNumber + 1) * casesInBatch;
+  
   const prompt = `You are a medical education expert generating lab interpretation cases for PANCE preparation.
 
 Generate exactly ${casesInBatch} unique, complex lab cases in JSON format. Each case must:
@@ -94,7 +97,7 @@ Generate exactly ${casesInBatch} unique, complex lab cases in JSON format. Each 
 Return ONLY a valid JSON array with the following structure (no markdown, no code blocks):
 [
   {
-    "id": "lab_case_${batchNumber * casesInBatch + 1}",
+    "id": "lab_case_${startId}",
     "correctDiagnosis": "Diabetic Ketoacidosis",
     "clinicalVignette": "A 24-year-old male with type 1 diabetes presents to the ED with nausea, vomiting, and abdominal pain for 2 days. He reports running out of insulin 3 days ago.",
     "labs": {
@@ -124,7 +127,7 @@ Return ONLY a valid JSON array with the following structure (no markdown, no cod
   }
 ]
 
-Generate ${casesInBatch} diverse cases covering different high-yield conditions. Start IDs at lab_case_${batchNumber * casesInBatch + 1}.`;
+Generate ${casesInBatch} diverse cases covering different high-yield conditions. Start IDs at lab_case_${startId} and end at lab_case_${endId}.`;
 
   try {
     console.log(`   Generating batch ${batchNumber + 1} (cases ${batchNumber * casesInBatch + 1}-${(batchNumber + 1) * casesInBatch})...`);
