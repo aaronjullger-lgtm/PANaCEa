@@ -30,6 +30,10 @@ npm run generate:lab
 
 # Generate 250 clinical presentation cases (~5-10 minutes)
 npm run generate:clinical
+
+# Add basic science links to existing cases
+npm run test:basic-science-links        # Test with 3 cases first
+npm run generate:basic-science-links    # Generate for all 500 cases
 ```
 
 ## What Gets Generated
@@ -42,6 +46,7 @@ npm run generate:clinical
 - **Clinical context**: Brief vignettes with patient demographics and presentation
 - **Abnormal values**: Each case has 2-3+ medically plausible abnormalities
 - **Flagged results**: Every lab value marked as High (H), Low (L), or Normal (N)
+- **Basic science links**: Up to 3 foundational concepts per case (e.g., "Review: Insulin Signaling")
 
 ### Clinical Cases (`src/data/clinicalCases.json`)
 
@@ -52,6 +57,7 @@ npm run generate:clinical
   - **Buzzwords**: Classic terminology (e.g., "thunderclap headache")
   - **Physical exam**: Specific findings (e.g., "nuchal rigidity")
   - **History**: Risk factors and context (e.g., "recent URI")
+- **Basic science links**: Up to 3 foundational concepts per case (e.g., "Review: The RAAS")
 
 ## File Structure
 
@@ -230,10 +236,53 @@ Both scripts implement:
 - **Git tracking**: Generated JSON files should be committed to the repository
 - **Testing**: Always run `npm run generate:test` first to verify API key and connectivity
 
+## Basic Science Links
+
+The system can automatically generate foundational basic science concept links for each case to help students review underlying mechanisms.
+
+### What are Basic Science Links?
+
+Each case can have up to 3 links to foundational concepts:
+```typescript
+basicScienceLinks: [
+  {
+    title: "Review: The RAAS",
+    conceptId: "raas-system"
+  },
+  {
+    title: "Review: Sodium Homeostasis", 
+    conceptId: "sodium-homeostasis"
+  }
+]
+```
+
+### How to Generate
+
+```bash
+# Test with 3 cases of each type first
+npm run test:basic-science-links
+
+# Review the test output in /tmp/basic-science-test/
+
+# If satisfied, generate for all 500 cases
+npm run generate:basic-science-links
+```
+
+### What Concepts are Generated?
+
+The AI focuses on:
+- Fundamental physiological processes (e.g., RAAS, insulin signaling)
+- Key biochemical pathways (e.g., glycolysis, ketone metabolism)
+- Important anatomical structures (e.g., circle of Willis)
+- Core pathophysiological mechanisms (e.g., inflammatory cascade)
+
+For detailed information, see `scripts/README_BASIC_SCIENCE_LINKS.md`
+
 ## Support
 
 For detailed documentation:
 - **Script details**: `scripts/README_CONTENT_GENERATION.md`
+- **Basic science links**: `scripts/README_BASIC_SCIENCE_LINKS.md`
 - **Usage examples**: `src/data/README.md`
 - **Type definitions**: `src/types/content.ts`
 

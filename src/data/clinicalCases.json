@@ -28,6 +28,20 @@
         "type": "history",
         "description": "History of uncontrolled hypertension"
       }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Cerebral Arterial Anatomy",
+        "conceptId": "cerebral-arterial-anatomy"
+      },
+      {
+        "title": "Review: Intracranial Pressure and Cerebral Perfusion",
+        "conceptId": "intracranial-pressure-cerebral-perfusion"
+      },
+      {
+        "title": "Review: Coagulation Cascade",
+        "conceptId": "coagulation-cascade"
+      }
     ]
   },
   {
@@ -54,6 +68,20 @@
       {
         "type": "history",
         "description": "Sudden onset of focal neurological deficits"
+      }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Cerebral Blood Flow Regulation",
+        "conceptId": "cerebral-blood-flow-regulation"
+      },
+      {
+        "title": "Review: Neurovascular Unit and Ischemic Cascade",
+        "conceptId": "neurovascular-unit-ischemic-cascade"
+      },
+      {
+        "title": "Review: Neuronal Metabolism and Excitotoxicity",
+        "conceptId": "neuronal-metabolism-excitotoxicity"
       }
     ]
   },
@@ -82,6 +110,20 @@
         "type": "physical_exam",
         "description": "Contralateral hemiparesis"
       }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Cranial Anatomy and Meninges",
+        "conceptId": "cranial-anatomy-and-meninges"
+      },
+      {
+        "title": "Review: Cerebral Blood Supply and Autoregulation",
+        "conceptId": "cerebral-blood-supply-and-autoregulation"
+      },
+      {
+        "title": "Review: Intracranial Pressure and its Effects",
+        "conceptId": "intracranial-pressure-and-effects"
+      }
     ]
   },
   {
@@ -108,6 +150,20 @@
       {
         "type": "history",
         "description": "Living in close quarters (dormitory)"
+      }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Blood-Brain Barrier",
+        "conceptId": "blood-brain-barrier"
+      },
+      {
+        "title": "Review: Inflammatory Response",
+        "conceptId": "inflammatory-response"
+      },
+      {
+        "title": "Review: Bacterial Cell Structure",
+        "conceptId": "bacterial-cell-structure"
       }
     ]
   },
@@ -136,6 +192,20 @@
         "type": "history",
         "description": "Paresthesias in distal extremities"
       }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Peripheral Nerve Anatomy and Physiology",
+        "conceptId": "peripheral-nerve-anatomy-physiology"
+      },
+      {
+        "title": "Review: Myelin Formation and Function",
+        "conceptId": "myelin-formation-function"
+      },
+      {
+        "title": "Review: Immunoglobulin-Mediated Inflammatory Response",
+        "conceptId": "immunoglobulin-mediated-inflammatory-response"
+      }
     ]
   },
   {
@@ -163,7 +233,8 @@
         "type": "history",
         "description": "Weakness improves with rest"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_7",
@@ -190,7 +261,8 @@
         "type": "history",
         "description": "Relapsing and remitting sensory or motor symptoms"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_8",
@@ -217,7 +289,8 @@
         "type": "history",
         "description": "Asymmetric onset of motor symptoms"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_9",
@@ -244,7 +317,8 @@
         "type": "buzzword",
         "description": "Bridging vein tear"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_10",
@@ -271,7 +345,8 @@
         "type": "history",
         "description": "Bowel incontinence"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_11",
@@ -298,7 +373,8 @@
         "type": "history",
         "description": "Sudden, maximal intensity pain at onset"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_12",
@@ -325,7 +401,8 @@
         "type": "history",
         "description": "Risk factors: pre-existing joint disease, IV drug use, immunosuppression"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_13",
@@ -352,7 +429,8 @@
         "type": "physical_exam",
         "description": "Gaze deviation towards the side of the lesion"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_14",
@@ -379,7 +457,8 @@
         "type": "buzzword",
         "description": "Association with HSV-1 (temporal lobe involvement)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_15",
@@ -406,7 +485,8 @@
         "type": "buzzword",
         "description": "Amyloid plaques and neurofibrillary tangles"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_16",
@@ -433,7 +513,8 @@
         "type": "physical_exam",
         "description": "Profoundly altered mental status without motor activity (nonconvulsive status)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_17",
@@ -460,7 +541,8 @@
         "type": "history",
         "description": "Nausea and/or vomiting"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_18",
@@ -487,7 +569,8 @@
         "type": "history",
         "description": "Associated with Giant Cell Arteritis"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_19",
@@ -514,7 +597,8 @@
         "type": "history",
         "description": "Constitutional symptoms (fever, fatigue, weight loss)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_20",
@@ -541,7 +625,8 @@
         "type": "physical_exam",
         "description": "Clear lung fields despite dyspnea"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_21",
@@ -568,7 +653,8 @@
         "type": "history",
         "description": "Often preceded by a viral illness (HSV)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_22",
@@ -595,7 +681,8 @@
         "type": "physical_exam",
         "description": "Edema and/or trophic changes (hair growth, nail changes)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_23",
@@ -622,7 +709,8 @@
         "type": "buzzword",
         "description": "Negative cardiac enzymes (troponin)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_24",
@@ -649,7 +737,8 @@
         "type": "history",
         "description": "Focal onset suggests a specific brain region (often temporal lobe)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_25",
@@ -676,7 +765,8 @@
         "type": "physical_exam",
         "description": "Ipsilateral Horner's syndrome (ptosis, miosis)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_26",
@@ -707,7 +797,8 @@
         "type": "history",
         "description": "No prior history of similar headaches"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_27",
@@ -734,7 +825,8 @@
         "type": "history",
         "description": "Sudden onset of focal neurological deficits"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_28",
@@ -757,7 +849,8 @@
         "type": "physical_exam",
         "description": "Rapid neurological decline after period of alertness"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_29",
@@ -784,7 +877,8 @@
         "type": "history",
         "description": "Living in close quarters (dormitory)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_30",
@@ -811,7 +905,8 @@
         "type": "history",
         "description": "Progression of symptoms over days to weeks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_31",
@@ -838,7 +933,8 @@
         "type": "history",
         "description": "Difficulty chewing (masseter weakness) or swallowing"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_32",
@@ -865,7 +961,8 @@
         "type": "history",
         "description": "History of optic neuritis"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_33",
@@ -892,7 +989,8 @@
         "type": "history",
         "description": "Masked facies (hypomimia)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_34",
@@ -919,7 +1017,8 @@
         "type": "history",
         "description": "History of poorly controlled hypertension or Marfan syndrome"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_35",
@@ -946,7 +1045,8 @@
         "type": "physical_exam",
         "description": "Fluctuating level of consciousness"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_36",
@@ -973,7 +1073,8 @@
         "type": "history",
         "description": "Associated symptoms of polymyalgia rheumatica (proximal muscle stiffness)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_37",
@@ -996,7 +1097,8 @@
         "type": "physical_exam",
         "description": "Focal seizures"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_38",
@@ -1019,7 +1121,8 @@
         "type": "physical_exam",
         "description": "Ongoing tonic-clonic activity or postictal state with no lucid interval"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_39",
@@ -1042,7 +1145,8 @@
         "type": "physical_exam",
         "description": "Normal motor and sensory exam in early stages"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_40",
@@ -1069,7 +1173,8 @@
         "type": "buzzword",
         "description": "Diffuse, concave ST-segment elevation on EKG"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_41",
@@ -1096,7 +1201,8 @@
         "type": "history",
         "description": "Recent fracture or crush injury, especially with casting"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_42",
@@ -1123,7 +1229,8 @@
         "type": "buzzword",
         "description": "Synovial fluid WBC > 50,000/mm³ with neutrophil predominance"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_43",
@@ -1150,7 +1257,8 @@
         "type": "buzzword",
         "description": "Negatively birefringent, needle-shaped crystals on arthrocentesis"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_44",
@@ -1177,7 +1285,8 @@
         "type": "history",
         "description": "Surgical emergency requiring immediate decompression"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_45",
@@ -1200,7 +1309,8 @@
         "type": "history",
         "description": "Absence of typical MCA/ACA stroke symptoms (hemiparesis, aphasia)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_46",
@@ -1227,7 +1337,8 @@
         "type": "physical_exam",
         "description": "Normal neurological exam between attacks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_47",
@@ -1254,7 +1365,8 @@
         "type": "physical_exam",
         "description": "Eyes deviate toward the side of the lesion"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_48",
@@ -1281,7 +1393,8 @@
         "type": "history",
         "description": "Restlessness or agitation during attacks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_49",
@@ -1308,7 +1421,8 @@
         "type": "history",
         "description": "Inciting event of lifting or twisting"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_50",
@@ -1335,7 +1449,8 @@
         "type": "history",
         "description": "Absence of sensory deficits"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_51",
@@ -1362,7 +1477,8 @@
         "type": "history",
         "description": "Onset during physical exertion (Valsalva)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_52",
@@ -1389,7 +1505,8 @@
         "type": "history",
         "description": "Abrupt onset of focal neurologic deficits"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_53",
@@ -1416,7 +1533,8 @@
         "type": "buzzword",
         "description": "Lens-shaped (biconvex) hematoma on non-contrast head CT"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_54",
@@ -1443,7 +1561,8 @@
         "type": "buzzword",
         "description": "Crescent-shaped (concave) hematoma on non-contrast head CT that crosses suture lines"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_55",
@@ -1470,7 +1589,8 @@
         "type": "history",
         "description": "Living in close quarters (dormitory, military barracks)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_56",
@@ -1497,7 +1617,8 @@
         "type": "buzzword",
         "description": "Albuminocytologic dissociation in CSF (high protein, normal WBC count)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_57",
@@ -1524,7 +1645,8 @@
         "type": "physical_exam",
         "description": "Improvement of ptosis with ice pack test"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_58",
@@ -1551,7 +1673,8 @@
         "type": "buzzword",
         "description": "Oligoclonal bands in CSF"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_59",
@@ -1578,7 +1701,8 @@
         "type": "buzzword",
         "description": "Masked facies (hypomimia) and micrographia"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_60",
@@ -1605,7 +1729,8 @@
         "type": "history",
         "description": "CSF shows lymphocytic pleocytosis and increased RBCs (in absence of traumatic tap)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_61",
@@ -1632,7 +1757,8 @@
         "type": "buzzword",
         "description": "Hemorrhage typically located in basal ganglia, pons, thalamus, or cerebellum"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_62",
@@ -1655,7 +1781,8 @@
         "type": "physical_exam",
         "description": "Ongoing tonic-clonic or other seizure activity upon examination"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_63",
@@ -1682,7 +1809,8 @@
         "type": "physical_exam",
         "description": "Normal motor and sensory exam early in the disease course"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_64",
@@ -1709,7 +1837,8 @@
         "type": "physical_exam",
         "description": "Normal neurological examination between attacks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_65",
@@ -1736,7 +1865,8 @@
         "type": "history",
         "description": "Preservation of sensation, cognition, and extraocular movements"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_66",
@@ -1763,7 +1893,8 @@
         "type": "buzzword",
         "description": "Widened mediastinum on chest X-ray"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_67",
@@ -1786,7 +1917,8 @@
         "type": "history",
         "description": "Multiple vascular risk factors (HTN, HLD, DM, smoking)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_68",
@@ -1813,7 +1945,8 @@
         "type": "physical_exam",
         "description": "Decreased deep tendon reflexes in the lower extremities"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_69",
@@ -1840,7 +1973,8 @@
         "type": "history",
         "description": "Rapid, dramatic response to low-dose corticosteroids"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_70",
@@ -1867,7 +2001,8 @@
         "type": "history",
         "description": "Associated symptoms of polymyalgia rheumatica"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_71",
@@ -1894,7 +2029,8 @@
         "type": "history",
         "description": "Precipitated by administration of glucose before thiamine"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_72",
@@ -1921,7 +2057,8 @@
         "type": "physical_exam",
         "description": "Completely normal neurologic examination between attacks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_73",
@@ -1948,7 +2085,8 @@
         "type": "history",
         "description": "Associated hyperacusis or decreased taste on anterior tongue"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_74",
@@ -1975,7 +2113,8 @@
         "type": "history",
         "description": "Pain worsened by Valsalva maneuvers (coughing, sneezing, straining)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_75",
@@ -2002,7 +2141,8 @@
         "type": "physical_exam",
         "description": "Motor/trophic changes: decreased range of motion, weakness, changes in hair/nail growth"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_76",
@@ -2029,7 +2169,8 @@
         "type": "history",
         "description": "History of hypertension or polycystic kidney disease"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_77",
@@ -2056,7 +2197,8 @@
         "type": "history",
         "description": "Abrupt onset of focal neurologic deficit"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_78",
@@ -2083,7 +2225,8 @@
         "type": "history",
         "description": "Mechanism involves injury to middle meningeal artery"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_79",
@@ -2110,7 +2253,8 @@
         "type": "history",
         "description": "Use of anticoagulants or antiplatelet agents"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_80",
@@ -2137,7 +2281,8 @@
         "type": "buzzword",
         "description": "Hypertensive emergency causing neurologic symptoms"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_81",
@@ -2164,7 +2309,8 @@
         "type": "history",
         "description": "Living in close quarters (dormitory, military barracks)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_82",
@@ -2191,7 +2337,8 @@
         "type": "history",
         "description": "No nuchal rigidity or signs of pure meningitis"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_83",
@@ -2218,7 +2365,8 @@
         "type": "buzzword",
         "description": "Albumino-cytologic dissociation in CSF (high protein, normal WBC)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_84",
@@ -2245,7 +2393,8 @@
         "type": "history",
         "description": "Relapsing-remitting pattern of neurologic deficits"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_85",
@@ -2272,7 +2421,8 @@
         "type": "history",
         "description": "Associated with thymoma or thymic hyperplasia"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_86",
@@ -2299,7 +2449,8 @@
         "type": "physical_exam",
         "description": "Masked facies (reduced facial expression)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_87",
@@ -2326,7 +2477,8 @@
         "type": "history",
         "description": "Sensation, bowel/bladder function, and cognition are typically spared"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_88",
@@ -2353,7 +2505,8 @@
         "type": "history",
         "description": "Patient has no memory of the event"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_89",
@@ -2380,7 +2533,8 @@
         "type": "physical_exam",
         "description": "Continuous convulsive activity on arrival"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_90",
@@ -2407,7 +2561,8 @@
         "type": "history",
         "description": "Aura is a transient, reversible focal neurologic symptom that precedes the headache"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_91",
@@ -2433,6 +2588,20 @@
       {
         "type": "history",
         "description": "Sense of restlessness or agitation during attacks"
+      }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Trigeminal Nerve Anatomy and Function",
+        "conceptId": "trigeminal-nerve-anatomy-function"
+      },
+      {
+        "title": "Review: Hypothalamic Regulation of Circadian Rhythms",
+        "conceptId": "hypothalamic-circadian-rhythms"
+      },
+      {
+        "title": "Review: Calcitonin Gene-Related Peptide (CGRP) Mechanism of Action",
+        "conceptId": "cgrp-mechanism-of-action"
       }
     ]
   },
@@ -2461,6 +2630,20 @@
         "type": "history",
         "description": "Absence of other neurologic, psychiatric, or systemic diseases that could account for the decline"
       }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Neuronal Structure and Function",
+        "conceptId": "neuronal-structure-and-function"
+      },
+      {
+        "title": "Review: Neurotransmitter Synthesis and Signaling",
+        "conceptId": "neurotransmitter-synthesis-and-signaling"
+      },
+      {
+        "title": "Review: Protein Misfolding and Aggregation",
+        "conceptId": "protein-misfolding-and-aggregation"
+      }
     ]
   },
   {
@@ -2487,6 +2670,20 @@
       {
         "type": "physical_exam",
         "description": "Hyperacusis (increased sensitivity to sound) or altered taste"
+      }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Facial Nerve Anatomy and Function",
+        "conceptId": "facial-nerve-anatomy-function"
+      },
+      {
+        "title": "Review: Cranial Nerve Inflammatory Mechanisms",
+        "conceptId": "cranial-nerve-inflammatory-mechanisms"
+      },
+      {
+        "title": "Review: Viral Neuropathology",
+        "conceptId": "viral-neuropathology"
       }
     ]
   },
@@ -2515,6 +2712,20 @@
         "type": "history",
         "description": "History of chronic alcoholism or malnutrition (thiamine deficiency)"
       }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Thiamine Metabolism",
+        "conceptId": "thiamine-metabolism"
+      },
+      {
+        "title": "Review: Glucose Metabolism",
+        "conceptId": "glucose-metabolism"
+      },
+      {
+        "title": "Review: Neuroanatomy of the Thalamus and Mammillary Bodies",
+        "conceptId": "thalamus-mammillary-bodies-anatomy"
+      }
     ]
   },
   {
@@ -2541,6 +2752,20 @@
       {
         "type": "physical_exam",
         "description": "Decreased anal sphincter tone on digital rectal exam"
+      }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Spinal Cord Anatomy",
+        "conceptId": "spinal-cord-anatomy"
+      },
+      {
+        "title": "Review: Peripheral Nerve Physiology",
+        "conceptId": "peripheral-nerve-physiology"
+      },
+      {
+        "title": "Review: Nerve Root Compression Pathophysiology",
+        "conceptId": "nerve-root-compression-pathophysiology"
       }
     ]
   },
@@ -2569,6 +2794,20 @@
         "type": "history",
         "description": "Systemic symptoms such as fever and chills"
       }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Inflammatory Response",
+        "conceptId": "inflammatory-response"
+      },
+      {
+        "title": "Review: Bacterial Pathogenesis",
+        "conceptId": "bacterial-pathogenesis"
+      },
+      {
+        "title": "Review: Joint Anatomy and Physiology",
+        "conceptId": "joint-anatomy-physiology"
+      }
     ]
   },
   {
@@ -2595,6 +2834,20 @@
       {
         "type": "history",
         "description": "Strong association with Giant Cell (Temporal) Arteritis"
+      }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Inflammatory Cytokines",
+        "conceptId": "inflammatory-cytokines"
+      },
+      {
+        "title": "Review: The Hypothalamic-Pituitary-Adrenal (HPA) Axis",
+        "conceptId": "hpa-axis"
+      },
+      {
+        "title": "Review: Immune System Regulation",
+        "conceptId": "immune-system-regulation"
       }
     ]
   },
@@ -2623,6 +2876,20 @@
         "type": "history",
         "description": "Increased risk of underlying malignancy"
       }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Type I Interferon Signaling",
+        "conceptId": "type-i-interferon-signaling"
+      },
+      {
+        "title": "Review: Autoimmunity and MHC Presentation",
+        "conceptId": "autoimmunity-mhc-presentation"
+      },
+      {
+        "title": "Review: Skeletal Muscle Structure and Function",
+        "conceptId": "skeletal-muscle-structure-function"
+      }
     ]
   },
   {
@@ -2649,6 +2916,20 @@
       {
         "type": "physical_exam",
         "description": "New aortic regurgitation murmur"
+      }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Arterial Wall Structure and Function",
+        "conceptId": "arterial-wall-structure-function"
+      },
+      {
+        "title": "Review: Hemodynamics and Blood Pressure Regulation",
+        "conceptId": "hemodynamics-blood-pressure"
+      },
+      {
+        "title": "Review: Connective Tissue Composition and Synthesis",
+        "conceptId": "connective-tissue-composition"
       }
     ]
   },
@@ -2677,6 +2958,20 @@
         "type": "physical_exam",
         "description": "Roth spots on funduscopic exam"
       }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Microbiology of Bacterial Infections",
+        "conceptId": "bacterial-infection-microbiology"
+      },
+      {
+        "title": "Review: Inflammation and the Immune Response",
+        "conceptId": "inflammation-immune-response"
+      },
+      {
+        "title": "Review: Hemodynamics and Blood Flow",
+        "conceptId": "hemodynamics-blood-flow"
+      }
     ]
   },
   {
@@ -2703,6 +2998,20 @@
       {
         "type": "history",
         "description": "Onset during physical exertion (Valsalva)"
+      }
+    ],
+    "basicScienceLinks": [
+      {
+        "title": "Review: Cerebral Circulation and Autoregulation",
+        "conceptId": "cerebral-circulation-autoregulation"
+      },
+      {
+        "title": "Review: Intracranial Pressure and Compliance",
+        "conceptId": "intracranial-pressure-compliance"
+      },
+      {
+        "title": "Review: Blood-Brain Barrier Structure and Function",
+        "conceptId": "blood-brain-barrier"
       }
     ]
   },
@@ -2731,7 +3040,8 @@
         "type": "history",
         "description": "Uncontrolled hypertension"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_103",
@@ -2758,7 +3068,8 @@
         "type": "buzzword",
         "description": "Lens-shaped (biconvex) hematoma on non-contrast CT"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_104",
@@ -2785,7 +3096,8 @@
         "type": "buzzword",
         "description": "Crescent-shaped (concave) hematoma on non-contrast CT"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_105",
@@ -2812,7 +3124,8 @@
         "type": "physical_exam",
         "description": "Petechial rash (suggests N. meningitidis)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_106",
@@ -2839,7 +3152,8 @@
         "type": "physical_exam",
         "description": "Minimal sensory deficits despite paresthesias"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_107",
@@ -2866,7 +3180,8 @@
         "type": "history",
         "description": "Bulbar symptoms (difficulty chewing, swallowing, speaking)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_108",
@@ -2893,7 +3208,8 @@
         "type": "buzzword",
         "description": "Oligoclonal bands in CSF"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_109",
@@ -2920,7 +3236,8 @@
         "type": "physical_exam",
         "description": "Masked facies (hypomimia)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_110",
@@ -2947,7 +3264,8 @@
         "type": "history",
         "description": "History of large central disc herniation"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_111",
@@ -2974,7 +3292,8 @@
         "type": "history",
         "description": "Older patient with degenerative spine changes"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_112",
@@ -3005,7 +3324,8 @@
         "type": "buzzword",
         "description": "Markedly elevated ESR and CRP"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_113",
@@ -3032,7 +3352,8 @@
         "type": "buzzword",
         "description": "Rapid response to low-dose corticosteroids"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_114",
@@ -3059,7 +3380,8 @@
         "type": "history",
         "description": "History of uncontrolled hypertension or Marfan syndrome"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_115",
@@ -3086,7 +3408,8 @@
         "type": "history",
         "description": "Recent viral illness (URI)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_116",
@@ -3113,7 +3436,8 @@
         "type": "physical_exam",
         "description": "Splinter hemorrhages under the nails"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_117",
@@ -3140,7 +3464,8 @@
         "type": "physical_exam",
         "description": "Ongoing tonic-clonic movements with unresponsiveness"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_118",
@@ -3167,7 +3492,8 @@
         "type": "physical_exam",
         "description": "Coarse tremor"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_119",
@@ -3194,7 +3520,8 @@
         "type": "physical_exam",
         "description": "Global confusion and apathy"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_120",
@@ -3221,7 +3548,8 @@
         "type": "buzzword",
         "description": "Hyperdense (white) lesion within the brain parenchyma on non-contrast CT"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_121",
@@ -3248,7 +3576,8 @@
         "type": "buzzword",
         "description": "Hemorrhagic CSF with lymphocytic pleocytosis"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_122",
@@ -3275,7 +3604,8 @@
         "type": "history",
         "description": "Associated nausea and/or vomiting"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_123",
@@ -3302,7 +3632,8 @@
         "type": "history",
         "description": "Male predominance"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_124",
@@ -3329,7 +3660,8 @@
         "type": "buzzword",
         "description": "Synovial fluid analysis: WBC > 50,000 with >75% neutrophils"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_125",
@@ -3356,7 +3688,8 @@
         "type": "physical_exam",
         "description": "Motor/trophic changes: decreased range of motion, hair/nail growth changes"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_126",
@@ -3387,7 +3720,8 @@
         "type": "history",
         "description": "History of polycystic kidney disease (risk for berry aneurysm)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_127",
@@ -3414,7 +3748,8 @@
         "type": "buzzword",
         "description": "Lens-shaped (biconvex) hematoma on non-contrast CT"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_128",
@@ -3441,7 +3776,8 @@
         "type": "history",
         "description": "Cerebral atrophy (risk factor - stretches bridging veins)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_129",
@@ -3468,7 +3804,8 @@
         "type": "physical_exam",
         "description": "Petechial or purpuric rash (concerning for N. meningitidis)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_130",
@@ -3495,7 +3832,8 @@
         "type": "history",
         "description": "Vascular risk factors (hypertension, diabetes)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_131",
@@ -3522,7 +3860,8 @@
         "type": "buzzword",
         "description": "Albuminocytologic dissociation in CSF (high protein, normal WBC)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_132",
@@ -3549,7 +3888,8 @@
         "type": "history",
         "description": "Diurnal variation (worse at the end of the day)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_133",
@@ -3576,7 +3916,8 @@
         "type": "buzzword",
         "description": "Oligoclonal bands in CSF"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_134",
@@ -3603,7 +3944,8 @@
         "type": "history",
         "description": "Micrographia (small handwriting)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_135",
@@ -3630,7 +3972,8 @@
         "type": "history",
         "description": "Olfactory or gustatory hallucinations"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_136",
@@ -3657,7 +4000,8 @@
         "type": "physical_exam",
         "description": "Ongoing convulsive activity or non-convulsive state with profound coma"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_137",
@@ -3688,7 +4032,8 @@
         "type": "buzzword",
         "description": "Markedly elevated Erythrocyte Sedimentation Rate (ESR)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_138",
@@ -3715,7 +4060,8 @@
         "type": "physical_exam",
         "description": "Normal neurological examination between attacks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_139",
@@ -3742,7 +4088,8 @@
         "type": "history",
         "description": "Patient is often restless or agitated during attacks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_140",
@@ -3769,7 +4116,8 @@
         "type": "physical_exam",
         "description": "Sensation, bowel/bladder function, and cognition are spared"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_141",
@@ -3796,7 +4144,8 @@
         "type": "buzzword",
         "description": "Idiopathic CN VII palsy"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_142",
@@ -3823,7 +4172,8 @@
         "type": "buzzword",
         "description": "CAG trinucleotide repeat expansion"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_143",
@@ -3850,7 +4200,8 @@
         "type": "history",
         "description": "Confabulation (invented memories)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_144",
@@ -3877,7 +4228,8 @@
         "type": "buzzword",
         "description": "Surgical emergency"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_145",
@@ -3904,7 +4256,8 @@
         "type": "buzzword",
         "description": "Beta-amyloid plaques and neurofibrillary tangles"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_146",
@@ -3931,7 +4284,8 @@
         "type": "history",
         "description": "Advanced age and pre-existing cognitive impairment are major risk factors"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_147",
@@ -3958,7 +4312,8 @@
         "type": "history",
         "description": "Nausea and/or vomiting"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_148",
@@ -3985,7 +4340,8 @@
         "type": "buzzword",
         "description": "Non-contrast CT shows hyperdense (white) area within brain parenchyma"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_149",
@@ -4012,7 +4368,8 @@
         "type": "history",
         "description": "Focal onset, most commonly from the temporal lobe"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_150",
@@ -4039,7 +4396,8 @@
         "type": "history",
         "description": "Often caused by enteroviruses in late summer/early fall"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_151",
@@ -4066,7 +4424,8 @@
         "type": "history",
         "description": "History of polycystic kidney disease (risk factor for berry aneurysm)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_152",
@@ -4093,7 +4452,8 @@
         "type": "history",
         "description": "Sudden onset of focal neurological deficits"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_153",
@@ -4120,7 +4480,8 @@
         "type": "history",
         "description": "Associated with middle meningeal artery tear"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_154",
@@ -4151,7 +4512,8 @@
         "type": "physical_exam",
         "description": "Petechial rash (suggests N. meningitidis)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_155",
@@ -4178,7 +4540,8 @@
         "type": "history",
         "description": "Paresthesias often precede weakness"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_156",
@@ -4205,7 +4568,8 @@
         "type": "physical_exam",
         "description": "Normal sensation and reflexes"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_157",
@@ -4232,7 +4596,8 @@
         "type": "history",
         "description": "Symptoms often exacerbated by heat (Uhthoff's phenomenon)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_158",
@@ -4259,7 +4624,8 @@
         "type": "physical_exam",
         "description": "Shuffling gait with stooped posture"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_159",
@@ -4286,7 +4652,8 @@
         "type": "physical_exam",
         "description": "Fluctuating level of consciousness"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_160",
@@ -4313,7 +4680,8 @@
         "type": "history",
         "description": "No lucid interval"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_161",
@@ -4340,7 +4708,8 @@
         "type": "physical_exam",
         "description": "Temporal lobe signs (aphasia, olfactory hallucinations, memory disturbance) are common with HSV"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_162",
@@ -4367,7 +4736,8 @@
         "type": "physical_exam",
         "description": "Normal motor and sensory exam in early stages"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_163",
@@ -4394,7 +4764,8 @@
         "type": "history",
         "description": "A neurological emergency"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_164",
@@ -4421,7 +4792,8 @@
         "type": "history",
         "description": "Headache is typically unilateral"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_165",
@@ -4448,7 +4820,8 @@
         "type": "history",
         "description": "More common in men; often associated with smoking history"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_166",
@@ -4475,7 +4848,8 @@
         "type": "physical_exam",
         "description": "Neurological exam is typically normal between attacks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_167",
@@ -4502,7 +4876,8 @@
         "type": "history",
         "description": "Idiopathic inflammation of the facial nerve (CN VII)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_168",
@@ -4529,7 +4904,8 @@
         "type": "history",
         "description": "Associated with CAG trinucleotide repeat expansion"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_169",
@@ -4556,7 +4932,8 @@
         "type": "history",
         "description": "Sensation, bowel/bladder function, and cognition are typically spared"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_170",
@@ -4583,7 +4960,8 @@
         "type": "history",
         "description": "Caused by thiamine (Vitamin B1) deficiency, commonly seen in alcoholism"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_171",
@@ -4610,7 +4988,8 @@
         "type": "buzzword",
         "description": "A neurosurgical emergency"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_172",
@@ -4637,7 +5016,8 @@
         "type": "history",
         "description": "Most commonly arise from the temporal lobe"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_173",
@@ -4664,7 +5044,8 @@
         "type": "history",
         "description": "Common in patients with diabetes or hypertension"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_174",
@@ -4691,7 +5072,8 @@
         "type": "history",
         "description": "Risk of irreversible vision loss (amaurosis fugax is a key warning sign)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_175",
@@ -4718,7 +5100,8 @@
         "type": "history",
         "description": "Unlike Myasthenia Gravis, ocular symptoms are rare"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_176",
@@ -4745,7 +5128,8 @@
         "type": "history",
         "description": "No prior history of similar headaches"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_177",
@@ -4772,7 +5156,8 @@
         "type": "history",
         "description": "Sudden onset of focal neurologic deficits"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_178",
@@ -4795,7 +5180,8 @@
         "type": "physical_exam",
         "description": "Contralateral hemiparesis"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_179",
@@ -4822,7 +5208,8 @@
         "type": "physical_exam",
         "description": "Fluctuating level of consciousness"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_180",
@@ -4849,7 +5236,8 @@
         "type": "physical_exam",
         "description": "Petechial rash (suggests N. meningitidis)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_181",
@@ -4872,7 +5260,8 @@
         "type": "buzzword",
         "description": "Albumino-cytologic dissociation in CSF (high protein, normal WBC)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_182",
@@ -4899,7 +5288,8 @@
         "type": "buzzword",
         "description": "Positive ice pack test"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_183",
@@ -4926,7 +5316,8 @@
         "type": "physical_exam",
         "description": "Internuclear ophthalmoplegia (INO)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_184",
@@ -4953,7 +5344,8 @@
         "type": "physical_exam",
         "description": "Shuffling gait with postural instability"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_185",
@@ -4980,7 +5372,8 @@
         "type": "buzzword",
         "description": "Widened mediastinum on chest X-ray"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_186",
@@ -5007,7 +5400,8 @@
         "type": "buzzword",
         "description": "HSV-1 is the most common cause of sporadic fatal encephalitis"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_187",
@@ -5034,7 +5428,8 @@
         "type": "history",
         "description": "Often precipitated by medication non-adherence"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_188",
@@ -5061,7 +5456,8 @@
         "type": "physical_exam",
         "description": "Anosognosia (unaware of deficits)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_189",
@@ -5084,7 +5480,8 @@
         "type": "history",
         "description": "Nausea and/or vomiting during attack"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_190",
@@ -5111,7 +5508,8 @@
         "type": "buzzword",
         "description": "Neurosurgical emergency"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_191",
@@ -5134,7 +5532,8 @@
         "type": "buzzword",
         "description": "Shopping cart sign"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_192",
@@ -5161,7 +5560,8 @@
         "type": "history",
         "description": "Recent history of a viral illness"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_193",
@@ -5188,7 +5588,8 @@
         "type": "history",
         "description": "Markedly elevated ESR and CRP"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_194",
@@ -5215,7 +5616,8 @@
         "type": "physical_exam",
         "description": "Markedly elevated blood pressure"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_195",
@@ -5242,7 +5644,8 @@
         "type": "history",
         "description": "Recent trauma, fracture, or crush injury"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_196",
@@ -5269,7 +5672,8 @@
         "type": "history",
         "description": "Risk factors include diabetes, IV drug use, or prosthetic joint"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_197",
@@ -5296,7 +5700,8 @@
         "type": "history",
         "description": "Sense of impending doom"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_198",
@@ -5319,7 +5724,8 @@
         "type": "history",
         "description": "History of malignancy, uremia, or recent cardiac surgery"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_199",
@@ -5346,7 +5752,8 @@
         "type": "history",
         "description": "Posterior circulation symptoms"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_200",
@@ -5373,7 +5780,8 @@
         "type": "physical_exam",
         "description": "Sudomotor changes (edema or sweating changes)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_201",
@@ -5404,7 +5812,8 @@
         "type": "history",
         "description": "No prior history of similar headaches"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_202",
@@ -5431,7 +5840,8 @@
         "type": "physical_exam",
         "description": "Contralateral homonymous hemianopsia"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_203",
@@ -5458,7 +5868,8 @@
         "type": "history",
         "description": "Living in close quarters (dormitory)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_204",
@@ -5485,7 +5896,8 @@
         "type": "history",
         "description": "Mechanism involves tearing of the middle meningeal artery"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_205",
@@ -5512,7 +5924,8 @@
         "type": "buzzword",
         "description": "Tearing of bridging veins"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_206",
@@ -5539,7 +5952,8 @@
         "type": "buzzword",
         "description": "Albumino-cytologic dissociation in CSF (high protein, normal WBC)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_207",
@@ -5566,7 +5980,8 @@
         "type": "history",
         "description": "Symptoms worsen with repetitive muscle use"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_208",
@@ -5593,7 +6008,8 @@
         "type": "history",
         "description": "Relapsing and remitting pattern of symptoms"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_209",
@@ -5620,7 +6036,8 @@
         "type": "history",
         "description": "Masked facies (hypomimia)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_210",
@@ -5647,7 +6064,8 @@
         "type": "physical_exam",
         "description": "New onset seizures"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_211",
@@ -5674,7 +6092,8 @@
         "type": "physical_exam",
         "description": "New aortic regurgitation murmur"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_212",
@@ -5701,7 +6120,8 @@
         "type": "buzzword",
         "description": "Diffuse concave ST-segment elevation on EKG"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_213",
@@ -5728,7 +6148,8 @@
         "type": "physical_exam",
         "description": "Splinter hemorrhages under the nails"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_214",
@@ -5755,7 +6176,8 @@
         "type": "buzzword",
         "description": "Markedly elevated Erythrocyte Sedimentation Rate (ESR)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_215",
@@ -5786,7 +6208,8 @@
         "type": "history",
         "description": "Strong association with Polymyalgia Rheumatica"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_216",
@@ -5813,7 +6236,8 @@
         "type": "physical_exam",
         "description": "Normal motor and sensory exam in early stages"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_217",
@@ -5840,7 +6264,8 @@
         "type": "history",
         "description": "Urinary or fecal incontinence"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_218",
@@ -5867,7 +6292,8 @@
         "type": "history",
         "description": "Risk factors like diabetes, immunosuppression, or prosthetic joint"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_219",
@@ -5894,7 +6320,8 @@
         "type": "history",
         "description": "Headache is aggravated by routine physical activity"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_220",
@@ -5921,7 +6348,8 @@
         "type": "buzzword",
         "description": "Neurologic emergency requiring immediate intervention"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_221",
@@ -5948,7 +6376,8 @@
         "type": "physical_exam",
         "description": "Markedly elevated blood pressure"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_222",
@@ -5975,7 +6404,8 @@
         "type": "history",
         "description": "Often caused by a massive central disc herniation"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_223",
@@ -6002,7 +6432,8 @@
         "type": "history",
         "description": "Sensation, bowel/bladder function, and cognition are typically spared"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_224",
@@ -6029,7 +6460,8 @@
         "type": "history",
         "description": "Often precipitated by an underlying medical condition, infection, or medication"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_225",
@@ -6060,7 +6492,8 @@
         "type": "buzzword",
         "description": "Caused by thiamine (Vitamin B1) deficiency"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_226",
@@ -6087,7 +6520,8 @@
         "type": "history",
         "description": "History of polycystic kidney disease or smoking"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_227",
@@ -6114,7 +6548,8 @@
         "type": "history",
         "description": "Associated with middle meningeal artery tear"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_228",
@@ -6141,7 +6576,8 @@
         "type": "physical_exam",
         "description": "Insidious onset of cognitive decline and focal deficits"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_229",
@@ -6168,7 +6604,8 @@
         "type": "history",
         "description": "Abrupt onset of focal neurological deficits"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_230",
@@ -6195,7 +6632,8 @@
         "type": "physical_exam",
         "description": "Photophobia and phonophobia"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_231",
@@ -6222,7 +6660,8 @@
         "type": "buzzword",
         "description": "Albumino-cytologic dissociation in CSF (high protein, normal WBC)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_232",
@@ -6249,7 +6688,8 @@
         "type": "history",
         "description": "Associated with thymoma or thymic hyperplasia"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_233",
@@ -6276,7 +6716,8 @@
         "type": "history",
         "description": "Relapsing-remitting pattern of symptoms"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_234",
@@ -6303,7 +6744,8 @@
         "type": "history",
         "description": "Asymmetric onset of symptoms"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_235",
@@ -6330,7 +6772,8 @@
         "type": "buzzword",
         "description": "Commonly occurs in basal ganglia, thalamus, pons, cerebellum"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_236",
@@ -6357,7 +6800,8 @@
         "type": "history",
         "description": "Often preceded by a prodrome of flu-like symptoms"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_237",
@@ -6384,7 +6828,8 @@
         "type": "physical_exam",
         "description": "Normal motor and sensory exam in early stages"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_238",
@@ -6411,7 +6856,8 @@
         "type": "history",
         "description": "Episode duration typically 30 seconds to 2 minutes"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_239",
@@ -6438,7 +6884,8 @@
         "type": "physical_exam",
         "description": "Continuous or rapidly recurring convulsive activity"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_240",
@@ -6465,7 +6912,8 @@
         "type": "history",
         "description": "Positive family history of similar headaches"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_241",
@@ -6492,7 +6940,8 @@
         "type": "physical_exam",
         "description": "Restlessness or agitation during attacks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_242",
@@ -6519,7 +6968,8 @@
         "type": "physical_exam",
         "description": "Neurological exam is typically normal between attacks"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_243",
@@ -6546,7 +6996,8 @@
         "type": "buzzword",
         "description": "Idiopathic peripheral facial nerve (CN VII) palsy"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_244",
@@ -6573,7 +7024,8 @@
         "type": "history",
         "description": "Sensation, bowel/bladder function, and cognition are typically spared"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_245",
@@ -6600,7 +7052,8 @@
         "type": "physical_exam",
         "description": "Athetosis (slow, writhing movements) and dystonia"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_246",
@@ -6627,7 +7080,8 @@
         "type": "history",
         "description": "Caused by thiamine (vitamin B1) deficiency"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_247",
@@ -6654,7 +7108,8 @@
         "type": "history",
         "description": "Also known as posterior circulation stroke"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_248",
@@ -6681,7 +7136,8 @@
         "type": "history",
         "description": "Symptoms may improve after large-volume lumbar puncture"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_249",
@@ -6708,7 +7164,8 @@
         "type": "history",
         "description": "Strongly associated with Polymyalgia Rheumatica (PMR)"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   },
   {
     "id": "clinical_case_250",
@@ -6739,6 +7196,7 @@
         "type": "physical_exam",
         "description": "Thenar muscle atrophy in severe, long-standing cases"
       }
-    ]
+    ],
+    "basicScienceLinks": []
   }
 ]
