@@ -18,6 +18,7 @@ import {
   BarChart3,
   Flame
 } from 'lucide-react';
+import { calculateAccuracy } from '../../lib/dashboardUtils';
 
 // ============================================================================
 // Types
@@ -152,9 +153,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
   };
 
   const scopedData = getScopedQuestions();
-  const scopedAccuracy = scopedData.questions > 0 
-    ? Math.round((scopedData.correct / scopedData.questions) * 100) 
-    : 0;
+  const scopedAccuracy = calculateAccuracy(scopedData.correct, scopedData.questions);
 
   // Render individual widgets
   const renderWidget = (widgetId: WidgetId, index: number) => {

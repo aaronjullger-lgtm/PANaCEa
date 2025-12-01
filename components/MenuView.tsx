@@ -29,6 +29,7 @@ import {
   DEFAULT_WIDGET_CONFIG 
 } from "./ProgressDashboard";
 import type { WidgetId, WidgetData, TimeScope, ProgressDayRecord, SystemMasterySummary } from "./ProgressDashboard";
+import { calculateAccuracy, calculateStreaks, loadWidgetPreferences } from "../lib/dashboardUtils";
 
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
@@ -85,13 +86,10 @@ const MenuView: React.FC<MenuViewProps> = ({
   
   // Dashboard state
   const [timeScope, setTimeScope] = useState<TimeScope>('1wk');
-  const [enabledWidgets, setEnabledWidgets] = useState<WidgetId[]>(() => {
-    try {
-      const stored = localStorage.getItem('panacea_widget_preferences');
-      if (stored) return JSON.parse(stored);
-    } catch { /* ignore */ }
-    return DEFAULT_WIDGET_CONFIG.filter(w => w.enabled).map(w => w.id);
-  });
+  const defaultWidgets = DEFAULT_WIDGET_CONFIG.filter(w => w.enabled).map(w => w.id);
+  const [enabledWidgets, setEnabledWidgets] = useState<WidgetId[]>(() => 
+    loadWidgetPreferences<WidgetId>(defaultWidgets)
+  );
 
   // Prevent scrolling when modal is open
   useEffect(() => {
@@ -165,25 +163,8 @@ const MenuView: React.FC<MenuViewProps> = ({
     const totalQuestions = performanceData.length;
     const totalCorrect = performanceData.filter(r => r.isCorrect).length;
     
-    // Calculate streaks
-    let currentStreak = 0;
-    let bestStreak = 0;
-    let tempStreak = 0;
-    for (let i = performanceData.length - 1; i >= 0; i--) {
-      if (performanceData[i].isCorrect) {
-        tempStreak++;
-        if (i === performanceData.length - 1 || 
-            (i < performanceData.length - 1 && performanceData[i + 1].isCorrect)) {
-          currentStreak = tempStreak;
-        }
-        bestStreak = Math.max(bestStreak, tempStreak);
-      } else {
-        tempStreak = 0;
-        if (i === performanceData.length - 1) {
-          currentStreak = 0;
-        }
-      }
-    }
+    // Calculate streaks using utility function
+    const { current: currentStreak, best: bestStreak } = calculateStreaks(performanceData);
     
     // Today's stats
     const today = new Date().toISOString().split('T')[0];
@@ -227,7 +208,7 @@ const MenuView: React.FC<MenuViewProps> = ({
       currentStreak,
       bestStreak,
       questionsAttempted: totalQuestions,
-      overallAccuracy: Math.round((totalCorrect / Math.max(totalQuestions, 1)) * 100),
+      overallAccuracy: calculateAccuracy(totalCorrect, totalQuestions),
       todayQuestions,
       todayCorrect,
       weekQuestions,
@@ -255,7 +236,7 @@ const MenuView: React.FC<MenuViewProps> = ({
         date,
         attempts: data.attempts,
         correct: data.correct,
-        accuracy: data.attempts > 0 ? (data.correct / data.attempts) * 100 : 0,
+        accuracy: calculateAccuracy(data.correct, data.attempts),
         system: data.system,
       });
     }

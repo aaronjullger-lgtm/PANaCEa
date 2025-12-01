@@ -7,6 +7,7 @@
 
 import type { PerformanceRecord, SystemCode } from '../types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../constants';
+import { calculateAccuracy } from './dashboardUtils';
 
 // ============================================================================
 // Types
@@ -104,9 +105,7 @@ function arrayToCSV(data: Record<string, unknown>[]): string {
 function prepareAnalyticsSummary(performanceData: PerformanceRecord[]): AnalyticsSummary {
   const totalQuestions = performanceData.length;
   const totalCorrect = performanceData.filter(r => r.isCorrect).length;
-  const overallAccuracy = totalQuestions > 0 
-    ? Math.round((totalCorrect / totalQuestions) * 100) 
-    : 0;
+  const overallAccuracy = calculateAccuracy(totalCorrect, totalQuestions);
 
   // System breakdown
   const systemMap = new Map<string, { correct: number; total: number }>();
@@ -126,7 +125,7 @@ function prepareAnalyticsSummary(performanceData: PerformanceRecord[]): Analytic
       systemName: ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] || system,
       correct: data.correct,
       total: data.total,
-      accuracy: Math.round((data.correct / data.total) * 100),
+      accuracy: calculateAccuracy(data.correct, data.total),
     }))
     .sort((a, b) => b.total - a.total);
 
@@ -146,7 +145,7 @@ function prepareAnalyticsSummary(performanceData: PerformanceRecord[]): Analytic
       date,
       questions: data.total,
       correct: data.correct,
-      accuracy: Math.round((data.correct / data.total) * 100),
+      accuracy: calculateAccuracy(data.correct, data.total),
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 

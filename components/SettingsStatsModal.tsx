@@ -27,6 +27,12 @@ import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
 import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from './ProgressDashboard';
 import type { WidgetId } from './ProgressDashboard';
 import { exportUserAnalytics } from '@/lib/analyticsExport';
+import { 
+  calculateAccuracy, 
+  calculateStreaks, 
+  loadWidgetPreferences as loadWidgetPrefs, 
+  saveWidgetPreferences as saveWidgetPrefs 
+} from '@/lib/dashboardUtils';
 
 interface SettingsStatsModalProps {
   isOpen: boolean;
@@ -45,30 +51,9 @@ interface SettingsStatsModalProps {
 
 type TabId = 'stats' | 'settings' | 'preferences';
 
-// Storage key for widget preferences
-const WIDGET_PREFS_KEY = 'panacea_widget_preferences';
-
 // Get default enabled widgets
 const getDefaultWidgets = (): WidgetId[] => 
   DEFAULT_WIDGET_CONFIG.filter(w => w.enabled).map(w => w.id);
-
-// Load widget preferences from localStorage
-const loadWidgetPreferences = (): WidgetId[] => {
-  try {
-    const stored = localStorage.getItem(WIDGET_PREFS_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch {
-    // Ignore parse errors
-  }
-  return getDefaultWidgets();
-};
-
-// Save widget preferences to localStorage
-const saveWidgetPreferences = (widgets: WidgetId[]) => {
-  localStorage.setItem(WIDGET_PREFS_KEY, JSON.stringify(widgets));
-};
 
 /**
  * SettingsStatsModal - Comprehensive settings and statistics view
@@ -93,7 +78,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   const [exportStatus, setExportStatus] = useState<'csv' | 'json' | null>(null);
   
   // Widget preferences state
-  const [localEnabledWidgets, setLocalEnabledWidgets] = useState<WidgetId[]>(loadWidgetPreferences);
+  const [localEnabledWidgets, setLocalEnabledWidgets] = useState<WidgetId[]>(() => 
+    loadWidgetPrefs<WidgetId>(getDefaultWidgets())
+  );
   
   // Use external widgets if provided, otherwise use local state
   const enabledWidgets = externalEnabledWidgets ?? localEnabledWidgets;
@@ -107,7 +94,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       onUpdateWidgets(newWidgets);
     } else {
       setLocalEnabledWidgets(newWidgets);
-      saveWidgetPreferences(newWidgets);
+      saveWidgetPrefs(newWidgets);
     }
   };
   
@@ -117,7 +104,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       onUpdateWidgets(defaults);
     } else {
       setLocalEnabledWidgets(defaults);
-      saveWidgetPreferences(defaults);
+      saveWidgetPrefs(defaults);
     }
   };
   
@@ -156,28 +143,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
     const totalQuestions = performanceData.length;
     const totalCorrect = performanceData.filter(r => r.isCorrect).length;
-    const overallAccuracy = Math.round((totalCorrect / totalQuestions) * 100);
+    const overallAccuracy = calculateAccuracy(totalCorrect, totalQuestions);
 
-    // Calculate streaks
-    let currentStreak = 0;
-    let bestStreak = 0;
-    let tempStreak = 0;
-
-    for (let i = performanceData.length - 1; i >= 0; i--) {
-      if (performanceData[i].isCorrect) {
-        tempStreak++;
-        if (i === performanceData.length - 1 || 
-            (i < performanceData.length - 1 && performanceData[i + 1].isCorrect)) {
-          currentStreak = tempStreak;
-        }
-        bestStreak = Math.max(bestStreak, tempStreak);
-      } else {
-        tempStreak = 0;
-        if (i === performanceData.length - 1) {
-          currentStreak = 0;
-        }
-      }
-    }
+    // Calculate streaks using utility function
+    const { current: currentStreak, best: bestStreak } = calculateStreaks(performanceData);
 
     // Today's stats
     const today = new Date().toISOString().split('T')[0];
@@ -211,7 +180,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         label: ABBREVIATION_TO_TOPIC_MAP[system as SystemCode] || system,
         correct: data.correct,
         total: data.total,
-        accuracy: Math.round((data.correct / data.total) * 100),
+        accuracy: calculateAccuracy(data.correct, data.total),
       }))
       .sort((a, b) => b.total - a.total);
 
