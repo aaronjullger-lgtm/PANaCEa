@@ -290,11 +290,15 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
       
       // Deep Insight Widgets
       case 'vignetteStamina':
+        // Short/Long question word count thresholds for UI display
+        const SHORT_THRESHOLD = 50;
+        const LONG_THRESHOLD = 150;
         const diff = (data.shortQuestionAccuracy ?? 0) - (data.longQuestionAccuracy ?? 0);
+        // Positive diff means short questions have higher accuracy
         const diffText = diff > 0 
-          ? `You are ${Math.abs(diff).toFixed(0)}% less accurate on long vignettes.`
+          ? `You are ${Math.abs(diff).toFixed(0)}% more accurate on shorter questions.`
           : diff < 0 
-          ? `You are ${Math.abs(diff).toFixed(0)}% more accurate on long vignettes.`
+          ? `You are ${Math.abs(diff).toFixed(0)}% more accurate on longer questions.`
           : 'Your accuracy is consistent across question lengths.';
         return (
           <motion.div
@@ -312,7 +316,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             </div>
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <div className="stat-label-sm mb-1">{"Short (<50 words)"}</div>
+                <div className="stat-label-sm mb-1">{`Short (<${SHORT_THRESHOLD} words)`}</div>
                 <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-indigo-400 rounded-full transition-all"
@@ -324,7 +328,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
                 </div>
               </div>
               <div className="flex-1">
-                <div className="stat-label-sm mb-1">{"Long (>150 words)"}</div>
+                <div className="stat-label-sm mb-1">{`Long (>${LONG_THRESHOLD} words)`}</div>
                 <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-purple-500 rounded-full transition-all"
@@ -336,8 +340,8 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
                 </div>
               </div>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2">
-              📖 {diffText}
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2" aria-label={diffText}>
+              {diffText}
             </p>
           </motion.div>
         );
