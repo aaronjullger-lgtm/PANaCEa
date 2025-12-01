@@ -31,6 +31,33 @@ import {
 import type { WidgetId, WidgetData, TimeScope, ProgressDayRecord, SystemMasterySummary } from "./ProgressDashboard";
 import { calculateAccuracy, calculateStreaks, loadWidgetPreferences } from "../lib/dashboardUtils";
 
+// System names for dynamic welcome message
+const SYSTEM_DISPLAY_NAMES: Record<string, string> = {
+  CV: 'Cardiovascular',
+  PULM: 'Pulmonary',
+  GI: 'Gastrointestinal',
+  NEURO: 'Neurology',
+  MSK: 'Musculoskeletal',
+  DERM: 'Dermatology',
+  HEME: 'Hematology',
+  ENDO: 'Endocrine',
+  HEENT: 'Head & Neck',
+  RENAL: 'Renal',
+  REPRO: 'Reproductive',
+  PSYCH: 'Psychiatry',
+  ID: 'Infectious Disease',
+  GU: 'Genitourinary',
+  PRO: 'Professional Practice',
+};
+
+// Get time-based greeting
+function getTimeBasedGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
   missedQuestions: Question[];
@@ -598,13 +625,33 @@ const MenuView: React.FC<MenuViewProps> = ({
             </motion.button>
           </motion.section>
 
-          {/* Analytics Dashboard */}
+          {/* Analytics Dashboard with Smart Header */}
           <motion.section 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="pt-2"
           >
+            {/* Smart Header - Dynamic Welcome Block */}
+            <div className="card-premium-glass p-5 rounded-2xl mb-6">
+              <h2 className="text-2xl font-light text-slate-900 dark:text-slate-100 mb-1">
+                {getTimeBasedGreeting()}.
+              </h2>
+              {stats.systemComparisonData.length > 0 ? (
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Your recommended focus is{' '}
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">
+                    {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0]?.system] || stats.systemComparisonData[0]?.system}
+                  </span>
+                  .
+                </p>
+              ) : (
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Start studying to unlock personalized recommendations.
+                </p>
+              )}
+            </div>
+
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 Analytics Dashboard

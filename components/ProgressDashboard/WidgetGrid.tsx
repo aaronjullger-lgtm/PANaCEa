@@ -16,7 +16,8 @@ import {
   TrendingUp,
   TrendingDown,
   BarChart3,
-  Flame
+  Flame,
+  FileText
 } from 'lucide-react';
 import { calculateAccuracy } from '../../lib/dashboardUtils';
 
@@ -35,7 +36,8 @@ export type WidgetId =
   | 'studyDays'
   | 'speedVsAccuracy'
   | 'secondGuessFactor'
-  | 'topicSplit';
+  | 'topicSplit'
+  | 'vignetteStamina';
 
 export interface WidgetConfig {
   id: WidgetId;
@@ -64,6 +66,9 @@ export interface WidgetData {
   secondGuessAccuracy?: number; // Accuracy when answer was changed
   diagnosisAccuracy?: number;
   managementAccuracy?: number;
+  // Vignette Stamina - Reading Fatigue metrics
+  shortQuestionAccuracy?: number; // Accuracy on questions < 50 words
+  longQuestionAccuracy?: number;  // Accuracy on questions > 150 words
 }
 
 export type TimeScope = 'today' | '1wk' | '1mo';
@@ -88,6 +93,7 @@ export const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
   { id: 'recentTrend', label: 'Recent Trend', icon: <TrendingUp className="w-5 h-5" />, enabled: true },
   { id: 'studyDays', label: 'Study Days', icon: <Flame className="w-5 h-5" />, enabled: false },
   // Deep Insight widgets - disabled by default
+  { id: 'vignetteStamina', label: 'Vignette Stamina', icon: <FileText className="w-5 h-5" />, enabled: false },
   { id: 'speedVsAccuracy', label: 'Speed vs Accuracy', icon: <Clock className="w-5 h-5" />, enabled: false },
   { id: 'secondGuessFactor', label: 'Second-Guess Factor', icon: <TrendingDown className="w-5 h-5" />, enabled: false },
   { id: 'topicSplit', label: 'Topic Split', icon: <BarChart3 className="w-5 h-5" />, enabled: false },
@@ -112,7 +118,7 @@ const StatCard: React.FC<StatCardProps> = ({
   label, 
   value, 
   subtext, 
-  colorClass = 'text-slate-900 dark:text-[var(--color-accent)]',
+  colorClass = 'text-slate-900 dark:text-slate-100',
   trend,
   delay = 0
 }) => (
@@ -120,16 +126,18 @@ const StatCard: React.FC<StatCardProps> = ({
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+    className="widget-premium-glass p-4 hover:shadow-lg transition-shadow"
   >
-    <div className="flex items-center gap-2 mb-2">
+    {/* Small uppercase label */}
+    <div className="flex items-center gap-2 mb-3">
       <span className={colorClass}>{icon}</span>
-      <span className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wide font-medium">
+      <span className="stat-label-sm">
         {label}
       </span>
     </div>
+    {/* Large thin data value */}
     <div className="flex items-baseline gap-2">
-      <span className={`text-2xl font-bold ${colorClass}`}>{value}</span>
+      <span className={`text-4xl font-light ${colorClass}`}>{value}</span>
       {trend !== undefined && (
         <span className={`flex items-center gap-0.5 text-xs font-medium ${
           trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-slate-500'
@@ -140,7 +148,7 @@ const StatCard: React.FC<StatCardProps> = ({
       )}
     </div>
     {subtext && (
-      <span className="text-xs text-slate-600 dark:text-slate-400">{subtext}</span>
+      <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">{subtext}</span>
     )}
   </motion.div>
 );
@@ -281,6 +289,59 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
         );
       
       // Deep Insight Widgets
+      case 'vignetteStamina':
+        const diff = (data.shortQuestionAccuracy ?? 0) - (data.longQuestionAccuracy ?? 0);
+        const diffText = diff > 0 
+          ? `You are ${Math.abs(diff).toFixed(0)}% less accurate on long vignettes.`
+          : diff < 0 
+          ? `You are ${Math.abs(diff).toFixed(0)}% more accurate on long vignettes.`
+          : 'Your accuracy is consistent across question lengths.';
+        return (
+          <motion.div
+            key={widgetId}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay }}
+            className="widget-premium-glass p-4 col-span-2"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="w-5 h-5 text-indigo-500" />
+              <span className="stat-label-sm">
+                Vignette Stamina
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="stat-label-sm mb-1">{"Short (<50 words)"}</div>
+                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-indigo-400 rounded-full transition-all"
+                    style={{ width: `${data.shortQuestionAccuracy ?? 0}%` }}
+                  />
+                </div>
+                <div className="text-2xl font-light text-slate-900 dark:text-slate-100 mt-1">
+                  {data.shortQuestionAccuracy ?? 0}%
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="stat-label-sm mb-1">{"Long (>150 words)"}</div>
+                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-purple-500 rounded-full transition-all"
+                    style={{ width: `${data.longQuestionAccuracy ?? 0}%` }}
+                  />
+                </div>
+                <div className="text-2xl font-light text-slate-900 dark:text-slate-100 mt-1">
+                  {data.longQuestionAccuracy ?? 0}%
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2">
+              📖 {diffText}
+            </p>
+          </motion.div>
+        );
+
       case 'speedVsAccuracy':
         return (
           <motion.div
@@ -288,36 +349,36 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay }}
-            className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm col-span-2"
+            className="widget-premium-glass p-4 col-span-2"
           >
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-5 h-5 text-blue-500" />
-              <span className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wide font-medium">
+              <span className="stat-label-sm">
                 Speed vs Accuracy
               </span>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{"Fast (<30s)"}</div>
+                <div className="stat-label-sm mb-1">{"Fast (<30s)"}</div>
                 <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-blue-500 rounded-full transition-all"
                     style={{ width: `${data.fastCorrectRate ?? 0}%` }}
                   />
                 </div>
-                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                <div className="text-2xl font-light text-slate-900 dark:text-slate-100 mt-1">
                   {data.fastCorrectRate ?? 0}%
                 </div>
               </div>
               <div className="flex-1">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{"Slow (>60s)"}</div>
+                <div className="stat-label-sm mb-1">{"Slow (>60s)"}</div>
                 <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-emerald-500 rounded-full transition-all"
                     style={{ width: `${data.slowCorrectRate ?? 0}%` }}
                   />
                 </div>
-                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                <div className="text-2xl font-light text-slate-900 dark:text-slate-100 mt-1">
                   {data.slowCorrectRate ?? 0}%
                 </div>
               </div>
@@ -350,21 +411,21 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay }}
-            className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm col-span-2"
+            className="widget-premium-glass p-4 col-span-2"
           >
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 className="w-5 h-5 text-violet-500" />
-              <span className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wide font-medium">
+              <span className="stat-label-sm">
                 Topic Split
               </span>
             </div>
             <div className="flex items-center gap-2 mb-2">
               <div className="flex-1">
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-slate-600 dark:text-slate-400">Diagnosis</span>
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">{data.diagnosisAccuracy ?? 0}%</span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="stat-label-sm">Diagnosis</span>
+                  <span className="text-2xl font-light text-slate-900 dark:text-slate-100">{data.diagnosisAccuracy ?? 0}%</span>
                 </div>
-                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-l-full overflow-hidden">
+                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-l-full overflow-hidden">
                   <div 
                     className="h-full bg-sky-500 rounded-l-full transition-all"
                     style={{ width: `${data.diagnosisAccuracy ?? 0}%` }}
@@ -373,11 +434,11 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
               </div>
               <div className="w-px h-8 bg-slate-300 dark:bg-slate-600" />
               <div className="flex-1">
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-slate-600 dark:text-slate-400">Management</span>
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">{data.managementAccuracy ?? 0}%</span>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="stat-label-sm">Management</span>
+                  <span className="text-2xl font-light text-slate-900 dark:text-slate-100">{data.managementAccuracy ?? 0}%</span>
                 </div>
-                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-r-full overflow-hidden">
+                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-r-full overflow-hidden">
                   <div 
                     className="h-full bg-violet-500 rounded-r-full transition-all"
                     style={{ width: `${data.managementAccuracy ?? 0}%` }}

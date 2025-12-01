@@ -193,8 +193,8 @@
       /* Glass button styling - Modern Medical Glassmorphism */
       .btn-glass {
         background: var(--color-glass-bg);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border: 1px solid var(--color-glass-border);
         color: var(--color-glass-text);
         box-shadow: 
@@ -211,6 +211,94 @@
       }
       .btn-glass:active {
         transform: translateY(0);
+      }
+
+      /* Premium Glass Card - Apple-style glassmorphism */
+      .card-premium-glass {
+        background: rgba(255, 255, 255, 0.60);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        /* Gradient borders to mimic light reflection */
+        border-top: 1px solid rgba(255, 255, 255, 0.80);
+        border-left: 1px solid rgba(255, 255, 255, 0.80);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.60);
+        border-right: 1px solid rgba(148, 163, 184, 0.60);
+        /* Soft, diffused shadows for depth */
+        box-shadow: 
+          0 10px 40px rgba(148, 163, 184, 0.25),
+          0 4px 12px rgba(148, 163, 184, 0.15);
+        transition: all 0.2s ease;
+      }
+      .card-premium-glass:hover {
+        transform: translateY(-2px);
+        box-shadow: 
+          0 14px 48px rgba(148, 163, 184, 0.30),
+          0 6px 16px rgba(148, 163, 184, 0.18);
+      }
+      .dark .card-premium-glass {
+        background: rgba(30, 41, 59, 0.60);
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        border-left: 1px solid rgba(255, 255, 255, 0.12);
+        border-bottom: 1px solid rgba(71, 85, 105, 0.40);
+        border-right: 1px solid rgba(71, 85, 105, 0.40);
+        box-shadow: 
+          0 10px 40px rgba(0, 0, 0, 0.40),
+          0 4px 12px rgba(0, 0, 0, 0.25);
+      }
+      .dark .card-premium-glass:hover {
+        box-shadow: 
+          0 14px 48px rgba(0, 0, 0, 0.50),
+          0 6px 16px rgba(0, 0, 0, 0.30);
+      }
+
+      /* Premium Glass Widget - for stat cards */
+      .widget-premium-glass {
+        background: rgba(255, 255, 255, 0.60);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-top: 1px solid rgba(255, 255, 255, 0.80);
+        border-left: 1px solid rgba(255, 255, 255, 0.80);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.50);
+        border-right: 1px solid rgba(148, 163, 184, 0.50);
+        box-shadow: 0 8px 32px rgba(148, 163, 184, 0.20);
+        border-radius: 16px;
+        transition: all 0.2s ease;
+      }
+      .widget-premium-glass:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 40px rgba(148, 163, 184, 0.25);
+      }
+      .dark .widget-premium-glass {
+        background: rgba(30, 41, 59, 0.50);
+        border-top: 1px solid rgba(255, 255, 255, 0.10);
+        border-left: 1px solid rgba(255, 255, 255, 0.10);
+        border-bottom: 1px solid rgba(71, 85, 105, 0.35);
+        border-right: 1px solid rgba(71, 85, 105, 0.35);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+      }
+      .dark .widget-premium-glass:hover {
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      }
+
+      /* Premium Typography - Big data, small labels */
+      .stat-value-lg {
+        font-size: 3rem;
+        font-weight: 300;
+        line-height: 1;
+        color: #0f172a;
+      }
+      .dark .stat-value-lg {
+        color: #f1f5f9;
+      }
+      .stat-label-sm {
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+      .dark .stat-label-sm {
+        color: #94a3b8;
       }
 
       /* Glass card styling */
