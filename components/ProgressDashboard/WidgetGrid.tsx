@@ -129,7 +129,7 @@ const StatCard: React.FC<StatCardProps> = ({
       </span>
     </div>
     <div className="flex items-baseline gap-2">
-      <span className={`text-2xl font-bold text-slate-900 dark:text-slate-100 ${colorClass !== 'text-slate-900 dark:text-[var(--color-accent)]' ? colorClass : ''}`}>{value}</span>
+      <span className={`text-2xl font-bold ${colorClass}`}>{value}</span>
       {trend !== undefined && (
         <span className={`flex items-center gap-0.5 text-xs font-medium ${
           trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-slate-500'
@@ -298,7 +298,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             </div>
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Fast (&lt;30s)</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{"Fast (<30s)"}</div>
                 <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-blue-500 rounded-full transition-all"
@@ -310,7 +310,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
                 </div>
               </div>
               <div className="flex-1">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Slow (&gt;60s)</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{"Slow (>60s)"}</div>
                 <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-emerald-500 rounded-full transition-all"
