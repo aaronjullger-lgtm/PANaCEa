@@ -15,12 +15,14 @@ import type {
   Question,
   PerformanceRecord,
   SessionSettings,
+  ErrorTag,
 } from "../types";
 import { CloseIcon } from "./icons/CloseIcon";
 import { FlagIcon } from "./icons/FlagIcon";
 import { ArrowLeftIcon } from "./icons/ArrowLeftIcon";
 import { ClearHighlightIcon } from "./icons/ClearHighlightIcon";
 import AnswerChoice from "./quiz/AnswerChoice";
+import ErrorTagger from "./quiz/ErrorTagger";
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -28,6 +30,7 @@ interface QuizViewProps {
   addPerformanceRecord: (record: PerformanceRecord) => void;
   addMissedQuestion: (question: Question) => void;
   updateReviewQuestion: (question: Question, wasCorrect: boolean) => void;
+  updateLastPerformanceErrorTag: (tag: ErrorTag) => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   sessionSettings: SessionSettings;
@@ -186,6 +189,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   addPerformanceRecord,
   addMissedQuestion,
   updateReviewQuestion,
+  updateLastPerformanceErrorTag,
   setIsLoading,
   setError,
   sessionSettings,
@@ -398,6 +402,12 @@ const QuizView: React.FC<QuizViewProps> = ({
       }
     }
 
+    // Calculate question word count for vignette stamina analysis
+    const questionWordCount = currentQuestion.question
+      .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+      .split(/\s+/)
+      .filter(word => word.length > 0).length;
+
     // Record detailed performance, including system/subcategory/condition
     addPerformanceRecord({
       timestamp: Date.now(),
@@ -409,6 +419,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       isCorrect,
       focus: sessionSettings.focus,
       difficulty: sessionSettings.difficulty,
+      questionWordCount,
     });
   };
 
@@ -659,6 +670,13 @@ const QuizView: React.FC<QuizViewProps> = ({
           )}
 
           <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg feedback-content">
+            {/* Error Tagger - Only show when incorrect */}
+            {selectedAnswerIndex !== currentQuestion.correctAnswerIndex && (
+              <div className="mb-4 pb-4 border-b border-slate-200 dark:border-slate-700">
+                <ErrorTagger onTagError={updateLastPerformanceErrorTag} />
+              </div>
+            )}
+
             <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
               Rationale
             </h3>

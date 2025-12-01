@@ -126,7 +126,7 @@ const StatCard: React.FC<StatCardProps> = ({
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="widget-premium-glass p-4 hover:shadow-lg transition-shadow"
+    className="widget-premium-glass widget-noise-texture p-4 hover:shadow-lg transition-shadow"
   >
     {/* Small uppercase label */}
     <div className="flex items-center gap-2 mb-3">
@@ -148,7 +148,7 @@ const StatCard: React.FC<StatCardProps> = ({
       )}
     </div>
     {subtext && (
-      <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">{subtext}</span>
+      <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">{subtext}</span>
     )}
   </motion.div>
 );
@@ -296,7 +296,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
         const diff = (data.shortQuestionAccuracy ?? 0) - (data.longQuestionAccuracy ?? 0);
         // Positive diff means short questions have higher accuracy
         const diffText = diff > 0 
-          ? `You are ${Math.abs(diff).toFixed(0)}% more accurate on shorter questions.`
+          ? `You perform ${Math.abs(diff).toFixed(0)}% worse when questions exceed ${LONG_THRESHOLD} words.`
           : diff < 0 
           ? `You are ${Math.abs(diff).toFixed(0)}% more accurate on longer questions.`
           : 'Your accuracy is consistent across question lengths.';
@@ -306,7 +306,8 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay }}
-            className="widget-premium-glass p-4 col-span-2"
+            className="widget-premium-glass widget-noise-texture p-4 col-span-2"
+            title={diffText}
           >
             <div className="flex items-center gap-2 mb-3">
               <FileText className="w-5 h-5 text-indigo-500" />
@@ -315,24 +316,28 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex-1">
+              <div className="flex-1" title={`Accuracy on questions with less than ${SHORT_THRESHOLD} words`}>
                 <div className="stat-label-sm mb-1">{`Short (<${SHORT_THRESHOLD} words)`}</div>
-                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-indigo-400 rounded-full transition-all"
-                    style={{ width: `${data.shortQuestionAccuracy ?? 0}%` }}
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-indigo-400 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${data.shortQuestionAccuracy ?? 0}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
                   />
                 </div>
                 <div className="text-2xl font-light text-slate-900 dark:text-slate-100 mt-1">
                   {data.shortQuestionAccuracy ?? 0}%
                 </div>
               </div>
-              <div className="flex-1">
+              <div className="flex-1" title={`Accuracy on questions with more than ${LONG_THRESHOLD} words`}>
                 <div className="stat-label-sm mb-1">{`Long (>${LONG_THRESHOLD} words)`}</div>
-                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-purple-500 rounded-full transition-all"
-                    style={{ width: `${data.longQuestionAccuracy ?? 0}%` }}
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-purple-500 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${data.longQuestionAccuracy ?? 0}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
                   />
                 </div>
                 <div className="text-2xl font-light text-slate-900 dark:text-slate-100 mt-1">
@@ -340,8 +345,8 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
                 </div>
               </div>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2" aria-label={diffText}>
-              {diffText}
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2" title={diffText}>
+              💡 {diffText}
             </p>
           </motion.div>
         );
@@ -353,7 +358,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay }}
-            className="widget-premium-glass p-4 col-span-2"
+            className="widget-premium-glass widget-noise-texture p-4 col-span-2"
           >
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-5 h-5 text-blue-500" />
@@ -364,10 +369,12 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <div className="stat-label-sm mb-1">{"Fast (<30s)"}</div>
-                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-500 rounded-full transition-all"
-                    style={{ width: `${data.fastCorrectRate ?? 0}%` }}
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-blue-500 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${data.fastCorrectRate ?? 0}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
                   />
                 </div>
                 <div className="text-2xl font-light text-slate-900 dark:text-slate-100 mt-1">
@@ -376,10 +383,12 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
               </div>
               <div className="flex-1">
                 <div className="stat-label-sm mb-1">{"Slow (>60s)"}</div>
-                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-emerald-500 rounded-full transition-all"
-                    style={{ width: `${data.slowCorrectRate ?? 0}%` }}
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-emerald-500 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${data.slowCorrectRate ?? 0}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
                   />
                 </div>
                 <div className="text-2xl font-light text-slate-900 dark:text-slate-100 mt-1">
@@ -388,9 +397,9 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
               </div>
             </div>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2">
-              {(data.fastCorrectRate ?? 0) < (data.slowCorrectRate ?? 0) 
-                ? "⚡ Slow down! Your accuracy improves with more time."
-                : "✓ Good pace! Your speed doesn't hurt accuracy."}
+              💡 {(data.fastCorrectRate ?? 0) < (data.slowCorrectRate ?? 0) 
+                ? "Slow down! Your accuracy improves with more time."
+                : "Good pace! Your speed doesn't hurt accuracy."}
             </p>
           </motion.div>
         );
@@ -415,7 +424,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay }}
-            className="widget-premium-glass p-4 col-span-2"
+            className="widget-premium-glass widget-noise-texture p-4 col-span-2"
           >
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 className="w-5 h-5 text-violet-500" />
@@ -429,10 +438,12 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
                   <span className="stat-label-sm">Diagnosis</span>
                   <span className="text-2xl font-light text-slate-900 dark:text-slate-100">{data.diagnosisAccuracy ?? 0}%</span>
                 </div>
-                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-l-full overflow-hidden">
-                  <div 
-                    className="h-full bg-sky-500 rounded-l-full transition-all"
-                    style={{ width: `${data.diagnosisAccuracy ?? 0}%` }}
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-l-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-sky-500 rounded-l-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${data.diagnosisAccuracy ?? 0}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
                   />
                 </div>
               </div>
@@ -442,16 +453,18 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
                   <span className="stat-label-sm">Management</span>
                   <span className="text-2xl font-light text-slate-900 dark:text-slate-100">{data.managementAccuracy ?? 0}%</span>
                 </div>
-                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-r-full overflow-hidden">
-                  <div 
-                    className="h-full bg-violet-500 rounded-r-full transition-all"
-                    style={{ width: `${data.managementAccuracy ?? 0}%` }}
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-r-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-violet-500 rounded-r-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${data.managementAccuracy ?? 0}%` }}
+                    transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
                   />
                 </div>
               </div>
             </div>
             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              {(data.diagnosisAccuracy ?? 0) > (data.managementAccuracy ?? 0)
+              💡 {(data.diagnosisAccuracy ?? 0) > (data.managementAccuracy ?? 0)
                 ? "Focus more on treatment & pharmacology."
                 : "Focus more on diagnosis & differentials."}
             </p>
