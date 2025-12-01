@@ -11,3 +11,10 @@ export { default as SystemComparison, generateMockSystemData } from './SystemCom
 export type { SystemMasterySummary } from './SystemComparison';
 
 export { default as ExportControls, exportToCSV, exportToJSON } from './ExportControls';
+
+export { default as WidgetGrid, DEFAULT_WIDGET_CONFIG } from './WidgetGrid';
+export type { WidgetId, WidgetConfig, WidgetData, TimeScope } from './WidgetGrid';
+
+export { default as TimeScopeFilter } from './TimeScopeFilter';
+
+export { default as StatisticsPreferences } from './StatisticsPreferences';

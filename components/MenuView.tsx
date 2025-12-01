@@ -21,6 +21,15 @@ import DrugDetailModal from "./DrugDetailModal";
 import { findConditionMetaById, searchConditions } from "../src/lib/conditionSearch";
 import { searchDrugs, findDrugByName } from "../src/lib/drugSearch";
 import type { DrugEntry, DrugSearchResult } from "../pharm/drugTypes";
+import { 
+  WidgetGrid, 
+  TimeScopeFilter, 
+  HeatmapCalendar, 
+  SystemComparison,
+  DEFAULT_WIDGET_CONFIG 
+} from "./ProgressDashboard";
+import type { WidgetId, WidgetData, TimeScope, ProgressDayRecord, SystemMasterySummary } from "./ProgressDashboard";
+import { calculateAccuracy, calculateStreaks, loadWidgetPreferences } from "../lib/dashboardUtils";
 
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
@@ -74,6 +83,13 @@ const MenuView: React.FC<MenuViewProps> = ({
     null
   );
   const [selectedDrug, setSelectedDrug] = useState<DrugEntry | null>(null);
+  
+  // Dashboard state
+  const [timeScope, setTimeScope] = useState<TimeScope>('1wk');
+  const defaultWidgets = DEFAULT_WIDGET_CONFIG.filter(w => w.enabled).map(w => w.id);
+  const [enabledWidgets, setEnabledWidgets] = useState<WidgetId[]>(() => 
+    loadWidgetPreferences<WidgetId>(defaultWidgets)
+  );
 
   // Prevent scrolling when modal is open
   useEffect(() => {
@@ -142,6 +158,120 @@ const MenuView: React.FC<MenuViewProps> = ({
         return { topic, score, correct, total };
       })
       .sort((a, b) => b.total - a.total);
+    
+    // Calculate widget data
+    const totalQuestions = performanceData.length;
+    const totalCorrect = performanceData.filter(r => r.isCorrect).length;
+    
+    // Calculate streaks using utility function
+    const { current: currentStreak, best: bestStreak } = calculateStreaks(performanceData);
+    
+    // Today's stats
+    const today = new Date().toISOString().split('T')[0];
+    const todayRecords = performanceData.filter(r => 
+      new Date(r.timestamp).toISOString().split('T')[0] === today
+    );
+    const todayQuestions = todayRecords.length;
+    const todayCorrect = todayRecords.filter(r => r.isCorrect).length;
+    
+    // This week's stats
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const weekRecords = performanceData.filter(r => r.timestamp > weekAgo);
+    const weekQuestions = weekRecords.length;
+    const weekCorrect = weekRecords.filter(r => r.isCorrect).length;
+    
+    // This month's stats
+    const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const monthRecords = performanceData.filter(r => r.timestamp > monthAgo);
+    const monthQuestions = monthRecords.length;
+    const monthCorrect = monthRecords.filter(r => r.isCorrect).length;
+    
+    // Recent trend (last 50 vs previous 50)
+    const last50 = performanceData.slice(-50);
+    const prev50 = performanceData.slice(-100, -50);
+    const last50Accuracy = last50.length > 0 
+      ? last50.filter(r => r.isCorrect).length / last50.length 
+      : 0;
+    const prev50Accuracy = prev50.length > 0 
+      ? prev50.filter(r => r.isCorrect).length / prev50.length 
+      : 0;
+    const recentTrend = Math.round((last50Accuracy - prev50Accuracy) * 100);
+    
+    // Study days
+    const uniqueDays = new Set(
+      performanceData.map(r => new Date(r.timestamp).toISOString().split('T')[0])
+    );
+    const studyDays = uniqueDays.size;
+    
+    // Widget data
+    const widgetData: WidgetData = {
+      currentStreak,
+      bestStreak,
+      questionsAttempted: totalQuestions,
+      overallAccuracy: calculateAccuracy(totalCorrect, totalQuestions),
+      todayQuestions,
+      todayCorrect,
+      weekQuestions,
+      weekCorrect,
+      monthQuestions,
+      monthCorrect,
+      recentTrend,
+      studyDays,
+    };
+    
+    // Heatmap calendar data (last 90 days)
+    const heatmapData: ProgressDayRecord[] = [];
+    const dailyMap = new Map<string, { attempts: number; correct: number; system: string }>();
+    for (const record of performanceData) {
+      const date = new Date(record.timestamp).toISOString().split('T')[0];
+      const existing = dailyMap.get(date) || { attempts: 0, correct: 0, system: '' };
+      dailyMap.set(date, {
+        attempts: existing.attempts + 1,
+        correct: existing.correct + (record.isCorrect ? 1 : 0),
+        system: record.system || existing.system || '',
+      });
+    }
+    for (const [date, data] of dailyMap.entries()) {
+      heatmapData.push({
+        date,
+        attempts: data.attempts,
+        correct: data.correct,
+        accuracy: calculateAccuracy(data.correct, data.attempts),
+        system: data.system,
+      });
+    }
+    
+    // System comparison data with trend calculation
+    const systemComparisonData: SystemMasterySummary[] = systemStats.map(s => {
+      // Calculate change from last period (last 2 weeks vs 2 weeks before that)
+      const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+      const fourWeeksAgo = Date.now() - 28 * 24 * 60 * 60 * 1000;
+      
+      const recentSystemRecords = performanceData.filter(
+        r => r.system === s.system && r.timestamp > twoWeeksAgo
+      );
+      const previousSystemRecords = performanceData.filter(
+        r => r.system === s.system && r.timestamp > fourWeeksAgo && r.timestamp <= twoWeeksAgo
+      );
+      
+      const recentAccuracy = recentSystemRecords.length > 0
+        ? recentSystemRecords.filter(r => r.isCorrect).length / recentSystemRecords.length
+        : 0;
+      const previousAccuracy = previousSystemRecords.length > 0
+        ? previousSystemRecords.filter(r => r.isCorrect).length / previousSystemRecords.length
+        : 0;
+      
+      const changeFromLastPeriod = previousSystemRecords.length >= 3 && recentSystemRecords.length >= 3
+        ? Math.round((recentAccuracy - previousAccuracy) * 100)
+        : undefined;
+      
+      return {
+        system: s.system,
+        questionsAnswered: s.total,
+        masteryScore: s.score / 100, // normalize to 0-1
+        changeFromLastPeriod,
+      };
+    });
 
     return {
       overallScore,
@@ -149,6 +279,9 @@ const MenuView: React.FC<MenuViewProps> = ({
       total360: last360.length,
       systemStats,
       topicScores,
+      widgetData,
+      heatmapData,
+      systemComparisonData,
     };
   }, [performanceData]);
 
@@ -465,30 +598,68 @@ const MenuView: React.FC<MenuViewProps> = ({
             </motion.button>
           </motion.section>
 
-          {/* Overall performance ring */}
+          {/* Analytics Dashboard */}
           <motion.section 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="pt-2"
           >
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-5 text-center">
-              Overall Score
-            </h2>
-            <div className="flex flex-col items-center p-5 bg-[var(--color-card-bg)] rounded-xl shadow-sm gap-2 border border-[var(--color-border)]">
-              <ProgressRing score={stats.overallScore} />
-              <p className="text-sm font-normal text-[var(--color-text-muted)]">
-                Based on the last {stats.total360} questions (
-                {stats.correct360}/{stats.total360})
-              </p>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                Analytics Dashboard
+              </h2>
+              <TimeScopeFilter value={timeScope} onChange={setTimeScope} />
             </div>
+            
+            {/* Widget Grid */}
+            <WidgetGrid 
+              data={stats.widgetData} 
+              enabledWidgets={enabledWidgets}
+              timeScope={timeScope}
+            />
           </motion.section>
+
+          {/* Study Activity Heatmap */}
+          {stats.heatmapData.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-5">
+                Study Activity
+              </h2>
+              <HeatmapCalendar 
+                records={stats.heatmapData} 
+                metric="attempts"
+                weeks={12}
+              />
+            </motion.section>
+          )}
+
+          {/* System Comparison */}
+          {stats.systemComparisonData.length > 0 && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-5">
+                System Performance
+              </h2>
+              <SystemComparison 
+                summary={stats.systemComparisonData}
+                onSystemClick={(system) => setSelectedSystem(system as SystemCode)}
+              />
+            </motion.section>
+          )}
 
           {/* Knowledge map – now by PANCE system */}
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
+            transition={{ delay: 0.35 }}
           >
             <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-5">
               Knowledge Map (PANCE Systems)
@@ -506,7 +677,7 @@ const MenuView: React.FC<MenuViewProps> = ({
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.4 }}
           >
             <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-3">
               Manage Data

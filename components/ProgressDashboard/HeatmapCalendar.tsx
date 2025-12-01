@@ -222,12 +222,12 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   };
   
   return (
-    <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+    <div className="p-4 bg-[var(--color-glass-bg)] backdrop-blur-sm rounded-xl border border-[var(--color-glass-border)] shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
           Study Activity
         </h3>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
+        <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
           <span>Less</span>
           {COLOR_SCALES[metric].map((color, idx) => (
             <div
@@ -244,7 +244,7 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
         {monthLabels.map((label, idx) => (
           <div
             key={idx}
-            className="text-xs text-slate-500 dark:text-slate-400"
+            className="text-xs text-[var(--color-text-muted)]"
             style={{ width: `${label.colSpan * 14}px` }}
           >
             {label.month}
@@ -259,7 +259,7 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           {DAYS_OF_WEEK.map((day, idx) => (
             <div
               key={idx}
-              className="h-3 text-xs text-slate-500 dark:text-slate-400 flex items-center"
+              className="h-3 text-xs text-[var(--color-text-muted)] flex items-center"
               style={{ display: idx % 2 === 1 ? 'flex' : 'none' }}
             >
               {day}
@@ -282,11 +282,11 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
                 return (
                   <div
                     key={rowIdx}
-                    className={`w-3 h-3 rounded-sm transition-colors ${
+                    className={`w-3 h-3 rounded-sm transition-all duration-200 ${
                       isFuture 
-                        ? 'bg-slate-50 dark:bg-slate-900' 
+                        ? 'bg-[var(--color-bg-secondary)]' 
                         : colorClass
-                    } ${date ? 'cursor-pointer hover:ring-2 hover:ring-blue-400' : ''}`}
+                    } ${date ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-accent)] hover:scale-110' : ''}`}
                     title={tooltip}
                   />
                 );
@@ -297,26 +297,26 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       </div>
       
       {/* Summary stats */}
-      <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-4">
+      <div className="mt-4 pt-3 border-t border-[var(--color-border)] grid grid-cols-3 gap-4">
         <div className="text-center">
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          <div className="text-lg font-bold text-[var(--color-text-primary)]">
             {records.reduce((sum, r) => sum + r.attempts, 0)}
           </div>
-          <div className="text-xs text-slate-500">Total Questions</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Total Questions</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          <div className="text-lg font-bold text-[var(--color-text-primary)]">
             {records.length}
           </div>
-          <div className="text-xs text-slate-500">Active Days</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Active Days</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          <div className="text-lg font-bold text-[var(--color-text-primary)]">
             {records.length > 0 
               ? (records.reduce((sum, r) => sum + r.accuracy, 0) / records.length).toFixed(0)
               : 0}%
           </div>
-          <div className="text-xs text-slate-500">Avg Accuracy</div>
+          <div className="text-xs text-[var(--color-text-muted)]">Avg Accuracy</div>
         </div>
       </div>
     </div>
