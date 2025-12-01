@@ -400,9 +400,6 @@ const App: React.FC = () => {
                 flaggedQuestions={flaggedQuestions}
                 onBackToQuiz={handleBackToQuiz}
                 hasActiveSession={hasActiveSession}
-                clearPerformanceData={clearPerformanceData}
-                clearMissedQuestionsData={clearMissedQuestionsData}
-                clearFlaggedQuestionsData={clearFlaggedQuestionsData}
                 setIsLoading={setIsLoading}
                 setError={setError}
                 onStartSession={handleStartSession}

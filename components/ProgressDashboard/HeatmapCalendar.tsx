@@ -40,21 +40,21 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 // Color scales for different metrics
 const COLOR_SCALES = {
   attempts: [
-    'bg-slate-100 dark:bg-slate-800',      // 0
+    'bg-slate-100 dark:bg-slate-800',      // 0 - using slate-800 for dark mode empty squares
     'bg-emerald-200 dark:bg-emerald-900',  // 1-5
     'bg-emerald-300 dark:bg-emerald-800',  // 6-10
     'bg-emerald-400 dark:bg-emerald-700',  // 11-20
     'bg-emerald-500 dark:bg-emerald-600',  // 21+
   ],
   accuracy: [
-    'bg-slate-100 dark:bg-slate-800',      // no data
+    'bg-slate-100 dark:bg-slate-800',      // no data - using slate-800 for dark mode
     'bg-red-300 dark:bg-red-900',          // <50%
     'bg-amber-300 dark:bg-amber-800',      // 50-69%
     'bg-emerald-300 dark:bg-emerald-700',  // 70-84%
     'bg-emerald-500 dark:bg-emerald-500',  // 85%+
   ],
   streak: [
-    'bg-slate-100 dark:bg-slate-800',      // 0
+    'bg-slate-100 dark:bg-slate-800',      // 0 - using slate-800 for dark mode
     'bg-orange-200 dark:bg-orange-900',    // 1-2
     'bg-orange-300 dark:bg-orange-800',    // 3-5
     'bg-orange-400 dark:bg-orange-700',    // 6-10
@@ -222,12 +222,12 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   };
   
   return (
-    <div className="p-4 bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+    <div className="card-premium-glass p-5 rounded-2xl w-full">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Study Activity
         </h3>
-        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <span>Less</span>
           {COLOR_SCALES[metric].map((color, idx) => (
             <div
@@ -296,26 +296,26 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       </div>
       
       {/* Summary stats */}
-      <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-4">
+      <div className="mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 grid grid-cols-3 gap-4">
         <div className="text-center">
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          <div className="text-3xl font-light text-slate-900 dark:text-slate-100">
             {records.reduce((sum, r) => sum + r.attempts, 0)}
           </div>
-          <div className="text-xs text-slate-600 dark:text-slate-400">Total Questions</div>
+          <div className="stat-label-sm mt-1">Total Questions</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          <div className="text-3xl font-light text-slate-900 dark:text-slate-100">
             {records.length}
           </div>
-          <div className="text-xs text-slate-600 dark:text-slate-400">Active Days</div>
+          <div className="stat-label-sm mt-1">Active Days</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          <div className="text-3xl font-light text-slate-900 dark:text-slate-100">
             {records.length > 0 
               ? (records.reduce((sum, r) => sum + r.accuracy, 0) / records.length).toFixed(0)
               : 0}%
           </div>
-          <div className="text-xs text-slate-600 dark:text-slate-400">Avg Accuracy</div>
+          <div className="stat-label-sm mt-1">Avg Accuracy</div>
         </div>
       </div>
     </div>

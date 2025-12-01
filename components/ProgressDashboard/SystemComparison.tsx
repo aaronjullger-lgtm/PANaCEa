@@ -87,7 +87,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
   };
   
   return (
-    <div className="p-4 bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+    <div className="card-premium-glass p-5 rounded-2xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
