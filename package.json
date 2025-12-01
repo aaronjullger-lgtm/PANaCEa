@@ -12,6 +12,8 @@
     "generate:lab": "tsx ./scripts/generateLabContent.ts",
     "generate:clinical": "tsx ./scripts/generateClinicalContent.ts",
     "generate:test": "tsx ./scripts/testContentGeneration.ts",
+    "generate:basic-science-links": "tsx ./scripts/generateBasicScienceLinks.ts",
+    "test:basic-science-links": "tsx ./scripts/testBasicScienceLinks.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run"

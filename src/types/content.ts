@@ -24,6 +24,14 @@ export interface LabPanels {
 }
 
 /**
+ * Basic science concept link for foundational learning
+ */
+export interface BasicScienceLink {
+  title: string;      // e.g., "Review: Insulin Signaling"
+  conceptId: string;  // Internal ID for the foundational page
+}
+
+/**
  * Lab case for Mini Mode training
  * Focuses on interpreting laboratory values to reach a diagnosis
  */
@@ -34,6 +42,8 @@ export interface LabCase {
   labs: LabPanels;
   /** Optional: Additional orderable tests that are available but not shown initially */
   orderableTests?: Record<string, LabValue[]>;
+  /** Optional: Links to foundational basic science concepts */
+  basicScienceLinks?: BasicScienceLink[];
 }
 
 /**
@@ -53,4 +63,6 @@ export interface ClinicalCase {
   correctDiagnosis: string;
   vignette: string;
   presentationClues: PresentationClue[];
+  /** Optional: Links to foundational basic science concepts */
+  basicScienceLinks?: BasicScienceLink[];
 }
