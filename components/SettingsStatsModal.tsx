@@ -16,10 +16,17 @@ import {
   Clock,
   Zap,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  LayoutDashboard,
+  FileSpreadsheet,
+  FileJson,
+  Check
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from './ProgressDashboard';
+import type { WidgetId } from './ProgressDashboard';
+import { exportUserAnalytics } from '@/lib/analyticsExport';
 
 interface SettingsStatsModalProps {
   isOpen: boolean;
@@ -32,9 +39,36 @@ interface SettingsStatsModalProps {
   flaggedQuestionsCount: number;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
+  enabledWidgets?: WidgetId[];
+  onUpdateWidgets?: (widgets: WidgetId[]) => void;
 }
 
-type TabId = 'stats' | 'settings';
+type TabId = 'stats' | 'settings' | 'preferences';
+
+// Storage key for widget preferences
+const WIDGET_PREFS_KEY = 'panacea_widget_preferences';
+
+// Get default enabled widgets
+const getDefaultWidgets = (): WidgetId[] => 
+  DEFAULT_WIDGET_CONFIG.filter(w => w.enabled).map(w => w.id);
+
+// Load widget preferences from localStorage
+const loadWidgetPreferences = (): WidgetId[] => {
+  try {
+    const stored = localStorage.getItem(WIDGET_PREFS_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return getDefaultWidgets();
+};
+
+// Save widget preferences to localStorage
+const saveWidgetPreferences = (widgets: WidgetId[]) => {
+  localStorage.setItem(WIDGET_PREFS_KEY, JSON.stringify(widgets));
+};
 
 /**
  * SettingsStatsModal - Comprehensive settings and statistics view
@@ -50,10 +84,55 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   flaggedQuestionsCount,
   theme = 'light',
   onToggleTheme,
+  enabledWidgets: externalEnabledWidgets,
+  onUpdateWidgets,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('stats');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [confirmClear, setConfirmClear] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState<'csv' | 'json' | null>(null);
+  
+  // Widget preferences state
+  const [localEnabledWidgets, setLocalEnabledWidgets] = useState<WidgetId[]>(loadWidgetPreferences);
+  
+  // Use external widgets if provided, otherwise use local state
+  const enabledWidgets = externalEnabledWidgets ?? localEnabledWidgets;
+  
+  const handleToggleWidget = (widgetId: WidgetId) => {
+    const newWidgets = enabledWidgets.includes(widgetId)
+      ? enabledWidgets.filter(w => w !== widgetId)
+      : [...enabledWidgets, widgetId];
+    
+    if (onUpdateWidgets) {
+      onUpdateWidgets(newWidgets);
+    } else {
+      setLocalEnabledWidgets(newWidgets);
+      saveWidgetPreferences(newWidgets);
+    }
+  };
+  
+  const handleResetWidgets = () => {
+    const defaults = getDefaultWidgets();
+    if (onUpdateWidgets) {
+      onUpdateWidgets(defaults);
+    } else {
+      setLocalEnabledWidgets(defaults);
+      saveWidgetPreferences(defaults);
+    }
+  };
+  
+  // Export handlers
+  const handleExportCSV = () => {
+    exportUserAnalytics(performanceData, 'csv');
+    setExportStatus('csv');
+    setTimeout(() => setExportStatus(null), 2000);
+  };
+  
+  const handleExportJSON = () => {
+    exportUserAnalytics(performanceData, 'json');
+    setExportStatus('json');
+    setTimeout(() => setExportStatus(null), 2000);
+  };
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -207,12 +286,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <div className="p-1.5 sm:p-2 bg-[var(--color-accent)]/10 rounded-lg">
                 {activeTab === 'stats' ? (
                   <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
+                ) : activeTab === 'preferences' ? (
+                  <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 ) : (
                   <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 )}
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
-                {activeTab === 'stats' ? 'Statistics' : 'Settings'}
+                {activeTab === 'stats' ? 'Statistics' : activeTab === 'preferences' ? 'Dashboard Preferences' : 'Settings'}
               </h2>
             </div>
             <button
@@ -233,8 +314,21 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
             >
-              <BarChart3 className="w-4 h-4 inline-block mr-2" />
-              Statistics
+              <BarChart3 className="w-4 h-4 inline-block mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Statistics</span>
+              <span className="sm:hidden">Stats</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('preferences')}
+              className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
+                activeTab === 'preferences'
+                  ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4 inline-block mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Preferences</span>
+              <span className="sm:hidden">Prefs</span>
             </button>
             <button
               onClick={() => setActiveTab('settings')}
@@ -244,7 +338,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
             >
-              <Settings className="w-4 h-4 inline-block mr-2" />
+              <Settings className="w-4 h-4 inline-block mr-1 sm:mr-2" />
               Settings
             </button>
           </div>
@@ -385,6 +479,64 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+            ) : activeTab === 'preferences' ? (
+              <div className="space-y-4 sm:space-y-6">
+                {/* Statistics Preferences Panel */}
+                <StatisticsPreferences
+                  enabledWidgets={enabledWidgets}
+                  onToggleWidget={handleToggleWidget}
+                  onResetToDefaults={handleResetWidgets}
+                />
+                
+                {/* Export Data Section */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Download className="w-5 h-5 text-[var(--color-accent)]" />
+                    <h3 className="font-medium text-[var(--color-text-primary)]">Export Your Data</h3>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)] mb-4">
+                    Download your performance data in CSV or JSON format.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={handleExportCSV}
+                      disabled={performanceData.length === 0}
+                      className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        performanceData.length === 0
+                          ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] cursor-not-allowed'
+                          : exportStatus === 'csv'
+                          ? 'bg-green-500/20 text-green-500'
+                          : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
+                      }`}
+                    >
+                      {exportStatus === 'csv' ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <FileSpreadsheet className="w-4 h-4" />
+                      )}
+                      Export CSV
+                    </button>
+                    <button
+                      onClick={handleExportJSON}
+                      disabled={performanceData.length === 0}
+                      className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        performanceData.length === 0
+                          ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] cursor-not-allowed'
+                          : exportStatus === 'json'
+                          ? 'bg-green-500/20 text-green-500'
+                          : 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] hover:bg-[var(--color-border)]'
+                      }`}
+                    >
+                      {exportStatus === 'json' ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <FileJson className="w-4 h-4" />
+                      )}
+                      Export JSON
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="space-y-4 sm:space-y-6">
