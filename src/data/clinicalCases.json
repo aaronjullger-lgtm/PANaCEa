@@ -1,0 +1,28 @@
+[
+  {
+    "id": "clinical-001",
+    "correctDiagnosis": "Community-Acquired Pneumonia",
+    "vignette": "A 45-year-old woman presents with 4 days of productive cough with green sputum, fever to 102°F, and pleuritic chest pain. She has no significant past medical history.",
+    "presentationClues": [
+      { "type": "buzzword", "description": "Productive cough with green sputum" },
+      { "type": "buzzword", "description": "Pleuritic chest pain" },
+      { "type": "physical_exam", "description": "Decreased breath sounds and dullness to percussion in right lower lobe" },
+      { "type": "physical_exam", "description": "Crackles on auscultation" },
+      { "type": "history", "description": "Fever to 102°F for 4 days" },
+      { "type": "history", "description": "No recent travel or sick contacts" }
+    ]
+  },
+  {
+    "id": "clinical-002",
+    "correctDiagnosis": "Acute Coronary Syndrome (ACS)",
+    "vignette": "A 58-year-old man with history of hypertension and smoking presents with crushing substernal chest pain radiating to the left arm for the past 2 hours. The pain is associated with diaphoresis and nausea.",
+    "presentationClues": [
+      { "type": "buzzword", "description": "Crushing substernal chest pain" },
+      { "type": "buzzword", "description": "Pain radiating to left arm" },
+      { "type": "physical_exam", "description": "Diaphoretic and pale appearance" },
+      { "type": "physical_exam", "description": "S4 heart sound on auscultation" },
+      { "type": "history", "description": "Hypertension and 30 pack-year smoking history" },
+      { "type": "history", "description": "Pain for 2 hours, not relieved by rest" }
+    ]
+  }
+]
