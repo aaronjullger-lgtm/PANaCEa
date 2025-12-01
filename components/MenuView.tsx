@@ -26,10 +26,13 @@ import {
   TimeScopeFilter, 
   HeatmapCalendar, 
   SystemComparison,
-  DEFAULT_WIDGET_CONFIG 
+  DEFAULT_WIDGET_CONFIG,
+  RootCauseAnalysis,
+  DailyPrescription
 } from "./ProgressDashboard";
-import type { WidgetId, WidgetData, TimeScope, ProgressDayRecord, SystemMasterySummary } from "./ProgressDashboard";
+import type { WidgetId, WidgetData, TimeScope, ProgressDayRecord, SystemMasterySummary, ErrorTagCount } from "./ProgressDashboard";
 import { calculateAccuracy, calculateStreaks, loadWidgetPreferences } from "../lib/dashboardUtils";
+import type { ErrorTag } from "../types";
 
 // System names for dynamic welcome message
 const SYSTEM_DISPLAY_NAMES: Record<string, string> = {
@@ -293,6 +296,31 @@ const MenuView: React.FC<MenuViewProps> = ({
         changeFromLastPeriod,
       };
     });
+    
+    // Error taxonomy counts for Root Cause Analysis
+    const errorCounts: ErrorTagCount[] = [
+      { tag: 'knowledge_gap', count: performanceData.filter(r => !r.isCorrect && r.errorTag === 'knowledge_gap').length },
+      { tag: 'misread_question', count: performanceData.filter(r => !r.isCorrect && r.errorTag === 'misread_question').length },
+      { tag: 'guessing', count: performanceData.filter(r => !r.isCorrect && r.errorTag === 'guessing').length },
+    ];
+    const totalIncorrect = performanceData.filter(r => !r.isCorrect).length;
+    
+    // Vignette Stamina calculations
+    const SHORT_THRESHOLD = 50;
+    const LONG_THRESHOLD = 150;
+    const shortQuestions = performanceData.filter(r => r.questionWordCount && r.questionWordCount < SHORT_THRESHOLD);
+    const longQuestions = performanceData.filter(r => r.questionWordCount && r.questionWordCount > LONG_THRESHOLD);
+    
+    const shortQuestionAccuracy = shortQuestions.length >= 5 
+      ? Math.round((shortQuestions.filter(r => r.isCorrect).length / shortQuestions.length) * 100)
+      : undefined;
+    const longQuestionAccuracy = longQuestions.length >= 5
+      ? Math.round((longQuestions.filter(r => r.isCorrect).length / longQuestions.length) * 100)
+      : undefined;
+    
+    // Add vignette stamina data to widget data
+    widgetData.shortQuestionAccuracy = shortQuestionAccuracy ?? 0;
+    widgetData.longQuestionAccuracy = longQuestionAccuracy ?? 0;
 
     return {
       overallScore,
@@ -303,6 +331,8 @@ const MenuView: React.FC<MenuViewProps> = ({
       widgetData,
       heatmapData,
       systemComparisonData,
+      errorCounts,
+      totalIncorrect,
     };
   }, [performanceData]);
 
@@ -319,6 +349,15 @@ const MenuView: React.FC<MenuViewProps> = ({
       focus: "topic",
       difficulty: "same",
       topic: topicAbbr,
+    });
+  };
+
+  // Handler for starting a focused session from Daily Prescription
+  const handleStartFocusSession = (system: SystemCode) => {
+    onConfirmSession({
+      focus: "topic",
+      difficulty: "same",
+      topic: system,
     });
   };
 
@@ -592,6 +631,18 @@ const MenuView: React.FC<MenuViewProps> = ({
         </motion.div>
 
         <div className="space-y-10">
+          {/* Daily Prescription - Smart Action Card */}
+          <motion.section 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+          >
+            <DailyPrescription 
+              performanceData={performanceData}
+              onStartFocusSession={handleStartFocusSession}
+            />
+          </motion.section>
+
           {/* Session controls */}
           <motion.section 
             initial={{ opacity: 0, y: 10 }}
@@ -611,7 +662,7 @@ const MenuView: React.FC<MenuViewProps> = ({
             )}
             <motion.button
               onClick={onStartSession}
-              className="w-full px-6 py-4 btn-glass text-lg font-bold rounded-xl"
+              className="w-full px-6 py-4 btn-glass text-lg font-bold tracking-tight rounded-xl"
               whileHover={{ scale: 1.01, y: -2 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -627,12 +678,12 @@ const MenuView: React.FC<MenuViewProps> = ({
             className="pt-2"
           >
             {/* Smart Header - Dynamic Welcome Block */}
-            <div className="card-premium-glass p-5 rounded-2xl mb-6">
-              <h2 className="text-2xl font-light text-slate-900 dark:text-slate-100 mb-1">
+            <div className="card-premium-glass card-noise-texture p-5 rounded-2xl mb-6">
+              <h2 className="text-2xl font-light tracking-tight text-slate-900 dark:text-slate-100 mb-1">
                 {getTimeBasedGreeting()}.
               </h2>
               {stats.systemComparisonData.length > 0 ? (
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Your recommended focus is{' '}
                   <span className="font-semibold text-slate-900 dark:text-slate-100">
                     {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0]?.system] || stats.systemComparisonData[0]?.system}
@@ -640,14 +691,14 @@ const MenuView: React.FC<MenuViewProps> = ({
                   .
                 </p>
               ) : (
-                <p className="text-sm text-slate-600 dark:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Start studying to unlock personalized recommendations.
                 </p>
               )}
             </div>
 
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 Analytics Dashboard
               </h2>
               <TimeScopeFilter value={timeScope} onChange={setTimeScope} />
@@ -659,6 +710,16 @@ const MenuView: React.FC<MenuViewProps> = ({
               enabledWidgets={enabledWidgets}
               timeScope={timeScope}
             />
+            
+            {/* Root Cause Analysis Widget - shows breakdown of why questions are missed */}
+            {stats.totalIncorrect > 0 && (
+              <div className="mt-6">
+                <RootCauseAnalysis 
+                  errorCounts={stats.errorCounts}
+                  totalIncorrect={stats.totalIncorrect}
+                />
+              </div>
+            )}
           </motion.section>
 
           {/* Study Activity Heatmap */}
@@ -668,7 +729,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-5">
+              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-5">
                 Study Activity
               </h2>
               <HeatmapCalendar 
@@ -686,7 +747,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-5">
+              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-5">
                 System Performance
               </h2>
               <SystemComparison 
@@ -702,7 +763,7 @@ const MenuView: React.FC<MenuViewProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
           >
-            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-5">
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-5">
               Knowledge Map (PANCE Systems)
             </h2>
             <TopicHeatmap

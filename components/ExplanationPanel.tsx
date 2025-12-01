@@ -7,6 +7,7 @@
  * - Why the others were wrong (collapsible accordion)
  * - Teach Me This button
  * - Helpful / Not Helpful feedback buttons
+ * - Error Tagger (only when incorrect)
  */
 
 import React, { useState, useMemo } from 'react';
@@ -18,6 +19,7 @@ import {
   generateMnemonic,
   highYieldPackage 
 } from '../lib/services/explanationCompression';
+import ErrorTagger from './quiz/ErrorTagger';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -44,6 +46,8 @@ export interface ExplanationPanelProps {
   onFeedback?: (helpful: boolean) => void;
   /** Optional question ID for analytics */
   questionId?: string;
+  /** Callback when error is tagged (only shown when incorrect) */
+  onTagError?: (tag: 'knowledge_gap' | 'misread_question' | 'guessing') => void;
 }
 
 /**
@@ -198,6 +202,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   onTeach,
   onFeedback,
   questionId,
+  onTagError,
 }) => {
   // Process explanation using the compression service
   const processedContent = useMemo(() => {
@@ -213,6 +218,13 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="space-y-4"
     >
+      {/* Error Tagger - Only show when incorrect */}
+      {!isCorrect && onTagError && (
+        <div className="mb-4">
+          <ErrorTagger onTagError={onTagError} />
+        </div>
+      )}
+
       {/* Main Glass Panel */}
       <GlassPanel isCorrect={isCorrect}>
         {/* Core Rationale Section */}

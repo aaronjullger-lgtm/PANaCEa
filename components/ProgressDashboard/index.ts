@@ -18,3 +18,8 @@ export type { WidgetId, WidgetConfig, WidgetData, TimeScope } from './WidgetGrid
 export { default as TimeScopeFilter } from './TimeScopeFilter';
 
 export { default as StatisticsPreferences } from './StatisticsPreferences';
+
+export { default as RootCauseAnalysis } from './RootCauseAnalysis';
+export type { ErrorTagCount } from './RootCauseAnalysis';
+
+export { default as DailyPrescription } from './DailyPrescription';
