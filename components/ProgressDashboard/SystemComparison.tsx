@@ -87,10 +87,10 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
   };
   
   return (
-    <div className="card-premium-glass p-5 rounded-2xl">
+    <div className="card-premium-glass card-noise-texture p-5 rounded-2xl">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Performance by System
         </h3>
         <div className="flex items-center gap-1">

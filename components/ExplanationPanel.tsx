@@ -302,7 +302,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
           {onTeach && (
             <button
               onClick={onTeach}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
             >
               <BookOpen className="w-4 h-4" />
               Teach Me This

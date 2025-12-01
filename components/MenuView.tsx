@@ -729,9 +729,6 @@ const MenuView: React.FC<MenuViewProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-5">
-                Study Activity
-              </h2>
               <HeatmapCalendar 
                 records={stats.heatmapData} 
                 metric="attempts"
@@ -747,9 +744,6 @@ const MenuView: React.FC<MenuViewProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-5">
-                System Performance
-              </h2>
               <SystemComparison 
                 summary={stats.systemComparisonData}
                 onSystemClick={(system) => setSelectedSystem(system as SystemCode)}
@@ -757,14 +751,14 @@ const MenuView: React.FC<MenuViewProps> = ({
             </motion.section>
           )}
 
-          {/* Knowledge map – now by PANCE system */}
+          {/* System Mastery Grid – now by PANCE system */}
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
           >
             <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-5">
-              Knowledge Map (PANCE Systems)
+              System Mastery Grid
             </h2>
             <TopicHeatmap
               topicScores={stats.topicScores || []}

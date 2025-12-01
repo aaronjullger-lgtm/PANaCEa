@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings } from "lucide-react";
 import QuizView from "./components/QuizView";
@@ -15,6 +15,7 @@ import ConditionDrillSession from "./components/drill/ConditionDrillSession";
 import GuidelineDrillSession from "./components/drill/GuidelineDrillSession";
 import SettingsStatsModal from "./components/SettingsStatsModal";
 import ThemeToggleButton from "./components/ThemeToggleButton";
+import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
 import { prefetchQuestions } from "./services/geminiService";
 import type {
   Question,
@@ -96,6 +97,21 @@ const App: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
+
+  // ---- Global keyboard shortcut for Cmd/Ctrl+K ----
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K to open keyboard shortcuts
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsShortcutsModalOpen(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   // ---- persist to localStorage whenever these change ----
   useEffect(() => {
@@ -384,6 +400,12 @@ const App: React.FC = () => {
         clearFlaggedQuestionsData={clearFlaggedQuestionsData}
         missedQuestionsCount={missedQuestions.length}
         flaggedQuestionsCount={flaggedQuestions.length}
+      />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-6 md:py-10">

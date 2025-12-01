@@ -528,7 +528,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       </div>
                       <button
                         onClick={onToggleTheme}
-                        className="px-4 py-2 bg-[var(--color-accent)] text-white rounded-lg hover:opacity-90 transition-opacity"
+                        className="px-4 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 rounded-lg hover:opacity-90 transition-opacity"
                       >
                         Switch to {theme === 'dark' ? 'Light' : 'Dark'}
                       </button>

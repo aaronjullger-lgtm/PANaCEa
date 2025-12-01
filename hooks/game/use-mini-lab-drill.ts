@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 
 // ============================================================================
 // INTERFACES
@@ -458,9 +458,19 @@ function randomizePatient(originalAge: number, originalSex: 'M' | 'F'): { age: n
   };
 }
 
-function generateRandomLabCase(category: LabCategory): LabCase {
+function generateRandomLabCase(category: LabCategory, recentDiagnoses?: Set<string>): LabCase {
   const availableCases = getCasesByCategory(category);
-  const randomCase = availableCases[Math.floor(Math.random() * availableCases.length)];
+  
+  // Try to find a case with a diagnosis we haven't seen recently
+  let attempts = 0;
+  let randomCase = availableCases[Math.floor(Math.random() * availableCases.length)];
+  
+  if (recentDiagnoses && recentDiagnoses.size > 0) {
+    while (recentDiagnoses.has(randomCase.correctDiagnosis) && attempts < 10) {
+      randomCase = availableCases[Math.floor(Math.random() * availableCases.length)];
+      attempts++;
+    }
+  }
   
   labCaseCounter++;
   
@@ -518,6 +528,7 @@ export interface UseMiniLabDrillReturn {
 }
 
 const INITIAL_QUEUE_SIZE = 3;
+const MAX_RECENT_DIAGNOSES = 10; // Track last 10 diagnoses to avoid repetition
 
 export function useMiniLabDrill(): UseMiniLabDrillReturn {
   const [selectedCategory, setSelectedCategory] = useState<LabCategory>('random');
@@ -528,6 +539,9 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   const [userAnswer, setUserAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<MiniLabGameStatus>('menu');
+  
+  // Track recently used diagnoses to avoid repetition
+  const recentDiagnosesRef = useRef<Set<string>>(new Set());
 
   const currentCase = queue[currentIndex] ?? null;
 
@@ -538,12 +552,26 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     return getDiagnosesByCategory(selectedCategory);
   }, [selectedCategory]);
 
+  const generateNewCase = useCallback((category: LabCategory): LabCase => {
+    const labCase = generateRandomLabCase(category, recentDiagnosesRef.current);
+    
+    // Add to recent diagnoses and maintain max size
+    recentDiagnosesRef.current.add(labCase.correctDiagnosis);
+    if (recentDiagnosesRef.current.size > MAX_RECENT_DIAGNOSES) {
+      const firstItem = recentDiagnosesRef.current.values().next().value;
+      if (firstItem) recentDiagnosesRef.current.delete(firstItem);
+    }
+    
+    return labCase;
+  }, []);
+
   const startSession = useCallback((category: LabCategory) => {
     setSelectedCategory(category);
+    recentDiagnosesRef.current.clear(); // Clear history on new session
     
     const initialQueue: LabCase[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      initialQueue.push(generateRandomLabCase(category));
+      initialQueue.push(generateNewCase(category));
     }
     
     setQueue(initialQueue);
@@ -553,7 +581,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setUserAnswer(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, []);
+  }, [generateNewCase]);
 
   const exitToMenu = useCallback(() => {
     setStatus('menu');
@@ -584,18 +612,19 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   }, [currentCase, status]);
 
   const nextCase = useCallback(() => {
-    const newCase = generateRandomLabCase(selectedCategory);
+    const newCase = generateNewCase(selectedCategory);
     setQueue(prev => [...prev, newCase]);
     setCurrentIndex(prev => prev + 1);
     setUserAnswer(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [selectedCategory]);
+  }, [selectedCategory, generateNewCase]);
 
   const reset = useCallback(() => {
+    recentDiagnosesRef.current.clear(); // Clear history on reset
     const newQueue: LabCase[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      newQueue.push(generateRandomLabCase(selectedCategory));
+      newQueue.push(generateNewCase(selectedCategory));
     }
     
     setQueue(newQueue);
@@ -605,7 +634,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setUserAnswer(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [selectedCategory]);
+  }, [selectedCategory, generateNewCase]);
 
   return {
     currentCase,
