@@ -13,6 +13,7 @@
     "generate:clinical": "tsx ./scripts/generateClinicalContent.ts",
     "generate:test": "tsx ./scripts/testContentGeneration.ts",
     "generate:basic-science-links": "tsx ./scripts/generateBasicScienceLinks.ts",
+    "generate:basic-science-links:incremental": "tsx ./scripts/generateBasicScienceLinksIncremental.ts",
     "test:basic-science-links": "tsx ./scripts/testBasicScienceLinks.ts",
     "build": "vite build",
     "preview": "vite preview",

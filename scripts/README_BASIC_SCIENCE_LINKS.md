@@ -70,9 +70,41 @@ npm run test:basic-science-links
 - Check the quality of generated links
 - Verify the script logic before processing all cases
 
-### 2. Full Generation Script
+### 2. Incremental Generation Script (Recommended)
 
-Generate links for all 500 cases:
+Generate links for all 500 cases with automatic resume:
+
+```bash
+export GEMINI_API_KEY="your-api-key-here"
+npm run generate:basic-science-links:incremental
+```
+
+**What it does:**
+- Reads all clinical cases from `src/data/clinicalCases.json`
+- Reads all lab cases from `src/data/labCases.json`
+- Generates basic science links only for cases that don't have them yet
+- Saves progress incrementally every 10 cases
+- Can be safely stopped and restarted - will resume from where it left off
+
+**Processing details:**
+- Respects API rate limit: 8 requests/minute (to stay under 10/min limit)
+- ~7.5 seconds delay between requests
+- Saves progress every 10 cases
+- Skips cases that already have links
+
+**Time estimate:**
+- ~60 minutes for 500 cases (due to API rate limits)
+- Can be run in multiple sessions if needed
+
+**Why use this?**
+- Gemini API has a rate limit of 10 requests/minute for free tier
+- This script ensures you don't hit the limit
+- Can be interrupted and resumed without losing progress
+- More reliable for large datasets
+
+### 3. Fast Generation Script (Use with caution)
+
+Generate links quickly (may hit rate limits):
 
 ```bash
 export GEMINI_API_KEY="your-api-key-here"
@@ -80,20 +112,18 @@ npm run generate:basic-science-links
 ```
 
 **What it does:**
-- Reads all clinical cases from `src/data/clinicalCases.json`
-- Reads all lab cases from `src/data/labCases.json`
-- Generates basic science links for each case
-- Overwrites the original JSON files with updated data
-
-**Processing details:**
 - Processes cases in batches of 10
-- 2-second delay between batches for rate limiting
-- Handles errors gracefully (returns empty array on failure)
-- Maintains existing case structure
+- 2-second delay between batches
+- Processes all cases even if they already have links (overwrites)
 
 **Time estimate:**
-- ~5-10 minutes for 500 cases
-- Depends on API response time
+- ~5-10 minutes if no rate limits hit
+- Will fail if you exceed API quota
+
+**When to use:**
+- Only for small datasets
+- When you have a paid API tier with higher limits
+- When regenerating all links is desired
 
 ## API Requirements
 
@@ -199,11 +229,22 @@ export GEMINI_API_KEY="your-key-here"
 echo $GEMINI_API_KEY  # Verify it's set
 ```
 
-### Rate Limit Errors
-If you hit rate limits:
-1. Increase `DELAY_BETWEEN_BATCHES` (e.g., to 5000ms)
-2. Decrease `BATCH_SIZE` (e.g., to 5)
-3. Run the script again - it will overwrite with new data
+### Rate Limit Errors (429 Too Many Requests)
+**Best solution:** Use the incremental script instead:
+```bash
+npm run generate:basic-science-links:incremental
+```
+
+The incremental script:
+- Respects the 10 requests/minute API limit
+- Automatically saves progress every 10 cases
+- Can be stopped and resumed at any time
+- Only processes cases that don't have links yet
+
+**Alternative:** For the fast script, if you still hit rate limits:
+1. Wait for the rate limit window to reset (usually 1 minute)
+2. The script will have saved some progress already
+3. Manually increase delays in the script configuration
 
 ### JSON Parse Errors
 The script automatically cleans markdown code blocks. If errors persist:
@@ -263,17 +304,34 @@ Recommended workflow for generating basic science links:
    ```
    Review output in `/tmp/basic-science-test/`
 
-2. **Generate full dataset**
+2. **Generate full dataset (incremental)**
    ```bash
-   npm run generate:basic-science-links
+   npm run generate:basic-science-links:incremental
+   ```
+   This will take ~60 minutes for 500 cases. The script:
+   - Shows progress for each case
+   - Saves every 10 cases
+   - Can be stopped with Ctrl+C and resumed later
+   - Skips cases that already have links
+
+3. **Resume if interrupted**
+   If you need to stop, just run the same command again:
+   ```bash
+   npm run generate:basic-science-links:incremental
+   ```
+   It will automatically continue from where it left off.
+
+4. **Verify results**
+   ```bash
+   # Check progress
+   jq '[.[] | select(.basicScienceLinks != null and (.basicScienceLinks | length) > 0)] | length' src/data/clinicalCases.json
+   jq '[.[] | select(.basicScienceLinks != null and (.basicScienceLinks | length) > 0)] | length' src/data/labCases.json
+   
+   # Spot-check random cases
+   jq '.[42].basicScienceLinks' src/data/clinicalCases.json
    ```
 
-3. **Verify results**
-   - Check file sizes are reasonable
-   - Spot-check random cases for quality
-   - Validate JSON structure
-
-4. **Commit changes**
+5. **Commit changes**
    ```bash
    git add src/data/clinicalCases.json src/data/labCases.json
    git commit -m "Add basic science links to all cases"
@@ -282,10 +340,13 @@ Recommended workflow for generating basic science links:
 ## Notes
 
 - **Backward compatibility**: The `basicScienceLinks` field is optional
-- **Re-running**: The script overwrites existing files completely
+- **Rate limits**: Gemini API free tier has 10 requests/minute limit
+- **Processing time**: ~60 minutes for 500 cases with incremental script
+- **Resume capability**: Incremental script can be stopped and restarted
 - **Version control**: Always commit before running to allow rollback
 - **API costs**: ~500 API calls total (250 clinical + 250 lab)
 - **Idempotency**: Running multiple times generates different links (non-deterministic)
+- **Best practice**: Use `generate:basic-science-links:incremental` for production use
 
 ## Support
 
@@ -301,5 +362,6 @@ For issues or questions:
 
 ```bash
 export GEMINI_API_KEY="your-key"
-npm run test:basic-science-links  # Start here!
+npm run test:basic-science-links                    # Test with 3 cases
+npm run generate:basic-science-links:incremental    # Generate all (recommended)
 ```
