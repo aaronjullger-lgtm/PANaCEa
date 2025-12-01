@@ -6,14 +6,16 @@ import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LabCase } from "../src/types/content";
 import { parseDirtyJson } from "./utils/parseDirtyJson";
+import { LAB_DRIVEN_CONDITIONS } from "../src/data/labDrivenConditions";
+import { LAB_TEST_DATABASE, DEFAULT_TESTS } from "../src/data/labTests";
 
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.5-pro";
+const MODEL_NAME = "gemini-2.0-flash-exp";
 const OUTPUT_FILE = path.resolve("src/data/labCases.json");
-const TARGET_CASES = 250;
-const BATCH_SIZE = 25; // Generate in batches to handle rate limits
+const TARGET_CASES = 300; // Increased to cover more conditions
+const BATCH_SIZE = 20; // Generate in batches to handle rate limits
 const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds between batches
 
 // ======================================================
@@ -81,26 +83,50 @@ const HIGH_YIELD_CONDITIONS = [
 // ======================================================
 // GENERATE LAB CASES
 // ======================================================
+
+// Get a random subset of conditions for this batch
+function getConditionsForBatch(count: number): string[] {
+  const shuffled = [...LAB_DRIVEN_CONDITIONS].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+// Get additional orderable tests (excluding defaults)
+function getOrderableTests(): string[] {
+  const defaultSet = new Set(DEFAULT_TESTS);
+  return LAB_TEST_DATABASE
+    .filter(test => !defaultSet.has(test.name))
+    .map(test => test.name)
+    .slice(0, 50); // Limit to 50 most common orderable tests
+}
+
 async function generateLabCaseBatch(batchNumber: number, casesInBatch: number, retryCount = 0): Promise<LabCase[]> {
   const startId = batchNumber * casesInBatch + 1;
   const endId = (batchNumber + 1) * casesInBatch;
   const MAX_RETRIES = 3;
   
+  const conditionsForBatch = getConditionsForBatch(casesInBatch);
+  const orderableTestsList = getOrderableTests();
+  
   const prompt = `You are a medical education expert generating lab interpretation cases for PANCE preparation.
 
 Generate exactly ${casesInBatch} unique, complex lab cases in JSON format. Each case must:
-1. Focus on high-yield conditions like: ${HIGH_YIELD_CONDITIONS.slice(0, 10).join(", ")}, etc.
+1. Focus on one of these conditions: ${conditionsForBatch.join(", ")}
 2. Include a brief clinical vignette (2-3 sentences) with age, sex, chief complaint, and relevant history
 3. Have at least 2-3 medically plausible abnormal lab values
-4. Include all three lab panels: BMP (Basic Metabolic Panel), CBC (Complete Blood Count), and LFT (Liver Function Tests)
-5. Each lab value must have: name, value, unit, and flag (H=High, L=Low, N=Normal)
-6. Use realistic reference ranges and clinically accurate abnormalities
+4. Include the THREE default lab panels that are ALWAYS shown initially:
+   - BMP (Basic Metabolic Panel): Sodium, Potassium, Chloride, Bicarbonate, BUN, Creatinine, Glucose
+   - CBC (Complete Blood Count): WBC, Hemoglobin, Hematocrit, Platelets, MCV (optional)
+   - LFT (Liver Function Tests): AST, ALT, Alkaline Phosphatase, Total Bilirubin, Albumin
+5. OPTIONALLY include 2-4 additional orderable tests that would be relevant for diagnosis from this list:
+   ${orderableTestsList.slice(0, 20).join(", ")}
+6. Each lab value must have: name, value, unit, and flag (H=High, L=Low, N=Normal)
+7. Use realistic reference ranges and clinically accurate abnormalities
 
 Return ONLY a valid JSON array with the following structure (no markdown, no code blocks):
 [
   {
     "id": "lab_case_${startId}",
-    "correctDiagnosis": "Diabetic Ketoacidosis",
+    "correctDiagnosis": "Diabetic Ketoacidosis (DKA)",
     "clinicalVignette": "A 24-year-old male with type 1 diabetes presents to the ED with nausea, vomiting, and abdominal pain for 2 days. He reports running out of insulin 3 days ago.",
     "labs": {
       "BMP": [
@@ -124,12 +150,22 @@ Return ONLY a valid JSON array with the following structure (no markdown, no cod
         {"name": "Alkaline Phosphatase", "value": "78", "unit": "U/L", "flag": "N"},
         {"name": "Total Bilirubin", "value": "0.8", "unit": "mg/dL", "flag": "N"},
         {"name": "Albumin", "value": "4.2", "unit": "g/dL", "flag": "N"}
+      ],
+      "Arterial Blood Gas": [
+        {"name": "pH", "value": "7.18", "unit": "", "flag": "L"},
+        {"name": "pCO2", "value": "22", "unit": "mmHg", "flag": "L"},
+        {"name": "HCO3", "value": "8", "unit": "mEq/L", "flag": "L"}
+      ],
+      "Ketones": [
+        {"name": "Beta-hydroxybutyrate", "value": "5.2", "unit": "mmol/L", "flag": "H"}
       ]
     }
   }
 ]
 
-Generate ${casesInBatch} diverse cases covering different high-yield conditions. Start IDs at lab_case_${startId} and end at lab_case_${endId}.`;
+Generate ${casesInBatch} diverse cases. Start IDs at lab_case_${startId} and end at lab_case_${endId}.
+Make sure each case uses a DIFFERENT condition from the list provided.`;
+
 
   try {
     console.log(`   Generating batch ${batchNumber + 1} (cases ${batchNumber * casesInBatch + 1}-${(batchNumber + 1) * casesInBatch})...`);

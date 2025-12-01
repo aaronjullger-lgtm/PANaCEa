@@ -12,12 +12,15 @@ export interface LabValue {
 }
 
 /**
- * Lab panel groupings
+ * Lab panel groupings (legacy - for backward compatibility)
+ * Note: Additional panels can be added dynamically as orderable tests
  */
 export interface LabPanels {
   BMP: LabValue[];
   CBC: LabValue[];
   LFT: LabValue[];
+  // Additional orderable test panels are added at runtime
+  // but not defined here to maintain type safety
 }
 
 /**
@@ -29,6 +32,8 @@ export interface LabCase {
   correctDiagnosis: string;
   clinicalVignette: string;
   labs: LabPanels;
+  /** Optional: Additional orderable tests that are available but not shown initially */
+  orderableTests?: Record<string, LabValue[]>;
 }
 
 /**

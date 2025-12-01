@@ -56,6 +56,10 @@ export interface LabCase {
   explanation: string;
   /** Category for filtering */
   category: LabCategory;
+  /** Optional: Additional orderable tests that can be revealed */
+  orderableTests?: LabPanel[];
+  /** Optional: Tests that have been ordered by the user */
+  orderedTests?: string[];
 }
 
 /**
@@ -153,6 +157,27 @@ const LAB_CASES: LabCase[] = [
         ],
       },
       {
+        name: 'Complete Blood Count',
+        values: [
+          { name: 'WBC', value: '14.2', unit: 'k/μL', referenceRange: '4.5-11.0', isAbnormal: true, abnormalDirection: 'high' },
+          { name: 'Hemoglobin', value: '15.1', unit: 'g/dL', referenceRange: '12.0-16.0', isAbnormal: false },
+          { name: 'Hematocrit', value: '45.3', unit: '%', referenceRange: '36-46', isAbnormal: false },
+          { name: 'Platelets', value: '285', unit: 'k/μL', referenceRange: '150-400', isAbnormal: false },
+        ],
+      },
+      {
+        name: 'Liver Function Tests',
+        values: [
+          { name: 'AST', value: '28', unit: 'U/L', referenceRange: '10-40', isAbnormal: false },
+          { name: 'ALT', value: '32', unit: 'U/L', referenceRange: '7-56', isAbnormal: false },
+          { name: 'Alkaline Phosphatase', value: '78', unit: 'U/L', referenceRange: '44-147', isAbnormal: false },
+          { name: 'Total Bilirubin', value: '0.8', unit: 'mg/dL', referenceRange: '0.1-1.2', isAbnormal: false },
+          { name: 'Albumin', value: '4.2', unit: 'g/dL', referenceRange: '3.5-5.0', isAbnormal: false },
+        ],
+      },
+    ],
+    orderableTests: [
+      {
         name: 'Arterial Blood Gas',
         values: [
           { name: 'pH', value: '7.18', unit: '', referenceRange: '7.35-7.45', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
@@ -161,10 +186,17 @@ const LAB_CASES: LabCase[] = [
         ],
       },
       {
-        name: 'Additional Labs',
+        name: 'Ketones',
         values: [
-          { name: 'Anion Gap', value: '24', unit: 'mEq/L', referenceRange: '8-12', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
           { name: 'Beta-hydroxybutyrate', value: '5.2', unit: 'mmol/L', referenceRange: '<0.6', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
+          { name: 'Anion Gap', value: '24', unit: 'mEq/L', referenceRange: '8-12', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
+        ],
+      },
+      {
+        name: 'Urinalysis',
+        values: [
+          { name: 'Ketones in Urine', value: 'Large', unit: '', referenceRange: 'Negative', isAbnormal: true },
+          { name: 'Glucose in Urine', value: '1000', unit: 'mg/dL', referenceRange: 'Negative', isAbnormal: true, abnormalDirection: 'high' },
         ],
       },
     ],
@@ -197,12 +229,42 @@ const LAB_CASES: LabCase[] = [
         ],
       },
       {
+        name: 'Basic Metabolic Panel',
+        values: [
+          { name: 'Sodium', value: '140', unit: 'mEq/L', referenceRange: '136-145', isAbnormal: false },
+          { name: 'Potassium', value: '4.2', unit: 'mEq/L', referenceRange: '3.5-5.0', isAbnormal: false },
+          { name: 'Chloride', value: '102', unit: 'mEq/L', referenceRange: '98-106', isAbnormal: false },
+          { name: 'Bicarbonate', value: '24', unit: 'mEq/L', referenceRange: '22-28', isAbnormal: false },
+          { name: 'BUN', value: '15', unit: 'mg/dL', referenceRange: '7-20', isAbnormal: false },
+          { name: 'Creatinine', value: '0.9', unit: 'mg/dL', referenceRange: '0.7-1.3', isAbnormal: false },
+          { name: 'Glucose', value: '92', unit: 'mg/dL', referenceRange: '70-100', isAbnormal: false },
+        ],
+      },
+      {
+        name: 'Liver Function Tests',
+        values: [
+          { name: 'AST', value: '22', unit: 'U/L', referenceRange: '10-40', isAbnormal: false },
+          { name: 'ALT', value: '18', unit: 'U/L', referenceRange: '7-56', isAbnormal: false },
+          { name: 'Alkaline Phosphatase', value: '65', unit: 'U/L', referenceRange: '44-147', isAbnormal: false },
+          { name: 'Total Bilirubin', value: '0.6', unit: 'mg/dL', referenceRange: '0.1-1.2', isAbnormal: false },
+          { name: 'Albumin', value: '4.0', unit: 'g/dL', referenceRange: '3.5-5.0', isAbnormal: false },
+        ],
+      },
+    ],
+    orderableTests: [
+      {
         name: 'Iron Studies',
         values: [
           { name: 'Serum Iron', value: '28', unit: 'µg/dL', referenceRange: '60-170', isAbnormal: true, abnormalDirection: 'low' },
           { name: 'TIBC', value: '450', unit: 'µg/dL', referenceRange: '250-370', isAbnormal: true, abnormalDirection: 'high' },
           { name: 'Ferritin', value: '8', unit: 'ng/mL', referenceRange: '20-200', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
           { name: 'Transferrin Sat', value: '6', unit: '%', referenceRange: '20-50', isAbnormal: true, abnormalDirection: 'low' },
+        ],
+      },
+      {
+        name: 'Reticulocyte Count',
+        values: [
+          { name: 'Reticulocyte Count', value: '0.5', unit: '%', referenceRange: '0.5-1.5', isAbnormal: false },
         ],
       },
     ],
@@ -525,6 +587,10 @@ export interface UseMiniLabDrillReturn {
   startSession: (category: LabCategory) => void;
   /** Exit to menu */
   exitToMenu: () => void;
+  /** Order additional tests */
+  orderTest: (testName: string) => void;
+  /** Available orderable tests for current case */
+  availableTests: string[];
 }
 
 const INITIAL_QUEUE_SIZE = 3;
@@ -544,6 +610,15 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
 
   const currentCase = queue[currentIndex] ?? null;
+  
+  // Get available orderable tests for the current case
+  const availableTests = useMemo(() => {
+    if (!currentCase || !currentCase.orderableTests) return [];
+    const alreadyOrdered = new Set(currentCase.orderedTests || []);
+    return currentCase.orderableTests
+      .map(panel => panel.name)
+      .filter(name => !alreadyOrdered.has(name));
+  }, [currentCase]);
 
   const validDiagnoses = useMemo(() => {
     if (selectedCategory === 'random') {
@@ -635,6 +710,37 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setIsCorrect(null);
     setStatus('playing');
   }, [selectedCategory, generateNewCase]);
+  
+  const orderTest = useCallback((testName: string): boolean => {
+    if (!currentCase || !currentCase.orderableTests) {
+      console.warn('Cannot order test: no current case or orderable tests available');
+      return false;
+    }
+    
+    // Find the test panel
+    const testPanel = currentCase.orderableTests.find(panel => panel.name === testName);
+    if (!testPanel) {
+      console.warn(`Cannot order test: test "${testName}" not found in orderable tests`);
+      return false;
+    }
+    
+    // Update the queue with the ordered test
+    setQueue(prev => {
+      const newQueue = [...prev];
+      const updatedCase = { ...newQueue[currentIndex] };
+      
+      // Add to panels
+      updatedCase.panels = [...updatedCase.panels, testPanel];
+      
+      // Track ordered tests
+      updatedCase.orderedTests = [...(updatedCase.orderedTests || []), testName];
+      
+      newQueue[currentIndex] = updatedCase;
+      return newQueue;
+    });
+    
+    return true;
+  }, [currentCase, currentIndex]);
 
   return {
     currentCase,
@@ -650,5 +756,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    orderTest,
+    availableTests,
   };
 }

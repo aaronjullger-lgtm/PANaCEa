@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMiniLabDrill, type LabCategory, type LabPanel, type LabValue } from '@/hooks/game/use-mini-lab-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { Flame, X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity, Shuffle, AlertTriangle } from 'lucide-react';
+import { Flame, X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity, Shuffle, AlertTriangle, Plus } from 'lucide-react';
 
 interface MiniLabDrillSessionProps {
   onExit?: () => void;
@@ -150,7 +150,11 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     startSession,
     exitToMenu,
     validDiagnoses,
+    orderTest,
+    availableTests,
   } = useMiniLabDrill();
+  
+  const [showOrderTestMenu, setShowOrderTestMenu] = React.useState(false);
 
   const handleExit = () => {
     exitToMenu();
@@ -161,6 +165,11 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
 
   const handleCategorySelect = (category: LabCategory) => {
     startSession(category);
+  };
+  
+  const handleOrderTest = (testName: string) => {
+    orderTest(testName);
+    setShowOrderTestMenu(false);
   };
 
   // Animation variants
@@ -321,6 +330,56 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                   </motion.div>
                 ))}
               </div>
+              
+              {/* Order Additional Tests Button */}
+              {status === 'playing' && availableTests.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-4"
+                >
+                  <button
+                    onClick={() => setShowOrderTestMenu(!showOrderTestMenu)}
+                    className="w-full px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-slate-200 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Order Additional Tests ({availableTests.length} available)
+                  </button>
+                  
+                  {showOrderTestMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-2 p-4 bg-slate-800 rounded-xl border border-slate-700 max-h-64 overflow-y-auto"
+                      role="menu"
+                      aria-label="Available laboratory tests"
+                    >
+                      <div className="grid grid-cols-1 gap-2">
+                        {availableTests.map((testName, index) => (
+                          <button
+                            key={testName}
+                            onClick={() => handleOrderTest(testName)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleOrderTest(testName);
+                              }
+                            }}
+                            className="px-4 py-2 text-left bg-slate-700 hover:bg-slate-600 focus:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg text-slate-200 transition-colors"
+                            role="menuitem"
+                            tabIndex={0}
+                            aria-label={`Order ${testName}`}
+                          >
+                            {testName}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
             </motion.div>
           )}
         </main>
