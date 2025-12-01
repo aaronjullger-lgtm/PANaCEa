@@ -19,6 +19,11 @@ export interface ConditionSearchResult {
   score: number;
 }
 
+// Scoring constants for search result ranking
+const SCORE_EXACT_MATCH = 3;
+const SCORE_STARTS_WITH = 2.5;
+const SCORE_CONTAINS_BASE = 2;
+
 function levenshtein(a: string, b: string): number {
   const dp = Array.from({ length: a.length + 1 }, () =>
     new Array(b.length + 1).fill(0)
@@ -45,18 +50,18 @@ function similarityScore(query: string, target: string): number {
   
   // Exact match gets highest score
   if (normalizedTarget === normalizedQuery) {
-    return 3;
+    return SCORE_EXACT_MATCH;
   }
   
   // Starts with match gets higher score (checked before includes)
   if (normalizedTarget.startsWith(normalizedQuery)) {
-    return 2.5;
+    return SCORE_STARTS_WITH;
   }
   
   // Contains match gets high score
   if (normalizedTarget.includes(normalizedQuery)) {
     const lengthBoost = normalizedQuery.length / Math.max(normalizedTarget.length, 1);
-    return 2 + lengthBoost;
+    return SCORE_CONTAINS_BASE + lengthBoost;
   }
   
   // Fuzzy match based on Levenshtein distance
