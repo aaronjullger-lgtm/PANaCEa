@@ -189,6 +189,13 @@
   border-color: var(--color-accent);
 }
 
+.dark .section-nav-button.active {
+  background: var(--color-accent);
+  color: #0f172a;
+  font-weight: 700;
+  border-color: var(--color-accent);
+}
+
 .condition-content-panel {
   flex: 1;
   overflow: hidden;
@@ -455,6 +462,10 @@
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   transition: all 0.2s ease;
+}
+
+.dark .condition-drill {
+  color: #0f172a;
 }
 
 .condition-drill:hover {

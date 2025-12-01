@@ -351,6 +351,13 @@ const QuizView: React.FC<QuizViewProps> = ({
         return;
       }
 
+      // Escape key to go back to menu
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onShowMenu();
+        return;
+      }
+
       // Map letter keys to indices (A=0, B=1, C=2, D=3)
       const letterToIndex: Record<string, number> = { a: 0, b: 1, c: 2, d: 3 };
 
@@ -374,7 +381,15 @@ const QuizView: React.FC<QuizViewProps> = ({
         }
       }
 
-      if (isAnswered && (event.key === "Enter" || event.key === " ")) {
+      // Space to reveal explanation (toggle showRationale)
+      if (isAnswered && event.key === " " && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+        setShowRationale(prev => !prev);
+        return;
+      }
+
+      // Cmd/Ctrl + Enter OR just Enter to go to next question
+      if (isAnswered && event.key === "Enter") {
         event.preventDefault();
         nextButtonRef.current?.click();
       }
@@ -384,7 +399,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isAnswered, handleToggleEliminate, eliminatedAnswers, currentQuestion]);
+  }, [isAnswered, handleToggleEliminate, eliminatedAnswers, currentQuestion, onShowMenu]);
 
   const handleOptionClick = (index: number) => {
     // Guard against selecting eliminated answers
@@ -510,7 +525,7 @@ const QuizView: React.FC<QuizViewProps> = ({
           <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
             <button
               onClick={onShowMenu}
-              className="px-6 py-2 bg-[var(--color-accent)] text-white font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
+              className="px-6 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
             >
               Back to Dashboard
             </button>

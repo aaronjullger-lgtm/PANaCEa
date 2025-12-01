@@ -222,9 +222,9 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   };
   
   return (
-    <div className="card-premium-glass p-5 rounded-2xl w-full">
+    <div className="card-premium-glass card-noise-texture p-5 rounded-2xl w-full">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Study Activity
         </h3>
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
@@ -253,13 +253,12 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       
       {/* Grid - Full width with evenly distributed squares */}
       <div className="flex w-full">
-        {/* Day labels */}
+        {/* Day labels - show all 7 days */}
         <div className="flex flex-col gap-0.5 mr-2 flex-shrink-0">
           {DAYS_OF_WEEK.map((day, idx) => (
             <div
               key={idx}
               className="h-3 text-xs text-slate-600 dark:text-slate-400 flex items-center"
-              style={{ display: idx % 2 === 1 ? 'flex' : 'none' }}
             >
               {day}
             </div>
