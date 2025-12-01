@@ -711,12 +711,18 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setStatus('playing');
   }, [selectedCategory, generateNewCase]);
   
-  const orderTest = useCallback((testName: string) => {
-    if (!currentCase || !currentCase.orderableTests) return;
+  const orderTest = useCallback((testName: string): boolean => {
+    if (!currentCase || !currentCase.orderableTests) {
+      console.warn('Cannot order test: no current case or orderable tests available');
+      return false;
+    }
     
     // Find the test panel
     const testPanel = currentCase.orderableTests.find(panel => panel.name === testName);
-    if (!testPanel) return;
+    if (!testPanel) {
+      console.warn(`Cannot order test: test "${testName}" not found in orderable tests`);
+      return false;
+    }
     
     // Update the queue with the ordered test
     setQueue(prev => {
@@ -732,6 +738,8 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
       newQueue[currentIndex] = updatedCase;
       return newQueue;
     });
+    
+    return true;
   }, [currentCase, currentIndex]);
 
   return {
