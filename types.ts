@@ -36,6 +36,12 @@ export interface PerformanceRecord {
   // Meta (so we can filter to PANCE-level ALL sessions)
   focus: SessionSettings["focus"];         // 'all' | 'growth' | ...
   difficulty: SessionSettings["difficulty"]; // 'easier' | 'same' | 'harder'
+
+  // Deep Insight metrics (optional for backward compatibility)
+  timeSpentMs?: number;            // Time spent on question in milliseconds
+  answerChangedCount?: number;     // Number of times answer was changed before submission
+  finalAnswerWasChanged?: boolean; // Whether the final answer differed from first selection
+  questionType?: 'diagnosis' | 'management' | 'pharm' | 'other'; // Question classification
 }
 
 export interface TopicStats {

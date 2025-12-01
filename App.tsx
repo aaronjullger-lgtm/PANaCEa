@@ -341,7 +341,7 @@ const App: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span 
-              className="text-xl font-semibold text-[var(--color-accent)] tracking-tight"
+              className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
               PANaCEa
@@ -373,7 +373,7 @@ const App: React.FC = () => {
       />
 
       <div className="max-w-4xl mx-auto px-4 py-6 md:py-10">
-        {isLoading && <Loader />}
+        {isLoading && <Loader forceDark={view === "imaging_drill"} />}
         {error && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
