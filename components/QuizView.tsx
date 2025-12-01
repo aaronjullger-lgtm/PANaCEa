@@ -226,6 +226,9 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Track eliminated answers (by index) for the current question
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
 
+  // Track first answer selection to detect answer switching (second-guess factor)
+  const [firstAnswerIndex, setFirstAnswerIndex] = useState<number | null>(null);
+
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);

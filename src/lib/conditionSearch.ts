@@ -42,10 +42,24 @@ function levenshtein(a: string, b: string): number {
 function similarityScore(query: string, target: string): number {
   const normalizedQuery = query.toLowerCase();
   const normalizedTarget = target.toLowerCase();
+  
+  // Exact match gets highest score
+  if (normalizedTarget === normalizedQuery) {
+    return 3;
+  }
+  
+  // Starts with match gets higher score (checked before includes)
+  if (normalizedTarget.startsWith(normalizedQuery)) {
+    return 2.5;
+  }
+  
+  // Contains match gets high score
   if (normalizedTarget.includes(normalizedQuery)) {
     const lengthBoost = normalizedQuery.length / Math.max(normalizedTarget.length, 1);
     return 2 + lengthBoost;
   }
+  
+  // Fuzzy match based on Levenshtein distance
   const distance = levenshtein(normalizedQuery, normalizedTarget);
   return 1 / (1 + distance);
 }

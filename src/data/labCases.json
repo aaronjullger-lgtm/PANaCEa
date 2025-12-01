@@ -1,0 +1,58 @@
+[
+  {
+    "id": "lab-001",
+    "correctDiagnosis": "Diabetic Ketoacidosis (DKA)",
+    "clinicalVignette": "A 28-year-old woman with type 1 diabetes presents with 3 days of nausea, vomiting, and abdominal pain. She appears dehydrated and is breathing rapidly.",
+    "labs": {
+      "BMP": [
+        { "name": "Sodium", "value": "132", "unit": "mmol/L", "flag": "L" },
+        { "name": "Potassium", "value": "5.8", "unit": "mmol/L", "flag": "H" },
+        { "name": "Chloride", "value": "95", "unit": "mmol/L", "flag": "N" },
+        { "name": "Bicarbonate", "value": "8", "unit": "mmol/L", "flag": "L" },
+        { "name": "BUN", "value": "32", "unit": "mg/dL", "flag": "H" },
+        { "name": "Creatinine", "value": "1.8", "unit": "mg/dL", "flag": "H" },
+        { "name": "Glucose", "value": "485", "unit": "mg/dL", "flag": "H" }
+      ],
+      "CBC": [
+        { "name": "WBC", "value": "14.2", "unit": "10^9/L", "flag": "H" },
+        { "name": "Hemoglobin", "value": "14.8", "unit": "g/dL", "flag": "N" },
+        { "name": "Hematocrit", "value": "44", "unit": "%", "flag": "N" },
+        { "name": "Platelets", "value": "285", "unit": "10^9/L", "flag": "N" }
+      ],
+      "LFT": [
+        { "name": "AST", "value": "28", "unit": "U/L", "flag": "N" },
+        { "name": "ALT", "value": "32", "unit": "U/L", "flag": "N" },
+        { "name": "Alkaline Phosphatase", "value": "85", "unit": "U/L", "flag": "N" },
+        { "name": "Total Bilirubin", "value": "0.8", "unit": "mg/dL", "flag": "N" }
+      ]
+    }
+  },
+  {
+    "id": "lab-002",
+    "correctDiagnosis": "Acute Kidney Injury (AKI)",
+    "clinicalVignette": "A 65-year-old man with hypertension presents with decreased urine output and fatigue for 5 days. He recently started an ACE inhibitor.",
+    "labs": {
+      "BMP": [
+        { "name": "Sodium", "value": "138", "unit": "mmol/L", "flag": "N" },
+        { "name": "Potassium", "value": "6.2", "unit": "mmol/L", "flag": "H" },
+        { "name": "Chloride", "value": "102", "unit": "mmol/L", "flag": "N" },
+        { "name": "Bicarbonate", "value": "18", "unit": "mmol/L", "flag": "L" },
+        { "name": "BUN", "value": "58", "unit": "mg/dL", "flag": "H" },
+        { "name": "Creatinine", "value": "4.2", "unit": "mg/dL", "flag": "H" },
+        { "name": "Glucose", "value": "108", "unit": "mg/dL", "flag": "N" }
+      ],
+      "CBC": [
+        { "name": "WBC", "value": "8.5", "unit": "10^9/L", "flag": "N" },
+        { "name": "Hemoglobin", "value": "10.2", "unit": "g/dL", "flag": "L" },
+        { "name": "Hematocrit", "value": "30", "unit": "%", "flag": "L" },
+        { "name": "Platelets", "value": "220", "unit": "10^9/L", "flag": "N" }
+      ],
+      "LFT": [
+        { "name": "AST", "value": "22", "unit": "U/L", "flag": "N" },
+        { "name": "ALT", "value": "18", "unit": "U/L", "flag": "N" },
+        { "name": "Alkaline Phosphatase", "value": "92", "unit": "U/L", "flag": "N" },
+        { "name": "Total Bilirubin", "value": "0.9", "unit": "mg/dL", "flag": "N" }
+      ]
+    }
+  }
+]
