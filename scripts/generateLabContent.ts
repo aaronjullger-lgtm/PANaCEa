@@ -19,7 +19,7 @@ import { LAB_TEST_DATABASE, DEFAULT_TESTS } from "../src/data/labTests";
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.0-flash-exp";
+const MODEL_NAME = "gemini-2.5-pro";
 const OUTPUT_FILE = path.resolve("src/data/labCases.json");
 const TARGET_CASES = 300; // Increased to cover more conditions
 const BATCH_SIZE = 20; // Generate in batches to handle rate limits
