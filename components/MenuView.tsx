@@ -606,7 +606,7 @@ const MenuView: React.FC<MenuViewProps> = ({
             className="pt-2"
           >
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                 Analytics Dashboard
               </h2>
               <TimeScopeFilter value={timeScope} onChange={setTimeScope} />
@@ -627,7 +627,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-5">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-5">
                 Study Activity
               </h2>
               <HeatmapCalendar 
@@ -645,7 +645,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-5">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-5">
                 System Performance
               </h2>
               <SystemComparison 
@@ -661,7 +661,7 @@ const MenuView: React.FC<MenuViewProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
           >
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-5">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-5">
               Knowledge Map (PANCE Systems)
             </h2>
             <TopicHeatmap
@@ -671,49 +671,6 @@ const MenuView: React.FC<MenuViewProps> = ({
                 setSelectedSystem(topicStats.topic as SystemCode);
               }}
             />
-          </motion.section>
-
-          {/* Data management */}
-          <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-3">
-              Manage Data
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={clearPerformanceData}
-                className="px-4 py-2 bg-red-500/90 dark:bg-red-600/80 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-500 text-sm transition-colors"
-              >
-                Clear All Performance Data
-              </button>
-              <button
-                onClick={clearMissedQuestionsData}
-                disabled={missedQuestions.length === 0}
-                className="px-4 py-2 bg-red-500/90 dark:bg-red-600/80 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-500 disabled:bg-[var(--color-text-muted)] disabled:cursor-not-allowed text-sm transition-colors"
-                title={
-                  missedQuestions.length === 0
-                    ? "No missed questions to clear"
-                    : "Clear missed questions bank"
-                }
-              >
-                Clear Missed Qs ({missedQuestions.length})
-              </button>
-              <button
-                onClick={clearFlaggedQuestionsData}
-                disabled={flaggedQuestions.length === 0}
-                className="px-4 py-2 bg-red-500/90 dark:bg-red-600/80 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-500 disabled:bg-[var(--color-text-muted)] disabled:cursor-not-allowed text-sm transition-colors"
-                title={
-                  flaggedQuestions.length === 0
-                    ? "No flagged questions to clear"
-                    : "Clear flagged questions"
-                }
-              >
-                Clear Flagged Qs ({flaggedQuestions.length})
-              </button>
-            </div>
           </motion.section>
         </div>
       </div>

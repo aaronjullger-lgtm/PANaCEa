@@ -32,7 +32,10 @@ export type WidgetId =
   | 'todayProgress'
   | 'weekProgress'
   | 'recentTrend'
-  | 'studyDays';
+  | 'studyDays'
+  | 'speedVsAccuracy'
+  | 'secondGuessFactor'
+  | 'topicSplit';
 
 export interface WidgetConfig {
   id: WidgetId;
@@ -54,6 +57,13 @@ export interface WidgetData {
   monthCorrect: number;
   recentTrend: number;
   studyDays: number;
+  // Deep Insight metrics
+  avgTimeMs?: number;
+  fastCorrectRate?: number; // Accuracy when answering quickly (< 30s)
+  slowCorrectRate?: number; // Accuracy when answering slowly (> 60s)
+  secondGuessAccuracy?: number; // Accuracy when answer was changed
+  diagnosisAccuracy?: number;
+  managementAccuracy?: number;
 }
 
 export type TimeScope = 'today' | '1wk' | '1mo';
@@ -77,6 +87,10 @@ export const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
   { id: 'weekProgress', label: 'Week Progress', icon: <Calendar className="w-5 h-5" />, enabled: false },
   { id: 'recentTrend', label: 'Recent Trend', icon: <TrendingUp className="w-5 h-5" />, enabled: true },
   { id: 'studyDays', label: 'Study Days', icon: <Flame className="w-5 h-5" />, enabled: false },
+  // Deep Insight widgets - disabled by default
+  { id: 'speedVsAccuracy', label: 'Speed vs Accuracy', icon: <Clock className="w-5 h-5" />, enabled: false },
+  { id: 'secondGuessFactor', label: 'Second-Guess Factor', icon: <TrendingDown className="w-5 h-5" />, enabled: false },
+  { id: 'topicSplit', label: 'Topic Split', icon: <BarChart3 className="w-5 h-5" />, enabled: false },
 ];
 
 // ============================================================================
@@ -98,7 +112,7 @@ const StatCard: React.FC<StatCardProps> = ({
   label, 
   value, 
   subtext, 
-  colorClass = 'text-[var(--color-accent)]',
+  colorClass = 'text-slate-900 dark:text-[var(--color-accent)]',
   trend,
   delay = 0
 }) => (
@@ -106,19 +120,19 @@ const StatCard: React.FC<StatCardProps> = ({
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="bg-[var(--color-glass-bg)] backdrop-blur-sm border border-[var(--color-glass-border)] rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+    className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
   >
     <div className="flex items-center gap-2 mb-2">
       <span className={colorClass}>{icon}</span>
-      <span className="text-xs text-[var(--color-text-muted)] uppercase tracking-wide font-medium">
+      <span className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wide font-medium">
         {label}
       </span>
     </div>
     <div className="flex items-baseline gap-2">
-      <span className={`text-2xl font-bold ${colorClass}`}>{value}</span>
+      <span className={`text-2xl font-bold text-slate-900 dark:text-slate-100 ${colorClass !== 'text-slate-900 dark:text-[var(--color-accent)]' ? colorClass : ''}`}>{value}</span>
       {trend !== undefined && (
         <span className={`flex items-center gap-0.5 text-xs font-medium ${
-          trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-[var(--color-text-muted)]'
+          trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-slate-500'
         }`}>
           {trend > 0 ? <TrendingUp className="w-3 h-3" /> : trend < 0 ? <TrendingDown className="w-3 h-3" /> : null}
           {trend > 0 ? '+' : ''}{trend}%
@@ -126,7 +140,7 @@ const StatCard: React.FC<StatCardProps> = ({
       )}
     </div>
     {subtext && (
-      <span className="text-xs text-[var(--color-text-muted)]">{subtext}</span>
+      <span className="text-xs text-slate-600 dark:text-slate-400">{subtext}</span>
     )}
   </motion.div>
 );
@@ -192,7 +206,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             label="Questions"
             value={scopedData.questions}
             subtext={`${scopedData.correct} correct`}
-            colorClass="text-[var(--color-text-primary)]"
+            colorClass="text-slate-900 dark:text-slate-100"
             delay={delay}
           />
         );
@@ -204,7 +218,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             icon={<BarChart3 className="w-5 h-5" />}
             label="Accuracy"
             value={`${scopedAccuracy}%`}
-            colorClass="text-[var(--color-accent)]"
+            colorClass="text-slate-900 dark:text-slate-100"
             delay={delay}
           />
         );
@@ -264,6 +278,119 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
             colorClass="text-purple-500"
             delay={delay}
           />
+        );
+      
+      // Deep Insight Widgets
+      case 'speedVsAccuracy':
+        return (
+          <motion.div
+            key={widgetId}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay }}
+            className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm col-span-2"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-5 h-5 text-blue-500" />
+              <span className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wide font-medium">
+                Speed vs Accuracy
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Fast (&lt;30s)</div>
+                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500 rounded-full transition-all"
+                    style={{ width: `${data.fastCorrectRate ?? 0}%` }}
+                  />
+                </div>
+                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  {data.fastCorrectRate ?? 0}%
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Slow (&gt;60s)</div>
+                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-500 rounded-full transition-all"
+                    style={{ width: `${data.slowCorrectRate ?? 0}%` }}
+                  />
+                </div>
+                <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  {data.slowCorrectRate ?? 0}%
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2">
+              {(data.fastCorrectRate ?? 0) < (data.slowCorrectRate ?? 0) 
+                ? "⚡ Slow down! Your accuracy improves with more time."
+                : "✓ Good pace! Your speed doesn't hurt accuracy."}
+            </p>
+          </motion.div>
+        );
+      
+      case 'secondGuessFactor':
+        return (
+          <StatCard
+            key={widgetId}
+            icon={<TrendingDown className="w-5 h-5" />}
+            label="Second-Guess Factor"
+            value={`${data.secondGuessAccuracy ?? 0}%`}
+            subtext="Accuracy when changing answers"
+            colorClass={(data.secondGuessAccuracy ?? 50) >= 50 ? 'text-emerald-500' : 'text-amber-500'}
+            delay={delay}
+          />
+        );
+      
+      case 'topicSplit':
+        return (
+          <motion.div
+            key={widgetId}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay }}
+            className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm col-span-2"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart3 className="w-5 h-5 text-violet-500" />
+              <span className="text-xs text-slate-600 dark:text-slate-400 uppercase tracking-wide font-medium">
+                Topic Split
+              </span>
+            </div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex-1">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-slate-600 dark:text-slate-400">Diagnosis</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">{data.diagnosisAccuracy ?? 0}%</span>
+                </div>
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-l-full overflow-hidden">
+                  <div 
+                    className="h-full bg-sky-500 rounded-l-full transition-all"
+                    style={{ width: `${data.diagnosisAccuracy ?? 0}%` }}
+                  />
+                </div>
+              </div>
+              <div className="w-px h-8 bg-slate-300 dark:bg-slate-600" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-slate-600 dark:text-slate-400">Management</span>
+                  <span className="font-semibold text-slate-900 dark:text-slate-100">{data.managementAccuracy ?? 0}%</span>
+                </div>
+                <div className="h-3 bg-slate-100 dark:bg-slate-700 rounded-r-full overflow-hidden">
+                  <div 
+                    className="h-full bg-violet-500 rounded-r-full transition-all"
+                    style={{ width: `${data.managementAccuracy ?? 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              {(data.diagnosisAccuracy ?? 0) > (data.managementAccuracy ?? 0)
+                ? "Focus more on treatment & pharmacology."
+                : "Focus more on diagnosis & differentials."}
+            </p>
+          </motion.div>
         );
       
       default:

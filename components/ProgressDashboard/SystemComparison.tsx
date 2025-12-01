@@ -87,10 +87,10 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
   };
   
   return (
-    <div className="p-4 bg-[var(--color-glass-bg)] backdrop-blur-sm rounded-xl border border-[var(--color-glass-border)] shadow-sm">
+    <div className="p-4 bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Performance by System
         </h3>
         <div className="flex items-center gap-1">
@@ -98,8 +98,8 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
             onClick={() => setViewMode('bar')}
             className={`p-1.5 rounded-lg transition-colors ${
               viewMode === 'bar' 
-                ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]' 
-                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+                ? 'bg-slate-900/10 dark:bg-slate-100/20 text-slate-900 dark:text-slate-100' 
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
             title="Bar chart view"
           >
@@ -109,8 +109,8 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
             onClick={() => setViewMode('radar')}
             className={`p-1.5 rounded-lg transition-colors ${
               viewMode === 'radar' 
-                ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)]' 
-                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+                ? 'bg-slate-900/10 dark:bg-slate-100/20 text-slate-900 dark:text-slate-100' 
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-100'
             }`}
             title="Radar chart view"
           >
@@ -121,10 +121,10 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
       
       {/* Lowest performer callout */}
       {lowestSystem && lowestSystem.questionsAnswered > 0 && (
-        <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg">
           <div className="flex items-center gap-2">
-            <TrendingDown className="w-4 h-4 text-amber-500" />
-            <span className="text-sm text-[var(--color-text-primary)]">
+            <TrendingDown className="w-4 h-4 text-amber-600 dark:text-amber-500" />
+            <span className="text-sm text-slate-900 dark:text-slate-100">
               <strong>{SYSTEM_NAMES[lowestSystem.system] || lowestSystem.system}</strong> needs the most work ({(lowestSystem.masteryScore * 100).toFixed(0)}%)
             </span>
             {lowestSystem.changeFromLastPeriod !== undefined && (
@@ -143,9 +143,9 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
         </div>
       )}
       
-      {/* Bar Chart View */}
+      {/* Bar Chart View - Slim Mode with label above bar */}
       {viewMode === 'bar' && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {sortedSummary.map((item) => {
             const colorClass = SYSTEM_COLORS[item.system] || 'bg-slate-500';
             const systemName = SYSTEM_NAMES[item.system] || item.system;
@@ -157,15 +157,11 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
                 onClick={() => handleSystemClick(item.system)}
                 className="w-full text-left group"
               >
+                {/* Label above bar */}
                 <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors">
-                      {item.system}
-                    </span>
-                    <span className="text-xs text-[var(--color-text-muted)]">
-                      {systemName}
-                    </span>
-                  </div>
+                  <span className="text-xs font-medium text-slate-900 dark:text-slate-100 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">
+                    {systemName}
+                  </span>
                   <div className="flex items-center gap-2">
                     {item.changeFromLastPeriod !== undefined && (
                       <span className={`flex items-center gap-0.5 text-xs ${
@@ -173,7 +169,7 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
                           ? 'text-green-500' 
                           : item.changeFromLastPeriod < 0
                           ? 'text-red-500'
-                          : 'text-[var(--color-text-muted)]'
+                          : 'text-slate-500'
                       }`}>
                         {item.changeFromLastPeriod > 0 ? (
                           <TrendingUp className="w-3 h-3" />
@@ -183,19 +179,17 @@ const SystemComparison: React.FC<SystemComparisonProps> = ({
                         {item.changeFromLastPeriod > 0 ? '+' : ''}{item.changeFromLastPeriod.toFixed(0)}%
                       </span>
                     )}
-                    <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+                    <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
                       {percentage.toFixed(0)}%
                     </span>
                   </div>
                 </div>
-                <div className="h-2 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+                {/* Slim bar (h-2) */}
+                <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div
                     className={`h-full ${colorClass} transition-all duration-300 group-hover:opacity-80`}
                     style={{ width: `${percentage}%` }}
                   />
-                </div>
-                <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                  {item.questionsAnswered} questions answered
                 </div>
               </button>
             );

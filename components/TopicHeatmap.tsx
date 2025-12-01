@@ -12,42 +12,70 @@ interface TopicHeatmapProps {
 const TopicHeatmap: React.FC<TopicHeatmapProps> = ({ topicScores, onTopicClick }) => {
   const topicStatsMap = new Map<string, TopicStats>(topicScores.map(item => [item.topic, item]));
 
-  const getTileColor = (topicAbbr: string): string => {
+  const getTileStyle = (topicAbbr: string): { bg: string; border: string; text: string } => {
     const score = topicStatsMap.get(topicAbbr)?.score;
     if (score === undefined) {
-      return 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] border-[var(--color-border)]';
+      // No data - Glass style
+      return {
+        bg: 'bg-white/70 dark:bg-slate-800/50',
+        border: 'border-slate-200 dark:border-slate-700',
+        text: 'text-slate-500 dark:text-slate-400'
+      };
     }
     if (score < 75) {
-      return 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800';
+      // Weakness - subtle red tinting
+      return {
+        bg: 'bg-red-50 dark:bg-red-900/20',
+        border: 'border-red-200 dark:border-red-800/50',
+        text: 'text-red-800 dark:text-red-300'
+      };
     }
     if (score < 85) {
-      return 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800';
+      // Moderate - subtle yellow tinting
+      return {
+        bg: 'bg-amber-50 dark:bg-amber-900/20',
+        border: 'border-amber-200 dark:border-amber-800/50',
+        text: 'text-amber-800 dark:text-amber-300'
+      };
     }
-    return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800';
+    // Strong - subtle green tinting
+    return {
+      bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+      border: 'border-emerald-200 dark:border-emerald-800/50',
+      text: 'text-emerald-800 dark:text-emerald-300'
+    };
   };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
       {PANCE_TOPIC_ABBREVIATIONS.map((abbr, index) => {
         const stats = topicStatsMap.get(abbr);
         const hasData = !!stats;
+        const style = getTileStyle(abbr);
+        const fullName = ABBREVIATION_TO_TOPIC_MAP[abbr];
 
         return (
           <motion.button
             key={abbr}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.03 }}
+            transition={{ delay: index * 0.02 }}
             onClick={() => { if (stats) onTopicClick(stats); }}
             disabled={!hasData}
-            whileHover={hasData ? { scale: 1.05, y: -2 } : {}}
+            whileHover={hasData ? { scale: 1.03, y: -1 } : {}}
             whileTap={hasData ? { scale: 0.98 } : {}}
-            className={`p-3 rounded-xl text-center font-semibold text-xs h-20 flex items-center justify-center transition-all duration-200 shadow-sm border
-              ${getTileColor(abbr)}
-              ${hasData ? 'hover:shadow-lg cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
-            title={hasData ? `${ABBREVIATION_TO_TOPIC_MAP[abbr]}: ${stats.score.toFixed(0)}%` : `${ABBREVIATION_TO_TOPIC_MAP[abbr]}: No data`}
+            className={`
+              p-2 rounded-lg text-center transition-all duration-200 backdrop-blur-xl shadow-sm border
+              aspect-[3/2] flex flex-col items-center justify-center
+              ${style.bg} ${style.border} ${style.text}
+              ${hasData ? 'hover:shadow-md cursor-pointer' : 'cursor-not-allowed opacity-60'}
+            `}
+            title={hasData ? `${fullName}: ${stats.score.toFixed(0)}%` : `${fullName}: No data`}
           >
-            {abbr}
+            <span className="text-xs font-bold">{abbr}</span>
+            {hasData && (
+              <span className="text-[10px] font-medium opacity-80">{stats.score.toFixed(0)}%</span>
+            )}
           </motion.button>
         );
       })}

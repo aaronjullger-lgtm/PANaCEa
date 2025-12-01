@@ -222,12 +222,12 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
   };
   
   return (
-    <div className="p-4 bg-[var(--color-glass-bg)] backdrop-blur-sm rounded-xl border border-[var(--color-glass-border)] shadow-sm">
+    <div className="p-4 bg-white/70 dark:bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           Study Activity
         </h3>
-        <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
           <span>Less</span>
           {COLOR_SCALES[metric].map((color, idx) => (
             <div
@@ -240,26 +240,25 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       </div>
       
       {/* Month labels */}
-      <div className="flex mb-1 ml-8">
+      <div className="flex mb-1 ml-8 w-full">
         {monthLabels.map((label, idx) => (
           <div
             key={idx}
-            className="text-xs text-[var(--color-text-muted)]"
-            style={{ width: `${label.colSpan * 14}px` }}
+            className="text-xs text-slate-600 dark:text-slate-400 flex-1"
           >
             {label.month}
           </div>
         ))}
       </div>
       
-      {/* Grid */}
-      <div className="flex">
+      {/* Grid - Full width with evenly distributed squares */}
+      <div className="flex w-full">
         {/* Day labels */}
-        <div className="flex flex-col gap-0.5 mr-2">
+        <div className="flex flex-col gap-0.5 mr-2 flex-shrink-0">
           {DAYS_OF_WEEK.map((day, idx) => (
             <div
               key={idx}
-              className="h-3 text-xs text-[var(--color-text-muted)] flex items-center"
+              className="h-3 text-xs text-slate-600 dark:text-slate-400 flex items-center"
               style={{ display: idx % 2 === 1 ? 'flex' : 'none' }}
             >
               {day}
@@ -267,8 +266,8 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           ))}
         </div>
         
-        {/* Cells */}
-        <div className="flex gap-0.5">
+        {/* Cells - Full width with justify-between */}
+        <div className="flex flex-1 justify-between">
           {dateGrid[0].map((_, colIdx) => (
             <div key={colIdx} className="flex flex-col gap-0.5">
               {dateGrid.map((row, rowIdx) => {
@@ -284,9 +283,9 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
                     key={rowIdx}
                     className={`w-3 h-3 rounded-sm transition-all duration-200 ${
                       isFuture 
-                        ? 'bg-[var(--color-bg-secondary)]' 
+                        ? 'bg-slate-100 dark:bg-slate-800' 
                         : colorClass
-                    } ${date ? 'cursor-pointer hover:ring-2 hover:ring-[var(--color-accent)] hover:scale-110' : ''}`}
+                    } ${date ? 'cursor-pointer hover:ring-2 hover:ring-slate-900 dark:hover:ring-slate-300 hover:scale-110' : ''}`}
                     title={tooltip}
                   />
                 );
@@ -297,26 +296,26 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       </div>
       
       {/* Summary stats */}
-      <div className="mt-4 pt-3 border-t border-[var(--color-border)] grid grid-cols-3 gap-4">
+      <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 grid grid-cols-3 gap-4">
         <div className="text-center">
-          <div className="text-lg font-bold text-[var(--color-text-primary)]">
+          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
             {records.reduce((sum, r) => sum + r.attempts, 0)}
           </div>
-          <div className="text-xs text-[var(--color-text-muted)]">Total Questions</div>
+          <div className="text-xs text-slate-600 dark:text-slate-400">Total Questions</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-[var(--color-text-primary)]">
+          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
             {records.length}
           </div>
-          <div className="text-xs text-[var(--color-text-muted)]">Active Days</div>
+          <div className="text-xs text-slate-600 dark:text-slate-400">Active Days</div>
         </div>
         <div className="text-center">
-          <div className="text-lg font-bold text-[var(--color-text-primary)]">
+          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">
             {records.length > 0 
               ? (records.reduce((sum, r) => sum + r.accuracy, 0) / records.length).toFixed(0)
               : 0}%
           </div>
-          <div className="text-xs text-[var(--color-text-muted)]">Avg Accuracy</div>
+          <div className="text-xs text-slate-600 dark:text-slate-400">Avg Accuracy</div>
         </div>
       </div>
     </div>
