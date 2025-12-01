@@ -18,8 +18,6 @@ export interface Question {
   userNote?: string;
 }
 
-import type { SystemCode, SessionSettings } from "./types"; // adjust if needed
-
 /** Error taxonomy for meta-cognition - helps users understand why they miss questions */
 export type ErrorTag = 'knowledge_gap' | 'misread_question' | 'guessing';
 

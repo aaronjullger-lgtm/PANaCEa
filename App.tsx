@@ -21,6 +21,7 @@ import type {
   PerformanceRecord,
   SessionSettings,
   SystemCode,
+  ErrorTag,
 } from "./types";
 import type { TrainingModeId } from "./config/training-modes";
 
@@ -153,6 +154,19 @@ const App: React.FC = () => {
   // ---- performance record hook passed into QuizView ----
   const addPerformanceRecord = (record: PerformanceRecord) => {
     setPerformanceData((prev) => [...prev, record]);
+  };
+
+  // ---- update last performance record with error tag (for meta-cognition) ----
+  const updateLastPerformanceErrorTag = (tag: ErrorTag) => {
+    setPerformanceData((prev) => {
+      if (prev.length === 0) return prev;
+      const updated = [...prev];
+      updated[updated.length - 1] = {
+        ...updated[updated.length - 1],
+        errorTag: tag,
+      };
+      return updated;
+    });
   };
 
   // ---- missed-question handling ----
@@ -427,6 +441,7 @@ const App: React.FC = () => {
                 addPerformanceRecord={addPerformanceRecord}
                 addMissedQuestion={addMissedQuestion}
                 updateReviewQuestion={updateReviewQuestion}
+                updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
                 setIsLoading={setIsLoading}
                 setError={setError}
                 sessionSettings={sessionSettings}

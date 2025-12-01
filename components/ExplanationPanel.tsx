@@ -20,6 +20,7 @@ import {
   highYieldPackage 
 } from '../lib/services/explanationCompression';
 import ErrorTagger from './quiz/ErrorTagger';
+import type { ErrorTag } from '../types';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -47,7 +48,7 @@ export interface ExplanationPanelProps {
   /** Optional question ID for analytics */
   questionId?: string;
   /** Callback when error is tagged (only shown when incorrect) */
-  onTagError?: (tag: 'knowledge_gap' | 'misread_question' | 'guessing') => void;
+  onTagError?: (tag: ErrorTag) => void;
 }
 
 /**
