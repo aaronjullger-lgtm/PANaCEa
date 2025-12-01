@@ -43,6 +43,13 @@ describe('explanationCompression', () => {
       expect(result.buzzwords).toContain('strawberry cervix');
     });
 
+    it('should extract curly-quoted terms as buzzwords', () => {
+      const text = 'The classic "strawberry cervix" finding indicates Trichomonas.';
+      const result = extractBuzzwords(text);
+      
+      expect(result.buzzwords).toContain('strawberry cervix');
+    });
+
     it('should handle multiple buzzwords in one text', () => {
       const text = "Patient has JVD, crackles on auscultation, and peripheral edema.";
       const result = extractBuzzwords(text);

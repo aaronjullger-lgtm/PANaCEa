@@ -19,6 +19,9 @@ import {
   highYieldPackage 
 } from '../lib/services/explanationCompression';
 
+/** Maximum number of bullet points to display in Core Rationale section */
+const MAX_BULLETS = 6;
+
 export interface DifferentialItem {
   /** The incorrect answer option text */
   option: string;
@@ -219,7 +222,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             title="Core Rationale" 
           />
           <ul className="space-y-2 pl-1">
-            {bullets.slice(0, 6).map((bullet, index) => (
+            {bullets.slice(0, MAX_BULLETS).map((bullet, index) => (
               <li 
                 key={index} 
                 className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
@@ -239,7 +242,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
           <section className="mb-6">
             <SectionHeader 
               icon={<AlertCircle className="w-5 h-5" />} 
-              title="Buzzwords &amp; Clues" 
+              title="Buzzwords & Clues" 
             />
             <div className="flex flex-wrap gap-2">
               {buzzwords.map((buzzword, index) => (

@@ -117,6 +117,17 @@ function escapeRegExp(string: string): string {
 }
 
 /**
+ * Pre-compiled regex patterns for pathognomonic terms (for performance)
+ * These are created once at module initialization
+ */
+const PATHOGNOMONIC_PATTERNS: Map<string, RegExp> = new Map(
+  PATHOGNOMONIC_TERMS.map(term => [
+    term,
+    new RegExp(`(${escapeRegExp(term)})`, 'gi')
+  ])
+);
+
+/**
  * Extracts and bolds pathognomonic terms (buzzwords) from text.
  * Identifies classic medical buzzwords like "Owl's eye inclusion" and formats them.
  * 
@@ -135,21 +146,23 @@ export function extractBuzzwords(text: string): {
   const foundBuzzwords: string[] = [];
   let formattedText = text;
 
-  // Find all pathognomonic terms present
+  // Find all pathognomonic terms present using pre-compiled patterns
   PATHOGNOMONIC_TERMS.forEach(term => {
     if (lowerText.includes(term.toLowerCase())) {
       foundBuzzwords.push(term);
-      // Bold the term in the formatted text
-      const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
-      formattedText = formattedText.replace(regex, '<strong>$1</strong>');
+      // Bold the term in the formatted text using pre-compiled pattern
+      const pattern = PATHOGNOMONIC_PATTERNS.get(term);
+      if (pattern) {
+        formattedText = formattedText.replace(pattern, '<strong>$1</strong>');
+      }
     }
   });
 
-  // Also extract quoted terms as potential buzzwords
-  const quotedTerms = text.match(/"([^"]+)"/g);
+  // Also extract quoted terms as potential buzzwords (supports straight and curly quotes)
+  const quotedTerms = text.match(/[""]([^"""]+)[""]|"([^"]+)"/g);
   if (quotedTerms) {
     quotedTerms.forEach(quotedTerm => {
-      const cleaned = quotedTerm.replace(/"/g, '');
+      const cleaned = quotedTerm.replace(/["""]/g, '');
       if (!foundBuzzwords.some(b => b.toLowerCase() === cleaned.toLowerCase())) {
         foundBuzzwords.push(cleaned);
         // Bold quoted terms in formatted text
@@ -243,14 +256,16 @@ export function compressToBullets(text: string): string[] {
     .slice(0, 4)
     .map(s => s.sentence.trim());
 
-  // Format as bullets with auto-bolded terms
+  // Format as bullets with auto-bolded terms using pre-compiled patterns
   const bullets = topSentences.map(sentence => {
     let formatted = sentence;
     
-    // Auto-bold pathognomonic terms
+    // Auto-bold pathognomonic terms using pre-compiled patterns
     PATHOGNOMONIC_TERMS.forEach(term => {
-      const regex = new RegExp(`\\b(${escapeRegExp(term)})\\b`, 'gi');
-      formatted = formatted.replace(regex, '<strong>$1</strong>');
+      const pattern = PATHOGNOMONIC_PATTERNS.get(term);
+      if (pattern) {
+        formatted = formatted.replace(pattern, '<strong>$1</strong>');
+      }
     });
     
     return formatted;
