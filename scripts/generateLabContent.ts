@@ -5,11 +5,12 @@ import fs from "fs";
 import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { LabCase } from "../src/types/content";
+import { parseDirtyJson } from "./utils/parseDirtyJson";
 
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.0-flash-exp";
+const MODEL_NAME = "gemini-2.5-pro";
 const OUTPUT_FILE = path.resolve("src/data/labCases.json");
 const TARGET_CASES = 250;
 const BATCH_SIZE = 25; // Generate in batches to handle rate limits
@@ -80,9 +81,10 @@ const HIGH_YIELD_CONDITIONS = [
 // ======================================================
 // GENERATE LAB CASES
 // ======================================================
-async function generateLabCaseBatch(batchNumber: number, casesInBatch: number): Promise<LabCase[]> {
+async function generateLabCaseBatch(batchNumber: number, casesInBatch: number, retryCount = 0): Promise<LabCase[]> {
   const startId = batchNumber * casesInBatch + 1;
   const endId = (batchNumber + 1) * casesInBatch;
+  const MAX_RETRIES = 3;
   
   const prompt = `You are a medical education expert generating lab interpretation cases for PANCE preparation.
 
@@ -136,15 +138,9 @@ Generate ${casesInBatch} diverse cases covering different high-yield conditions.
     const response = result.response;
     const text = response.text();
     
-    // Clean up response - remove markdown code blocks if present
-    const cleanedText = text
-      .replace(/```json\s*/g, '')
-      .replace(/```\s*/g, '')
-      .trim();
-    
     let parsed: LabCase[];
     try {
-      parsed = JSON.parse(cleanedText);
+      parsed = parseDirtyJson(text);
       
       if (!Array.isArray(parsed)) {
         throw new Error("Response is not an array");
@@ -165,12 +161,28 @@ Generate ${casesInBatch} diverse cases covering different high-yield conditions.
       
     } catch (parseError) {
       console.error(`   ✗ Failed to parse batch ${batchNumber + 1}`);
-      console.error("   Response snippet:", cleanedText.substring(0, 500));
+      console.error("   Response length:", text.length, "characters");
+      console.error("   Response snippet (first 500):", text.substring(0, 500));
+      console.error("   Response snippet (last 500):", text.slice(-500));
+      
+      if (retryCount < MAX_RETRIES) {
+        console.log(`   ⟳ Retrying batch ${batchNumber + 1} (attempt ${retryCount + 2}/${MAX_RETRIES + 1})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return generateLabCaseBatch(batchNumber, casesInBatch, retryCount + 1);
+      }
+      
       throw new Error(`JSON parse error in batch ${batchNumber + 1}: ${parseError}`);
     }
     
   } catch (error) {
     console.error(`   ✗ Error generating batch ${batchNumber + 1}:`, error);
+    
+    if (retryCount < MAX_RETRIES) {
+      console.log(`   ⟳ Retrying batch ${batchNumber + 1} (attempt ${retryCount + 2}/${MAX_RETRIES + 1})...`);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return generateLabCaseBatch(batchNumber, casesInBatch, retryCount + 1);
+    }
+    
     throw error;
   }
 }
