@@ -9,6 +9,9 @@
     "media:integrate": "tsx ./scripts/mediaIntegrator.ts",
     "infographic:match": "tsx ./scripts/infographicMatcher.ts",
     "infographic:audit": "tsx ./scripts/infographicAudit.ts",
+    "generate:lab": "tsx ./scripts/generateLabContent.ts",
+    "generate:clinical": "tsx ./scripts/generateClinicalContent.ts",
+    "generate:test": "tsx ./scripts/testContentGeneration.ts",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run"

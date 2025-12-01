@@ -1,0 +1,4 @@
+# This directory contains generated case content for Mini Modes
+# Run the generation scripts to populate:
+#   npm run generate:lab
+#   npm run generate:clinical
