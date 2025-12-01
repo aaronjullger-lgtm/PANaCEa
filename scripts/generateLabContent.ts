@@ -1,5 +1,12 @@
 // scripts/generateLabContent.ts
 // Generates lab cases for Mini Mode training using Gemini API
+//
+// KEY CONCEPT: All tests are orderable, only pertinent ones have results
+// - All 300+ tests from LAB_TEST_DATABASE are orderable by the user
+// - Each case includes default panels (BMP, CBC, LFT) that are always shown
+// - Each case includes 3-6 "pertinent" tests that have actual results (normal or abnormal)
+// - Pertinent tests are relevant to the diagnosis and appear when ordered
+// - Non-pertinent tests can still be ordered but won't show results (realistic workflow)
 
 import fs from "fs";
 import path from "path";
@@ -90,13 +97,21 @@ function getConditionsForBatch(count: number): string[] {
   return shuffled.slice(0, count);
 }
 
-// Get additional orderable tests (excluding defaults)
-function getOrderableTests(): string[] {
-  const defaultSet = new Set(DEFAULT_TESTS);
+// Get list of pertinent tests that could have results for various conditions
+function getPertinentTestsList(): string[] {
+  // Return a curated list of commonly pertinent tests across various conditions
+  // These are tests that frequently aid in diagnosis beyond the default panels
   return LAB_TEST_DATABASE
-    .filter(test => !defaultSet.has(test.name))
+    .filter(test => {
+      const category = test.category;
+      // Exclude basic panels as they're always shown by default
+      return category !== "Basic Panels" && 
+             !test.name.includes("Basic Metabolic") &&
+             !test.name.includes("Complete Blood Count") &&
+             !test.name.includes("Liver Function Tests");
+    })
     .map(test => test.name)
-    .slice(0, 50); // Limit to 50 most common orderable tests
+    .slice(0, 80); // Include top 80 most common diagnostic tests
 }
 
 async function generateLabCaseBatch(batchNumber: number, casesInBatch: number, retryCount = 0): Promise<LabCase[]> {
@@ -105,7 +120,7 @@ async function generateLabCaseBatch(batchNumber: number, casesInBatch: number, r
   const MAX_RETRIES = 3;
   
   const conditionsForBatch = getConditionsForBatch(casesInBatch);
-  const orderableTestsList = getOrderableTests();
+  const pertinentTestsList = getPertinentTestsList();
   
   const prompt = `You are a medical education expert generating lab interpretation cases for PANCE preparation.
 
@@ -117,10 +132,16 @@ Generate exactly ${casesInBatch} unique, complex lab cases in JSON format. Each 
    - BMP (Basic Metabolic Panel): Sodium, Potassium, Chloride, Bicarbonate, BUN, Creatinine, Glucose
    - CBC (Complete Blood Count): WBC, Hemoglobin, Hematocrit, Platelets, MCV (optional)
    - LFT (Liver Function Tests): AST, ALT, Alkaline Phosphatase, Total Bilirubin, Albumin
-5. OPTIONALLY include 2-4 additional orderable tests that would be relevant for diagnosis from this list:
-   ${orderableTestsList.slice(0, 20).join(", ")}
+5. Include 3-6 PERTINENT additional tests in a "pertinentResults" field. These should be:
+   - Tests that are RELEVANT to the specific condition (helpful for diagnosis)
+   - Can have NORMAL or ABNORMAL values (normal values are useful to rule out other conditions)
+   - Selected from this list: ${pertinentTestsList.slice(0, 30).join(", ")}
+   - Will be shown ONLY when the user orders them (not shown initially)
 6. Each lab value must have: name, value, unit, and flag (H=High, L=Low, N=Normal)
-7. Use realistic reference ranges and clinically accurate abnormalities
+7. Use realistic reference ranges and clinically accurate values
+
+IMPORTANT: The "pertinentResults" field should contain tests organized by their panel/category name as the key.
+For example, Arterial Blood Gas tests go under "Arterial Blood Gas", Thyroid tests under "Thyroid Function", etc.
 
 Return ONLY a valid JSON array with the following structure (no markdown, no code blocks):
 [
@@ -150,21 +171,31 @@ Return ONLY a valid JSON array with the following structure (no markdown, no cod
         {"name": "Alkaline Phosphatase", "value": "78", "unit": "U/L", "flag": "N"},
         {"name": "Total Bilirubin", "value": "0.8", "unit": "mg/dL", "flag": "N"},
         {"name": "Albumin", "value": "4.2", "unit": "g/dL", "flag": "N"}
-      ],
+      ]
+    },
+    "pertinentResults": {
       "Arterial Blood Gas": [
         {"name": "pH", "value": "7.18", "unit": "", "flag": "L"},
         {"name": "pCO2", "value": "22", "unit": "mmHg", "flag": "L"},
         {"name": "HCO3", "value": "8", "unit": "mEq/L", "flag": "L"}
       ],
       "Ketones": [
-        {"name": "Beta-hydroxybutyrate", "value": "5.2", "unit": "mmol/L", "flag": "H"}
+        {"name": "Serum Ketones", "value": "5.2", "unit": "mmol/L", "flag": "H"}
+      ],
+      "Urinalysis": [
+        {"name": "Glucose", "value": "3+", "unit": "", "flag": "H"},
+        {"name": "Ketones", "value": "3+", "unit": "", "flag": "H"}
+      ],
+      "Anion Gap": [
+        {"name": "Anion Gap", "value": "24", "unit": "mEq/L", "flag": "H"}
       ]
     }
   }
 ]
 
 Generate ${casesInBatch} diverse cases. Start IDs at lab_case_${startId} and end at lab_case_${endId}.
-Make sure each case uses a DIFFERENT condition from the list provided.`;
+Make sure each case uses a DIFFERENT condition from the list provided.
+REMEMBER: All tests in LAB_TEST_DATABASE are orderable, but only include pertinent ones in pertinentResults.`;
 
 
   try {
@@ -188,7 +219,11 @@ Make sure each case uses a DIFFERENT condition from the list provided.`;
           throw new Error(`Invalid case structure: missing required fields`);
         }
         if (!labCase.labs.BMP || !labCase.labs.CBC || !labCase.labs.LFT) {
-          throw new Error(`Invalid case structure: missing lab panels`);
+          throw new Error(`Invalid case structure: missing required lab panels (BMP, CBC, or LFT)`);
+        }
+        // pertinentResults is optional, so we don't validate its presence
+        if (labCase.pertinentResults && typeof labCase.pertinentResults !== 'object') {
+          throw new Error(`Invalid case structure: pertinentResults must be an object`);
         }
       }
       
