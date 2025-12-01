@@ -64,9 +64,6 @@ interface MenuViewProps {
   flaggedQuestions: Question[];
   onBackToQuiz: () => void; // "Continue Session"
   hasActiveSession: boolean;
-  clearPerformanceData: () => void;
-  clearMissedQuestionsData: () => void;
-  clearFlaggedQuestionsData: () => void;
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   onStartSession: () => void;
@@ -93,9 +90,6 @@ const MenuView: React.FC<MenuViewProps> = ({
   flaggedQuestions,
   onBackToQuiz,
   hasActiveSession,
-  clearPerformanceData,
-  clearMissedQuestionsData,
-  clearFlaggedQuestionsData,
   onStartSession,
   isModalOpen,
   onCloseModal,
