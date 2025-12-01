@@ -19,9 +19,9 @@ const SHORTCUTS: ShortcutItem[] = [
   { keys: ['B'], description: 'Select answer option B', category: 'quiz' },
   { keys: ['C'], description: 'Select answer option C', category: 'quiz' },
   { keys: ['D'], description: 'Select answer option D', category: 'quiz' },
-  { keys: ['Space'], description: 'Reveal explanation after selection', category: 'quiz' },
-  { keys: ['⌘/Ctrl', 'Enter'], description: 'Proceed to next question', category: 'quiz' },
-  { keys: ['Esc'], description: 'Pause or exit current session', category: 'quiz' },
+  { keys: ['Space'], description: 'Toggle explanation after selection', category: 'quiz' },
+  { keys: ['Enter'], description: 'Proceed to next question', category: 'quiz' },
+  { keys: ['Esc'], description: 'Return to dashboard', category: 'quiz' },
   // General shortcuts
   { keys: ['⌘/Ctrl', 'K'], description: 'Open keyboard shortcuts', category: 'general' },
 ];
