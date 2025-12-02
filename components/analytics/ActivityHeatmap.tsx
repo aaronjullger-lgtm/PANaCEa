@@ -359,10 +359,6 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
           onClose={handleClosePopover}
         />
       )}
-
-      {/* TODO: Add weekly streak ring overlay badge */}
-      {/* TODO: Add study coach suggestions based on heatmap patterns */}
-      {/* TODO: Add colorblind-safe palette toggle */}
     </div>
   );
 };

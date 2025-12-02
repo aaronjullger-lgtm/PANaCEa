@@ -148,13 +148,6 @@ const DayCellPopover: React.FC<DayCellPopoverProps> = ({ data, position, onClose
               </div>
             </div>
           )}
-
-          {/* TODO: Replay Day feature */}
-          {/* <div className="pt-2 border-t border-[var(--color-border)]">
-            <button className="w-full px-3 py-2 text-sm font-medium text-[var(--color-accent)] hover:bg-[var(--color-accent)]/10 rounded-lg transition-colors">
-              Replay Day (Coming Soon)
-            </button>
-          </div> */}
         </div>
 
         {/* Close button (click outside also works) */}
