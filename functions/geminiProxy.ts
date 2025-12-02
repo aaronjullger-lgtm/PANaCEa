@@ -60,7 +60,19 @@ export async function onRequestPost(context: CloudflareContext) {
     const genAI = new GoogleGenerativeAI(apiKey);
 
     // Parse the request body
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+    
     const { modelName, prompt, temperature } = body;
 
     if (!modelName || !prompt) {
@@ -84,7 +96,7 @@ export async function onRequestPost(context: CloudflareContext) {
       },
     });
 
-    const rawText = result.response.text() || "";
+    const rawText = (await result.response.text()) || "";
     const text = stripCodeFences(rawText);
 
     return new Response(JSON.stringify({ text }), {
