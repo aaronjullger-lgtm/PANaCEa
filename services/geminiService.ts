@@ -32,7 +32,7 @@ async function callGeminiText(
   prompt: string,
   temperature: number = 0.8
 ): Promise<string> {
-  const response = await fetch("/geminiProxy", {
+  const response = await fetch("/.netlify/functions/geminiProxy", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ modelName, prompt, temperature }),

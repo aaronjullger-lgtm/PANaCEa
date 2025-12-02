@@ -5,6 +5,7 @@
 // Cloudflare Pages Function context type
 interface Env {
   GEMINI_API_KEY?: string;
+  VITE_GEMINI_API_KEY?: string;
 }
 
 interface RequestBody {
@@ -57,11 +58,11 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
   try {
     // Get API key from environment
-    const apiKey = env.GEMINI_API_KEY;
+    const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
     
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY environment variable is not set" }),
+        JSON.stringify({ error: "Missing API Key on Server" }),
         {
           status: 500,
           headers: { 
