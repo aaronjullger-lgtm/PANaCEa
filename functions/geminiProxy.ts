@@ -1,14 +1,26 @@
 // functions/geminiProxy.ts
 // Cloudflare Pages Function for Gemini API proxy
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// Uses direct Fetch API to work in Cloudflare Workers environment
 
 // Cloudflare Pages Function context type
-interface CloudflareContext {
-  request: Request;
-  env: {
-    GEMINI_API_KEY?: string;
-  };
+interface Env {
+  GEMINI_API_KEY?: string;
+}
+
+interface RequestBody {
+  modelName: string;
+  prompt: string;
+  temperature?: number;
+}
+
+interface GeminiAPIResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+    };
+  }>;
 }
 
 /**
@@ -39,8 +51,8 @@ function stripCodeFences(text: string): string {
   return cleaned;
 }
 
-// Cloudflare Pages Functions use a different interface than Netlify
-export async function onRequestPost(context: CloudflareContext) {
+// Cloudflare Pages Functions export handler for POST requests
+export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
   try {
@@ -52,56 +64,101 @@ export async function onRequestPost(context: CloudflareContext) {
         JSON.stringify({ error: "GEMINI_API_KEY environment variable is not set" }),
         {
           status: 500,
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+          },
         }
       );
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-
     // Parse the request body
-    let body;
+    let body: RequestBody;
     try {
-      body = await request.json();
+      body = await request.json() as RequestBody;
     } catch (parseError) {
       return new Response(
         JSON.stringify({ error: "Invalid JSON in request body" }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+          },
         }
       );
     }
     
-    const { modelName, prompt, temperature } = body;
+    const { modelName, prompt, temperature = 0.8 } = body;
 
     if (!modelName || !prompt) {
       return new Response(
         JSON.stringify({ error: "modelName and prompt are required" }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+          },
         }
       );
     }
 
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-    });
-
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: typeof temperature === "number" ? temperature : 0.8,
+    // Call Gemini API directly using Fetch
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+    
+    const geminiResponse = await fetch(geminiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: temperature,
+        },
+      }),
     });
 
-    const rawText = (await result.response.text()) || "";
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      console.error("Gemini API error:", errorText);
+      return new Response(
+        JSON.stringify({ 
+          error: "Gemini API error",
+          details: `Status ${geminiResponse.status}: ${errorText}` 
+        }),
+        {
+          status: geminiResponse.status,
+          headers: { 
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+          },
+        }
+      );
+    }
+
+    const geminiData = await geminiResponse.json() as GeminiAPIResponse;
+    
+    // Extract text from Gemini response
+    let rawText = "";
+    if (geminiData.candidates && geminiData.candidates[0]?.content?.parts?.[0]?.text) {
+      rawText = geminiData.candidates[0].content.parts[0].text;
+    }
+
     const text = stripCodeFences(rawText);
 
     return new Response(JSON.stringify({ text }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*"
+      },
     });
   } catch (error) {
     console.error("Error in geminiProxy:", error);
@@ -113,8 +170,23 @@ export async function onRequestPost(context: CloudflareContext) {
       }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        },
       }
     );
   }
+}
+
+// Handle OPTIONS requests for CORS
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
 }

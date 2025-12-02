@@ -1,6 +1,7 @@
 {
   "name": "panacea",
   "compatibility_date": "2024-11-12",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./dist"
   }
