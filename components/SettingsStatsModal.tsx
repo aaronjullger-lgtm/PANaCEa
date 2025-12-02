@@ -331,72 +331,70 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           <div className="overflow-y-auto max-h-[calc(90vh-140px)] p-4 sm:p-6">
             {activeTab === 'stats' ? (
               <div className="space-y-4 sm:space-y-6">
-                {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                {/* Motivational Message - Low Stakes Approach */}
+                <div className="card-premium-glass p-4 rounded-xl">
+                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                    <strong className="text-[var(--color-text-primary)]">Focus on your current form.</strong> Your recent effort matters more than past mistakes—every session is a fresh opportunity to improve.
+                  </p>
+                </div>
+
+                {/* Priority: Current Form Stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
+                  {/* Recent Trend - Most Important */}
+                  <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.recentTrend >= 10 ? 'gold-achievement' : 'bg-[var(--color-bg-secondary)]'}`}>
+                    <div className={`text-2xl sm:text-3xl font-bold ${stats.recentTrend >= 10 ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}>
+                      {stats.recentTrend >= 0 ? '+' : ''}{stats.recentTrend}%
+                    </div>
+                    <div className={`text-xs ${stats.recentTrend >= 10 ? 'text-amber-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
+                      {stats.recentTrend >= 10 ? '🔥 Hot Streak!' : 'Recent Form'}
+                    </div>
+                  </div>
+                  
+                  {/* Current Streak */}
+                  <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.currentStreak >= 10 ? 'gold-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}>
+                    {stats.currentStreak >= 10 && <span className="absolute top-1 right-1 text-lg">✨</span>}
+                    <div className="flex items-center justify-center gap-1">
+                      <Zap className={`w-5 h-5 ${stats.currentStreak >= 10 ? 'text-amber-900' : 'text-orange-500'}`} />
+                      <span className={`text-2xl sm:text-3xl font-bold ${stats.currentStreak >= 10 ? 'text-amber-900' : 'text-orange-500'}`}>
+                        {stats.currentStreak}
+                      </span>
+                    </div>
+                    <div className={`text-xs ${stats.currentStreak >= 10 ? 'text-amber-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
+                      Active Streak
+                    </div>
+                  </div>
+                  
+                  {/* Overall Accuracy */}
                   <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3 sm:p-4 text-center">
                     <div className="text-2xl sm:text-3xl font-bold text-[var(--color-accent)]">
                       {stats.overallAccuracy}%
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)]">Overall Accuracy</div>
                   </div>
-                  <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3 sm:p-4 text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)]">
-                      {stats.totalQuestions}
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)]">Total Questions</div>
-                  </div>
-                  <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3 sm:p-4 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Zap className="w-5 h-5 text-orange-500" />
-                      <span className="text-2xl sm:text-3xl font-bold text-orange-500">
-                        {stats.currentStreak}
-                      </span>
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)]">Current Streak</div>
-                  </div>
-                  <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3 sm:p-4 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Award className="w-5 h-5 text-amber-500" />
-                      <span className="text-2xl sm:text-3xl font-bold text-amber-500">
-                        {stats.bestStreak}
-                      </span>
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)]">Best Streak</div>
-                  </div>
                 </div>
-
-                {/* Trend & Activity */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <TrendingUp className={`w-5 h-5 ${stats.recentTrend >= 0 ? 'text-green-500' : 'text-red-500'}`} />
-                      <span className="font-medium text-[var(--color-text-primary)]">Recent Trend</span>
+                
+                {/* De-emphasized: Lifetime Stats */}
+                {showAdvanced && (
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4 opacity-60">
+                    <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3 sm:p-4 text-center">
+                      <div className="text-xl sm:text-2xl font-bold text-[var(--color-text-primary)]">
+                        {stats.totalQuestions}
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">Total Questions</div>
                     </div>
-                    <div className={`text-2xl font-bold ${stats.recentTrend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {stats.recentTrend >= 0 ? '+' : ''}{stats.recentTrend}%
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)]">
-                      Comparing last 50 vs previous 50 questions
+                    <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3 sm:p-4 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Award className="w-4 h-4 text-slate-500" />
+                        <span className="text-xl sm:text-2xl font-bold text-slate-500">
+                          {stats.bestStreak}
+                        </span>
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)]">All-Time Best</div>
                     </div>
                   </div>
+                )}
 
-                  <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Calendar className="w-5 h-5 text-blue-500" />
-                      <span className="font-medium text-[var(--color-text-primary)]">Study Activity</span>
-                    </div>
-                    <div className="flex items-baseline gap-4">
-                      <div>
-                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.studyDays}</div>
-                        <div className="text-xs text-[var(--color-text-muted)]">Days Studied</div>
-                      </div>
-                      <div>
-                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">{stats.avgQuestionsPerDay}</div>
-                        <div className="text-xs text-[var(--color-text-muted)]">Avg/Day</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
 
                 {/* Today & Week */}
                 <div className="grid grid-cols-2 gap-4">
@@ -463,6 +461,26 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                   </div>
                 )}
+                
+                {/* Toggle for Lifetime Stats */}
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                  >
+                    {showAdvanced ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        Hide Lifetime Stats
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        Show Lifetime Stats
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             ) : activeTab === 'activity' ? (
               <div className="space-y-4 sm:space-y-6">

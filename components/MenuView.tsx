@@ -480,7 +480,7 @@ const MenuView: React.FC<MenuViewProps> = ({
           PANaCEa
         </motion.h1>
 
-        {/* Unified search for conditions and drugs */}
+        {/* Premium Glass Search Bar */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -488,12 +488,14 @@ const MenuView: React.FC<MenuViewProps> = ({
           className="w-full max-w-2xl mx-auto mb-10 relative"
         >
           <div className="flex justify-center">
-            <input
+            <motion.input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search conditions or medications (e.g., ACS, Fluoxetine, DKA, Metoprolol)..."
-              className="w-full px-4 py-3 border border-[var(--color-border)] bg-[var(--color-input-bg)] text-[var(--color-text-primary)] rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:border-[var(--color-accent)] transition-all placeholder:text-[var(--color-text-muted)]"
+              className="w-full px-5 py-3.5 border border-[var(--color-border)] bg-[var(--color-glass-bg)] backdrop-blur-xl text-[var(--color-text-primary)] rounded-2xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-all duration-300 placeholder:text-[var(--color-text-muted)]"
+              whileFocus={{ scale: 1.01 }}
+              transition={{ duration: 0.2 }}
             />
           </div>
           <AnimatePresence>
