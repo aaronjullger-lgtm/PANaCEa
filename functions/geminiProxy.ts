@@ -52,9 +52,18 @@ function stripCodeFences(text: string): string {
   return cleaned;
 }
 
-// Cloudflare Pages Functions export handler for POST requests
-export async function onRequestPost(context: { request: Request; env: Env }) {
+export async function onRequestPost(context) {
   const { request, env } = context;
+  
+  // 1. Get the API Key from Cloudflare Environment Variables
+  const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "Missing API Key on Server" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
 
   try {
     // Get API key from environment
