@@ -8,9 +8,9 @@ import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.5-flash-preview-05-20";
-const INPUT_FILE = path.resolve("conditionContent.generated.json");
-const OUTPUT_FILE = path.resolve("conditionContent.generated.json");
+const MODEL_NAME = "gemini-2.5-pro";
+const INPUT_FILE = path.resolve("/workspaces/PANaCEa/conditionContent.generated.json");
+const OUTPUT_FILE = path.resolve("/workspaces/PANaCEa/conditionContent.generated.json");
 const MAX_RETRIES = 3;
 const DELAY_BETWEEN_REQUESTS = 1000; // 1 second delay
 const PLACEHOLDER_VALUE = "--";
@@ -89,15 +89,38 @@ interface ConditionContent {
 // ======================================================
 function isValidSection(value: unknown): boolean {
   if (value === undefined || value === null) return false;
-  if (typeof value === "string") return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
+  
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    // Check if it's empty or a placeholder value
+    if (trimmed.length === 0 || trimmed === PLACEHOLDER_VALUE) return false;
+    // Check if it contains "Content to be generated" placeholder text
+    if (trimmed.includes("Content to be generated")) return false;
+    return true;
+  }
+  
+  if (Array.isArray(value)) {
+    // Check if array is empty or only contains placeholder values
+    if (value.length === 0) return false;
+    // Filter out placeholder values and check if anything remains
+    const nonPlaceholderValues = value.filter(
+      (item) => item !== PLACEHOLDER_VALUE && item?.toString().trim() !== PLACEHOLDER_VALUE
+    );
+    return nonPlaceholderValues.length > 0;
+  }
+  
   if (typeof value === "object") {
     const obj = value as Record<string, unknown>;
     if ("notes" in obj && typeof obj.notes === "string") {
-      return obj.notes.trim().length > 0;
+      const trimmed = obj.notes.trim();
+      // Check if notes is empty, placeholder, or contains "Content to be generated"
+      if (trimmed.length === 0 || trimmed === PLACEHOLDER_VALUE) return false;
+      if (trimmed.includes("Content to be generated")) return false;
+      return true;
     }
     return Object.keys(obj).length > 0;
   }
+  
   return false;
 }
 

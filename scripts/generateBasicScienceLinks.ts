@@ -9,7 +9,7 @@ import type { ClinicalCase, LabCase, BasicScienceLink } from "../src/types/conte
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.0-flash-exp";
+const MODEL_NAME = "gemini-2.5-pro";
 const CLINICAL_CASES_FILE = path.resolve("src/data/clinicalCases.json");
 const LAB_CASES_FILE = path.resolve("src/data/labCases.json");
 const BATCH_SIZE = 10; // Process in batches to handle rate limits

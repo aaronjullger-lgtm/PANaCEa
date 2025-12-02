@@ -4,17 +4,35 @@
 import fs from "fs";
 import path from "path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import type { ClinicalCase, LabCase, BasicScienceLink } from "../src/types/content";
+import type { BasicScienceLink } from "../src/types/content";
 
 // ======================================================
 // CONFIG
 // ======================================================
-const MODEL_NAME = "gemini-2.0-flash-exp";
-const CLINICAL_CASES_FILE = path.resolve("src/data/clinicalCases.json");
-const LAB_CASES_FILE = path.resolve("src/data/labCases.json");
+const MODEL_NAME = "gemini-2.5-pro";
+const CONDITION_CONTENT_FILE = path.resolve("/workspaces/PANaCEa/conditionContent.correct.json");
 const REQUESTS_PER_MINUTE = 8; // Stay under 10/min limit
 // Add 20% buffer to account for API call processing time
 const DELAY_BETWEEN_REQUESTS = Math.ceil((60000 / REQUESTS_PER_MINUTE) * 1.2); // ~9 seconds
+
+// Type for condition content structure
+interface ConditionContent {
+  diagnostics?: any;
+  overview?: string;
+  etiologyPathophysiology?: string;
+  epidemiology?: string;
+  riskFactors?: string[];
+  clinicalPresentation?: string;
+  symptoms?: string[];
+  examFindings?: string[];
+  treatment?: string[];
+  management?: string[];
+  complications?: string[];
+  prognosis?: string;
+  basicScienceLinks?: BasicScienceLink[];
+}
+
+type ConditionsDatabase = Record<string, ConditionContent>;
 
 // ======================================================
 // API KEY
@@ -114,77 +132,85 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
 }
 
 /**
- * Process cases incrementally with rate limiting
+ * Get human-readable condition name from condition ID
  */
-async function processCasesIncremental<T extends { id: string; correctDiagnosis: string; basicScienceLinks?: BasicScienceLink[] }>(
-  cases: T[],
-  caseType: "clinical" | "lab",
+function getConditionName(conditionId: string): string {
+  // Convert condition ID like "CV__ecg__sinus_bradycardia" to "Sinus Bradycardia"
+  const parts = conditionId.split("__");
+  const namePart = parts[parts.length - 1];
+  return namePart
+    .split("_")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+/**
+ * Process conditions incrementally with rate limiting
+ */
+async function processConditionsIncremental(
+  conditions: ConditionsDatabase,
   outputFile: string
-): Promise<T[]> {
-  // Filter cases that need processing
-  const casesNeedingLinks = cases.filter(
-    (c) => !c.basicScienceLinks || c.basicScienceLinks.length === 0
+): Promise<ConditionsDatabase> {
+  const conditionIds = Object.keys(conditions);
+  
+  // Filter conditions that need processing
+  const conditionsNeedingLinks = conditionIds.filter(
+    (id) => !conditions[id].basicScienceLinks || conditions[id].basicScienceLinks.length === 0
   );
-  const casesWithLinks = cases.filter(
-    (c) => c.basicScienceLinks && c.basicScienceLinks.length > 0
+  const conditionsWithLinks = conditionIds.filter(
+    (id) => conditions[id].basicScienceLinks && conditions[id].basicScienceLinks.length > 0
   );
 
-  console.log(`📊 Total cases: ${cases.length}`);
-  console.log(`   ✓ Already have links: ${casesWithLinks.length}`);
-  console.log(`   ⏳ Need links: ${casesNeedingLinks.length}`);
+  console.log(`📊 Total conditions: ${conditionIds.length}`);
+  console.log(`   ✓ Already have links: ${conditionsWithLinks.length}`);
+  console.log(`   ⏳ Need links: ${conditionsNeedingLinks.length}`);
 
-  if (casesNeedingLinks.length === 0) {
-    console.log(`\n✅ All ${caseType} cases already have basic science links!\n`);
-    return cases;
+  if (conditionsNeedingLinks.length === 0) {
+    console.log(`\n✅ All conditions already have basic science links!\n`);
+    return conditions;
   }
 
   const estimatedMinutes = Math.ceil(
-    (casesNeedingLinks.length * DELAY_BETWEEN_REQUESTS) / 60000
+    (conditionsNeedingLinks.length * DELAY_BETWEEN_REQUESTS) / 60000
   );
   console.log(`\n⏱️  Estimated time: ~${estimatedMinutes} minutes\n`);
 
   let processed = 0;
-  const updatedCases = [...cases];
+  const updatedConditions = { ...conditions };
 
-  for (let i = 0; i < updatedCases.length; i++) {
-    const caseItem = updatedCases[i];
-
-    // Skip if already has links
-    if (caseItem.basicScienceLinks && caseItem.basicScienceLinks.length > 0) {
-      continue;
-    }
-
+  for (const conditionId of conditionsNeedingLinks) {
     processed++;
-    const progress = `[${processed}/${casesNeedingLinks.length}]`;
+    const progress = `[${processed}/${conditionsNeedingLinks.length}]`;
+    const conditionName = getConditionName(conditionId);
 
-    console.log(`${progress} ${caseItem.correctDiagnosis}`);
+    console.log(`${progress} ${conditionName} (${conditionId})`);
 
-    const basicScienceLinks = await generateBasicScienceLinks(caseItem.correctDiagnosis);
+    const basicScienceLinks = await generateBasicScienceLinks(conditionName);
 
-    updatedCases[i] = {
-      ...caseItem,
+    updatedConditions[conditionId] = {
+      ...updatedConditions[conditionId],
       basicScienceLinks,
     };
 
     console.log(`   ✓ Generated ${basicScienceLinks.length} link(s)`);
 
-    // Save incrementally every 10 cases
+    // Save incrementally every 10 conditions
     if (processed % 10 === 0) {
-      fs.writeFileSync(outputFile, JSON.stringify(updatedCases, null, 2), "utf-8");
-      console.log(`   💾 Progress saved (${processed}/${casesNeedingLinks.length})\n`);
+      fs.writeFileSync(outputFile, JSON.stringify(updatedConditions, null, 2), "utf-8");
+      console.log(`   💾 Progress saved (${processed}/${conditionsNeedingLinks.length})\n`);
     }
 
     // Rate limiting delay (except for last item)
-    if (processed < casesNeedingLinks.length) {
+    if (processed < conditionsNeedingLinks.length) {
       await sleep(DELAY_BETWEEN_REQUESTS);
     }
   }
 
   // Final save
-  fs.writeFileSync(outputFile, JSON.stringify(updatedCases, null, 2), "utf-8");
-  console.log(`\n✅ All ${caseType} cases processed and saved!\n`);
+  fs.writeFileSync(outputFile, JSON.stringify(updatedConditions, null, 2), "utf-8");
+  console.log(`\n✅ All conditions processed and saved!\n`);
 
-  return updatedCases;
+  return updatedConditions;
 }
 
 // ======================================================
@@ -200,43 +226,22 @@ async function main() {
     console.log("=".repeat(60));
 
     // ======================================================
-    // PROCESS CLINICAL CASES
+    // PROCESS CONDITIONS
     // ======================================================
-    console.log("\n📋 PROCESSING CLINICAL CASES");
+    console.log("\n📋 PROCESSING CONDITIONS FROM DATABASE");
     console.log("=".repeat(60));
 
-    if (!fs.existsSync(CLINICAL_CASES_FILE)) {
-      console.error(`❌ Error: Clinical cases file not found at ${CLINICAL_CASES_FILE}`);
+    if (!fs.existsSync(CONDITION_CONTENT_FILE)) {
+      console.error(`❌ Error: Condition content file not found at ${CONDITION_CONTENT_FILE}`);
       process.exit(1);
     }
 
-    const clinicalCasesData = fs.readFileSync(CLINICAL_CASES_FILE, "utf-8");
-    const clinicalCases: ClinicalCase[] = JSON.parse(clinicalCasesData);
+    const conditionsData = fs.readFileSync(CONDITION_CONTENT_FILE, "utf-8");
+    const conditions: ConditionsDatabase = JSON.parse(conditionsData);
 
-    const updatedClinicalCases = await processCasesIncremental<ClinicalCase>(
-      clinicalCases,
-      "clinical",
-      CLINICAL_CASES_FILE
-    );
-
-    // ======================================================
-    // PROCESS LAB CASES
-    // ======================================================
-    console.log("\n📋 PROCESSING LAB CASES");
-    console.log("=".repeat(60));
-
-    if (!fs.existsSync(LAB_CASES_FILE)) {
-      console.error(`❌ Error: Lab cases file not found at ${LAB_CASES_FILE}`);
-      process.exit(1);
-    }
-
-    const labCasesData = fs.readFileSync(LAB_CASES_FILE, "utf-8");
-    const labCases: LabCase[] = JSON.parse(labCasesData);
-
-    const updatedLabCases = await processCasesIncremental<LabCase>(
-      labCases,
-      "lab",
-      LAB_CASES_FILE
+    const updatedConditions = await processConditionsIncremental(
+      conditions,
+      CONDITION_CONTENT_FILE
     );
 
     // ======================================================
@@ -246,17 +251,14 @@ async function main() {
     console.log("✨ GENERATION COMPLETE!");
     console.log("=".repeat(60));
 
-    const clinicalWithLinks = updatedClinicalCases.filter(
-      (c) => c.basicScienceLinks && c.basicScienceLinks.length > 0
-    ).length;
-    const labWithLinks = updatedLabCases.filter(
-      (c) => c.basicScienceLinks && c.basicScienceLinks.length > 0
+    const totalConditions = Object.keys(updatedConditions).length;
+    const conditionsWithLinks = Object.keys(updatedConditions).filter(
+      (id) => updatedConditions[id].basicScienceLinks && updatedConditions[id].basicScienceLinks.length > 0
     ).length;
 
     console.log(`\n📈 Final results:`);
-    console.log(`   - Clinical: ${clinicalWithLinks}/${updatedClinicalCases.length} cases with links`);
-    console.log(`   - Lab: ${labWithLinks}/${updatedLabCases.length} cases with links`);
-    console.log(`   - Total: ${clinicalWithLinks + labWithLinks}/${updatedClinicalCases.length + updatedLabCases.length} cases\n`);
+    console.log(`   - Conditions: ${conditionsWithLinks}/${totalConditions} with basic science links`);
+    console.log(`   - Coverage: ${((conditionsWithLinks / totalConditions) * 100).toFixed(1)}%\n`);
 
     console.log("✅ All done!\n");
   } catch (error) {
