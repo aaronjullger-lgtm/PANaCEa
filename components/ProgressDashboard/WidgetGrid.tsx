@@ -84,14 +84,16 @@ interface WidgetGridProps {
 // ============================================================================
 
 export const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
-  { id: 'currentStreak', label: 'Current Streak', icon: <Zap className="w-5 h-5" />, enabled: true },
-  { id: 'bestStreak', label: 'Best Streak', icon: <Award className="w-5 h-5" />, enabled: true },
-  { id: 'questionsAttempted', label: 'Questions Attempted', icon: <Target className="w-5 h-5" />, enabled: true },
-  { id: 'overallAccuracy', label: 'Overall Accuracy', icon: <BarChart3 className="w-5 h-5" />, enabled: true },
-  { id: 'todayProgress', label: 'Today\'s Progress', icon: <Clock className="w-5 h-5" />, enabled: true },
-  { id: 'weekProgress', label: 'Week Progress', icon: <Calendar className="w-5 h-5" />, enabled: false },
-  { id: 'recentTrend', label: 'Recent Trend', icon: <TrendingUp className="w-5 h-5" />, enabled: true },
+  // PRIORITIZE CURRENT FORM OVER LIFETIME STATS
+  { id: 'todayProgress', label: 'Today\'s Session', icon: <Clock className="w-5 h-5" />, enabled: true },
+  { id: 'recentTrend', label: 'Recent Form', icon: <TrendingUp className="w-5 h-5" />, enabled: true },
+  { id: 'currentStreak', label: 'Active Streak', icon: <Zap className="w-5 h-5" />, enabled: true },
+  { id: 'overallAccuracy', label: 'Current Accuracy', icon: <BarChart3 className="w-5 h-5" />, enabled: true },
+  // De-emphasized: Lifetime stats (disabled by default)
+  { id: 'questionsAttempted', label: 'Total Questions', icon: <Target className="w-5 h-5" />, enabled: false },
+  { id: 'bestStreak', label: 'Best Streak', icon: <Award className="w-5 h-5" />, enabled: false },
   { id: 'studyDays', label: 'Study Days', icon: <Flame className="w-5 h-5" />, enabled: false },
+  { id: 'weekProgress', label: 'Week Progress', icon: <Calendar className="w-5 h-5" />, enabled: false },
   // Deep Insight widgets - disabled by default
   { id: 'vignetteStamina', label: 'Vignette Stamina', icon: <FileText className="w-5 h-5" />, enabled: false },
   { id: 'speedVsAccuracy', label: 'Speed vs Accuracy', icon: <Clock className="w-5 h-5" />, enabled: false },
@@ -111,6 +113,7 @@ interface StatCardProps {
   colorClass?: string;
   trend?: number;
   delay?: number;
+  isGoldAchievement?: boolean; // Reserved for extraordinary achievements
 }
 
 const StatCard: React.FC<StatCardProps> = ({ 
@@ -120,24 +123,37 @@ const StatCard: React.FC<StatCardProps> = ({
   subtext, 
   colorClass = 'text-slate-900 dark:text-slate-100',
   trend,
-  delay = 0
+  delay = 0,
+  isGoldAchievement = false
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="widget-premium-glass widget-noise-texture p-4 hover:shadow-lg transition-shadow"
+    className={`${
+      isGoldAchievement 
+        ? 'gold-achievement rounded-2xl' 
+        : 'widget-premium-glass widget-noise-texture'
+    } p-4 hover:shadow-lg transition-all duration-300 relative`}
   >
+    {/* Gold sparkle for achievements */}
+    {isGoldAchievement && (
+      <span className="absolute top-2 right-2 text-xl animate-pulse">✨</span>
+    )}
+    
     {/* Small uppercase label */}
     <div className="flex items-center gap-2 mb-3">
-      <span className={colorClass}>{icon}</span>
-      <span className="stat-label-sm">
+      <span className={isGoldAchievement ? 'text-amber-900' : colorClass}>{icon}</span>
+      <span className={`stat-label-sm ${isGoldAchievement ? 'text-amber-900' : ''}`}>
         {label}
       </span>
     </div>
+    
     {/* Large thin data value */}
     <div className="flex items-baseline gap-2">
-      <span className={`text-4xl font-light ${colorClass}`}>{value}</span>
+      <span className={`text-4xl font-light ${isGoldAchievement ? 'text-amber-900 font-bold' : colorClass}`}>
+        {value}
+      </span>
       {trend !== undefined && (
         <span className={`flex items-center gap-0.5 text-xs font-medium ${
           trend > 0 ? 'text-green-500' : trend < 0 ? 'text-red-500' : 'text-slate-500'
@@ -147,8 +163,11 @@ const StatCard: React.FC<StatCardProps> = ({
         </span>
       )}
     </div>
+    
     {subtext && (
-      <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">{subtext}</span>
+      <span className={`text-[10px] mt-1 block ${isGoldAchievement ? 'text-amber-900 font-semibold' : 'text-slate-500 dark:text-slate-400'}`}>
+        {subtext}
+      </span>
     )}
   </motion.div>
 );
@@ -183,66 +202,81 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
     
     switch (widgetId) {
       case 'currentStreak':
+        // Gold achievement: 10+ correct in a row (extraordinary)
+        const isExtraordinaryStreak = data.currentStreak >= 10;
         return (
           <StatCard
             key={widgetId}
             icon={<Zap className="w-5 h-5" />}
-            label="Current Streak"
+            label={isExtraordinaryStreak ? "🔥 Exceptional Streak" : "Active Streak"}
             value={data.currentStreak}
+            subtext={isExtraordinaryStreak ? "You're on fire!" : "Questions in a row"}
             colorClass="text-orange-500"
+            isGoldAchievement={isExtraordinaryStreak}
             delay={delay}
           />
         );
       
       case 'bestStreak':
+        // De-emphasized: Lifetime stat
         return (
           <StatCard
             key={widgetId}
             icon={<Award className="w-5 h-5" />}
-            label="Best Streak"
+            label="All-Time Best"
             value={data.bestStreak}
-            colorClass="text-amber-500"
+            subtext="Personal record"
+            colorClass="text-slate-500 dark:text-slate-400"
             delay={delay}
           />
         );
       
       case 'questionsAttempted':
+        // De-emphasized: Total lifetime questions
         return (
           <StatCard
             key={widgetId}
             icon={<Target className="w-5 h-5" />}
-            label="Questions"
+            label="Total Attempts"
             value={scopedData.questions}
             subtext={`${scopedData.correct} correct`}
-            colorClass="text-slate-900 dark:text-slate-100"
+            colorClass="text-slate-500 dark:text-slate-400"
             delay={delay}
           />
         );
       
       case 'overallAccuracy':
+        // Emphasize: This is rolling/scoped accuracy, not lifetime
         return (
           <StatCard
             key={widgetId}
             icon={<BarChart3 className="w-5 h-5" />}
-            label="Accuracy"
+            label="Current Accuracy"
             value={`${scopedAccuracy}%`}
+            subtext={timeScope === 'today' ? 'Today' : timeScope === '1wk' ? 'This week' : 'This month'}
             colorClass="text-slate-900 dark:text-slate-100"
             delay={delay}
           />
         );
       
       case 'todayProgress':
+        // Emphasize: Today's performance
+        // Gold achievement: Perfect day with 10+ questions
+        const isPerfectDay = data.todayQuestions >= 10 && data.todayCorrect === data.todayQuestions;
         return (
           <StatCard
             key={widgetId}
             icon={<Clock className="w-5 h-5" />}
-            label="Today"
-            value={`${data.todayCorrect}/${data.todayQuestions}`}
+            label={isPerfectDay ? "🏆 Perfect Session!" : "Today's Session"}
+            value={data.todayQuestions === 0 ? '—' : `${data.todayCorrect}/${data.todayQuestions}`}
             subtext={data.todayQuestions > 0 
-              ? `${Math.round((data.todayCorrect / data.todayQuestions) * 100)}% accuracy`
-              : 'No questions yet'
+              ? isPerfectDay 
+                ? 'Flawless performance!' 
+                : `${Math.round((data.todayCorrect / data.todayQuestions) * 100)}% accuracy`
+              : 'Ready to start'
             }
             colorClass="text-blue-500"
+            isGoldAchievement={isPerfectDay}
             delay={delay}
           />
         );
@@ -264,14 +298,15 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
         );
       
       case 'recentTrend':
+        // Emphasize: Your current form matters more than past mistakes
         return (
           <StatCard
             key={widgetId}
             icon={data.recentTrend >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
-            label="Recent Trend"
+            label="Recent Form"
             value={`${data.recentTrend >= 0 ? '+' : ''}${data.recentTrend}%`}
-            subtext="Last 50 vs previous 50"
-            colorClass={data.recentTrend >= 0 ? 'text-green-500' : 'text-red-500'}
+            subtext="Last 50 questions"
+            colorClass={data.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}
             delay={delay}
           />
         );

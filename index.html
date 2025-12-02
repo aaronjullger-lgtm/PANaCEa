@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
-      /* CSS Custom Properties for theming - Modern Medical Glassmorphism */
+      /* CSS Custom Properties for theming - Slate, White & Glass */
       :root {
-        /* Fresh, modern light mode with soft blue-gray tones - "High-Contrast Glass" */
+        /* Slate & White light mode - Clean, professional medical aesthetic */
         --color-bg-primary: #f8fafc;
         --color-bg-secondary: #f1f5f9;
         --color-bg-tertiary: #ffffff;
@@ -26,25 +26,38 @@
         --color-text-muted: #64748b;
         --color-border: #cbd5e1;
         --color-border-light: #e2e8f0;
-        /* Slate palette - replacing Royal Blue */
+        
+        /* Slate accent for primary actions */
         --color-accent: #0f172a;
         --color-accent-hover: #1e293b;
         --color-accent-light: #e2e8f0;
+        
+        /* Shiny Gold - Reserved for extraordinary achievements only */
+        --color-gold: #d4af37;
+        --color-gold-light: #f4e5b8;
+        --color-gold-dark: #b8941f;
+        --color-gold-gradient: linear-gradient(135deg, #f9d423 0%, #d4af37 50%, #b8941f 100%);
+        --color-gold-glow: 0 4px 24px rgba(212, 175, 55, 0.4);
+        
+        /* Glass effects - Enhanced for premium feel */
         --color-card-bg: rgba(255, 255, 255, 0.70);
         --color-input-bg: #ffffff;
-        --color-overlay: rgba(15, 23, 42, 0.5);
+        --color-overlay: rgba(15, 23, 42, 0.6);
+        
         /* Button text colors */
         --color-btn-primary-text: #ffffff;
         --color-btn-secondary-text: #0f172a;
-        /* Glass-like button effects for light mode - "High-Contrast Glass" */
-        --color-glass-bg: rgba(255, 255, 255, 0.70);
+        
+        /* Premium glass styling */
+        --color-glass-bg: rgba(255, 255, 255, 0.75);
         --color-glass-border: rgba(203, 213, 225, 0.8);
         --color-glass-shadow: rgba(0, 0, 0, 0.08);
-        --color-glass-hover: rgba(255, 255, 255, 0.85);
+        --color-glass-hover: rgba(255, 255, 255, 0.90);
         --color-glass-text: #0f172a;
       }
 
       .dark {
+        /* Slate dark mode - Deep, sophisticated medical interface */
         --color-bg-primary: #0f172a;
         --color-bg-secondary: #1e293b;
         --color-bg-tertiary: #334155;
@@ -53,22 +66,33 @@
         --color-text-muted: #94a3b8;
         --color-border: #475569;
         --color-border-light: #334155;
-        /* Changed from Teal to Frosted White for high contrast */
+        
+        /* Frosted white accent for high contrast */
         --color-accent: rgba(248, 250, 252, 0.9);
         --color-accent-hover: rgba(255, 255, 255, 1);
         --color-accent-light: rgba(248, 250, 252, 0.15);
+        
+        /* Shiny Gold - Same for dark mode, reserved for achievements */
+        --color-gold: #f4d03f;
+        --color-gold-light: #f9e79f;
+        --color-gold-dark: #d4af37;
+        --color-gold-gradient: linear-gradient(135deg, #f9e79f 0%, #f4d03f 50%, #d4af37 100%);
+        --color-gold-glow: 0 4px 32px rgba(244, 208, 63, 0.5);
+        
+        /* Glass effects for dark mode */
         --color-card-bg: #1e293b;
         --color-input-bg: #334155;
-        --color-overlay: rgba(0, 0, 0, 0.7);
-        /* Button text colors - dark text on light frosted backgrounds */
+        --color-overlay: rgba(0, 0, 0, 0.8);
+        
+        /* Button text colors */
         --color-btn-primary-text: #0f172a;
         --color-btn-secondary-text: #f1f5f9;
-        /* Mini-Dashboard tiles - force light text for readability */
         --color-tile-text: #f3f4f6;
-        /* Glass-like button effects for dark mode - "Frosted White" (semi-transparent white) */
+        
+        /* Premium frosted glass styling */
         --color-glass-bg: rgba(255, 255, 255, 0.10);
         --color-glass-border: rgba(255, 255, 255, 0.15);
-        --color-glass-shadow: rgba(0, 0, 0, 0.3);
+        --color-glass-shadow: rgba(0, 0, 0, 0.4);
         --color-glass-hover: rgba(255, 255, 255, 0.18);
         --color-glass-text: #f1f5f9;
       }
@@ -107,6 +131,8 @@
       #question-container tbody tr:nth-child(even) {
         background-color: var(--color-bg-secondary);
       }
+      /* ===== ELEGANT ANIMATIONS & MICRO-INTERACTIONS ===== */
+      
       @keyframes shake {
         10%, 90% { transform: translateX(-1px); }
         20%, 80% { transform: translateX(2px); }
@@ -116,6 +142,7 @@
       .animate-shake {
         animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
       }
+      
       @keyframes bounce {
         0%, 100% {
           transform: translateY(-25%);
@@ -129,33 +156,85 @@
       .animate-bounce-custom {
         animation: bounce 1s infinite;
       }
+      
+      /* Smooth fade transitions */
       @keyframes fade-in {
         from { opacity: 0; }
         to { opacity: 1; }
       }
       .animate-fade-in {
-        animation: fade-in 0.5s ease-out forwards;
+        animation: fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
+      
       @keyframes fade-in-down {
-        from { opacity: 0; transform: translateY(-10px); }
+        from { opacity: 0; transform: translateY(-12px); }
         to { opacity: 1; transform: translateY(0); }
       }
       .animate-fade-in-down {
-        animation: fade-in-down 0.4s ease-out forwards;
+        animation: fade-in-down 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
+      
       @keyframes slide-up {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
       }
       .animate-slide-up {
-        animation: slide-up 0.4s ease-out forwards;
+        animation: slide-up 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       }
+      
       @keyframes scale-in {
         from { opacity: 0; transform: scale(0.95); }
         to { opacity: 1; transform: scale(1); }
       }
       .animate-scale-in {
-        animation: scale-in 0.3s ease-out forwards;
+        animation: scale-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+      
+      /* Gold Celebration Animation - Reserved for extraordinary achievements */
+      @keyframes gold-shimmer {
+        0% {
+          background-position: -200% center;
+        }
+        100% {
+          background-position: 200% center;
+        }
+      }
+      
+      @keyframes gold-glow-pulse {
+        0%, 100% {
+          box-shadow: var(--color-gold-glow), 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        50% {
+          box-shadow: 0 8px 40px rgba(212, 175, 55, 0.6), 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+      }
+      
+      .gold-achievement {
+        background: var(--color-gold-gradient);
+        background-size: 200% auto;
+        animation: gold-shimmer 3s linear infinite, gold-glow-pulse 2s ease-in-out infinite;
+        color: #1a1410;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+      
+      .dark .gold-achievement {
+        color: #1a1410;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+      
+      /* Gold sparkle effect for perfect streaks */
+      @keyframes sparkle {
+        0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1) rotate(180deg); }
+      }
+      
+      .gold-sparkle::after {
+        content: '✨';
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        animation: sparkle 2s ease-in-out infinite;
       }
       .user-highlight {
         background-color: #FFF176;
@@ -173,111 +252,146 @@
         font-style: italic;
       }
 
-      /* Smooth transitions for interactive elements */
+      /* ===== SMOOTH TRANSITIONS - Nothing should feel jarring ===== */
+      
+      /* Elegant transitions for all interactive elements */
       button, a, input, textarea, select {
-        transition: all 0.2s ease;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      button:active, a:active {
+        transition-duration: 0.1s;
       }
 
-      /* Card hover effects */
+      /* Premium card hover effects with smooth elevation */
       .card-hover {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
       }
       .dark .card-hover:hover {
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+      }
+      
+      /* Smooth scale effect for clickable items */
+      .scale-on-hover {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .scale-on-hover:hover {
+        transform: scale(1.02);
+      }
+      .scale-on-hover:active {
+        transform: scale(0.98);
       }
 
-      /* Glass button styling - Modern Medical Glassmorphism */
+      /* ===== GLASSMORPHISM - Premium feel without clutter ===== */
+      
+      /* Glass button styling - Elegant and fluid */
       .btn-glass {
         background: var(--color-glass-bg);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         border: 1px solid var(--color-glass-border);
         color: var(--color-glass-text);
         box-shadow: 
           0 4px 16px var(--color-glass-shadow),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        transition: all 0.2s ease;
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .btn-glass:hover {
         background: var(--color-glass-hover);
-        transform: translateY(-1px);
+        transform: translateY(-2px);
         box-shadow: 
-          0 6px 20px var(--color-glass-shadow),
-          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+          0 8px 24px var(--color-glass-shadow),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
       }
       .btn-glass:active {
         transform: translateY(0);
+        transition-duration: 0.1s;
       }
 
-      /* Premium Glass Card - Apple-style glassmorphism */
+      /* Premium Glass Card - Sophisticated depth */
       .card-premium-glass {
-        background: rgba(255, 255, 255, 0.60);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        /* Gradient borders to mimic light reflection */
-        border-top: 1px solid rgba(255, 255, 255, 0.80);
-        border-left: 1px solid rgba(255, 255, 255, 0.80);
-        border-bottom: 1px solid rgba(148, 163, 184, 0.60);
-        border-right: 1px solid rgba(148, 163, 184, 0.60);
-        /* Soft, diffused shadows for depth */
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        /* Gradient borders for realistic light reflection */
+        border-top: 1px solid rgba(255, 255, 255, 0.85);
+        border-left: 1px solid rgba(255, 255, 255, 0.85);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.65);
+        border-right: 1px solid rgba(148, 163, 184, 0.65);
+        /* Soft, layered shadows for premium depth */
         box-shadow: 
-          0 10px 40px rgba(148, 163, 184, 0.25),
-          0 4px 12px rgba(148, 163, 184, 0.15);
-        transition: all 0.2s ease;
+          0 10px 40px rgba(148, 163, 184, 0.28),
+          0 4px 12px rgba(148, 163, 184, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .card-premium-glass:hover {
-        transform: translateY(-2px);
+        transform: translateY(-3px);
         box-shadow: 
           0 14px 48px rgba(148, 163, 184, 0.30),
           0 6px 16px rgba(148, 163, 184, 0.18);
       }
       .dark .card-premium-glass {
-        background: rgba(30, 41, 59, 0.60);
+        background: rgba(30, 41, 59, 0.65);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border-top: 1px solid rgba(255, 255, 255, 0.14);
+        border-left: 1px solid rgba(255, 255, 255, 0.14);
+        border-bottom: 1px solid rgba(71, 85, 105, 0.45);
+        border-right: 1px solid rgba(71, 85, 105, 0.45);
+        box-shadow: 
+          0 10px 40px rgba(0, 0, 0, 0.50),
+          0 4px 12px rgba(0, 0, 0, 0.30),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      }
+      .dark .card-premium-glass:hover {
+        box-shadow: 
+          0 16px 52px rgba(0, 0, 0, 0.60),
+          0 6px 18px rgba(0, 0, 0, 0.35);
+      }
+
+      /* Premium Glass Widget - for stat cards with enhanced depth */
+      .widget-premium-glass {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border-top: 1px solid rgba(255, 255, 255, 0.85);
+        border-left: 1px solid rgba(255, 255, 255, 0.85);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.55);
+        border-right: 1px solid rgba(148, 163, 184, 0.55);
+        box-shadow: 
+          0 8px 32px rgba(148, 163, 184, 0.22),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .widget-premium-glass:hover {
+        transform: translateY(-2px);
+        box-shadow: 
+          0 12px 40px rgba(148, 163, 184, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      }
+      .dark .widget-premium-glass {
+        background: rgba(30, 41, 59, 0.55);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
         border-top: 1px solid rgba(255, 255, 255, 0.12);
         border-left: 1px solid rgba(255, 255, 255, 0.12);
         border-bottom: 1px solid rgba(71, 85, 105, 0.40);
         border-right: 1px solid rgba(71, 85, 105, 0.40);
         box-shadow: 
-          0 10px 40px rgba(0, 0, 0, 0.40),
-          0 4px 12px rgba(0, 0, 0, 0.25);
-      }
-      .dark .card-premium-glass:hover {
-        box-shadow: 
-          0 14px 48px rgba(0, 0, 0, 0.50),
-          0 6px 16px rgba(0, 0, 0, 0.30);
-      }
-
-      /* Premium Glass Widget - for stat cards */
-      .widget-premium-glass {
-        background: rgba(255, 255, 255, 0.60);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border-top: 1px solid rgba(255, 255, 255, 0.80);
-        border-left: 1px solid rgba(255, 255, 255, 0.80);
-        border-bottom: 1px solid rgba(148, 163, 184, 0.50);
-        border-right: 1px solid rgba(148, 163, 184, 0.50);
-        box-shadow: 0 8px 32px rgba(148, 163, 184, 0.20);
-        border-radius: 16px;
-        transition: all 0.2s ease;
-      }
-      .widget-premium-glass:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 12px 40px rgba(148, 163, 184, 0.25);
-      }
-      .dark .widget-premium-glass {
-        background: rgba(30, 41, 59, 0.50);
-        border-top: 1px solid rgba(255, 255, 255, 0.10);
-        border-left: 1px solid rgba(255, 255, 255, 0.10);
-        border-bottom: 1px solid rgba(71, 85, 105, 0.35);
-        border-right: 1px solid rgba(71, 85, 105, 0.35);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+          0 8px 32px rgba(0, 0, 0, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
       .dark .widget-premium-glass:hover {
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+        box-shadow: 
+          0 12px 40px rgba(0, 0, 0, 0.55),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
       }
 
       /* Noise texture overlay for premium glass effect - removes "plastic" look */
