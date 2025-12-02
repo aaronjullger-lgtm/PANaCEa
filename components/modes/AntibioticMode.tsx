@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, XCircle, Pill, ArrowRight, RotateCcw, Shuffle } from 'lucide-react';
 import type { AntibioticDrillQuestion, OrganismInfection, AntibioticDrug } from '@/types/drill-modes';
 import { ORGANISMS, ANTIBIOTICS, COVERAGE_MAP, generateAntibioticDrill } from '@/data/modes/antibioticData';
+import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 
 interface AntibioticModeProps {
   onExit?: () => void;
@@ -54,6 +55,13 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
       correct: prev.correct + (correct ? 1 : 0),
       total: prev.total + 1
     }));
+    
+    // Trigger haptic feedback
+    if (correct) {
+      hapticSuccess();
+    } else {
+      hapticError();
+    }
   };
 
   const toggleDrugSelection = (drugId: string) => {

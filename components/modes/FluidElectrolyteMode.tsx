@@ -8,6 +8,7 @@ import {
   getRandomFluidCase, 
   validateNumericAnswer 
 } from '@/data/modes/fluidElectrolyteData';
+import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 
 interface FluidElectrolyteModeProps {
   onExit?: () => void;
@@ -42,9 +43,12 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
       total: prev.total + 1
     }));
 
+    // Trigger haptic feedback
     if (validation.isCorrect) {
+      hapticSuccess();
       setFeedback(`Correct! Your answer of ${numericAnswer} ${currentCase.unit} is within the acceptable range.`);
     } else {
+      hapticError();
       setFeedback(
         `Your answer of ${numericAnswer} ${currentCase.unit} is outside the acceptable range. ` +
         `The correct answer is ${currentCase.correctAnswer} ${currentCase.unit} (±${currentCase.marginOfError}).`
