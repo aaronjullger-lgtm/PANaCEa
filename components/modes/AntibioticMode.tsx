@@ -4,18 +4,7 @@ import { X, CheckCircle, XCircle, Pill, ArrowRight, RotateCcw, Shuffle, Play } f
 import type { AntibioticDrillQuestion, OrganismInfection, AntibioticDrug } from '@/types/drill-modes';
 import { ORGANISMS, ANTIBIOTICS, COVERAGE_MAP, generateAntibioticDrill } from '@/data/modes/antibioticData';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
-
-/**
- * Convert a string to Title Case for proper display
- */
-function toTitleCase(str: string): string {
-  if (!str) return str;
-  return str
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
+import { toTitleCase } from '@/lib/textUtils';
 
 interface AntibioticModeProps {
   onExit?: () => void;

@@ -2,9 +2,9 @@
 // Unified search that intelligently combines and ranks conditions and drugs
 
 import { searchConditions } from "./conditionSearch";
-import { searchDrugs } from "./drugSearch";
 import type { ConditionSearchResult } from "./conditionSearch";
-import type { DrugSearchResult } from "../../pharm/drugTypes";
+import { searchDrugs } from "./drugSearch";
+import type { DrugSearchResult } from "@/pharm/drugTypes";
 
 export type UnifiedSearchResultType = "condition" | "drug";
 

@@ -5,25 +5,12 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DrugEntry, DrugInteraction } from "../pharm/drugTypes";
 import { formatDrugName } from "../lib/drugBrandNames";
+import { toTitleCase } from "../lib/textUtils";
 
 interface DrugDetailModalProps {
   drug: DrugEntry;
   onClose: () => void;
   onDrillDrug?: (drug: DrugEntry) => void;
-}
-
-/**
- * Convert a string to Title Case for proper display.
- * E.g., "acetyl salicylic acid" -> "Acetyl Salicylic Acid"
- * Used for ingredient formatting
- */
-function toTitleCase(str: string): string {
-  if (!str) return str;
-  return str
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 }
 
 const DrugDetailModal: React.FC<DrugDetailModalProps> = ({

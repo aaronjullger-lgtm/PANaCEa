@@ -17,17 +17,13 @@ const drugRegistry: Map<string, DrugEntry> = new Map();
 // Map of normalized names to canonical names for deduplication
 const canonicalNameMap: Map<string, string> = new Map();
 
-// Build reverse lookup for brand names
-const brandToGenericMap: Map<string, string> = new Map();
-for (const [generic, brand] of Object.entries(BRAND_NAME_MAP)) {
-  brandToGenericMap.set(brand.toLowerCase(), generic);
-}
-
 // Initialize the registry with deduplication
 for (const [key, entry] of Object.entries(drugData)) {
+  // Normalize for deduplication by removing all non-alphanumeric characters
+  // This helps identify duplicates like "aspirin" and "Acetylsalicylic Acid"
   const normalized = entry.term.toLowerCase().replace(/[^a-z0-9]/g, '');
   
-  // Check if this is a duplicate (e.g., "aspirin" and "Acetylsalicylic Acid")
+  // Check if this is a duplicate
   if (!canonicalNameMap.has(normalized)) {
     canonicalNameMap.set(normalized, key);
     drugRegistry.set(key.toLowerCase(), entry);
@@ -116,11 +112,12 @@ function bestTermScore(query: string, term: string | undefined | null): number {
 
 /**
  * Properly capitalize a drug name for display
+ * Handles common abbreviations (SSRI, ACE, etc.) specially
  */
 function capitalizeDrugName(name: string | undefined | null): string {
   if (!name || typeof name !== 'string') return "";
   
-  // Handle special cases
+  // Handle special abbreviations that should be fully uppercase
   const specialCases: Record<string, string> = {
     'nsaid': 'NSAID',
     'ssri': 'SSRI',
@@ -141,8 +138,8 @@ function capitalizeDrugName(name: string | undefined | null): string {
       if (specialCases[lower]) {
         return specialCases[lower];
       }
-      // Capitalize first letter, keep rest as-is for abbreviations
-      return word.charAt(0).toUpperCase() + word.slice(1);
+      // For regular words, capitalize first letter and lowercase the rest
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     })
     .join(' ');
 }
