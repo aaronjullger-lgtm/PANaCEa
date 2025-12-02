@@ -10,9 +10,9 @@
  * - Error Tagger (only when incorrect)
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, BookOpen, Lightbulb, AlertCircle, HelpCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, BookOpen, Lightbulb, AlertCircle, HelpCircle, ExternalLink } from 'lucide-react';
 import { 
   compressToBullets, 
   extractBuzzwords, 
@@ -32,6 +32,11 @@ export interface DifferentialItem {
   reasoning: string;
 }
 
+export interface BasicScienceLink {
+  title: string;
+  conceptId: string;
+}
+
 export interface ExplanationPanelProps {
   /** The full explanation/rationale text */
   explanation: string;
@@ -49,6 +54,10 @@ export interface ExplanationPanelProps {
   questionId?: string;
   /** Callback when error is tagged (only shown when incorrect) */
   onTagError?: (tag: ErrorTag) => void;
+  /** Optional basic science links for foundational review */
+  basicScienceLinks?: BasicScienceLink[];
+  /** Optional condition ID to fetch basic science links */
+  conditionId?: string;
 }
 
 /**
@@ -204,6 +213,8 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   onFeedback,
   questionId,
   onTagError,
+  basicScienceLinks = [],
+  conditionId,
 }) => {
   // Process explanation using the compression service
   const processedContent = useMemo(() => {
@@ -211,6 +222,30 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   }, [explanation, condition]);
 
   const { bullets, buzzwords, mnemonic } = processedContent;
+  
+  // Load basic science links from condition content if conditionId is provided
+  const [loadedBasicScienceLinks, setLoadedBasicScienceLinks] = useState<BasicScienceLink[]>(basicScienceLinks);
+  
+  useEffect(() => {
+    if (conditionId && !basicScienceLinks.length) {
+      // Try to load from condition content
+      import('../lib/loadConditions').then(({ getConditionById }) => {
+        const conditionData = getConditionById(conditionId);
+        if (conditionData?.sections?.basicScienceLinks) {
+          try {
+            const links = typeof conditionData.sections.basicScienceLinks === 'string' 
+              ? JSON.parse(conditionData.sections.basicScienceLinks)
+              : conditionData.sections.basicScienceLinks;
+            if (Array.isArray(links)) {
+              setLoadedBasicScienceLinks(links);
+            }
+          } catch (e) {
+            console.warn('Failed to parse basicScienceLinks', e);
+          }
+        }
+      });
+    }
+  }, [conditionId, basicScienceLinks.length]);
 
   return (
     <motion.div
@@ -293,6 +328,32 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
               title="Why the Others Were Wrong" 
             />
             <DifferentialAccordion differentials={differentials} />
+          </section>
+        )}
+
+        {/* Basic Science Links Section */}
+        {loadedBasicScienceLinks.length > 0 && (
+          <section className="mb-6">
+            <SectionHeader 
+              icon={<BookOpen className="w-5 h-5" />} 
+              title="Review: Foundational Science" 
+            />
+            <div className="space-y-2">
+              {loadedBasicScienceLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={`/concepts/${link.conceptId}`}
+                  className="flex items-center gap-2 p-3 bg-blue-50/80 dark:bg-blue-900/20 rounded-lg border border-blue-200/60 dark:border-blue-700/40 hover:bg-blue-100/80 dark:hover:bg-blue-900/30 transition-colors group"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    {link.title}
+                  </span>
+                </a>
+              ))}
+            </div>
           </section>
         )}
 
