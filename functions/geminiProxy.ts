@@ -13,6 +13,16 @@ interface RequestBody {
   temperature?: number;
 }
 
+interface GeminiAPIResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+    };
+  }>;
+}
+
 /**
  * Clean up Gemini text so the frontend always gets plain JSON-as-string.
  * - Trims whitespace
@@ -133,7 +143,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       );
     }
 
-    const geminiData = await geminiResponse.json() as any;
+    const geminiData = await geminiResponse.json() as GeminiAPIResponse;
     
     // Extract text from Gemini response
     let rawText = "";
