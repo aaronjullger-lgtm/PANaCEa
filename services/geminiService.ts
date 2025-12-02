@@ -25,14 +25,14 @@ import {
   normalizeConditionContent,
 } from "../lib/loadConditions";
 
-// --- Helper: call Netlify serverless function, which talks to Gemini ---
+// --- Helper: call serverless function, which talks to Gemini ---
 
 async function callGeminiText(
   modelName: string,
   prompt: string,
   temperature: number = 0.8
 ): Promise<string> {
-  const response = await fetch("/.netlify/functions/geminiProxy", {
+  const response = await fetch("/geminiProxy", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ modelName, prompt, temperature }),
