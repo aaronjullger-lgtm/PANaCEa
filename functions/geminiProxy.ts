@@ -51,26 +51,48 @@ function stripCodeFences(text: string): string {
   return cleaned;
 }
 
-// Cloudflare Pages Functions export handler for POST requests
-export async function onRequestPost(context: { request: Request; env: Env }) {
+export async function onRequestPost(context) {
   const { request, env } = context;
+  
+  // 1. Get the API Key from Cloudflare Environment Variables
+  const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return new Response(JSON.stringify({ error: "Missing API Key on Server" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
 
   try {
-    // Get API key from environment
-    const apiKey = env.GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: "GEMINI_API_KEY environment variable is not set" }),
-        {
-          status: 500,
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-          },
-        }
-      );
-    }
+    // 2. Get the data your website sent
+    const requestBody = await request.json();
+
+    // 3. Forward the request to Google Gemini
+    // Note: We default to gemini-1.5-flash. If your app expects gemini-pro, change the model name below.
+    const model = "gemini-2.5-pro"; 
+    const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+    const googleResponse = await fetch(googleUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody)
+    });
+
+    const data = await googleResponse.json();
+
+    // 4. Send the answer back to your website
+    return new Response(JSON.stringify(data), {
+      headers: { "Content-Type": "application/json" }
+    });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
 
     // Parse the request body
     let body: RequestBody;
