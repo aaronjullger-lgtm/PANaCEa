@@ -488,14 +488,12 @@ const MenuView: React.FC<MenuViewProps> = ({
           className="w-full max-w-2xl mx-auto mb-10 relative"
         >
           <div className="flex justify-center">
-            <motion.input
+            <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search conditions or medications (e.g., ACS, Fluoxetine, DKA, Metoprolol)..."
-              className="w-full px-5 py-3.5 border border-[var(--color-border)] bg-[var(--color-glass-bg)] backdrop-blur-xl text-[var(--color-text-primary)] rounded-2xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] transition-all duration-300 placeholder:text-[var(--color-text-muted)]"
-              whileFocus={{ scale: 1.01 }}
-              transition={{ duration: 0.2 }}
+              className="w-full px-5 py-3.5 border border-[var(--color-border)] bg-[var(--color-glass-bg)] backdrop-blur-xl text-[var(--color-text-primary)] rounded-2xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] focus:scale-[1.01] transition-all duration-300 placeholder:text-[var(--color-text-muted)]"
             />
           </div>
           <AnimatePresence>

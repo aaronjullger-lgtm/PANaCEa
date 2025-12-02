@@ -22,6 +22,15 @@ import {
 import { calculateAccuracy } from '../../lib/dashboardUtils';
 
 // ============================================================================
+// Constants - Gold Achievement Thresholds
+// ============================================================================
+
+// Reserved for extraordinary performance only
+const GOLD_ACHIEVEMENT_STREAK_THRESHOLD = 10;
+const GOLD_ACHIEVEMENT_TREND_THRESHOLD = 10;
+const PERFECT_DAY_QUESTION_THRESHOLD = 10;
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -202,8 +211,8 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
     
     switch (widgetId) {
       case 'currentStreak':
-        // Gold achievement: 10+ correct in a row (extraordinary)
-        const isExtraordinaryStreak = data.currentStreak >= 10;
+        // Gold achievement: Extraordinary streak threshold
+        const isExtraordinaryStreak = data.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD;
         return (
           <StatCard
             key={widgetId}
@@ -261,8 +270,8 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
       
       case 'todayProgress':
         // Emphasize: Today's performance
-        // Gold achievement: Perfect day with 10+ questions
-        const isPerfectDay = data.todayQuestions >= 10 && data.todayCorrect === data.todayQuestions;
+        // Gold achievement: Perfect day with threshold questions
+        const isPerfectDay = data.todayQuestions >= PERFECT_DAY_QUESTION_THRESHOLD && data.todayCorrect === data.todayQuestions;
         return (
           <StatCard
             key={widgetId}

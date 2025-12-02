@@ -36,6 +36,10 @@ import {
 } from '@/lib/dashboardUtils';
 import ActivityHeatmap from './analytics/ActivityHeatmap';
 
+// Gold Achievement Thresholds - Reserved for extraordinary performance
+const GOLD_ACHIEVEMENT_STREAK_THRESHOLD = 10;
+const GOLD_ACHIEVEMENT_TREND_THRESHOLD = 10;
+
 interface SettingsStatsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -341,25 +345,25 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Priority: Current Form Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
                   {/* Recent Trend - Most Important */}
-                  <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.recentTrend >= 10 ? 'gold-achievement' : 'bg-[var(--color-bg-secondary)]'}`}>
-                    <div className={`text-2xl sm:text-3xl font-bold ${stats.recentTrend >= 10 ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}>
+                  <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'gold-achievement' : 'bg-[var(--color-bg-secondary)]'}`}>
+                    <div className={`text-2xl sm:text-3xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}>
                       {stats.recentTrend >= 0 ? '+' : ''}{stats.recentTrend}%
                     </div>
-                    <div className={`text-xs ${stats.recentTrend >= 10 ? 'text-amber-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
-                      {stats.recentTrend >= 10 ? '🔥 Hot Streak!' : 'Recent Form'}
+                    <div className={`text-xs ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
+                      {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? '🔥 Hot Streak!' : 'Recent Form'}
                     </div>
                   </div>
                   
                   {/* Current Streak */}
-                  <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.currentStreak >= 10 ? 'gold-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}>
-                    {stats.currentStreak >= 10 && <span className="absolute top-1 right-1 text-lg">✨</span>}
+                  <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'gold-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}>
+                    {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD && <span className="absolute top-1 right-1 text-lg">✨</span>}
                     <div className="flex items-center justify-center gap-1">
-                      <Zap className={`w-5 h-5 ${stats.currentStreak >= 10 ? 'text-amber-900' : 'text-orange-500'}`} />
-                      <span className={`text-2xl sm:text-3xl font-bold ${stats.currentStreak >= 10 ? 'text-amber-900' : 'text-orange-500'}`}>
+                      <Zap className={`w-5 h-5 ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`} />
+                      <span className={`text-2xl sm:text-3xl font-bold ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`}>
                         {stats.currentStreak}
                       </span>
                     </div>
-                    <div className={`text-xs ${stats.currentStreak >= 10 ? 'text-amber-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
+                    <div className={`text-xs ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
                       Active Streak
                     </div>
                   </div>
