@@ -5,25 +5,12 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DrugEntry, DrugInteraction } from "../pharm/drugTypes";
 import { formatDrugName } from "../lib/drugBrandNames";
+import { toTitleCase } from "../lib/textUtils";
 
 interface DrugDetailModalProps {
   drug: DrugEntry;
   onClose: () => void;
   onDrillDrug?: (drug: DrugEntry) => void;
-}
-
-/**
- * Convert a string to Title Case for proper display.
- * E.g., "acetyl salicylic acid" -> "Acetyl Salicylic Acid"
- * Used for ingredient formatting
- */
-function toTitleCase(str: string): string {
-  if (!str) return str;
-  return str
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
 }
 
 const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
@@ -73,11 +60,11 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
               </h2>
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
-                  {drug.class}
+                  {toTitleCase(drug.class)}
                 </span>
                 {drug.subclass && (
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
-                    {drug.subclass}
+                    {toTitleCase(drug.subclass)}
                   </span>
                 )}
                 {/* Only show type if it's NOT "small molecule" or other non-instructional classifications */}
@@ -86,7 +73,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                  drug.type.toLowerCase() !== "small molecule" && 
                  drug.type.toLowerCase() !== "small_molecule" && (
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
-                    {drug.type}
+                    {toTitleCase(drug.type)}
                   </span>
                 )}
               </div>

@@ -18,10 +18,10 @@ import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
 import type { ConditionMeta } from "../conditionRegistry";
 import ConditionDetailModal from "./ConditionDetailModal";
 import DrugDetailModal from "./DrugDetailModal";
-import { findConditionMetaById, searchConditions } from "../src/lib/conditionSearch";
-import { searchDrugs, findDrugByName } from "../src/lib/drugSearch";
-import type { DrugEntry, DrugSearchResult } from "../pharm/drugTypes";
-import { formatDrugName } from "../lib/drugBrandNames";
+import { findConditionMetaById } from "../src/lib/conditionSearch";
+import { findDrugByName } from "../src/lib/drugSearch";
+import { unifiedSearch } from "../src/lib/unifiedSearch";
+import type { DrugEntry } from "../pharm/drugTypes";
 import { 
   WidgetGrid, 
   TimeScopeFilter, 
@@ -362,35 +362,14 @@ const MenuView: React.FC<MenuViewProps> = ({
     });
   };
 
-  // Combined search results for conditions and drugs with weighted ordering
-  // If a drug name closely matches the query, it should appear first (before conditions)
-  const { conditionResults, drugResults, drugsFirst } = useMemo(
-    () => {
-      const conditions = searchConditions(searchQuery);
-      const drugs = searchDrugs(searchQuery);
-      
-      // Determine if drugs should be shown first based on weighted matching
-      // If any drug has a high score (exact or starts-with match on drug name), prioritize drugs
-      const normalizedQuery = searchQuery.trim().toLowerCase();
-      const hasDrugNameMatch = drugs.some(drug => {
-        const drugNameLower = drug.drugName.toLowerCase();
-        // Exact match or starts-with match on drug name = high priority
-        return drugNameLower === normalizedQuery || 
-               drugNameLower.startsWith(normalizedQuery) ||
-               drug.score >= 2.5; // Score >= 2.5 indicates exact or starts-with match
-      });
-      
-      return { 
-        conditionResults: conditions, 
-        drugResults: drugs,
-        drugsFirst: hasDrugNameMatch
-      };
-    },
+  // Unified search results with intelligent ranking
+  const searchResults = useMemo(
+    () => unifiedSearch(searchQuery),
     [searchQuery]
   );
 
   // Check if we have any search results
-  const hasSearchResults = conditionResults.length > 0 || drugResults.length > 0;
+  const hasSearchResults = searchResults.length > 0;
 
   return (
     <>
@@ -525,107 +504,43 @@ const MenuView: React.FC<MenuViewProps> = ({
                 exit={{ opacity: 0, y: -10 }}
                 className="absolute z-30 mt-2 w-full bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-xl shadow-lg max-h-80 overflow-y-auto"
               >
-                {/* Weighted Search: Show Drugs first if query matches a drug name */}
-                {drugsFirst && drugResults.length > 0 && (
-                  <>
-                    <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                        💊 Pharmacology
+                {/* Unified search results - intelligently ranked */}
+                {searchResults.map((result) => (
+                  <button
+                    key={result.id}
+                    type="button"
+                    onClick={() => {
+                      if (result.type === "condition" && result.conditionData) {
+                        const meta = findConditionMetaById(result.id);
+                        if (meta) {
+                          setSelectedCondition(meta);
+                        }
+                      } else if (result.type === "drug" && result.drugData) {
+                        const drug = findDrugByName(result.drugData.drugName);
+                        if (drug) {
+                          setSelectedDrug(drug);
+                        }
+                      }
+                      setSearchQuery("");
+                    }}
+                    className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
+                  >
+                    <div className="flex items-start gap-2">
+                      {/* Icon badge */}
+                      <span className="flex-shrink-0 mt-0.5 text-xs">
+                        {result.type === "condition" ? "🏥" : "💊"}
                       </span>
+                      <div className="flex-1 flex flex-col gap-0.5">
+                        <span className="font-semibold text-[var(--color-text-primary)]">
+                          {result.name}
+                        </span>
+                        <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                          {result.subtitle}
+                        </span>
+                      </div>
                     </div>
-                    {drugResults.slice(0, 10).map((result) => (
-                      <button
-                        key={result.id}
-                        type="button"
-                        onClick={() => {
-                          const drug = findDrugByName(result.drugName);
-                          if (drug) {
-                            setSelectedDrug(drug);
-                          }
-                          setSearchQuery("");
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
-                      >
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-[var(--color-text-primary)]">
-                            {result.drugName}
-                          </span>
-                          <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
-                            {result.drugClass}{result.subclass ? ` • ${result.subclass}` : ""}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </>
-                )}
-
-                {/* Conditions section */}
-                {conditionResults.length > 0 && (
-                  <>
-                    <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
-                        Conditions
-                      </span>
-                    </div>
-                    {conditionResults.slice(0, 10).map((result) => (
-                      <button
-                        key={result.id}
-                        type="button"
-                        onClick={() => {
-                          const meta = findConditionMetaById(result.id);
-                          if (meta) {
-                            setSelectedCondition(meta);
-                          }
-                          setSearchQuery("");
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
-                      >
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-[var(--color-text-primary)]">
-                            {result.condition}
-                          </span>
-                          <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
-                            {result.system} • {result.subcategory}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </>
-                )}
-                
-                {/* Drugs/Pharmacology section (shown after conditions if not drugsFirst) */}
-                {!drugsFirst && drugResults.length > 0 && (
-                  <>
-                    <div className="px-4 py-2 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                        💊 Pharmacology
-                      </span>
-                    </div>
-                    {drugResults.slice(0, 10).map((result) => (
-                      <button
-                        key={result.id}
-                        type="button"
-                        onClick={() => {
-                          const drug = findDrugByName(result.drugName);
-                          if (drug) {
-                            setSelectedDrug(drug);
-                          }
-                          setSearchQuery("");
-                        }}
-                        className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
-                      >
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-bold text-[var(--color-text-primary)]">
-                            {formatDrugName(result.drugName)}
-                          </span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400">
-                            {result.drugClass}{result.subclass ? ` • ${result.subclass}` : ""}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </>
-                )}
+                  </button>
+                ))}
               </motion.div>
             )}
           </AnimatePresence>
