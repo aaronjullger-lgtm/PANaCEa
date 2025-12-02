@@ -5,6 +5,18 @@ import type { AntibioticDrillQuestion, OrganismInfection, AntibioticDrug } from 
 import { ORGANISMS, ANTIBIOTICS, COVERAGE_MAP, generateAntibioticDrill } from '@/data/modes/antibioticData';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 
+/**
+ * Convert a string to Title Case for proper display
+ */
+function toTitleCase(str: string): string {
+  if (!str) return str;
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 interface AntibioticModeProps {
   onExit?: () => void;
 }
@@ -151,7 +163,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
                   } ${isSubmitted ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <div className="font-semibold text-white text-sm">{drug.name}</div>
-                  <div className="text-xs text-slate-400 mt-1">{drug.class}</div>
+                  <div className="text-xs text-slate-400 mt-1">{toTitleCase(drug.class)}</div>
                 </button>
               ))}
             </div>
@@ -180,7 +192,7 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             <div className="bg-slate-900/50 rounded-lg p-4">
               <h4 className="text-xl font-bold text-white mb-2">{currentDrill.drug.name}</h4>
               <span className="px-3 py-1 bg-purple-900/40 rounded-full text-purple-300 text-sm border border-purple-700/30">
-                {currentDrill.drug.class}
+                {toTitleCase(currentDrill.drug.class)}
               </span>
             </div>
           </div>

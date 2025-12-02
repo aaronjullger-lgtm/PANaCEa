@@ -73,11 +73,11 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
               </h2>
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)]">
-                  {drug.class}
+                  {toTitleCase(drug.class)}
                 </span>
                 {drug.subclass && (
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
-                    {drug.subclass}
+                    {toTitleCase(drug.subclass)}
                   </span>
                 )}
                 {/* Only show type if it's NOT "small molecule" or other non-instructional classifications */}
@@ -86,7 +86,7 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                  drug.type.toLowerCase() !== "small molecule" && 
                  drug.type.toLowerCase() !== "small_molecule" && (
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
-                    {drug.type}
+                    {toTitleCase(drug.type)}
                   </span>
                 )}
               </div>
