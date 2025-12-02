@@ -199,9 +199,6 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               {condition.system} • {condition.subcategory}
             </p>
           </div>
-          <button onClick={onClose} className="condition-close">
-            Close
-          </button>
         </header>
 
         <div className="condition-layout">
