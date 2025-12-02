@@ -156,8 +156,22 @@ export const PATIENT_ENCOUNTER_CASES: PatientEncounterCase[] = [
 
 /**
  * Get a random patient encounter case
+ * Can return static cases or dynamically generated ones
  */
-export function getRandomEncounterCase(): PatientEncounterCase {
+export function getRandomEncounterCase(preferGenerated: boolean = false): PatientEncounterCase {
+  // If we want to prefer generated content or randomly mix them
+  if (preferGenerated && Math.random() > 0.3) {
+    // Use dynamic generation 70% of the time when preferGenerated is true
+    try {
+      const { generatePatientEncounterFromCondition } = require('@/services/patientEncounterGenerator');
+      return generatePatientEncounterFromCondition();
+    } catch (error) {
+      console.warn('Failed to generate dynamic patient case from condition content. Falling back to static cases. Error:', error);
+      console.info('If this persists, check that conditionContent.generated.json is accessible and properly formatted.');
+      // Fallback to static
+    }
+  }
+  
   return PATIENT_ENCOUNTER_CASES[Math.floor(Math.random() * PATIENT_ENCOUNTER_CASES.length)];
 }
 

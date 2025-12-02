@@ -23,7 +23,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsLoading(true);
     // Simulate loading for content generation buffer
     setTimeout(() => {
-      const newCase = getRandomEncounterCase();
+      // Use dynamic generation to ensure fresh content each time
+      const newCase = getRandomEncounterCase(true);
       setCurrentCase(newCase);
       setSession({
         caseId: newCase.id,
@@ -436,8 +437,18 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   // Results View
   if (viewState === 'results' && currentCase && session && session.score) {
     const { score } = session;
-    const isCorrectDiagnosis = userDiagnosis.toLowerCase().includes(currentCase.correctDiagnosis.toLowerCase()) ||
-                                currentCase.correctDiagnosis.toLowerCase().includes(userDiagnosis.toLowerCase());
+    // Simple diagnosis matching - normalize and check for key terms
+    const normalizeText = (text: string) => text.toLowerCase().trim().replace(/[^\w\s]/g, '');
+    const userDx = normalizeText(userDiagnosis);
+    const correctDx = normalizeText(currentCase.correctDiagnosis);
+    
+    // Check if the main diagnosis terms are present (allowing for some flexibility)
+    const userTerms = userDx.split(/\s+/);
+    const correctTerms = correctDx.split(/\s+/);
+    const matchCount = correctTerms.filter(term => 
+      term.length > 3 && userTerms.some(userTerm => userTerm.includes(term) || term.includes(userTerm))
+    ).length;
+    const isCorrectDiagnosis = matchCount >= Math.ceil(correctTerms.length * 0.6); // 60% of key terms match
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-teal-950 via-slate-900 to-cyan-950 text-white">
