@@ -227,12 +227,6 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
 
           {/* Action buttons */}
           <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[var(--color-border)]">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-            >
-              Close
-            </button>
             {onDrillDrug && (
               <button
                 onClick={() => onDrillDrug(drug)}
