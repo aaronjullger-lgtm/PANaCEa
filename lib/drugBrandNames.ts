@@ -159,13 +159,17 @@ export function getBrandName(genericName: string): string | null {
 
 /**
  * Format drug name for display: Generic Name (Brand Name) or just Generic Name
- * Always capitalizes the first letter of the generic name
+ * Properly capitalizes multi-word drug names
  */
 export function formatDrugName(genericName: string): string {
   if (!genericName) return "";
   
-  // Capitalize first letter
-  const formattedGeneric = genericName.charAt(0).toUpperCase() + genericName.slice(1).toLowerCase();
+  // Proper title case for multi-word names
+  const formattedGeneric = genericName
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
   
   // Get brand name
   const brandName = getBrandName(genericName);
