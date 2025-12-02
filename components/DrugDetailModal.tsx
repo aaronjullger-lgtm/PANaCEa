@@ -4,6 +4,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DrugEntry, DrugInteraction } from "../pharm/drugTypes";
+import { formatDrugName } from "../lib/drugBrandNames";
 
 interface DrugDetailModalProps {
   drug: DrugEntry;
@@ -12,8 +13,8 @@ interface DrugDetailModalProps {
 }
 
 /**
- * Convert a string to Title Case for proper drug name display.
- * E.g., "duloxetine" -> "Duloxetine", "acetyl salicylic acid" -> "Acetyl Salicylic Acid"
+ * Convert a string to Title Case for proper display.
+ * E.g., "acetyl salicylic acid" -> "Acetyl Salicylic Acid"
  */
 function toTitleCase(str: string): string {
   if (!str) return str;
@@ -24,11 +25,8 @@ function toTitleCase(str: string): string {
     .join(' ');
 }
 
-/**
- * Common brand name mappings for generic drugs.
- * Format: Generic Name (Brand Name)
- */
-const BRAND_NAME_MAP: Record<string, string> = {
+// BRAND_NAME_MAP moved to lib/drugBrandNames.ts - keeping only for legacy compatibility
+const LEGACY_BRAND_NAME_MAP: Record<string, string> = {
   // SNRIs
   "duloxetine": "Cymbalta",
   "venlafaxine": "Effexor",
@@ -176,11 +174,11 @@ const BRAND_NAME_MAP: Record<string, string> = {
 };
 
 /**
- * Get brand name for a generic drug name
+ * Get brand name for a generic drug name (legacy fallback)
  */
-function getBrandName(genericName: string): string | null {
+function getBrandNameLegacy(genericName: string): string | null {
   const normalized = genericName.toLowerCase().trim();
-  return BRAND_NAME_MAP[normalized] || null;
+  return LEGACY_BRAND_NAME_MAP[normalized] || null;
 }
 
 const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
@@ -202,16 +200,8 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
     return JSON.stringify(interaction);
   };
 
-  // Title case the drug name for display
-  const displayDrugName = toTitleCase(drug.term);
-  
-  // Get brand name if available
-  const brandName = getBrandName(drug.term);
-  
-  // Format: "Generic Name (Brand Name)" or just "Generic Name"
-  const fullDisplayName = brandName 
-    ? `${displayDrugName} (${brandName})`
-    : displayDrugName;
+  // Use the centralized formatting function
+  const fullDisplayName = formatDrugName(drug.term);
 
   return (
     <AnimatePresence>
@@ -245,7 +235,11 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                     {drug.subclass}
                   </span>
                 )}
-                {drug.type && drug.type !== "N/A" && (
+                {/* Only show type if it's NOT "small molecule" or other non-instructional classifications */}
+                {drug.type && 
+                 drug.type !== "N/A" && 
+                 drug.type.toLowerCase() !== "small molecule" && 
+                 drug.type.toLowerCase() !== "small_molecule" && (
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
                     {drug.type}
                   </span>

@@ -21,6 +21,7 @@ import DrugDetailModal from "./DrugDetailModal";
 import { findConditionMetaById, searchConditions } from "../src/lib/conditionSearch";
 import { searchDrugs, findDrugByName } from "../src/lib/drugSearch";
 import type { DrugEntry, DrugSearchResult } from "../pharm/drugTypes";
+import { formatDrugName } from "../lib/drugBrandNames";
 import { 
   WidgetGrid, 
   TimeScopeFilter, 
@@ -614,10 +615,10 @@ const MenuView: React.FC<MenuViewProps> = ({
                         className="w-full text-left px-4 py-3 text-sm hover:bg-[var(--color-bg-secondary)] transition-colors border-b border-[var(--color-border)] last:border-b-0"
                       >
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-[var(--color-text-primary)]">
-                            {result.drugName}
+                          <span className="font-bold text-[var(--color-text-primary)]">
+                            {formatDrugName(result.drugName)}
                           </span>
-                          <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
                             {result.drugClass}{result.subclass ? ` • ${result.subclass}` : ""}
                           </span>
                         </div>
