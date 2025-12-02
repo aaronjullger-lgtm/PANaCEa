@@ -20,7 +20,10 @@ export type TrainingModeId =
   | 'mini_lab'
   | 'first_line_treatment'
   | 'pharmacology'
-  | 'condition_drill';
+  | 'condition_drill'
+  | 'fluid_electrolyte'
+  | 'antibiotic_mode'
+  | 'patient_encounter';
 
 /**
  * Configuration interface for training mode cards.
@@ -34,7 +37,7 @@ export interface TrainingModeConfig {
   /** Subtext/description displayed below the title */
   description: string;
   /** Category grouping for the mode */
-  category: 'core' | 'visual' | 'recall' | 'mastery' | 'pharmacology';
+  category: 'core' | 'visual' | 'recall' | 'mastery' | 'pharmacology' | 'clinical';
   /** Icon name (mapped to Lucide-React icons) */
   iconName: string;
   /** Theme color for Tailwind styling */
@@ -166,6 +169,37 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     theme: 'red',
     route: '/session/mastery-drill',
   },
+  // Clinical Simulation Modes
+  {
+    id: 'fluid_electrolyte',
+    label: 'Hydro-Mode',
+    description: 'Fluid & electrolyte calculations with numeric validation.',
+    category: 'clinical',
+    iconName: 'Droplets',
+    theme: 'cyan',
+    route: '/drill/fluid-electrolyte',
+    isComingSoon: false,
+  },
+  {
+    id: 'antibiotic_mode',
+    label: 'Bug-Drug Mastery',
+    description: 'Antibiotic selection with rotating drill types.',
+    category: 'clinical',
+    iconName: 'Pill',
+    theme: 'purple',
+    route: '/drill/antibiotic',
+    isComingSoon: false,
+  },
+  {
+    id: 'patient_encounter',
+    label: 'Virtual OSCE',
+    description: 'Interactive patient interviews with scoring.',
+    category: 'clinical',
+    iconName: 'MessageSquare',
+    theme: 'teal',
+    route: '/drill/patient-encounter',
+    isComingSoon: true,
+  },
 ];
 
 /**
@@ -183,5 +217,8 @@ export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = [
   'pharmacology',
   'first_line_treatment',
   'condition_drill',
-  'guideline_drill'
+  'guideline_drill',
+  'fluid_electrolyte',
+  'antibiotic_mode',
+  'patient_encounter'
 ];

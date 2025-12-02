@@ -7,8 +7,8 @@ import {
 
 describe('Training Modes Configuration', () => {
   describe('MODE_REGISTRY', () => {
-    it('should contain exactly 12 training modes', () => {
-      expect(MODE_REGISTRY).toHaveLength(12);
+    it('should contain exactly 15 training modes', () => {
+      expect(MODE_REGISTRY).toHaveLength(15);
     });
 
     it('should have unique ids for all modes', () => {
@@ -40,7 +40,7 @@ describe('Training Modes Configuration', () => {
     });
 
     it('should have valid category values for all modes', () => {
-      const validCategories = ['core', 'visual', 'recall', 'mastery', 'pharmacology'];
+      const validCategories = ['core', 'visual', 'recall', 'mastery', 'pharmacology', 'clinical'];
 
       MODE_REGISTRY.forEach((mode) => {
         expect(validCategories).toContain(mode.category);

@@ -40,7 +40,7 @@ describe('TrainingMenu Component Logic', () => {
     // Icon names used in MODE_REGISTRY (expanded for new modes)
     const expectedIconNames = [
       'Brain', 'Image', 'Zap', 'GitCompare', 'FileText', 'Flame', 'ClipboardList',
-      'Activity', 'Scan', 'FileCheck', 'Layers', 'Pill', 'Beaker'
+      'Activity', 'Scan', 'FileCheck', 'Layers', 'Pill', 'Beaker', 'Droplets', 'MessageSquare'
     ];
     
     it('should have valid icon names for all modes', () => {

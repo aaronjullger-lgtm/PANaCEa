@@ -13,6 +13,8 @@ import PharmDrillSession from "./components/drill/PharmDrillSession";
 import FirstLineDrillSession from "./components/drill/FirstLineDrillSession";
 import ConditionDrillSession from "./components/drill/ConditionDrillSession";
 import GuidelineDrillSession from "./components/drill/GuidelineDrillSession";
+import FluidElectrolyteMode from "./components/modes/FluidElectrolyteMode";
+import AntibioticMode from "./components/modes/AntibioticMode";
 import SettingsStatsModal from "./components/SettingsStatsModal";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
@@ -42,8 +44,11 @@ const DRILL_MODE_PHARMACOLOGY: TrainingModeId = 'pharmacology';
 const DRILL_MODE_FIRST_LINE: TrainingModeId = 'first_line_treatment';
 const DRILL_MODE_CONDITION: TrainingModeId = 'condition_drill';
 const DRILL_MODE_GUIDELINE: TrainingModeId = 'guideline_drill';
+const DRILL_MODE_FLUID_ELECTROLYTE: TrainingModeId = 'fluid_electrolyte';
+const DRILL_MODE_ANTIBIOTIC: TrainingModeId = 'antibiotic_mode';
+const DRILL_MODE_PATIENT_ENCOUNTER: TrainingModeId = 'patient_encounter';
 
-type View = "menu" | "quiz" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill";
+type View = "menu" | "quiz" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -349,6 +354,12 @@ const App: React.FC = () => {
       setView('condition_drill');
     } else if (modeId === DRILL_MODE_GUIDELINE) {
       setView('guideline_drill');
+    } else if (modeId === DRILL_MODE_FLUID_ELECTROLYTE) {
+      setView('fluid_electrolyte');
+    } else if (modeId === DRILL_MODE_ANTIBIOTIC) {
+      setView('antibiotic_mode');
+    } else if (modeId === DRILL_MODE_PATIENT_ENCOUNTER) {
+      setView('patient_encounter');
     }
   };
 
@@ -524,6 +535,27 @@ const App: React.FC = () => {
 
           {view === "guideline_drill" && (
             <GuidelineDrillSession onExit={() => setView("menu")} />
+          )}
+
+          {view === "fluid_electrolyte" && (
+            <FluidElectrolyteMode onExit={() => setView("menu")} />
+          )}
+
+          {view === "antibiotic_mode" && (
+            <AntibioticMode onExit={() => setView("menu")} />
+          )}
+
+          {view === "patient_encounter" && (
+            <div className="text-center py-20">
+              <h2 className="text-2xl font-bold mb-4">Coming Soon</h2>
+              <p className="text-slate-400 mb-6">Virtual OSCE mode is under development</p>
+              <button
+                onClick={() => setView("menu")}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
+              >
+                Back to Menu
+              </button>
+            </div>
           )}
         </AnimatePresence>
       </div>
