@@ -4,6 +4,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DrugEntry, DrugInteraction } from "../pharm/drugTypes";
+import { formatDrugName } from "../lib/drugBrandNames";
 
 interface DrugDetailModalProps {
   drug: DrugEntry;
@@ -12,8 +13,9 @@ interface DrugDetailModalProps {
 }
 
 /**
- * Convert a string to Title Case for proper drug name display.
- * E.g., "duloxetine" -> "Duloxetine", "acetyl salicylic acid" -> "Acetyl Salicylic Acid"
+ * Convert a string to Title Case for proper display.
+ * E.g., "acetyl salicylic acid" -> "Acetyl Salicylic Acid"
+ * Used for ingredient formatting
  */
 function toTitleCase(str: string): string {
   if (!str) return str;
@@ -22,165 +24,6 @@ function toTitleCase(str: string): string {
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
-}
-
-/**
- * Common brand name mappings for generic drugs.
- * Format: Generic Name (Brand Name)
- */
-const BRAND_NAME_MAP: Record<string, string> = {
-  // SNRIs
-  "duloxetine": "Cymbalta",
-  "venlafaxine": "Effexor",
-  "desvenlafaxine": "Pristiq",
-  // SSRIs
-  "fluoxetine": "Prozac",
-  "sertraline": "Zoloft",
-  "paroxetine": "Paxil",
-  "escitalopram": "Lexapro",
-  "citalopram": "Celexa",
-  "fluvoxamine": "Luvox",
-  // TCAs
-  "amitriptyline": "Elavil",
-  "nortriptyline": "Pamelor",
-  "imipramine": "Tofranil",
-  // Antipsychotics
-  "quetiapine": "Seroquel",
-  "risperidone": "Risperdal",
-  "olanzapine": "Zyprexa",
-  "aripiprazole": "Abilify",
-  "haloperidol": "Haldol",
-  // Benzodiazepines
-  "alprazolam": "Xanax",
-  "diazepam": "Valium",
-  "lorazepam": "Ativan",
-  "clonazepam": "Klonopin",
-  // Opioids
-  "oxycodone": "OxyContin",
-  "hydrocodone": "Vicodin",
-  "morphine": "MS Contin",
-  "fentanyl": "Duragesic",
-  "tramadol": "Ultram",
-  // Beta-blockers
-  "metoprolol": "Lopressor",
-  "atenolol": "Tenormin",
-  "propranolol": "Inderal",
-  "carvedilol": "Coreg",
-  // ACE Inhibitors
-  "lisinopril": "Zestril",
-  "enalapril": "Vasotec",
-  "captopril": "Capoten",
-  "ramipril": "Altace",
-  // ARBs
-  "losartan": "Cozaar",
-  "valsartan": "Diovan",
-  "irbesartan": "Avapro",
-  // Calcium Channel Blockers
-  "amlodipine": "Norvasc",
-  "diltiazem": "Cardizem",
-  "verapamil": "Calan",
-  "nifedipine": "Procardia",
-  // Diuretics
-  "furosemide": "Lasix",
-  "hydrochlorothiazide": "Microzide",
-  "spironolactone": "Aldactone",
-  // Statins
-  "atorvastatin": "Lipitor",
-  "simvastatin": "Zocor",
-  "rosuvastatin": "Crestor",
-  "pravastatin": "Pravachol",
-  // Diabetes
-  "metformin": "Glucophage",
-  "glipizide": "Glucotrol",
-  "glyburide": "DiaBeta",
-  "sitagliptin": "Januvia",
-  "liraglutide": "Victoza",
-  "empagliflozin": "Jardiance",
-  // PPIs
-  "omeprazole": "Prilosec",
-  "esomeprazole": "Nexium",
-  "pantoprazole": "Protonix",
-  "lansoprazole": "Prevacid",
-  // Antibiotics
-  "amoxicillin": "Amoxil",
-  "azithromycin": "Zithromax",
-  "ciprofloxacin": "Cipro",
-  "levofloxacin": "Levaquin",
-  "doxycycline": "Vibramycin",
-  "metronidazole": "Flagyl",
-  // Antivirals
-  "acyclovir": "Zovirax",
-  "valacyclovir": "Valtrex",
-  "oseltamivir": "Tamiflu",
-  // Antihistamines
-  "cetirizine": "Zyrtec",
-  "loratadine": "Claritin",
-  "diphenhydramine": "Benadryl",
-  "fexofenadine": "Allegra",
-  // Corticosteroids
-  "prednisone": "Deltasone",
-  "methylprednisolone": "Medrol",
-  "dexamethasone": "Decadron",
-  // Thyroid
-  "levothyroxine": "Synthroid",
-  "liothyronine": "Cytomel",
-  // Pain/Anti-inflammatory
-  "ibuprofen": "Motrin",
-  "naproxen": "Aleve",
-  "acetaminophen": "Tylenol",
-  "celecoxib": "Celebrex",
-  // Anticonvulsants
-  "gabapentin": "Neurontin",
-  "pregabalin": "Lyrica",
-  "levetiracetam": "Keppra",
-  "valproate": "Depakote",
-  "carbamazepine": "Tegretol",
-  "phenytoin": "Dilantin",
-  "lamotrigine": "Lamictal",
-  "topiramate": "Topamax",
-  // Muscle Relaxants
-  "cyclobenzaprine": "Flexeril",
-  "baclofen": "Lioresal",
-  "tizanidine": "Zanaflex",
-  // Anticoagulants
-  "warfarin": "Coumadin",
-  "rivaroxaban": "Xarelto",
-  "apixaban": "Eliquis",
-  "dabigatran": "Pradaxa",
-  "enoxaparin": "Lovenox",
-  // Sleep
-  "zolpidem": "Ambien",
-  "eszopiclone": "Lunesta",
-  "trazodone": "Desyrel",
-  // ADHD
-  "methylphenidate": "Ritalin",
-  "amphetamine": "Adderall",
-  "lisdexamfetamine": "Vyvanse",
-  "atomoxetine": "Strattera",
-  // Respiratory
-  "albuterol": "Ventolin",
-  "fluticasone": "Flovent",
-  "montelukast": "Singulair",
-  "tiotropium": "Spiriva",
-  // GI
-  "ondansetron": "Zofran",
-  "promethazine": "Phenergan",
-  "sucralfate": "Carafate",
-  // Other
-  "sildenafil": "Viagra",
-  "tadalafil": "Cialis",
-  "finasteride": "Proscar",
-  "tamsulosin": "Flomax",
-  "memantine": "Namenda",
-  "donepezil": "Aricept",
-};
-
-/**
- * Get brand name for a generic drug name
- */
-function getBrandName(genericName: string): string | null {
-  const normalized = genericName.toLowerCase().trim();
-  return BRAND_NAME_MAP[normalized] || null;
 }
 
 const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
@@ -202,16 +45,8 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
     return JSON.stringify(interaction);
   };
 
-  // Title case the drug name for display
-  const displayDrugName = toTitleCase(drug.term);
-  
-  // Get brand name if available
-  const brandName = getBrandName(drug.term);
-  
-  // Format: "Generic Name (Brand Name)" or just "Generic Name"
-  const fullDisplayName = brandName 
-    ? `${displayDrugName} (${brandName})`
-    : displayDrugName;
+  // Use the centralized formatting function
+  const fullDisplayName = formatDrugName(drug.term);
 
   return (
     <AnimatePresence>
@@ -245,7 +80,11 @@ const DrugDetailModal: React.FC<DrugDetailModalProps> = ({
                     {drug.subclass}
                   </span>
                 )}
-                {drug.type && drug.type !== "N/A" && (
+                {/* Only show type if it's NOT "small molecule" or other non-instructional classifications */}
+                {drug.type && 
+                 drug.type !== "N/A" && 
+                 drug.type.toLowerCase() !== "small molecule" && 
+                 drug.type.toLowerCase() !== "small_molecule" && (
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]">
                     {drug.type}
                   </span>
