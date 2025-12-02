@@ -20,7 +20,8 @@ import {
   LayoutDashboard,
   FileSpreadsheet,
   FileJson,
-  Check
+  Check,
+  Activity
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
@@ -33,6 +34,7 @@ import {
   loadWidgetPreferences as loadWidgetPrefs, 
   saveWidgetPreferences as saveWidgetPrefs 
 } from '@/lib/dashboardUtils';
+import ActivityHeatmap from './analytics/ActivityHeatmap';
 
 interface SettingsStatsModalProps {
   isOpen: boolean;
@@ -49,7 +51,7 @@ interface SettingsStatsModalProps {
   onUpdateWidgets?: (widgets: WidgetId[]) => void;
 }
 
-type TabId = 'stats' | 'settings' | 'preferences';
+type TabId = 'stats' | 'settings' | 'preferences' | 'activity';
 
 // Get default enabled widgets
 const getDefaultWidgets = (): WidgetId[] => 
@@ -257,12 +259,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 ) : activeTab === 'preferences' ? (
                   <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
+                ) : activeTab === 'activity' ? (
+                  <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 ) : (
                   <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 )}
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
-                {activeTab === 'stats' ? 'Statistics' : activeTab === 'preferences' ? 'Dashboard Preferences' : 'Settings'}
+                {activeTab === 'stats' ? 'Statistics' : activeTab === 'preferences' ? 'Dashboard Preferences' : activeTab === 'activity' ? 'Activity' : 'Settings'}
               </h2>
             </div>
             <button
@@ -286,6 +290,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <BarChart3 className="w-4 h-4 inline-block mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Statistics</span>
               <span className="sm:hidden">Stats</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('activity')}
+              className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
+                activeTab === 'activity'
+                  ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+              }`}
+            >
+              <Activity className="w-4 h-4 inline-block mr-1 sm:mr-2" />
+              <span>Activity</span>
             </button>
             <button
               onClick={() => setActiveTab('preferences')}
@@ -448,6 +463,27 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                   </div>
                 )}
+              </div>
+            ) : activeTab === 'activity' ? (
+              <div className="space-y-4 sm:space-y-6">
+                {/* Activity Heatmap */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 sm:p-6">
+                  <ActivityHeatmap 
+                    performanceData={performanceData}
+                    weeks={13}
+                  />
+                </div>
+
+                {/* Activity Summary */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <h3 className="font-medium text-[var(--color-text-primary)] mb-3">
+                    Activity Overview
+                  </h3>
+                  <p className="text-sm text-[var(--color-text-muted)]">
+                    Click any day to view detailed statistics including questions answered, accuracy, 
+                    average time per question, and weakest system for that day.
+                  </p>
+                </div>
               </div>
             ) : activeTab === 'preferences' ? (
               <div className="space-y-4 sm:space-y-6">
