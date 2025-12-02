@@ -3,6 +3,14 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// Cloudflare Pages Function context type
+interface CloudflareContext {
+  request: Request;
+  env: {
+    GEMINI_API_KEY?: string;
+  };
+}
+
 /**
  * Clean up Gemini text so the frontend always gets plain JSON-as-string.
  * - Trims whitespace
@@ -32,7 +40,7 @@ function stripCodeFences(text: string): string {
 }
 
 // Cloudflare Pages Functions use a different interface than Netlify
-export async function onRequestPost(context: any) {
+export async function onRequestPost(context: CloudflareContext) {
   const { request, env } = context;
 
   try {
@@ -85,8 +93,12 @@ export async function onRequestPost(context: any) {
     });
   } catch (error) {
     console.error("Error in geminiProxy:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return new Response(
-      JSON.stringify({ error: "Gemini proxy error" }),
+      JSON.stringify({ 
+        error: "Gemini proxy error",
+        details: errorMessage 
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
