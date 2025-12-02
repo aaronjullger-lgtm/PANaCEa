@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, XCircle, Droplets, ArrowRight, RotateCcw } from 'lucide-react';
+import { X, CheckCircle, XCircle, Droplets, ArrowRight, RotateCcw, Play } from 'lucide-react';
 import type { FluidElectrolyteCase } from '@/types/drill-modes';
 import { 
   FLUID_ELECTROLYTE_CASES, 
@@ -14,15 +14,31 @@ interface FluidElectrolyteModeProps {
   onExit?: () => void;
 }
 
+type ViewState = 'landing' | 'active';
+
 const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) => {
-  const [currentCase, setCurrentCase] = useState<FluidElectrolyteCase>(getRandomFluidCase());
+  const [viewState, setViewState] = useState<ViewState>('landing');
+  const [currentCase, setCurrentCase] = useState<FluidElectrolyteCase | null>(null);
   const [userAnswer, setUserAnswer] = useState<string>('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [feedback, setFeedback] = useState<string>('');
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleStart = () => {
+    setIsLoading(true);
+    // Simulate loading for content generation buffer
+    setTimeout(() => {
+      setCurrentCase(getRandomFluidCase());
+      setIsLoading(false);
+      setViewState('active');
+    }, 1000);
+  };
 
   const handleSubmit = () => {
+    if (!currentCase) return;
+    
     const numericAnswer = parseFloat(userAnswer);
     
     if (isNaN(numericAnswer)) {
@@ -68,6 +84,105 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
     setScore({ correct: 0, total: 0 });
     handleNext();
   };
+
+  // Landing Page
+  if (viewState === 'landing') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-cyan-950 via-slate-900 to-blue-950 text-white">
+        <div className="border-b border-cyan-800/30 bg-black/20 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Droplets className="w-8 h-8 text-cyan-400" />
+              <div>
+                <h1 className="text-2xl font-bold">Hydro-Mode</h1>
+                <p className="text-sm text-cyan-300">Fluid & Electrolyte Management</p>
+              </div>
+            </div>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center space-y-8"
+          >
+            <div className="space-y-4">
+              <h2 className="text-4xl font-bold text-cyan-400">Master Fluid & Electrolyte Calculations</h2>
+              <p className="text-xl text-slate-300">
+                Practice real-world clinical calculations with instant feedback
+              </p>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-8 border border-cyan-800/30 text-left space-y-6">
+              <h3 className="text-2xl font-semibold text-cyan-400">What You'll Practice</h3>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-cyan-900/20 rounded-lg p-4 border border-cyan-800/30">
+                  <h4 className="font-semibold text-white mb-2">FENa Calculations</h4>
+                  <p className="text-slate-400 text-sm">Fractional excretion of sodium for AKI workup</p>
+                </div>
+                <div className="bg-cyan-900/20 rounded-lg p-4 border border-cyan-800/30">
+                  <h4 className="font-semibold text-white mb-2">Anion Gap</h4>
+                  <p className="text-slate-400 text-sm">Acid-base disorder assessment</p>
+                </div>
+                <div className="bg-cyan-900/20 rounded-lg p-4 border border-cyan-800/30">
+                  <h4 className="font-semibold text-white mb-2">Maintenance Fluids</h4>
+                  <p className="text-slate-400 text-sm">4-2-1 rule and pediatric calculations</p>
+                </div>
+                <div className="bg-cyan-900/20 rounded-lg p-4 border border-cyan-800/30">
+                  <h4 className="font-semibold text-white mb-2">Free Water Deficit</h4>
+                  <p className="text-slate-400 text-sm">Hypernatremia management</p>
+                </div>
+              </div>
+
+              <div className="bg-cyan-900/20 rounded-lg p-4 border border-cyan-800/30">
+                <p className="text-sm text-cyan-300 font-semibold mb-2">Features:</p>
+                <ul className="text-sm text-slate-300 space-y-1">
+                  <li>• Clinical vignettes with lab values</li>
+                  <li>• Formula hints provided for each calculation</li>
+                  <li>• Urine chemistry reference table</li>
+                  <li>• Margin of error for numeric answers</li>
+                  <li>• Detailed explanations and teaching points</li>
+                </ul>
+              </div>
+            </div>
+
+            <button
+              onClick={handleStart}
+              disabled={isLoading}
+              className="px-8 py-4 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 
+                       disabled:cursor-not-allowed rounded-lg font-semibold text-lg
+                       transition-colors flex items-center justify-center gap-3 mx-auto"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Loading Case...
+                </>
+              ) : (
+                <>
+                  Start Practice
+                  <Play className="w-5 h-5" />
+                </>
+              )}
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Active Session
+  if (!currentCase) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-950 via-slate-900 to-blue-950 text-white">

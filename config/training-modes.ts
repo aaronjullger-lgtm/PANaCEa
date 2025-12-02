@@ -198,7 +198,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'MessageSquare',
     theme: 'teal',
     route: '/drill/patient-encounter',
-    isComingSoon: true,
+    isComingSoon: false,
   },
 ];
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, XCircle, Pill, ArrowRight, RotateCcw, Shuffle } from 'lucide-react';
+import { X, CheckCircle, XCircle, Pill, ArrowRight, RotateCcw, Shuffle, Play } from 'lucide-react';
 import type { AntibioticDrillQuestion, OrganismInfection, AntibioticDrug } from '@/types/drill-modes';
 import { ORGANISMS, ANTIBIOTICS, COVERAGE_MAP, generateAntibioticDrill } from '@/data/modes/antibioticData';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
@@ -9,13 +9,27 @@ interface AntibioticModeProps {
   onExit?: () => void;
 }
 
+type ViewState = 'landing' | 'active';
+
 const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
-  const [currentDrill, setCurrentDrill] = useState<AntibioticDrillQuestion>(generateAntibioticDrill());
+  const [viewState, setViewState] = useState<ViewState>('landing');
+  const [currentDrill, setCurrentDrill] = useState<AntibioticDrillQuestion | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [selectedDrugs, setSelectedDrugs] = useState<string[]>([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleStart = () => {
+    setIsLoading(true);
+    // Simulate loading for content generation buffer
+    setTimeout(() => {
+      setCurrentDrill(generateAntibioticDrill());
+      setIsLoading(false);
+      setViewState('active');
+    }, 1000);
+  };
 
   const handleNext = () => {
     setCurrentDrill(generateAntibioticDrill());
@@ -31,6 +45,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   };
 
   const handleSubmit = () => {
+    if (!currentDrill) return;
+    
     let correct = false;
 
     if (currentDrill.type === 'coverage') {
@@ -209,11 +225,111 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
   };
 
   const canSubmit = () => {
+    if (!currentDrill) return false;
     if (currentDrill.type === 'coverage') {
       return selectedDrugs.length > 0;
     }
     return selectedAnswer !== null;
   };
+
+  // Landing Page
+  if (viewState === 'landing') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 text-white">
+        <div className="border-b border-purple-800/30 bg-black/20 backdrop-blur-sm">
+          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Pill className="w-8 h-8 text-purple-400" />
+              <div>
+                <h1 className="text-2xl font-bold">Bug-Drug Mastery</h1>
+                <p className="text-sm text-purple-300">Antibiotic Selection & Knowledge</p>
+              </div>
+            </div>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center space-y-8"
+          >
+            <div className="space-y-4">
+              <h2 className="text-4xl font-bold text-purple-400">Master Antibiotic Selection</h2>
+              <p className="text-xl text-slate-300">
+                Sharpen your antimicrobial stewardship skills with rotating drill types
+              </p>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-8 border border-purple-800/30 text-left space-y-6">
+              <h3 className="text-2xl font-semibold text-purple-400">Drill Types</h3>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-800/30">
+                  <h4 className="font-semibold text-white mb-2">Bug-Drug Coverage</h4>
+                  <p className="text-slate-400 text-sm">Match organisms to appropriate antibiotics</p>
+                </div>
+                <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
+                  <h4 className="font-semibold text-white mb-2">Mechanism of Action</h4>
+                  <p className="text-slate-400 text-sm">Understand how antibiotics work</p>
+                </div>
+                <div className="bg-red-900/20 rounded-lg p-4 border border-red-800/30">
+                  <h4 className="font-semibold text-white mb-2">Side Effects</h4>
+                  <p className="text-slate-400 text-sm">Know the adverse reactions and contraindications</p>
+                </div>
+                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
+                  <h4 className="font-semibold text-white mb-2">Empiric Therapy</h4>
+                  <p className="text-slate-400 text-sm">Choose the right antibiotic for clinical scenarios</p>
+                </div>
+              </div>
+
+              <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
+                <p className="text-sm text-purple-300 font-semibold mb-2">Features:</p>
+                <ul className="text-sm text-slate-300 space-y-1">
+                  <li>• Rotating drill types keep practice fresh</li>
+                  <li>• Clinical pearls with every question</li>
+                  <li>• Real-world clinical scenarios</li>
+                  <li>• Comprehensive antibiotic database</li>
+                  <li>• Immediate feedback and explanations</li>
+                </ul>
+              </div>
+            </div>
+
+            <button
+              onClick={handleStart}
+              disabled={isLoading}
+              className="px-8 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 
+                       disabled:cursor-not-allowed rounded-lg font-semibold text-lg
+                       transition-colors flex items-center justify-center gap-3 mx-auto"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Loading Questions...
+                </>
+              ) : (
+                <>
+                  Start Practice
+                  <Play className="w-5 h-5" />
+                </>
+              )}
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Active Session
+  if (!currentDrill) return null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 text-white">

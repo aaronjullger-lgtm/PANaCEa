@@ -15,6 +15,7 @@ import ConditionDrillSession from "./components/drill/ConditionDrillSession";
 import GuidelineDrillSession from "./components/drill/GuidelineDrillSession";
 import FluidElectrolyteMode from "./components/modes/FluidElectrolyteMode";
 import AntibioticMode from "./components/modes/AntibioticMode";
+import PatientEncounterMode from "./components/modes/PatientEncounterMode";
 import SettingsStatsModal from "./components/SettingsStatsModal";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
@@ -546,16 +547,7 @@ const App: React.FC = () => {
           )}
 
           {view === "patient_encounter" && (
-            <div className="text-center py-20">
-              <h2 className="text-2xl font-bold mb-4">Coming Soon</h2>
-              <p className="text-slate-400 mb-6">Virtual OSCE mode is under development</p>
-              <button
-                onClick={() => setView("menu")}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-colors"
-              >
-                Back to Menu
-              </button>
-            </div>
+            <PatientEncounterMode onExit={() => setView("menu")} />
           )}
         </AnimatePresence>
       </div>
