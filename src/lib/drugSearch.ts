@@ -2,6 +2,7 @@
 // Search functionality for pharmacological agents and treatments
 
 import type { DrugEntry, DrugSearchResult, DrugSearchFilters } from "../../pharm/drugTypes";
+import { BRAND_NAME_MAP } from "../../lib/drugBrandNames";
 
 // Import the drug data from JSON
 // Note: This will be loaded at build time by Vite
@@ -13,9 +14,33 @@ const drugData = drugDataJson as Record<string, DrugEntry>;
 // Build a lookup for efficient searching
 const drugRegistry: Map<string, DrugEntry> = new Map();
 
-// Initialize the registry
+// Map of normalized names to canonical names for deduplication
+const canonicalNameMap: Map<string, string> = new Map();
+
+// Build reverse lookup for brand names
+const brandToGenericMap: Map<string, string> = new Map();
+for (const [generic, brand] of Object.entries(BRAND_NAME_MAP)) {
+  brandToGenericMap.set(brand.toLowerCase(), generic);
+}
+
+// Initialize the registry with deduplication
 for (const [key, entry] of Object.entries(drugData)) {
-  drugRegistry.set(key.toLowerCase(), entry);
+  const normalized = entry.term.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  // Check if this is a duplicate (e.g., "aspirin" and "Acetylsalicylic Acid")
+  if (!canonicalNameMap.has(normalized)) {
+    canonicalNameMap.set(normalized, key);
+    drugRegistry.set(key.toLowerCase(), entry);
+  } else {
+    // If duplicate found, keep the shorter/simpler name
+    const existingKey = canonicalNameMap.get(normalized)!;
+    if (key.length < existingKey.length || key.toLowerCase() === key) {
+      // Replace with simpler name
+      drugRegistry.delete(existingKey.toLowerCase());
+      drugRegistry.set(key.toLowerCase(), entry);
+      canonicalNameMap.set(normalized, key);
+    }
+  }
 }
 
 /**
@@ -70,15 +95,56 @@ function similarityScore(query: string, target: string): number {
 }
 
 /**
- * Get the best score across multiple terms
+ * Get the best score across multiple terms, including brand names
  */
 function bestTermScore(query: string, term: string | undefined | null): number {
   if (!term || typeof term !== 'string') return 0;
+  
   const candidates = [term, ...term.split(/\s+|[-–—]/).filter(Boolean)];
+  
+  // Also check brand name if this is a generic drug
+  const brandName = BRAND_NAME_MAP[term.toLowerCase()];
+  if (brandName) {
+    candidates.push(brandName);
+  }
+  
   return candidates.reduce(
     (score, candidate) => Math.max(score, similarityScore(query, candidate)),
     0
   );
+}
+
+/**
+ * Properly capitalize a drug name for display
+ */
+function capitalizeDrugName(name: string | undefined | null): string {
+  if (!name || typeof name !== 'string') return "";
+  
+  // Handle special cases
+  const specialCases: Record<string, string> = {
+    'nsaid': 'NSAID',
+    'ssri': 'SSRI',
+    'snri': 'SNRI',
+    'maoi': 'MAOI',
+    'ace': 'ACE',
+    'arb': 'ARB',
+    'hiv': 'HIV',
+    'dpp': 'DPP',
+    'sglt': 'SGLT',
+    'glp': 'GLP',
+  };
+  
+  return name
+    .split(/\s+/)
+    .map(word => {
+      const lower = word.toLowerCase();
+      if (specialCases[lower]) {
+        return specialCases[lower];
+      }
+      // Capitalize first letter, keep rest as-is for abbreviations
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
 }
 
 /**
@@ -115,7 +181,7 @@ export function getDrugTypeOptions(): string[] {
 }
 
 /**
- * Search for drugs by name, class, or ingredients
+ * Search for drugs by name, class, or ingredients (including brand names)
  */
 export function searchDrugs(
   rawQuery: string,
@@ -139,24 +205,30 @@ export function searchDrugs(
       ? entry.ingredients.filter(i => typeof i === 'string')
       : [];
     const searchTerms = [entry.term, ...ingredients];
+    
+    // Add brand name as searchable term if available
+    const brandName = BRAND_NAME_MAP[entry.term.toLowerCase()];
+    if (brandName) {
+      searchTerms.push(brandName);
+    }
 
     let bestScore = 0;
 
-    // Score against drug name and ingredients
+    // Score against drug name, ingredients, and brand name
     for (const term of searchTerms) {
       const score = bestTermScore(query, term);
       if (score > bestScore) bestScore = score;
     }
 
-    // Also check if query matches the class name
+    // Also check if query matches the class name (lower weight)
     if (entry.class) {
-      const classScore = bestTermScore(query, entry.class) * 0.8; // Slightly lower weight for class matches
+      const classScore = bestTermScore(query, entry.class) * 0.6; // Lower weight for class matches
       if (classScore > bestScore) bestScore = classScore;
     }
 
-    // Also check subclass
+    // Also check subclass (even lower weight)
     if (entry.subclass) {
-      const subclassScore = bestTermScore(query, entry.subclass) * 0.7;
+      const subclassScore = bestTermScore(query, entry.subclass) * 0.5;
       if (subclassScore > bestScore) bestScore = subclassScore;
     }
 
@@ -166,10 +238,10 @@ export function searchDrugs(
         : [];
       results.push({
         id: generateDrugId(entry.term),
-        drugName: entry.term,
-        drugClass: entry.class,
-        subclass: entry.subclass || "",
-        type: entry.type,
+        drugName: capitalizeDrugName(entry.term),
+        drugClass: capitalizeDrugName(entry.class),
+        subclass: entry.subclass ? capitalizeDrugName(entry.subclass) : "",
+        type: capitalizeDrugName(entry.type),
         aliases: safeIngredients,
         score: bestScore,
       });
