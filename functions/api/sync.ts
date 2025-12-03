@@ -3,10 +3,13 @@
  * Handles uploading local data and downloading cloud data
  */
 
-interface Env {
-  DATABASE_URL?: string;
-  CLERK_PUBLISHABLE_KEY?: string;
-}
+import {
+  type Env,
+  authenticateRequest,
+  createErrorResponse,
+  createSuccessResponse,
+  handleCorsOptions,
+} from './_shared/auth';
 
 interface PagesContext {
   request: Request;
@@ -30,45 +33,8 @@ interface SyncResponse {
   };
 }
 
-/**
- * Extract user ID from Clerk session token
- * 
- * ⚠️ SECURITY WARNING: This is a simplified implementation for demonstration.
- * In production, you MUST properly verify JWT signatures using:
- * - @clerk/backend SDK (recommended)
- * - jsonwebtoken library with proper key verification
- * - Clerk's verify session endpoint
- * 
- * Without proper verification, tokens can be forged!
- */
-function extractUserIdFromToken(authHeader: string): string | null {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-  
-  try {
-    // ⚠️ WARNING: This only decodes, does NOT verify signature
-    // TODO: Replace with proper JWT verification before production deployment
-    const token = authHeader.substring(7);
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    
-    const payload = JSON.parse(atob(parts[1]));
-    return payload.sub || payload.userId || null;
-  } catch {
-    return null;
-  }
-}
-
 export async function onRequestOptions(): Promise<Response> {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
+  return handleCorsOptions();
 }
 
 /**
@@ -78,26 +44,18 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
   const { request, env } = context;
 
   try {
-    const authHeader = request.headers.get('Authorization');
-    const userId = extractUserIdFromToken(authHeader || '');
+    const authContext = await authenticateRequest(request, env);
 
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
+    if (!authContext) {
+      return createErrorResponse('Unauthorized', 401);
     }
+
+    const { userId } = authContext;
 
     // Note: In Cloudflare Workers/Pages Functions, we can't use Prisma directly
     // due to connection pooling issues. This is a placeholder.
     // In production, you'd use Prisma Data Proxy or D1
-    
+
     const response: SyncResponse = {
       success: true,
       message: 'Data retrieved successfully',
@@ -108,25 +66,10 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       },
     };
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
+    return createSuccessResponse(response);
   } catch (error) {
     console.error('Sync GET error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    return createErrorResponse('Internal server error', 500);
   }
 }
 
@@ -137,36 +80,19 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
   const { request, env } = context;
 
   try {
-    const authHeader = request.headers.get('Authorization');
-    const userId = extractUserIdFromToken(authHeader || '');
+    const authContext = await authenticateRequest(request, env);
 
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        {
-          status: 401,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
+    if (!authContext) {
+      return createErrorResponse('Unauthorized', 401);
     }
+
+    const { userId } = authContext;
 
     const payload: SyncPayload = await request.json();
 
     // Validate payload
     if (payload.userId !== userId) {
-      return new Response(
-        JSON.stringify({ error: 'User ID mismatch' }),
-        {
-          status: 403,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
+      return createErrorResponse('User ID mismatch', 403);
     }
 
     // Note: Database operations would go here
@@ -182,24 +108,9 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       },
     };
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
+    return createSuccessResponse(response);
   } catch (error) {
     console.error('Sync POST error:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
-    );
+    return createErrorResponse('Internal server error', 500);
   }
 }
