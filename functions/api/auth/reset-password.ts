@@ -3,10 +3,8 @@
  * Validates reset token and updates password
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrismaClient } from '../../../lib/db';
 import { verifyToken, hashPassword, isTokenExpired } from '../../../lib/auth/tokens';
-
-const prisma = new PrismaClient();
 
 interface RequestBody {
   token: string;
@@ -34,6 +32,8 @@ export async function onRequestPost(context: any) {
       );
     }
 
+    const prisma = getPrismaClient();
+    
     // Find user with valid reset token
     const users = await prisma.user.findMany({
       where: {

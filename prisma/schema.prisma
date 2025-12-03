@@ -212,6 +212,7 @@ model ConfusionPair {
   
   @@unique([userId, realCondition, mistakenFor])
   @@index([userId])
+  @@index([userId, realCondition])
   @@index([realCondition])
 }
 

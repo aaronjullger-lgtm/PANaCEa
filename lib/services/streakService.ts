@@ -3,9 +3,9 @@
  * Manages daily activity streaks and flame level calculation
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrismaClient } from '../db';
 
-const prisma = new PrismaClient();
+const getPrisma = () => getPrismaClient();
 
 export interface StreakInfo {
   currentStreak: number;
@@ -44,6 +44,7 @@ export async function recordDailyActivity(
   studyMinutes: number = 0
 ): Promise<void> {
   const today = getTodayDate();
+  const prisma = getPrisma();
 
   await prisma.dailyStreak.upsert({
     where: {
@@ -72,6 +73,7 @@ export async function recordDailyActivity(
  */
 async function getCurrentDayAccuracy(userId: string): Promise<number> {
   const today = getTodayDate();
+  const prisma = getPrisma();
   const record = await prisma.dailyStreak.findUnique({
     where: {
       userId_date: {
@@ -87,6 +89,7 @@ async function getCurrentDayAccuracy(userId: string): Promise<number> {
  * Calculate current streak for a user
  */
 export async function getCurrentStreak(userId: string): Promise<StreakInfo> {
+  const prisma = getPrisma();
   const streaks = await prisma.dailyStreak.findMany({
     where: { userId },
     orderBy: { date: 'desc' },
@@ -174,6 +177,7 @@ export async function getCurrentStreak(userId: string): Promise<StreakInfo> {
  */
 export async function getStreakStats(userId: string) {
   const info = await getCurrentStreak(userId);
+  const prisma = getPrisma();
   
   const thisWeek = await prisma.dailyStreak.findMany({
     where: {

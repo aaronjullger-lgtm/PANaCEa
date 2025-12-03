@@ -3,11 +3,9 @@
  * Generates a reset token and sends reset email
  */
 
-import { PrismaClient } from '@prisma/client';
+import { getPrismaClient } from '../../../lib/db';
 import { generateToken, hashToken, generateTokenExpiry } from '../../../lib/auth/tokens';
 import { sendPasswordResetEmail } from '../../../lib/email/emailSender';
-
-const prisma = new PrismaClient();
 
 interface RequestBody {
   email: string;
@@ -25,6 +23,8 @@ export async function onRequestPost(context: any) {
       );
     }
 
+    const prisma = getPrismaClient();
+    
     // Find user by email
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },

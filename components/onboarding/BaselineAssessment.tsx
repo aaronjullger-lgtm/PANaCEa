@@ -28,6 +28,10 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
   const [phase, setPhase] = useState<AssessmentPhase>('intro');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<boolean[]>([]);
+  
+  // Predetermined mock answers for consistency (demo purposes only)
+  const mockAnswers = [true, false, true, true, false, true, false, true, true, false, 
+                       true, true, false, true, false, true, true, false, true, true];
 
   // Mock questions for demonstration
   // In production, these would be fetched from your question bank
@@ -212,25 +216,25 @@ export function BaselineAssessment({ onComplete, onSkip }: BaselineAssessmentPro
             {/* Mock Answer Buttons */}
             <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
               <button
-                onClick={() => handleAnswer(Math.random() > 0.4)}
+                onClick={() => handleAnswer(mockAnswers[currentQuestion])}
                 className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
               >
                 Option A
               </button>
               <button
-                onClick={() => handleAnswer(Math.random() > 0.4)}
+                onClick={() => handleAnswer(!mockAnswers[currentQuestion])}
                 className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
               >
                 Option B
               </button>
               <button
-                onClick={() => handleAnswer(Math.random() > 0.4)}
+                onClick={() => handleAnswer(mockAnswers[currentQuestion])}
                 className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
               >
                 Option C
               </button>
               <button
-                onClick={() => handleAnswer(Math.random() > 0.4)}
+                onClick={() => handleAnswer(!mockAnswers[currentQuestion])}
                 className="p-4 bg-[var(--color-bg-secondary)] rounded-lg hover:bg-[var(--color-bg-secondary)]/80 transition-colors text-[var(--color-text-primary)] border border-[var(--color-border)]"
               >
                 Option D

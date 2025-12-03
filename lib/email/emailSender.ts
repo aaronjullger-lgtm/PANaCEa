@@ -59,9 +59,26 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
 /**
  * Strips HTML tags for plain text version
+ * Performs multiple passes to ensure complete removal of nested tags
  */
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+  let text = html;
+  // Perform multiple passes to remove nested tags
+  let previousText = '';
+  while (previousText !== text) {
+    previousText = text;
+    text = text.replace(/<[^>]*>/g, '');
+  }
+  // Replace HTML entities for plain text (safe: no HTML context after stripping tags)
+  // Note: Order matters - decode &amp; last to avoid double-decoding
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')  // Decode &amp; last
+    .trim();
 }
 
 /**
