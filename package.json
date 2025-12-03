@@ -23,6 +23,7 @@
     "@clerk/backend": "^2.25.0",
     "@clerk/clerk-react": "^5.57.1",
     "@google/generative-ai": "^0.21.0",
+    "@neondatabase/serverless": "^1.0.2",
     "@prisma/client": "^6.19.0",
     "@types/bcrypt": "^6.0.0",
     "@types/nodemailer": "^7.0.4",
