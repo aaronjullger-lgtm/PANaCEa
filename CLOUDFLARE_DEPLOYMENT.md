@@ -1,32 +1,28 @@
 # Cloudflare Pages Deployment Guide
 
-## Migration from Netlify to Cloudflare Pages
+This document describes how to deploy this application on Cloudflare Pages.
 
-This document describes how to deploy this application on Cloudflare Pages after migrating from Netlify.
+## Architecture
 
-## Changes Made
-
-1. **Created Cloudflare Pages Function**: `/functions/geminiProxy.ts`
-   - This replaces the Netlify function that was located at `/netlify/functions/geminiProxy.ts`
+1. **Cloudflare Pages Function**: `/functions/geminiProxy.ts`
    - Uses Cloudflare Pages Functions API (exports `onRequestPost`)
    - Uses direct Fetch API to call Gemini instead of Node.js SDK (for Workers compatibility)
    - Includes CORS headers for cross-origin requests
-   - Endpoint will be available at: `https://your-domain.com/geminiProxy`
+   - Endpoint available at: `https://your-domain.com/geminiProxy`
 
-2. **Updated API Client**: `services/geminiService.ts`
-   - Changed endpoint from `/.netlify/functions/geminiProxy` to `/geminiProxy`
-   - All API calls now use the Cloudflare Pages function
+2. **API Client**: `services/geminiService.ts`
+   - Calls `/geminiProxy` endpoint for all Gemini API requests
+   - All API calls use the Cloudflare Pages function
 
-3. **Removed Tailwind CDN**: Replaced with proper PostCSS integration
-   - Installed Tailwind CSS v4 as a dev dependency
-   - Added PostCSS configuration with `@tailwindcss/postcss` plugin
-   - Created `tailwind.config.js` for content configuration
-   - Added Tailwind directives to `index.css`
-   - Removed CDN script tag from `index.html`
+3. **Tailwind CSS**: Proper PostCSS integration
+   - Tailwind CSS v4 as a dev dependency
+   - PostCSS configuration with `@tailwindcss/postcss` plugin
+   - `tailwind.config.js` for content configuration
+   - Tailwind directives in `index.css`
 
-4. **Added Cloudflare Configuration**:
-   - Updated `wrangler.jsonc` with `nodejs_compat` flag
-   - Created `public/_routes.json` to optimize function routing
+4. **Cloudflare Configuration**:
+   - `wrangler.jsonc` with `nodejs_compat` flag
+   - `public/_routes.json` to optimize function routing
 
 ## Cloudflare Pages Setup
 
@@ -58,7 +54,7 @@ You **must** set the following environment variable in your Cloudflare Pages pro
 
 ### 3. Node.js Version
 
-The project uses Node.js 22.12.0. This is configured in `netlify.toml` but Cloudflare Pages will automatically detect and use the appropriate version.
+The project uses Node.js 22.12.0. Cloudflare Pages will automatically detect and use the appropriate version based on your package.json engines field or their default version.
 
 ## How It Works
 
@@ -149,18 +145,18 @@ This approach:
 - Verify `index.css` contains the Tailwind directives
 - Run `npm run build` and check for PostCSS errors
 
-## Differences from Netlify
+## Cloudflare Pages Functions Key Features
 
-| Feature | Netlify | Cloudflare Pages |
-|---------|---------|------------------|
-| Functions location | `/netlify/functions/` | `/functions/` |
-| Function export | `export { handler }` | `export async function onRequestPost(context)` |
-| Environment vars | `process.env` | `context.env` |
-| Endpoint path | `/.netlify/functions/functionName` | `/functionName` |
-| Request/Response | Netlify handler interface | Standard Fetch API |
-| Runtime | Node.js (full APIs) | Cloudflare Workers (limited Node.js APIs) |
-| API Client | Can use Node.js SDKs | Must use Fetch API for external calls |
-| CSS Processing | Pre-configured | Needs PostCSS setup |
+| Feature | Implementation |
+|---------|----------------|
+| Functions location | `/functions/` directory |
+| Function export | `export async function onRequestPost(context)` for POST requests |
+| Environment vars | Accessed via `context.env` |
+| Endpoint path | `/functionName` (based on file name) |
+| Request/Response | Standard Fetch API |
+| Runtime | Cloudflare Workers with `nodejs_compat` flag |
+| API Client | Must use Fetch API for external calls |
+| CSS Processing | Configured via PostCSS |
 
 ## Additional Resources
 
