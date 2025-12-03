@@ -50,8 +50,8 @@ async function resolveUserId(sql: any, clerkId: string): Promise<string> {
 
   // User doesn't exist, create them
   const newUser = await sql`
-    INSERT INTO "User" ("id", "clerkId", "email", "createdAt", "updatedAt")
-    VALUES (gen_random_uuid(), ${clerkId}, ${clerkId + '@unknown.com'}, NOW(), NOW())
+    INSERT INTO "User" ("clerkId", "email")
+    VALUES (${clerkId}, ${clerkId + '@clerk.temp'})
     RETURNING id
   `;
 
@@ -87,18 +87,12 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     // Resolve clerkId to internal userId
     const internalUserId = await resolveUserId(sql, clerkId);
 
-    // Fetch all user data
-    const performanceRecords = await sql`
-      SELECT * FROM "PerformanceRecord" WHERE "userId" = ${internalUserId}
-    `;
-
-    const srsItems = await sql`
-      SELECT * FROM "SRSItem" WHERE "userId" = ${internalUserId}
-    `;
-
-    const savedQuestions = await sql`
-      SELECT * FROM "SavedQuestion" WHERE "userId" = ${internalUserId}
-    `;
+    // Fetch all user data (execute in parallel for better performance)
+    const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
+      sql`SELECT * FROM "PerformanceRecord" WHERE "userId" = ${internalUserId}`,
+      sql`SELECT * FROM "SRSItem" WHERE "userId" = ${internalUserId}`,
+      sql`SELECT * FROM "SavedQuestion" WHERE "userId" = ${internalUserId}`
+    ]);
 
     const response: SyncResponse = {
       success: true,
@@ -156,28 +150,51 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       // Insert PerformanceRecords
       if (payload.performanceRecords && payload.performanceRecords.length > 0) {
         for (const record of payload.performanceRecords) {
-          await sql`
-            INSERT INTO "PerformanceRecord" (
-              "id", "userId", "topic", "system", "focus", "difficulty",
-              "isCorrect", "timestamp", "questionWordCount", "errorTag",
-              "subcategoryName", "conditionName", "createdAt"
-            ) VALUES (
-              ${record.id || null},
-              ${internalUserId},
-              ${record.topic},
-              ${record.system || null},
-              ${record.focus},
-              ${record.difficulty},
-              ${record.isCorrect},
-              ${record.timestamp},
-              ${record.questionWordCount || null},
-              ${record.errorTag || null},
-              ${record.subcategoryName || null},
-              ${record.conditionName || null},
-              ${record.createdAt || new Date().toISOString()}
-            )
-            ON CONFLICT (id) DO NOTHING
-          `;
+          if (record.id) {
+            // If ID is provided, try to insert with it
+            await sql`
+              INSERT INTO "PerformanceRecord" (
+                "id", "userId", "topic", "system", "focus", "difficulty",
+                "isCorrect", "timestamp", "questionWordCount", "errorTag",
+                "subcategoryName", "conditionName"
+              ) VALUES (
+                ${record.id},
+                ${internalUserId},
+                ${record.topic},
+                ${record.system || null},
+                ${record.focus},
+                ${record.difficulty},
+                ${record.isCorrect},
+                ${record.timestamp},
+                ${record.questionWordCount || null},
+                ${record.errorTag || null},
+                ${record.subcategoryName || null},
+                ${record.conditionName || null}
+              )
+              ON CONFLICT (id) DO NOTHING
+            `;
+          } else {
+            // If no ID, let database generate it
+            await sql`
+              INSERT INTO "PerformanceRecord" (
+                "userId", "topic", "system", "focus", "difficulty",
+                "isCorrect", "timestamp", "questionWordCount", "errorTag",
+                "subcategoryName", "conditionName"
+              ) VALUES (
+                ${internalUserId},
+                ${record.topic},
+                ${record.system || null},
+                ${record.focus},
+                ${record.difficulty},
+                ${record.isCorrect},
+                ${record.timestamp},
+                ${record.questionWordCount || null},
+                ${record.errorTag || null},
+                ${record.subcategoryName || null},
+                ${record.conditionName || null}
+              )
+            `;
+          }
         }
       }
 
@@ -186,11 +203,10 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         for (const item of payload.srsItems) {
           await sql`
             INSERT INTO "SRSItem" (
-              "id", "userId", "questionId", "interval", "repetition",
+              "userId", "questionId", "interval", "repetition",
               "easiness", "dueDate", "lastReviewed", "quality", "difficulty",
-              "stabilityScore", "createdAt", "updatedAt"
+              "stabilityScore"
             ) VALUES (
-              ${item.id || null},
               ${internalUserId},
               ${item.questionId},
               ${item.interval},
@@ -200,9 +216,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
               ${item.lastReviewed},
               ${item.quality},
               ${item.difficulty},
-              ${item.stabilityScore},
-              ${item.createdAt || new Date().toISOString()},
-              ${item.updatedAt || new Date().toISOString()}
+              ${item.stabilityScore}
             )
             ON CONFLICT ("userId", "questionId") DO UPDATE SET
               "interval" = ${item.interval},
@@ -212,8 +226,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
               "lastReviewed" = ${item.lastReviewed},
               "quality" = ${item.quality},
               "difficulty" = ${item.difficulty},
-              "stabilityScore" = ${item.stabilityScore},
-              "updatedAt" = ${item.updatedAt || new Date().toISOString()}
+              "stabilityScore" = ${item.stabilityScore}
           `;
         }
       }
@@ -223,11 +236,10 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         for (const question of payload.savedQuestions) {
           await sql`
             INSERT INTO "SavedQuestion" (
-              "id", "userId", "questionId", "questionText", "correctAnswer",
+              "userId", "questionId", "questionText", "correctAnswer",
               "explanation", "topic", "system", "type", "userNote",
-              "repetitionLevel", "nextReviewDate", "createdAt", "updatedAt"
+              "repetitionLevel", "nextReviewDate"
             ) VALUES (
-              ${question.id || null},
               ${internalUserId},
               ${question.questionId},
               ${question.questionText},
@@ -238,15 +250,12 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
               ${question.type},
               ${question.userNote || null},
               ${question.repetitionLevel || 1},
-              ${question.nextReviewDate || null},
-              ${question.createdAt || new Date().toISOString()},
-              ${question.updatedAt || new Date().toISOString()}
+              ${question.nextReviewDate || null}
             )
             ON CONFLICT ("userId", "questionId", "type") DO UPDATE SET
               "userNote" = ${question.userNote || null},
               "repetitionLevel" = ${question.repetitionLevel || 1},
-              "nextReviewDate" = ${question.nextReviewDate || null},
-              "updatedAt" = ${question.updatedAt || new Date().toISOString()}
+              "nextReviewDate" = ${question.nextReviewDate || null}
           `;
         }
       }
@@ -259,18 +268,12 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       throw error;
     }
 
-    // Fetch updated data to return
-    const performanceRecords = await sql`
-      SELECT * FROM "PerformanceRecord" WHERE "userId" = ${internalUserId}
-    `;
-
-    const srsItems = await sql`
-      SELECT * FROM "SRSItem" WHERE "userId" = ${internalUserId}
-    `;
-
-    const savedQuestions = await sql`
-      SELECT * FROM "SavedQuestion" WHERE "userId" = ${internalUserId}
-    `;
+    // Fetch updated data to return (execute in parallel for better performance)
+    const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
+      sql`SELECT * FROM "PerformanceRecord" WHERE "userId" = ${internalUserId}`,
+      sql`SELECT * FROM "SRSItem" WHERE "userId" = ${internalUserId}`,
+      sql`SELECT * FROM "SavedQuestion" WHERE "userId" = ${internalUserId}`
+    ]);
 
     const response: SyncResponse = {
       success: true,
