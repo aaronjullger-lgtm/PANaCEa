@@ -11,7 +11,6 @@ import {
   createSuccessResponse,
   handleCorsOptions,
 } from '../_shared/auth';
-import { isAdmin } from '../_shared/rbac';
 
 interface PagesContext {
   request: Request;
