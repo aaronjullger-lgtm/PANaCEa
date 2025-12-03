@@ -34,6 +34,7 @@ import {
 import type { WidgetId, WidgetData, TimeScope, ProgressDayRecord, SystemMasterySummary, ErrorTagCount } from "./ProgressDashboard";
 import { calculateAccuracy, calculateStreaks, loadWidgetPreferences } from "../lib/dashboardUtils";
 import type { ErrorTag } from "../types";
+import { AuthButton } from "./AuthButton";
 
 // System names for dynamic welcome message
 const SYSTEM_DISPLAY_NAMES: Record<string, string> = {
@@ -77,6 +78,9 @@ interface MenuViewProps {
   growthAreas: string[];
   /** Callback for navigating to dedicated drill mode views */
   onNavigateToDrillMode?: (modeId: string) => void;
+  isSyncing?: boolean;
+  lastSyncTime?: number | null;
+  syncError?: string | null;
 }
 
 // For the heatmap: one row per PANCE system
@@ -100,6 +104,9 @@ const MenuView: React.FC<MenuViewProps> = ({
   onConfirmSession,
   growthAreas,
   onNavigateToDrillMode,
+  isSyncing,
+  lastSyncTime,
+  syncError,
 }) => {
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
 
@@ -559,6 +566,20 @@ const MenuView: React.FC<MenuViewProps> = ({
             <DailyPrescription 
               performanceData={performanceData}
               onStartFocusSession={handleStartFocusSession}
+            />
+          </motion.section>
+
+          {/* Authentication Section */}
+          <motion.section 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.13 }}
+            className="flex justify-center"
+          >
+            <AuthButton 
+              isSyncing={isSyncing}
+              lastSyncTime={lastSyncTime}
+              syncError={syncError}
             />
           </motion.section>
 

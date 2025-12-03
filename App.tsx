@@ -20,6 +20,7 @@ import SettingsStatsModal from "./components/SettingsStatsModal";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
 import { prefetchQuestions } from "./services/geminiService";
+import { useUserStats } from "./hooks/useUserStats";
 import type {
   Question,
   PerformanceRecord,
@@ -86,18 +87,18 @@ const App: React.FC = () => {
   );
   const [questionQueue, setQuestionQueue] = useState<Question[]>([]);
 
-  const [performanceData, setPerformanceData] = useState<PerformanceRecord[]>(
-    () => safeParse<PerformanceRecord[]>(
-      window.localStorage.getItem(PERFORMANCE_KEY),
-      []
-    )
-  );
-  const [missedQuestions, setMissedQuestions] = useState<Question[]>(() =>
-    safeParse<Question[]>(window.localStorage.getItem(MISSED_KEY), [])
-  );
-  const [flaggedQuestions, setFlaggedQuestions] = useState<Question[]>(() =>
-    safeParse<Question[]>(window.localStorage.getItem(FLAGGED_KEY), [])
-  );
+  // Use the cloud-sync-enabled stats hook
+  const {
+    performanceData,
+    missedQuestions,
+    flaggedQuestions,
+    setPerformanceData,
+    setMissedQuestions,
+    setFlaggedQuestions,
+    isSyncing,
+    lastSyncTime,
+    syncError,
+  } = useUserStats();
 
   const [fontSizeAdjustment, setFontSizeAdjustment] = useState<number>(0);
 
@@ -118,22 +119,6 @@ const App: React.FC = () => {
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
-
-  // ---- persist to localStorage whenever these change ----
-  useEffect(() => {
-    window.localStorage.setItem(
-      PERFORMANCE_KEY,
-      JSON.stringify(performanceData)
-    );
-  }, [performanceData]);
-
-  useEffect(() => {
-    window.localStorage.setItem(MISSED_KEY, JSON.stringify(missedQuestions));
-  }, [missedQuestions]);
-
-  useEffect(() => {
-    window.localStorage.setItem(FLAGGED_KEY, JSON.stringify(flaggedQuestions));
-  }, [flaggedQuestions]);
 
   // ---- derived: “growth areas” and heatmap data ----
   // Heatmap must ONLY use PANCE-level all-topics sessions
@@ -461,6 +446,9 @@ const App: React.FC = () => {
                 onConfirmSession={handleConfirmSession}
                 growthAreas={growthAreas}
                 onNavigateToDrillMode={handleNavigateToDrillMode}
+                isSyncing={isSyncing}
+                lastSyncTime={lastSyncTime}
+                syncError={syncError}
               />
             </motion.div>
           )}

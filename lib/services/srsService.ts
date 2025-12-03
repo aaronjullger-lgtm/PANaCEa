@@ -450,6 +450,86 @@ export function clearSRSData(userId: string): void {
   saveSRSItems(items);
 }
 
+// ============================================================================
+// Cloud Sync Functions (for authenticated users)
+// ============================================================================
+
+/**
+ * Get all SRS items for a user (for cloud sync)
+ */
+export function getAllSRSItems(userId: string): SRSItem[] {
+  const items = loadSRSItems();
+  const userItems: SRSItem[] = [];
+  
+  for (const item of items.values()) {
+    if (item.userId === userId) {
+      userItems.push(item);
+    }
+  }
+  
+  return userItems;
+}
+
+/**
+ * Load SRS items from cloud data
+ * Merges with existing local data, preferring most recent updates
+ */
+export function loadSRSItemsFromCloud(cloudItems: SRSItem[]): void {
+  const localItems = loadSRSItems();
+  
+  for (const cloudItem of cloudItems) {
+    const existing = localItems.get(cloudItem.questionId);
+    
+    // Ensure dates are properly compared as timestamps
+    const cloudUpdatedTime = typeof cloudItem.updatedAt === 'string' 
+      ? new Date(cloudItem.updatedAt).getTime() 
+      : cloudItem.updatedAt.getTime();
+    const existingUpdatedTime = existing 
+      ? (typeof existing.updatedAt === 'string' 
+          ? new Date(existing.updatedAt).getTime() 
+          : existing.updatedAt.getTime())
+      : 0;
+    
+    // If no local item, or cloud item is newer, use cloud data
+    if (!existing || cloudUpdatedTime > existingUpdatedTime) {
+      localItems.set(cloudItem.questionId, {
+        ...cloudItem,
+        dueDate: new Date(cloudItem.dueDate),
+        lastReviewed: new Date(cloudItem.lastReviewed),
+        createdAt: new Date(cloudItem.createdAt),
+        updatedAt: new Date(cloudItem.updatedAt),
+      });
+    }
+  }
+  
+  saveSRSItems(localItems);
+}
+
+/**
+ * Async version of updateReviewOutcome for cloud sync
+ */
+export async function updateReviewOutcomeAsync(
+  userId: string,
+  questionId: string,
+  input: SRSUpdateInput,
+  syncToCloud?: (items: SRSItem[]) => Promise<void>
+): Promise<SRSScheduleResult> {
+  const result = updateReviewOutcome(userId, questionId, input);
+  
+  // If sync function provided, sync to cloud
+  if (syncToCloud) {
+    try {
+      const allItems = getAllSRSItems(userId);
+      await syncToCloud(allItems);
+    } catch (error) {
+      console.error('Failed to sync SRS data to cloud:', error);
+      // Continue even if sync fails - data is saved locally
+    }
+  }
+  
+  return result;
+}
+
 /**
  * Get SRS statistics for dashboard display
  */
