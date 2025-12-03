@@ -16,5 +16,8 @@ View your app in AI Studio: https://ai.studio/apps/drive/1XKKOL9unGhpt6WDahRfrws
 1. Install dependencies:
    `npm install`
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+3. Start the backend server on port 3001 (required for `/geminiProxy` endpoint)
+4. Run the app:
    `npm run dev`
+
+**Note:** The Vite development server is configured to proxy requests to `/geminiProxy` to `http://localhost:3001`. Make sure your backend server is running on this port before starting the frontend.
