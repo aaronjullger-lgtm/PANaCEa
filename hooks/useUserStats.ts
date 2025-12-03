@@ -30,6 +30,10 @@ interface UseUserStatsResult extends UserStatsState {
   syncFromCloud: () => Promise<void>;
 }
 
+interface SavedQuestionWithType extends Question {
+  type: 'missed' | 'flagged';
+}
+
 function safeParse<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback;
   try {
@@ -37,6 +41,18 @@ function safeParse<T>(raw: string | null, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+/**
+ * Helper to separate saved questions by type
+ */
+function separateSavedQuestions(savedQuestions: SavedQuestionWithType[]): {
+  missed: Question[];
+  flagged: Question[];
+} {
+  const missed = savedQuestions.filter(q => q.type === 'missed');
+  const flagged = savedQuestions.filter(q => q.type === 'flagged');
+  return { missed, flagged };
 }
 
 /**
@@ -103,7 +119,7 @@ export function useUserStats(): UseUserStatsResult {
         body: JSON.stringify({
           userId: user.clerkId,
           performanceRecords: performanceData,
-          srsItems: srsItems,
+          srsItems,
           savedQuestions: [...missedQuestions, ...flaggedQuestions].map(q => ({
             ...q,
             type: missedQuestions.includes(q) ? 'missed' : 'flagged',
@@ -129,8 +145,7 @@ export function useUserStats(): UseUserStatsResult {
         }
         
         if (result.data.savedQuestions) {
-          const missed = result.data.savedQuestions.filter((q: any) => q.type === 'missed');
-          const flagged = result.data.savedQuestions.filter((q: any) => q.type === 'flagged');
+          const { missed, flagged } = separateSavedQuestions(result.data.savedQuestions);
           setMissedQuestionsState(missed);
           setFlaggedQuestionsState(flagged);
         }
@@ -188,8 +203,7 @@ export function useUserStats(): UseUserStatsResult {
         }
         
         if (result.data.savedQuestions) {
-          const missed = result.data.savedQuestions.filter((q: any) => q.type === 'missed');
-          const flagged = result.data.savedQuestions.filter((q: any) => q.type === 'flagged');
+          const { missed, flagged } = separateSavedQuestions(result.data.savedQuestions);
           setMissedQuestionsState(missed);
           setFlaggedQuestionsState(flagged);
         }
