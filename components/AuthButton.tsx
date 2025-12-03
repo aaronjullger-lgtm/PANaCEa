@@ -3,10 +3,10 @@
  * Shows sign in/sign out and user profile
  */
 
-import React, { useState } from 'react';
-import { SignIn, SignOutButton, UserButton, useUser } from '@clerk/clerk-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { User, LogOut, Cloud, CloudOff } from 'lucide-react';
+import React from 'react';
+import { UserButton, useUser } from '@clerk/clerk-react';
+import { motion } from 'framer-motion';
+import { Cloud, CloudOff } from 'lucide-react';
 
 interface AuthButtonProps {
   isSyncing?: boolean;
@@ -16,7 +16,6 @@ interface AuthButtonProps {
 
 export function AuthButton({ isSyncing, lastSyncTime, syncError }: AuthButtonProps) {
   const { isSignedIn, user, isLoaded } = useUser();
-  const [showSignIn, setShowSignIn] = useState(false);
 
   if (!isLoaded) {
     return (
@@ -26,88 +25,61 @@ export function AuthButton({ isSyncing, lastSyncTime, syncError }: AuthButtonPro
     );
   }
 
+  // This component should only be shown to authenticated users now
+  // since unauthenticated users see the landing page
   if (!isSignedIn) {
-    return (
-      <>
-        <motion.button
-          onClick={() => setShowSignIn(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-colors text-sm font-medium"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          <User className="w-4 h-4" />
-          Sign In
-        </motion.button>
-
-        <AnimatePresence>
-          {showSignIn && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-50"
-              onClick={() => setShowSignIn(false)}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-2"
-              >
-                <SignIn 
-                  appearance={{
-                    elements: {
-                      rootBox: 'mx-auto',
-                      card: 'bg-transparent shadow-none',
-                    },
-                  }}
-                  afterSignInUrl="/"
-                  afterSignUpUrl="/"
-                />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </>
-    );
+    return null;
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col sm:flex-row items-center justify-center gap-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800/50 dark:to-slate-700/50 rounded-2xl border border-blue-200/50 dark:border-slate-600/50"
+    >
+      {/* User Profile Section */}
+      <div className="flex items-center gap-3">
+        <UserButton 
+          appearance={{
+            elements: {
+              avatarBox: 'w-12 h-12 ring-2 ring-blue-500/20',
+            },
+          }}
+        />
+        <div className="text-left">
+          <div className="text-sm font-semibold text-[var(--color-text-primary)]">
+            {user?.firstName || 'Student'}
+          </div>
+          <div className="text-xs text-[var(--color-text-muted)]">
+            {user?.emailAddresses[0]?.emailAddress}
+          </div>
+        </div>
+      </div>
+
       {/* Sync Status Indicator */}
-      <div className="flex items-center gap-2 text-xs">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 dark:bg-slate-900/30 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
         {isSyncing ? (
-          <div className="flex items-center gap-1.5 text-[var(--color-text-muted)]">
+          <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
             <Cloud className="w-4 h-4 animate-pulse" />
-            <span>Syncing...</span>
+            <span className="text-xs font-medium">Syncing...</span>
           </div>
         ) : syncError ? (
           <div className="flex items-center gap-1.5 text-red-500">
             <CloudOff className="w-4 h-4" />
-            <span>Sync error</span>
+            <span className="text-xs font-medium">Sync error</span>
           </div>
         ) : lastSyncTime ? (
+          <div className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
+            <Cloud className="w-4 h-4" />
+            <span className="text-xs font-medium">Cloud synced</span>
+          </div>
+        ) : (
           <div className="flex items-center gap-1.5 text-[var(--color-text-muted)]">
             <Cloud className="w-4 h-4" />
-            <span>Synced</span>
+            <span className="text-xs font-medium">Local only</span>
           </div>
-        ) : null}
+        )}
       </div>
-
-      {/* User Profile */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-[var(--color-text-muted)] hidden sm:block">
-          {user?.firstName || user?.emailAddresses[0]?.emailAddress}
-        </span>
-        <UserButton 
-          appearance={{
-            elements: {
-              avatarBox: 'w-9 h-9',
-            },
-          }}
-        />
-      </div>
-    </div>
+    </motion.div>
   );
 }
