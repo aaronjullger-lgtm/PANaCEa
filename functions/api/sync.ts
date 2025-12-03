@@ -46,9 +46,7 @@ async function verifyAuthToken(authHeader: string, secretKey: string): Promise<s
     const clerkClient = createClerkClient({ secretKey });
     
     // Verify the token using Clerk's secure verification
-    const verifiedToken = await clerkClient.verifyToken(token, {
-      secretKey,
-    });
+    const verifiedToken = await clerkClient.verifyToken(token);
     
     return verifiedToken.sub || null;
   } catch (error) {
