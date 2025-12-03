@@ -6,6 +6,8 @@ import {
   ABBREVIATION_TO_TOPIC_MAP,
   PANCE_DECK,
   TASK_DECK,
+  GEMINI_FLASH_MODEL,
+  GEMINI_PRO_MODEL,
 } from "../constants";
 import type {
   Question,
@@ -335,7 +337,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   // --- Call Gemini through proxy and parse JSON ---
 
    try {
-    const rawText = await callGeminiText("gemini-2.5-flash", prompt, 0.8);
+    const rawText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.8);
 
     // Repair common HTML-table newline bug:
     // Gemini sometimes puts a real newline between tags like </td>\n    <td>,
@@ -474,7 +476,7 @@ A: [Answer]
 (one per block).`;
   }
 
-  const modelName = useProModel ? "gemini-2.5-pro" : "gemini-2.5-flash";
+  const modelName = useProModel ? GEMINI_PRO_MODEL : GEMINI_FLASH_MODEL;
   const temperature = useProModel ? 0.5 : 0.7;
 
   try {
@@ -516,7 +518,7 @@ Your Task:
 4. Format your response clearly with short paragraphs and bullet points where helpful.`;
 
   try {
-    const text = await callGeminiText("gemini-2.5-flash", prompt, 0.6);
+    const text = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.6);
     return text;
   } catch (error) {
     console.error("Error generating alternate rationale:", error);
