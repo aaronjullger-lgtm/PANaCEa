@@ -157,6 +157,14 @@ Visit `http://localhost:3000` and:
 
 ### Authentication Issues
 
+**Problem**: Error "Missing Publishable Key for Clerk!" when starting the application
+- **Solution**: 
+  1. Copy `.env.example` to `.env`: `cp .env.example .env`
+  2. Get your Clerk publishable key from https://dashboard.clerk.com
+  3. Add it to `.env` as: `VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here`
+  4. Restart the development server
+- **Note**: This error is intentional to ensure proper configuration before the app starts
+
 **Problem**: "Sign In" button doesn't appear
 - **Solution**: Check that `VITE_CLERK_PUBLISHABLE_KEY` is set in `.env`
 - Restart dev server after adding environment variables

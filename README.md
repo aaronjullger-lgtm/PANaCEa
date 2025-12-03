@@ -15,7 +15,17 @@ View your app in AI Studio: https://ai.studio/apps/drive/1XKKOL9unGhpt6WDahRfrws
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+   Then edit `.env` and add:
+   - `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key (from https://dashboard.clerk.com)
+   - `GEMINI_API_KEY`: Your Gemini API key
+   - `VITE_GEMINI_API_KEY`: Your Gemini API key (for client-side)
+   
+   See [AUTHENTICATION_SETUP.md](AUTHENTICATION_SETUP.md) for detailed authentication setup instructions.
+
 3. Start the backend server on port 3001 (required for `/geminiProxy` endpoint)
 4. Run the app:
    `npm run dev`

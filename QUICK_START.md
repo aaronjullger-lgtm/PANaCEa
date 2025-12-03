@@ -88,6 +88,13 @@ That's it! 🎉
 
 ## Troubleshooting
 
+### "Missing Publishable Key for Clerk!" error
+- This error appears when the app starts without proper Clerk configuration
+- **Solution:** 
+  1. Create `.env` file: `cp .env.example .env`
+  2. Add your Clerk publishable key to `.env`
+  3. Restart dev server: `Ctrl+C` then `npm run dev`
+
 ### "Sign In button doesn't appear"
 - Check `.env` file has correct keys
 - Restart dev server: `Ctrl+C` then `npm run dev`
