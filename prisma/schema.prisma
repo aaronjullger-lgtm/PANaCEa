@@ -31,15 +31,32 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
+  /// Authentication fields
+  emailVerified      DateTime? // Email verification timestamp
+  role               String    @default("user") // user, admin, superadmin
+  resetToken         String?   // Password reset token (hashed)
+  resetTokenExpiry   DateTime? // Reset token expiration
+  verifyToken        String?   // Email verification token (hashed)
+  verifyTokenExpiry  DateTime? // Verification token expiration
+  
+  /// Onboarding fields
+  hasCompletedBaseline Boolean @default(false) // Has completed baseline assessment
+  examDate            DateTime? // Target PANCE/PANRE exam date
+  
   /// User's performance records
   performanceRecords PerformanceRecord[]
   /// User's SRS (Spaced Repetition System) items
   srsItems           SRSItem[]
   /// User's saved questions (flagged/missed)
   savedQuestions     SavedQuestion[]
+  /// User's achievements
+  achievements       UserAchievement[]
+  /// User's daily streaks
+  streaks            DailyStreak[]
   
   @@index([clerkId])
   @@index([email])
+  @@index([role])
 }
 
 /// Represents a single performance record from a quiz session
@@ -149,4 +166,86 @@ model MediaAsset {
   @@index([conditionId])
   @@index([type])
   @@index([filename])
+}
+
+/// Represents an achievement earned by a user
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String
+  achievementId String   // Achievement identifier from definitions
+  unlockedAt    DateTime @default(now())
+  progress      Int      @default(100) // 0-100, for progressive achievements
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+}
+
+/// Represents daily activity streaks for gamification
+model DailyStreak {
+  id             String   @id @default(uuid())
+  userId         String
+  date           DateTime @db.Date // Date of activity (YYYY-MM-DD)
+  questionsAnswered Int   @default(0) // Questions answered on this day
+  accuracyPercent   Float // Accuracy for the day
+  studyMinutes      Int   @default(0) // Minutes studied
+  createdAt      DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+/// Represents confusion pairs tracked for DDx analysis
+model ConfusionPair {
+  id              String   @id @default(uuid())
+  userId          String?  // Null for global stats, set for user-specific
+  realCondition   String   // The correct condition
+  mistakenFor     String   // What user incorrectly chose
+  count           Int      @default(1) // How many times this happened
+  lastOccurrence  DateTime @default(now())
+  createdAt       DateTime @default(now())
+  
+  @@unique([userId, realCondition, mistakenFor])
+  @@index([userId])
+  @@index([userId, realCondition])
+  @@index([realCondition])
+}
+
+/// Represents mastery tier progress for conditions/topics
+model MasteryProgress {
+  id            String   @id @default(uuid())
+  userId        String
+  conditionName String?  // Specific condition, or null for system-level
+  systemCode    String?  // CV, PULM, GI, etc.
+  subcategory   String?
+  masteryTier   String   @default("bronze") // bronze, silver, gold, platinum
+  accuracy      Float    // Current accuracy percentage
+  attempts      Int      @default(0)
+  lastAttempt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([userId, conditionName, systemCode, subcategory])
+  @@index([userId])
+  @@index([systemCode])
+}
+
+/// Represents baseline assessment results
+model BaselineAssessment {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  completedAt       DateTime @default(now())
+  totalQuestions    Int
+  correctAnswers    Int
+  accuracy          Float
+  systemBreakdown   Json     // System-level performance breakdown
+  weakestSystems    String[] // Top 3 weakest systems
+  strongestSystems  String[] // Top 3 strongest systems
+  
+  @@index([userId])
 }
