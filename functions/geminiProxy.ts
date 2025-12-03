@@ -115,6 +115,9 @@ export async function onRequestPost(context) {
     }
 
     // Call Gemini API directly using Fetch
+    // NOTE: The modelName parameter should be passed WITHOUT any "models/" prefix
+    // (e.g., "gemini-2.5-flash", not "models/gemini-2.5-flash")
+    // The URL template below adds the single required "models/" path segment
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
     
     const geminiResponse = await fetch(geminiUrl, {
