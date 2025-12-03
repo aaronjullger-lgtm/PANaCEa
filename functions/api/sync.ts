@@ -3,9 +3,11 @@
  * Handles uploading local data and downloading cloud data
  */
 
+import { createClerkClient } from '@clerk/backend';
+
 interface Env {
   DATABASE_URL?: string;
-  CLERK_PUBLISHABLE_KEY?: string;
+  CLERK_SECRET_KEY?: string;
 }
 
 interface PagesContext {
@@ -31,31 +33,26 @@ interface SyncResponse {
 }
 
 /**
- * Extract user ID from Clerk session token
- * 
- * ⚠️ SECURITY WARNING: This is a simplified implementation for demonstration.
- * In production, you MUST properly verify JWT signatures using:
- * - @clerk/backend SDK (recommended)
- * - jsonwebtoken library with proper key verification
- * - Clerk's verify session endpoint
- * 
- * Without proper verification, tokens can be forged!
+ * Verify and extract user ID from Clerk session token
+ * Uses @clerk/backend SDK for secure JWT verification
  */
-function extractUserIdFromToken(authHeader: string): string | null {
+async function verifyAuthToken(authHeader: string, secretKey: string): Promise<string | null> {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
   
   try {
-    // ⚠️ WARNING: This only decodes, does NOT verify signature
-    // TODO: Replace with proper JWT verification before production deployment
     const token = authHeader.substring(7);
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    const clerkClient = createClerkClient({ secretKey });
     
-    const payload = JSON.parse(atob(parts[1]));
-    return payload.sub || payload.userId || null;
-  } catch {
+    // Verify the token using Clerk's secure verification
+    const verifiedToken = await clerkClient.verifyToken(token, {
+      secretKey,
+    });
+    
+    return verifiedToken.sub || null;
+  } catch (error) {
+    console.error('Token verification failed:', error);
     return null;
   }
 }
@@ -79,7 +76,23 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
 
   try {
     const authHeader = request.headers.get('Authorization');
-    const userId = extractUserIdFromToken(authHeader || '');
+    const secretKey = env.CLERK_SECRET_KEY;
+
+    if (!secretKey) {
+      console.error('CLERK_SECRET_KEY is not configured');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
+
+    const userId = await verifyAuthToken(authHeader || '', secretKey);
 
     if (!userId) {
       return new Response(
@@ -138,7 +151,23 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
   try {
     const authHeader = request.headers.get('Authorization');
-    const userId = extractUserIdFromToken(authHeader || '');
+    const secretKey = env.CLERK_SECRET_KEY;
+
+    if (!secretKey) {
+      console.error('CLERK_SECRET_KEY is not configured');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
+
+    const userId = await verifyAuthToken(authHeader || '', secretKey);
 
     if (!userId) {
       return new Response(
