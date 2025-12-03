@@ -152,6 +152,8 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         for (const record of payload.performanceRecords) {
           if (record.id) {
             // If ID is provided, try to insert with it
+            // ON CONFLICT DO NOTHING: PerformanceRecords are immutable once created
+            // This prevents duplicate submissions from overwriting historical data
             await sql`
               INSERT INTO "PerformanceRecord" (
                 "id", "userId", "topic", "system", "focus", "difficulty",
@@ -226,7 +228,8 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
               "lastReviewed" = ${item.lastReviewed},
               "quality" = ${item.quality},
               "difficulty" = ${item.difficulty},
-              "stabilityScore" = ${item.stabilityScore}
+              "stabilityScore" = ${item.stabilityScore},
+              "updatedAt" = NOW()
           `;
         }
       }
@@ -255,7 +258,8 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
             ON CONFLICT ("userId", "questionId", "type") DO UPDATE SET
               "userNote" = ${question.userNote || null},
               "repetitionLevel" = ${question.repetitionLevel || 1},
-              "nextReviewDate" = ${question.nextReviewDate || null}
+              "nextReviewDate" = ${question.nextReviewDate || null},
+              "updatedAt" = NOW()
           `;
         }
       }
