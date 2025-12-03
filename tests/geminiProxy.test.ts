@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
+// Test constants
+const MODELS_PATH_PATTERN = /\/models\//g;
+
 describe('Gemini Proxy URL Construction', () => {
   it('should construct correct URL without duplicating models/ prefix', () => {
     // Test URL construction logic from functions/geminiProxy.ts line 118
@@ -43,7 +46,7 @@ describe('Gemini Proxy URL Construction', () => {
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
     
     // Count occurrences of "/models/" in the URL
-    const modelsCount = (geminiUrl.match(/\/models\//g) || []).length;
+    const modelsCount = (geminiUrl.match(MODELS_PATH_PATTERN) || []).length;
     expect(modelsCount).toBe(1);
   });
 
