@@ -321,6 +321,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
 
               <div className="flex gap-2">
                 <input
+                  id="fluid-electrolyte-answer"
+                  name="fluid-electrolyte-answer"
                   type="number"
                   step="any"
                   value={userAnswer}
@@ -328,6 +330,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   onKeyPress={(e) => e.key === 'Enter' && !isSubmitted && handleSubmit()}
                   placeholder="Enter your answer"
                   disabled={isSubmitted}
+                  autoComplete="off"
                   className="flex-1 px-4 py-3 bg-slate-900/70 border border-cyan-800/50 rounded-lg 
                            text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500
                            disabled:opacity-50 disabled:cursor-not-allowed font-mono text-lg"
