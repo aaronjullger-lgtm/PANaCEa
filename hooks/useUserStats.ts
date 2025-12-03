@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import type { PerformanceRecord, Question } from '../types';
+import { getAllSRSItems, loadSRSItemsFromCloud } from '../lib/services/srsService';
 
 const PERFORMANCE_KEY = 'panceai_performance_v2';
 const MISSED_KEY = 'panceai_missed_v2';
@@ -29,6 +30,10 @@ interface UseUserStatsResult extends UserStatsState {
   syncFromCloud: () => Promise<void>;
 }
 
+interface SavedQuestionWithType extends Question {
+  type: 'missed' | 'flagged';
+}
+
 function safeParse<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback;
   try {
@@ -36,6 +41,18 @@ function safeParse<T>(raw: string | null, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+/**
+ * Helper to separate saved questions by type
+ */
+function separateSavedQuestions(savedQuestions: SavedQuestionWithType[]): {
+  missed: Question[];
+  flagged: Question[];
+} {
+  const missed = savedQuestions.filter(q => q.type === 'missed');
+  const flagged = savedQuestions.filter(q => q.type === 'flagged');
+  return { missed, flagged };
 }
 
 /**
@@ -90,6 +107,9 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error('Failed to get authentication token');
       }
 
+      // Get SRS items from srsService
+      const srsItems = getAllSRSItems(user.clerkId);
+
       const response = await fetch('/api/sync', {
         method: 'POST',
         headers: {
@@ -99,7 +119,7 @@ export function useUserStats(): UseUserStatsResult {
         body: JSON.stringify({
           userId: user.clerkId,
           performanceRecords: performanceData,
-          srsItems: [], // Will be populated from srsService
+          srsItems,
           savedQuestions: [...missedQuestions, ...flaggedQuestions].map(q => ({
             ...q,
             type: missedQuestions.includes(q) ? 'missed' : 'flagged',
@@ -112,6 +132,25 @@ export function useUserStats(): UseUserStatsResult {
       }
 
       const result = await response.json();
+      
+      // Process server response and update local state with merged data
+      if (result.success && result.data) {
+        // Update local state with merged data from server
+        if (result.data.performanceRecords) {
+          setPerformanceDataState(result.data.performanceRecords);
+        }
+        
+        if (result.data.srsItems) {
+          loadSRSItemsFromCloud(result.data.srsItems);
+        }
+        
+        if (result.data.savedQuestions) {
+          const { missed, flagged } = separateSavedQuestions(result.data.savedQuestions);
+          setMissedQuestionsState(missed);
+          setFlaggedQuestionsState(flagged);
+        }
+      }
+      
       setLastSyncTime(Date.now());
       console.log('Sync to cloud successful:', result);
     } catch (error) {
@@ -159,9 +198,12 @@ export function useUserStats(): UseUserStatsResult {
           setPerformanceDataState(result.data.performanceRecords);
         }
         
+        if (result.data.srsItems) {
+          loadSRSItemsFromCloud(result.data.srsItems);
+        }
+        
         if (result.data.savedQuestions) {
-          const missed = result.data.savedQuestions.filter((q: any) => q.type === 'missed');
-          const flagged = result.data.savedQuestions.filter((q: any) => q.type === 'flagged');
+          const { missed, flagged } = separateSavedQuestions(result.data.savedQuestions);
           setMissedQuestionsState(missed);
           setFlaggedQuestionsState(flagged);
         }
@@ -180,7 +222,14 @@ export function useUserStats(): UseUserStatsResult {
   // Auto-sync when user signs in (only once per session)
   useEffect(() => {
     if (isSignedIn && user) {
-      syncFromCloud();
+      // Check if there is local data
+      if (performanceData.length > 0) {
+        // If local data exists, upload and merge with server
+        syncToCloud();
+      } else {
+        // If no local data, download from server
+        syncFromCloud();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]); // Only trigger on sign-in state change, not on every clerkId change
