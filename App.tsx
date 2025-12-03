@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
 import QuizView from "./components/QuizView";
 import MenuView from "./components/MenuView";
 import Loader from "./components/Loader";
@@ -19,6 +20,7 @@ import PatientEncounterMode from "./components/modes/PatientEncounterMode";
 import SettingsStatsModal from "./components/SettingsStatsModal";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
+import { LandingPage } from "./components/LandingPage";
 import { prefetchQuestions } from "./services/geminiService";
 import { useUserStats } from "./hooks/useUserStats";
 import type {
@@ -78,6 +80,9 @@ function scheduleNextReview(level: number): string {
 }
 
 const App: React.FC = () => {
+  // Check authentication status
+  const { isSignedIn, isLoaded: authLoaded } = useUser();
+
   const [view, setView] = useState<View>("menu");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -362,6 +367,21 @@ const App: React.FC = () => {
     ease: [0.4, 0, 0.2, 1] // Custom cubic-bezier for smooth feel
   };
 
+  // Show loading state while checking auth
+  if (!authLoaded) {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
+        <Loader />
+      </div>
+    );
+  }
+
+  // Show landing page for unauthenticated users
+  if (!isSignedIn) {
+    return <LandingPage />;
+  }
+
+  // Main authenticated app
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
       {/* Premium Glass Header - Elegant and professional */}
