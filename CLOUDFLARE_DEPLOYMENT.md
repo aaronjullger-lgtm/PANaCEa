@@ -21,8 +21,8 @@ This document describes how to deploy this application on Cloudflare Pages.
    - Tailwind directives in `index.css`
 
 4. **Cloudflare Configuration**:
-   - `wrangler.jsonc` with `nodejs_compat` flag
-   - `public/_routes.json` to optimize function routing
+   - Cloudflare Pages automatically detects and deploys functions from the `/functions` directory
+   - No manual configuration files needed (Pages auto-configures routing)
 
 ## Cloudflare Pages Setup
 
@@ -131,7 +131,7 @@ This approach:
 - Verify the `/functions/geminiProxy.ts` file is in your repository
 - Check Cloudflare Pages deployment logs for function deployment status
 - Ensure the build was successful
-- Check that `_routes.json` is in the `dist` directory (it should be copied from `public/`)
+- Cloudflare Pages automatically detects functions - no manual route configuration needed
 
 ### Questions not generating
 - Check browser console for errors

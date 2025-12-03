@@ -10,8 +10,7 @@ This checklist ensures all changes are properly deployed to fix the issues menti
 - [x] ✅ Tailwind configuration created (`tailwind.config.js`)
 - [x] ✅ Cloudflare function uses Fetch API (no Node.js SDK dependency)
 - [x] ✅ CORS headers added to function
-- [x] ✅ `_routes.json` created in `public/` directory
-- [x] ✅ `wrangler.jsonc` updated with `nodejs_compat` flag
+- [x] ✅ Worker config files removed (Pages auto-detects functions)
 - [x] ✅ All tests pass (209/209)
 - [x] ✅ Build completes successfully
 - [x] ✅ No security vulnerabilities (CodeQL scan: 0 issues)
@@ -82,7 +81,7 @@ If you get a 404:
 1. Verify the `/functions` directory is in your repository root
 2. Check Cloudflare Pages deployment logs for "Functions deployed" message
 3. Force a new deployment by pushing a small change
-4. Verify `_routes.json` is in the `dist` directory
+4. Cloudflare Pages automatically detects functions - no manual configuration needed
 
 ### Issue: GEMINI_API_KEY not set error
 

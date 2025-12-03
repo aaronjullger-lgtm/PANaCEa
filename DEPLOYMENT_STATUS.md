@@ -15,9 +15,8 @@ Your repository **already has the correct structure** required by Cloudflare Pag
 /PANaCEa (project root)
   ├── functions/              ← ✅ PRESENT
   │   └── geminiProxy.ts      ← ✅ PRESENT (TypeScript natively supported)
-  ├── public/
-  │   └── _routes.json        ← ✅ CONFIGURED
-  ├── wrangler.jsonc          ← ✅ CONFIGURED
+  ├── public/                 ← Static assets
+  │   └── panacea-logo.svg
   └── ... other files
 ```
 
@@ -52,12 +51,11 @@ When you deploy this project to Cloudflare Pages:
 ✅ `/functions` folder exists at project root  
 ✅ `geminiProxy.ts` is inside the functions folder  
 ✅ File is tracked by git (not in .gitignore)  
-✅ `wrangler.jsonc` configuration is correct  
-✅ `_routes.json` includes the /geminiProxy route  
 ✅ Function exports `onRequestPost` and `onRequestOptions`  
 ✅ CORS headers are configured  
 ✅ All tests passing (209/209)  
 ✅ Build successful  
+✅ Cloudflare Pages auto-detects functions (no manual configuration needed)  
 
 ## Why Your Setup is Correct
 

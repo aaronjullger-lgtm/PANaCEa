@@ -10,12 +10,11 @@ Your repository is **already correctly configured** for Cloudflare Pages Functio
 /PANaCEa (project root)
   ├── functions/              ← ✅ Special Cloudflare Pages Functions folder
   │   └── geminiProxy.ts      ← ✅ Backend API endpoint (TypeScript natively supported)
-  ├── public/
-  │   └── _routes.json        ← ✅ Routes configuration for Functions
+  ├── public/                 ← Static assets folder
+  │   └── panacea-logo.svg
   ├── dist/                   ← Build output directory (created by npm run build)
   ├── index.html              ← Frontend entry point
-  ├── package.json
-  └── wrangler.jsonc          ← ✅ Cloudflare configuration
+  └── package.json
 ```
 
 ## How Cloudflare Pages Functions Work
@@ -129,13 +128,13 @@ This means:
 
 ### Issue: 404 Not Found on /geminiProxy
 
-**Cause**: Function not deployed or wrong configuration.
+**Cause**: Function not deployed correctly.
 
 **Solution**:
 1. Check Cloudflare deployment logs
 2. Verify the build was successful
-3. Ensure `wrangler.jsonc` exists with correct configuration
-4. Verify `public/_routes.json` includes `/geminiProxy` in the include array
+3. Ensure `/functions/geminiProxy.ts` is in your repository
+4. Cloudflare Pages automatically detects functions - no manual configuration needed
 
 ### Issue: CORS errors in browser
 
@@ -151,7 +150,7 @@ This means:
 
 Cloudflare Pages uses a convention-based approach:
 
-1. **Static Assets**: Served from the `dist` folder (configured in `wrangler.jsonc`)
+1. **Static Assets**: Served from the `dist` folder
 2. **Dynamic Functions**: Automatically detected from `/functions` folder at root
 3. **TypeScript Support**: Native compilation, no build step needed
 4. **Environment Variables**: Injected at runtime via `context.env`
@@ -172,15 +171,9 @@ export async function onRequestOptions(): Promise<Response> {
 
 ### Routes Configuration
 
-The `public/_routes.json` file tells Cloudflare which paths should be handled by Functions:
-
-```json
-{
-  "version": 1,
-  "include": ["/geminiProxy"],
-  "exclude": []
-}
-```
+Cloudflare Pages automatically creates routes for functions based on their filenames:
+- `functions/geminiProxy.ts` → Automatically available at `/geminiProxy`
+- No manual route configuration needed
 
 ## Summary
 
@@ -188,11 +181,11 @@ The `public/_routes.json` file tells Cloudflare which paths should be handled by
 ✅ **The `/functions/geminiProxy.ts` file is in the right place**
 ✅ **TypeScript is natively supported by Cloudflare Pages**
 ✅ **CORS headers are properly configured**
-✅ **Routes are configured in `_routes.json`**
+✅ **Routes are automatically detected by Cloudflare Pages**
 
 **Next Step**: Deploy and add your `GEMINI_API_KEY` environment variable in the Cloudflare dashboard.
 
-The error message will disappear once Cloudflare detects the Functions folder during deployment.
+Cloudflare Pages will automatically detect the Functions folder and create the appropriate routes during deployment.
 
 ## Additional Resources
 
