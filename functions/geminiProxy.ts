@@ -1,11 +1,11 @@
 // functions/geminiProxy.ts
 // Cloudflare Pages Function for Gemini API proxy
-// Uses direct Fetch API to work in Cloudflare Workers environment
 
-// Cloudflare Pages Function context type
+// 1. Define Types
 interface Env {
   GEMINI_API_KEY?: string;
   VITE_GEMINI_API_KEY?: string;
+  GOOGLE_API_KEY?: string;
 }
 
 interface PagesContext {
@@ -29,128 +29,126 @@ interface GeminiAPIResponse {
   }>;
 }
 
-/**
- * Clean up Gemini text so the frontend always gets plain JSON-as-string.
- * - Trims whitespace
- * - Removes ```json ... ``` or ``` ... ``` fences if present
- */
+// 2. Helper Functions
 function stripCodeFences(text: string): string {
   if (!text) return "";
-
   let cleaned = text.trim();
-
   if (cleaned.startsWith("```")) {
-    // Drop the first line (``` or ```json)
     const firstNewline = cleaned.indexOf("\n");
     if (firstNewline !== -1) {
       cleaned = cleaned.slice(firstNewline + 1);
     }
-
-    // Remove trailing ```
     if (cleaned.endsWith("```")) {
       cleaned = cleaned.slice(0, -3);
     }
-
     cleaned = cleaned.trim();
   }
-
   return cleaned;
 }
 
+// 3. Handle OPTIONS requests (CORS Preflight)
+// This fixes CORS errors when calling from the frontend
+export async function onRequestOptions(): Promise<Response> {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+
+// 4. Handle GET requests (Crucial for Debugging)
+// Allows you to visit /geminiProxy in the browser to confirm it exists
+export async function onRequestGet(context: PagesContext): Promise<Response> {
+  const { env } = context;
+  const hasKey = !!(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || env.GOOGLE_API_KEY);
+  
+  return new Response(
+    JSON.stringify({ 
+      status: "Alive", 
+      message: "Gemini Proxy is running!", 
+      hasApiKey: hasKey 
+    }),
+    {
+      status: 200,
+      headers: { 
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*" 
+      },
+    }
+  );
+}
+
+// 5. Handle POST requests (The Main Logic)
 export async function onRequestPost(context: PagesContext): Promise<Response> {
   const { request, env } = context;
   
   try {
-    // Get API key from environment
-    const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
+    // Get API key from environment (try multiple names)
+    const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || env.GOOGLE_API_KEY;
     
     if (!apiKey) {
+      console.error("Missing API Key on Server");
       return new Response(
-        JSON.stringify({ error: "Missing API Key on Server" }),
+        JSON.stringify({ error: "Missing API Key configuration on Server" }),
         {
           status: 500,
           headers: { 
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
+            "Access-Control-Allow-Origin": "*" 
           },
         }
       );
     }
 
-    // Parse the request body
+    // Parse Body
     let body: RequestBody;
     try {
       body = await request.json() as RequestBody;
     } catch (parseError) {
       return new Response(
         JSON.stringify({ error: "Invalid JSON in request body" }),
-        {
-          status: 400,
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-          },
-        }
+        { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
       );
     }
     
-    const { modelName, prompt, temperature = 0.8 } = body;
+    const { modelName = "gemini-1.5-flash", prompt, temperature = 0.8 } = body;
 
-    if (!modelName || !prompt) {
+    if (!prompt) {
       return new Response(
-        JSON.stringify({ error: "modelName and prompt are required" }),
-        {
-          status: 400,
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-          },
-        }
+        JSON.stringify({ error: "Prompt is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
       );
     }
 
-    // Call Gemini API directly using Fetch
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`;
+    // Call Gemini API
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
     
     const geminiResponse = await fetch(geminiUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
-        generationConfig: {
-          temperature: temperature,
-        },
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: temperature },
       }),
     });
 
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text();
-      console.error("Gemini API error:", errorText);
+      console.error(`Gemini API Error (${geminiResponse.status}):`, errorText);
       return new Response(
-        JSON.stringify({ 
-          error: "Gemini API error",
-          details: `Status ${geminiResponse.status}: ${errorText}` 
-        }),
-        {
-          status: geminiResponse.status,
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-          },
+        JSON.stringify({ error: "Gemini Upstream Error", details: errorText }),
+        { 
+          status: geminiResponse.status, 
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
         }
       );
     }
 
     const geminiData = await geminiResponse.json() as GeminiAPIResponse;
     
-    // Extract text from Gemini response
     let rawText = "";
     if (geminiData.candidates && geminiData.candidates[0]?.content?.parts?.[0]?.text) {
       rawText = geminiData.candidates[0].content.parts[0].text;
@@ -162,36 +160,19 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       status: 200,
       headers: { 
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*"
+        "Access-Control-Allow-Origin": "*" 
       },
     });
+
   } catch (error) {
-    console.error("Error in geminiProxy:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("Critical Error in geminiProxy:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
-      JSON.stringify({ 
-        error: "Gemini proxy error",
-        details: errorMessage 
-      }),
-      {
-        status: 500,
-        headers: { 
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        },
+      JSON.stringify({ error: "Internal Server Error", details: errorMessage }),
+      { 
+        status: 500, 
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } 
       }
     );
   }
-}
-
-// Handle OPTIONS requests for CORS
-export async function onRequestOptions(): Promise<Response> {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
-  });
 }
