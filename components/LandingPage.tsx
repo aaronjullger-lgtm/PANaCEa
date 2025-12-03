@@ -64,10 +64,7 @@ export function LandingPage() {
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
               <Zap className="w-5 h-5 text-white" />
             </div>
-            <span 
-              className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
+            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-serif">
               PANaCEa
             </span>
           </motion.div>
@@ -268,7 +265,7 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-slate-600 dark:text-slate-400">
-          <p>© 2024 PANaCEa. Your trusted partner in PANCE preparation.</p>
+          <p>© {new Date().getFullYear()} PANaCEa. Your trusted partner in PANCE preparation.</p>
         </div>
       </footer>
 
