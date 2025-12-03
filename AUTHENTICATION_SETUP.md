@@ -224,6 +224,24 @@ For high-traffic scenarios:
 5. **Monitor API usage** and set up alerts
 6. **Implement rate limiting** on sync endpoints
 
+### ⚠️ Important Security Note
+
+The current JWT verification in `/functions/api/sync.ts` is simplified for demonstration. Before deploying to production, you MUST implement proper JWT signature verification using:
+
+- **Option 1 (Recommended)**: Use `@clerk/backend` SDK
+  ```bash
+  npm install @clerk/backend
+  ```
+  Then use `clerkClient.verifyToken()` in your API functions
+
+- **Option 2**: Use `jsonwebtoken` library with proper key verification
+  ```bash
+  npm install jsonwebtoken
+  ```
+  Configure with your Clerk JWT public key
+
+Without proper verification, authentication tokens can be forged, compromising user data security.
+
 ## Support
 
 For issues:

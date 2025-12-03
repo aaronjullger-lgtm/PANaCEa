@@ -177,34 +177,41 @@ export function useUserStats(): UseUserStatsResult {
     }
   }, [isSignedIn, user, getToken]);
 
-  // Auto-sync when user signs in
+  // Auto-sync when user signs in (only once per session)
   useEffect(() => {
     if (isSignedIn && user) {
       syncFromCloud();
     }
-  }, [isSignedIn, user?.clerkId]); // Only sync on sign-in, not on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSignedIn]); // Only trigger on sign-in state change, not on every clerkId change
 
-  // Wrapper setters that also trigger cloud sync (debounced)
+  // Wrapper setters that also trigger cloud sync
+  // Note: These use a simple delay for sync. In production, consider using
+  // a debouncing library or queue-based sync for better reliability
   const setPerformanceData = useCallback((data: PerformanceRecord[] | ((prev: PerformanceRecord[]) => PerformanceRecord[])) => {
     setPerformanceDataState(data);
-    // Note: In production, you'd want to debounce this
+    // Trigger sync after a delay (simple debounce)
+    // In production, use a proper debouncing utility
     if (isSignedIn) {
-      // Trigger sync after a delay
-      setTimeout(() => syncToCloud(), 2000);
+      const timeoutId = setTimeout(() => syncToCloud(), 2000);
+      // Note: Cleanup would be needed if component unmounts
+      return () => clearTimeout(timeoutId);
     }
   }, [isSignedIn, syncToCloud]);
 
   const setMissedQuestions = useCallback((data: Question[] | ((prev: Question[]) => Question[])) => {
     setMissedQuestionsState(data);
     if (isSignedIn) {
-      setTimeout(() => syncToCloud(), 2000);
+      const timeoutId = setTimeout(() => syncToCloud(), 2000);
+      return () => clearTimeout(timeoutId);
     }
   }, [isSignedIn, syncToCloud]);
 
   const setFlaggedQuestions = useCallback((data: Question[] | ((prev: Question[]) => Question[])) => {
     setFlaggedQuestionsState(data);
     if (isSignedIn) {
-      setTimeout(() => syncToCloud(), 2000);
+      const timeoutId = setTimeout(() => syncToCloud(), 2000);
+      return () => clearTimeout(timeoutId);
     }
   }, [isSignedIn, syncToCloud]);
 

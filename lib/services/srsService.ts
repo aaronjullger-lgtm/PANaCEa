@@ -480,8 +480,18 @@ export function loadSRSItemsFromCloud(cloudItems: SRSItem[]): void {
   for (const cloudItem of cloudItems) {
     const existing = localItems.get(cloudItem.questionId);
     
+    // Ensure dates are properly compared as timestamps
+    const cloudUpdatedTime = typeof cloudItem.updatedAt === 'string' 
+      ? new Date(cloudItem.updatedAt).getTime() 
+      : cloudItem.updatedAt.getTime();
+    const existingUpdatedTime = existing 
+      ? (typeof existing.updatedAt === 'string' 
+          ? new Date(existing.updatedAt).getTime() 
+          : existing.updatedAt.getTime())
+      : 0;
+    
     // If no local item, or cloud item is newer, use cloud data
-    if (!existing || new Date(cloudItem.updatedAt) > new Date(existing.updatedAt)) {
+    if (!existing || cloudUpdatedTime > existingUpdatedTime) {
       localItems.set(cloudItem.questionId, {
         ...cloudItem,
         dueDate: new Date(cloudItem.dueDate),

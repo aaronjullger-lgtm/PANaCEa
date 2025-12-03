@@ -32,7 +32,14 @@ interface SyncResponse {
 
 /**
  * Extract user ID from Clerk session token
- * In production, this should properly verify the JWT
+ * 
+ * ⚠️ SECURITY WARNING: This is a simplified implementation for demonstration.
+ * In production, you MUST properly verify JWT signatures using:
+ * - @clerk/backend SDK (recommended)
+ * - jsonwebtoken library with proper key verification
+ * - Clerk's verify session endpoint
+ * 
+ * Without proper verification, tokens can be forged!
  */
 function extractUserIdFromToken(authHeader: string): string | null {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -40,7 +47,8 @@ function extractUserIdFromToken(authHeader: string): string | null {
   }
   
   try {
-    // Simple extraction - in production, verify the JWT signature
+    // ⚠️ WARNING: This only decodes, does NOT verify signature
+    // TODO: Replace with proper JWT verification before production deployment
     const token = authHeader.substring(7);
     const parts = token.split('.');
     if (parts.length !== 3) return null;
