@@ -233,6 +233,21 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <a
+                href="/admin/content-management"
+                className="flex items-center gap-3 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg hover:bg-[var(--color-accent)]/20 transition-colors text-left"
+              >
+                <Activity className="w-5 h-5 text-[var(--color-accent)]" />
+                <div>
+                  <div className="font-medium text-[var(--color-text-primary)]">
+                    Content Management
+                  </div>
+                  <div className="text-xs text-[var(--color-text-muted)]">
+                    Edit clinical content, conditions, and drugs
+                  </div>
+                </div>
+              </a>
+
               <button className="flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[var(--color-bg-tertiary)]/80 transition-colors text-left">
                 <Users className="w-5 h-5 text-[var(--color-accent)]" />
                 <div>
