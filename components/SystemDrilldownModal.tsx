@@ -243,6 +243,8 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                   <div className="flex items-center gap-2">
                     <label className="flex items-center gap-1 text-[11px] text-slate-500">
                       <input
+                        id="show-weak-only"
+                        name="show-weak-only"
                         type="checkbox"
                         className="h-3 w-3 rounded border-slate-300"
                         checked={showWeakOnly}

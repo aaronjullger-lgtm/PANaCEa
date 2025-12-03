@@ -8,6 +8,11 @@ interface Env {
   VITE_GEMINI_API_KEY?: string;
 }
 
+interface PagesContext {
+  request: Request;
+  env: Env;
+}
+
 interface RequestBody {
   modelName: string;
   prompt: string;
@@ -52,19 +57,9 @@ function stripCodeFences(text: string): string {
   return cleaned;
 }
 
-export async function onRequestPost(context) {
+export async function onRequestPost(context: PagesContext): Promise<Response> {
   const { request, env } = context;
   
-  // 1. Get the API Key from Cloudflare Environment Variables
-  const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
-
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: "Missing API Key on Server" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-
   try {
     // Get API key from environment
     const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY;
@@ -190,7 +185,7 @@ export async function onRequestPost(context) {
 }
 
 // Handle OPTIONS requests for CORS
-export async function onRequestOptions() {
+export async function onRequestOptions(): Promise<Response> {
   return new Response(null, {
     status: 204,
     headers: {

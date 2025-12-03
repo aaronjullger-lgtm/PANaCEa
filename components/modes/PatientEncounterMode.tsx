@@ -349,6 +349,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <h3 className="text-lg font-semibold mb-4 text-teal-400">Ask a Question</h3>
                 <div className="flex gap-2">
                   <input
+                    id="patient-question"
+                    name="patient-question"
                     type="text"
                     value={currentQuestion}
                     onChange={(e) => setCurrentQuestion(e.target.value)}
@@ -356,6 +358,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     placeholder="e.g., When did the chest pain start?"
                     className="flex-1 px-4 py-3 bg-slate-900/70 border border-teal-800/50 rounded-lg 
                              text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                    autoComplete="off"
                   />
                   <button
                     onClick={handleAskQuestion}
@@ -377,12 +380,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               >
                 <h3 className="text-lg font-semibold mb-4 text-teal-300">Your Diagnosis</h3>
                 <input
+                  id="patient-diagnosis"
+                  name="patient-diagnosis"
                   type="text"
                   value={userDiagnosis}
                   onChange={(e) => setUserDiagnosis(e.target.value)}
                   placeholder="Enter your diagnosis..."
                   className="w-full px-4 py-3 bg-slate-900/70 border border-teal-800/50 rounded-lg mb-4
                            text-white placeholder-slate-500 focus:outline-none focus:border-teal-500"
+                  autoComplete="off"
                 />
                 <button
                   onClick={handleSubmitDiagnosis}

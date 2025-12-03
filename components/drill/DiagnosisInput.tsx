@@ -130,6 +130,8 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
   return (
     <div className="relative flex-1">
       <input
+        id="diagnosis-input"
+        name="diagnosis-input"
         ref={inputRef}
         type="text"
         value={inputValue}
@@ -143,6 +145,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
         className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Diagnosis input"
         aria-autocomplete="list"
+        autoComplete="off"
         aria-controls="diagnosis-dropdown"
         aria-expanded={isOpen && filteredConditions.length > 0}
       />

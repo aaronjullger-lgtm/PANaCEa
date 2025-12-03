@@ -489,11 +489,14 @@ const MenuView: React.FC<MenuViewProps> = ({
         >
           <div className="flex justify-center">
             <input
+              id="condition-search"
+              name="condition-search"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search conditions or medications (e.g., ACS, Fluoxetine, DKA, Metoprolol)..."
               className="w-full px-5 py-3.5 border border-[var(--color-border)] bg-[var(--color-glass-bg)] backdrop-blur-xl text-[var(--color-text-primary)] rounded-2xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/40 focus:border-[var(--color-accent)] focus:scale-[1.01] transition-all duration-300 placeholder:text-[var(--color-text-muted)]"
+              autoComplete="off"
             />
           </div>
           <AnimatePresence>
