@@ -1,25 +1,10 @@
 // App.tsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
-import QuizView from "./components/QuizView";
-import MenuView from "./components/MenuView";
 import Loader from "./components/Loader";
-import PhotoDrillSession from "./components/PhotoDrillSession";
-import RapidRecallDrill from "./components/drill/recall/RapidRecallDrill";
-import DDxCompareDrill from "./components/drill/ddx/DDxCompareDrill";
-import MiniLabDrillSession from "./components/drill/MiniLabDrillSession";
-import PharmDrillSession from "./components/drill/PharmDrillSession";
-import FirstLineDrillSession from "./components/drill/FirstLineDrillSession";
-import ConditionDrillSession from "./components/drill/ConditionDrillSession";
-import GuidelineDrillSession from "./components/drill/GuidelineDrillSession";
-import FluidElectrolyteMode from "./components/modes/FluidElectrolyteMode";
-import AntibioticMode from "./components/modes/AntibioticMode";
-import PatientEncounterMode from "./components/modes/PatientEncounterMode";
-import SettingsStatsModal from "./components/SettingsStatsModal";
 import ThemeToggleButton from "./components/ThemeToggleButton";
-import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
 import { LandingPage } from "./components/LandingPage";
 import { AccountFooter } from "./components/AccountFooter";
 import { prefetchQuestions } from "./services/geminiService";
@@ -32,6 +17,23 @@ import type {
   ErrorTag,
 } from "./types";
 import type { TrainingModeId } from "./config/training-modes";
+
+// Lazy load components for better performance
+const QuizView = lazy(() => import("./components/QuizView"));
+const MenuView = lazy(() => import("./components/MenuView"));
+const PhotoDrillSession = lazy(() => import("./components/PhotoDrillSession"));
+const RapidRecallDrill = lazy(() => import("./components/drill/recall/RapidRecallDrill"));
+const DDxCompareDrill = lazy(() => import("./components/drill/ddx/DDxCompareDrill"));
+const MiniLabDrillSession = lazy(() => import("./components/drill/MiniLabDrillSession"));
+const PharmDrillSession = lazy(() => import("./components/drill/PharmDrillSession"));
+const FirstLineDrillSession = lazy(() => import("./components/drill/FirstLineDrillSession"));
+const ConditionDrillSession = lazy(() => import("./components/drill/ConditionDrillSession"));
+const GuidelineDrillSession = lazy(() => import("./components/drill/GuidelineDrillSession"));
+const FluidElectrolyteMode = lazy(() => import("./components/modes/FluidElectrolyteMode"));
+const AntibioticMode = lazy(() => import("./components/modes/AntibioticMode"));
+const PatientEncounterMode = lazy(() => import("./components/modes/PatientEncounterMode"));
+const SettingsStatsModal = lazy(() => import("./components/SettingsStatsModal"));
+const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcutsModal"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -414,22 +416,26 @@ const App: React.FC = () => {
       </header>
 
       {/* Settings/Stats Modal */}
-      <SettingsStatsModal
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
-        performanceData={performanceData}
-        clearPerformanceData={clearPerformanceData}
-        clearMissedQuestionsData={clearMissedQuestionsData}
-        clearFlaggedQuestionsData={clearFlaggedQuestionsData}
-        missedQuestionsCount={missedQuestions.length}
-        flaggedQuestionsCount={flaggedQuestions.length}
-      />
+      <Suspense fallback={null}>
+        <SettingsStatsModal
+          isOpen={isSettingsModalOpen}
+          onClose={() => setIsSettingsModalOpen(false)}
+          performanceData={performanceData}
+          clearPerformanceData={clearPerformanceData}
+          clearMissedQuestionsData={clearMissedQuestionsData}
+          clearFlaggedQuestionsData={clearFlaggedQuestionsData}
+          missedQuestionsCount={missedQuestions.length}
+          flaggedQuestionsCount={flaggedQuestions.length}
+        />
+      </Suspense>
 
       {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcutsModal
-        isOpen={isShortcutsModalOpen}
-        onClose={() => setIsShortcutsModalOpen(false)}
-      />
+      <Suspense fallback={null}>
+        <KeyboardShortcutsModal
+          isOpen={isShortcutsModalOpen}
+          onClose={() => setIsShortcutsModalOpen(false)}
+        />
+      </Suspense>
 
       <div className="max-w-4xl mx-auto px-4 py-6 md:py-10 pb-24">
         {isLoading && <Loader forceDark={view === "imaging_drill"} />}
@@ -453,24 +459,26 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <MenuView
-                performanceData={heatmapPerformance}
-                missedQuestions={missedQuestions}
-                flaggedQuestions={flaggedQuestions}
-                onBackToQuiz={handleBackToQuiz}
-                hasActiveSession={hasActiveSession}
-                setIsLoading={setIsLoading}
-                setError={setError}
-                onStartSession={handleStartSession}
-                isModalOpen={isModalOpen}
-                onCloseModal={() => setIsModalOpen(false)}
-                onConfirmSession={handleConfirmSession}
-                growthAreas={growthAreas}
-                onNavigateToDrillMode={handleNavigateToDrillMode}
-                isSyncing={isSyncing}
-                lastSyncTime={lastSyncTime}
-                syncError={syncError}
-              />
+              <Suspense fallback={<Loader />}>
+                <MenuView
+                  performanceData={heatmapPerformance}
+                  missedQuestions={missedQuestions}
+                  flaggedQuestions={flaggedQuestions}
+                  onBackToQuiz={handleBackToQuiz}
+                  hasActiveSession={hasActiveSession}
+                  setIsLoading={setIsLoading}
+                  setError={setError}
+                  onStartSession={handleStartSession}
+                  isModalOpen={isModalOpen}
+                  onCloseModal={() => setIsModalOpen(false)}
+                  onConfirmSession={handleConfirmSession}
+                  growthAreas={growthAreas}
+                  onNavigateToDrillMode={handleNavigateToDrillMode}
+                  isSyncing={isSyncing}
+                  lastSyncTime={lastSyncTime}
+                  syncError={syncError}
+                />
+              </Suspense>
             </motion.div>
           )}
 
@@ -483,85 +491,115 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <QuizView
-                initialQueue={questionQueue}
-                setParentQueue={setQuestionQueue}
-                addPerformanceRecord={addPerformanceRecord}
-                addMissedQuestion={addMissedQuestion}
-                updateReviewQuestion={updateReviewQuestion}
-                updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
-                setIsLoading={setIsLoading}
-                setError={setError}
-                sessionSettings={sessionSettings}
-                growthAreas={growthAreas}
-                onEndSession={handleEndSession}
-                onShowMenu={() => setView("menu")}
-                performanceData={heatmapPerformance}
-                fontSizeAdjustment={fontSizeAdjustment}
-                setFontSizeAdjustment={setFontSizeAdjustment}
-                flaggedQuestions={flaggedQuestions}
-                addFlaggedQuestion={addFlaggedQuestion}
-                removeFlaggedQuestion={removeFlaggedQuestion}
-                updateQuestionNote={updateQuestionNote}
-              />
+              <Suspense fallback={<Loader />}>
+                <QuizView
+                  initialQueue={questionQueue}
+                  setParentQueue={setQuestionQueue}
+                  addPerformanceRecord={addPerformanceRecord}
+                  addMissedQuestion={addMissedQuestion}
+                  updateReviewQuestion={updateReviewQuestion}
+                  updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                  setIsLoading={setIsLoading}
+                  setError={setError}
+                  sessionSettings={sessionSettings}
+                  growthAreas={growthAreas}
+                  onEndSession={handleEndSession}
+                  onShowMenu={() => setView("menu")}
+                  performanceData={heatmapPerformance}
+                  fontSizeAdjustment={fontSizeAdjustment}
+                  setFontSizeAdjustment={setFontSizeAdjustment}
+                  flaggedQuestions={flaggedQuestions}
+                  addFlaggedQuestion={addFlaggedQuestion}
+                  removeFlaggedQuestion={removeFlaggedQuestion}
+                  updateQuestionNote={updateQuestionNote}
+                />
+              </Suspense>
             </motion.div>
           )}
 
           {view === "photo_drill" && (
-            <PhotoDrillSession onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <PhotoDrillSession onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {/* ECG, Derm, and Imaging drills use the same PhotoDrillSession component with different filters */}
           {view === "ecg_drill" && (
-            <PhotoDrillSession onExit={() => setView("menu")} filterType="ecg" />
+            <Suspense fallback={<Loader />}>
+              <PhotoDrillSession onExit={() => setView("menu")} filterType="ecg" />
+            </Suspense>
           )}
 
           {view === "derm_drill" && (
-            <PhotoDrillSession onExit={() => setView("menu")} filterType="derm" />
+            <Suspense fallback={<Loader />}>
+              <PhotoDrillSession onExit={() => setView("menu")} filterType="derm" />
+            </Suspense>
           )}
 
           {view === "imaging_drill" && (
-            <PhotoDrillSession onExit={() => setView("menu")} filterType="imaging" />
+            <Suspense fallback={<Loader />}>
+              <PhotoDrillSession onExit={() => setView("menu")} filterType="imaging" />
+            </Suspense>
           )}
 
           {view === "rapid_recall" && (
-            <RapidRecallDrill onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <RapidRecallDrill onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {view === "ddx_compare" && (
-            <DDxCompareDrill onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <DDxCompareDrill onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {view === "mini_lab" && (
-            <MiniLabDrillSession onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <MiniLabDrillSession onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {view === "pharmacology" && (
-            <PharmDrillSession onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <PharmDrillSession onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {view === "first_line_treatment" && (
-            <FirstLineDrillSession onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <FirstLineDrillSession onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {view === "condition_drill" && (
-            <ConditionDrillSession onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <ConditionDrillSession onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {view === "guideline_drill" && (
-            <GuidelineDrillSession onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <GuidelineDrillSession onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {view === "fluid_electrolyte" && (
-            <FluidElectrolyteMode onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <FluidElectrolyteMode onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {view === "antibiotic_mode" && (
-            <AntibioticMode onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <AntibioticMode onExit={() => setView("menu")} />
+            </Suspense>
           )}
 
           {view === "patient_encounter" && (
-            <PatientEncounterMode onExit={() => setView("menu")} />
+            <Suspense fallback={<Loader />}>
+              <PatientEncounterMode onExit={() => setView("menu")} />
+            </Suspense>
           )}
         </AnimatePresence>
       </div>

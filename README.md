@@ -10,24 +10,56 @@ View your app in AI Studio: https://ai.studio/apps/drive/1XKKOL9unGhpt6WDahRfrws
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:**  Node.js (v18 or higher)
 
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-1. Install dependencies:
-   `npm install`
-2. Set up environment variables:
+2. **Set up environment variables:**
    ```bash
    cp .env.example .env
    ```
    Then edit `.env` and add:
    - `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key (from https://dashboard.clerk.com)
+   - `CLERK_SECRET_KEY`: Your Clerk secret key
    - `GEMINI_API_KEY`: Your Gemini API key
    - `VITE_GEMINI_API_KEY`: Your Gemini API key (for client-side)
+   - `DATABASE_URL`: Your PostgreSQL connection string (optional for development)
    
    See [AUTHENTICATION_SETUP.md](AUTHENTICATION_SETUP.md) for detailed authentication setup instructions.
 
-3. Start the backend server on port 3001 (required for `/geminiProxy` endpoint)
-4. Run the app:
-   `npm run dev`
+3. **Start the application:**
+   
+   **Option A - Run both frontend and backend together (recommended):**
+   ```bash
+   npm run dev:all
+   ```
+   This starts:
+   - Backend server on `http://localhost:3001`
+   - Frontend dev server on `http://localhost:3000`
+   
+   **Option B - Run separately:**
+   ```bash
+   # Terminal 1 - Backend
+   npm run dev:server
+   
+   # Terminal 2 - Frontend
+   npm run dev
+   ```
 
-**Note:** The Vite development server is configured to proxy requests to `/geminiProxy` to `http://localhost:3001`. Make sure your backend server is running on this port before starting the frontend.
+4. **Open your browser:**
+   Navigate to `http://localhost:3000`
+
+## Available Scripts
+
+- `npm run dev` - Start frontend development server
+- `npm run dev:server` - Start backend server with hot reload
+- `npm run dev:all` - Start both frontend and backend concurrently
+- `npm run build` - Build frontend for production
+- `npm run build:server` - Build backend for production
+- `npm run preview` - Preview production build
+- `npm test` - Run test suite
+
+**Note:** The Vite development server proxies requests to `/geminiProxy` to `http://localhost:3001`. The backend server must be running for AI features to work.

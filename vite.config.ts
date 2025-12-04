@@ -24,6 +24,34 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              // Vendor chunks for better caching
+              'vendor-react': ['react', 'react-dom'],
+              'vendor-clerk': ['@clerk/clerk-react', '@clerk/backend'],
+              'vendor-animation': ['framer-motion'],
+              'vendor-icons': ['lucide-react'],
+              'vendor-markdown': ['react-markdown', 'remark-gfm', 'rehype-raw', 'unified', 'remark-parse'],
+              'vendor-ai': ['@google/generative-ai'],
+            }
+          }
+        },
+        chunkSizeWarningLimit: 1000,
+        // Conditionally enable source maps based on environment
+        // In production, use 'hidden' to generate maps but not reference them in the bundle
+        sourcemap: mode === 'production' ? 'hidden' : true,
+      },
+      optimizeDeps: {
+        include: [
+          'react',
+          'react-dom',
+          '@clerk/clerk-react',
+          'framer-motion',
+          'lucide-react',
+        ]
       }
     };
 });
