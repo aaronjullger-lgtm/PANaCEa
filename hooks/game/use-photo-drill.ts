@@ -406,14 +406,79 @@ export const MOCK_CASES: PhotoCase[] = [
  * @param threshold - Similarity threshold (0-1), default 0.8
  * @returns true if strings are similar enough
  */
+/**
+ * Calculate the Levenshtein distance between two strings.
+ * This measures the minimum number of single-character edits (insertions, deletions, or substitutions)
+ * required to change one string into another.
+ * 
+ * @param str1 - First string to compare
+ * @param str2 - Second string to compare
+ * @returns The Levenshtein distance between the two strings
+ */
+function levenshteinDistance(str1: string, str2: string): number {
+  const len1 = str1.length;
+  const len2 = str2.length;
+  
+  // Create a 2D array to store distances
+  const matrix: number[][] = Array(len1 + 1)
+    .fill(null)
+    .map(() => Array(len2 + 1).fill(0));
+  
+  // Initialize first column and row
+  for (let i = 0; i <= len1; i++) {
+    matrix[i][0] = i;
+  }
+  for (let j = 0; j <= len2; j++) {
+    matrix[0][j] = j;
+  }
+  
+  // Fill in the rest of the matrix
+  for (let i = 1; i <= len1; i++) {
+    for (let j = 1; j <= len2; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,      // deletion
+        matrix[i][j - 1] + 1,      // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+  
+  return matrix[len1][len2];
+}
+
+/**
+ * Fuzzy matching function that uses Levenshtein distance to allow for minor spelling errors.
+ * This is especially useful for medical terminology where users might have small typos.
+ * 
+ * @param input - The user's input string
+ * @param target - The correct target string
+ * @param threshold - Similarity threshold (0-1), default 0.8. Higher values require closer matches.
+ * @returns true if the input is similar enough to the target
+ */
 export function fuzzyMatch(
   input: string,
   target: string,
-  _threshold: number = 0.8
+  threshold: number = 0.8
 ): boolean {
-  // For now, just do case-insensitive exact match
-  // TODO: Implement Levenshtein distance or similar algorithm
-  return input.toLowerCase().trim() === target.toLowerCase().trim();
+  // Normalize both strings: lowercase and trim whitespace
+  const normalizedInput = input.toLowerCase().trim();
+  const normalizedTarget = target.toLowerCase().trim();
+  
+  // Exact match always returns true
+  if (normalizedInput === normalizedTarget) {
+    return true;
+  }
+  
+  // Calculate Levenshtein distance
+  const distance = levenshteinDistance(normalizedInput, normalizedTarget);
+  
+  // Calculate similarity ratio based on the longer string
+  const maxLength = Math.max(normalizedInput.length, normalizedTarget.length);
+  const similarity = 1 - (distance / maxLength);
+  
+  // Return true if similarity meets or exceeds threshold
+  return similarity >= threshold;
 }
 
 // ============================================================================

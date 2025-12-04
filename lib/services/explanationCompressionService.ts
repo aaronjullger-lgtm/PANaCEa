@@ -3,11 +3,43 @@
  * 
  * Service for compressing and extracting high-yield content from question explanations.
  * Focuses on actionable learning, brevity, buzzwords, and diagnostic clues.
+ * 
+ * Features:
+ * - Adaptive explanations based on user performance patterns
+ * - Time-to-read analysis for pacing feedback
+ * - Intelligent content prioritization
  */
 
-// TODO: Implement adaptive explanations based on user bias
-// TODO: Add time-to-read analysis
-// TODO: Add optional audio playback support
+/**
+ * User bias profile for adaptive explanations.
+ * Tracks common error patterns to customize explanation focus.
+ */
+export interface UserBiasProfile {
+  /** Tendency to guess rather than reason (0-1) */
+  guessingRate: number;
+  /** Tendency to overthink or second-guess (0-1) */
+  overthinkingRate: number;
+  /** Average time per question in seconds */
+  avgTimePerQuestion: number;
+  /** Weak knowledge areas (system codes) */
+  weakSystems: string[];
+  /** Common error types */
+  commonErrors: ('knowledge_gap' | 'misread' | 'calculation' | 'time_pressure')[];
+}
+
+/**
+ * Explanation customization options based on user needs.
+ */
+export interface ExplanationOptions {
+  /** User's performance profile for adaptive content */
+  userProfile?: UserBiasProfile;
+  /** Verbosity level: 'minimal', 'standard', or 'detailed' */
+  verbosity?: 'minimal' | 'standard' | 'detailed';
+  /** Focus area: 'diagnostic', 'treatment', 'differential', or 'all' */
+  focus?: 'diagnostic' | 'treatment' | 'differential' | 'all';
+  /** Include time-to-read estimate */
+  includeReadingTime?: boolean;
+}
 
 /**
  * Common medical terms that should be auto-bolded in explanations
@@ -426,6 +458,201 @@ function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/**
+ * Calculate estimated reading time for text content.
+ * Based on average reading speed of 200-250 words per minute for technical content.
+ * 
+ * @param text - The text to analyze
+ * @returns Reading time estimate in seconds and formatted string
+ */
+export function calculateReadingTime(text: string): { seconds: number; formatted: string } {
+  if (!text || text.trim().length === 0) {
+    return { seconds: 0, formatted: '0 sec' };
+  }
+  
+  // Count words (split by whitespace)
+  const words = text.trim().split(/\s+/).length;
+  
+  // Use 200 words per minute for medical content (slower than general reading)
+  const wordsPerMinute = 200;
+  const minutes = words / wordsPerMinute;
+  const seconds = Math.ceil(minutes * 60);
+  
+  // Format the output
+  let formatted: string;
+  if (seconds < 60) {
+    formatted = `${seconds} sec`;
+  } else if (seconds < 120) {
+    formatted = `1 min`;
+  } else {
+    const mins = Math.ceil(seconds / 60);
+    formatted = `${mins} min`;
+  }
+  
+  return { seconds, formatted };
+}
+
+/**
+ * Adapt explanation content based on user's performance profile.
+ * Customizes focus areas and detail level based on identified weaknesses.
+ * 
+ * @param explanation - The original explanation text
+ * @param options - Customization options including user profile
+ * @returns Adapted explanation with metadata
+ */
+export function adaptExplanation(
+  explanation: string,
+  options: ExplanationOptions = {}
+): {
+  text: string;
+  bullets: string[];
+  readingTime?: { seconds: number; formatted: string };
+  adaptations: string[];
+} {
+  const {
+    userProfile,
+    verbosity = 'standard',
+    focus = 'all',
+    includeReadingTime = false,
+  } = options;
+  
+  const adaptations: string[] = [];
+  
+  // Start with compressed explanation
+  let bullets = compressExplanation(explanation);
+  
+  // Adapt based on user profile
+  if (userProfile) {
+    // If user tends to guess (knowledge gaps), emphasize diagnostic features
+    if (userProfile.guessingRate > 0.4) {
+      bullets = bullets.filter(bullet => 
+        /\b(diagnos|confirm|classic|pathognomonic|key finding|distinguish)\b/i.test(bullet)
+      );
+      adaptations.push('Focused on diagnostic features (identified knowledge gaps)');
+    }
+    
+    // If user overthinks, provide clear decision rules
+    if (userProfile.overthinkingRate > 0.4) {
+      bullets = bullets.filter(bullet => 
+        /\b(first-line|gold standard|most common|rule out|definitive)\b/i.test(bullet)
+      );
+      adaptations.push('Emphasized clear decision rules (to reduce overthinking)');
+    }
+    
+    // If user is slow, prioritize high-yield content
+    if (userProfile.avgTimePerQuestion > 90) {
+      bullets = bullets.slice(0, 4); // Fewer, more focused bullets
+      adaptations.push('Condensed to high-yield points only (time management)');
+    }
+    
+    // If user makes calculation errors, highlight numerical information
+    if (userProfile.commonErrors.includes('calculation')) {
+      const calcPattern = /\d+|calculate|formula|value|level|dose|range/i;
+      bullets = bullets.map(bullet => {
+        if (calcPattern.test(bullet)) {
+          return `🔢 ${bullet}`;
+        }
+        return bullet;
+      });
+      adaptations.push('Highlighted numerical calculations');
+    }
+  }
+  
+  // Apply verbosity setting
+  if (verbosity === 'minimal') {
+    bullets = bullets.slice(0, 3);
+    adaptations.push('Minimal verbosity applied');
+  } else if (verbosity === 'detailed') {
+    // For detailed, include the full explanation as first item
+    bullets = [explanation, ...bullets];
+    adaptations.push('Detailed explanation included');
+  }
+  
+  // Apply focus filter
+  if (focus !== 'all') {
+    switch (focus) {
+      case 'diagnostic':
+        bullets = bullets.filter(bullet => 
+          /\b(diagnos|symptom|sign|present|finding|test|lab)\b/i.test(bullet)
+        );
+        adaptations.push('Filtered to diagnostic information');
+        break;
+      case 'treatment':
+        bullets = bullets.filter(bullet => 
+          /\b(treat|manag|therap|drug|medicat|prescribe|surgery)\b/i.test(bullet)
+        );
+        adaptations.push('Filtered to treatment information');
+        break;
+      case 'differential':
+        bullets = bullets.filter(bullet => 
+          /\b(versus|unlike|distinguish|differentiate|rule out|compare)\b/i.test(bullet)
+        );
+        adaptations.push('Filtered to differential diagnosis');
+        break;
+    }
+  }
+  
+  // Ensure we always have at least one bullet
+  if (bullets.length === 0) {
+    bullets = [explanation];
+  }
+  
+  const text = bullets.join('\n\n');
+  
+  const result: any = {
+    text,
+    bullets,
+    adaptations,
+  };
+  
+  if (includeReadingTime) {
+    result.readingTime = calculateReadingTime(text);
+  }
+  
+  return result;
+}
+
+/**
+ * Generate a study tip based on user's performance patterns.
+ * 
+ * @param userProfile - User's bias profile
+ * @returns Personalized study tip
+ */
+export function generateStudyTip(userProfile: UserBiasProfile): string {
+  const tips: string[] = [];
+  
+  if (userProfile.guessingRate > 0.4) {
+    tips.push('💡 Tip: Review diagnostic criteria before attempting questions to reduce guessing.');
+  }
+  
+  if (userProfile.overthinkingRate > 0.4) {
+    tips.push('💡 Tip: Trust your initial instinct. Practice first-line treatments to build confidence.');
+  }
+  
+  if (userProfile.avgTimePerQuestion > 90) {
+    tips.push('💡 Tip: Practice timed drills to improve reading speed and pattern recognition.');
+  }
+  
+  if (userProfile.avgTimePerQuestion < 30) {
+    tips.push('💡 Tip: Slow down and read carefully. Speed without accuracy won\'t help on exam day.');
+  }
+  
+  if (userProfile.commonErrors.includes('misread')) {
+    tips.push('💡 Tip: Underline key phrases in the question stem to avoid missing critical details.');
+  }
+  
+  if (userProfile.commonErrors.includes('calculation')) {
+    tips.push('💡 Tip: Review common formulas and practice mental math for clinical calculations.');
+  }
+  
+  if (tips.length === 0) {
+    tips.push('💡 Keep up the great work! Consistency is key to PANCE success.');
+  }
+  
+  // Return a random tip from applicable ones
+  return tips[Math.floor(Math.random() * tips.length)];
+}
+
 export default {
   compressExplanation,
   extractBuzzwords,
@@ -434,4 +661,7 @@ export default {
   storeUserReaction,
   updateWeaknessMap,
   updateConfusionGraph,
+  calculateReadingTime,
+  adaptExplanation,
+  generateStudyTip,
 };

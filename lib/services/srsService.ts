@@ -607,7 +607,306 @@ export function formatNextReview(dueDate: Date): string {
   }
 }
 
-// TODO: integrate forgetting curve visualization
-// TODO: enable priority override to support cram mode
-// TODO: research SM-15 enhancements for professional education
-// TODO: apply Bayesian reinforcement based on global learner data
+// ============================================================================
+// Forgetting Curve Visualization
+// ============================================================================
+
+/**
+ * Data point for forgetting curve visualization.
+ */
+export interface ForgettingCurvePoint {
+  daysSinceReview: number;
+  retentionProbability: number;
+  label: string;
+}
+
+/**
+ * Calculate forgetting curve data for visualization.
+ * Based on Ebbinghaus forgetting curve adapted for spaced repetition.
+ * 
+ * @param item - The SRS item to analyze
+ * @returns Array of data points for plotting the forgetting curve
+ */
+export function calculateForgettingCurve(item: SRSItem): ForgettingCurvePoint[] {
+  const points: ForgettingCurvePoint[] = [];
+  const maxDays = item.interval * 2; // Show curve beyond next review
+  
+  // Calculate retention probability using exponential decay
+  // R(t) = e^(-t/S) where S is stability (related to easiness and repetition)
+  const stability = item.easiness * (1 + item.repetition * 0.5);
+  
+  for (let day = 0; day <= maxDays; day += Math.max(1, Math.floor(maxDays / 20))) {
+    const retention = Math.exp(-day / stability) * 100;
+    
+    let label = '';
+    if (day === 0) {
+      label = 'Now';
+    } else if (day === item.interval) {
+      label = 'Next Review';
+    } else if (day === maxDays) {
+      label = `+${Math.floor(maxDays)} days`;
+    }
+    
+    points.push({
+      daysSinceReview: day,
+      retentionProbability: Math.max(0, Math.min(100, retention)),
+      label,
+    });
+  }
+  
+  return points;
+}
+
+/**
+ * Get retention statistics for a collection of SRS items.
+ * 
+ * @param items - Array of SRS items to analyze
+ * @returns Statistics about retention levels
+ */
+export function getRetentionStats(items: SRSItem[]): {
+  avgRetention: number;
+  criticalItems: number;
+  solidItems: number;
+  masteredItems: number;
+} {
+  if (items.length === 0) {
+    return { avgRetention: 0, criticalItems: 0, solidItems: 0, masteredItems: 0 };
+  }
+  
+  let totalRetention = 0;
+  let criticalItems = 0;
+  let solidItems = 0;
+  let masteredItems = 0;
+  
+  items.forEach(item => {
+    const daysSinceReview = Math.floor(
+      (Date.now() - item.lastReviewed.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const stability = item.easiness * (1 + item.repetition * 0.5);
+    const retention = Math.exp(-daysSinceReview / stability) * 100;
+    
+    totalRetention += retention;
+    
+    if (retention < 50) {
+      criticalItems++;
+    } else if (retention < 80) {
+      solidItems++;
+    } else {
+      masteredItems++;
+    }
+  });
+  
+  return {
+    avgRetention: totalRetention / items.length,
+    criticalItems,
+    solidItems,
+    masteredItems,
+  };
+}
+
+// ============================================================================
+// Cram Mode Support
+// ============================================================================
+
+/**
+ * Priority override modes for different study scenarios.
+ */
+export type PriorityMode = 'standard' | 'cram' | 'maintenance' | 'weak_areas';
+
+/**
+ * Configuration for priority override in different modes.
+ */
+export interface PriorityOverride {
+  mode: PriorityMode;
+  /** Weight multiplier for overdue items (default: 1.0) */
+  overdueWeight?: number;
+  /** Weight multiplier for high-easiness items (default: 1.0) */
+  easyWeight?: number;
+  /** Weight multiplier for low-easiness items (default: 1.0) */
+  hardWeight?: number;
+  /** Maximum number of items to review per session */
+  maxItems?: number;
+}
+
+/**
+ * Get the next question to review with priority mode support.
+ * Supports different study modes: standard review, cram mode, maintenance, etc.
+ * 
+ * @param userId - User ID to filter items
+ * @param priorityOverride - Optional priority mode configuration
+ * @returns Next question to review or null if none available
+ */
+export function getNextReviewWithPriority(
+  userId: string,
+  priorityOverride?: PriorityOverride
+): NextQuestionResult | null {
+  const items = loadSRSItems();
+  const userItems = Array.from(items.values()).filter(
+    (item) => item.userId === userId
+  );
+  
+  if (userItems.length === 0) {
+    return null;
+  }
+  
+  const now = new Date();
+  const mode = priorityOverride?.mode || 'standard';
+  
+  // Apply mode-specific filtering and weighting
+  let candidateItems = userItems;
+  
+  switch (mode) {
+    case 'cram':
+      // Cram mode: Focus on items due soon, prioritize overdue and difficult items
+      candidateItems = userItems.filter(item => {
+        const daysToDue = Math.floor(
+          (item.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return daysToDue <= 7; // Only items due within a week
+      });
+      break;
+      
+    case 'maintenance':
+      // Maintenance mode: Only review items that are actually due
+      candidateItems = userItems.filter(item => item.dueDate <= now);
+      break;
+      
+    case 'weak_areas':
+      // Weak areas mode: Focus on low-easiness items regardless of due date
+      candidateItems = userItems.filter(item => item.easiness < 2.0);
+      break;
+      
+    case 'standard':
+    default:
+      // Standard mode: Include items due within the next day
+      candidateItems = userItems.filter(item => {
+        const daysToDue = Math.floor(
+          (item.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        return daysToDue <= 1;
+      });
+      break;
+  }
+  
+  if (candidateItems.length === 0) {
+    return null;
+  }
+  
+  // Calculate priority scores with mode-specific weights
+  const weights = {
+    overdue: priorityOverride?.overdueWeight || (mode === 'cram' ? 3.0 : 1.0),
+    easy: priorityOverride?.easyWeight || (mode === 'cram' ? 0.3 : 1.0),
+    hard: priorityOverride?.hardWeight || (mode === 'weak_areas' ? 2.0 : 1.0),
+  };
+  
+  const scoredItems = candidateItems.map(item => {
+    const overdueDays = Math.max(
+      0,
+      Math.floor((now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24))
+    );
+    
+    // Base priority on how overdue the item is
+    let priority = overdueDays * weights.overdue;
+    
+    // Adjust for difficulty
+    if (item.easiness < 2.0) {
+      priority *= weights.hard;
+    } else if (item.easiness > 2.5) {
+      priority *= weights.easy;
+    }
+    
+    // Boost items with low stability (high forgetting risk)
+    if (item.stabilityScore < 0.5) {
+      priority *= 1.5;
+    }
+    
+    let reason = '';
+    if (overdueDays > 0) {
+      reason = `Overdue by ${overdueDays} day${overdueDays !== 1 ? 's' : ''}`;
+    } else if (item.easiness < 2.0) {
+      reason = 'Difficult item - needs reinforcement';
+    } else {
+      reason = 'Scheduled for review';
+    }
+    
+    return {
+      item,
+      priority,
+      overdueDays,
+      reason,
+    };
+  });
+  
+  // Sort by priority (highest first)
+  scoredItems.sort((a, b) => b.priority - a.priority);
+  
+  // Apply max items limit if specified
+  const maxItems = priorityOverride?.maxItems || candidateItems.length;
+  const selectedItem = scoredItems[0];
+  
+  if (!selectedItem) {
+    return null;
+  }
+  
+  return {
+    questionId: selectedItem.item.questionId,
+    dueDate: selectedItem.item.dueDate,
+    overdueDays: selectedItem.overdueDays,
+    priority: selectedItem.priority,
+    reason: selectedItem.reason,
+  };
+}
+
+/**
+ * Get a batch of questions for a cram session.
+ * 
+ * @param userId - User ID to filter items
+ * @param count - Number of items to retrieve
+ * @param priorityMode - Priority mode for selection
+ * @returns Array of question IDs prioritized for the session
+ */
+export function getCramSessionQuestions(
+  userId: string,
+  count: number = 20,
+  priorityMode: PriorityMode = 'cram'
+): string[] {
+  const items = loadSRSItems();
+  const userItems = Array.from(items.values()).filter(
+    (item) => item.userId === userId
+  );
+  
+  if (userItems.length === 0) {
+    return [];
+  }
+  
+  const questionIds: string[] = [];
+  const override: PriorityOverride = {
+    mode: priorityMode,
+    maxItems: count,
+  };
+  
+  // Collect questions using priority algorithm
+  for (let i = 0; i < count; i++) {
+    const next = getNextReviewWithPriority(userId, override);
+    if (!next) break;
+    
+    questionIds.push(next.questionId);
+    
+    // Temporarily mark as reviewed to get next item
+    const itemsMap = loadSRSItems();
+    const item = Array.from(itemsMap.values()).find(
+      (item) => item.questionId === next.questionId && item.userId === userId
+    );
+    if (item) {
+      item.lastReviewed = new Date();
+      saveSRSItems(itemsMap);
+    }
+  }
+  
+  return questionIds;
+}
+
+// Research notes for future enhancements:
+// - SM-15 algorithm improvements for professional education contexts
+// - Bayesian reinforcement using global learner data for difficulty calibration
+// - Machine learning for personalized retention curve fitting

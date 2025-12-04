@@ -1,0 +1,117 @@
+/**
+ * Data Loader Utility
+ * 
+ * Provides lazy loading and caching for large data files to improve
+ * initial bundle size and application performance.
+ */
+
+// Cache to store loaded data
+const dataCache = new Map<string, any>();
+
+/**
+ * Lazily load drug data when needed.
+ * Uses dynamic import to keep it out of the main bundle.
+ * 
+ * @returns Promise resolving to the drug data
+ */
+export async function loadDrugData(): Promise<any> {
+  const cacheKey = 'drugData';
+  
+  // Return from cache if already loaded
+  if (dataCache.has(cacheKey)) {
+    return dataCache.get(cacheKey);
+  }
+  
+  try {
+    const module = await import('../../pharm/drugData.json');
+    const data = module.default;
+    dataCache.set(cacheKey, data);
+    return data;
+  } catch (error) {
+    console.error('Failed to load drug data:', error);
+    throw new Error('Unable to load drug data. Please try again.');
+  }
+}
+
+/**
+ * Lazily load condition content when needed.
+ * Uses dynamic import to keep it out of the main bundle.
+ * 
+ * @returns Promise resolving to the condition content
+ */
+export async function loadConditionContent(): Promise<any> {
+  const cacheKey = 'conditionContent';
+  
+  // Return from cache if already loaded
+  if (dataCache.has(cacheKey)) {
+    return dataCache.get(cacheKey);
+  }
+  
+  try {
+    const module = await import('../../conditionContent.correct.json');
+    const data = module.default;
+    dataCache.set(cacheKey, data);
+    return data;
+  } catch (error) {
+    console.error('Failed to load condition content:', error);
+    throw new Error('Unable to load condition content. Please try again.');
+  }
+}
+
+/**
+ * Lazily load lab cases data when needed.
+ * Uses dynamic import to keep it out of the main bundle.
+ * 
+ * @returns Promise resolving to the lab cases data
+ */
+export async function loadLabCases(): Promise<any> {
+  const cacheKey = 'labCases';
+  
+  // Return from cache if already loaded
+  if (dataCache.has(cacheKey)) {
+    return dataCache.get(cacheKey);
+  }
+  
+  try {
+    const module = await import('../../src/data/labCases.json');
+    const data = module.default;
+    dataCache.set(cacheKey, data);
+    return data;
+  } catch (error) {
+    console.error('Failed to load lab cases:', error);
+    throw new Error('Unable to load lab cases data. Please try again.');
+  }
+}
+
+/**
+ * Preload data in the background to improve perceived performance.
+ * Call this after the initial app load to warm up the cache.
+ */
+export function preloadData(): void {
+  // Preload in the background without blocking
+  setTimeout(() => {
+    loadDrugData().catch(() => {
+      // Silently fail - will retry when actually needed
+    });
+    loadConditionContent().catch(() => {
+      // Silently fail - will retry when actually needed
+    });
+    loadLabCases().catch(() => {
+      // Silently fail - will retry when actually needed
+    });
+  }, 2000); // Wait 2 seconds after app load
+}
+
+/**
+ * Clear the data cache. Useful for testing or forcing a reload.
+ */
+export function clearDataCache(): void {
+  dataCache.clear();
+}
+
+/**
+ * Get the current cache size (number of loaded datasets).
+ */
+export function getCacheSize(): number {
+  return dataCache.size;
+}
