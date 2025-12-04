@@ -50,23 +50,35 @@ export function validateStringLength(field: string, min: number, max: number) {
 
 /**
  * Sanitizes string input to prevent XSS
- * Note: This is a basic sanitizer. For production, consider using a dedicated library
- * like DOMPurify or validator.js for more robust protection.
+ * 
+ * ⚠️ WARNING: This is a BASIC sanitizer suitable for development only.
+ * For production use, MUST replace with a dedicated library like:
+ * - DOMPurify (https://github.com/cure53/DOMPurify)
+ * - validator.js (https://github.com/validatorjs/validator.js)
+ * - xss (https://github.com/leizongmin/js-xss)
+ * 
+ * This basic implementation has known limitations and should NOT be used
+ * for production security without enhancement.
  */
 export function sanitizeString(value: string): string {
   if (typeof value !== 'string') {
     throw new TypeError('sanitizeString expects a string input');
   }
   
-  // Remove potentially dangerous characters and tags
-  // This is a basic implementation - enhance for production use
+  // BASIC sanitization - Replace with DOMPurify or similar for production
+  // This implementation has known security limitations
+  
+  // For production, use:
+  // import DOMPurify from 'dompurify';
+  // return DOMPurify.sanitize(value);
+  
   return value
-    .replace(/<script[^>]*>.*?<\/script>/gi, '')
-    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
-    .replace(/<object[^>]*>.*?<\/object>/gi, '')
-    .replace(/<embed[^>]*>.*?<\/embed>/gi, '')
-    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-    .replace(/javascript:/gi, '')
+    .replace(/<script[^>]*>.*?<\/script>/gis, '')  // Remove scripts
+    .replace(/<iframe[^>]*>.*?<\/iframe>/gis, '')  // Remove iframes
+    .replace(/<object[^>]*>.*?<\/object>/gis, '')  // Remove objects
+    .replace(/<embed[^>]*>.*?<\/embed>/gis, '')    // Remove embeds
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')   // Remove inline event handlers
+    .replace(/(javascript|data|vbscript):/gi, '')   // Remove dangerous protocols
     .trim();
 }
 
