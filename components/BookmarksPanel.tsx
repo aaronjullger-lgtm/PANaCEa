@@ -209,7 +209,7 @@ export const BookmarksPanel: React.FC<BookmarksPanelProps> = ({
                         </div>
                         
                         {/* Question Preview */}
-                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-2">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 mb-2 overflow-hidden" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                           {question.question}
                         </p>
                         
