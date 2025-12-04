@@ -149,18 +149,28 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     reset,
     startSession,
     exitToMenu,
+    showCategoryMenu,
     validDiagnoses,
     orderTest,
     availableTests,
   } = useMiniLabDrill();
   
   const [showOrderTestMenu, setShowOrderTestMenu] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleExit = () => {
     exitToMenu();
     if (onExit) {
       onExit();
     }
+  };
+
+  const handleStart = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      showCategoryMenu();
+      setIsLoading(false);
+    }, 500);
   };
 
   const handleCategorySelect = (category: LabCategory) => {
@@ -185,6 +195,112 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     animate: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 },
   };
+
+  // =========================================================================
+  // LANDING PAGE - Welcome screen with mode description
+  // =========================================================================
+  if (status === 'landing') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white">
+        <div className="border-b border-emerald-800/30 bg-black/20 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FlaskConical className="w-8 h-8 text-emerald-400" />
+              <div>
+                <h1 className="text-2xl font-bold">Mini Lab Mode</h1>
+                <p className="text-sm text-emerald-300">Clinical Lab Interpretation</p>
+              </div>
+            </div>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center space-y-8"
+          >
+            <div className="space-y-4">
+              <h2 className="text-4xl font-bold text-emerald-400">Master Lab Interpretation</h2>
+              <p className="text-xl text-slate-300">
+                Diagnose conditions from real lab values and clinical context
+              </p>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-8 border border-emerald-800/30 text-left space-y-6">
+              <h3 className="text-2xl font-semibold text-emerald-400">What You'll Practice</h3>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
+                  <h4 className="font-semibold text-white mb-2">Hematology</h4>
+                  <p className="text-slate-400 text-sm">CBC, iron studies, coagulation disorders</p>
+                </div>
+                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
+                  <h4 className="font-semibold text-white mb-2">Metabolic</h4>
+                  <p className="text-slate-400 text-sm">Electrolytes, ABG, acid-base analysis</p>
+                </div>
+                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
+                  <h4 className="font-semibold text-white mb-2">Endocrine</h4>
+                  <p className="text-slate-400 text-sm">Thyroid, adrenal, glucose disorders</p>
+                </div>
+                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
+                  <h4 className="font-semibold text-white mb-2">Renal</h4>
+                  <p className="text-slate-400 text-sm">Kidney function, electrolyte imbalances</p>
+                </div>
+                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
+                  <h4 className="font-semibold text-white mb-2">Hepatic</h4>
+                  <p className="text-slate-400 text-sm">LFTs, bilirubin, liver disease</p>
+                </div>
+                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
+                  <h4 className="font-semibold text-white mb-2">Cardiac</h4>
+                  <p className="text-slate-400 text-sm">Troponin, BNP, cardiac markers</p>
+                </div>
+              </div>
+
+              <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
+                <p className="text-sm text-emerald-300 font-semibold mb-2">Features:</p>
+                <ul className="text-sm text-slate-300 space-y-1">
+                  <li>• Realistic clinical vignettes with patient demographics</li>
+                  <li>• Multiple lab panels (CBC, CMP, specific panels)</li>
+                  <li>• Order additional tests as needed</li>
+                  <li>• Highlighted abnormal and critical values</li>
+                  <li>• Detailed explanations of key findings</li>
+                </ul>
+              </div>
+            </div>
+
+            <button
+              onClick={handleStart}
+              disabled={isLoading}
+              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 
+                       disabled:cursor-not-allowed rounded-lg font-semibold text-lg
+                       transition-colors flex items-center justify-center gap-3 mx-auto"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  Choose Category
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   // =========================================================================
   // VIEW A: The Lobby (Status: 'menu')

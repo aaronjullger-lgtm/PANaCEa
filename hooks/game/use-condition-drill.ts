@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { generateConditionQuestion, type ConditionQuestion, type ConditionQuestionType } from '@/data/conditionDrillData';
 
-export type ConditionDrillStatus = 'menu' | 'playing' | 'feedback' | 'summary';
+export type ConditionDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
 export type ConditionCategory = 
   | 'presentation'
@@ -24,6 +24,7 @@ export interface UseConditionDrillReturn {
   reset: () => void;
   startSession: (category: ConditionCategory) => void;
   exitToMenu: () => void;
+  showCategoryMenu: () => void;
 }
 
 const INITIAL_QUEUE_SIZE = 3;
@@ -38,7 +39,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [userAnswerIndex, setUserAnswerIndex] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [status, setStatus] = useState<ConditionDrillStatus>('menu');
+  const [status, setStatus] = useState<ConditionDrillStatus>('landing');
   
   // Track recently used conditions to avoid repetition
   const recentConditionsRef = useRef<Set<string>>(new Set());
@@ -90,8 +91,13 @@ export function useConditionDrill(): UseConditionDrillReturn {
     setStatus('playing');
   }, [generateNewQuestion]);
 
-  const exitToMenu = useCallback(() => {
+  const showCategoryMenu = useCallback(() => {
     setStatus('menu');
+  }, []);
+
+
+  const exitToMenu = useCallback(() => {
+    setStatus('landing');
     setQueue([]);
     setCurrentIndex(0);
     setScore(0);
@@ -160,5 +166,6 @@ export function useConditionDrill(): UseConditionDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    showCategoryMenu,
   };
 }

@@ -11,7 +11,7 @@ describe('useMiniLabDrill', () => {
     it('should start with no ordered tests', () => {
       const { result } = renderHook(() => useMiniLabDrill());
       
-      expect(result.current.status).toBe('menu');
+      expect(result.current.status).toBe('landing');
     });
 
     it('should show available orderable tests after starting session', () => {
@@ -122,10 +122,10 @@ describe('useMiniLabDrill', () => {
   });
 
   describe('Basic Functionality', () => {
-    it('should start in menu status', () => {
+    it('should start in landing status', () => {
       const { result } = renderHook(() => useMiniLabDrill());
       
-      expect(result.current.status).toBe('menu');
+      expect(result.current.status).toBe('landing');
       expect(result.current.currentCase).toBeNull();
     });
 
@@ -201,7 +201,7 @@ describe('useMiniLabDrill', () => {
       expect(result.current.streak).toBe(0);
     });
 
-    it('should go back to menu on exitToMenu', () => {
+    it('should go back to landing on exitToMenu', () => {
       const { result } = renderHook(() => useMiniLabDrill());
       
       act(() => {
@@ -214,7 +214,7 @@ describe('useMiniLabDrill', () => {
         result.current.exitToMenu();
       });
       
-      expect(result.current.status).toBe('menu');
+      expect(result.current.status).toBe('landing');
       expect(result.current.currentCase).toBeNull();
     });
   });

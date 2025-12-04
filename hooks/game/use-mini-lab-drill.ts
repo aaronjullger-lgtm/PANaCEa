@@ -77,7 +77,7 @@ export type LabCategory =
 /**
  * Game status states
  */
-export type MiniLabGameStatus = 'menu' | 'playing' | 'feedback' | 'summary';
+export type MiniLabGameStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
 // ============================================================================
 // MASTER DIAGNOSIS LIST FOR MINI LAB MODE
@@ -585,8 +585,10 @@ export interface UseMiniLabDrillReturn {
   reset: () => void;
   /** Start a new session */
   startSession: (category: LabCategory) => void;
-  /** Exit to menu */
+  /** Exit to landing page */
   exitToMenu: () => void;
+  /** Show category selection menu */
+  showCategoryMenu: () => void;
   /** Order additional tests */
   orderTest: (testName: string) => void;
   /** Available orderable tests for current case */
@@ -604,7 +606,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   const [streak, setStreak] = useState(0);
   const [userAnswer, setUserAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [status, setStatus] = useState<MiniLabGameStatus>('menu');
+  const [status, setStatus] = useState<MiniLabGameStatus>('landing');
   
   // Track recently used diagnoses to avoid repetition
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
@@ -658,8 +660,12 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setStatus('playing');
   }, [generateNewCase]);
 
-  const exitToMenu = useCallback(() => {
+  const showCategoryMenu = useCallback(() => {
     setStatus('menu');
+  }, []);
+
+  const exitToMenu = useCallback(() => {
+    setStatus('landing');
     setQueue([]);
     setCurrentIndex(0);
     setScore(0);
@@ -756,6 +762,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    showCategoryMenu,
     orderTest,
     availableTests,
   };
