@@ -40,7 +40,9 @@ export default defineConfig(({ mode }) => {
           }
         },
         chunkSizeWarningLimit: 1000,
-        sourcemap: false, // Disable source maps in production for smaller bundle
+        // Conditionally enable source maps based on environment
+        // In production, use 'hidden' to generate maps but not reference them in the bundle
+        sourcemap: mode === 'production' ? 'hidden' : true,
       },
       optimizeDeps: {
         include: [

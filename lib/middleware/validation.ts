@@ -50,15 +50,23 @@ export function validateStringLength(field: string, min: number, max: number) {
 
 /**
  * Sanitizes string input to prevent XSS
+ * Note: This is a basic sanitizer. For production, consider using a dedicated library
+ * like DOMPurify or validator.js for more robust protection.
  */
 export function sanitizeString(value: string): string {
-  if (typeof value !== 'string') return '';
+  if (typeof value !== 'string') {
+    throw new TypeError('sanitizeString expects a string input');
+  }
   
   // Remove potentially dangerous characters and tags
+  // This is a basic implementation - enhance for production use
   return value
     .replace(/<script[^>]*>.*?<\/script>/gi, '')
     .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
+    .replace(/<object[^>]*>.*?<\/object>/gi, '')
+    .replace(/<embed[^>]*>.*?<\/embed>/gi, '')
     .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+    .replace(/javascript:/gi, '')
     .trim();
 }
 
@@ -67,13 +75,22 @@ export function sanitizeString(value: string): string {
  */
 export function sanitizeBody(req: Request, res: Response, next: NextFunction) {
   if (req.body && typeof req.body === 'object') {
-    Object.keys(req.body).forEach(key => {
-      if (typeof req.body[key] === 'string') {
-        req.body[key] = sanitizeString(req.body[key]);
-      }
-    });
+    try {
+      Object.keys(req.body).forEach(key => {
+        if (typeof req.body[key] === 'string') {
+          req.body[key] = sanitizeString(req.body[key]);
+        }
+      });
+      next();
+    } catch (error) {
+      res.status(400).json({
+        error: 'Invalid input format',
+        message: error instanceof Error ? error.message : 'Validation error'
+      });
+    }
+  } else {
+    next();
   }
-  next();
 }
 
 /**

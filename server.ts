@@ -1,6 +1,14 @@
 /**
  * Backend server for PANaCEa
  * Runs on port 3001 to serve API endpoints and proxy Gemini requests
+ * 
+ * PRODUCTION CONSIDERATIONS:
+ * - Replace in-memory rate limiting with Redis for distributed deployments
+ * - Use a dedicated sanitization library (DOMPurify, validator.js) for production
+ * - Enable production logging and monitoring (Winston, Datadog, etc.)
+ * - Implement proper database connection pooling
+ * - Add request ID tracking for debugging
+ * - Consider adding helmet.js for additional security headers
  */
 
 import express, { Request, Response, NextFunction } from 'express';
@@ -40,7 +48,9 @@ app.get('/health', (req: Request, res: Response) => {
 // Gemini proxy endpoint
 app.post('/geminiProxy', async (req: Request, res: Response) => {
   try {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+    // Security: Only use server-side environment variables
+    // Never use VITE_ prefixed keys on the server - they're exposed to the client
+    const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
       return res.status(500).json({ 
@@ -106,13 +116,17 @@ app.post('/geminiProxy', async (req: Request, res: Response) => {
   }
 });
 
-// Rate limiting data structure (simple in-memory implementation)
+// Rate limiting data structure
+// NOTE: This in-memory implementation is suitable for development and single-instance deployments
+// For production with multiple instances or load balancers, use Redis or a distributed solution
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 // Rate limiting middleware
 function rateLimit(maxRequests: number, windowMs: number) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const clientId = req.ip || 'unknown';
+    // In production, use a more reliable client identifier
+    // Consider using req.headers['x-forwarded-for'] with load balancers
+    const clientId = req.ip || req.socket.remoteAddress || 'unknown';
     const now = Date.now();
     
     const clientData = rateLimitMap.get(clientId);
