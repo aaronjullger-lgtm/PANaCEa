@@ -205,26 +205,26 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
   const systemLabel = system ? SYSTEM_LABELS[system] : "System Details";
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col border border-[var(--color-border)]">
         {/* HEADER */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-[var(--color-border)] flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-[#3D1B0E]">
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
               {systemLabel} – Drilldown
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">
               {systemSummary.total > 0
-                ? `Based on ${systemSummary.total.toString()} ${systemLabel.toLowerCase()} questions (${systemSummary.correct.toString()}/${systemSummary.total.toString()}, ${systemSummary.percent.toString()}% correct) from PANCE-level ALL-topics sessions.`
-                : "No performance data yet for this system in PANCE-level ALL-topics sessions."}
+                ? `Based on ${systemSummary.total.toString()} ${systemLabel.toLowerCase()} questions (${systemSummary.correct.toString()}/${systemSummary.total.toString()}, ${systemSummary.percent.toString()}% correct).`
+                : "No performance data yet for this system."}
             </p>
-            <p className="text-[11px] text-slate-400 mt-1">
+            <p className="text-[11px] text-[var(--color-text-muted)] mt-1">
               Click a subcategory to see condition-level performance.
             </p>
           </div>
           <button
             onClick={props.onClose}
-            className="px-3 py-1 text-sm rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium"
+            className="px-3 py-1 text-sm rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] font-medium transition-colors"
           >
             Close
           </button>
@@ -233,10 +233,10 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
         {/* BODY */}
         <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
           {/* LEFT: SUBCATEGORIES */}
-          <div className="md:w-1/2 border-b md:border-b-0 md:border-r border-slate-200 overflow-y-auto bg-slate-50">
+          <div className="md:w-1/2 border-b md:border-b-0 md:border-r border-[var(--color-border)] overflow-y-auto bg-[var(--color-bg-secondary)]">
             <div className="p-4">
               <div className="flex items-center justify-between mb-3 gap-2">
-                <h3 className="text-sm font-semibold text-slate-700">
+                <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
                   Subcategories
                 </h3>
                 {subcategoryStats.length > 0 && (
@@ -270,7 +270,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
               </div>
 
               {subcategoryStats.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   No performance data for this system yet.
                 </p>
               ) : (
@@ -285,19 +285,19 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                         onClick={() => setActiveSubcategory(sub.subcategory)}
                         className={`w-full text-left p-3 rounded-lg border transition-colors ${
                           isActive
-                            ? "border-[#3D1B0E] bg-[#FDF5F3]"
-                            : "border-slate-200 bg-white hover:bg-slate-100"
+                            ? "border-[var(--color-accent)] bg-[var(--color-accent)]/10"
+                            : "border-[var(--color-border)] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-primary)]"
                         }`}
                       >
                         <div className="flex justify-between items-center mb-1">
-                          <span className="text-sm font-medium text-slate-800">
+                          <span className="text-sm font-medium text-[var(--color-text-primary)]">
                             {sub.subcategory}
                           </span>
-                          <span className="text-xs font-semibold text-slate-600">
+                          <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
                             {sub.score.toFixed(0)}% ({sub.correct}/{sub.total})
                           </span>
                         </div>
-                        <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
+                        <div className="w-full bg-[var(--color-bg-primary)] rounded-full h-1.5 mb-1">
                           <div
                             className={`h-1.5 rounded-full ${getBarColor(
                               sub.score
@@ -306,17 +306,17 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-slate-400">
+                          <span className="text-[11px] text-[var(--color-text-muted)]">
                             {sub.total.toString()} question
                             {sub.total !== 1 ? "s" : ""}
                           </span>
                           {isWeak && (
-                            <span className="text-[11px] text-amber-600 font-medium">
+                            <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
                               Weak area
                             </span>
                           )}
                           {!isWeak && sub.total < 3 && (
-                            <span className="text-[11px] text-slate-400">
+                            <span className="text-[11px] text-[var(--color-text-muted)]">
                               Low sample size
                             </span>
                           )}
@@ -330,12 +330,12 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
           </div>
 
           {/* RIGHT: CONDITIONS */}
-          <div className="md:w-1/2 overflow-y-auto bg-slate-50">
+          <div className="md:w-1/2 overflow-y-auto bg-[var(--color-bg-secondary)]">
             <div className="p-4">
               {activeSubcategory ? (
                 <>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-slate-700">
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
                       Conditions – {activeSubcategory}
                     </h3>
                     {props.onDrillSubcategory && system && (
@@ -347,25 +347,25 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                           });
                           props.onClose();
                         }}
-                        className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md border border-[#3D1B0E]/40 text-[#3D1B0E] bg-white hover:bg-[#3D1B0E]/5 shadow-sm transition"
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md border border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-accent)]/10 shadow-sm transition"
                       >
                         Drill this subcategory
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mb-3">
+                  <p className="text-xs text-[var(--color-text-muted)] mb-3">
                     Questions from this subcategory are listed below.
                   </p>
                 </>
               ) : (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   Select a subcategory on the left to see condition-level
                   mastery.
                 </p>
               )}
 
               {activeSubcategory && filteredConditionStats.length === 0 && (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-[var(--color-text-muted)]">
                   No condition-level data yet for this subcategory.
                 </p>
               )}
@@ -375,17 +375,17 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                   {filteredConditionStats.map((cond) => (
                     <div
                       key={`${cond.subcategory}__${cond.condition}`}
-                      className="p-4 rounded-lg bg-white border border-slate-200 shadow-sm"
+                      className="p-4 rounded-lg bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] shadow-sm"
                     >
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm font-medium text-slate-800">
+                        <span className="text-sm font-medium text-[var(--color-text-primary)]">
                           {cond.condition}
                         </span>
-                        <span className="text-xs font-semibold text-slate-600">
+                        <span className="text-xs font-semibold text-[var(--color-text-secondary)]">
                           {cond.score.toFixed(0)}% ({cond.correct}/{cond.total})
                         </span>
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-1.5 mb-1">
+                      <div className="w-full bg-[var(--color-bg-primary)] rounded-full h-1.5 mb-1">
                         <div
                           className={`h-1.5 rounded-full ${getBarColor(
                             cond.score
@@ -394,7 +394,7 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
                         />
                       </div>
                       {cond.total < 3 && (
-                        <span className="text-[11px] text-slate-400">
+                        <span className="text-[11px] text-[var(--color-text-muted)]">
                           Low sample size
                         </span>
                       )}
@@ -406,11 +406,6 @@ const SystemDrilldownModal: React.FC<SystemDrilldownModalProps> = (props) => {
           </div>
         </div>
 
-        {/* FOOTER */}
-        <div className="px-6 py-3 border-t border-slate-200 text-xs text-slate-500">
-          Heatmap drilldown currently uses only stored performance records
-          (PANCE-level / ALL-topics sessions as you configured).
-        </div>
       </div>
     </div>
   );
