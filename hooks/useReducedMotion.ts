@@ -19,8 +19,8 @@ export function useReducedMotion(): boolean {
 
     // Listen for changes
     const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
-      // Type guard to handle both MediaQueryListEvent and MediaQueryList
-      const matches = 'matches' in event ? event.matches : (event as MediaQueryList).matches;
+      // Type guard: MediaQueryListEvent has a 'type' property, MediaQueryList does not
+      const matches = 'type' in event ? event.matches : (event as MediaQueryList).matches;
       setPrefersReducedMotion(matches);
     };
 
@@ -59,12 +59,23 @@ export function useAccessibleAnimation(
 }
 
 /**
+ * Transition configuration type for Framer Motion
+ */
+export interface TransitionConfig {
+  duration?: number;
+  ease?: string | number[];
+  type?: string;
+  delay?: number;
+  [key: string]: number | string | number[] | undefined;
+}
+
+/**
  * Get transition configuration that respects reduced motion preference
  * 
  * @param normalConfig - Normal transition configuration
  * @returns Transition configuration that respects user preference
  */
-export function useAccessibleTransition<T extends Record<string, any>>(
+export function useAccessibleTransition<T extends TransitionConfig>(
   normalConfig: T
 ): T {
   const prefersReducedMotion = useReducedMotion();
@@ -74,7 +85,7 @@ export function useAccessibleTransition<T extends Record<string, any>>(
       ...normalConfig,
       duration: 0.01,
       ease: 'linear',
-    };
+    } as T;
   }
   
   return normalConfig;
