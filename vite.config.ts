@@ -28,14 +28,57 @@ export default defineConfig(({ mode }) => {
       build: {
         rollupOptions: {
           output: {
-            manualChunks: {
+            manualChunks: (id) => {
               // Vendor chunks for better caching
-              'vendor-react': ['react', 'react-dom'],
-              'vendor-clerk': ['@clerk/clerk-react', '@clerk/backend'],
-              'vendor-animation': ['framer-motion'],
-              'vendor-icons': ['lucide-react'],
-              'vendor-markdown': ['react-markdown', 'remark-gfm', 'rehype-raw', 'unified', 'remark-parse'],
-              'vendor-ai': ['@google/generative-ai'],
+              if (id.includes('node_modules')) {
+                if (id.includes('react') || id.includes('react-dom')) {
+                  return 'vendor-react';
+                }
+                if (id.includes('@clerk')) {
+                  return 'vendor-clerk';
+                }
+                if (id.includes('framer-motion')) {
+                  return 'vendor-animation';
+                }
+                if (id.includes('lucide-react')) {
+                  return 'vendor-icons';
+                }
+                if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype') || id.includes('unified')) {
+                  return 'vendor-markdown';
+                }
+                if (id.includes('@google/generative-ai')) {
+                  return 'vendor-ai';
+                }
+                // Group other node_modules into a common vendor chunk
+                return 'vendor-common';
+              }
+              
+              // Split large data files into separate chunks for lazy loading
+              if (id.includes('drugData.json')) {
+                return 'data-drugs';
+              }
+              if (id.includes('conditionContent')) {
+                return 'data-conditions';
+              }
+              if (id.includes('labCases.json')) {
+                return 'data-labs';
+              }
+              
+              // Split drill mode components for better code splitting
+              if (id.includes('components/drill/')) {
+                const match = id.match(/components\/drill\/(\w+)/);
+                if (match) {
+                  return `drill-${match[1].toLowerCase()}`;
+                }
+              }
+              
+              // Split analytics and admin components
+              if (id.includes('components/analytics/')) {
+                return 'analytics';
+              }
+              if (id.includes('components/admin/') || id.includes('pages/admin/')) {
+                return 'admin';
+              }
             }
           }
         },
@@ -43,6 +86,9 @@ export default defineConfig(({ mode }) => {
         // Conditionally enable source maps based on environment
         // In production, use 'hidden' to generate maps but not reference them in the bundle
         sourcemap: mode === 'production' ? 'hidden' : true,
+        // Improve build performance
+        minify: 'esbuild',
+        target: 'esnext',
       },
       optimizeDeps: {
         include: [
