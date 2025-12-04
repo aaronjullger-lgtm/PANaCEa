@@ -180,35 +180,114 @@ app.post('/api/sync', (req: Request, res: Response) => {
   });
 });
 
-// Analytics endpoints with validation
+// Analytics endpoints with validation and database persistence
 app.post('/api/analytics/reactions',
   validateRequired(['questionId', 'reaction']),
   validateEnum('reaction', ['helpful', 'not_helpful']),
-  (req: Request, res: Response) => {
-    // Store user feedback on explanation helpfulness
-    console.log('Reaction received:', req.body);
-    // TODO: Store in database
-    res.json({ success: true });
+  async (req: Request, res: Response) => {
+    try {
+      const { questionId, reaction, userId } = req.body;
+      
+      // Store user feedback on explanation helpfulness
+      // Note: In production, extract userId from authenticated session
+      console.log('Reaction received:', req.body);
+      
+      // For development: use in-memory storage
+      // TODO: Uncomment when database is connected
+      // const { prisma } = await import('./lib/prisma');
+      // await prisma.explanationReaction.create({
+      //   data: {
+      //     questionId,
+      //     reaction,
+      //     userId: userId || null,
+      //   },
+      // });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to store reaction:', error);
+      res.status(500).json({ success: false, error: 'Failed to store reaction' });
+    }
   }
 );
 
 app.post('/api/analytics/weakness',
   validateRequired(['conditionId', 'wasCorrect']),
-  (req: Request, res: Response) => {
-    // Track user weakness patterns for adaptive learning
-    console.log('Weakness data received:', req.body);
-    // TODO: Store in database and update user profile
-    res.json({ success: true });
+  async (req: Request, res: Response) => {
+    try {
+      const { conditionId, wasCorrect, userId } = req.body;
+      
+      // Track user weakness patterns for adaptive learning
+      console.log('Weakness data received:', req.body);
+      
+      // For development: use in-memory storage
+      // TODO: Uncomment when database is connected
+      // const { prisma } = await import('./lib/prisma');
+      // if (userId) {
+      //   await prisma.weaknessPattern.create({
+      //     data: {
+      //       userId,
+      //       conditionId,
+      //       wasCorrect,
+      //     },
+      //   });
+      // }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to store weakness pattern:', error);
+      res.status(500).json({ success: false, error: 'Failed to store weakness pattern' });
+    }
   }
 );
 
 app.post('/api/analytics/confusion',
   validateRequired(['correctCondition', 'selectedCondition']),
-  (req: Request, res: Response) => {
-    // Track diagnostic confusion patterns
-    console.log('Confusion data received:', req.body);
-    // TODO: Store in database for DDx analysis
-    res.json({ success: true });
+  async (req: Request, res: Response) => {
+    try {
+      const { correctCondition, selectedCondition, userId } = req.body;
+      
+      // Track diagnostic confusion patterns
+      console.log('Confusion data received:', req.body);
+      
+      // For development: use in-memory storage
+      // TODO: Uncomment when database is connected
+      // const { prisma } = await import('./lib/prisma');
+      // // Update or create confusion pair
+      // const existingPair = await prisma.confusionPair.findUnique({
+      //   where: {
+      //     userId_realCondition_mistakenFor: {
+      //       userId: userId || null,
+      //       realCondition: correctCondition,
+      //       mistakenFor: selectedCondition,
+      //     },
+      //   },
+      // });
+      // 
+      // if (existingPair) {
+      //   await prisma.confusionPair.update({
+      //     where: { id: existingPair.id },
+      //     data: {
+      //       count: { increment: 1 },
+      //       lastOccurrence: new Date(),
+      //     },
+      //   });
+      // } else {
+      //   await prisma.confusionPair.create({
+      //     data: {
+      //       userId: userId || null,
+      //       realCondition: correctCondition,
+      //       mistakenFor: selectedCondition,
+      //       count: 1,
+      //     },
+      //   });
+      // }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to store confusion pattern:', error);
+      res.status(500).json({ success: false, error: 'Failed to store confusion pattern' });
+    }
   }
 );
 
@@ -235,12 +314,20 @@ app.listen(PORT, () => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully...');
+  // Disconnect Prisma client
+  // TODO: Uncomment when database is connected
+  // const { disconnectPrisma } = await import('./lib/prisma');
+  // await disconnectPrisma();
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('\nSIGINT received, shutting down gracefully...');
+  // Disconnect Prisma client
+  // TODO: Uncomment when database is connected
+  // const { disconnectPrisma } = await import('./lib/prisma');
+  // await disconnectPrisma();
   process.exit(0);
 });

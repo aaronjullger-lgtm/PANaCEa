@@ -1,5 +1,22 @@
 import type { PatientEncounterCase } from '@/types/drill-modes';
-import conditionContent from '../conditionContent.generated.json';
+
+// Lazy load condition content to improve initial bundle size
+let conditionContentCache: Record<string, unknown> | null = null;
+
+async function getConditionContent(): Promise<Record<string, unknown>> {
+  if (conditionContentCache) {
+    return conditionContentCache;
+  }
+  
+  try {
+    const module = await import('../conditionContent.generated.json');
+    conditionContentCache = module.default;
+    return conditionContentCache;
+  } catch (error) {
+    console.error('Failed to load condition content:', error);
+    return {};
+  }
+}
 
 interface ConditionData {
   overview?: string;
@@ -259,8 +276,9 @@ function extractTeachingPoints(conditionKey: string, data: ConditionData): strin
 
 /**
  * Get suitable conditions for patient encounters (exclude ECGs, pure diagnostics, etc.)
+ * Takes condition content as parameter to avoid redundant loading
  */
-function getSuitableConditions(): string[] {
+function getSuitableConditionsFromContent(conditionContent: Record<string, unknown>): string[] {
   const allKeys = Object.keys(conditionContent);
   
   return allKeys.filter(key => {
@@ -278,8 +296,9 @@ function getSuitableConditions(): string[] {
 /**
  * Generate a patient encounter case from condition content
  */
-export function generatePatientEncounterFromCondition(): PatientEncounterCase {
-  const suitableConditions = getSuitableConditions();
+export async function generatePatientEncounterFromCondition(): Promise<PatientEncounterCase> {
+  const conditionContent = await getConditionContent();
+  const suitableConditions = await getSuitableConditionsFromContent(conditionContent);
   const conditionKey = suitableConditions[Math.floor(Math.random() * suitableConditions.length)];
   const data = (conditionContent as Record<string, ConditionData>)[conditionKey];
 
@@ -313,12 +332,12 @@ export function generatePatientEncounterFromCondition(): PatientEncounterCase {
 /**
  * Get a fresh patient encounter (either from static data or generated)
  */
-export function getFreshPatientEncounter(useGenerated: boolean = false): PatientEncounterCase {
+export async function getFreshPatientEncounter(useGenerated: boolean = false): Promise<PatientEncounterCase> {
   if (useGenerated) {
-    return generatePatientEncounterFromCondition();
+    return await generatePatientEncounterFromCondition();
   }
   
   // Import and use static cases as fallback
   // This will be implemented in the data file
-  return generatePatientEncounterFromCondition();
+  return await generatePatientEncounterFromCondition();
 }

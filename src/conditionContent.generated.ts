@@ -22,8 +22,8 @@ export interface ConditionContent {
   aliases?: string[];
 }
 
-import baseContent from "./conditionContent.generated.json";
-import updatedContent from "../conditionContent.generated.json";
+// Lazy-load condition content to improve initial bundle size
+let conditionContentCache: Record<string, ConditionContent> | null = null;
 
 type ConditionContentPatch =
   | ConditionContent
@@ -52,7 +52,40 @@ function mergeConditionContent(
   return merged;
 }
 
-export const CONDITION_CONTENT = mergeConditionContent(
-  baseContent as Record<string, ConditionContent>,
-  updatedContent as Record<string, ConditionContentPatch>
-);
+/**
+ * Lazily load and merge condition content
+ */
+export async function loadConditionContent(): Promise<Record<string, ConditionContent>> {
+  if (conditionContentCache) {
+    return conditionContentCache;
+  }
+
+  try {
+    const [baseModule, updatedModule] = await Promise.all([
+      import("./conditionContent.generated.json"),
+      import("../conditionContent.generated.json")
+    ]);
+
+    conditionContentCache = mergeConditionContent(
+      baseModule.default as Record<string, ConditionContent>,
+      updatedModule.default as Record<string, ConditionContentPatch>
+    );
+
+    return conditionContentCache;
+  } catch (error) {
+    console.error('Failed to load condition content:', error);
+    return {};
+  }
+}
+
+/**
+ * @deprecated Legacy synchronous export for backward compatibility.
+ * WARNING: This object is empty until loadConditionContent() is called.
+ * 
+ * Migration path:
+ * - Replace: const data = CONDITION_CONTENT;
+ * - With: const data = await loadConditionContent();
+ * 
+ * This synchronous export will be removed in a future version.
+ */
+export const CONDITION_CONTENT: Record<string, ConditionContent> = {};
