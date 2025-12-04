@@ -22,6 +22,11 @@ import { findConditionMetaById } from "../src/lib/conditionSearch";
 import { findDrugByName } from "../src/lib/drugSearch";
 import { unifiedSearch } from "../src/lib/unifiedSearch";
 import type { DrugEntry } from "../pharm/drugTypes";
+import { StreakTracker } from "./StreakTracker";
+import { QuickReviewMode } from "./QuickReviewMode";
+import { BookmarksPanel } from "./BookmarksPanel";
+import { StudyGuideGenerator } from "./StudyGuideGenerator";
+import { LeaderboardPanel } from "./LeaderboardPanel";
 import { 
   WidgetGrid, 
   TimeScopeFilter, 
@@ -107,6 +112,12 @@ const MenuView: React.FC<MenuViewProps> = ({
     null
   );
   const [selectedDrug, setSelectedDrug] = useState<DrugEntry | null>(null);
+  
+  // New feature modals
+  const [showQuickReview, setShowQuickReview] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showStudyGuide, setShowStudyGuide] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   
   // Dashboard state
   const [timeScope, setTimeScope] = useState<TimeScope>('1wk');
@@ -614,6 +625,76 @@ const MenuView: React.FC<MenuViewProps> = ({
             </motion.button>
           </motion.section>
 
+          {/* Quick Actions - New Feature Shortcuts */}
+          <motion.section 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.23 }}
+            className="pt-2"
+          >
+            <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-4">
+              Quick Actions
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <motion.button
+                onClick={() => setShowQuickReview(true)}
+                className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="text-2xl mb-2">🔄</div>
+                <div className="font-semibold text-sm text-slate-900 dark:text-white">Quick Review</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Recent misses</div>
+              </motion.button>
+
+              <motion.button
+                onClick={() => setShowBookmarks(true)}
+                className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="text-2xl mb-2">🔖</div>
+                <div className="font-semibold text-sm text-slate-900 dark:text-white">Bookmarks</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Saved questions</div>
+              </motion.button>
+
+              <motion.button
+                onClick={() => setShowStudyGuide(true)}
+                className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="text-2xl mb-2">📄</div>
+                <div className="font-semibold text-sm text-slate-900 dark:text-white">Study Guide</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Print/Export</div>
+              </motion.button>
+
+              <motion.button
+                onClick={() => setShowLeaderboard(true)}
+                className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="text-2xl mb-2">🏆</div>
+                <div className="font-semibold text-sm text-slate-900 dark:text-white">Leaderboard</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Compare stats</div>
+              </motion.button>
+            </div>
+          </motion.section>
+
+          {/* Streak Tracker */}
+          <motion.section 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.24 }}
+          >
+            <StreakTracker
+              currentStreak={stats.widgetData.currentStreak}
+              bestStreak={stats.widgetData.bestStreak}
+              lastStudyDate={performanceData.length > 0 ? new Date(performanceData[performanceData.length - 1].timestamp).toISOString().split('T')[0] : undefined}
+            />
+          </motion.section>
+
           {/* Analytics Dashboard */}
           <motion.section 
             initial={{ opacity: 0, y: 10 }}
@@ -695,6 +776,53 @@ const MenuView: React.FC<MenuViewProps> = ({
           </motion.section>
         </div>
       </div>
+
+      {/* New Feature Modals */}
+      {showQuickReview && (
+        <QuickReviewMode
+          missedQuestions={missedQuestions}
+          onClose={() => setShowQuickReview(false)}
+          onStartReview={(questions) => {
+            // TODO: Implement review session with selected questions
+            setShowQuickReview(false);
+            console.log('Starting review with', questions.length, 'questions');
+          }}
+        />
+      )}
+
+      {showBookmarks && (
+        <BookmarksPanel
+          bookmarkedQuestions={missedQuestions.filter(q => q.isBookmarked) || []}
+          onRemoveBookmark={(question) => {
+            // TODO: Implement bookmark removal
+            console.log('Removing bookmark for', question.condition);
+          }}
+          onViewQuestion={(question) => {
+            // TODO: Implement question review
+            console.log('Viewing question', question.condition);
+          }}
+          onClose={() => setShowBookmarks(false)}
+        />
+      )}
+
+      {showStudyGuide && (
+        <StudyGuideGenerator
+          questions={missedQuestions}
+          title="Missed Questions Study Guide"
+          onClose={() => setShowStudyGuide(false)}
+        />
+      )}
+
+      {showLeaderboard && (
+        <LeaderboardPanel
+          currentUserStats={{
+            questionsAnswered: stats.widgetData.questionsAttempted,
+            accuracy: stats.widgetData.overallAccuracy / 100,
+            streak: stats.widgetData.currentStreak,
+          }}
+          onClose={() => setShowLeaderboard(false)}
+        />
+      )}
     </>
   );
 };
