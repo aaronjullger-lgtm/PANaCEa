@@ -92,6 +92,9 @@ export function AccountFooter({
                 appearance={{
                   elements: {
                     avatarBox: 'w-8 h-8 ring-2 ring-[var(--color-accent)]/20',
+                    // Hide Clerk branding and development indicators
+                    footer: 'hidden',
+                    userButtonPopoverFooter: 'hidden',
                   },
                 }}
               />
@@ -149,6 +152,9 @@ export function AccountFooter({
                       appearance={{
                         elements: {
                           avatarBox: 'w-10 h-10 ring-2 ring-[var(--color-accent)]/30',
+                          // Hide Clerk branding and development indicators
+                          footer: 'hidden',
+                          userButtonPopoverFooter: 'hidden',
                         },
                       }}
                     />
