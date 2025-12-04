@@ -1,12 +1,13 @@
 // App.tsx
 import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings } from "lucide-react";
+import { Settings, Keyboard } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import Loader from "./components/Loader";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import { LandingPage } from "./components/LandingPage";
 import { AccountFooter } from "./components/AccountFooter";
+import { LoadingProgress } from "./components/LoadingProgress";
 import { prefetchQuestions } from "./services/geminiService";
 import { useUserStats } from "./hooks/useUserStats";
 import { preloadData } from "./lib/utils/dataLoader";
@@ -395,6 +396,9 @@ const App: React.FC = () => {
   // Main authenticated app
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+      {/* Loading Progress Bar */}
+      <LoadingProgress isLoading={isLoading} />
+      
       {/* Premium Glass Header - Elegant and professional */}
       <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -409,6 +413,16 @@ const App: React.FC = () => {
             </motion.span>
           </div>
           <div className="flex items-center gap-2">
+            <motion.button
+              onClick={() => setIsShortcutsModalOpen(true)}
+              className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
+              aria-label="Keyboard Shortcuts (Ctrl+K)"
+              title="Keyboard Shortcuts (Ctrl+K)"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Keyboard className="w-5 h-5" />
+            </motion.button>
             <motion.button
               onClick={() => setIsSettingsModalOpen(true)}
               className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
