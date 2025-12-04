@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMiniLabDrill, type LabCategory, type LabPanel, type LabValue } from '@/hooks/game/use-mini-lab-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { Flame, X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity, Shuffle, AlertTriangle, Plus } from 'lucide-react';
+import { Flame, X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity as ActivityIcon, Shuffle, AlertTriangle, Plus } from 'lucide-react';
 
 interface MiniLabDrillSessionProps {
   onExit?: () => void;
@@ -34,7 +34,7 @@ const CATEGORY_CARDS: Array<{
     id: 'endocrine',
     title: 'Endocrine',
     description: 'Thyroid, adrenal, glucose',
-    icon: <Activity className="w-8 h-8" />,
+    icon: <ActivityIcon className="w-8 h-8" />,
     gradient: 'from-purple-600 to-violet-700',
   },
   {

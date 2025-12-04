@@ -31,18 +31,20 @@ export default defineConfig(({ mode }) => {
             manualChunks: (id) => {
               // Vendor chunks for better caching
               if (id.includes('node_modules')) {
-                if (id.includes('react') || id.includes('react-dom')) {
-                  return 'vendor-react';
-                }
+                // Don't manually chunk React to avoid initialization issues with React 19
+                // if (id.includes('react') || id.includes('react-dom')) {
+                //   return 'vendor-react';
+                // }
                 if (id.includes('@clerk')) {
                   return 'vendor-clerk';
                 }
                 if (id.includes('framer-motion')) {
                   return 'vendor-animation';
                 }
-                if (id.includes('lucide-react')) {
-                  return 'vendor-icons';
-                }
+                // Keep lucide-react with vendor-common to avoid module initialization issues
+                // if (id.includes('lucide-react')) {
+                //   return 'vendor-icons';
+                // }
                 if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype') || id.includes('unified')) {
                   return 'vendor-markdown';
                 }

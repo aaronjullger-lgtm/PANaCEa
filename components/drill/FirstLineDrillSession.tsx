@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Heart, Wind, Bug, Activity, Utensils, Brain, Bone, Shuffle, Pill } from 'lucide-react';
+import { X, Heart, Wind, Bug, Activity as ActivityIcon, Utensils, Brain, Bone, Shuffle, Pill } from 'lucide-react';
 import { useFirstLineDrill, type FirstLineCategory } from '@/hooks/game/use-first-line-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption, FeedbackPanel, CategoryCard } from './MiniDrillLayout';
 
@@ -41,7 +41,7 @@ const CATEGORY_CARDS: Array<{
     id: 'Endocrinology',
     title: 'Endocrinology',
     description: 'Diabetes, thyroid, osteoporosis',
-    icon: <Activity className="w-6 h-6 sm:w-8 sm:h-8" />,
+    icon: <ActivityIcon className="w-6 h-6 sm:w-8 sm:h-8" />,
     gradient: 'from-purple-600 to-violet-700',
   },
   {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoDrill, type CategoryType, type ClinicalContext } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity, Shuffle, User, Heart, ClipboardList, Eye, EyeOff, Stethoscope } from 'lucide-react';
+import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity as ActivityIcon, Shuffle, User, Heart, ClipboardList, Eye, EyeOff, Stethoscope } from 'lucide-react';
 
 export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
 
@@ -25,7 +25,7 @@ const CATEGORY_CARDS: Array<{
     id: 'ecg',
     title: 'ECG',
     description: 'Electrocardiogram interpretation',
-    icon: <Activity className="w-8 h-8" />,
+    icon: <ActivityIcon className="w-8 h-8" />,
     gradient: 'from-emerald-600 to-teal-700',
   },
   {

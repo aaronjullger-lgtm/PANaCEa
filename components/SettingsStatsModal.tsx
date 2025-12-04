@@ -21,7 +21,7 @@ import {
   FileSpreadsheet,
   FileJson,
   Check,
-  Activity
+  Activity as ActivityIcon
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
@@ -302,7 +302,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 ) : activeTab === 'preferences' ? (
                   <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 ) : activeTab === 'activity' ? (
-                  <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
+                  <ActivityIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 ) : (
                   <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 )}
@@ -341,7 +341,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
               }`}
             >
-              <Activity className="w-4 h-4 inline-block mr-1 sm:mr-2" />
+              <ActivityIcon className="w-4 h-4 inline-block mr-1 sm:mr-2" />
               <span>Activity</span>
             </button>
             <button
