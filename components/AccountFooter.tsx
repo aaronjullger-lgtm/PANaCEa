@@ -5,9 +5,9 @@
  */
 
 import React, { useState } from 'react';
-import { UserButton, useUser } from '@clerk/clerk-react';
+import { UserButton, useUser, useClerk } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cloud, CloudOff, Settings, User, LogOut, CheckCircle, XCircle } from 'lucide-react';
+import { Cloud, CloudOff, Settings, LogOut, CheckCircle, XCircle } from 'lucide-react';
 
 interface AccountFooterProps {
   isSyncing?: boolean;
@@ -23,6 +23,7 @@ export function AccountFooter({
   onOpenSettings 
 }: AccountFooterProps) {
   const { isSignedIn, user, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   if (!isLoaded || !isSignedIn) {
@@ -162,24 +163,12 @@ export function AccountFooter({
                   <span>Account Settings</span>
                 </button>
 
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    // UserButton handles this internally
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
-                >
-                  <User className="w-4 h-4 text-[var(--color-text-muted)]" />
-                  <span>View Profile</span>
-                </button>
-
                 <div className="border-t border-[var(--color-border)] my-1" />
 
                 <button
                   onClick={() => {
                     setIsMenuOpen(false);
-                    // Clerk's UserButton handles sign out
-                    document.querySelector('[data-clerk-button]')?.click();
+                    signOut();
                   }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                 >
