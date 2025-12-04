@@ -120,12 +120,12 @@ export function refillShuffledContentQueue() {
   const enabledSystems = getEnabledSystems();
   
   // Filter deck to only include enabled systems
-  const deck = PANCE_DECK.filter(system => enabledSystems.has(system as SystemCode));
+  let deck = PANCE_DECK.filter(system => enabledSystems.has(system as SystemCode));
   
   // If no systems are enabled, use all systems (fallback)
   if (deck.length === 0) {
     console.warn('No systems enabled, using all systems as fallback');
-    deck.push(...PANCE_DECK);
+    deck = [...PANCE_DECK];
   }
   
   // Shuffle the filtered deck
