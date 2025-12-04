@@ -228,7 +228,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
 
   // Track if we're actively generating a question in the background
-  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState<boolean>(false);
+  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
 
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
@@ -528,7 +528,6 @@ const QuizView: React.FC<QuizViewProps> = ({
     }
     
     // Otherwise, show session complete (for finite modes or when truly done)
-    // If currentQuestion is null, queue must be empty (they're synced via useEffect)
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
         <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
