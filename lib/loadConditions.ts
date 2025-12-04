@@ -1,4 +1,20 @@
-import conditions from "../conditionContent.generated.json";
+// Lazy load conditions to improve initial bundle size
+let conditionsCache: Record<string, unknown> | null = null;
+
+async function getConditions(): Promise<Record<string, unknown>> {
+  if (conditionsCache) {
+    return conditionsCache;
+  }
+  
+  try {
+    const module = await import("../conditionContent.generated.json");
+    conditionsCache = module.default;
+    return conditionsCache;
+  } catch (error) {
+    console.error('Failed to load conditions:', error);
+    return {};
+  }
+}
 
 export type ConditionContent = string | string[] | Record<string, unknown> | null;
 
@@ -103,13 +119,28 @@ function normalizeEntry(raw: unknown, id: string): ConditionEntry | undefined {
   return { condition: conditionId, sections };
 }
 
-// ===== Top-level export (must be outside of the function) =====
-export const CONDITIONS = Object.fromEntries(
-  Object.entries(conditions as Record<string, unknown>).map(([id, raw]) => [
-    id,
-    normalizeEntry(raw, id),
-  ])
-) as Record<string, ConditionEntry | undefined>;
+// ===== Lazy-loaded conditions =====
+let CONDITIONS_CACHE: Record<string, ConditionEntry | undefined> | null = null;
+
+export async function loadConditions(): Promise<Record<string, ConditionEntry | undefined>> {
+  if (CONDITIONS_CACHE) {
+    return CONDITIONS_CACHE;
+  }
+  
+  const conditions = await getConditions();
+  CONDITIONS_CACHE = Object.fromEntries(
+    Object.entries(conditions).map(([id, raw]) => [
+      id,
+      normalizeEntry(raw, id),
+    ])
+  ) as Record<string, ConditionEntry | undefined>;
+  
+  return CONDITIONS_CACHE;
+}
+
+// Legacy synchronous export for backward compatibility
+// This will be empty until loadConditions() is called
+export const CONDITIONS: Record<string, ConditionEntry | undefined> = {};
 
 export function isMeaningfulContent(value?: unknown): boolean {
   if (typeof value !== "string") return false;
@@ -120,7 +151,14 @@ export function isMeaningfulContent(value?: unknown): boolean {
   return normalized.toUpperCase() !== PLACEHOLDER_TEXT;
 }
 
-export function getConditionById(id: string): ConditionEntry | undefined {
+export async function getConditionById(id: string): Promise<ConditionEntry | undefined> {
   if (!id || typeof id !== "string") return undefined;
-  return normalizeEntry((conditions as Record<string, unknown>)[id], id);
+  const conditions = await getConditions();
+  return normalizeEntry(conditions[id], id);
+}
+
+// Synchronous version for backward compatibility (may return undefined if not loaded)
+export function getConditionByIdSync(id: string): ConditionEntry | undefined {
+  if (!id || typeof id !== "string" || !conditionsCache) return undefined;
+  return normalizeEntry(conditionsCache[id], id);
 }
