@@ -21,6 +21,7 @@ import SettingsStatsModal from "./components/SettingsStatsModal";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import KeyboardShortcutsModal from "./components/KeyboardShortcutsModal";
 import { LandingPage } from "./components/LandingPage";
+import { AccountFooter } from "./components/AccountFooter";
 import { prefetchQuestions } from "./services/geminiService";
 import { useUserStats } from "./hooks/useUserStats";
 import type {
@@ -430,7 +431,7 @@ const App: React.FC = () => {
         onClose={() => setIsShortcutsModalOpen(false)}
       />
 
-      <div className="max-w-4xl mx-auto px-4 py-6 md:py-10">
+      <div className="max-w-4xl mx-auto px-4 py-6 md:py-10 pb-24">
         {isLoading && <Loader forceDark={view === "imaging_drill"} />}
         {error && (
           <motion.div 
@@ -564,6 +565,14 @@ const App: React.FC = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Account Footer - Persistent bottom bar */}
+      <AccountFooter
+        isSyncing={isSyncing}
+        lastSyncTime={lastSyncTime}
+        syncError={syncError}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
+      />
     </div>
   );
 };
