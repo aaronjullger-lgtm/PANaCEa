@@ -249,3 +249,29 @@ model BaselineAssessment {
   
   @@index([userId])
 }
+
+/// Represents user feedback on explanation helpfulness
+model ExplanationReaction {
+  id         String   @id @default(uuid())
+  userId     String?  // Null for anonymous feedback
+  questionId String   // Question identifier
+  reaction   String   // "helpful" | "not_helpful"
+  timestamp  DateTime @default(now())
+  
+  @@index([questionId])
+  @@index([userId, questionId])
+}
+
+/// Represents user weakness patterns for adaptive learning
+model WeaknessPattern {
+  id          String   @id @default(uuid())
+  userId      String
+  conditionId String
+  wasCorrect  Boolean
+  timestamp   DateTime @default(now())
+  consecutiveWrong Int @default(0) // Track consecutive wrong answers
+  
+  @@index([userId])
+  @@index([userId, conditionId])
+  @@index([conditionId])
+}

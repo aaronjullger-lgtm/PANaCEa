@@ -32,9 +32,43 @@ import {
   updateConfusionGraph,
 } from '@/lib/services/explanationCompressionService';
 
-// TODO: Implement adaptive explanations based on user bias
-// TODO: Add time-to-read analysis
-// TODO: Add optional audio playback support
+/**
+ * Calculate estimated reading time based on text length
+ * Average reading speed: ~200-250 words per minute
+ */
+function calculateReadingTime(text: string): number {
+  const words = text.trim().split(/\s+/).length;
+  const wordsPerMinute = 225; // Average reading speed
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return minutes;
+}
+
+/**
+ * Adaptive explanation hints based on user performance patterns
+ * Provides targeted guidance for common mistakes
+ */
+function getAdaptiveHint(
+  isCorrect: boolean,
+  userAnswer: string,
+  correctAnswer: string
+): string | null {
+  if (isCorrect) return null;
+  
+  // Provide hints based on common patterns
+  if (userAnswer.toLowerCase().includes('itis') && correctAnswer.toLowerCase().includes('osis')) {
+    return '💡 Remember: "-itis" means inflammation, while "-osis" refers to a condition or process.';
+  }
+  
+  if (userAnswer.toLowerCase().includes('hyper') && correctAnswer.toLowerCase().includes('hypo')) {
+    return '💡 Careful with prefixes: "hyper-" means high/above, "hypo-" means low/below.';
+  }
+  
+  if (userAnswer.toLowerCase().includes('acute') && correctAnswer.toLowerCase().includes('chronic')) {
+    return '💡 Time course matters: Acute (sudden, short-term) vs Chronic (gradual, long-term).';
+  }
+  
+  return null;
+}
 
 export interface ExplanationPanelProps {
   /** The full rationale text from the question */
@@ -88,6 +122,15 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
 }) => {
   const [showWrongAnswers, setShowWrongAnswers] = useState(false);
   const [userReaction, setUserReaction] = useState<'helpful' | 'not_helpful' | null>(null);
+
+  // Calculate reading time
+  const readingTimeMinutes = useMemo(() => calculateReadingTime(rationale), [rationale]);
+  
+  // Get adaptive hint if user answered incorrectly
+  const adaptiveHint = useMemo(
+    () => getAdaptiveHint(isCorrect, userAnswer, correctAnswer),
+    [isCorrect, userAnswer, correctAnswer]
+  );
 
   // Compute compressed content
   const coreRationale = useMemo(() => compressExplanation(rationale), [rationale]);
@@ -191,13 +234,27 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
             {isCorrect ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
             {isCorrect ? 'Correct' : 'Incorrect'}
           </span>
-          <span className="text-sm text-[var(--color-text-muted)]">
-            {condition}
+          <span className="text-sm text-[var(--color-text-muted)] flex items-center gap-2">
+            <span>{condition}</span>
+            {readingTimeMinutes > 0 && (
+              <span className="text-xs opacity-70">
+                · {readingTimeMinutes} min read
+              </span>
+            )}
           </span>
         </div>
       </div>
 
       <div className="p-5 space-y-5">
+        {/* Adaptive Learning Hint */}
+        {adaptiveHint && (
+          <motion.div
+            variants={itemVariants}
+            className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
+          >
+            <p className="text-sm text-blue-800 dark:text-blue-300">{adaptiveHint}</p>
+          </motion.div>
+        )}
         {/* Core Rationale Section */}
         <motion.section variants={itemVariants}>
           <h3 className="font-bold text-base mb-3 text-[var(--color-text-primary)] flex items-center gap-2">
