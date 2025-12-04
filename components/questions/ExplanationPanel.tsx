@@ -35,17 +35,20 @@ import {
 /**
  * Calculate estimated reading time based on text length
  * Average reading speed: ~200-250 words per minute
+ * Returns 0 for very short content (< 50 words)
  */
 function calculateReadingTime(text: string): number {
   const words = text.trim().split(/\s+/).length;
+  if (words < 50) return 0; // Don't show reading time for very short content
   const wordsPerMinute = 225; // Average reading speed
-  const minutes = Math.ceil(words / wordsPerMinute);
+  const minutes = Math.max(1, Math.round(words / wordsPerMinute));
   return minutes;
 }
 
 /**
  * Adaptive explanation hints based on user performance patterns
  * Provides targeted guidance for common mistakes
+ * Uses word boundary matching to avoid false positives
  */
 function getAdaptiveHint(
   isCorrect: boolean,
@@ -54,16 +57,19 @@ function getAdaptiveHint(
 ): string | null {
   if (isCorrect) return null;
   
-  // Provide hints based on common patterns
-  if (userAnswer.toLowerCase().includes('itis') && correctAnswer.toLowerCase().includes('osis')) {
+  const userLower = userAnswer.toLowerCase();
+  const correctLower = correctAnswer.toLowerCase();
+  
+  // Provide hints based on common patterns with word boundary checks
+  if (/\bitis\b/.test(userLower) && /\bosis\b/.test(correctLower)) {
     return '💡 Remember: "-itis" means inflammation, while "-osis" refers to a condition or process.';
   }
   
-  if (userAnswer.toLowerCase().includes('hyper') && correctAnswer.toLowerCase().includes('hypo')) {
+  if (/\bhyper/.test(userLower) && /\bhypo/.test(correctLower)) {
     return '💡 Careful with prefixes: "hyper-" means high/above, "hypo-" means low/below.';
   }
   
-  if (userAnswer.toLowerCase().includes('acute') && correctAnswer.toLowerCase().includes('chronic')) {
+  if (/\bacute\b/.test(userLower) && /\bchronic\b/.test(correctLower)) {
     return '💡 Time course matters: Acute (sudden, short-term) vs Chronic (gradual, long-term).';
   }
   

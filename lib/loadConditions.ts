@@ -138,8 +138,16 @@ export async function loadConditions(): Promise<Record<string, ConditionEntry | 
   return CONDITIONS_CACHE;
 }
 
-// Legacy synchronous export for backward compatibility
-// This will be empty until loadConditions() is called
+/**
+ * @deprecated Legacy synchronous export for backward compatibility.
+ * WARNING: This object is empty until loadConditions() is called.
+ * 
+ * Migration path:
+ * - Replace: const data = CONDITIONS;
+ * - With: const data = await loadConditions();
+ * 
+ * This synchronous export will be removed in a future version.
+ */
 export const CONDITIONS: Record<string, ConditionEntry | undefined> = {};
 
 export function isMeaningfulContent(value?: unknown): boolean {

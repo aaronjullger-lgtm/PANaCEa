@@ -276,9 +276,9 @@ function extractTeachingPoints(conditionKey: string, data: ConditionData): strin
 
 /**
  * Get suitable conditions for patient encounters (exclude ECGs, pure diagnostics, etc.)
+ * Takes condition content as parameter to avoid redundant loading
  */
-async function getSuitableConditions(): Promise<string[]> {
-  const conditionContent = await getConditionContent();
+function getSuitableConditionsFromContent(conditionContent: Record<string, unknown>): string[] {
   const allKeys = Object.keys(conditionContent);
   
   return allKeys.filter(key => {
@@ -298,7 +298,7 @@ async function getSuitableConditions(): Promise<string[]> {
  */
 export async function generatePatientEncounterFromCondition(): Promise<PatientEncounterCase> {
   const conditionContent = await getConditionContent();
-  const suitableConditions = await getSuitableConditions();
+  const suitableConditions = await getSuitableConditionsFromContent(conditionContent);
   const conditionKey = suitableConditions[Math.floor(Math.random() * suitableConditions.length)];
   const data = (conditionContent as Record<string, ConditionData>)[conditionKey];
 

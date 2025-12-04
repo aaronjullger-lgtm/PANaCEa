@@ -78,5 +78,14 @@ export async function loadConditionContent(): Promise<Record<string, ConditionCo
   }
 }
 
-// Legacy export for backward compatibility - will be empty until loaded
+/**
+ * @deprecated Legacy synchronous export for backward compatibility.
+ * WARNING: This object is empty until loadConditionContent() is called.
+ * 
+ * Migration path:
+ * - Replace: const data = CONDITION_CONTENT;
+ * - With: const data = await loadConditionContent();
+ * 
+ * This synchronous export will be removed in a future version.
+ */
 export const CONDITION_CONTENT: Record<string, ConditionContent> = {};
