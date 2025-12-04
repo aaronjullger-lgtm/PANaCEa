@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { generatePharmQuestion, type PharmQuestion, type PharmQuestionType } from '@/data/pharmQuizData';
 
-export type PharmDrillStatus = 'menu' | 'playing' | 'feedback' | 'summary';
+export type PharmDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
 export type PharmCategory = 
   | 'mechanism'
@@ -27,6 +27,7 @@ export interface UsePharmDrillReturn {
   reset: () => void;
   startSession: (category: PharmCategory) => void;
   exitToMenu: () => void;
+  showCategoryMenu: () => void;
 }
 
 const INITIAL_QUEUE_SIZE = 3;
@@ -41,7 +42,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [userAnswerIndex, setUserAnswerIndex] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [status, setStatus] = useState<PharmDrillStatus>('menu');
+  const [status, setStatus] = useState<PharmDrillStatus>('landing');
   
   // Track recently used drugs to avoid repetition
   const recentDrugsRef = useRef<Set<string>>(new Set());
@@ -93,8 +94,12 @@ export function usePharmDrill(): UsePharmDrillReturn {
     setStatus('playing');
   }, [generateNewQuestion]);
 
-  const exitToMenu = useCallback(() => {
+  const showCategoryMenu = useCallback(() => {
     setStatus('menu');
+  }, []);
+
+  const exitToMenu = useCallback(() => {
+    setStatus('landing');
     setQueue([]);
     setCurrentIndex(0);
     setScore(0);
@@ -163,5 +168,6 @@ export function usePharmDrill(): UsePharmDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    showCategoryMenu,
   };
 }

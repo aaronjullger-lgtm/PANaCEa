@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { generateConditionQuestion, type ConditionQuestion, type ConditionQuestionType } from '@/data/conditionDrillData';
 
-export type ConditionDrillStatus = 'menu' | 'playing' | 'feedback' | 'summary';
+export type ConditionDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
 export type ConditionCategory = 
   | 'presentation'
@@ -38,7 +38,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [userAnswerIndex, setUserAnswerIndex] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [status, setStatus] = useState<ConditionDrillStatus>('menu');
+  const [status, setStatus] = useState<ConditionDrillStatus>('landing');
   
   // Track recently used conditions to avoid repetition
   const recentConditionsRef = useRef<Set<string>>(new Set());

@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { FIRST_LINE_TREATMENTS, type FirstLineTreatment } from '@/data/firstLineTreatmentData';
 
-export type FirstLineDrillStatus = 'menu' | 'playing' | 'feedback' | 'summary';
+export type FirstLineDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
 export type FirstLineCategory = 
   | 'Cardiology'
@@ -104,7 +104,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [userAnswerIndex, setUserAnswerIndex] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [status, setStatus] = useState<FirstLineDrillStatus>('menu');
+  const [status, setStatus] = useState<FirstLineDrillStatus>('landing');
   
   // Track recently used conditions to avoid repetition
   const recentConditionsRef = useRef<Set<string>>(new Set());
