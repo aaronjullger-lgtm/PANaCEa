@@ -23,6 +23,7 @@ import { ArrowLeftIcon } from "./icons/ArrowLeftIcon";
 import { ClearHighlightIcon } from "./icons/ClearHighlightIcon";
 import AnswerChoice from "./quiz/AnswerChoice";
 import ErrorTagger from "./quiz/ErrorTagger";
+import Loader from "./Loader";
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -226,6 +227,9 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Track eliminated answers (by index) for the current question
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
 
+  // Track if we're actively generating a question in the background
+  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -260,6 +264,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Do NOT show the global loader here – this is background work
   if (!shouldEndlesslyReplenish) return;
 
+  setIsGeneratingQuestion(true);
   try {
     const newQuestion = await fetchNewQuestion(sessionSettings, growthAreas);
 
@@ -273,6 +278,8 @@ const QuizView: React.FC<QuizViewProps> = ({
       err?.message ||
         "Failed to load the next question. You can keep working with the current queue."
     );
+  } finally {
+    setIsGeneratingQuestion(false);
   }
 }, [
   shouldEndlesslyReplenish,
@@ -513,33 +520,36 @@ const QuizView: React.FC<QuizViewProps> = ({
     return "bg-green-500";
   };
 
-  // SESSION COMPLETE (finite modes only)
+  // NO CURRENT QUESTION - Show appropriate screen based on context
   if (!currentQuestion) {
-    if (initialQueue.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
-          <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
-          <p className="text-[var(--color-text-secondary)]">
-            You’ve reached the end of this set of questions.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
-            <button
-              onClick={onShowMenu}
-              className="px-6 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
-            >
-              Back to Dashboard
-            </button>
-            <button
-              onClick={onEndSession}
-              className="px-6 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] font-semibold rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors border border-[var(--color-border)]"
-            >
-              End Session
-            </button>
-          </div>
-        </div>
-      );
+    // In continuous mode, if we're actively generating, show loading screen
+    if (shouldEndlesslyReplenish && isGeneratingQuestion) {
+      return <Loader message="Generating next question..." />;
     }
-    return null;
+    
+    // Otherwise, show session complete (for finite modes or when truly done)
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
+        <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
+        <p className="text-[var(--color-text-secondary)]">
+          You've reached the end of this set of questions.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
+          <button
+            onClick={onShowMenu}
+            className="px-6 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
+          >
+            Back to Dashboard
+          </button>
+          <button
+            onClick={onEndSession}
+            className="px-6 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] font-semibold rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors border border-[var(--color-border)]"
+          >
+            End Session
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
