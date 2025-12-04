@@ -6,6 +6,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { config } from 'dotenv';
+import { sanitizeBody, validateRequired, validateEnum } from './lib/middleware/validation';
 
 // Load environment variables
 config();
@@ -19,6 +20,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
+app.use(sanitizeBody); // Sanitize all request bodies
 
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -163,6 +165,38 @@ app.post('/api/sync', (req: Request, res: Response) => {
     message: 'Data synced successfully'
   });
 });
+
+// Analytics endpoints with validation
+app.post('/api/analytics/reactions',
+  validateRequired(['questionId', 'reaction']),
+  validateEnum('reaction', ['helpful', 'not_helpful']),
+  (req: Request, res: Response) => {
+    // Store user feedback on explanation helpfulness
+    console.log('Reaction received:', req.body);
+    // TODO: Store in database
+    res.json({ success: true });
+  }
+);
+
+app.post('/api/analytics/weakness',
+  validateRequired(['conditionId', 'wasCorrect']),
+  (req: Request, res: Response) => {
+    // Track user weakness patterns for adaptive learning
+    console.log('Weakness data received:', req.body);
+    // TODO: Store in database and update user profile
+    res.json({ success: true });
+  }
+);
+
+app.post('/api/analytics/confusion',
+  validateRequired(['correctCondition', 'selectedCondition']),
+  (req: Request, res: Response) => {
+    // Track diagnostic confusion patterns
+    console.log('Confusion data received:', req.body);
+    // TODO: Store in database for DDx analysis
+    res.json({ success: true });
+  }
+);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
