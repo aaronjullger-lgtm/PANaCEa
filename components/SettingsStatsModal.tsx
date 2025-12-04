@@ -88,6 +88,19 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     loadWidgetPrefs<WidgetId>(getDefaultWidgets())
   );
   
+  // System selection state - Load from localStorage
+  const [enabledSystems, setEnabledSystems] = useState<Set<SystemCode>>(() => {
+    const saved = localStorage.getItem('panceai_enabled_systems');
+    if (saved) {
+      try {
+        return new Set(JSON.parse(saved) as SystemCode[]);
+      } catch {
+        return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+      }
+    }
+    return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+  });
+  
   // Use external widgets if provided, otherwise use local state
   const enabledWidgets = externalEnabledWidgets ?? localEnabledWidgets;
   
@@ -112,6 +125,31 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       setLocalEnabledWidgets(defaults);
       saveWidgetPrefs(defaults);
     }
+  };
+  
+  const handleToggleSystem = (system: SystemCode) => {
+    setEnabledSystems(prev => {
+      const next = new Set(prev);
+      if (next.has(system)) {
+        next.delete(system);
+      } else {
+        next.add(system);
+      }
+      // Save to localStorage
+      localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(next)));
+      return next;
+    });
+  };
+  
+  const handleEnableAllSystems = () => {
+    const allSystems = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+    setEnabledSystems(allSystems);
+    localStorage.setItem('panceai_enabled_systems', JSON.stringify(Array.from(allSystems)));
+  };
+  
+  const handleDisableAllSystems = () => {
+    setEnabledSystems(new Set());
+    localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
   };
   
   // Export handlers
@@ -593,6 +631,64 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* System Selection */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="font-medium text-[var(--color-text-primary)]">Study Systems</h3>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                        Select which systems you want to study. Questions will only be generated from enabled systems.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={handleEnableAllSystems}
+                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors"
+                    >
+                      Enable All
+                    </button>
+                    <button
+                      onClick={handleDisableAllSystems}
+                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors"
+                    >
+                      Disable All
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]).map(system => (
+                      <button
+                        key={system}
+                        onClick={() => handleToggleSystem(system)}
+                        className={`p-2.5 rounded-lg text-sm font-medium transition-all ${
+                          enabledSystems.has(system)
+                            ? 'bg-[var(--color-accent)] text-white'
+                            : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                        }`}
+                      >
+                        <div className="font-semibold">{system}</div>
+                        <div className="text-xs opacity-75 truncate">
+                          {ABBREVIATION_TO_TOPIC_MAP[system].replace(' System', '').replace('Psychiatry/Behavioral Science', 'Psychiatry')}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {enabledSystems.size === 0 && (
+                    <div className="mt-3 p-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg">
+                      <p className="text-xs text-amber-900 dark:text-amber-300">
+                        ⚠️ No systems enabled. Please enable at least one system to generate questions.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="mt-3 text-xs text-[var(--color-text-muted)]">
+                    {enabledSystems.size} of {Object.keys(ABBREVIATION_TO_TOPIC_MAP).length} systems enabled
+                  </div>
+                </div>
 
                 {/* Data Management */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">

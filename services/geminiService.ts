@@ -101,8 +101,34 @@ let recentQuestionHistory: string[] = [];
 const RECENT_HISTORY_COUNT = 10;
 
 // Shuffle helpers
+/**
+ * Helper to get enabled systems from localStorage
+ */
+function getEnabledSystems(): Set<SystemCode> {
+  const saved = localStorage.getItem('panceai_enabled_systems');
+  if (saved) {
+    try {
+      return new Set(JSON.parse(saved) as SystemCode[]);
+    } catch {
+      return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+    }
+  }
+  return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+}
+
 export function refillShuffledContentQueue() {
-  const deck = [...PANCE_DECK];
+  const enabledSystems = getEnabledSystems();
+  
+  // Filter deck to only include enabled systems
+  const deck = PANCE_DECK.filter(system => enabledSystems.has(system as SystemCode));
+  
+  // If no systems are enabled, use all systems (fallback)
+  if (deck.length === 0) {
+    console.warn('No systems enabled, using all systems as fallback');
+    deck.push(...PANCE_DECK);
+  }
+  
+  // Shuffle the filtered deck
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
