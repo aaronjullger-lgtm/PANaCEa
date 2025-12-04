@@ -37,28 +37,28 @@ interface HeatmapCalendarProps {
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-// Color scales for different metrics
+// Color scales for different metrics - using consistent UI theme colors
 const COLOR_SCALES = {
   attempts: [
-    'bg-slate-100 dark:bg-slate-800',      // 0 - using slate-800 for dark mode empty squares
-    'bg-emerald-200 dark:bg-emerald-900',  // 1-5
-    'bg-emerald-300 dark:bg-emerald-800',  // 6-10
-    'bg-emerald-400 dark:bg-emerald-700',  // 11-20
-    'bg-emerald-500 dark:bg-emerald-600',  // 21+
+    'bg-slate-100 dark:bg-slate-800',      // 0 - empty
+    'bg-slate-200 dark:bg-slate-700',      // 1-5
+    'bg-slate-300 dark:bg-slate-600',      // 6-10
+    'bg-slate-400 dark:bg-slate-500',      // 11-20
+    'bg-slate-500 dark:bg-slate-400',      // 21+
   ],
   accuracy: [
-    'bg-slate-100 dark:bg-slate-800',      // no data - using slate-800 for dark mode
-    'bg-red-300 dark:bg-red-900',          // <50%
-    'bg-amber-300 dark:bg-amber-800',      // 50-69%
-    'bg-emerald-300 dark:bg-emerald-700',  // 70-84%
-    'bg-emerald-500 dark:bg-emerald-500',  // 85%+
+    'bg-slate-100 dark:bg-slate-800',      // no data
+    'bg-slate-200 dark:bg-slate-700',      // <50%
+    'bg-slate-300 dark:bg-slate-600',      // 50-69%
+    'bg-slate-400 dark:bg-slate-500',      // 70-84%
+    'bg-slate-500 dark:bg-slate-400',      // 85%+
   ],
   streak: [
-    'bg-slate-100 dark:bg-slate-800',      // 0 - using slate-800 for dark mode
-    'bg-orange-200 dark:bg-orange-900',    // 1-2
-    'bg-orange-300 dark:bg-orange-800',    // 3-5
-    'bg-orange-400 dark:bg-orange-700',    // 6-10
-    'bg-orange-500 dark:bg-orange-600',    // 11+
+    'bg-slate-100 dark:bg-slate-800',      // 0 - empty
+    'bg-slate-200 dark:bg-slate-700',      // 1-2
+    'bg-slate-300 dark:bg-slate-600',      // 3-5
+    'bg-slate-400 dark:bg-slate-500',      // 6-10
+    'bg-slate-500 dark:bg-slate-400',      // 11+
   ],
 };
 
@@ -253,12 +253,13 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       
       {/* Grid - Full width with evenly distributed squares */}
       <div className="flex w-full">
-        {/* Day labels - show all 7 days */}
+        {/* Day labels - show only Mon/Wed/Fri like GitHub */}
         <div className="flex flex-col gap-0.5 mr-2 flex-shrink-0">
           {DAYS_OF_WEEK.map((day, idx) => (
             <div
               key={idx}
               className="h-3 text-xs text-slate-600 dark:text-slate-400 flex items-center"
+              style={{ visibility: idx === 1 || idx === 3 || idx === 5 ? 'visible' : 'hidden' }}
             >
               {day}
             </div>

@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Flame, TrendingUp, Calendar, Award } from 'lucide-react';
+import { Flame, TrendingUp, Calendar, Award, CheckCircle } from 'lucide-react';
 
 interface StreakTrackerProps {
   currentStreak: number;
@@ -42,9 +42,9 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
     if (currentStreak === 0) return "Start your streak today!";
     if (currentStreak === 1) return "Great start! Keep it going!";
     if (currentStreak < 7) return "Building momentum!";
-    if (currentStreak < 14) return "You're on fire! 🔥";
+    if (currentStreak < 14) return "You're on fire!";
     if (currentStreak < 30) return "Unstoppable! Keep crushing it!";
-    return "Legendary dedication! 🏆";
+    return "Legendary dedication!";
   };
   
   const hasStudiedOnDate = (date: string) => {
@@ -178,7 +178,8 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800"
         >
           <p className="text-sm text-green-700 dark:text-green-300 text-center flex items-center justify-center gap-2">
-            ✅ Studied today - Streak active!
+            <CheckCircle className="w-4 h-4" />
+            Studied today - Streak active!
           </p>
         </motion.div>
       )}

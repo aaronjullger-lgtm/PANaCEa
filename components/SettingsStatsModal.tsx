@@ -21,7 +21,8 @@ import {
   FileSpreadsheet,
   FileJson,
   Check,
-  Activity as ActivityIcon
+  Activity as ActivityIcon,
+  Flame
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
@@ -384,17 +385,20 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
                   {/* Recent Trend - Most Important */}
                   <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'gold-achievement' : 'bg-[var(--color-bg-secondary)]'}`}>
-                    <div className={`text-2xl sm:text-3xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}>
-                      {stats.recentTrend >= 0 ? '+' : ''}{stats.recentTrend}%
+                    <div className="flex items-center justify-center gap-2">
+                      {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD && <Flame className="w-5 h-5 text-amber-900" />}
+                      <div className={`text-2xl sm:text-3xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}>
+                        {stats.recentTrend >= 0 ? '+' : ''}{stats.recentTrend}%
+                      </div>
                     </div>
                     <div className={`text-xs ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
-                      {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? '🔥 Hot Streak!' : 'Recent Form'}
+                      {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'Hot Streak!' : 'Recent Form'}
                     </div>
                   </div>
                   
                   {/* Current Streak */}
                   <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'gold-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}>
-                    {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD && <span className="absolute top-1 right-1 text-lg">✨</span>}
+                    {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD && <Award className="absolute top-1 right-1 w-4 h-4 text-amber-900" />}
                     <div className="flex items-center justify-center gap-1">
                       <Zap className={`w-5 h-5 ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`} />
                       <span className={`text-2xl sm:text-3xl font-bold ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`}>

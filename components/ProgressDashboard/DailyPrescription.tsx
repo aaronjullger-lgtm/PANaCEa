@@ -10,7 +10,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Target, Calendar, ChevronRight } from 'lucide-react';
+import { Zap, Target, Calendar, ChevronRight, Award } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '../../types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../../constants';
 
@@ -172,13 +172,14 @@ const DailyPrescription: React.FC<DailyPrescriptionProps> = ({
         </div>
 
         {/* Insight */}
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-          💡 {focusSystem.accuracy < 60 
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 flex items-start gap-1">
+          <Award className="w-3 h-3 flex-shrink-0 mt-0.5" />
+          <span>{focusSystem.accuracy < 60 
             ? `Your ${focusSystem.label} accuracy needs work. Let's drill in.`
             : focusSystem.accuracy < 80
             ? `Good progress on ${focusSystem.label}! Push for 80%+.`
             : `Fine-tuning ${focusSystem.label}. Keep the momentum!`
-          }
+          }</span>
         </p>
 
         {/* CTA */}

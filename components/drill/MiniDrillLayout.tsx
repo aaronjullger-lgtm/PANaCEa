@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flame, ArrowRight, RotateCcw, CheckCircle, XCircle } from 'lucide-react';
+import { X, Flame, ArrowRight, RotateCcw, CheckCircle, XCircle, Award } from 'lucide-react';
 
 interface MiniDrillLayoutProps {
   /** Title for the header */
@@ -51,7 +51,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
       {/* Flash overlay for correct/incorrect feedback */}
       <AnimatePresence>
         {isFeedback && isCorrect !== null && (
@@ -69,37 +69,37 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
       </AnimatePresence>
 
       {/* Header - Responsive */}
-      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
+      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800/50">
         <button
           onClick={onExit}
-          className="flex items-center gap-1.5 sm:gap-2 text-slate-400 hover:text-slate-200 transition-colors p-1"
+          className="flex items-center gap-1.5 sm:gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors p-1"
           aria-label="Exit"
         >
           <X className="w-5 h-5" />
           <span className="text-sm font-medium hidden sm:inline">Exit</span>
         </button>
 
-        <h1 className="text-base sm:text-lg font-semibold text-slate-200 truncate max-w-[50%]">
+        <h1 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-200 truncate max-w-[50%]">
           {title}
         </h1>
 
         <div className="flex items-center gap-3 sm:gap-4">
           {/* Score */}
-          <div className="text-xs sm:text-sm text-slate-400">
-            <span className="text-slate-200 font-semibold">{score}</span>
-            <span className="text-slate-500">/{totalAttempts}</span>
+          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+            <span className="text-slate-900 dark:text-slate-200 font-semibold">{score}</span>
+            <span className="text-slate-500 dark:text-slate-500">/{totalAttempts}</span>
           </div>
 
           {/* Streak Counter */}
           <div className="flex items-center gap-1">
             <Flame
               className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                streak > 0 ? 'text-orange-500' : 'text-slate-600'
+                streak > 0 ? 'text-orange-500' : 'text-slate-400 dark:text-slate-600'
               }`}
             />
             <span
               className={`text-xs sm:text-sm font-bold ${
-                streak > 0 ? 'text-orange-500' : 'text-slate-600'
+                streak > 0 ? 'text-orange-500' : 'text-slate-400 dark:text-slate-600'
               }`}
             >
               {streak}
@@ -115,7 +115,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
 
       {/* Fixed Footer Bar */}
       {footer && (
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-10">
+        <div className="fixed bottom-0 left-0 right-0 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-10">
           {footer}
         </div>
       )}
@@ -123,7 +123,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
       {/* Reset button (floating) - Responsive positioning */}
       <button
         onClick={onReset}
-        className="fixed bottom-20 sm:bottom-24 right-3 sm:right-4 p-2.5 sm:p-3 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-400 hover:text-slate-200 transition-colors shadow-lg z-20"
+        className="fixed bottom-20 sm:bottom-24 right-3 sm:right-4 p-2.5 sm:p-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors shadow-lg z-20"
         aria-label="Reset session"
         title="Reset session"
       >
@@ -150,23 +150,23 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-slate-900 rounded-xl sm:rounded-2xl border border-slate-700 p-4 sm:p-6 mb-4 sm:mb-6"
+    className="bg-slate-50 dark:bg-slate-900 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 p-4 sm:p-6 mb-4 sm:mb-6"
   >
     {(category || subcategory) && (
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {category && (
-          <span className="px-2 py-0.5 bg-slate-800 rounded text-xs font-medium text-slate-400">
+          <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 rounded text-xs font-medium text-slate-600 dark:text-slate-400">
             {category}
           </span>
         )}
         {subcategory && (
-          <span className="px-2 py-0.5 bg-slate-800/50 rounded text-xs text-slate-500">
+          <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 rounded text-xs text-slate-500 dark:text-slate-500">
             {subcategory}
           </span>
         )}
       </div>
     )}
-    <p className="text-base sm:text-lg text-slate-200 leading-relaxed">
+    <p className="text-base sm:text-lg text-slate-900 dark:text-slate-200 leading-relaxed">
       {question}
     </p>
   </motion.div>
@@ -197,14 +197,14 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
   
   if (isAnswered) {
     if (isCorrect === true) {
-      buttonClasses += ' bg-emerald-900/50 border-emerald-500 text-emerald-100';
+      buttonClasses += ' bg-emerald-100 dark:bg-emerald-900/50 border-emerald-500 text-emerald-900 dark:text-emerald-100';
     } else if (isSelected) {
-      buttonClasses += ' bg-red-900/50 border-red-500 text-red-100';
+      buttonClasses += ' bg-red-100 dark:bg-red-900/50 border-red-500 text-red-900 dark:text-red-100';
     } else {
-      buttonClasses += ' bg-slate-800/50 border-slate-700 text-slate-400 opacity-60';
+      buttonClasses += ' bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 opacity-60';
     }
   } else {
-    buttonClasses += ' bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700 hover:border-slate-600 cursor-pointer';
+    buttonClasses += ' bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-600 cursor-pointer';
   }
 
   return (
@@ -217,15 +217,15 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
       className={buttonClasses}
     >
       <div className="flex items-start gap-2 sm:gap-3">
-        <span className="font-bold text-slate-400 flex-shrink-0">
+        <span className="font-bold text-slate-600 dark:text-slate-400 flex-shrink-0">
           {String.fromCharCode(65 + index)}.
         </span>
         <span className="flex-1">{text}</span>
         {isAnswered && isCorrect === true && (
-          <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
         )}
         {isAnswered && isSelected && isCorrect === false && (
-          <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+          <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
         )}
       </div>
     </motion.button>
@@ -269,19 +269,19 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
       transition={{ duration: 0.2 }}
       className={`p-3 sm:p-4 ${
         isCorrect
-          ? 'bg-emerald-950/50 border-t-2 border-emerald-500'
-          : 'bg-red-950/50 border-t-2 border-red-500'
+          ? 'bg-emerald-100 dark:bg-emerald-950/50 border-t-2 border-emerald-500'
+          : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'
       }`}
     >
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div className="flex-1">
-            <div className={`text-lg font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
+            <div className={`text-lg font-bold ${isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
               {isCorrect ? 'Correct!' : 'Incorrect'}
             </div>
             {!isCorrect && correctAnswer && (
-              <div className="text-sm text-slate-300 mt-1">
-                Correct answer: <span className="font-semibold text-slate-100">{correctAnswer}</span>
+              <div className="text-sm text-slate-700 dark:text-slate-300 mt-1">
+                Correct answer: <span className="font-semibold text-slate-900 dark:text-slate-100">{correctAnswer}</span>
               </div>
             )}
           </div>
@@ -290,7 +290,7 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
             className={`inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-sm sm:text-base w-full sm:w-auto ${
               isCorrect
                 ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
+                : 'bg-slate-700 dark:bg-slate-700 hover:bg-slate-600 dark:hover:bg-slate-600 text-white dark:text-slate-100'
             }`}
           >
             {nextLabel}
@@ -299,16 +299,16 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
         </div>
 
         {/* Explanation */}
-        <div className="text-sm text-slate-300 bg-slate-900/50 rounded-lg p-3">
-          <span className="font-medium text-slate-200">Explanation: </span>
+        <div className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3">
+          <span className="font-medium text-slate-900 dark:text-slate-200">Explanation: </span>
           {explanation}
         </div>
 
         {/* Pearl */}
         {pearl && (
-          <div className="text-sm text-amber-300/90 bg-amber-900/20 rounded-lg p-3 mt-2 border border-amber-700/30">
-            <span className="font-medium">💡 Pearl: </span>
-            {pearl}
+          <div className="text-sm text-amber-900 dark:text-amber-300/90 bg-amber-100 dark:bg-amber-900/20 rounded-lg p-3 mt-2 border border-amber-300 dark:border-amber-700/30 flex items-start gap-2">
+            <Award className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span><span className="font-medium">Pearl: </span>{pearl}</span>
           </div>
         )}
       </div>

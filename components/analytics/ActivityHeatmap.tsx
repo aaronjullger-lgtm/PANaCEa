@@ -31,20 +31,20 @@ interface DailyStats {
 
 /**
  * Color intensity based on questions answered per day
- * Aligns with GitHub contribution calendar style
+ * Uses consistent UI theme colors - different shades of the same base color
  */
 function getIntensityColor(count: number): string {
   if (count === 0) {
     return 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700';
   } else if (count <= 5) {
-    return 'bg-emerald-200 dark:bg-emerald-900/50 border-emerald-300 dark:border-emerald-800';
+    return 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600';
   } else if (count <= 15) {
-    return 'bg-emerald-300 dark:bg-emerald-800/60 border-emerald-400 dark:border-emerald-700';
+    return 'bg-slate-300 dark:bg-slate-600 border-slate-400 dark:border-slate-500';
   } else if (count <= 30) {
-    return 'bg-[#d4af37]/60 dark:bg-[#d4af37]/40 border-[#d4af37]/70 dark:border-[#d4af37]/50';
+    return 'bg-slate-400 dark:bg-slate-500 border-slate-500 dark:border-slate-400';
   } else {
-    // High activity → gold accent
-    return 'bg-[#d4af37] dark:bg-[#d4af37]/80 border-[#d4af37] dark:border-[#d4af37]';
+    // High activity → darkest shade
+    return 'bg-slate-500 dark:bg-slate-400 border-slate-600 dark:border-slate-300';
   }
 }
 
@@ -301,13 +301,13 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
           {/* Grid */}
           <div className="flex gap-1">
-            {/* Day labels */}
+            {/* Day labels - only show Mon/Wed/Fri like GitHub */}
             <div className="flex flex-col gap-1 pr-2">
               {DAYS_OF_WEEK.map((day, idx) => (
                 <div
                   key={day}
                   className="h-3 text-xs text-[var(--color-text-muted)] flex items-center"
-                  style={{ opacity: idx % 2 === 0 ? 1 : 0 }}
+                  style={{ visibility: idx === 1 || idx === 3 || idx === 5 ? 'visible' : 'hidden' }}
                 >
                   {day}
                 </div>
