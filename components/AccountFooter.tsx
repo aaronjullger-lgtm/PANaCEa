@@ -16,6 +16,14 @@ interface AccountFooterProps {
   onOpenSettings?: () => void;
 }
 
+// Get time-based greeting
+function getTimeBasedGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export function AccountFooter({ 
   isSyncing, 
   lastSyncTime, 
@@ -129,6 +137,12 @@ export function AccountFooter({
             >
               {/* User Info Header */}
               <div className="px-4 py-3 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)]">
+                {/* Time-based greeting */}
+                <div className="mb-2">
+                  <div className="text-lg font-semibold text-[var(--color-text-primary)]">
+                    {getTimeBasedGreeting()}
+                  </div>
+                </div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10">
                     <UserButton 
@@ -140,8 +154,8 @@ export function AccountFooter({
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-[var(--color-text-primary)] truncate">
-                      {user?.firstName || 'Student'}
+                    <div className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                      {user?.fullName || user?.firstName || 'Student'}
                     </div>
                     <div className="text-xs text-[var(--color-text-muted)] truncate">
                       {user?.emailAddresses[0]?.emailAddress}

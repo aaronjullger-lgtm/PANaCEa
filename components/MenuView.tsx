@@ -556,11 +556,37 @@ const MenuView: React.FC<MenuViewProps> = ({
         </motion.div>
 
         <div className="space-y-10">
+          {/* Welcome Card - Prioritized at Top */}
+          <motion.section 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div className="card-premium-glass card-noise-texture p-6 rounded-2xl shadow-lg">
+              <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-slate-100 mb-2">
+                {getTimeBasedGreeting()}.
+              </h2>
+              {stats.systemComparisonData.length > 0 ? (
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Your recommended focus is{' '}
+                  <span className="font-semibold text-[var(--color-accent)]">
+                    {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0]?.system] || stats.systemComparisonData[0]?.system}
+                  </span>
+                  .
+                </p>
+              ) : (
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Start studying to unlock personalized recommendations.
+                </p>
+              )}
+            </div>
+          </motion.section>
+
           {/* Daily Prescription - Smart Action Card */}
           <motion.section 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12 }}
+            transition={{ delay: 0.15 }}
           >
             <DailyPrescription 
               performanceData={performanceData}
@@ -572,7 +598,7 @@ const MenuView: React.FC<MenuViewProps> = ({
           <motion.section 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.13 }}
+            transition={{ delay: 0.2 }}
             className="text-center space-y-3"
           >
             {hasActiveSession && (
@@ -595,32 +621,13 @@ const MenuView: React.FC<MenuViewProps> = ({
             </motion.button>
           </motion.section>
 
-          {/* Analytics Dashboard with Smart Header */}
+          {/* Analytics Dashboard */}
           <motion.section 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.25 }}
             className="pt-2"
           >
-            {/* Smart Header - Dynamic Welcome Block */}
-            <div className="card-premium-glass card-noise-texture p-5 rounded-2xl mb-6">
-              <h2 className="text-2xl font-light tracking-tight text-slate-900 dark:text-slate-100 mb-1">
-                {getTimeBasedGreeting()}.
-              </h2>
-              {stats.systemComparisonData.length > 0 ? (
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Your recommended focus is{' '}
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">
-                    {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0]?.system] || stats.systemComparisonData[0]?.system}
-                  </span>
-                  .
-                </p>
-              ) : (
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Start studying to unlock personalized recommendations.
-                </p>
-              )}
-            </div>
 
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
