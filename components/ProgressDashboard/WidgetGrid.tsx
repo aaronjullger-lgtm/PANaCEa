@@ -147,7 +147,7 @@ const StatCard: React.FC<StatCardProps> = ({
   >
     {/* Gold sparkle for achievements */}
     {isGoldAchievement && (
-      <span className="absolute top-2 right-2 text-xl animate-pulse">✨</span>
+      <Award className="absolute top-2 right-2 w-5 h-5 text-amber-500 animate-pulse" />
     )}
     
     {/* Small uppercase label */}
@@ -216,8 +216,8 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
         return (
           <StatCard
             key={widgetId}
-            icon={<Zap className="w-5 h-5" />}
-            label={isExtraordinaryStreak ? "🔥 Exceptional Streak" : "Active Streak"}
+            icon={isExtraordinaryStreak ? <Flame className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
+            label={isExtraordinaryStreak ? "Exceptional Streak" : "Active Streak"}
             value={data.currentStreak}
             subtext={isExtraordinaryStreak ? "You're on fire!" : "Questions in a row"}
             colorClass="text-orange-500"
@@ -275,8 +275,8 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
         return (
           <StatCard
             key={widgetId}
-            icon={<Clock className="w-5 h-5" />}
-            label={isPerfectDay ? "🏆 Perfect Session!" : "Today's Session"}
+            icon={isPerfectDay ? <Award className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+            label={isPerfectDay ? "Perfect Session!" : "Today's Session"}
             value={data.todayQuestions === 0 ? '—' : `${data.todayCorrect}/${data.todayQuestions}`}
             subtext={data.todayQuestions > 0 
               ? isPerfectDay 
@@ -389,8 +389,9 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
                 </div>
               </div>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2" title={diffText}>
-              💡 {diffText}
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 flex items-start gap-1" title={diffText}>
+              <Award className="w-3 h-3 flex-shrink-0 mt-0.5" />
+              <span>{diffText}</span>
             </p>
           </motion.div>
         );
@@ -440,10 +441,11 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
                 </div>
               </div>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2">
-              💡 {(data.fastCorrectRate ?? 0) < (data.slowCorrectRate ?? 0) 
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 flex items-start gap-1">
+              <Award className="w-3 h-3 flex-shrink-0 mt-0.5" />
+              <span>{(data.fastCorrectRate ?? 0) < (data.slowCorrectRate ?? 0) 
                 ? "Slow down! Your accuracy improves with more time."
-                : "Good pace! Your speed doesn't hurt accuracy."}
+                : "Good pace! Your speed doesn't hurt accuracy."}</span>
             </p>
           </motion.div>
         );
@@ -507,10 +509,11 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({
                 </div>
               </div>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              💡 {(data.diagnosisAccuracy ?? 0) > (data.managementAccuracy ?? 0)
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 flex items-start gap-1">
+              <Award className="w-3 h-3 flex-shrink-0 mt-0.5" />
+              <span>{(data.diagnosisAccuracy ?? 0) > (data.managementAccuracy ?? 0)
                 ? "Focus more on treatment & pharmacology."
-                : "Focus more on diagnosis & differentials."}
+                : "Focus more on diagnosis & differentials."}</span>
             </p>
           </motion.div>
         );

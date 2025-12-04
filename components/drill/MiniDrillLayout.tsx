@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flame, ArrowRight, RotateCcw, CheckCircle, XCircle } from 'lucide-react';
+import { X, Flame, ArrowRight, RotateCcw, CheckCircle, XCircle, Award } from 'lucide-react';
 
 interface MiniDrillLayoutProps {
   /** Title for the header */
@@ -306,9 +306,9 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
 
         {/* Pearl */}
         {pearl && (
-          <div className="text-sm text-amber-300/90 bg-amber-900/20 rounded-lg p-3 mt-2 border border-amber-700/30">
-            <span className="font-medium">💡 Pearl: </span>
-            {pearl}
+          <div className="text-sm text-amber-300/90 bg-amber-900/20 rounded-lg p-3 mt-2 border border-amber-700/30 flex items-start gap-2">
+            <Award className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span><span className="font-medium">Pearl: </span>{pearl}</span>
           </div>
         )}
       </div>

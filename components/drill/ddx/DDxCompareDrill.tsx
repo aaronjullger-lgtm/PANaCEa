@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RotateCcw, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, RotateCcw, Trophy, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 
 /**
  * A symptom/finding card with its correct association and explanation.
@@ -309,9 +309,9 @@ const DDxCompareDrill: React.FC<DDxCompareDrillProps> = ({ onExit }) => {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute bottom-8 text-6xl"
+              className="absolute bottom-8"
             >
-              ✓
+              <CheckCircle className="w-16 h-16 text-white" />
             </motion.div>
           )}
         </button>
@@ -344,9 +344,9 @@ const DDxCompareDrill: React.FC<DDxCompareDrillProps> = ({ onExit }) => {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute bottom-8 text-6xl"
+              className="absolute bottom-8"
             >
-              ✓
+              <CheckCircle className="w-16 h-16 text-white" />
             </motion.div>
           )}
         </button>

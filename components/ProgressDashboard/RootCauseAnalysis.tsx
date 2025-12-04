@@ -7,7 +7,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, Eye, HelpCircle, PieChart } from 'lucide-react';
+import { Brain, Eye, HelpCircle, PieChart, Award } from 'lucide-react';
 import type { ErrorTag } from '../../types';
 
 export interface ErrorTagCount {
@@ -200,8 +200,9 @@ const RootCauseAnalysis: React.FC<RootCauseAnalysisProps> = ({
 
       {/* Insight */}
       {totalIncorrect > 0 && (
-        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
-          💡 {getInsight()}
+        <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-4 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-start gap-1">
+          <Award className="w-3 h-3 flex-shrink-0 mt-0.5" />
+          <span>{getInsight()}</span>
         </p>
       )}
     </motion.div>

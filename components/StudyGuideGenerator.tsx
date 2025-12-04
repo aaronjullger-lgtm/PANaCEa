@@ -182,9 +182,10 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
     }
     
     .pearl-item:before {
-      content: "💡";
+      content: "●";
       position: absolute;
       left: 0;
+      color: #d97706;
     }
     
     .footer {
@@ -268,14 +269,14 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
         if (includeAnswers) {
           const correctLetter = String.fromCharCode(65 + question.correctAnswerIndex);
           html += `      <div class="correct-answer">
-        ✓ Correct Answer: ${correctLetter}. ${question.options[question.correctAnswerIndex]}
+        → Correct Answer: ${correctLetter}. ${question.options[question.correctAnswerIndex]}
       </div>
 `;
         }
         
         if (includeRationale) {
           html += `      <div class="rationale">
-        <div class="rationale-title">📚 Rationale</div>
+        <div class="rationale-title">Rationale</div>
         <div>${question.rationale}</div>
       </div>
 `;
@@ -283,7 +284,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
         
         if (includePearls && question.pearls && question.pearls.length > 0) {
           html += `      <div class="pearls">
-        <div class="pearls-title">✨ Clinical Pearls</div>
+        <div class="pearls-title">Clinical Pearls</div>
 `;
           question.pearls.forEach(pearl => {
             html += `        <div class="pearl-item">${pearl}</div>
@@ -305,7 +306,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
     
     html += `  <div class="footer">
     Generated with PANaCEa - AI-Powered PANCE Exam Preparation<br>
-    Study smart, not just hard 📚
+    Study smart, not just hard
   </div>
 </body>
 </html>`;

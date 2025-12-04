@@ -19,6 +19,8 @@ import {
   ThumbsDown,
   ExternalLink,
   GraduationCap,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react';
 import {
   compressExplanation,
@@ -181,12 +183,13 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
           : 'bg-red-50 dark:bg-red-900/20'
       }`}>
         <div className="flex items-center justify-between">
-          <span className={`font-bold text-lg ${
+          <span className={`font-bold text-lg flex items-center gap-2 ${
             isCorrect 
               ? 'text-green-700 dark:text-green-400' 
               : 'text-red-700 dark:text-red-400'
           }`}>
-            {isCorrect ? '✓ Correct' : '✗ Incorrect'}
+            {isCorrect ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+            {isCorrect ? 'Correct' : 'Incorrect'}
           </span>
           <span className="text-sm text-[var(--color-text-muted)]">
             {condition}
