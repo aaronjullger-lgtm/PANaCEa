@@ -520,20 +520,14 @@ const QuizView: React.FC<QuizViewProps> = ({
     return "bg-green-500";
   };
 
-  // NO CURRENT QUESTION - Show appropriate screen based on context
+  // SESSION COMPLETE (finite modes only)
   if (!currentQuestion) {
-    // In continuous mode, if we're actively generating, show loading screen
-    if (shouldEndlesslyReplenish && isGeneratingQuestion) {
-      return <Loader message="Generating next question..." />;
-    }
-    
-    // Otherwise, show session complete (for finite modes or when truly done)
     if (initialQueue.length === 0) {
       return (
         <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center space-y-4">
           <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
           <p className="text-[var(--color-text-secondary)]">
-            You've reached the end of this set of questions.
+            You’ve reached the end of this set of questions.
           </p>
           <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
             <button
