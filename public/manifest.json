@@ -1,0 +1,38 @@
+{
+  "name": "PANaCEa - PANCE Exam Preparation",
+  "short_name": "PANaCEa",
+  "description": "Master the PANCE with AI-powered question generation and adaptive learning",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E9ECF1",
+  "theme_color": "#1F283A",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/PANaCEa.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "medical", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    }
+  ]
+}

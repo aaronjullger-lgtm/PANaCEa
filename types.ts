@@ -16,6 +16,13 @@ export interface Question {
   repetitionLevel?: number;
   nextReviewDate?: string; // YYYY-MM-DD
   userNote?: string;
+  /** Bookmarked for quick reference */
+  isBookmarked?: boolean;
+  /** Timestamp when bookmarked */
+  bookmarkedAt?: number;
+  /** Optional tags for organization */
+  tags?: string[];
+  lastReviewedAt?: string; // ISO timestamp
 }
 
 /** Error taxonomy for meta-cognition - helps users understand why they miss questions */
