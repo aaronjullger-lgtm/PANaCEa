@@ -25,33 +25,33 @@ export function LandingPage() {
   const features = [
     {
       icon: Brain,
-      title: 'AI-Generated Questions',
-      description: 'Gemini AI creates PANCE-style questions on demand, targeting your weak areas with adaptive difficulty'
+      title: 'Intelligent Question Generation',
+      description: 'Advanced AI analyzes your performance patterns and generates exam-level questions that target your specific knowledge gaps—no generic question banks'
     },
     {
       icon: Activity,
-      title: 'Visual Learning Drills',
-      description: 'ECG interpretation, dermatology images, radiology studies, and photo-based clinical cases'
+      title: 'Clinical Image Mastery',
+      description: 'Master ECG interpretation, dermatological diagnosis, and radiological analysis with curated visual cases that mirror real exam conditions'
     },
     {
       icon: Target,
-      title: 'Specialized Training Modes',
-      description: '15+ drill formats including pharmacology, DDx comparisons, mini-labs, and patient encounters'
+      title: '15+ Clinical Training Modes',
+      description: "From pharmacology drills to differential diagnosis challenges—train with the same depth and variety you'll encounter on exam day"
     },
     {
       icon: Repeat,
-      title: 'SM-2 Spaced Repetition',
-      description: 'Research-backed algorithm schedules reviews at optimal intervals based on your performance'
+      title: 'Scientific Spaced Repetition',
+      description: 'Evidence-based SM-2 algorithm optimizes your review schedule, ensuring information moves from short-term to long-term memory efficiently'
     }
   ];
 
   const benefits = [
-    '1000+ curated conditions across all PANCE systems',
-    'Real-time performance heatmaps showing strengths and weaknesses',
-    'Rapid Recall drills for quick fact reinforcement',
-    'First-line treatment and antibiotic selection training',
-    'Detailed rationales with clinical pearls and mnemonics',
-    'Cloud sync keeps your progress available anywhere'
+    'Comprehensive coverage: 1000+ conditions mapped to the NCCPA blueprint',
+    'Performance analytics that reveal exactly where you need to focus',
+    'Rapid Recall mode: Build reflexive knowledge for time-pressured scenarios',
+    'Clinical decision training: First-line treatments and antibiotic selection',
+    'Expert rationales featuring clinical pearls, mnemonics, and high-yield details',
+    'Seamless cloud synchronization—study anywhere, pick up where you left off'
   ];
 
   return (
@@ -64,10 +64,10 @@ export function LandingPage() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-400 dark:to-teal-500 rounded-lg flex items-center justify-center shadow-lg">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 bg-gradient-to-br from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#E9ECF1] rounded-lg flex items-center justify-center shadow-lg">
+              <Zap className="w-5 h-5 text-white dark:text-[#101729]" />
             </div>
-            <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight font-serif">
+            <span className="text-2xl font-bold text-[var(--color-text-primary)] tracking-tight font-serif">
               PANaCEa
             </span>
           </motion.div>
@@ -75,7 +75,7 @@ export function LandingPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             onClick={() => setShowSignIn(true)}
-            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+            className="px-6 py-2.5 bg-[#1F283A] hover:bg-[#364154] dark:bg-[#E9ECF1] dark:hover:bg-white text-white dark:text-[#101729] rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -93,14 +93,14 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-              <span className="text-[var(--color-text-primary)]">PANCE Prep with </span>
-              <span className="bg-gradient-to-r from-emerald-500 to-teal-600 dark:from-emerald-400 dark:to-teal-500 bg-clip-text text-transparent">
-                AI Intelligence
+              <span className="text-[var(--color-text-primary)]">Master the PANCE with </span>
+              <span className="bg-gradient-to-r from-[#1F283A] to-[#364154] dark:from-[#E9ECF1] dark:to-[#ffffff] bg-clip-text text-transparent">
+                Precision AI
               </span>
             </h1>
             <p className="text-xl sm:text-2xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
-              A comprehensive study platform combining AI-generated questions, visual learning drills, 
-              and evidence-based spaced repetition to help PA students pass the PANCE.
+              An intelligent study platform that adapts to your learning patterns—combining AI-driven question generation, 
+              clinical visual mastery, and evidence-based retention science to ensure you're exam-ready.
             </p>
           </motion.div>
 
@@ -112,15 +112,15 @@ export function LandingPage() {
           >
             <motion.button
               onClick={() => setShowSignIn(true)}
-              className="group px-8 py-4 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+              className="group px-8 py-4 bg-[#1F283A] hover:bg-[#364154] dark:bg-[#E9ECF1] dark:hover:bg-white text-white dark:text-[#101729] rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Start Studying Free
+              Begin Your Preparation
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </motion.button>
             <div className="text-sm text-[var(--color-text-muted)]">
-              Free account • No credit card
+              Free to start • Full access
             </div>
           </motion.div>
 
@@ -131,7 +131,7 @@ export function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-wrap gap-3 justify-center mt-12"
           >
-            {['Gemini AI', '15+ Drill Modes', 'SM-2 Algorithm', '1000+ Conditions'].map((pill, idx) => (
+            {['Adaptive AI', '15+ Training Modes', 'Spaced Repetition', '1000+ Conditions'].map((pill, idx) => (
               <div
                 key={idx}
                 className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]"
@@ -153,10 +153,10 @@ export function LandingPage() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl font-bold text-[var(--color-text-primary)] mb-4">
-            Four Core Features That Work
+            Study Smarter, Not Harder
           </h2>
           <p className="text-xl text-[var(--color-text-secondary)]">
-            Targeted tools designed for efficient PANCE preparation
+            Four intelligent systems working together to maximize your exam readiness
           </p>
         </motion.div>
 
@@ -170,8 +170,8 @@ export function LandingPage() {
               transition={{ duration: 0.6, delay: idx * 0.1 }}
               className="group p-8 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-2xl border border-[var(--color-border)] hover:shadow-xl hover:scale-[1.02] transition-all duration-300"
             >
-              <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-400 dark:to-teal-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
-                <feature.icon className="w-7 h-7 text-white" />
+              <div className="w-14 h-14 bg-gradient-to-br from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#E9ECF1] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+                <feature.icon className="w-7 h-7 text-white dark:text-[#101729]" />
               </div>
               <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
                 {feature.title}
@@ -186,7 +186,7 @@ export function LandingPage() {
 
       {/* Benefits Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 rounded-3xl p-12 text-white shadow-2xl">
+        <div className="bg-gradient-to-br from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#1F283A] rounded-3xl p-12 text-white shadow-2xl">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -195,18 +195,18 @@ export function LandingPage() {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-4xl font-bold mb-6">
-                What You Actually Get
+                Everything You Need to Succeed
               </h2>
-              <p className="text-xl text-emerald-50 mb-8">
-                Specific features designed to help you identify weak areas and improve systematically.
+              <p className="text-xl text-[#E9ECF1] mb-8">
+                Precision tools and intelligent systems that identify gaps in your knowledge and systematically strengthen them—no guesswork, just results.
               </p>
               <motion.button
                 onClick={() => setShowSignIn(true)}
-                className="px-8 py-4 bg-white text-emerald-600 rounded-lg font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                className="px-8 py-4 bg-white text-[#1F283A] rounded-lg font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Start Training Today
+                Start Your Journey
               </motion.button>
             </motion.div>
 
@@ -226,8 +226,8 @@ export function LandingPage() {
                   transition={{ duration: 0.4, delay: idx * 0.05 }}
                   className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4"
                 >
-                  <CheckCircle2 className="w-6 h-6 text-emerald-200 flex-shrink-0 mt-0.5" />
-                  <span className="text-lg font-medium leading-relaxed">{benefit}</span>
+                  <CheckCircle2 className="w-6 h-6 text-[#E9ECF1] flex-shrink-0 mt-0.5" />
+                  <span className="text-lg font-medium leading-relaxed text-[#E9ECF1]">{benefit}</span>
                 </motion.div>
               ))}
             </motion.div>
@@ -245,19 +245,19 @@ export function LandingPage() {
           className="space-y-8"
         >
           <h2 className="text-4xl sm:text-5xl font-bold text-[var(--color-text-primary)]">
-            Ready to Start Studying?
+            Transform Your Exam Preparation
           </h2>
           <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto">
-            Create a free account to access AI-generated questions, visual drills, 
-            and performance tracking across all PANCE content areas.
+            Join PA students who are preparing smarter with adaptive AI, clinical visual training, 
+            and performance analytics that ensure you're ready for exam day.
           </p>
           <motion.button
             onClick={() => setShowSignIn(true)}
-            className="px-10 py-5 bg-emerald-500 hover:bg-emerald-600 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-lg font-bold text-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 mx-auto"
+            className="px-10 py-5 bg-[#1F283A] hover:bg-[#364154] dark:bg-[#E9ECF1] dark:hover:bg-white text-white dark:text-[#101729] rounded-lg font-bold text-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 mx-auto"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            Create Free Account
+            Get Started Now
             <ArrowRight className="w-6 h-6" />
           </motion.button>
         </motion.div>
@@ -289,7 +289,7 @@ export function LandingPage() {
             >
               <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)]">
                 {/* Modal Header */}
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-700 px-6 py-4 text-white">
+                <div className="bg-gradient-to-r from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#1F283A] px-6 py-4 text-white">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold">Welcome to PANaCEa</h3>
                     <button
@@ -302,7 +302,7 @@ export function LandingPage() {
                       </svg>
                     </button>
                   </div>
-                  <p className="text-emerald-50 mt-1 text-sm">
+                  <p className="text-[#E9ECF1] mt-1 text-sm">
                     Sign in to access your study dashboard
                   </p>
                 </div>
@@ -317,8 +317,8 @@ export function LandingPage() {
                         headerTitle: 'hidden',
                         headerSubtitle: 'hidden',
                         socialButtonsBlockButton: 'hover:scale-105 transition-transform',
-                        formButtonPrimary: 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-lg',
-                        footerActionLink: 'text-emerald-600 hover:text-teal-600 dark:text-emerald-400 dark:hover:text-teal-400',
+                        formButtonPrimary: 'bg-[#1F283A] hover:bg-[#364154] hover:shadow-lg',
+                        footerActionLink: 'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
                       },
                     }}
                     afterSignInUrl="/"
