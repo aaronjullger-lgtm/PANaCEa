@@ -8,20 +8,13 @@ import React, { useState } from 'react';
 import { UserButton, useUser, useClerk } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cloud, CloudOff, Settings, LogOut, CheckCircle, XCircle } from 'lucide-react';
+import { getTimeBasedGreeting } from '../lib/utils/timeUtils';
 
 interface AccountFooterProps {
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;
   onOpenSettings?: () => void;
-}
-
-// Get time-based greeting
-function getTimeBasedGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
 }
 
 export function AccountFooter({ 

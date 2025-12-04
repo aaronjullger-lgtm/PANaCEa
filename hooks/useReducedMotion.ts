@@ -18,8 +18,10 @@ export function useReducedMotion(): boolean {
     setPrefersReducedMotion(mediaQuery.matches);
 
     // Listen for changes
-    const handleChange = (event: MediaQueryListEvent) => {
-      setPrefersReducedMotion(event.matches);
+    const handleChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      // Type guard to handle both MediaQueryListEvent and MediaQueryList
+      const matches = 'matches' in event ? event.matches : (event as MediaQueryList).matches;
+      setPrefersReducedMotion(matches);
     };
 
     // Modern browsers
@@ -27,10 +29,14 @@ export function useReducedMotion(): boolean {
       mediaQuery.addEventListener('change', handleChange);
       return () => mediaQuery.removeEventListener('change', handleChange);
     } 
-    // Legacy browsers
-    else if (mediaQuery.addListener) {
+    // Legacy browsers - uses deprecated addListener/removeListener
+    else if ('addListener' in mediaQuery && typeof mediaQuery.addListener === 'function') {
       mediaQuery.addListener(handleChange);
-      return () => mediaQuery.removeListener(handleChange);
+      return () => {
+        if ('removeListener' in mediaQuery && typeof mediaQuery.removeListener === 'function') {
+          mediaQuery.removeListener(handleChange);
+        }
+      };
     }
   }, []);
 

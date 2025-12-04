@@ -33,6 +33,7 @@ import {
 } from "./ProgressDashboard";
 import type { WidgetId, WidgetData, TimeScope, ProgressDayRecord, SystemMasterySummary, ErrorTagCount } from "./ProgressDashboard";
 import { calculateAccuracy, calculateStreaks, loadWidgetPreferences } from "../lib/dashboardUtils";
+import { getTimeBasedGreeting } from "../lib/utils/timeUtils";
 import type { ErrorTag } from "../types";
 
 // System names for dynamic welcome message
@@ -53,14 +54,6 @@ const SYSTEM_DISPLAY_NAMES: Record<string, string> = {
   GU: 'Genitourinary',
   PRO: 'Professional Practice',
 };
-
-// Get time-based greeting
-function getTimeBasedGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
 
 interface MenuViewProps {
   performanceData: PerformanceRecord[];
