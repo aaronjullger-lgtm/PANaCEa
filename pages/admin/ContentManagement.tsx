@@ -51,13 +51,15 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
   const loadContent = async () => {
     setLoading(true);
     try {
-      // TODO: Fetch from API
-      // For now, using mock data
-      const mockContent: MedicalContent[] = [];
-      setContent(mockContent);
-      setFilteredContent(mockContent);
+      // Dynamically import the content service to avoid loading it in the main bundle
+      const { loadAllContent } = await import('../../lib/api/contentService');
+      const loadedContent = await loadAllContent();
+      setContent(loadedContent);
+      setFilteredContent(loadedContent);
     } catch (error) {
       console.error('Failed to load content:', error);
+      setContent([]);
+      setFilteredContent([]);
     } finally {
       setLoading(false);
     }

@@ -1,0 +1,103 @@
+/**
+ * Content Service API
+ * Handles loading and managing clinical content for the CMS
+ */
+
+import type { MedicalContent } from '../../types/admin-cms';
+
+/**
+ * Load all medical content from the condition registry
+ * In production, this would fetch from the database
+ */
+export async function loadAllContent(): Promise<MedicalContent[]> {
+  try {
+    // Import condition data
+    const { default: conditionContent } = await import('../../src/conditionContent.generated');
+    
+    const content: MedicalContent[] = [];
+    
+    // Convert condition data to MedicalContent format
+    for (const [conditionId, condition] of Object.entries(conditionContent)) {
+      if (typeof condition === 'object' && condition !== null) {
+        const item: MedicalContent = {
+          id: conditionId,
+          conditionId: conditionId,
+          condition: (condition as any).name || conditionId,
+          system: (condition as any).system || 'GENERAL',
+          category: 'condition',
+          subcategory: (condition as any).subcategory || 'General',
+          status: 'published',
+          version: 1,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          createdBy: 'system',
+          lastModifiedBy: 'system',
+          content: condition as any
+        };
+        content.push(item);
+      }
+    }
+    
+    return content;
+  } catch (error) {
+    console.error('Error loading content:', error);
+    return [];
+  }
+}
+
+/**
+ * Get a single content item by ID
+ */
+export async function getContentById(id: string): Promise<MedicalContent | null> {
+  const allContent = await loadAllContent();
+  return allContent.find(item => item.id === id) || null;
+}
+
+/**
+ * Search content by query
+ */
+export async function searchContent(query: string): Promise<MedicalContent[]> {
+  const allContent = await loadAllContent();
+  const lowerQuery = query.toLowerCase();
+  
+  return allContent.filter(item =>
+    item.condition.toLowerCase().includes(lowerQuery) ||
+    item.conditionId.toLowerCase().includes(lowerQuery) ||
+    item.subcategory.toLowerCase().includes(lowerQuery)
+  );
+}
+
+/**
+ * Filter content by system
+ */
+export async function getContentBySystem(system: string): Promise<MedicalContent[]> {
+  const allContent = await loadAllContent();
+  return allContent.filter(item => item.system === system);
+}
+
+/**
+ * Get content statistics
+ */
+export async function getContentStats() {
+  const allContent = await loadAllContent();
+  
+  const stats = {
+    total: allContent.length,
+    bySystem: {} as Record<string, number>,
+    byStatus: {} as Record<string, number>,
+    byCategory: {} as Record<string, number>
+  };
+  
+  allContent.forEach(item => {
+    // By system
+    stats.bySystem[item.system] = (stats.bySystem[item.system] || 0) + 1;
+    
+    // By status
+    stats.byStatus[item.status] = (stats.byStatus[item.status] || 0) + 1;
+    
+    // By category
+    stats.byCategory[item.category] = (stats.byCategory[item.category] || 0) + 1;
+  });
+  
+  return stats;
+}
