@@ -36,7 +36,7 @@ export function LandingPage() {
     {
       icon: Target,
       title: '15+ Clinical Training Modes',
-      description: 'From pharmacology drills to differential diagnosis challenges—train with the same depth and variety you\'ll encounter on exam day'
+      description: "From pharmacology drills to differential diagnosis challenges—train with the same depth and variety you'll encounter on exam day"
     },
     {
       icon: Repeat,
