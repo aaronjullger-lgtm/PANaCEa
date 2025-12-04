@@ -879,27 +879,55 @@ export function getCramSessionQuestions(
     return [];
   }
   
+  // Create a set to track already selected question IDs
+  const selectedIds = new Set<string>();
   const questionIds: string[] = [];
   const override: PriorityOverride = {
     mode: priorityMode,
     maxItems: count,
   };
   
-  // Collect questions using priority algorithm
-  for (let i = 0; i < count; i++) {
-    const next = getNextReviewWithPriority(userId, override);
-    if (!next) break;
-    
-    questionIds.push(next.questionId);
-    
-    // Temporarily mark as reviewed to get next item
-    const itemsMap = loadSRSItems();
-    const item = Array.from(itemsMap.values()).find(
-      (item) => item.questionId === next.questionId && item.userId === userId
+  // Get all candidate items and score them
+  const now = new Date();
+  const candidateItems = userItems.filter(item => {
+    const daysToDue = Math.floor(
+      (item.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
     );
-    if (item) {
-      item.lastReviewed = new Date();
-      saveSRSItems(itemsMap);
+    
+    // Apply mode-specific filtering
+    switch (priorityMode) {
+      case 'cram':
+        return daysToDue <= 7;
+      case 'maintenance':
+        return item.dueDate <= now;
+      case 'weak_areas':
+        return item.easiness < 2.0;
+      default:
+        return daysToDue <= 1;
+    }
+  });
+  
+  // Score and sort items
+  const scoredItems = candidateItems.map(item => {
+    const overdueDays = Math.max(
+      0,
+      Math.floor((now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24))
+    );
+    
+    let priority = overdueDays;
+    if (item.easiness < 2.0) priority *= 2.0;
+    if (item.stabilityScore < 0.5) priority *= 1.5;
+    
+    return { item, priority };
+  });
+  
+  // Sort by priority and take top items
+  scoredItems.sort((a, b) => b.priority - a.priority);
+  
+  for (const { item } of scoredItems.slice(0, count)) {
+    if (!selectedIds.has(item.questionId)) {
+      selectedIds.add(item.questionId);
+      questionIds.push(item.questionId);
     }
   }
   

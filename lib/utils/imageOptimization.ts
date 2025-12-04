@@ -271,7 +271,7 @@ export class ImageLoadingQueue {
           .finally(() => {
             if (this.normalQueue.length > 0) {
               if ('requestIdleCallback' in window) {
-                (window as any).requestIdleCallback(processNext);
+                (window as Window & typeof globalThis & { requestIdleCallback: (callback: IdleRequestCallback) => number }).requestIdleCallback(processNext);
               } else {
                 setTimeout(processNext, 50);
               }
@@ -281,7 +281,7 @@ export class ImageLoadingQueue {
     };
     
     if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(processNext);
+      (window as Window & typeof globalThis & { requestIdleCallback: (callback: IdleRequestCallback) => number }).requestIdleCallback(processNext);
     } else {
       setTimeout(processNext, 50);
     }

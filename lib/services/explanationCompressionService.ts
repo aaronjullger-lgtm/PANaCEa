@@ -493,6 +493,16 @@ export function calculateReadingTime(text: string): { seconds: number; formatted
 }
 
 /**
+ * Result type for adapted explanations
+ */
+export interface AdaptedExplanationResult {
+  text: string;
+  bullets: string[];
+  readingTime?: { seconds: number; formatted: string };
+  adaptations: string[];
+}
+
+/**
  * Adapt explanation content based on user's performance profile.
  * Customizes focus areas and detail level based on identified weaknesses.
  * 
@@ -503,12 +513,7 @@ export function calculateReadingTime(text: string): { seconds: number; formatted
 export function adaptExplanation(
   explanation: string,
   options: ExplanationOptions = {}
-): {
-  text: string;
-  bullets: string[];
-  readingTime?: { seconds: number; formatted: string };
-  adaptations: string[];
-} {
+): AdaptedExplanationResult {
   const {
     userProfile,
     verbosity = 'standard',
@@ -599,7 +604,7 @@ export function adaptExplanation(
   
   const text = bullets.join('\n\n');
   
-  const result: any = {
+  const result: AdaptedExplanationResult = {
     text,
     bullets,
     adaptations,
