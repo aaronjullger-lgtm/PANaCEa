@@ -10,7 +10,7 @@ import {
   Shield,
   Users,
   TrendingUp,
-  Activity,
+  Activity as ActivityIcon,
   AlertCircle,
   Settings,
   BarChart3,
@@ -180,7 +180,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)]">
               <div className="flex items-center justify-between mb-4">
                 <div className="p-3 bg-green-500/20 rounded-lg">
-                  <Activity className="w-6 h-6 text-green-500" />
+                  <ActivityIcon className="w-6 h-6 text-green-500" />
                 </div>
                 <TrendingUp className="w-5 h-5 text-green-500" />
               </div>
@@ -237,7 +237,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 href="/admin/content-management"
                 className="flex items-center gap-3 p-4 bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30 rounded-lg hover:bg-[var(--color-accent)]/20 transition-colors text-left"
               >
-                <Activity className="w-5 h-5 text-[var(--color-accent)]" />
+                <ActivityIcon className="w-5 h-5 text-[var(--color-accent)]" />
                 <div>
                   <div className="font-medium text-[var(--color-text-primary)]">
                     Content Management

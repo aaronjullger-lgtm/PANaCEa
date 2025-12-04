@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Brain,
-  Image,
+  Image as ImageIcon,
   Zap,
   GitCompare,
   FileText,
@@ -12,34 +12,39 @@ import {
   Clock,
   Trophy,
   ClipboardList,
-  Activity,
+  Activity as ActivityIcon,
   Scan,
   FileCheck,
   Layers,
   Pill,
   Beaker,
+  Droplets,
+  MessageSquare,
   LucideIcon,
 } from 'lucide-react';
 import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
 
 /**
  * Icon mapping helper to map string names from the config to Lucide React components.
+ * Using a function to ensure icons are fully loaded before mapping.
  */
-const ICON_MAP: Record<string, LucideIcon> = {
+const getIconMap = (): Record<string, LucideIcon> => ({
   Brain,
-  Image,
+  Image: ImageIcon,
   Zap,
   GitCompare,
   FileText,
   Flame,
   ClipboardList,
-  Activity,
+  Activity: ActivityIcon,
   Scan,
   FileCheck,
   Layers,
   Pill,
   Beaker,
-};
+  Droplets,
+  MessageSquare,
+});
 
 /** Storage key for streak high score */
 const STREAK_HIGH_SCORE_KEY = 'panceai_streak_high_score';
@@ -360,6 +365,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
    * Render drill mode card with unique styling per mode
    */
   const renderDrillCard = (mode: TrainingModeConfig) => {
+    const ICON_MAP = getIconMap();
     const IconComponent = ICON_MAP[mode.iconName] ?? HelpCircle;
     const isDisabled = mode.isComingSoon;
     const styles = getDrillModeStyles(mode.id);

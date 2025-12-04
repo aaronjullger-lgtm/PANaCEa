@@ -13,7 +13,7 @@ import {
   TrendingUp, 
   CheckCircle2,
   ArrowRight,
-  Activity,
+  Activity as ActivityIcon,
   Target,
   Repeat
 } from 'lucide-react';
@@ -28,7 +28,7 @@ export function LandingPage() {
       description: 'Advanced AI analyzes your performance patterns and generates exam-level questions that target your specific knowledge gaps—no generic question banks'
     },
     {
-      icon: Activity,
+      icon: ActivityIcon,
       title: 'Clinical Image Mastery',
       description: 'Master ECG interpretation, dermatological diagnosis, and radiological analysis with curated visual cases that mirror real exam conditions'
     },

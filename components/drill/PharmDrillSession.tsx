@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Beaker, Pill, AlertTriangle, FileQuestion, Syringe, Shuffle, Activity } from 'lucide-react';
+import { X, Beaker, Pill, AlertTriangle, FileQuestion, Syringe, Shuffle, Activity as ActivityIcon } from 'lucide-react';
 import { usePharmDrill, type PharmCategory } from '@/hooks/game/use-pharm-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption, FeedbackPanel, CategoryCard } from './MiniDrillLayout';
 
@@ -20,7 +20,7 @@ const CATEGORY_CARDS: Array<{
     id: 'mechanism',
     title: 'Mechanism of Action',
     description: 'How do these drugs work?',
-    icon: <Activity className="w-6 h-6 sm:w-8 sm:h-8" />,
+    icon: <ActivityIcon className="w-6 h-6 sm:w-8 sm:h-8" />,
     gradient: 'from-purple-600 to-violet-700',
   },
   {
@@ -175,7 +175,7 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
             </div>
 
             <button onClick={handleStart} disabled={isLoading} className="px-8 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-3 mx-auto">
-              {isLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Loading...</>) : (<>Choose Category<Activity className="w-5 h-5" /></>)}
+              {isLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Loading...</>) : (<>Choose Category<ActivityIcon className="w-5 h-5" /></>)}
             </button>
           </motion.div>
         </div>
