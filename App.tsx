@@ -9,6 +9,8 @@ import { LandingPage } from "./components/LandingPage";
 import { AccountFooter } from "./components/AccountFooter";
 import { prefetchQuestions } from "./services/geminiService";
 import { useUserStats } from "./hooks/useUserStats";
+import { preloadData } from "./lib/utils/dataLoader";
+import { useAccessibleTransition } from "./hooks/useReducedMotion";
 import type {
   Question,
   PerformanceRecord,
@@ -113,6 +115,12 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
+
+  // ---- Preload large data files in background for better performance ----
+  useEffect(() => {
+    // Start preloading data after initial mount
+    preloadData();
+  }, []);
 
   // ---- Global keyboard shortcut for Cmd/Ctrl+K ----
   useEffect(() => {
@@ -358,17 +366,17 @@ const App: React.FC = () => {
   };
 
   // Animation variants for page transitions
-  // Elegant page transition animations - smooth and fluid
+  // Elegant page transition animations - smooth and fluid, respects reduced motion preference
   const pageVariants = {
     initial: { opacity: 0, y: 15, scale: 0.98 },
     animate: { opacity: 1, y: 0, scale: 1 },
     exit: { opacity: 0, y: -15, scale: 0.98 }
   };
 
-  const pageTransition = {
+  const pageTransition = useAccessibleTransition({
     duration: 0.35,
     ease: [0.4, 0, 0.2, 1] // Custom cubic-bezier for smooth feel
-  };
+  });
 
   // Show loading state while checking auth
   if (!authLoaded) {
