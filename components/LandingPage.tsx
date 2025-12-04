@@ -11,7 +11,6 @@ import {
   Brain, 
   Award, 
   TrendingUp, 
-  Zap,
   CheckCircle2,
   ArrowRight,
   Activity,
@@ -64,9 +63,11 @@ export function LandingPage() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-2"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#E9ECF1] rounded-lg flex items-center justify-center shadow-lg">
-              <Zap className="w-5 h-5 text-white dark:text-[#101729]" />
-            </div>
+            <img 
+              src="/PANaCEa.svg" 
+              alt="PANaCEa Logo" 
+              className="w-8 h-8"
+            />
             <span className="text-2xl font-bold text-[var(--color-text-primary)] tracking-tight font-serif">
               PANaCEa
             </span>
