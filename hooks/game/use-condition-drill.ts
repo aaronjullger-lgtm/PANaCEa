@@ -24,6 +24,7 @@ export interface UseConditionDrillReturn {
   reset: () => void;
   startSession: (category: ConditionCategory) => void;
   exitToMenu: () => void;
+  showCategoryMenu: () => void;
 }
 
 const INITIAL_QUEUE_SIZE = 3;
@@ -90,8 +91,13 @@ export function useConditionDrill(): UseConditionDrillReturn {
     setStatus('playing');
   }, [generateNewQuestion]);
 
-  const exitToMenu = useCallback(() => {
+  const showCategoryMenu = useCallback(() => {
     setStatus('menu');
+  }, []);
+
+
+  const exitToMenu = useCallback(() => {
+    setStatus('landing');
     setQueue([]);
     setCurrentIndex(0);
     setScore(0);
@@ -160,5 +166,6 @@ export function useConditionDrill(): UseConditionDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    showCategoryMenu,
   };
 }

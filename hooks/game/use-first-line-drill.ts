@@ -38,6 +38,7 @@ export interface UseFirstLineDrillReturn {
   reset: () => void;
   startSession: (category: FirstLineCategory) => void;
   exitToMenu: () => void;
+  showCategoryMenu: () => void;
 }
 
 function getRandomTreatments(count: number, exclude: string): FirstLineTreatment[] {
@@ -143,8 +144,13 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     setStatus('playing');
   }, [generateNewQuestion]);
 
-  const exitToMenu = useCallback(() => {
+  const showCategoryMenu = useCallback(() => {
     setStatus('menu');
+  }, []);
+
+
+  const exitToMenu = useCallback(() => {
+    setStatus('landing');
     setQueue([]);
     setCurrentIndex(0);
     setScore(0);
@@ -213,5 +219,6 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     reset,
     startSession,
     exitToMenu,
+    showCategoryMenu,
   };
 }
