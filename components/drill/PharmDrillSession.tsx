@@ -91,7 +91,10 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
     reset,
     startSession,
     exitToMenu,
+    showCategoryMenu,
   } = usePharmDrill();
+
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleExit = () => {
     exitToMenu();
@@ -99,6 +102,86 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
       onExit();
     }
   };
+
+  const handleStart = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      showCategoryMenu();
+      setIsLoading(false);
+    }, 500);
+  };
+
+  // =========================================================================
+  // LANDING PAGE
+  // =========================================================================
+  if (status === 'landing') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 text-white">
+        <div className="border-b border-purple-800/30 bg-black/20 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Beaker className="w-8 h-8 text-purple-400" />
+              <div>
+                <h1 className="text-2xl font-bold">Pharmacology Quiz</h1>
+                <p className="text-sm text-purple-300">Drug Knowledge & Mechanisms</p>
+              </div>
+            </div>
+            {onExit && (
+              <button onClick={onExit} className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-16">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-8">
+            <div className="space-y-4">
+              <h2 className="text-4xl font-bold text-purple-400">Master Pharmacology</h2>
+              <p className="text-xl text-slate-300">High-yield drug mechanisms, side effects, and interactions</p>
+            </div>
+
+            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-8 border border-purple-800/30 text-left space-y-6">
+              <h3 className="text-2xl font-semibold text-purple-400">What You'll Practice</h3>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
+                  <h4 className="font-semibold text-white mb-2">Mechanisms of Action</h4>
+                  <p className="text-slate-400 text-sm">How drugs work at the molecular level</p>
+                </div>
+                <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
+                  <h4 className="font-semibold text-white mb-2">Side Effects</h4>
+                  <p className="text-slate-400 text-sm">Adverse reactions and contraindications</p>
+                </div>
+                <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
+                  <h4 className="font-semibold text-white mb-2">Drug Interactions</h4>
+                  <p className="text-slate-400 text-sm">Critical combinations and warnings</p>
+                </div>
+                <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
+                  <h4 className="font-semibold text-white mb-2">Clinical Uses</h4>
+                  <p className="text-slate-400 text-sm">Indications and therapeutic applications</p>
+                </div>
+              </div>
+
+              <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
+                <p className="text-sm text-purple-300 font-semibold mb-2">Features:</p>
+                <ul className="text-sm text-slate-300 space-y-1">
+                  <li>• PANCE high-yield medications</li>
+                  <li>• Multiple question types (MOA, side effects, antidotes)</li>
+                  <li>• Detailed explanations with pearls</li>
+                  <li>• Score tracking and streak counter</li>
+                </ul>
+              </div>
+            </div>
+
+            <button onClick={handleStart} disabled={isLoading} className="px-8 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-3 mx-auto">
+              {isLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Loading...</>) : (<>Choose Category<Activity className="w-5 h-5" /></>)}
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   // =========================================================================
   // MENU VIEW
