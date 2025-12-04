@@ -33,7 +33,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   return (
-    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider 
+      publishableKey={CLERK_PUBLISHABLE_KEY}
+      appearance={{
+        elements: {
+          // Hide Clerk branding and development mode indicators
+          footer: 'hidden',
+          footerAction: 'hidden',
+          footerActionText: 'hidden',
+          // Customize the overall styling to match app theme
+          card: 'shadow-xl border border-[var(--color-border)]',
+          headerTitle: 'text-[var(--color-text-primary)] font-semibold',
+          headerSubtitle: 'text-[var(--color-text-muted)]',
+          formButtonPrimary: 'bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90',
+          formFieldInput: 'border-[var(--color-border)] bg-[var(--color-bg-secondary)]',
+          footerActionLink: 'text-[var(--color-accent)] hover:text-[var(--color-accent)]/90',
+        },
+      }}
+    >
       {children}
     </ClerkProvider>
   );
