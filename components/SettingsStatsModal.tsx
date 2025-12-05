@@ -185,6 +185,29 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     return (saved as AnalyticsPalette) || 'default';
   });
   
+  // Clinical Fidelity Mode settings - Load from localStorage
+  const [clinicalFidelitySettings, setClinicalFidelitySettings] = useState(() => {
+    const saved = localStorage.getItem('panceai_clinical_fidelity');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return {
+          emrInterface: false,
+          writeOrders: false,
+          rawLabValues: false,
+          multimediaAuscultation: false
+        };
+      }
+    }
+    return {
+      emrInterface: false,
+      writeOrders: false,
+      rawLabValues: false,
+      multimediaAuscultation: false
+    };
+  });
+  
   // Use external widgets if provided, otherwise use local state
   const enabledWidgets = externalEnabledWidgets ?? localEnabledWidgets;
   
@@ -234,6 +257,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   const handleDisableAllSystems = () => {
     setEnabledSystems(new Set());
     localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
+  };
+  
+  const handleToggleClinicalFidelity = (setting: keyof typeof clinicalFidelitySettings) => {
+    setClinicalFidelitySettings(prev => {
+      const updated = { ...prev, [setting]: !prev[setting] };
+      localStorage.setItem('panceai_clinical_fidelity', JSON.stringify(updated));
+      return updated;
+    });
   };
   
   const handleSetAnalyticsPalette = (palette: AnalyticsPalette) => {
@@ -836,6 +867,96 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   
                   <div className="mt-3 text-xs text-[var(--color-text-muted)]">
                     {enabledSystems.size} of {Object.keys(ABBREVIATION_TO_TOPIC_MAP).length} systems enabled
+                  </div>
+                </div>
+
+                {/* Clinical Fidelity Mode */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)]">Clinical Fidelity Mode</h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      Enable realistic clinical simulation features for more authentic practice.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {/* EMR Interface Toggle */}
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Simulated EMR Interface
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Display vignettes in tabbed hospital chart format (HPI, Vitals, Labs, Imaging)
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={clinicalFidelitySettings.emrInterface}
+                        onChange={() => handleToggleClinicalFidelity('emrInterface')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    {/* Write Orders Input Toggle */}
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          "Write Orders" Input
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Type orders instead of selecting from multiple choice (tests active recall)
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={clinicalFidelitySettings.writeOrders}
+                        onChange={() => handleToggleClinicalFidelity('writeOrders')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    {/* Raw Lab Values Toggle */}
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Raw Lab Value Interpretation
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Show raw lab panels without interpretation hints (e.g., "Na: 128" instead of "hyponatremia")
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={clinicalFidelitySettings.rawLabValues}
+                        onChange={() => handleToggleClinicalFidelity('rawLabValues')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+
+                    {/* Multimedia Auscultation Toggle */}
+                    <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                          Multimedia Auscultation
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                          Include audio clips for heart sounds (murmurs) and lung sounds (crackles/wheezes)
+                        </div>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={clinicalFidelitySettings.multimediaAuscultation}
+                        onChange={() => handleToggleClinicalFidelity('multimediaAuscultation')}
+                        className="ml-3 w-5 h-5 rounded border-gray-300 text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-xs text-blue-900 dark:text-blue-300">
+                      💡 <strong>Note:</strong> Clinical Fidelity features are optional enhancements designed for advanced learners who want more realistic practice.
+                    </p>
                   </div>
                 </div>
 
