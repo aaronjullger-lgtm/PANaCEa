@@ -70,7 +70,7 @@ export function LandingPage() {
               className="h-12 sm:h-14 w-auto dark:hidden"
             />
             <img 
-              src="/altfavi.svg" 
+              src="/favicondarkmodeTP.svg" 
               alt="PANaCEa Icon" 
               className="h-12 sm:h-14 w-auto hidden dark:block"
             />
