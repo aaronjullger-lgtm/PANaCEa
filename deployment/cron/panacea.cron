@@ -1,0 +1,19 @@
+# PANaCEa Scheduled Jobs
+# 
+# To install these cron jobs:
+#   crontab -e
+# Then paste the relevant lines below
+#
+# Note: Update /opt/PANaCEa to match your installation path
+
+# Daily job scheduler - runs at midnight to schedule jobs for the next day
+0 0 * * * cd /opt/PANaCEa && /usr/bin/npx tsx scripts/scheduleJobs.ts >> /opt/PANaCEa/logs/scheduler.log 2>&1
+
+# Nightly health check - runs at 3 AM to audit content quality
+0 3 * * * cd /opt/PANaCEa && /usr/bin/npx tsx scripts/contentHealthChecker.ts >> /opt/PANaCEa/logs/health-check.log 2>&1
+
+# Weekly cleanup - runs on Sunday at 4 AM to remove old jobs
+0 4 * * 0 cd /opt/PANaCEa && /usr/bin/npx tsx scripts/cleanupJobs.ts >> /opt/PANaCEa/logs/cleanup.log 2>&1
+
+# Log rotation - optional, runs daily at 5 AM
+0 5 * * * find /opt/PANaCEa/logs -name "*.log" -mtime +30 -delete

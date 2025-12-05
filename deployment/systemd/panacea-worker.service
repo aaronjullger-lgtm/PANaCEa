@@ -1,0 +1,31 @@
+[Unit]
+Description=PANaCEa Background Job Worker
+Documentation=https://github.com/aaronjullger-lgtm/PANaCEa
+After=network.target postgresql.service panacea-server.service
+
+[Service]
+Type=simple
+User=panacea
+Group=panacea
+WorkingDirectory=/opt/PANaCEa
+Environment="NODE_ENV=production"
+Environment="BACKGROUND_WORKER_ENABLED=true"
+Environment="JOB_QUEUE_POLL_INTERVAL=5000"
+Environment="MAX_JOB_ATTEMPTS=3"
+EnvironmentFile=/opt/PANaCEa/.env
+ExecStart=/usr/bin/npx tsx scripts/backgroundWorker.ts
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=panacea-worker
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/PANaCEa/logs
+
+[Install]
+WantedBy=multi-user.target
