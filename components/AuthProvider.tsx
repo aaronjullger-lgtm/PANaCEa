@@ -35,6 +35,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <ClerkProvider 
       publishableKey={CLERK_PUBLISHABLE_KEY}
+      clerkJSUrl="https://cdn.clerk.io/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
       appearance={{
         elements: {
           // Hide Clerk branding and development mode indicators
