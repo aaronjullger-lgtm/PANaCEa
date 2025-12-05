@@ -162,6 +162,9 @@ function getEndpointForOperation(operation: SyncOperation['operation']): string 
 /**
  * Debounced save function
  * Phase 4: Wait 500ms before hitting the API
+ * 
+ * Note: Map is automatically cleaned up when timeout executes.
+ * For long-running apps, consider periodic cleanup of stale entries.
  */
 const debouncedSaves = new Map<string, NodeJS.Timeout>();
 
@@ -196,10 +199,22 @@ export function debouncedSave(
       // Queue immediately if offline
       queueOperation(operation, data);
     }
+    // Clean up this entry from the map
     debouncedSaves.delete(key);
   }, delay);
 
   debouncedSaves.set(key, timeout);
+}
+
+/**
+ * Clear all pending debounced operations
+ * Useful for cleanup on unmount or logout
+ */
+export function clearDebouncedSaves(): void {
+  for (const timeout of debouncedSaves.values()) {
+    clearTimeout(timeout);
+  }
+  debouncedSaves.clear();
 }
 
 /**

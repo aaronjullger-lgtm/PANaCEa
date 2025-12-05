@@ -58,6 +58,8 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     if (system) where.system = system;
     if (status) where.status = status;
     if (search) {
+      // Note: For production with large datasets, consider adding a full-text search
+      // index or using PostgreSQL's tsvector for better performance
       where.OR = [
         { condition: { contains: search, mode: 'insensitive' } },
         { conditionId: { contains: search, mode: 'insensitive' } },

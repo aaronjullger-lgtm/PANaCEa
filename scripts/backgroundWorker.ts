@@ -114,7 +114,7 @@ async function processQuestionGeneration(job: any): Promise<void> {
   
   console.log(`[Worker] Generating ${count} questions for ${system || 'all systems'}`);
   
-  const generatedCount = 0;
+  let generatedCount = 0;
   
   // Note: Actual question generation would use the existing questionGenerator
   // This is a simplified version to demonstrate the pattern
@@ -137,6 +137,8 @@ async function processQuestionGeneration(job: any): Promise<void> {
           questionData: questionData,
         },
       });
+      
+      generatedCount++;
     } catch (error: any) {
       console.error(`[Worker] Failed to generate question ${i + 1}:`, error.message);
     }

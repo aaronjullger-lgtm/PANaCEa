@@ -5,10 +5,18 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 describe('Offline Sync', () => {
-  // Mock localStorage
-  const mockLocalStorage = (() => {
+  // Mock localStorage with proper typing
+  interface MockStorage extends Storage {
+    length: number;
+    key(index: number): string | null;
+    [key: string]: any;
+  }
+
+  const createMockStorage = (): MockStorage => {
     let store: Record<string, string> = {};
     return {
+      length: 0,
+      key: (index: number) => null,
       getItem: (key: string) => store[key] || null,
       setItem: (key: string, value: string) => {
         store[key] = value;
@@ -20,11 +28,13 @@ describe('Offline Sync', () => {
         store = {};
       },
     };
-  })();
+  };
+
+  const mockLocalStorage = createMockStorage();
 
   beforeEach(() => {
     // Setup localStorage mock
-    global.localStorage = mockLocalStorage as any;
+    global.localStorage = mockLocalStorage;
     global.localStorage.clear();
   });
 

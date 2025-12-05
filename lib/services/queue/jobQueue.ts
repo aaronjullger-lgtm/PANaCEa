@@ -63,7 +63,6 @@ export async function getNextJob(
   const where: any = {
     status: 'pending',
     scheduledFor: { lte: new Date() },
-    attempts: { lt: prisma.raw('max_attempts') },
   };
 
   if (jobTypes && jobTypes.length > 0) {
@@ -79,6 +78,11 @@ export async function getNextJob(
   });
 
   if (job) {
+    // Check if max attempts would be exceeded
+    if (job.attempts >= job.maxAttempts) {
+      return null; // Skip this job, it's maxed out
+    }
+    
     // Mark as processing
     await prisma.backgroundJob.update({
       where: { id: job.id },
