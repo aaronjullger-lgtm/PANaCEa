@@ -52,28 +52,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       }
 
       try {
-        // Fetch user role from API/database
-        // Falls back to localStorage if API is not available
-        let role: UserRole = 'user';
-        
-        try {
-          // Try to fetch from API first
-          const response = await fetch(`/api/users/${userId}/role`);
-          if (response.ok) {
-            const data = await response.json();
-            role = data.role as UserRole;
-          } else {
-            // Fallback to localStorage for development/demo
-            const storedRole = localStorage.getItem(`panacea_user_role_${userId}`);
-            role = (storedRole as UserRole) || 'user';
-          }
-        } catch (apiError) {
-          // If API call fails, use localStorage fallback
-          const storedRole = localStorage.getItem(`panacea_user_role_${userId}`);
-          role = (storedRole as UserRole) || 'user';
-        }
-        
+        // Fetch user role from Clerk metadata or localStorage
+        // In production, this could be fetched from Clerk's user metadata or database
+        // For now, using localStorage as the role is set during authentication
+        const storedRole = localStorage.getItem(`panacea_user_role_${userId}`);
+        const role = (storedRole as UserRole) || 'user';
         setUserRole(role);
+        
         const access = isAdmin(role);
         setHasAccess(access);
 
