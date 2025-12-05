@@ -61,7 +61,6 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
   // Generate embed code
   const embedCode = useMemo(() => {
     // Create a data URI for the widget HTML
-    const blob = new Blob([widgetHTML], { type: 'text/html' });
     const dataUri = `data:text/html;base64,${btoa(widgetHTML)}`;
     
     if (embedFormat === 'obsidian') {

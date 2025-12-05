@@ -388,7 +388,7 @@ export function getQuestionOfDay(questions: Question[], date: Date = new Date())
   
   // Use date as seed for consistent daily question
   const dateStr = date.toISOString().split('T')[0];
-  const seed = dateStr.split('-').reduce((acc, val) => acc + parseInt(val), 0);
+  const seed = dateStr.split('-').reduce((acc, val) => acc + parseInt(val, 10), 0);
   
   const index = seed % questions.length;
   return questions[index];

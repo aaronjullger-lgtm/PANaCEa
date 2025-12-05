@@ -44,11 +44,13 @@ const PANCE_SYSTEMS = [
  * Generate a study plan based on exam date
  * Distributes PANCE systems across available weeks
  */
+const MILLISECONDS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
+
 export function generateStudyPlan(examDate: Date): StudyPlan[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  const weeksUntilExam = Math.ceil((examDate.getTime() - today.getTime()) / (7 * 24 * 60 * 60 * 1000));
+  const weeksUntilExam = Math.ceil((examDate.getTime() - today.getTime()) / MILLISECONDS_PER_WEEK);
   
   if (weeksUntilExam <= 0) {
     throw new Error('Exam date must be in the future');

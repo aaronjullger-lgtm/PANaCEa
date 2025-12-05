@@ -34,6 +34,7 @@ export function getMissedQuestionsToday(
   const todayTimestamp = today.getTime();
 
   // Get question IDs that were answered incorrectly today
+  // Use conditionId as primary identifier, falling back to condition name for legacy data
   const missedTodayIds = new Set(
     performanceData
       .filter(record => {
@@ -41,12 +42,15 @@ export function getMissedQuestionsToday(
         recordDate.setHours(0, 0, 0, 0);
         return !record.isCorrect && recordDate.getTime() === todayTimestamp;
       })
-      .map(record => record.condition || record.topic)
+      .map(record => record.conditionId || record.condition || record.topic)
   );
 
   // Filter missed questions to only include today's mistakes
+  // Match by conditionId first, then fall back to condition name
   return missedQuestions.filter(question => 
-    missedTodayIds.has(question.condition || question.topic)
+    missedTodayIds.has(question.conditionId) || 
+    missedTodayIds.has(question.condition) ||
+    missedTodayIds.has(question.topic)
   );
 }
 
