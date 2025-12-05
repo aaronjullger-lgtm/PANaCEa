@@ -192,11 +192,11 @@ export async function compareQuestionVersions(
     const { prisma } = await import('../prisma');
     
     const [v1, v2] = await Promise.all([
-      prisma.questionHistory.findUnique({
-        where: { questionId_version: { questionId, version: version1 } },
+      prisma.questionHistory.findFirst({
+        where: { questionId, version: version1 },
       }),
-      prisma.questionHistory.findUnique({
-        where: { questionId_version: { questionId, version: version2 } },
+      prisma.questionHistory.findFirst({
+        where: { questionId, version: version2 },
       }),
     ]);
     
@@ -267,8 +267,8 @@ export async function revertQuestionToVersion(
     const { prisma } = await import('../prisma');
     
     // Get the target version
-    const targetVersionData = await prisma.questionHistory.findUnique({
-      where: { questionId_version: { questionId, version: targetVersion } },
+    const targetVersionData = await prisma.questionHistory.findFirst({
+      where: { questionId, version: targetVersion },
     });
     
     if (!targetVersionData) {

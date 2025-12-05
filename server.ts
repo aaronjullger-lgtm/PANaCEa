@@ -470,11 +470,22 @@ app.post('/api/questions/generate',
       }
       
       // Generate new question (placeholder - integrate with actual question generation)
-      // In production, this would call your AI question generation service
+      // TODO: In production, integrate with actual AI question generation service
+      // For now, return an indication that generation would happen here
       const newQuestion = {
-        id: Math.random().toString(36).substring(7),
-        text: `Generated question for: ${queryText}`,
-        // ... rest of question data
+        id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        type: questionType,
+        system: system || null,
+        difficulty: difficulty || 'medium',
+        text: `This is a placeholder. In production, this would be an AI-generated ${questionType} question about: ${queryText}`,
+        options: questionType === 'mcq' ? ['Option A', 'Option B', 'Option C', 'Option D'] : undefined,
+        correctAnswer: questionType === 'mcq' ? 'Option A' : undefined,
+        explanation: 'Placeholder explanation. In production, this would contain detailed medical explanation.',
+        generatedAt: new Date().toISOString(),
+        metadata: {
+          originalQuery: queryText,
+          cached: false,
+        }
       };
       
       // Cache the generated question
