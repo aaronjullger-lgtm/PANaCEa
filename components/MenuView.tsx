@@ -27,6 +27,7 @@ import { QuickReviewMode } from "./QuickReviewMode";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { StudyGuideGenerator } from "./StudyGuideGenerator";
 import { LeaderboardPanel } from "./LeaderboardPanel";
+import GroupChatWidget from "./GroupChatWidget";
 import { 
   WidgetGrid, 
   TimeScopeFilter, 
@@ -566,23 +567,52 @@ const MenuView: React.FC<MenuViewProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <div className="card-premium-glass card-noise-texture p-6 rounded-2xl shadow-lg">
-              <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-slate-100 mb-2">
-                {getTimeBasedGreeting()}.
-              </h2>
-              {stats.systemComparisonData.length > 0 ? (
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Your recommended focus is{' '}
-                  <span className="font-semibold text-[var(--color-accent)]">
-                    {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0]?.system] || stats.systemComparisonData[0]?.system}
-                  </span>
-                  .
-                </p>
-              ) : (
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Start studying to unlock personalized recommendations.
-                </p>
-              )}
+            <div className="relative overflow-hidden card-premium-glass card-noise-texture p-8 rounded-3xl shadow-xl border-2 border-white/10 dark:border-white/5">
+              {/* Animated gradient background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-pink-500/10" />
+              
+              <div className="relative z-10">
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                >
+                  <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent mb-3">
+                    {getTimeBasedGreeting()}.
+                  </h2>
+                </motion.div>
+                
+                {stats.systemComparisonData.length > 0 ? (
+                  <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.4 }}
+                    className="flex items-center gap-3 mt-4"
+                  >
+                    <div className="w-1 h-12 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                        Recommended Focus
+                      </p>
+                      <p className="text-xl font-bold text-[var(--color-accent)]">
+                        {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0]?.system] || stats.systemComparisonData[0]?.system}
+                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                        Based on your recent performance
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-base text-slate-600 dark:text-slate-300 mt-4"
+                  >
+                    🚀 Start studying to unlock personalized recommendations and AI-powered insights!
+                  </motion.p>
+                )}
+              </div>
             </div>
           </motion.section>
 
@@ -603,26 +633,48 @@ const MenuView: React.FC<MenuViewProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-center space-y-3"
+            className="space-y-4"
           >
             {hasActiveSession && (
               <motion.button
                 onClick={onBackToQuiz}
-                className="w-full px-6 py-3 btn-glass font-bold rounded-xl"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                className="w-full px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
               >
+                <span className="text-2xl">▶️</span>
                 Continue Study Session
               </motion.button>
             )}
             <motion.button
               onClick={onStartSession}
-              className="w-full px-6 py-4 btn-glass text-lg font-bold tracking-tight rounded-xl"
-              whileHover={{ scale: 1.01, y: -2 }}
-              whileTap={{ scale: 0.99 }}
+              className="relative w-full px-8 py-5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white text-xl font-bold tracking-tight rounded-2xl shadow-2xl overflow-hidden group"
+              whileHover={{ scale: 1.02, y: -3 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {hasActiveSession ? "Start New Session" : "Start Study Session"}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <div className="relative flex items-center justify-center gap-3">
+                <span className="text-3xl">🎯</span>
+                {hasActiveSession ? "Start New Session" : "Start Study Session"}
+              </div>
             </motion.button>
+          </motion.section>
+
+          {/* Group Chat Widget - Dynamic AI Conversations */}
+          <motion.section 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22 }}
+          >
+            <GroupChatWidget 
+              userStats={{
+                currentStreak: stats.widgetData.currentStreak,
+                recentTopic: growthAreas[0],
+                questionsToday: stats.widgetData.todayQuestions,
+                weakAreas: growthAreas
+              }}
+              isVisible={true}
+            />
           </motion.section>
 
           {/* Quick Actions - New Feature Shortcuts */}

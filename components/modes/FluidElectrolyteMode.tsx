@@ -342,25 +342,29 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
 
               <div className="mt-4 flex gap-2">
                 {!isSubmitted ? (
-                  <button
+                  <motion.button
                     onClick={handleSubmit}
                     disabled={!userAnswer}
-                    className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 disabled:from-slate-700 disabled:to-slate-700 
                              disabled:cursor-not-allowed py-3 rounded-lg font-semibold
-                             transition-colors flex items-center justify-center gap-2"
+                             transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
                   >
                     Submit Answer
                     <ArrowRight className="w-5 h-5" />
-                  </button>
+                  </motion.button>
                 ) : (
-                  <button
+                  <motion.button
                     onClick={handleNext}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold
-                             transition-colors flex items-center justify-center gap-2"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-3 rounded-lg font-semibold
+                             transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
                   >
                     Next Case
                     <ArrowRight className="w-5 h-5" />
-                  </button>
+                  </motion.button>
                 )}
               </div>
             </div>
@@ -369,28 +373,57 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             <AnimatePresence>
               {isSubmitted && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className={`rounded-xl p-6 border ${
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
+                  className={`rounded-xl p-6 border shadow-2xl ${
                     isCorrect
-                      ? 'bg-green-900/40 border-green-600/30'
-                      : 'bg-red-900/40 border-red-600/30'
+                      ? 'bg-gradient-to-br from-green-900/60 to-emerald-900/40 border-green-500/50'
+                      : 'bg-gradient-to-br from-red-900/60 to-rose-900/40 border-red-500/50'
                   }`}
                 >
+                  {isCorrect && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: [0, 1.2, 1] }}
+                      transition={{ duration: 0.5 }}
+                      className="absolute -top-4 -right-4 text-6xl"
+                    >
+                      🎉
+                    </motion.div>
+                  )}
                   <div className="flex items-start gap-3">
-                    {isCorrect ? (
-                      <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
-                    ) : (
-                      <XCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" />
-                    )}
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
+                    >
+                      {isCorrect ? (
+                        <CheckCircle className="w-8 h-8 text-green-400 flex-shrink-0 mt-1" />
+                      ) : (
+                        <XCircle className="w-8 h-8 text-red-400 flex-shrink-0 mt-1" />
+                      )}
+                    </motion.div>
                     <div className="flex-1">
-                      <p className={`font-semibold mb-2 ${isCorrect ? 'text-green-300' : 'text-red-300'}`}>
+                      <motion.p
+                        initial={{ x: -10, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className={`text-lg font-bold mb-3 ${isCorrect ? 'text-green-200' : 'text-red-200'}`}
+                      >
                         {feedback}
-                      </p>
-                      <p className="text-slate-300 text-sm leading-relaxed">
-                        {currentCase.explanation}
-                      </p>
+                      </motion.p>
+                      <motion.div
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50"
+                      >
+                        <p className="text-slate-200 text-sm leading-relaxed">
+                          {currentCase.explanation}
+                        </p>
+                      </motion.div>
                     </div>
                   </div>
                 </motion.div>
