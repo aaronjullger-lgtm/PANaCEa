@@ -65,8 +65,8 @@ export function LandingPage() {
           >
             <img 
               src="/HEADER V1.png" 
-              alt="PANaCEa - PANCE Preparation Platform" 
-              className="h-16 sm:h-20 w-auto dark:brightness-0 dark:invert"
+              alt="PANaCEa - PA School Study Resource" 
+              className="h-24 sm:h-32 w-auto dark:brightness-0 dark:invert"
             />
           </motion.div>
           <motion.button
@@ -91,13 +91,13 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-              <span className="text-[var(--color-text-primary)]">PANCE Preparation </span>
+              <span className="text-[var(--color-text-primary)]">Your Complete </span>
               <span className="bg-gradient-to-r from-[#1F283A] to-[#364154] dark:from-[#E9ECF1] dark:to-[#ffffff] bg-clip-text text-transparent">
-                Platform
+                PA School Resource
               </span>
             </h1>
             <p className="text-xl sm:text-2xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
-              Study platform with comprehensive medical database, performance tracking, clinical image training, and 15+ specialized training modes for PA students.
+              Comprehensive study platform for PA students with medical database, performance tracking, clinical image training, and 15+ specialized training modes.
             </p>
           </motion.div>
 
@@ -153,7 +153,7 @@ export function LandingPage() {
             Key Features
           </h2>
           <p className="text-xl text-[var(--color-text-secondary)]">
-            Tools for comprehensive PANCE preparation
+            Essential tools for PA school success and exam preparation
           </p>
         </motion.div>
 
@@ -262,7 +262,7 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-[var(--color-text-muted)]">
-          <p>© {new Date().getFullYear()} PANaCEa. PANCE preparation platform for physician assistant students.</p>
+          <p>© {new Date().getFullYear()} PANaCEa. Complete study resource for physician assistant students.</p>
         </div>
       </footer>
 
@@ -285,9 +285,9 @@ export function LandingPage() {
             >
               <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)]">
                 {/* Modal Header */}
-                <div className="bg-gradient-to-r from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#1F283A] px-6 py-4 text-white">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold">Welcome to PANaCEa</h3>
+                <div className="bg-gradient-to-r from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#1F283A] px-6 py-5 text-white">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-2xl font-bold">Welcome to PANaCEa</h3>
                     <button
                       onClick={() => setShowSignIn(false)}
                       className="p-1 hover:bg-white/20 rounded-lg transition-colors"
@@ -298,8 +298,8 @@ export function LandingPage() {
                       </svg>
                     </button>
                   </div>
-                  <p className="text-[#E9ECF1] mt-1 text-sm">
-                    Sign in to access your study dashboard
+                  <p className="text-[#E9ECF1] text-base">
+                    Sign in to access your personalized study dashboard
                   </p>
                 </div>
 

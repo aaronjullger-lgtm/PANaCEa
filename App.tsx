@@ -406,7 +406,7 @@ const App: React.FC = () => {
             <motion.img 
               src="/HEADER V1.png"
               alt="PANaCEa"
-              className="h-10 sm:h-12 w-auto dark:brightness-0 dark:invert"
+              className="h-16 sm:h-20 w-auto dark:brightness-0 dark:invert"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
             />
