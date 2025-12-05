@@ -20,6 +20,9 @@ interface GroupChatWidgetProps {
   isVisible?: boolean;
 }
 
+// Threshold for using AI vs template-based generation
+const AI_USAGE_THRESHOLD = 0.3; // 70% chance to use AI when enabled
+
 const GroupChatWidget: React.FC<GroupChatWidgetProps> = ({ 
   userStats, 
   isVisible = true 
@@ -41,7 +44,7 @@ const GroupChatWidget: React.FC<GroupChatWidgetProps> = ({
     try {
       let newMessages: ChatMessage[];
       
-      if (useAI && Math.random() > 0.3) { // 70% chance to use AI when enabled
+      if (useAI && Math.random() > AI_USAGE_THRESHOLD) {
         const hour = new Date().getHours();
         const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
         

@@ -238,7 +238,6 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <>
                   <MessageSquare className="w-6 h-6" />
                   Start Interview
-                  <span className="text-2xl">🩺</span>
                 </>
               )}
             </motion.button>

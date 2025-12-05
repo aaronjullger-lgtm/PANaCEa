@@ -170,6 +170,12 @@ export async function generateContextualConversation(
   return messages.sort((a, b) => a.timestamp - b.timestamp);
 }
 
+interface AIMessageSchema {
+  author: string;
+  message: string;
+  mood: 'excited' | 'focused' | 'encouraging' | 'curious' | 'celebrating';
+}
+
 /**
  * Generate AI-powered conversation using Gemini (if available)
  */
@@ -181,7 +187,10 @@ export async function generateAIConversation(
   }
 ): Promise<ChatMessage[]> {
   try {
-    // Call Gemini API through our proxy
+    // Call Gemini API through our proxy with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const prompt = `Generate 3-4 realistic, encouraging messages for a medical study group chat.
     
 Context:
@@ -205,22 +214,37 @@ Return as JSON array with format: [{"author": "Name", "message": "text", "mood":
         modelName: 'gemini-1.5-flash',
         prompt,
         temperature: 0.9
-      })
+      }),
+      signal: controller.signal
     });
     
+    clearTimeout(timeoutId);
+    
     if (!response.ok) {
-      throw new Error('Failed to generate AI conversation');
+      throw new Error(`Failed to generate AI conversation: HTTP ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
     const text = typeof data === 'string' ? data : data.text;
     
-    // Parse the JSON response
-    const aiMessages = JSON.parse(text.replace(/```json\n?|\n?```/g, ''));
+    // Parse the JSON response with error handling
+    let aiMessages: AIMessageSchema[];
+    try {
+      const cleanedText = text.replace(/```json\n?|\n?```/g, '').trim();
+      aiMessages = JSON.parse(cleanedText);
+      
+      // Validate array format
+      if (!Array.isArray(aiMessages)) {
+        throw new Error('AI response is not an array');
+      }
+    } catch (parseError) {
+      console.error('Failed to parse AI conversation response:', parseError);
+      throw new Error(`Invalid AI response format: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`);
+    }
     
     // Convert to our ChatMessage format
     const now = Date.now();
-    return aiMessages.map((msg: any, i: number) => {
+    return aiMessages.map((msg, i) => {
       const member = GROUP_MEMBERS.find(m => m.name === msg.author) || GROUP_MEMBERS[0];
       return {
         id: `ai-msg-${now}-${i}`,
@@ -232,7 +256,11 @@ Return as JSON array with format: [{"author": "Name", "message": "text", "mood":
       };
     });
   } catch (error) {
-    console.error('Error generating AI conversation:', error);
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('AI conversation generation timed out');
+    } else {
+      console.error('Error generating AI conversation:', error);
+    }
     // Fallback to template-based generation
     return generateContextualConversation({
       currentStreak: 0,
