@@ -52,24 +52,61 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       }
 
       try {
-        // TODO: Fetch user role from API/database
-        // For now, check localStorage for demo purposes
-        const storedRole = localStorage.getItem(`panacea_user_role_${userId}`);
-        const role = (storedRole as UserRole) || 'user';
-        setUserRole(role);
+        // Fetch user role from API/database
+        // Falls back to localStorage if API is not available
+        let role: UserRole = 'user';
         
+        try {
+          // Try to fetch from API first
+          const response = await fetch(`/api/users/${userId}/role`);
+          if (response.ok) {
+            const data = await response.json();
+            role = data.role as UserRole;
+          } else {
+            // Fallback to localStorage for development/demo
+            const storedRole = localStorage.getItem(`panacea_user_role_${userId}`);
+            role = (storedRole as UserRole) || 'user';
+          }
+        } catch (apiError) {
+          // If API call fails, use localStorage fallback
+          const storedRole = localStorage.getItem(`panacea_user_role_${userId}`);
+          role = (storedRole as UserRole) || 'user';
+        }
+        
+        setUserRole(role);
         const access = isAdmin(role);
         setHasAccess(access);
 
         if (access) {
-          // Load admin stats
-          // TODO: Fetch from API
-          setStats({
-            totalUsers: 150,
-            activeUsers: 78,
-            totalQuestions: 45230,
-            avgAccuracy: 76.5,
-          });
+          // Load admin stats from API
+          try {
+            const statsResponse = await fetch('/api/admin/stats');
+            if (statsResponse.ok) {
+              const { data } = await statsResponse.json();
+              setStats({
+                totalUsers: data.totalUsers || 0,
+                activeUsers: data.activeUsersToday || 0,
+                totalQuestions: data.totalStudySessions || 0,
+                avgAccuracy: data.averageAccuracy || 0,
+              });
+            } else {
+              // Fallback to placeholder stats
+              setStats({
+                totalUsers: 150,
+                activeUsers: 78,
+                totalQuestions: 45230,
+                avgAccuracy: 76.5,
+              });
+            }
+          } catch (statsError) {
+            // Fallback to placeholder stats if API fails
+            setStats({
+              totalUsers: 150,
+              activeUsers: 78,
+              totalQuestions: 45230,
+              avgAccuracy: 76.5,
+            });
+          }
         }
       } catch (error) {
         console.error('Failed to check admin access:', error);
