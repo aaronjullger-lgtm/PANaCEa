@@ -1,0 +1,29 @@
+[Unit]
+Description=PANaCEa Backend API Server
+Documentation=https://github.com/aaronjullger-lgtm/PANaCEa
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=panacea
+Group=panacea
+WorkingDirectory=/opt/PANaCEa
+Environment="NODE_ENV=production"
+Environment="PORT=3001"
+EnvironmentFile=/opt/PANaCEa/.env
+ExecStart=/usr/bin/npx tsx server.ts
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=panacea-server
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/PANaCEa/logs
+
+[Install]
+WantedBy=multi-user.target
