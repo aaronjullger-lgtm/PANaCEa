@@ -58,6 +58,83 @@ interface SettingsStatsModalProps {
 
 type TabId = 'stats' | 'settings' | 'preferences' | 'activity';
 
+// Analytics color palette types
+export type AnalyticsPalette = 'default' | 'neon' | 'pastel' | 'high-contrast';
+
+export interface AnalyticsPaletteConfig {
+  id: AnalyticsPalette;
+  label: string;
+  description: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    tertiary: string;
+    quaternary: string;
+    success: string;
+    warning: string;
+    error: string;
+  };
+}
+
+export const ANALYTICS_PALETTES: AnalyticsPaletteConfig[] = [
+  {
+    id: 'default',
+    label: 'Medical Standard',
+    description: 'Classic medical color coding',
+    colors: {
+      primary: '#3b82f6',
+      secondary: '#10b981',
+      tertiary: '#f59e0b',
+      quaternary: '#8b5cf6',
+      success: '#22c55e',
+      warning: '#f59e0b',
+      error: '#ef4444',
+    },
+  },
+  {
+    id: 'neon',
+    label: 'Neon',
+    description: 'High-energy vibrant colors',
+    colors: {
+      primary: '#ff006e',
+      secondary: '#00f5ff',
+      tertiary: '#ffbe0b',
+      quaternary: '#8338ec',
+      success: '#06ffa5',
+      warning: '#ffbe0b',
+      error: '#ff006e',
+    },
+  },
+  {
+    id: 'pastel',
+    label: 'Pastel',
+    description: 'Soft, gentle colors',
+    colors: {
+      primary: '#a8dadc',
+      secondary: '#f1faee',
+      tertiary: '#e9c46a',
+      quaternary: '#f4a261',
+      success: '#b7e4c7',
+      warning: '#e9c46a',
+      error: '#e76f51',
+    },
+  },
+  {
+    id: 'high-contrast',
+    label: 'High Contrast',
+    description: 'Maximum visibility',
+    colors: {
+      primary: '#000000',
+      secondary: '#ffffff',
+      tertiary: '#ffff00',
+      quaternary: '#ff00ff',
+      success: '#00ff00',
+      warning: '#ffff00',
+      error: '#ff0000',
+    },
+  },
+];
+
 // Get default enabled widgets
 const getDefaultWidgets = (): WidgetId[] => 
   DEFAULT_WIDGET_CONFIG.filter(w => w.enabled).map(w => w.id);
@@ -100,6 +177,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       }
     }
     return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+  });
+  
+  // Analytics color palette state - Load from localStorage
+  const [analyticsPalette, setAnalyticsPalette] = useState<AnalyticsPalette>(() => {
+    const saved = localStorage.getItem('panceai_analytics_palette');
+    return (saved as AnalyticsPalette) || 'default';
   });
   
   // Use external widgets if provided, otherwise use local state
@@ -152,6 +235,27 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     setEnabledSystems(new Set());
     localStorage.setItem('panceai_enabled_systems', JSON.stringify([]));
   };
+  
+  const handleSetAnalyticsPalette = (palette: AnalyticsPalette) => {
+    setAnalyticsPalette(palette);
+    localStorage.setItem('panceai_analytics_palette', palette);
+    // Apply palette colors to CSS variables for charts/visualizations
+    const paletteConfig = ANALYTICS_PALETTES.find(p => p.id === palette);
+    if (paletteConfig) {
+      document.documentElement.style.setProperty('--analytics-primary', paletteConfig.colors.primary);
+      document.documentElement.style.setProperty('--analytics-secondary', paletteConfig.colors.secondary);
+      document.documentElement.style.setProperty('--analytics-tertiary', paletteConfig.colors.tertiary);
+      document.documentElement.style.setProperty('--analytics-quaternary', paletteConfig.colors.quaternary);
+      document.documentElement.style.setProperty('--analytics-success', paletteConfig.colors.success);
+      document.documentElement.style.setProperty('--analytics-warning', paletteConfig.colors.warning);
+      document.documentElement.style.setProperty('--analytics-error', paletteConfig.colors.error);
+    }
+  };
+  
+  // Apply analytics palette on mount
+  useEffect(() => {
+    handleSetAnalyticsPalette(analyticsPalette);
+  }, []);
   
   // Export handlers
   const handleExportCSV = () => {
@@ -635,6 +739,47 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     </div>
                   </div>
                 )}
+
+                {/* Analytics Color Palette */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)]">Analytics Color Palette</h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      Choose color scheme for charts, heatmaps, progress bars, and data visualizations. This does not affect the main UI theme.
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {ANALYTICS_PALETTES.map(palette => (
+                      <button
+                        key={palette.id}
+                        onClick={() => handleSetAnalyticsPalette(palette.id)}
+                        className={`p-3 rounded-lg border-2 transition-all text-left ${
+                          analyticsPalette === palette.id
+                            ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                            : 'border-[var(--color-border)] hover:border-[var(--color-accent)]/50 bg-[var(--color-bg-primary)]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold text-[var(--color-text-primary)]">{palette.label}</span>
+                          {analyticsPalette === palette.id && (
+                            <Check className="w-4 h-4 text-[var(--color-accent)]" />
+                          )}
+                        </div>
+                        <p className="text-xs text-[var(--color-text-muted)] mb-2">{palette.description}</p>
+                        <div className="flex gap-1">
+                          {Object.values(palette.colors).slice(0, 5).map((color, i) => (
+                            <div
+                              key={i}
+                              className="w-6 h-6 rounded-md border border-[var(--color-border)]"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* System Selection */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">

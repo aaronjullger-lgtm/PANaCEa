@@ -211,7 +211,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             disabled={option.disabled}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
               focus === option.value
-                ? 'bg-blue-600 text-white shadow-sm dark:bg-blue-500'
+                ? 'bg-[#364154] text-[#E9ECF1] shadow-sm dark:bg-[#364154]'
                 : option.disabled
                 ? 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-700 dark:text-slate-500'
                 : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-600'
@@ -456,7 +456,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               <button
                 type="button"
                 onClick={handleCoreStart}
-                className="w-full md:w-auto px-8 py-3.5 bg-blue-600 dark:bg-blue-500 text-white font-semibold rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
+                className="w-full md:w-auto px-8 py-3.5 bg-[#364154] text-[#E9ECF1] font-semibold rounded-xl hover:bg-[#1F283A] transition-colors shadow-md hover:shadow-lg"
               >
                 Start Session
               </button>
