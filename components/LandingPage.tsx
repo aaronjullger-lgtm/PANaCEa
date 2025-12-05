@@ -23,9 +23,9 @@ export function LandingPage() {
 
   const features = [
     {
-      icon: Brain,
-      title: 'AI-Generated Questions',
-      description: 'Personalized practice questions based on your performance, targeting areas where you need improvement'
+      icon: TrendingUp,
+      title: 'Performance Tracking & Stats',
+      description: 'Detailed analytics and insights into your progress, identifying weak areas and tracking improvement over time'
     },
     {
       icon: ActivityIcon,
@@ -33,14 +33,14 @@ export function LandingPage() {
       description: 'Practice with ECGs, dermatology images, and radiology cases to build diagnostic skills'
     },
     {
+      icon: BookOpen,
+      title: 'Comprehensive Medical Database',
+      description: 'Complete medical reference with 1000+ conditions, treatments, labs, and clinical guidelines built right in'
+    },
+    {
       icon: Target,
       title: '15+ Training Modes',
       description: 'Pharmacology, differential diagnosis, first-line treatments, and more specialized practice modes'
-    },
-    {
-      icon: Repeat,
-      title: 'Spaced Repetition',
-      description: 'SM-2 algorithm schedules review sessions to improve long-term retention'
     }
   ];
 
@@ -66,7 +66,7 @@ export function LandingPage() {
             <img 
               src="/HEADER V1.png" 
               alt="PANaCEa - PANCE Preparation Platform" 
-              className="h-10 sm:h-12 w-auto dark:brightness-0 dark:invert"
+              className="h-16 sm:h-20 w-auto dark:brightness-0 dark:invert"
             />
           </motion.div>
           <motion.button
@@ -97,7 +97,7 @@ export function LandingPage() {
               </span>
             </h1>
             <p className="text-xl sm:text-2xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
-              Study platform with AI-generated questions, clinical image training, and spaced repetition for PA students.
+              Study platform with comprehensive medical database, performance tracking, clinical image training, and 15+ specialized training modes for PA students.
             </p>
           </motion.div>
 
@@ -128,7 +128,7 @@ export function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-wrap gap-3 justify-center mt-12"
           >
-            {['Adaptive AI', '15+ Training Modes', 'Spaced Repetition', '1000+ Conditions'].map((pill, idx) => (
+            {['Performance Analytics', '15+ Training Modes', 'Medical Database', '1000+ Conditions'].map((pill, idx) => (
               <div
                 key={idx}
                 className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]"
