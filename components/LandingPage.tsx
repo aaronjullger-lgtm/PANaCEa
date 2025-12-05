@@ -61,18 +61,26 @@ export function LandingPage() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center"
+            className="flex items-center gap-3"
           >
+            {/* Favicon icons - opposites for light/dark mode */}
             <img 
-              src="/PANaCEa.svg" 
-              alt="PANaCEa - PA School Study Resource" 
-              className="h-24 sm:h-32 w-auto dark:hidden"
+              src="/Favicon.svg" 
+              alt="PANaCEa Icon" 
+              className="h-12 sm:h-14 w-auto dark:hidden"
             />
             <img 
-              src="/PANaCEa1.svg" 
-              alt="PANaCEa - PA School Study Resource" 
-              className="h-24 sm:h-32 w-auto hidden dark:block"
+              src="/altfavi.svg" 
+              alt="PANaCEa Icon" 
+              className="h-12 sm:h-14 w-auto hidden dark:block"
             />
+            {/* PANaCEa text with Poppins Bold font */}
+            <span 
+              className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)]"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
+            >
+              PANaCEa
+            </span>
           </motion.div>
           <motion.button
             initial={{ opacity: 0, x: 20 }}
