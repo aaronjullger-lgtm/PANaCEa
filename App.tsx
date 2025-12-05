@@ -402,21 +402,31 @@ const App: React.FC = () => {
       {/* Premium Glass Header - Elegant and professional */}
       <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* Favicon icons - opposites for light/dark mode */}
             <motion.img 
-              src="/PANaCEa.svg"
-              alt="PANaCEa"
-              className="h-16 sm:h-20 w-auto dark:hidden"
-              whileHover={{ scale: 1.02 }}
+              src="/Favicon.svg"
+              alt="PANaCEa Icon"
+              className="h-10 sm:h-12 w-auto dark:hidden"
+              whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             />
             <motion.img 
-              src="/PANaCEa1.svg"
-              alt="PANaCEa"
-              className="h-16 sm:h-20 w-auto hidden dark:block"
-              whileHover={{ scale: 1.02 }}
+              src="/altfavi.svg"
+              alt="PANaCEa Icon"
+              className="h-10 sm:h-12 w-auto hidden dark:block"
+              whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             />
+            {/* PANaCEa text with Poppins Bold font */}
+            <motion.span 
+              className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)]"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              PANaCEa
+            </motion.span>
           </div>
           <div className="flex items-center gap-2">
             <motion.button
