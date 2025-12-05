@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Award } from "lucide-react";
 import type {
   PerformanceRecord,
   SessionSettings,
