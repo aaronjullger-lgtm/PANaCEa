@@ -289,6 +289,283 @@ app.post('/api/analytics/confusion',
   }
 );
 
+// Question flagging endpoints (Task 42: Feedback Loop Closure)
+app.post('/api/questions/flag',
+  validateRequired(['userId', 'questionId', 'flagType', 'description']),
+  validateEnum('flagType', ['typo', 'incorrect_answer', 'unclear', 'outdated', 'other']),
+  async (req: Request, res: Response) => {
+    try {
+      const { userId, userEmail, userFirstName, questionId, questionText, correctAnswer, 
+              topic, system, flagType, description, priority } = req.body;
+      
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ 
+          success: false, 
+          error: 'Database not configured' 
+        });
+      }
+      
+      const { prisma } = await import('./lib/prisma');
+      const { sendAdminFlagNotification } = await import('./lib/services/notificationService');
+      
+      // Create flag in database
+      const flag = await prisma.questionFlag.create({
+        data: {
+          userId,
+          userEmail: userEmail || null,
+          userFirstName: userFirstName || null,
+          questionId,
+          questionText: questionText || '',
+          correctAnswer: correctAnswer || null,
+          topic: topic || null,
+          system: system || null,
+          flagType,
+          description,
+          priority: priority || 'medium',
+        },
+      });
+      
+      // Send notification to admin (if configured)
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (adminEmail) {
+        await sendAdminFlagNotification(adminEmail, {
+          id: flag.id,
+          questionId,
+          questionText: questionText || '',
+          flagType,
+          description,
+          userEmail,
+          userFirstName,
+        });
+      }
+      
+      res.json({ 
+        success: true, 
+        flagId: flag.id,
+        message: 'Question flagged successfully. We will review it soon!' 
+      });
+    } catch (error) {
+      console.error('Failed to flag question:', error);
+      res.status(500).json({ success: false, error: 'Failed to flag question' });
+    }
+  }
+);
+
+// Mark a flag as resolved and send notification to user
+app.post('/api/questions/flag/:flagId/resolve',
+  validateRequired(['reviewedBy', 'resolutionNote']),
+  async (req: Request, res: Response) => {
+    try {
+      const { flagId } = req.params;
+      const { reviewedBy, resolutionNote } = req.body;
+      
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ 
+          success: false, 
+          error: 'Database not configured' 
+        });
+      }
+      
+      const { prisma } = await import('./lib/prisma');
+      const { sendFlagResolvedNotification } = await import('./lib/services/notificationService');
+      
+      // Update flag status
+      const flag = await prisma.questionFlag.update({
+        where: { id: flagId },
+        data: {
+          status: 'fixed',
+          reviewedBy,
+          reviewedAt: new Date(),
+          resolutionNote,
+        },
+      });
+      
+      // Send notification to user
+      if (flag.userEmail) {
+        const notificationSent = await sendFlagResolvedNotification({
+          userEmail: flag.userEmail,
+          userFirstName: flag.userFirstName || undefined,
+          questionId: flag.questionId,
+          questionText: flag.questionText,
+          flagType: flag.flagType,
+          resolutionNote,
+        });
+        
+        if (notificationSent) {
+          await prisma.questionFlag.update({
+            where: { id: flagId },
+            data: {
+              notificationSent: true,
+              notifiedAt: new Date(),
+            },
+          });
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Flag resolved and user notified' 
+      });
+    } catch (error) {
+      console.error('Failed to resolve flag:', error);
+      res.status(500).json({ success: false, error: 'Failed to resolve flag' });
+    }
+  }
+);
+
+// Get all question flags (admin endpoint)
+app.get('/api/questions/flags', async (req: Request, res: Response) => {
+  try {
+    const { status, priority } = req.query;
+    
+    if (!process.env.DATABASE_URL) {
+      return res.json({ success: true, flags: [] });
+    }
+    
+    const { prisma } = await import('./lib/prisma');
+    
+    const flags = await prisma.questionFlag.findMany({
+      where: {
+        ...(status && { status: status as string }),
+        ...(priority && { priority: priority as string }),
+      },
+      orderBy: [
+        { priority: 'desc' },
+        { createdAt: 'desc' },
+      ],
+    });
+    
+    res.json({ success: true, flags });
+  } catch (error) {
+    console.error('Failed to get flags:', error);
+    res.status(500).json({ success: false, error: 'Failed to get flags' });
+  }
+});
+
+// Semantic cache endpoint (Task 43)
+app.post('/api/questions/generate',
+  validateRequired(['queryText', 'questionType']),
+  async (req: Request, res: Response) => {
+    try {
+      const { queryText, questionType, system, difficulty } = req.body;
+      
+      const { findSimilarCachedQuestion, cacheGeneratedQuestion } = 
+        await import('./lib/services/semanticCacheService');
+      
+      // Check cache first
+      const cached = await findSimilarCachedQuestion({
+        queryText,
+        questionType,
+        system,
+        difficulty,
+      });
+      
+      if (cached) {
+        return res.json({
+          success: true,
+          question: cached.question,
+          cached: true,
+          similarity: cached.similarity,
+        });
+      }
+      
+      // Generate new question (placeholder - integrate with actual question generation)
+      // TODO: In production, integrate with actual AI question generation service
+      // For now, return an indication that generation would happen here
+      const newQuestion = {
+        id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        type: questionType,
+        system: system || null,
+        difficulty: difficulty || 'medium',
+        text: `This is a placeholder. In production, this would be an AI-generated ${questionType} question about: ${queryText}`,
+        options: questionType === 'mcq' ? ['Option A', 'Option B', 'Option C', 'Option D'] : undefined,
+        correctAnswer: questionType === 'mcq' ? 'Option A' : undefined,
+        explanation: 'Placeholder explanation. In production, this would contain detailed medical explanation.',
+        generatedAt: new Date().toISOString(),
+        metadata: {
+          originalQuery: queryText,
+          cached: false,
+        }
+      };
+      
+      // Cache the generated question
+      await cacheGeneratedQuestion({
+        queryText,
+        questionType,
+        system,
+        difficulty,
+      }, newQuestion);
+      
+      res.json({
+        success: true,
+        question: newQuestion,
+        cached: false,
+      });
+    } catch (error) {
+      console.error('Failed to generate question:', error);
+      res.status(500).json({ success: false, error: 'Failed to generate question' });
+    }
+  }
+);
+
+// Content branching endpoints (Task 46)
+app.post('/api/branches',
+  validateRequired(['name', 'createdBy']),
+  async (req: Request, res: Response) => {
+    try {
+      const { name, description, baseBranch, createdBy } = req.body;
+      
+      const { createBranch } = await import('./lib/services/contentBranchingService');
+      
+      const branchId = await createBranch({
+        name,
+        description,
+        baseBranch,
+        createdBy,
+      });
+      
+      res.json({ success: true, branchId });
+    } catch (error: any) {
+      console.error('Failed to create branch:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+);
+
+app.get('/api/branches', async (req: Request, res: Response) => {
+  try {
+    const { includeArchived } = req.query;
+    
+    const { listBranches } = await import('./lib/services/contentBranchingService');
+    
+    const branches = await listBranches(includeArchived === 'true');
+    
+    res.json({ success: true, branches });
+  } catch (error) {
+    console.error('Failed to list branches:', error);
+    res.status(500).json({ success: false, error: 'Failed to list branches' });
+  }
+});
+
+app.post('/api/branches/:branchName/merge',
+  validateRequired(['mergedBy']),
+  async (req: Request, res: Response) => {
+    try {
+      const { branchName } = req.params;
+      const { mergedBy, targetBranch } = req.body;
+      
+      const { mergeBranch } = await import('./lib/services/contentBranchingService');
+      
+      const result = await mergeBranch(branchName, mergedBy, targetBranch);
+      
+      res.json({ success: result.success, ...result });
+    } catch (error: any) {
+      console.error('Failed to merge branch:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+);
+
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled error:', err);

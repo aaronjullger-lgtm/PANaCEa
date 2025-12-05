@@ -463,3 +463,127 @@ model SyncQueue {
   @@index([status])
   @@index([createdAt])
 }
+
+/// Represents a flagged question reported by a user
+model QuestionFlag {
+  id              String   @id @default(uuid())
+  userId          String   // User who flagged the question
+  userEmail       String?  // Email for notification
+  userFirstName   String?  // User's first name for personalized emails
+  questionId      String   // Unique identifier for the question
+  questionText    String   @db.Text
+  correctAnswer   String?
+  topic           String?
+  system          String?
+  flagType        String   // "typo", "incorrect_answer", "unclear", "outdated", "other"
+  description     String   @db.Text // User's description of the issue
+  status          String   @default("pending") // pending, under_review, fixed, wont_fix, duplicate
+  priority        String   @default("medium") // low, medium, high, critical
+  
+  /// Admin tracking
+  assignedTo      String?  // Admin user ID
+  reviewedBy      String?  // Admin who reviewed/fixed
+  reviewedAt      DateTime?
+  resolutionNote  String?  @db.Text // Admin's note about the fix
+  
+  /// Notification tracking
+  notificationSent Boolean  @default(false)
+  notifiedAt      DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([questionId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([status, priority]) // For admin queue sorting
+}
+
+/// Semantic cache for AI-generated questions
+model SemanticCache {
+  id                String   @id @default(uuid())
+  queryText         String   @db.Text // Original query/prompt
+  queryEmbedding    String?  @db.Text // Vector embedding as JSON
+  questionType      String   // "vignette", "mcq", "clinical"
+  system            String?
+  difficulty        String?
+  cachedQuestion    Json     // The generated question data
+  generatedAt       DateTime @default(now())
+  lastUsedAt        DateTime @default(now())
+  useCount          Int      @default(1)
+  qualityScore      Float    @default(0) // User feedback quality
+  
+  @@index([queryText(ops: raw("gin_trgm_ops"))]) // PostgreSQL trigram for similarity
+  @@index([questionType])
+  @@index([system])
+  @@index([lastUsedAt])
+}
+
+/// Question version history for time travel
+model QuestionHistory {
+  id              String   @id @default(uuid())
+  questionId      String   // The question identifier
+  version         Int      // Version number
+  questionData    Json     // Complete question snapshot
+  changedBy       String?  // User/system that made the change
+  changeReason    String?  @db.Text
+  validFrom       DateTime @default(now())
+  validTo         DateTime? // Null for current version
+  
+  @@unique([questionId, version])
+  @@index([questionId])
+  @@index([validFrom])
+  @@index([questionId, validFrom]) // For time-travel queries
+}
+
+/// Content branches for Git-like version control
+model ContentBranch {
+  id              String   @id @default(uuid())
+  name            String   // "main", "2026-guideline-update", etc.
+  description     String?  @db.Text
+  baseBranch      String?  // Parent branch name
+  status          String   @default("active") // active, merged, archived
+  
+  /// Branch metadata
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  mergedAt        DateTime?
+  mergedBy        String?
+  mergeCommitId   String?
+  
+  /// Statistics
+  contentCount    Int      @default(0)
+  changeCount     Int      @default(0)
+  
+  /// Relations
+  changes         BranchChange[]
+  
+  @@unique([name])
+  @@index([status])
+  @@index([createdBy])
+  @@index([createdAt])
+}
+
+/// Individual changes within a content branch
+model BranchChange {
+  id              String   @id @default(uuid())
+  branchId        String
+  contentId       String   // Reference to MedicalContent
+  conditionId     String
+  changeType      String   // create, update, delete
+  contentData     Json     // The changed content
+  previousData    Json?    // For updates/deletes
+  
+  createdBy       String
+  createdAt       DateTime @default(now())
+  
+  branch          ContentBranch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  
+  @@index([branchId])
+  @@index([contentId])
+  @@index([conditionId])
+  @@index([createdAt])
+}
