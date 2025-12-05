@@ -149,7 +149,11 @@ export function updateSystemProgress(
   progress: UserOrganProgress,
   performanceData: PerformanceRecord[]
 ): UserOrganProgress {
-  const systemProgress = new Map<SystemCode, {
+  // Start with existing progress to preserve any manually tracked data
+  const systemProgress = new Map(progress.systemProgress);
+
+  // Recalculate from performance data
+  const calculatedProgress = new Map<SystemCode, {
     questionsAnswered: number;
     correct: number;
     accuracy: number;
@@ -159,24 +163,25 @@ export function updateSystemProgress(
   performanceData.forEach(record => {
     if (!record.system) return;
 
-    const existing = systemProgress.get(record.system) || {
+    const existing = calculatedProgress.get(record.system) || {
       questionsAnswered: 0,
       correct: 0,
       accuracy: 0,
     };
 
-    systemProgress.set(record.system, {
+    calculatedProgress.set(record.system, {
       questionsAnswered: existing.questionsAnswered + 1,
       correct: existing.correct + (record.isCorrect ? 1 : 0),
       accuracy: 0, // Will calculate after
     });
   });
 
-  // Calculate accuracy
-  systemProgress.forEach((data, system) => {
+  // Calculate accuracy and merge with existing
+  calculatedProgress.forEach((data, system) => {
     data.accuracy = data.questionsAnswered > 0
       ? Math.round((data.correct / data.questionsAnswered) * 100)
       : 0;
+    systemProgress.set(system, data);
   });
 
   return {
@@ -316,8 +321,13 @@ export function incrementSpecialModeProgress(
   increment: number = 1
 ): UserOrganProgress {
   const current = progress.specialModeProgress.get(modeId) || 0;
-  progress.specialModeProgress.set(modeId, current + increment);
-  return progress;
+  const newProgress = new Map(progress.specialModeProgress);
+  newProgress.set(modeId, current + increment);
+  
+  return {
+    ...progress,
+    specialModeProgress: newProgress,
+  };
 }
 
 /**

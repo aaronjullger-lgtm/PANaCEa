@@ -351,7 +351,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
   },
   {
     id: 'stomach_appendicitis',
-    name: 'McBurney\'s Point',
+    name: "McBurney's Point",
     description: 'Right lower quadrant tenderness',
     system: 'GI',
     isBase: false,

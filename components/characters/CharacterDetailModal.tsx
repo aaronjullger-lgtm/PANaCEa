@@ -196,7 +196,7 @@ const CharacterDetailModal: React.FC<CharacterDetailModalProps> = ({
 
                       {/* Name */}
                       <div className="text-xs font-medium text-[var(--color-text-primary)] text-center mt-1 truncate">
-                        {isUnlocked ? accessory.name.split(' ')[0] : '???'}
+                        {isUnlocked ? (accessory.name.split(' ')[0] || accessory.name) : '???'}
                       </div>
                     </button>
                   );

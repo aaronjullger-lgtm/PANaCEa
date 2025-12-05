@@ -82,8 +82,9 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
       saveOrganProgress(unlockedProgress);
       setNewUnlocks({ variants: newVariants, accessories: newAccessories });
       
-      // Clear notification after 5 seconds
-      setTimeout(() => setNewUnlocks({ variants: [], accessories: [] }), 5000);
+      // Clear notification after 5 seconds with cleanup
+      const timeoutId = setTimeout(() => setNewUnlocks({ variants: [], accessories: [] }), 5000);
+      return () => clearTimeout(timeoutId);
     } else {
       setProgress(updatedProgress);
       saveOrganProgress(updatedProgress);
