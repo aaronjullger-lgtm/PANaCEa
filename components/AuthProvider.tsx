@@ -13,6 +13,9 @@ interface AuthProviderProps {
 // Get publishable key from environment variable
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 
+// Use official Clerk CDN to bypass custom domain configuration issues
+const CLERK_JS_URL = 'https://cdn.clerk.io/npm/@clerk/clerk-js@5/dist/clerk.browser.js';
+
 // Error message when Clerk publishable key is missing
 const MISSING_KEY_ERROR = `Missing Publishable Key for Clerk!
 
@@ -35,7 +38,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   return (
     <ClerkProvider 
       publishableKey={CLERK_PUBLISHABLE_KEY}
-      clerkJSUrl="https://cdn.clerk.io/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+      clerkJSUrl={CLERK_JS_URL}
       appearance={{
         elements: {
           // Hide Clerk branding and development mode indicators
