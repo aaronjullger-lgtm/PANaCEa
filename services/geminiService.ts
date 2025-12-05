@@ -68,6 +68,9 @@ const slugify = (value: string): string =>
 
 function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
   const id = buildConditionDefinition(meta).id;
+  // Note: Using getConditionByIdSync here is safe because this function is only called
+  // during question generation (from fetchNewQuestion), and conditions are loaded
+  // during app initialization. Returns undefined if not loaded yet, which is handled gracefully.
   const content = getConditionByIdSync(id)?.sections;
   if (!content) return undefined;
 
