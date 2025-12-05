@@ -21,7 +21,7 @@ const TEST_CASES_PER_TYPE = 3; // Test with 3 cases of each type
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
 
 if (!apiKey) {
-  console.error("❌ Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
+  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
   console.error("   Please set your API key before running this script:");
   console.error("   export GEMINI_API_KEY=your_key_here");
   process.exit(1);
@@ -104,7 +104,7 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
     // Limit to 3 links
     return links.slice(0, 3);
   } catch (error) {
-    console.error(`   ⚠️  Error generating links for "${diagnosis}":`, error);
+    console.error(`   [WARNING]  Error generating links for "${diagnosis}":`, error);
     return []; // Return empty array on error
   }
 }
@@ -133,7 +133,7 @@ async function main() {
     const clinicalCases: ClinicalCase[] = JSON.parse(clinicalCasesData);
     const testClinicalCases = clinicalCases.slice(0, TEST_CASES_PER_TYPE);
 
-    console.log(`📊 Testing with ${testClinicalCases.length} clinical cases\n`);
+    console.log(`[INFO] Testing with ${testClinicalCases.length} clinical cases\n`);
 
     const updatedClinicalCases = [];
     for (const caseItem of testClinicalCases) {
@@ -171,7 +171,7 @@ async function main() {
     const labCases: LabCase[] = JSON.parse(labCasesData);
     const testLabCases = labCases.slice(0, TEST_CASES_PER_TYPE);
 
-    console.log(`📊 Testing with ${testLabCases.length} lab cases\n`);
+    console.log(`[INFO] Testing with ${testLabCases.length} lab cases\n`);
 
     const updatedLabCases = [];
     for (const caseItem of testLabCases) {
@@ -201,7 +201,7 @@ async function main() {
     console.log("=".repeat(60));
     console.log("✨ TEST COMPLETE!");
     console.log("=".repeat(60));
-    console.log(`\n📊 Summary:`);
+    console.log(`\n[INFO] Summary:`);
     console.log(`   - Clinical cases tested: ${testClinicalCases.length}`);
     console.log(`   - Lab cases tested: ${testLabCases.length}`);
     console.log(`   - Test output directory: ${TEST_OUTPUT_DIR}`);
@@ -220,7 +220,7 @@ async function main() {
     console.log("\n✅ Test successful! Review the output files to validate quality.");
     console.log("   If satisfied, run: npm run generate:basic-science-links\n");
   } catch (error) {
-    console.error("\n❌ Fatal error:", error);
+    console.error("\n[ERROR] Fatal error:", error);
     process.exit(1);
   }
 }

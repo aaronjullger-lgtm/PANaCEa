@@ -829,7 +829,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   {enabledSystems.size === 0 && (
                     <div className="mt-3 p-3 bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded-lg">
                       <p className="text-xs text-amber-900 dark:text-amber-300">
-                        ⚠️ No systems enabled. Please enable at least one system to generate questions.
+                        <strong>Warning:</strong> No systems enabled. Please enable at least one system to generate questions.
                       </p>
                     </div>
                   )}

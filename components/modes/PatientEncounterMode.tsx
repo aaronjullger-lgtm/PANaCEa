@@ -211,11 +211,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
               <div className="bg-teal-900/20 rounded-lg p-4 border border-teal-800/30">
                 <p className="text-sm text-teal-300 font-semibold mb-2">Pro Tips:</p>
-                <ul className="text-sm text-slate-300 space-y-1">
-                  <li>• Ask essential questions first (onset, character, severity)</li>
-                  <li>• Avoid unnecessary questions that waste time</li>
-                  <li>• Be thorough but efficient - quality over quantity</li>
-                  <li>• Consider differential diagnoses as you gather information</li>
+                <ul className="text-sm text-slate-300 space-y-1 list-disc list-inside">
+                  <li>Ask essential questions first (onset, character, severity)</li>
+                  <li>Avoid unnecessary questions that waste time</li>
+                  <li>Be thorough but efficient - quality over quantity</li>
+                  <li>Consider differential diagnoses as you gather information</li>
                 </ul>
               </div>
             </div>

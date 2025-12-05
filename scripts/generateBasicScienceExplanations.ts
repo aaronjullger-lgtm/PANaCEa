@@ -53,7 +53,7 @@ type ExplanationsDatabase = Record<string, ConceptExplanation>;
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
 
 if (!apiKey) {
-  console.error("❌ Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
+  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
   console.error("   Please set your API key before running this script:");
   console.error("   export GEMINI_API_KEY=your_key_here");
   process.exit(1);
@@ -180,7 +180,7 @@ Focus on clarity, accuracy, and board exam-level detail. Use proper medical term
       relatedConditions: relatedConditionIds,
     };
   } catch (error) {
-    console.error(`   ⚠️  Error: ${error}`);
+    console.error(`   [WARNING]  Error: ${error}`);
     return null;
   }
 }
@@ -194,7 +194,7 @@ function loadExistingExplanations(): ExplanationsDatabase {
       const data = fs.readFileSync(OUTPUT_FILE, "utf-8");
       return JSON.parse(data);
     } catch (error) {
-      console.warn(`⚠️  Could not load existing explanations: ${error}`);
+      console.warn(`[WARNING]  Could not load existing explanations: ${error}`);
       return {};
     }
   }
@@ -218,8 +218,8 @@ async function processConceptsIncremental(
     (id) => existingExplanations[id] && existingExplanations[id].explanation
   );
 
-  console.log(`📊 Total unique concepts: ${allConceptIds.length}`);
-  console.log(`   ✓ Already have explanations: ${conceptsWithExplanations.length}`);
+  console.log(`[INFO] Total unique concepts: ${allConceptIds.length}`);
+  console.log(`   [OK] Already have explanations: ${conceptsWithExplanations.length}`);
   console.log(`   ⏳ Need explanations: ${conceptsNeedingExplanations.length}`);
 
   if (conceptsNeedingExplanations.length === 0) {
@@ -251,9 +251,9 @@ async function processConceptsIncremental(
 
     if (explanation) {
       updatedExplanations[conceptId] = explanation;
-      console.log(`   ✓ Generated explanation`);
+      console.log(`   [OK] Generated explanation`);
     } else {
-      console.log(`   ❌ Failed to generate explanation`);
+      console.log(`   [ERROR] Failed to generate explanation`);
     }
 
     // Save incrementally every 5 concepts
@@ -294,25 +294,25 @@ async function main() {
     console.log("=".repeat(60));
 
     if (!fs.existsSync(CONDITION_CONTENT_FILE)) {
-      console.error(`❌ Error: Condition content file not found at ${CONDITION_CONTENT_FILE}`);
+      console.error(`[ERROR] Error: Condition content file not found at ${CONDITION_CONTENT_FILE}`);
       process.exit(1);
     }
 
     const conditionsData = fs.readFileSync(CONDITION_CONTENT_FILE, "utf-8");
     const conditions: ConditionsDatabase = JSON.parse(conditionsData);
-    console.log(`✓ Loaded ${Object.keys(conditions).length} conditions`);
+    console.log(`[OK] Loaded ${Object.keys(conditions).length} conditions`);
 
     // ======================================================
     // EXTRACT ALL CONCEPTS
     // ======================================================
-    console.log("\n📊 EXTRACTING BASIC SCIENCE CONCEPTS");
+    console.log("\n[INFO] EXTRACTING BASIC SCIENCE CONCEPTS");
     console.log("=".repeat(60));
 
     const conceptsMap = extractAllConcepts(conditions);
-    console.log(`✓ Found ${conceptsMap.size} unique concepts across all conditions`);
+    console.log(`[OK] Found ${conceptsMap.size} unique concepts across all conditions`);
 
     if (conceptsMap.size === 0) {
-      console.log("\n⚠️  No basic science links found in conditions database.");
+      console.log("\n[WARNING]  No basic science links found in conditions database.");
       console.log("   Please run generateBasicScienceLinksIncremental.ts first.\n");
       process.exit(0);
     }
@@ -334,7 +334,7 @@ async function main() {
     console.log("=".repeat(60));
 
     const existingExplanations = loadExistingExplanations();
-    console.log(`✓ Loaded ${Object.keys(existingExplanations).length} existing explanations`);
+    console.log(`[OK] Loaded ${Object.keys(existingExplanations).length} existing explanations`);
 
     // ======================================================
     // GENERATE EXPLANATIONS
@@ -366,7 +366,7 @@ async function main() {
 
     console.log("✅ All done!\n");
   } catch (error) {
-    console.error("\n❌ Fatal error:", error);
+    console.error("\n[ERROR] Fatal error:", error);
     console.error("\n💡 You can safely re-run this script to continue from where it stopped.\n");
     process.exit(1);
   }

@@ -40,7 +40,7 @@ type ConditionsDatabase = Record<string, ConditionContent>;
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
 
 if (!apiKey) {
-  console.error("❌ Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
+  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
   console.error("   Please set your API key before running this script:");
   console.error("   export GEMINI_API_KEY=your_key_here");
   process.exit(1);
@@ -126,7 +126,7 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
 
     return links.slice(0, 3);
   } catch (error) {
-    console.error(`   ⚠️  Error: ${error}`);
+    console.error(`   [WARNING]  Error: ${error}`);
     return [];
   }
 }
@@ -161,8 +161,8 @@ async function processConditionsIncremental(
     (id) => conditions[id].basicScienceLinks && conditions[id].basicScienceLinks.length > 0
   );
 
-  console.log(`📊 Total conditions: ${conditionIds.length}`);
-  console.log(`   ✓ Already have links: ${conditionsWithLinks.length}`);
+  console.log(`[INFO] Total conditions: ${conditionIds.length}`);
+  console.log(`   [OK] Already have links: ${conditionsWithLinks.length}`);
   console.log(`   ⏳ Need links: ${conditionsNeedingLinks.length}`);
 
   if (conditionsNeedingLinks.length === 0) {
@@ -192,7 +192,7 @@ async function processConditionsIncremental(
       basicScienceLinks,
     };
 
-    console.log(`   ✓ Generated ${basicScienceLinks.length} link(s)`);
+    console.log(`   [OK] Generated ${basicScienceLinks.length} link(s)`);
 
     // Save incrementally every 10 conditions
     if (processed % 10 === 0) {
@@ -232,7 +232,7 @@ async function main() {
     console.log("=".repeat(60));
 
     if (!fs.existsSync(CONDITION_CONTENT_FILE)) {
-      console.error(`❌ Error: Condition content file not found at ${CONDITION_CONTENT_FILE}`);
+      console.error(`[ERROR] Error: Condition content file not found at ${CONDITION_CONTENT_FILE}`);
       process.exit(1);
     }
 
@@ -262,7 +262,7 @@ async function main() {
 
     console.log("✅ All done!\n");
   } catch (error) {
-    console.error("\n❌ Fatal error:", error);
+    console.error("\n[ERROR] Fatal error:", error);
     console.error("\n💡 You can safely re-run this script to continue from where it stopped.\n");
     process.exit(1);
   }

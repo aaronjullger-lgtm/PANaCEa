@@ -193,16 +193,16 @@ export function runContentHealthCheck(): ContentHealthReport {
  */
 function printReport(report: ContentHealthReport): void {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📊 Content Health Report');
+  console.log('[INFO] Content Health Report');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
   console.log(`Generated: ${report.timestamp.toLocaleString()}`);
   console.log(`Total Content Items: ${report.totalContent}`);
   console.log(`Total Issues Found: ${report.issues.length}\n`);
 
   console.log('Summary:');
-  console.log(`  ❌ Missing Explanations: ${report.summary.missingExplanations}`);
+  console.log(`  [ERROR] Missing Explanations: ${report.summary.missingExplanations}`);
   console.log(`  🔗 Broken Media Links: ${report.summary.brokenMediaLinks}`);
-  console.log(`  ⚠️  Invalid Fields: ${report.summary.invalidFields}`);
+  console.log(`  [WARNING]  Invalid Fields: ${report.summary.invalidFields}`);
   console.log(`  📅 Outdated Content: ${report.summary.outdatedContent}\n`);
 
   // Group issues by severity
@@ -223,7 +223,7 @@ function printReport(report: ContentHealthReport): void {
   }
 
   if (mediumSeverity.length > 0) {
-    console.log(`\n⚠️  MEDIUM SEVERITY ISSUES (${mediumSeverity.length}):`);
+    console.log(`\n[WARNING]  MEDIUM SEVERITY ISSUES (${mediumSeverity.length}):`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     mediumSeverity.slice(0, 5).forEach((issue, i) => {
       console.log(`${i + 1}. [${issue.condition}] ${issue.description}`);
@@ -253,14 +253,14 @@ if (require.main === module) {
     // Exit with error code if critical issues found
     const criticalIssues = report.issues.filter(i => i.severity === 'high').length;
     if (criticalIssues > 0) {
-      console.log(`⚠️  ${criticalIssues} critical issues require attention!`);
+      console.log(`[WARNING]  ${criticalIssues} critical issues require attention!`);
       process.exit(1);
     } else {
       console.log('✅ No critical issues found. Content health is good!');
       process.exit(0);
     }
   } catch (error) {
-    console.error('❌ Error running content health check:', error);
+    console.error('[ERROR] Error running content health check:', error);
     process.exit(1);
   }
 }

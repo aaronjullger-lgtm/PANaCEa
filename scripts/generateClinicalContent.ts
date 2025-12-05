@@ -21,7 +21,7 @@ const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds between batches
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
 
 if (!apiKey) {
-  console.error("❌ Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
+  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
   console.error("   Please set your API key before running this script:");
   console.error("   export GEMINI_API_KEY=your_key_here");
   process.exit(1);
@@ -207,7 +207,7 @@ Ensure each case has clinically accurate and distinctive presentation clues that
         }
       }
       
-      console.log(`   ✓ Successfully generated ${parsed.length} cases`);
+      console.log(`   [OK] Successfully generated ${parsed.length} cases`);
       return parsed;
       
     } catch (parseError) {
@@ -276,7 +276,7 @@ async function main() {
     
   } catch (error) {
     console.error("\n" + "=".repeat(60));
-    console.error("❌ GENERATION FAILED");
+    console.error("[ERROR] GENERATION FAILED");
     console.error("=".repeat(60));
     console.error(error);
     console.error("=".repeat(60) + "\n");
