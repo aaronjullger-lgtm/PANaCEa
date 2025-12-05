@@ -33,7 +33,7 @@ model User {
   
   /// Authentication fields
   emailVerified      DateTime? // Email verification timestamp
-  role               String    @default("user") // user, admin, superadmin
+  role               String    @default("user") // user, viewer, editor, approver, admin, superadmin
   resetToken         String?   // Password reset token (hashed)
   resetTokenExpiry   DateTime? // Reset token expiration
   verifyToken        String?   // Email verification token (hashed)
@@ -149,14 +149,32 @@ model Condition {
 }
 
 /// Represents a media asset (EKG, imaging, lab table, diagram, etc.)
-/// linked to a medical condition.
+/// linked to a medical condition. Enhanced for centralized media library.
 model MediaAsset {
   id          String     @id @default(uuid())
   conditionId String?
-  type        String     // "ekg" | "imaging" | "labs" | "diagram" | "other"
+  type        String     // "ekg" | "imaging" | "labs" | "diagram" | "photo" | "other"
   filename    String
-  tags        String[]   // Keywords extracted from filename and metadata
-  confidence  Float      // Matching confidence score (0-1)
+  
+  /// Object storage URLs
+  originalUrl   String?    // Full-resolution URL (S3/R2)
+  thumbnailUrl  String?    // Lower-res thumbnail for UI
+  
+  /// Metadata and tagging
+  tags        String[]   // Keywords: "X-Ray", "Chest", "Pneumonia", etc.
+  description String?    @db.Text
+  altText     String?    @db.Text // Accessibility
+  mimeType    String?    // image/jpeg, image/png, etc.
+  fileSize    Int?       // Bytes
+  dimensions  Json?      // { width: 1920, height: 1080 }
+  
+  /// AI matching and quality
+  confidence  Float      @default(0) // AI matching confidence score (0-1)
+  aiMetadata  Json?      // Additional AI analysis data
+  
+  /// Upload tracking
+  uploadedBy  String?    // User ID
+  uploadedAt  DateTime   @default(now())
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   
@@ -166,6 +184,8 @@ model MediaAsset {
   @@index([conditionId])
   @@index([type])
   @@index([filename])
+  @@index([tags])
+  @@index([uploadedBy])
 }
 
 /// Represents an achievement earned by a user
@@ -274,4 +294,172 @@ model WeaknessPattern {
   @@index([userId])
   @@index([userId, conditionId])
   @@index([conditionId])
+}
+
+/// Represents medical content for the CMS with full version control
+model MedicalContent {
+  id          String   @id @default(uuid())
+  conditionId String   @unique // e.g., "CV__ecg__atrial_fibrillation"
+  system      String   // System code (CV, PULM, GI, etc.)
+  subcategory String
+  condition   String
+  
+  /// Content sections stored as JSONB for flexibility
+  content     Json     // Full content structure including overview, symptoms, treatment, etc.
+  
+  /// Workflow state machine
+  status      String   @default("draft") // draft, pending_review, approved, published, archived
+  version     Int      @default(1)
+  
+  /// Timestamps and attribution
+  createdAt   DateTime @default(now())
+  createdBy   String   // User ID
+  updatedAt   DateTime @updatedAt
+  updatedBy   String   // User ID
+  publishedAt DateTime?
+  publishedBy String?
+  approvedAt  DateTime?
+  approvedBy  String?
+  
+  /// Relations
+  versions    ContentVersion[]
+  auditLogs   ContentAuditLog[]
+  
+  @@index([conditionId])
+  @@index([system])
+  @@index([status])
+  @@index([createdBy])
+  @@index([updatedAt])
+}
+
+/// Represents a historical version of content
+model ContentVersion {
+  id                String         @id @default(uuid())
+  contentId         String
+  version           Int
+  content           Json           // Snapshot of content at this version
+  changeType        String         // create, update, delete, publish, unpublish, approve, reject
+  changeDescription String?        @db.Text
+  changedBy         String         // User ID
+  changedAt         DateTime       @default(now())
+  
+  medicalContent    MedicalContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  
+  @@unique([contentId, version])
+  @@index([contentId])
+  @@index([changedBy])
+  @@index([changedAt])
+}
+
+/// Audit log for all content changes (immutable)
+model ContentAuditLog {
+  id              String         @id @default(uuid())
+  contentId       String
+  conditionId     String
+  version         Int
+  changeType      String         // create, update, delete, publish, unpublish, approve, reject
+  changeDescription String?      @db.Text
+  changedFields   String[]       // Array of field names that changed
+  oldValues       Json?          // Previous values (for updates)
+  newValues       Json?          // New values (for updates)
+  changedBy       String         // User ID
+  changedByRole   String         // admin, superadmin
+  changedAt       DateTime       @default(now())
+  ipAddress       String?
+  userAgent       String?        @db.Text
+  
+  medicalContent  MedicalContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  
+  @@index([contentId])
+  @@index([conditionId])
+  @@index([changedBy])
+  @@index([changedAt])
+  @@index([changeType])
+}
+
+/// Content health report from nightly audits
+model ContentHealthReport {
+  id                    String   @id @default(uuid())
+  timestamp             DateTime @default(now())
+  totalContent          Int
+  missingExplanations   Int      @default(0)
+  brokenMediaLinks      Int      @default(0)
+  invalidFields         Int      @default(0)
+  outdatedContent       Int      @default(0)
+  reportData            Json     // Full report details
+  
+  @@index([timestamp])
+}
+
+/// Pre-generated AI questions for instant delivery
+model PreGeneratedQuestion {
+  id                String   @id @default(uuid())
+  questionType      String   // "vignette", "mcq", "clinical"
+  system            String?  // System code
+  conditionId       String?  // Related condition
+  difficulty        String   // "easy", "medium", "hard"
+  questionData      Json     // Full question structure
+  generatedAt       DateTime @default(now())
+  usedAt            DateTime?
+  usedBy            String?  // User ID who received this question
+  quality           Int?     // AI quality score 1-10
+  
+  @@index([questionType])
+  @@index([system])
+  @@index([difficulty])
+  @@index([usedAt])
+  @@index([generatedAt])
+}
+
+/// Background job queue for async processing
+model BackgroundJob {
+  id              String   @id @default(uuid())
+  jobType         String   // "generate_questions", "health_check", "media_processing"
+  status          String   @default("pending") // pending, processing, completed, failed
+  priority        Int      @default(5) // 1-10, higher = more important
+  payload         Json     // Job-specific data
+  result          Json?    // Job result data
+  error           String?  @db.Text
+  attempts        Int      @default(0)
+  maxAttempts     Int      @default(3)
+  scheduledFor    DateTime @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([jobType])
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([priority, status])
+}
+
+/// Real-time collaboration tracking
+model ContentLock {
+  id          String   @id @default(uuid())
+  contentId   String   @unique
+  lockedBy    String   // User ID
+  lockedAt    DateTime @default(now())
+  expiresAt   DateTime // Auto-release after timeout
+  
+  @@index([contentId])
+  @@index([lockedBy])
+  @@index([expiresAt])
+}
+
+/// Offline sync queue for resilience
+model SyncQueue {
+  id          String   @id @default(uuid())
+  userId      String
+  operation   String   // "save_progress", "submit_quiz", "update_settings"
+  data        Json     // Operation data
+  status      String   @default("pending") // pending, synced, failed
+  attempts    Int      @default(0)
+  createdAt   DateTime @default(now())
+  syncedAt    DateTime?
+  error       String?  @db.Text
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
