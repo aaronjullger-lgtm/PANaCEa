@@ -35,6 +35,7 @@ const GuidelineDrillSession = lazy(() => import("./components/drill/GuidelineDri
 const FluidElectrolyteMode = lazy(() => import("./components/modes/FluidElectrolyteMode"));
 const AntibioticMode = lazy(() => import("./components/modes/AntibioticMode"));
 const PatientEncounterMode = lazy(() => import("./components/modes/PatientEncounterMode"));
+const IntegrationsHub = lazy(() => import("./components/integrations/IntegrationsHub"));
 const SettingsStatsModal = lazy(() => import("./components/SettingsStatsModal"));
 const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcutsModal"));
 
@@ -58,7 +59,7 @@ const DRILL_MODE_FLUID_ELECTROLYTE: TrainingModeId = 'fluid_electrolyte';
 const DRILL_MODE_ANTIBIOTIC: TrainingModeId = 'antibiotic_mode';
 const DRILL_MODE_PATIENT_ENCOUNTER: TrainingModeId = 'patient_encounter';
 
-type View = "menu" | "quiz" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter";
+type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -512,6 +513,7 @@ const App: React.FC = () => {
                   onConfirmSession={handleConfirmSession}
                   growthAreas={growthAreas}
                   onNavigateToDrillMode={handleNavigateToDrillMode}
+                  onNavigateToIntegrations={() => setView("integrations")}
                   isSyncing={isSyncing}
                   lastSyncTime={lastSyncTime}
                   syncError={syncError}
@@ -637,6 +639,16 @@ const App: React.FC = () => {
           {view === "patient_encounter" && (
             <Suspense fallback={<Loader />}>
               <PatientEncounterMode onExit={() => setView("menu")} />
+            </Suspense>
+          )}
+
+          {view === "integrations" && (
+            <Suspense fallback={<Loader />}>
+              <IntegrationsHub
+                performanceData={performanceData}
+                missedQuestions={missedQuestions}
+                onBack={() => setView("menu")}
+              />
             </Suspense>
           )}
         </AnimatePresence>

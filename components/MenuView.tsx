@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText } from "lucide-react";
+import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2 } from "lucide-react";
 import type {
   PerformanceRecord,
   SessionSettings,
@@ -76,6 +76,8 @@ interface MenuViewProps {
   growthAreas: string[];
   /** Callback for navigating to dedicated drill mode views */
   onNavigateToDrillMode?: (modeId: string) => void;
+  /** Callback for navigating to integrations hub */
+  onNavigateToIntegrations?: () => void;
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;
@@ -102,6 +104,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   onConfirmSession,
   growthAreas,
   onNavigateToDrillMode,
+  onNavigateToIntegrations,
   isSyncing,
   lastSyncTime,
   syncError,
@@ -640,7 +643,7 @@ const MenuView: React.FC<MenuViewProps> = ({
             <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-4">
               Quick Actions
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               <motion.button
                 onClick={() => setShowQuickReview(true)}
                 className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
@@ -684,6 +687,19 @@ const MenuView: React.FC<MenuViewProps> = ({
                 <div className="font-semibold text-sm text-slate-900 dark:text-white">Leaderboard</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">Compare stats</div>
               </motion.button>
+
+              {onNavigateToIntegrations && (
+                <motion.button
+                  onClick={onNavigateToIntegrations}
+                  className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Link2 className="w-8 h-8 mb-2 text-indigo-500" />
+                  <div className="font-semibold text-sm text-slate-900 dark:text-white">Integrations</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">Anki, Calendar</div>
+                </motion.button>
+              )}
             </div>
           </motion.section>
 

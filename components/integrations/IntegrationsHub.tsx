@@ -156,3 +156,5 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
     </div>
   );
 };
+
+export default IntegrationsHub;
