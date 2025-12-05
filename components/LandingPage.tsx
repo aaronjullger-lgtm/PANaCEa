@@ -64,9 +64,14 @@ export function LandingPage() {
             className="flex items-center"
           >
             <img 
-              src="/HEADER V1.png" 
+              src="/PANaCEa.svg" 
               alt="PANaCEa - PA School Study Resource" 
-              className="h-24 sm:h-32 w-auto dark:brightness-0 dark:invert"
+              className="h-24 sm:h-32 w-auto dark:hidden"
+            />
+            <img 
+              src="/PANaCEa1.svg" 
+              alt="PANaCEa - PA School Study Resource" 
+              className="h-24 sm:h-32 w-auto hidden dark:block"
             />
           </motion.div>
           <motion.button

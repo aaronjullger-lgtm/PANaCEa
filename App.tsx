@@ -404,9 +404,16 @@ const App: React.FC = () => {
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <motion.img 
-              src="/HEADER V1.png"
+              src="/PANaCEa.svg"
               alt="PANaCEa"
-              className="h-16 sm:h-20 w-auto dark:brightness-0 dark:invert"
+              className="h-16 sm:h-20 w-auto dark:hidden"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.img 
+              src="/PANaCEa1.svg"
+              alt="PANaCEa"
+              className="h-16 sm:h-20 w-auto hidden dark:block"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
             />
