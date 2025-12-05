@@ -61,16 +61,13 @@ export function LandingPage() {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2"
+            className="flex items-center"
           >
             <img 
-              src="/PANaCEa.svg" 
-              alt="PANaCEa Logo" 
-              className="w-8 h-8"
+              src="/HEADER V1.png" 
+              alt="PANaCEa - PANCE Preparation Platform" 
+              className="h-10 sm:h-12 w-auto dark:brightness-0 dark:invert"
             />
-            <span className="text-2xl font-bold text-[var(--color-text-primary)] tracking-tight font-serif">
-              PANaCEa
-            </span>
           </motion.div>
           <motion.button
             initial={{ opacity: 0, x: 20 }}
