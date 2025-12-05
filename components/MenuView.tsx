@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Award } from "lucide-react";
+import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText } from "lucide-react";
 import type {
   PerformanceRecord,
   SessionSettings,
@@ -541,8 +541,12 @@ const MenuView: React.FC<MenuViewProps> = ({
                   >
                     <div className="flex items-start gap-2">
                       {/* Icon badge */}
-                      <span className="flex-shrink-0 mt-0.5 text-xs">
-                        {result.type === "condition" ? "🏥" : "💊"}
+                      <span className="flex-shrink-0 mt-1">
+                        {result.type === "condition" ? (
+                          <Hospital className="w-4 h-4 text-[var(--color-accent)]" />
+                        ) : (
+                          <Pill className="w-4 h-4 text-[var(--color-accent)]" />
+                        )}
                       </span>
                       <div className="flex-1 flex flex-col gap-0.5">
                         <span className="font-semibold text-[var(--color-text-primary)]">
@@ -643,7 +647,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="text-2xl mb-2">🔄</div>
+                <RotateCcw className="w-8 h-8 mb-2 text-blue-500" />
                 <div className="font-semibold text-sm text-slate-900 dark:text-white">Quick Review</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">Recent misses</div>
               </motion.button>
@@ -654,7 +658,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="text-2xl mb-2">🔖</div>
+                <Bookmark className="w-8 h-8 mb-2 text-amber-500" />
                 <div className="font-semibold text-sm text-slate-900 dark:text-white">Bookmarks</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">Saved questions</div>
               </motion.button>
@@ -665,7 +669,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="text-2xl mb-2">📄</div>
+                <FileText className="w-8 h-8 mb-2 text-slate-500" />
                 <div className="font-semibold text-sm text-slate-900 dark:text-white">Study Guide</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">Print/Export</div>
               </motion.button>
