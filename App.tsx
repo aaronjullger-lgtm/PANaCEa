@@ -403,14 +403,13 @@ const App: React.FC = () => {
       <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <motion.span 
-              className="text-xl font-semibold text-slate-900 dark:text-white tracking-tight"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+            <motion.img 
+              src="/HEADER V1.png"
+              alt="PANaCEa"
+              className="h-10 sm:h-12 w-auto dark:brightness-0 dark:invert"
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
-            >
-              PANaCEa
-            </motion.span>
+            />
           </div>
           <div className="flex items-center gap-2">
             <motion.button
