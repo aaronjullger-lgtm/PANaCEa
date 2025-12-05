@@ -97,7 +97,7 @@ export function LandingPage() {
               </span>
             </h1>
             <p className="text-xl sm:text-2xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
-              Study platform with AI-generated questions, clinical image training, and spaced repetition for PA students.
+              Study platform with comprehensive medical database, performance tracking, clinical image training, and 15+ specialized training modes for PA students.
             </p>
           </motion.div>
 
@@ -128,7 +128,7 @@ export function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-wrap gap-3 justify-center mt-12"
           >
-            {['Adaptive AI', '15+ Training Modes', 'Spaced Repetition', '1000+ Conditions'].map((pill, idx) => (
+            {['Performance Analytics', '15+ Training Modes', 'Medical Database', '1000+ Conditions'].map((pill, idx) => (
               <div
                 key={idx}
                 className="px-4 py-2 bg-[var(--color-bg-secondary)] backdrop-blur-sm rounded-full border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)]"
