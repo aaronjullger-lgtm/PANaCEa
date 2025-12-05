@@ -39,8 +39,8 @@ import {
 import ActivityHeatmap from './analytics/ActivityHeatmap';
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 
-// Lazy load Character Collection
-const CharacterCollection = lazy(() => import('./characters/CharacterCollection'));
+// Lazy load Character Gallery
+const CharacterGallery = lazy(() => import('./characters/CharacterGallery'));
 
 // Gold Achievement Thresholds - Reserved for extraordinary performance
 const GOLD_ACHIEVEMENT_STREAK_THRESHOLD = 10;
@@ -748,10 +748,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)]" />
                 </div>
               }>
-                <CharacterCollection
+                <CharacterGallery
                   performanceData={performanceData}
                   currentStreak={stats.currentStreak}
-                  onClose={onClose}
                 />
               </Suspense>
             ) : activeTab === 'preferences' ? (
