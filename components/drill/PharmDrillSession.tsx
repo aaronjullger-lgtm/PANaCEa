@@ -174,9 +174,15 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
               </div>
             </div>
 
-            <button onClick={handleStart} disabled={isLoading} className="px-8 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-3 mx-auto">
-              {isLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Loading...</>) : (<>Choose Category<ActivityIcon className="w-5 h-5" /></>)}
-            </button>
+            <motion.button
+              onClick={handleStart}
+              disabled={isLoading}
+              whileHover={{ scale: 1.05, y: -3 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-slate-700 disabled:to-slate-700 disabled:cursor-not-allowed rounded-xl font-bold text-lg shadow-2xl transition-all duration-300 flex items-center justify-center gap-3 mx-auto"
+            >
+              {isLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Loading...</>) : (<><Pill className="w-6 h-6" />Choose Category<ActivityIcon className="w-5 h-5" /></>)}
+            </motion.button>
           </motion.div>
         </div>
       </div>

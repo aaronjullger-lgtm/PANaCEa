@@ -277,12 +277,14 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
               </div>
             </div>
 
-            <button
+            <motion.button
               onClick={handleStart}
               disabled={isLoading}
-              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 
-                       disabled:cursor-not-allowed rounded-lg font-semibold text-lg
-                       transition-colors flex items-center justify-center gap-3 mx-auto"
+              whileHover={{ scale: 1.05, y: -3 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-slate-700 disabled:to-slate-700 
+                       disabled:cursor-not-allowed rounded-xl font-bold text-lg shadow-2xl
+                       transition-all duration-300 flex items-center justify-center gap-3 mx-auto"
             >
               {isLoading ? (
                 <>
@@ -291,11 +293,12 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                 </>
               ) : (
                 <>
+                  <FlaskConical className="w-6 h-6" />
                   Choose Category
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
-            </button>
+            </motion.button>
           </motion.div>
         </div>
       </div>
