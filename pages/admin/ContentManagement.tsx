@@ -42,6 +42,8 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | 'all'>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<ContentSort>({ field: 'updatedAt', direction: 'desc' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
   
   // Load content (in production, this would fetch from API/database)
   useEffect(() => {
@@ -111,6 +113,8 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
     });
 
     setFilteredContent(filtered);
+    // Reset to first page when filters change
+    setCurrentPage(1);
   }, [content, searchQuery, selectedStatus, selectedSystem, sortBy]);
 
   const getStatusColor = (status: ContentStatus) => {
@@ -330,7 +334,9 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border)]">
-                  {filteredContent.map((item) => (
+                  {filteredContent
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((item) => (
                     <tr
                       key={item.id}
                       className="hover:bg-[var(--color-bg-tertiary)]/50 transition-colors"
@@ -383,12 +389,32 @@ export function ContentManagement({ userRole, userId }: ContentManagementProps) 
           )}
         </div>
 
-        {/* Pagination (TODO) */}
+        {/* Pagination */}
         {filteredContent.length > 0 && (
           <div className="mt-6 flex items-center justify-between">
             <p className="text-sm text-[var(--color-text-muted)]">
-              Showing {filteredContent.length} of {content.length} items
+              Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredContent.length)} to{' '}
+              {Math.min(currentPage * itemsPerPage, filteredContent.length)} of {filteredContent.length} items
             </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2 text-sm text-[var(--color-text-primary)]">
+                Page {currentPage} of {Math.ceil(filteredContent.length / itemsPerPage)}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredContent.length / itemsPerPage), p + 1))}
+                disabled={currentPage >= Math.ceil(filteredContent.length / itemsPerPage)}
+                className="px-3 py-2 text-sm font-medium text-[var(--color-text-primary)] bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

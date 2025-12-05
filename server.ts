@@ -190,18 +190,18 @@ app.post('/api/analytics/reactions',
       
       // Store user feedback on explanation helpfulness
       // Note: In production, extract userId from authenticated session
-      console.log('Reaction received:', req.body);
       
-      // For development: use in-memory storage
-      // TODO: Uncomment when database is connected
-      // const { prisma } = await import('./lib/prisma');
-      // await prisma.explanationReaction.create({
-      //   data: {
-      //     questionId,
-      //     reaction,
-      //     userId: userId || null,
-      //   },
-      // });
+      // Store in database if DATABASE_URL is configured
+      if (process.env.DATABASE_URL) {
+        const { prisma } = await import('./lib/prisma');
+        await prisma.explanationReaction.create({
+          data: {
+            questionId,
+            reaction,
+            userId: userId || null,
+          },
+        });
+      }
       
       res.json({ success: true });
     } catch (error) {
@@ -218,20 +218,18 @@ app.post('/api/analytics/weakness',
       const { conditionId, wasCorrect, userId } = req.body;
       
       // Track user weakness patterns for adaptive learning
-      console.log('Weakness data received:', req.body);
       
-      // For development: use in-memory storage
-      // TODO: Uncomment when database is connected
-      // const { prisma } = await import('./lib/prisma');
-      // if (userId) {
-      //   await prisma.weaknessPattern.create({
-      //     data: {
-      //       userId,
-      //       conditionId,
-      //       wasCorrect,
-      //     },
-      //   });
-      // }
+      // Store in database if DATABASE_URL is configured
+      if (process.env.DATABASE_URL && userId) {
+        const { prisma } = await import('./lib/prisma');
+        await prisma.weaknessPattern.create({
+          data: {
+            userId,
+            conditionId,
+            wasCorrect,
+          },
+        });
+      }
       
       res.json({ success: true });
     } catch (error) {
@@ -248,40 +246,40 @@ app.post('/api/analytics/confusion',
       const { correctCondition, selectedCondition, userId } = req.body;
       
       // Track diagnostic confusion patterns
-      console.log('Confusion data received:', req.body);
       
-      // For development: use in-memory storage
-      // TODO: Uncomment when database is connected
-      // const { prisma } = await import('./lib/prisma');
-      // // Update or create confusion pair
-      // const existingPair = await prisma.confusionPair.findUnique({
-      //   where: {
-      //     userId_realCondition_mistakenFor: {
-      //       userId: userId || null,
-      //       realCondition: correctCondition,
-      //       mistakenFor: selectedCondition,
-      //     },
-      //   },
-      // });
-      // 
-      // if (existingPair) {
-      //   await prisma.confusionPair.update({
-      //     where: { id: existingPair.id },
-      //     data: {
-      //       count: { increment: 1 },
-      //       lastOccurrence: new Date(),
-      //     },
-      //   });
-      // } else {
-      //   await prisma.confusionPair.create({
-      //     data: {
-      //       userId: userId || null,
-      //       realCondition: correctCondition,
-      //       mistakenFor: selectedCondition,
-      //       count: 1,
-      //     },
-      //   });
-      // }
+      // Store in database if DATABASE_URL is configured
+      if (process.env.DATABASE_URL) {
+        const { prisma } = await import('./lib/prisma');
+        // Update or create confusion pair
+        const existingPair = await prisma.confusionPair.findUnique({
+          where: {
+            userId_realCondition_mistakenFor: {
+              userId: userId || null,
+              realCondition: correctCondition,
+              mistakenFor: selectedCondition,
+            },
+          },
+        });
+        
+        if (existingPair) {
+          await prisma.confusionPair.update({
+            where: { id: existingPair.id },
+            data: {
+              count: { increment: 1 },
+              lastOccurrence: new Date(),
+            },
+          });
+        } else {
+          await prisma.confusionPair.create({
+            data: {
+              userId: userId || null,
+              realCondition: correctCondition,
+              mistakenFor: selectedCondition,
+              count: 1,
+            },
+          });
+        }
+      }
       
       res.json({ success: true });
     } catch (error) {
@@ -316,18 +314,20 @@ app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully...');
-  // Disconnect Prisma client
-  // TODO: Uncomment when database is connected
-  // const { disconnectPrisma } = await import('./lib/prisma');
-  // await disconnectPrisma();
+  // Disconnect Prisma client if database is configured
+  if (process.env.DATABASE_URL) {
+    const { disconnectPrisma } = await import('./lib/prisma');
+    await disconnectPrisma();
+  }
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('\nSIGINT received, shutting down gracefully...');
-  // Disconnect Prisma client
-  // TODO: Uncomment when database is connected
-  // const { disconnectPrisma } = await import('./lib/prisma');
-  // await disconnectPrisma();
+  // Disconnect Prisma client if database is configured
+  if (process.env.DATABASE_URL) {
+    const { disconnectPrisma } = await import('./lib/prisma');
+    await disconnectPrisma();
+  }
   process.exit(0);
 });
