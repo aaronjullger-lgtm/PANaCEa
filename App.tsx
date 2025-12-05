@@ -412,7 +412,7 @@ const App: React.FC = () => {
               transition={{ duration: 0.2 }}
             />
             <motion.img 
-              src="/altfavi.svg"
+              src="/favicondarkmodeTP.svg"
               alt="PANaCEa Icon"
               className="h-10 sm:h-12 w-auto hidden dark:block"
               whileHover={{ scale: 1.05 }}
