@@ -37,10 +37,11 @@ describe('TrainingMenu Component Logic', () => {
   });
 
   describe('Icon Mapping', () => {
-    // Icon names used in MODE_REGISTRY (expanded for new modes)
+    // Icon names used in MODE_REGISTRY (expanded for new modes including Phase 7 & 8)
     const expectedIconNames = [
       'Brain', 'Image', 'Zap', 'GitCompare', 'FileText', 'Flame', 'ClipboardList',
-      'Activity', 'Scan', 'FileCheck', 'Layers', 'Pill', 'Beaker', 'Droplets', 'MessageSquare'
+      'Activity', 'Scan', 'FileCheck', 'Layers', 'Pill', 'Beaker', 'Droplets', 'MessageSquare',
+      'Siren', 'Calendar', 'Trophy', 'Clock', 'Headphones'
     ];
     
     it('should have valid icon names for all modes', () => {
@@ -60,7 +61,7 @@ describe('TrainingMenu Component Logic', () => {
   describe('Theme Background Mapping', () => {
     const validThemes = [
       'stone', 'slate', 'amber', 'blue', 'teal', 'red', 'emerald',
-      'rose', 'pink', 'violet', 'cyan', 'purple'
+      'rose', 'pink', 'violet', 'cyan', 'purple', 'orange'
     ];
     
     it('should have valid theme values for all modes', () => {
@@ -83,6 +84,7 @@ describe('TrainingMenu Component Logic', () => {
         violet: 'bg-violet-100',
         cyan: 'bg-cyan-100',
         purple: 'bg-purple-100',
+        orange: 'bg-orange-100',
       };
 
       MODE_REGISTRY.forEach((mode) => {

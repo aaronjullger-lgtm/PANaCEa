@@ -208,6 +208,33 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     };
   });
   
+  // Mini Modes selection - Load from localStorage
+  const [enabledMiniModes, setEnabledMiniModes] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('panceai_enabled_mini_modes');
+    if (saved) {
+      try {
+        return new Set(JSON.parse(saved) as string[]);
+      } catch {
+        // Default: all mini modes enabled
+        return new Set([
+          'ecg_drill', 'derm_drill', 'imaging_drill', 'mini_lab',
+          'rapid_recall', 'ddx_compare', 'guideline_drill', 'condition_drill',
+          'first_line_treatment', 'pharmacology',
+          'fluid_electrolyte', 'antibiotic_mode', 'patient_encounter',
+          'code_blue_speed', 'diagnosisdle', 'grand_rounds', 'cram_mode', 'commuter_mode'
+        ]);
+      }
+    }
+    // Default: all mini modes enabled
+    return new Set([
+      'ecg_drill', 'derm_drill', 'imaging_drill', 'mini_lab',
+      'rapid_recall', 'ddx_compare', 'guideline_drill', 'condition_drill',
+      'first_line_treatment', 'pharmacology',
+      'fluid_electrolyte', 'antibiotic_mode', 'patient_encounter',
+      'code_blue_speed', 'diagnosisdle', 'grand_rounds', 'cram_mode', 'commuter_mode'
+    ]);
+  });
+  
   // Use external widgets if provided, otherwise use local state
   const enabledWidgets = externalEnabledWidgets ?? localEnabledWidgets;
   
@@ -265,6 +292,36 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       localStorage.setItem('panceai_clinical_fidelity', JSON.stringify(updated));
       return updated;
     });
+  };
+  
+  const handleToggleMiniMode = (modeId: string) => {
+    setEnabledMiniModes(prev => {
+      const next = new Set(prev);
+      if (next.has(modeId)) {
+        next.delete(modeId);
+      } else {
+        next.add(modeId);
+      }
+      localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify(Array.from(next)));
+      return next;
+    });
+  };
+  
+  const handleEnableAllMiniModes = () => {
+    const allModes = new Set([
+      'ecg_drill', 'derm_drill', 'imaging_drill', 'mini_lab',
+      'rapid_recall', 'ddx_compare', 'guideline_drill', 'condition_drill',
+      'first_line_treatment', 'pharmacology',
+      'fluid_electrolyte', 'antibiotic_mode', 'patient_encounter',
+      'code_blue_speed', 'diagnosisdle', 'grand_rounds', 'cram_mode', 'commuter_mode'
+    ]);
+    setEnabledMiniModes(allModes);
+    localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify(Array.from(allModes)));
+  };
+  
+  const handleDisableAllMiniModes = () => {
+    setEnabledMiniModes(new Set());
+    localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify([]));
   };
   
   const handleSetAnalyticsPalette = (palette: AnalyticsPalette) => {
@@ -870,6 +927,192 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </div>
                 </div>
 
+                {/* Mini Modes Selection */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="font-medium text-[var(--color-text-primary)]">Mini Modes</h3>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                        Select which mini training modes appear in your menu. The main PANCE adaptive system is always available.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={handleEnableAllMiniModes}
+                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors"
+                    >
+                      Enable All
+                    </button>
+                    <button
+                      onClick={handleDisableAllMiniModes}
+                      className="px-3 py-1.5 text-xs font-medium bg-[var(--color-bg-primary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)] rounded-lg transition-colors"
+                    >
+                      Disable All
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {/* Visual Modes */}
+                    <div className="mb-2">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Visual Drills</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: 'ecg_drill', label: 'ECG', desc: 'Rhythm strips' },
+                          { id: 'derm_drill', label: 'Derm', desc: 'Skin lesions' },
+                          { id: 'imaging_drill', label: 'Imaging', desc: 'X-ray/CT/MRI' },
+                          { id: 'mini_lab', label: 'Mini Lab', desc: 'Lab results' }
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            onClick={() => handleToggleMiniMode(mode.id)}
+                            className={`p-2 rounded-lg text-left text-xs transition-all ${
+                              enabledMiniModes.has(mode.id)
+                                ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                            }`}
+                          >
+                            <div className="font-semibold">{mode.label}</div>
+                            <div className="text-xs opacity-75">{mode.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Recall Modes */}
+                    <div className="mb-2">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Recall Modes</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: 'rapid_recall', label: 'Rapid Recall', desc: 'Buzzwords' },
+                          { id: 'ddx_compare', label: 'DDx Compare', desc: 'Side-by-side' },
+                          { id: 'guideline_drill', label: 'Guidelines', desc: 'Scoring systems' },
+                          { id: 'condition_drill', label: 'Conditions', desc: '5-stage drills' }
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            onClick={() => handleToggleMiniMode(mode.id)}
+                            className={`p-2 rounded-lg text-left text-xs transition-all ${
+                              enabledMiniModes.has(mode.id)
+                                ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                            }`}
+                          >
+                            <div className="font-semibold">{mode.label}</div>
+                            <div className="text-xs opacity-75">{mode.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Pharmacology Modes */}
+                    <div className="mb-2">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Pharmacology</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: 'first_line_treatment', label: 'First Line', desc: 'Go-to treatments' },
+                          { id: 'pharmacology', label: 'Pharm Quiz', desc: 'Drug mechanisms' }
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            onClick={() => handleToggleMiniMode(mode.id)}
+                            className={`p-2 rounded-lg text-left text-xs transition-all ${
+                              enabledMiniModes.has(mode.id)
+                                ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                            }`}
+                          >
+                            <div className="font-semibold">{mode.label}</div>
+                            <div className="text-xs opacity-75">{mode.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Clinical Simulation Modes */}
+                    <div className="mb-2">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Clinical Simulation</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { id: 'fluid_electrolyte', label: 'Hydro-Mode', desc: 'Fluid/lytes calc' },
+                          { id: 'antibiotic_mode', label: 'Bug-Drug', desc: 'Antibiotic choice' },
+                          { id: 'patient_encounter', label: 'Virtual OSCE', desc: 'Patient interview' }
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            onClick={() => handleToggleMiniMode(mode.id)}
+                            className={`p-2 rounded-lg text-left text-xs transition-all ${
+                              enabledMiniModes.has(mode.id)
+                                ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
+                            }`}
+                          >
+                            <div className="font-semibold">{mode.label}</div>
+                            <div className="text-xs opacity-75">{mode.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Engagement Modes (Phase 7) */}
+                    <div className="mb-2">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Engagement (Coming Soon)</div>
+                      <div className="grid grid-cols-2 gap-2 opacity-60">
+                        {[
+                          { id: 'code_blue_speed', label: 'Code Blue', desc: 'ACLS/PALS speed' },
+                          { id: 'diagnosisdle', label: 'Diagnosisdle', desc: 'Daily mystery' },
+                          { id: 'grand_rounds', label: 'Grand Rounds', desc: 'Live competition' },
+                          { id: 'cram_mode', label: 'Cram Button', desc: '50 high-yield Qs' }
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            onClick={() => handleToggleMiniMode(mode.id)}
+                            disabled
+                            className={`p-2 rounded-lg text-left text-xs transition-all cursor-not-allowed ${
+                              enabledMiniModes.has(mode.id)
+                                ? 'bg-[var(--color-accent)]/50 text-[var(--color-btn-primary-text)]'
+                                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)]'
+                            }`}
+                          >
+                            <div className="font-semibold">{mode.label}</div>
+                            <div className="text-xs opacity-75">{mode.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Commuter Mode (Phase 8) */}
+                    <div>
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Accessibility (Coming Soon)</div>
+                      <div className="grid grid-cols-2 gap-2 opacity-60">
+                        <button
+                          onClick={() => handleToggleMiniMode('commuter_mode')}
+                          disabled
+                          className={`p-2 rounded-lg text-left text-xs transition-all cursor-not-allowed ${
+                            enabledMiniModes.has('commuter_mode')
+                              ? 'bg-[var(--color-accent)]/50 text-[var(--color-btn-primary-text)]'
+                              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)]'
+                          }`}
+                        >
+                          <div className="font-semibold">Commuter Mode</div>
+                          <div className="text-xs opacity-75">Voice/TTS</div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 text-xs text-[var(--color-text-muted)]">
+                    {enabledMiniModes.size} mini modes enabled
+                  </div>
+
+                  <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <p className="text-xs text-green-900 dark:text-green-300">
+                      ✓ <strong>PANCE System Protected:</strong> Your main adaptive PANCE question system is always available regardless of these settings.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Clinical Fidelity Mode */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">
@@ -956,6 +1199,75 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-xs text-blue-900 dark:text-blue-300">
                       💡 <strong>Note:</strong> Clinical Fidelity features are optional enhancements designed for advanced learners who want more realistic practice.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Institutional Features (Phase 9 - B2B) */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 border-2 border-dashed border-[var(--color-border)]">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)]">Institutional Features</h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      Features for PA programs and educational institutions (Coming Soon)
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-3 opacity-60">
+                    {/* Program Director Dashboard */}
+                    <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded">
+                          <BarChart3 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                            Program Director Dashboard
+                          </div>
+                          <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                            Class-wide analytics: "Class of 2025 is in the 90th percentile for Pharm"
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Assignment System */}
+                    <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded">
+                          <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                            Assignment System
+                          </div>
+                          <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                            Professors can create homework sets of 50 questions with due dates
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Curriculum Mapping */}
+                    <div className="p-3 bg-[var(--color-bg-primary)] rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded">
+                          <Target className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                            Curriculum Mapping
+                          </div>
+                          <div className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                            NCCPA PANCE Blueprint categories (e.g., "Cardiology - 13%")
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                    <p className="text-xs text-purple-900 dark:text-purple-300">
+                      🏫 <strong>For Institutions:</strong> Contact us to enable these features for your PA program.
                     </p>
                   </div>
                 </div>

@@ -23,7 +23,12 @@ export type TrainingModeId =
   | 'condition_drill'
   | 'fluid_electrolyte'
   | 'antibiotic_mode'
-  | 'patient_encounter';
+  | 'patient_encounter'
+  | 'code_blue_speed'
+  | 'diagnosisdle'
+  | 'grand_rounds'
+  | 'cram_mode'
+  | 'commuter_mode';
 
 /**
  * Configuration interface for training mode cards.
@@ -200,6 +205,58 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     route: '/drill/patient-encounter',
     isComingSoon: false,
   },
+  // Phase 7: Engagement & Sticky Features
+  {
+    id: 'code_blue_speed',
+    label: 'Code Blue Speed Mode',
+    description: 'Timed ACLS/PALS rapid-fire. 5 seconds per question!',
+    category: 'clinical',
+    iconName: 'Siren',
+    theme: 'red',
+    route: '/drill/code-blue',
+    isComingSoon: true,
+  },
+  {
+    id: 'diagnosisdle',
+    label: 'Diagnosisdle',
+    description: 'Daily mystery case. Wordle-style progressive clues.',
+    category: 'mastery',
+    iconName: 'Calendar',
+    theme: 'purple',
+    route: '/drill/diagnosisdle',
+    isComingSoon: true,
+  },
+  {
+    id: 'grand_rounds',
+    label: 'Grand Rounds Live',
+    description: 'Weekly live quiz competitions (HQ Trivia style).',
+    category: 'mastery',
+    iconName: 'Trophy',
+    theme: 'amber',
+    route: '/drill/grand-rounds',
+    isComingSoon: true,
+  },
+  {
+    id: 'cram_mode',
+    label: 'Cram Button',
+    description: '50 highest-yield questions for rapid review.',
+    category: 'core',
+    iconName: 'Clock',
+    theme: 'orange',
+    route: '/drill/cram',
+    isComingSoon: true,
+  },
+  // Phase 8: Accessibility & Commuter Learning
+  {
+    id: 'commuter_mode',
+    label: 'Commuter Mode',
+    description: 'Text-to-Speech with voice control for studying on-the-go.',
+    category: 'core',
+    iconName: 'Headphones',
+    theme: 'cyan',
+    route: '/drill/commuter',
+    isComingSoon: true,
+  },
 ];
 
 /**
@@ -220,5 +277,10 @@ export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = [
   'guideline_drill',
   'fluid_electrolyte',
   'antibiotic_mode',
-  'patient_encounter'
+  'patient_encounter',
+  'code_blue_speed',
+  'diagnosisdle',
+  'grand_rounds',
+  'cram_mode',
+  'commuter_mode'
 ];
