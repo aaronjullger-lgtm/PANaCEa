@@ -1,7 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import FormattedSection from "../../components/conditions/FormattedSection";
 import {
   getConditionById,
+  getConditionByIdSync,
+  loadConditions,
   isMeaningfulContent,
   type ConditionContent,
   type ConditionEntry,
@@ -48,10 +50,35 @@ interface ContentSection {
 
 const ConditionPage: React.FC = () => {
   const conditionId = useMemo(() => getConditionIdFromPath(), []);
-  const conditionContent: ConditionEntry | undefined = useMemo(
-    () => (conditionId ? getConditionById(conditionId) : undefined),
-    [conditionId]
-  );
+  const [conditionContent, setConditionContent] = useState<ConditionEntry | undefined>(undefined);
+
+  // Load condition content asynchronously
+  useEffect(() => {
+    let mounted = true;
+    
+    async function loadContent() {
+      if (!conditionId) return;
+      
+      // Try to get it synchronously first (if already loaded)
+      let entry = getConditionByIdSync(conditionId);
+      
+      if (!entry) {
+        // If not loaded, load it asynchronously
+        await loadConditions();
+        entry = getConditionByIdSync(conditionId);
+      }
+      
+      if (mounted) {
+        setConditionContent(entry);
+      }
+    }
+    
+    loadContent();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [conditionId]);
 
   const sections: ContentSection[] = useMemo(() => {
     if (!conditionContent?.sections) return [];

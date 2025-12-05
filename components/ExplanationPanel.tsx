@@ -21,7 +21,7 @@ import {
 } from '../lib/services/explanationCompression';
 import ErrorTagger from './quiz/ErrorTagger';
 import type { ErrorTag } from '../types';
-import { getConditionById } from '../lib/loadConditions';
+import { getConditionByIdSync, loadConditions } from '../lib/loadConditions';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -230,19 +230,24 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   useEffect(() => {
     if (conditionId && !basicScienceLinks.length) {
       // Load from condition content using top-level import
-      const conditionData = getConditionById(conditionId);
-      if (conditionData?.sections?.basicScienceLinks) {
-        try {
-          const links = typeof conditionData.sections.basicScienceLinks === 'string' 
-            ? JSON.parse(conditionData.sections.basicScienceLinks)
-            : conditionData.sections.basicScienceLinks;
-          if (Array.isArray(links)) {
-            setLoadedBasicScienceLinks(links);
+      async function loadBasicScienceLinks() {
+        // Ensure conditions are loaded
+        await loadConditions();
+        const conditionData = getConditionByIdSync(conditionId);
+        if (conditionData?.sections?.basicScienceLinks) {
+          try {
+            const links = typeof conditionData.sections.basicScienceLinks === 'string' 
+              ? JSON.parse(conditionData.sections.basicScienceLinks)
+              : conditionData.sections.basicScienceLinks;
+            if (Array.isArray(links)) {
+              setLoadedBasicScienceLinks(links);
+            }
+          } catch (e) {
+            console.warn(`Failed to parse basicScienceLinks for condition: ${conditionId}`, e);
           }
-        } catch (e) {
-          console.warn(`Failed to parse basicScienceLinks for condition: ${conditionId}`, e);
         }
       }
+      loadBasicScienceLinks();
     }
   }, [conditionId, basicScienceLinks.length]);
 
