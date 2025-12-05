@@ -1,7 +1,7 @@
 {
   "name": "PANaCEa - PANCE Exam Preparation",
   "short_name": "PANaCEa",
-  "description": "Master the PANCE with AI-powered question generation and adaptive learning",
+  "description": "Master the PANCE with comprehensive medical database, performance tracking, and 15+ specialized training modes",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#E9ECF1",
@@ -9,7 +9,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/PANaCEa.svg",
+      "src": "/Favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
