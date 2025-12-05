@@ -814,7 +814,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         onClick={() => handleToggleSystem(system)}
                         className={`p-2.5 rounded-lg text-sm font-medium transition-all ${
                           enabledSystems.has(system)
-                            ? 'bg-[var(--color-accent)] text-white'
+                            ? 'bg-[var(--color-accent)] text-[var(--color-btn-primary-text)]'
                             : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-border)]'
                         }`}
                       >
