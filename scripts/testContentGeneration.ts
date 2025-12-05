@@ -18,7 +18,7 @@ const TEST_CASES = 2; // Generate just 2 cases for testing
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
 
 if (!apiKey) {
-  console.error("❌ Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
+  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
   console.error("   Please set your API key before running this script:");
   console.error("   export GEMINI_API_KEY=your_key_here");
   process.exit(1);
@@ -78,13 +78,13 @@ Return ONLY a valid JSON array (no markdown, no code blocks):
     
     const parsed: LabCase[] = JSON.parse(cleanedText);
     
-    console.log(`✓ Generated ${parsed.length} lab cases`);
+    console.log(`[OK] Generated ${parsed.length} lab cases`);
     console.log("\nSample Lab Case:");
     console.log(JSON.stringify(parsed[0], null, 2));
     console.log("\n✅ Lab generation test PASSED!\n");
     
   } catch (error) {
-    console.error("❌ Lab generation test FAILED:", error);
+    console.error("[ERROR] Lab generation test FAILED:", error);
     throw error;
   }
 }
@@ -134,13 +134,13 @@ Return ONLY a valid JSON array (no markdown, no code blocks):
     
     const parsed: ClinicalCase[] = JSON.parse(cleanedText);
     
-    console.log(`✓ Generated ${parsed.length} clinical cases`);
+    console.log(`[OK] Generated ${parsed.length} clinical cases`);
     console.log("\nSample Clinical Case:");
     console.log(JSON.stringify(parsed[0], null, 2));
     console.log("\n✅ Clinical generation test PASSED!\n");
     
   } catch (error) {
-    console.error("❌ Clinical generation test FAILED:", error);
+    console.error("[ERROR] Clinical generation test FAILED:", error);
     throw error;
   }
 }
@@ -166,7 +166,7 @@ async function main() {
     
   } catch (error) {
     console.error("\n" + "=".repeat(60));
-    console.error("❌ TEST SUITE FAILED");
+    console.error("[ERROR] TEST SUITE FAILED");
     console.error("=".repeat(60));
     console.error(error);
     process.exit(1);

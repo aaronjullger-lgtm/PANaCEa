@@ -135,9 +135,9 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
                 </h2>
                 <div className="text-sm text-[var(--color-text-muted)]">
                   <span className="font-medium">{content.condition}</span>
-                  <span className="mx-2">•</span>
+                  <span className="mx-2">|</span>
                   <span>{content.system} / {content.subcategory}</span>
-                  <span className="mx-2">•</span>
+                  <span className="mx-2">|</span>
                   <span>Version {content.version}</span>
                 </div>
                 {hasChanges && (

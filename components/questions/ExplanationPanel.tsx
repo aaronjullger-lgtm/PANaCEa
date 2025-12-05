@@ -62,15 +62,15 @@ function getAdaptiveHint(
   
   // Provide hints based on common patterns with word boundary checks
   if (/\bitis\b/.test(userLower) && /\bosis\b/.test(correctLower)) {
-    return '💡 Remember: "-itis" means inflammation, while "-osis" refers to a condition or process.';
+    return 'Tip: "-itis" means inflammation, while "-osis" refers to a condition or process.';
   }
   
   if (/\bhyper/.test(userLower) && /\bhypo/.test(correctLower)) {
-    return '💡 Careful with prefixes: "hyper-" means high/above, "hypo-" means low/below.';
+    return 'Tip: "hyper-" means high/above, "hypo-" means low/below.';
   }
   
   if (/\bacute\b/.test(userLower) && /\bchronic\b/.test(correctLower)) {
-    return '💡 Time course matters: Acute (sudden, short-term) vs Chronic (gradual, long-term).';
+    return 'Tip: Acute (sudden, short-term) vs Chronic (gradual, long-term).';
   }
   
   return null;
@@ -273,7 +273,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                 key={index} 
                 className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
               >
-                <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0">•</span>
+                <span className="text-[var(--color-accent)] mt-1.5 flex-shrink-0 font-bold">-</span>
                 <span>{renderFormattedText(point)}</span>
               </li>
             ))}
@@ -318,7 +318,7 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
                   key={index} 
                   className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
                 >
-                  <span className="text-blue-500 mt-1.5 flex-shrink-0">→</span>
+                  <span className="text-blue-500 mt-1.5 flex-shrink-0 font-bold">›</span>
                   <span>{renderFormattedText(diff)}</span>
                 </li>
               ))}

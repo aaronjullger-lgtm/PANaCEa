@@ -48,7 +48,7 @@ if (apiKey) {
   model = client.getGenerativeModel({ model: MODEL_NAME });
   console.log("✅ Gemini API key found - will generate content with AI");
 } else {
-  console.log("⚠️ No Gemini API key found - will use placeholder content");
+  console.log("[WARNING] No Gemini API key found - will use placeholder content");
 }
 
 // ======================================================
@@ -304,7 +304,7 @@ IMPORTANT: Return ONLY the JSON object with the missing sections, no markdown fo
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error(
-        `  ❌ Attempt ${attempt} failed for ${conditionId}: ${errorMessage}`
+        `  [ERROR] Attempt ${attempt} failed for ${conditionId}: ${errorMessage}`
       );
       if (attempt === MAX_RETRIES) {
         return null;
@@ -323,7 +323,7 @@ async function main() {
 
   // Load existing content
   if (!fs.existsSync(INPUT_FILE)) {
-    console.error(`❌ Input file not found: ${INPUT_FILE}`);
+    console.error(`[ERROR] Input file not found: ${INPUT_FILE}`);
     process.exit(1);
   }
 
@@ -347,7 +347,7 @@ async function main() {
       sectionCounts[section] = (sectionCounts[section] || 0) + 1;
     }
   }
-  console.log("\n📊 Missing sections distribution:");
+  console.log("\n[INFO] Missing sections distribution:");
   for (const [section, count] of Object.entries(sectionCounts).sort(
     (a, b) => b[1] - a[1]
   )) {
@@ -382,7 +382,7 @@ async function main() {
       fs.writeFileSync(OUTPUT_FILE, JSON.stringify(allConditions, null, 2), "utf8");
     } else {
       failed++;
-      console.log(`   ❌ Failed: ${id}`);
+      console.log(`   [ERROR] Failed: ${id}`);
     }
 
     // Delay between requests
@@ -391,8 +391,8 @@ async function main() {
 
   console.log("\n🎉 Fixing complete!");
   console.log(`  ✅ Fixed: ${fixed}`);
-  console.log(`  ❌ Failed: ${failed}`);
-  console.log(`  📊 Total conditions: ${Object.keys(allConditions).length}`);
+  console.log(`  [ERROR] Failed: ${failed}`);
+  console.log(`  [INFO] Total conditions: ${Object.keys(allConditions).length}`);
 
   // Verify completion
   const remainingIncomplete = findIncompleteConditions(allConditions);

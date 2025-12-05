@@ -294,12 +294,12 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
 
               <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
                 <p className="text-sm text-purple-300 font-semibold mb-2">Features:</p>
-                <ul className="text-sm text-slate-300 space-y-1">
-                  <li>• Rotating drill types keep practice fresh</li>
-                  <li>• Clinical pearls with every question</li>
-                  <li>• Real-world clinical scenarios</li>
-                  <li>• Comprehensive antibiotic database</li>
-                  <li>• Immediate feedback and explanations</li>
+                <ul className="text-sm text-slate-300 space-y-1 list-disc list-inside">
+                  <li>Rotating drill types keep practice fresh</li>
+                  <li>Clinical pearls with every question</li>
+                  <li>Real-world clinical scenarios</li>
+                  <li>Comprehensive antibiotic database</li>
+                  <li>Immediate feedback and explanations</li>
                 </ul>
               </div>
             </div>

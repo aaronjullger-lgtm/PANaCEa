@@ -27,7 +27,7 @@ if (apiKey) {
   model = client.getGenerativeModel({ model: MODEL_NAME });
   console.log("✅ Gemini API key found - will generate content with AI");
 } else {
-  console.log("⚠️ No Gemini API key found - will use placeholder content");
+  console.log("[WARNING] No Gemini API key found - will use placeholder content");
 }
 
 // ======================================================
@@ -444,7 +444,7 @@ IMPORTANT: Return ONLY the JSON object, no markdown formatting or code blocks.`;
       
       return content;
     } catch (err: any) {
-      console.error(`  ❌ Attempt ${attempt} failed for ${condition.condition}: ${err.message}`);
+      console.error(`  [ERROR] Attempt ${attempt} failed for ${condition.condition}: ${err.message}`);
       if (attempt === MAX_RETRIES) {
         return null;
       }
@@ -497,7 +497,7 @@ async function main() {
       fs.writeFileSync(OUTPUT_FILE, JSON.stringify(existingContent, null, 2), "utf8");
     } else {
       failed++;
-      console.log(`  ❌ Failed: ${condition.condition}`);
+      console.log(`  [ERROR] Failed: ${condition.condition}`);
     }
     
     // Delay between requests
@@ -507,8 +507,8 @@ async function main() {
   console.log("\n🎉 Generation complete!");
   console.log(`  ✅ Added: ${added}`);
   console.log(`  ⏩ Skipped: ${skipped}`);
-  console.log(`  ❌ Failed: ${failed}`);
-  console.log(`  📊 Total conditions now: ${Object.keys(existingContent).length}`);
+  console.log(`  [ERROR] Failed: ${failed}`);
+  console.log(`  [INFO] Total conditions now: ${Object.keys(existingContent).length}`);
 }
 
 main().catch(console.error);

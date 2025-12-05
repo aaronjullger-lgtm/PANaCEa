@@ -21,7 +21,7 @@ const DELAY_BETWEEN_BATCHES = 2000; // 2 seconds between batches
 const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
 
 if (!apiKey) {
-  console.error("❌ Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
+  console.error("[ERROR] Error: GEMINI_API_KEY or GOOGLE_API_KEY environment variable is required");
   console.error("   Please set your API key before running this script:");
   console.error("   export GEMINI_API_KEY=your_key_here");
   process.exit(1);
@@ -111,7 +111,7 @@ Return between 1-3 concepts, prioritizing the most relevant and foundational.`;
     // Limit to 3 links
     return links.slice(0, 3);
   } catch (error) {
-    console.error(`   ⚠️  Error generating links for "${diagnosis}":`, error);
+    console.error(`   [WARNING]  Error generating links for "${diagnosis}":`, error);
     return []; // Return empty array on error
   }
 }
@@ -141,7 +141,7 @@ async function processCasesInBatches<T extends { id: string; correctDiagnosis: s
         basicScienceLinks,
       } as T);
 
-      console.log(`   ✓ Generated ${basicScienceLinks.length} link(s)`);
+      console.log(`   [OK] Generated ${basicScienceLinks.length} link(s)`);
     }
 
     // Rate limiting between batches
@@ -170,13 +170,13 @@ async function main() {
     console.log("=".repeat(60));
 
     if (!fs.existsSync(CLINICAL_CASES_FILE)) {
-      console.error(`❌ Error: Clinical cases file not found at ${CLINICAL_CASES_FILE}`);
+      console.error(`[ERROR] Error: Clinical cases file not found at ${CLINICAL_CASES_FILE}`);
       process.exit(1);
     }
 
     const clinicalCasesData = fs.readFileSync(CLINICAL_CASES_FILE, "utf-8");
     const clinicalCases: ClinicalCase[] = JSON.parse(clinicalCasesData);
-    console.log(`📊 Loaded ${clinicalCases.length} clinical cases`);
+    console.log(`[INFO] Loaded ${clinicalCases.length} clinical cases`);
 
     const updatedClinicalCases = await processCasesInBatches<ClinicalCase>(
       clinicalCases,
@@ -198,13 +198,13 @@ async function main() {
     console.log("=".repeat(60));
 
     if (!fs.existsSync(LAB_CASES_FILE)) {
-      console.error(`❌ Error: Lab cases file not found at ${LAB_CASES_FILE}`);
+      console.error(`[ERROR] Error: Lab cases file not found at ${LAB_CASES_FILE}`);
       process.exit(1);
     }
 
     const labCasesData = fs.readFileSync(LAB_CASES_FILE, "utf-8");
     const labCases: LabCase[] = JSON.parse(labCasesData);
-    console.log(`📊 Loaded ${labCases.length} lab cases`);
+    console.log(`[INFO] Loaded ${labCases.length} lab cases`);
 
     const updatedLabCases = await processCasesInBatches<LabCase>(labCases, "lab");
 
@@ -218,7 +218,7 @@ async function main() {
     console.log("\n" + "=".repeat(60));
     console.log("✨ GENERATION COMPLETE!");
     console.log("=".repeat(60));
-    console.log(`\n📊 Summary:`);
+    console.log(`\n[INFO] Summary:`);
     console.log(`   - Clinical cases: ${updatedClinicalCases.length} cases processed`);
     console.log(`   - Lab cases: ${updatedLabCases.length} cases processed`);
     console.log(`   - Total: ${updatedClinicalCases.length + updatedLabCases.length} cases`);
@@ -237,7 +237,7 @@ async function main() {
 
     console.log("\n✅ All done!\n");
   } catch (error) {
-    console.error("\n❌ Fatal error:", error);
+    console.error("\n[ERROR] Fatal error:", error);
     process.exit(1);
   }
 }
