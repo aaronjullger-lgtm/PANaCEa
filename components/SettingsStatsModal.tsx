@@ -36,6 +36,7 @@ import {
   saveWidgetPreferences as saveWidgetPrefs 
 } from '@/lib/dashboardUtils';
 import ActivityHeatmap from './analytics/ActivityHeatmap';
+import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 
 // Gold Achievement Thresholds - Reserved for extraordinary performance
 const GOLD_ACHIEVEMENT_STREAK_THRESHOLD = 10;
@@ -216,23 +217,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         return new Set(JSON.parse(saved) as string[]);
       } catch {
         // Default: all mini modes enabled
-        return new Set([
-          'ecg_drill', 'derm_drill', 'imaging_drill', 'mini_lab',
-          'rapid_recall', 'ddx_compare', 'guideline_drill', 'condition_drill',
-          'first_line_treatment', 'pharmacology',
-          'fluid_electrolyte', 'antibiotic_mode', 'patient_encounter',
-          'code_blue_speed', 'diagnosisdle', 'grand_rounds', 'cram_mode', 'commuter_mode'
-        ]);
+        return new Set(ALL_MINI_MODES);
       }
     }
     // Default: all mini modes enabled
-    return new Set([
-      'ecg_drill', 'derm_drill', 'imaging_drill', 'mini_lab',
-      'rapid_recall', 'ddx_compare', 'guideline_drill', 'condition_drill',
-      'first_line_treatment', 'pharmacology',
-      'fluid_electrolyte', 'antibiotic_mode', 'patient_encounter',
-      'code_blue_speed', 'diagnosisdle', 'grand_rounds', 'cram_mode', 'commuter_mode'
-    ]);
+    return new Set(ALL_MINI_MODES);
   });
   
   // Use external widgets if provided, otherwise use local state
@@ -308,13 +297,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   };
   
   const handleEnableAllMiniModes = () => {
-    const allModes = new Set([
-      'ecg_drill', 'derm_drill', 'imaging_drill', 'mini_lab',
-      'rapid_recall', 'ddx_compare', 'guideline_drill', 'condition_drill',
-      'first_line_treatment', 'pharmacology',
-      'fluid_electrolyte', 'antibiotic_mode', 'patient_encounter',
-      'code_blue_speed', 'diagnosisdle', 'grand_rounds', 'cram_mode', 'commuter_mode'
-    ]);
+    const allModes = new Set(ALL_MINI_MODES);
     setEnabledMiniModes(allModes);
     localStorage.setItem('panceai_enabled_mini_modes', JSON.stringify(Array.from(allModes)));
   };
@@ -1065,11 +1048,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           { id: 'grand_rounds', label: 'Grand Rounds', desc: 'Live competition' },
                           { id: 'cram_mode', label: 'Cram Button', desc: '50 high-yield Qs' }
                         ].map(mode => (
-                          <button
+                          <div
                             key={mode.id}
-                            onClick={() => handleToggleMiniMode(mode.id)}
-                            disabled
-                            className={`p-2 rounded-lg text-left text-xs transition-all cursor-not-allowed ${
+                            className={`p-2 rounded-lg text-left text-xs cursor-not-allowed ${
                               enabledMiniModes.has(mode.id)
                                 ? 'bg-[var(--color-accent)]/50 text-[var(--color-btn-primary-text)]'
                                 : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)]'
@@ -1077,7 +1058,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           >
                             <div className="font-semibold">{mode.label}</div>
                             <div className="text-xs opacity-75">{mode.desc}</div>
-                          </button>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -1086,10 +1067,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     <div>
                       <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Accessibility (Coming Soon)</div>
                       <div className="grid grid-cols-2 gap-2 opacity-60">
-                        <button
-                          onClick={() => handleToggleMiniMode('commuter_mode')}
-                          disabled
-                          className={`p-2 rounded-lg text-left text-xs transition-all cursor-not-allowed ${
+                        <div
+                          className={`p-2 rounded-lg text-left text-xs cursor-not-allowed ${
                             enabledMiniModes.has('commuter_mode')
                               ? 'bg-[var(--color-accent)]/50 text-[var(--color-btn-primary-text)]'
                               : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)]'
@@ -1097,7 +1076,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         >
                           <div className="font-semibold">Commuter Mode</div>
                           <div className="text-xs opacity-75">Voice/TTS</div>
-                        </button>
+                        </div>
                       </div>
                     </div>
                   </div>

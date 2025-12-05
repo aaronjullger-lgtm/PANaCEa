@@ -284,3 +284,28 @@ export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = [
   'cram_mode',
   'commuter_mode'
 ];
+
+/**
+ * All mini mode IDs (excludes core_adaptive and mastery_drill which are special modes).
+ * Used for user preferences in settings.
+ */
+export const ALL_MINI_MODES: TrainingModeId[] = [
+  'ecg_drill',
+  'derm_drill',
+  'imaging_drill',
+  'mini_lab',
+  'rapid_recall',
+  'ddx_compare',
+  'guideline_drill',
+  'condition_drill',
+  'first_line_treatment',
+  'pharmacology',
+  'fluid_electrolyte',
+  'antibiotic_mode',
+  'patient_encounter',
+  'code_blue_speed',
+  'diagnosisdle',
+  'grand_rounds',
+  'cram_mode',
+  'commuter_mode'
+];
