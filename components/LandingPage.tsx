@@ -24,33 +24,33 @@ export function LandingPage() {
   const features = [
     {
       icon: Brain,
-      title: 'Intelligent Question Generation',
-      description: 'Advanced AI analyzes your performance patterns and generates exam-level questions that target your specific knowledge gaps—no generic question banks'
+      title: 'AI-Generated Questions',
+      description: 'Personalized practice questions based on your performance, targeting areas where you need improvement'
     },
     {
       icon: ActivityIcon,
-      title: 'Clinical Image Mastery',
-      description: 'Master ECG interpretation, dermatological diagnosis, and radiological analysis with curated visual cases that mirror real exam conditions'
+      title: 'Clinical Image Training',
+      description: 'Practice with ECGs, dermatology images, and radiology cases to build diagnostic skills'
     },
     {
       icon: Target,
-      title: '15+ Clinical Training Modes',
-      description: "From pharmacology drills to differential diagnosis challenges—train with the same depth and variety you'll encounter on exam day"
+      title: '15+ Training Modes',
+      description: 'Pharmacology, differential diagnosis, first-line treatments, and more specialized practice modes'
     },
     {
       icon: Repeat,
-      title: 'Scientific Spaced Repetition',
-      description: 'Evidence-based SM-2 algorithm optimizes your review schedule, ensuring information moves from short-term to long-term memory efficiently'
+      title: 'Spaced Repetition',
+      description: 'SM-2 algorithm schedules review sessions to improve long-term retention'
     }
   ];
 
   const benefits = [
-    'Comprehensive coverage: 1000+ conditions mapped to the NCCPA blueprint',
-    'Performance analytics that reveal exactly where you need to focus',
-    'Rapid Recall mode: Build reflexive knowledge for time-pressured scenarios',
-    'Clinical decision training: First-line treatments and antibiotic selection',
-    'Expert rationales featuring clinical pearls, mnemonics, and high-yield details',
-    'Seamless cloud synchronization—study anywhere, pick up where you left off'
+    '1000+ conditions aligned with NCCPA content blueprint',
+    'Performance tracking to identify weak areas',
+    'Rapid recall drills for time-sensitive practice',
+    'First-line treatment and antibiotic selection training',
+    'Detailed explanations with clinical pearls and mnemonics',
+    'Cloud sync across devices'
   ];
 
   return (
@@ -94,14 +94,13 @@ export function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6">
-              <span className="text-[var(--color-text-primary)]">Master the PANCE with </span>
+              <span className="text-[var(--color-text-primary)]">PANCE Preparation </span>
               <span className="bg-gradient-to-r from-[#1F283A] to-[#364154] dark:from-[#E9ECF1] dark:to-[#ffffff] bg-clip-text text-transparent">
-                Precision AI
+                Platform
               </span>
             </h1>
             <p className="text-xl sm:text-2xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
-              An intelligent study platform that adapts to your learning patterns—combining AI-driven question generation, 
-              clinical visual mastery, and evidence-based retention science to ensure you're exam-ready.
+              Study platform with AI-generated questions, clinical image training, and spaced repetition for PA students.
             </p>
           </motion.div>
 
@@ -117,7 +116,7 @@ export function LandingPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Begin Your Preparation
+              Get Started
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </motion.button>
             <div className="text-sm text-[var(--color-text-muted)]">
@@ -154,10 +153,10 @@ export function LandingPage() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl font-bold text-[var(--color-text-primary)] mb-4">
-            Study Smarter, Not Harder
+            Key Features
           </h2>
           <p className="text-xl text-[var(--color-text-secondary)]">
-            Four intelligent systems working together to maximize your exam readiness
+            Tools for comprehensive PANCE preparation
           </p>
         </motion.div>
 
@@ -196,10 +195,10 @@ export function LandingPage() {
               transition={{ duration: 0.6 }}
             >
               <h2 className="text-4xl font-bold mb-6">
-                Everything You Need to Succeed
+                Comprehensive Study Tools
               </h2>
               <p className="text-xl text-[#E9ECF1] mb-8">
-                Precision tools and intelligent systems that identify gaps in your knowledge and systematically strengthen them—no guesswork, just results.
+                Track your performance, identify knowledge gaps, and focus your study time effectively.
               </p>
               <motion.button
                 onClick={() => setShowSignIn(true)}
@@ -207,7 +206,7 @@ export function LandingPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Start Your Journey
+                Start Studying
               </motion.button>
             </motion.div>
 
@@ -246,11 +245,10 @@ export function LandingPage() {
           className="space-y-8"
         >
           <h2 className="text-4xl sm:text-5xl font-bold text-[var(--color-text-primary)]">
-            Transform Your Exam Preparation
+            Ready to Start?
           </h2>
           <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto">
-            Join PA students who are preparing smarter with adaptive AI, clinical visual training, 
-            and performance analytics that ensure you're ready for exam day.
+            Access all study modes and features with a free account.
           </p>
           <motion.button
             onClick={() => setShowSignIn(true)}
@@ -258,7 +256,7 @@ export function LandingPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            Get Started Now
+            Sign Up Free
             <ArrowRight className="w-6 h-6" />
           </motion.button>
         </motion.div>
