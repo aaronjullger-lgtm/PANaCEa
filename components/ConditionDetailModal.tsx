@@ -7,6 +7,8 @@ import {
 } from "../conditionRegistry";
 import {
   getConditionById,
+  getConditionByIdSync,
+  loadConditions,
   isMeaningfulContent,
   type ConditionContent,
   type ConditionEntry,
@@ -61,13 +63,37 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   const contentRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
+  const [content, setContent] = useState<ConditionEntry | undefined>(undefined);
+  
   const conditionId = useMemo(
     () => buildConditionDefinition(condition).id,
     [condition]
   );
 
-  const content: ConditionEntry | undefined = useMemo(() => {
-    return getConditionById(conditionId) ?? getConditionById(condition.condition);
+  // Load condition content asynchronously
+  useEffect(() => {
+    let mounted = true;
+    
+    async function loadContent() {
+      // Try to get it synchronously first (if already loaded)
+      let entry = getConditionByIdSync(conditionId) ?? getConditionByIdSync(condition.condition);
+      
+      if (!entry) {
+        // If not loaded, load it asynchronously
+        await loadConditions();
+        entry = getConditionByIdSync(conditionId) ?? getConditionByIdSync(condition.condition);
+      }
+      
+      if (mounted) {
+        setContent(entry);
+      }
+    }
+    
+    loadContent();
+    
+    return () => {
+      mounted = false;
+    };
   }, [condition.condition, conditionId]);
 
   const sections: ContentSection[] = useMemo(() => {

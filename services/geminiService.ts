@@ -22,7 +22,7 @@ import {
   type ConditionMeta,
 } from "../conditionRegistry";
 import {
-  getConditionById,
+  getConditionByIdSync,
   isMeaningfulContent,
   normalizeConditionContent,
 } from "../lib/loadConditions";
@@ -68,7 +68,7 @@ const slugify = (value: string): string =>
 
 function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
   const id = buildConditionDefinition(meta).id;
-  const content = getConditionById(id)?.sections;
+  const content = getConditionByIdSync(id)?.sections;
   if (!content) return undefined;
 
   const pieces: string[] = [];
