@@ -93,15 +93,15 @@ Chest X-ray reveals right lower lobe consolidation consistent with pneumonia.`,
       correctScore: 3,
       explanation: `This patient scores 3 on CURB-65:
 
-✅ **Confusion** (1 point): Patient is confused and oriented only to person - this is new-onset mental confusion.
+[✓] **Confusion** (1 point): Patient is confused and oriented only to person - this is new-onset mental confusion.
 
-❌ **Urea** (0 points): BUN of 12 mg/dL is within normal limits (not > 19 mg/dL).
+[×] **Urea** (0 points): BUN of 12 mg/dL is within normal limits (not > 19 mg/dL).
 
-❌ **Respiratory Rate** (0 points): RR is 24/min, which is below the threshold of ≥30/min.
+[×] **Respiratory Rate** (0 points): RR is 24/min, which is below the threshold of ≥30/min.
 
-✅ **Blood Pressure** (1 point): BP of 85/55 mmHg meets criteria (systolic < 90 mmHg).
+[✓] **Blood Pressure** (1 point): BP of 85/55 mmHg meets criteria (systolic < 90 mmHg).
 
-✅ **Age** (1 point): Patient is 72 years old (≥ 65 years).
+[✓] **Age** (1 point): Patient is 72 years old (≥ 65 years).
 
 **Interpretation**: Score of 3 = High Risk. This patient should be admitted and managed as severe pneumonia. The combination of confusion and hypotension is particularly concerning for sepsis.`,
     },
@@ -126,15 +126,15 @@ Chest X-ray shows a small right middle lobe infiltrate.`,
       correctScore: 0,
       explanation: `This patient scores 0 on CURB-65:
 
-❌ **Confusion** (0 points): Patient is alert and oriented x4 - no mental status changes.
+[×] **Confusion** (0 points): Patient is alert and oriented x4 - no mental status changes.
 
-❌ **Urea** (0 points): BUN of 10 mg/dL is normal (not > 19 mg/dL).
+[×] **Urea** (0 points): BUN of 10 mg/dL is normal (not > 19 mg/dL).
 
-❌ **Respiratory Rate** (0 points): RR is 18/min, well below the threshold of ≥30/min.
+[×] **Respiratory Rate** (0 points): RR is 18/min, well below the threshold of ≥30/min.
 
-❌ **Blood Pressure** (0 points): BP of 118/72 mmHg is normal.
+[×] **Blood Pressure** (0 points): BP of 118/72 mmHg is normal.
 
-❌ **Age** (0 points): Patient is 24 years old (< 65 years).
+[×] **Age** (0 points): Patient is 24 years old (< 65 years).
 
 **Interpretation**: Score of 0 = Low Risk. This patient can be safely managed as an outpatient with oral antibiotics. She should have close follow-up and return precautions for worsening symptoms.`,
     },
@@ -160,15 +160,15 @@ Chest X-ray shows bilateral infiltrates.`,
       correctScore: 5,
       explanation: `This patient scores 5 on CURB-65 (maximum score):
 
-✅ **Confusion** (1 point): Despite baseline dementia, she is MORE confused than usual - this counts as acute confusion.
+[✓] **Confusion** (1 point): Despite baseline dementia, she is MORE confused than usual - this counts as acute confusion.
 
-✅ **Urea** (1 point): BUN of 35 mg/dL is significantly elevated (> 19 mg/dL).
+[✓] **Urea** (1 point): BUN of 35 mg/dL is significantly elevated (> 19 mg/dL).
 
-✅ **Respiratory Rate** (1 point): RR of 34/min exceeds the threshold of ≥30/min.
+[✓] **Respiratory Rate** (1 point): RR of 34/min exceeds the threshold of ≥30/min.
 
-✅ **Blood Pressure** (1 point): BP of 78/50 mmHg is severely hypotensive.
+[✓] **Blood Pressure** (1 point): BP of 78/50 mmHg is severely hypotensive.
 
-✅ **Age** (1 point): Patient is 80 years old (≥ 65 years).
+[✓] **Age** (1 point): Patient is 80 years old (≥ 65 years).
 
 **Interpretation**: Score of 5 = Very High Risk. This patient requires immediate ICU admission. The combination of all criteria plus bilateral infiltrates suggests severe sepsis from pneumonia. Mortality risk is approximately 40% or higher.`,
     },
@@ -303,12 +303,12 @@ Which Jones Criteria are met?`,
       explanation: `Jones Criteria Met:
 
 **Major Criteria:**
-✅ **Carditis** (2 points): New holosystolic murmur suggests mitral regurgitation
-✅ **Migratory Polyarthritis** (2 points): Joint swelling that moved from knee to ankle
+[✓] **Carditis** (2 points): New holosystolic murmur suggests mitral regurgitation
+[✓] **Migratory Polyarthritis** (2 points): Joint swelling that moved from knee to ankle
 
 **Minor Criteria:**
-✅ **Fever** (1 point): Temperature 39°C
-✅ **Elevated ESR/CRP** (1 point): Both markers elevated
+[✓] **Fever** (1 point): Temperature 39°C
+[✓] **Elevated ESR/CRP** (1 point): Both markers elevated
 
 **Diagnosis**: This patient meets Jones Criteria (2 major + 2 minor) with evidence of prior strep infection (elevated ASO). Diagnosis of acute rheumatic fever is confirmed. Initiate penicillin treatment and anti-inflammatory therapy.`,
     },
@@ -351,9 +351,9 @@ Apply Light's Criteria.`,
       correctScore: 0,
       explanation: `Light's Criteria Analysis:
 
-❌ **Protein Ratio**: 2.0/6.0 = 0.33 (NOT > 0.5)
-❌ **LDH Ratio**: 80/200 = 0.40 (NOT > 0.6)
-❌ **LDH Absolute**: 80 U/L (NOT > 150, which is 2/3 of 225)
+[×] **Protein Ratio**: 2.0/6.0 = 0.33 (NOT > 0.5)
+[×] **LDH Ratio**: 80/200 = 0.40 (NOT > 0.6)
+[×] **LDH Absolute**: 80 U/L (NOT > 150, which is 2/3 of 225)
 
 **Interpretation**: This is a TRANSUDATE. The effusion is likely due to her CHF (increased hydrostatic pressure). Treat the underlying heart failure.`,
     },
@@ -372,9 +372,9 @@ Apply Light's Criteria.`,
       correctScore: 3,
       explanation: `Light's Criteria Analysis:
 
-✅ **Protein Ratio**: 4.5/7.0 = 0.64 (> 0.5)
-✅ **LDH Ratio**: 300/180 = 1.67 (> 0.6)
-✅ **LDH Absolute**: 300 U/L (> 150, which is 2/3 of 225)
+[✓] **Protein Ratio**: 4.5/7.0 = 0.64 (> 0.5)
+[✓] **LDH Ratio**: 300/180 = 1.67 (> 0.6)
+[✓] **LDH Absolute**: 300 U/L (> 150, which is 2/3 of 225)
 
 **Interpretation**: This is an EXUDATE (meets all 3 criteria). Given smoking history and weight loss, malignancy is a major concern. Send cytology and consider CT chest and possible pleural biopsy.`,
     },
@@ -415,14 +415,14 @@ Calculate her CHA2DS2-VASc score.`,
       correctScore: 5,
       explanation: `CHA2DS2-VASc Score:
 
-❌ **C** (CHF): 0 points - No heart failure
-✅ **H** (Hypertension): 1 point
-✅ **A2** (Age ≥75): 2 points
-✅ **D** (Diabetes): 1 point
-❌ **S2** (Stroke/TIA): 0 points
-❌ **V** (Vascular disease): 0 points
+[×] **C** (CHF): 0 points - No heart failure
+[✓] **H** (Hypertension): 1 point
+[✓] **A2** (Age ≥75): 2 points
+[✓] **D** (Diabetes): 1 point
+[×] **S2** (Stroke/TIA): 0 points
+[×] **V** (Vascular disease): 0 points
 N/A **A** (Age 65-74): Not applicable (she is ≥75)
-✅ **Sc** (Female): 1 point
+[✓] **Sc** (Female): 1 point
 
 **Total Score: 5**
 
@@ -467,16 +467,16 @@ Calculate her Wells score for DVT.`,
       correctScore: 5,
       explanation: `Wells Score for DVT:
 
-❌ Active cancer: 0
-❌ Paralysis/cast: 0
-✅ **Bedridden/major surgery**: 1 point (knee replacement 4 weeks ago)
-✅ **Localized tenderness**: 1 point (along popliteal vein)
-✅ **Entire leg swollen**: 1 point
-✅ **Calf >3cm larger**: 1 point (4cm difference)
-✅ **Pitting edema**: 1 point
-❌ Collateral veins: 0
-❌ Prior DVT: 0
-❌ Alternative diagnosis equally likely: Not subtracted
+[×] Active cancer: 0
+[×] Paralysis/cast: 0
+[✓] **Bedridden/major surgery**: 1 point (knee replacement 4 weeks ago)
+[✓] **Localized tenderness**: 1 point (along popliteal vein)
+[✓] **Entire leg swollen**: 1 point
+[✓] **Calf >3cm larger**: 1 point (4cm difference)
+[✓] **Pitting edema**: 1 point
+[×] Collateral veins: 0
+[×] Prior DVT: 0
+[×] Alternative diagnosis equally likely: Not subtracted
 
 **Total: 5 points = High Probability**
 

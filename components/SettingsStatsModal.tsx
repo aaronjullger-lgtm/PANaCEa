@@ -1116,7 +1116,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                   <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                     <p className="text-xs text-green-900 dark:text-green-300">
-                      ✓ <strong>PANCE System Protected:</strong> Your main adaptive PANCE question system is always available regardless of these settings.
+                      [✓] <strong>PANCE System Protected:</strong> Your main adaptive PANCE question system is always available regardless of these settings.
                     </p>
                   </div>
                 </div>
@@ -1206,7 +1206,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                   <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-xs text-blue-900 dark:text-blue-300">
-                      💡 <strong>Note:</strong> Clinical Fidelity features are optional enhancements designed for advanced learners who want more realistic practice.
+                      [i] <strong>Note:</strong> Clinical Fidelity features are optional enhancements designed for advanced learners who want more realistic practice.
                     </p>
                   </div>
                 </div>

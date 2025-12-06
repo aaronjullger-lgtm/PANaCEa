@@ -66,7 +66,7 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
             }`}
           >
-            📚 Anki Export
+            [◆] Anki Export
           </button>
           <button
             onClick={() => setActiveTab('calendar')}
