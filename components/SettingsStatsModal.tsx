@@ -23,10 +23,16 @@ import {
   Check,
   Activity as ActivityIcon,
   Flame,
-  Sparkles
+  Sparkles,
+  User,
+  School,
+  GraduationCap
 } from 'lucide-react';
-import type { PerformanceRecord, SystemCode } from '@/types';
+import type { PerformanceRecord, SystemCode, UserProfile, ClinicalRotation, YearInProgram } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
+import { loadUserProfile, updateUserProfile } from '@/services/userProfileService';
+import { RotationSelector } from './onboarding/RotationSelector';
 import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from './ProgressDashboard';
 import type { WidgetId } from './ProgressDashboard';
 import { exportUserAnalytics } from '@/lib/analyticsExport';
@@ -227,6 +233,11 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     // Default: all mini modes enabled
     return new Set(ALL_MINI_MODES);
   });
+
+  // User Profile - Load from localStorage
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    return loadUserProfile() || { hasCompletedOnboarding: false };
+  });
   
   // Use external widgets if provided, otherwise use local state
   const enabledWidgets = externalEnabledWidgets ?? localEnabledWidgets;
@@ -331,6 +342,27 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   useEffect(() => {
     handleSetAnalyticsPalette(analyticsPalette);
   }, []);
+
+  // User profile update handlers
+  const handleUpdateSchool = (school: string) => {
+    const updated = updateUserProfile({ school });
+    setUserProfile(updated);
+  };
+
+  const handleUpdateGraduationDate = (graduationDate: string) => {
+    const updated = updateUserProfile({ graduationDate });
+    setUserProfile(updated);
+  };
+
+  const handleUpdateYearInProgram = (yearInProgram: YearInProgram) => {
+    const updated = updateUserProfile({ yearInProgram });
+    setUserProfile(updated);
+  };
+
+  const handleUpdateRotation = (currentRotation: ClinicalRotation) => {
+    const updated = updateUserProfile({ currentRotation });
+    setUserProfile(updated);
+  };
   
   // Export handlers
   const handleExportCSV = () => {
@@ -813,6 +845,91 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               </div>
             ) : (
               <div className="space-y-4 sm:space-y-6">
+                {/* User Profile Section */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <User className="w-5 h-5 text-[var(--color-accent)]" />
+                    <h3 className="font-medium text-[var(--color-text-primary)]">Your Profile</h3>
+                  </div>
+                  <p className="text-xs text-[var(--color-text-muted)] mb-4">
+                    Keep your information updated to help us personalize your learning experience.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    {/* School */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                        <School className="w-4 h-4" />
+                        PA School/Program
+                      </label>
+                      <input
+                        type="text"
+                        value={userProfile.school || ''}
+                        onChange={(e) => handleUpdateSchool(e.target.value)}
+                        placeholder="e.g., Duke University, Stanford PA Program"
+                        className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
+                          text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]
+                          focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
+                          transition-all text-sm"
+                      />
+                    </div>
+
+                    {/* Graduation Date */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                        <Calendar className="w-4 h-4" />
+                        Expected/Actual Graduation Date
+                      </label>
+                      <input
+                        type="date"
+                        value={userProfile.graduationDate || ''}
+                        onChange={(e) => handleUpdateGraduationDate(e.target.value)}
+                        className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
+                          text-[var(--color-text-primary)]
+                          focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
+                          transition-all text-sm"
+                      />
+                    </div>
+
+                    {/* Year in Program */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+                        <GraduationCap className="w-4 h-4" />
+                        Where are you in your PA journey?
+                      </label>
+                      <select
+                        value={userProfile.yearInProgram || ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value && YEAR_IN_PROGRAM_OPTIONS.includes(value as YearInProgram)) {
+                            handleUpdateYearInProgram(value as YearInProgram);
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
+                          text-[var(--color-text-primary)]
+                          focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
+                          transition-all text-sm"
+                      >
+                        <option value="">Select year...</option>
+                        {YEAR_IN_PROGRAM_OPTIONS.map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Rotation Selector - Only show if in Clinical Year */}
+                    {userProfile.yearInProgram === 'Clinical Year' && (
+                      <div>
+                        <RotationSelector
+                          value={userProfile.currentRotation}
+                          onChange={handleUpdateRotation}
+                          label="Current Clinical Rotation"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {/* Theme Toggle */}
                 {onToggleTheme && (
                   <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">

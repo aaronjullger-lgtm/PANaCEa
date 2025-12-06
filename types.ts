@@ -101,3 +101,44 @@ export interface ConditionDefinition {
   /** Leaf-level condition name, e.g. "STEMI", "Pulmonary Embolism" */
   condition: string;
 }
+
+// User profile and onboarding types
+export type YearInProgram = 
+  | 'Didactic Year 1'
+  | 'Didactic Year 2' 
+  | 'Clinical Year'
+  | 'Graduated'
+  | 'Post-Graduate'
+  | 'Preparing for PANCE';
+
+export type ClinicalRotation = 
+  | 'Emergency Medicine'
+  | 'Family Medicine'
+  | 'Internal Medicine'
+  | 'Surgery'
+  | 'Pediatrics'
+  | 'Psychiatry'
+  | 'Obstetrics & Gynecology'
+  | 'Cardiology'
+  | 'Orthopedics'
+  | 'Dermatology'
+  | 'Neurology'
+  | 'Other';
+
+export interface UserProfile {
+  school?: string;
+  graduationDate?: string; // ISO date string
+  currentRotation?: ClinicalRotation;
+  yearInProgram?: YearInProgram;
+  hasCompletedOnboarding: boolean;
+}
+
+// Constants for dropdown options
+export const YEAR_IN_PROGRAM_OPTIONS: readonly YearInProgram[] = [
+  'Didactic Year 1',
+  'Didactic Year 2',
+  'Clinical Year',
+  'Graduated',
+  'Post-Graduate',
+  'Preparing for PANCE',
+] as const;

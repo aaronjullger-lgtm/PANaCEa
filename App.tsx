@@ -18,7 +18,12 @@ import type {
   SessionSettings,
   SystemCode,
   ErrorTag,
+  UserProfile,
 } from "./types";
+import { 
+  hasCompletedOnboarding, 
+  saveUserProfile 
+} from "./services/userProfileService";
 import type { TrainingModeId } from "./config/training-modes";
 
 // Lazy load components for better performance
@@ -41,6 +46,7 @@ const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcuts
 const ARAnatomyMode = lazy(() => import("./components/ar/ARAnatomyMode"));
 const PANRELASimulator = lazy(() => import("./components/lifelong-learning/PANRELASimulator"));
 const CommandPalette = lazy(() => import("./components/CommandPalette"));
+const UserProfileModal = lazy(() => import("./components/onboarding/UserProfileModal"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -121,12 +127,26 @@ const App: React.FC = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(false);
 
   // ---- Preload large data files in background for better performance ----
   useEffect(() => {
     // Start preloading data after initial mount
     preloadData();
   }, []);
+
+  // ---- Check if user needs onboarding on first sign-in ----
+  useEffect(() => {
+    if (isSignedIn && authLoaded) {
+      const completed = hasCompletedOnboarding();
+      if (!completed) {
+        // Show onboarding modal after a short delay for better UX
+        setTimeout(() => {
+          setIsOnboardingModalOpen(true);
+        }, 500);
+      }
+    }
+  }, [isSignedIn, authLoaded]);
 
   // ---- Global keyboard shortcuts ----
   useEffect(() => {
@@ -342,6 +362,18 @@ const App: React.FC = () => {
 
   const hasActiveSession =
     !!sessionSettings && questionQueue && questionQueue.length > 0;
+
+  // Handle onboarding completion
+  const handleOnboardingComplete = (profile: UserProfile) => {
+    saveUserProfile(profile);
+    setIsOnboardingModalOpen(false);
+  };
+
+  // Handle onboarding skip
+  const handleOnboardingSkip = () => {
+    saveUserProfile({ hasCompletedOnboarding: true });
+    setIsOnboardingModalOpen(false);
+  };
 
   // Handler for navigating to drill modes with dedicated routes
   const handleNavigateToDrillMode = (modeId: string) => {
@@ -693,6 +725,16 @@ const App: React.FC = () => {
           isOpen={isCommandPaletteOpen}
           onClose={() => setIsCommandPaletteOpen(false)}
           onNavigate={handleNavigateToDrillMode}
+        />
+      </Suspense>
+
+      {/* User Profile Onboarding Modal */}
+      <Suspense fallback={null}>
+        <UserProfileModal
+          isOpen={isOnboardingModalOpen}
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+          canSkip={true}
         />
       </Suspense>
     </div>
