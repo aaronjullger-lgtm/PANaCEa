@@ -32,22 +32,21 @@ interface RotationOption {
   value: ClinicalRotation;
   label: string;
   icon: React.ElementType;
-  color: string;
 }
 
 const ROTATION_OPTIONS: RotationOption[] = [
-  { value: 'Emergency Medicine', label: 'Emergency Medicine', icon: Activity, color: 'red' },
-  { value: 'Family Medicine', label: 'Family Medicine', icon: Users, color: 'blue' },
-  { value: 'Internal Medicine', label: 'Internal Medicine', icon: Stethoscope, color: 'indigo' },
-  { value: 'Surgery', label: 'Surgery', icon: Scissors, color: 'purple' },
-  { value: 'Pediatrics', label: 'Pediatrics', icon: Baby, color: 'pink' },
-  { value: 'Psychiatry', label: 'Psychiatry', icon: Brain, color: 'violet' },
-  { value: 'Obstetrics & Gynecology', label: 'OB/GYN', icon: Heart, color: 'rose' },
-  { value: 'Cardiology', label: 'Cardiology', icon: Heart, color: 'red' },
-  { value: 'Orthopedics', label: 'Orthopedics', icon: Bone, color: 'amber' },
-  { value: 'Dermatology', label: 'Dermatology', icon: Eye, color: 'orange' },
-  { value: 'Neurology', label: 'Neurology', icon: Brain, color: 'purple' },
-  { value: 'Other', label: 'Other', icon: Sparkles, color: 'gray' },
+  { value: 'Emergency Medicine', label: 'Emergency Medicine', icon: Activity },
+  { value: 'Family Medicine', label: 'Family Medicine', icon: Users },
+  { value: 'Internal Medicine', label: 'Internal Medicine', icon: Stethoscope },
+  { value: 'Surgery', label: 'Surgery', icon: Scissors },
+  { value: 'Pediatrics', label: 'Pediatrics', icon: Baby },
+  { value: 'Psychiatry', label: 'Psychiatry', icon: Brain },
+  { value: 'Obstetrics & Gynecology', label: 'OB/GYN', icon: Heart },
+  { value: 'Cardiology', label: 'Cardiology', icon: Heart },
+  { value: 'Orthopedics', label: 'Orthopedics', icon: Bone },
+  { value: 'Dermatology', label: 'Dermatology', icon: Eye },
+  { value: 'Neurology', label: 'Neurology', icon: Brain },
+  { value: 'Other', label: 'Other', icon: Sparkles },
 ];
 
 export function RotationSelector({ value, onChange, label = 'Current Rotation', className = '' }: RotationSelectorProps) {

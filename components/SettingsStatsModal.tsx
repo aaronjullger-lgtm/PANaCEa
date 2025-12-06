@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode, UserProfile, ClinicalRotation, YearInProgram } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/userProfileService';
 import { RotationSelector } from './onboarding/RotationSelector';
 import { StatisticsPreferences, DEFAULT_WIDGET_CONFIG } from './ProgressDashboard';
@@ -905,12 +906,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                           transition-all text-sm"
                       >
                         <option value="">Select year...</option>
-                        <option value="Didactic Year 1">Didactic Year 1</option>
-                        <option value="Didactic Year 2">Didactic Year 2</option>
-                        <option value="Clinical Year">Clinical Year</option>
-                        <option value="Graduated">Graduated</option>
-                        <option value="Post-Graduate">Post-Graduate</option>
-                        <option value="Preparing for PANCE">Preparing for PANCE</option>
+                        {YEAR_IN_PROGRAM_OPTIONS.map((year) => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
                       </select>
                     </div>
 
