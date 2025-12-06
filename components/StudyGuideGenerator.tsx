@@ -355,7 +355,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
         className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 text-white rounded-t-2xl">
+        <div className="bg-[var(--color-accent)] p-6 text-white dark:text-[var(--color-bg-primary)] rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
               <FileText className="w-6 h-6" />
@@ -447,7 +447,7 @@ export const StudyGuideGenerator: React.FC<StudyGuideGeneratorProps> = ({
             </button>
             <button
               onClick={handlePrint}
-              className="flex-1 py-3 px-6 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+              className="flex-1 py-3 px-6 rounded-lg bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white dark:text-[var(--color-bg-primary)] font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
             >
               <Printer className="w-5 h-5" />
               Print

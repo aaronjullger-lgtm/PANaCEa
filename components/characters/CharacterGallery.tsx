@@ -203,7 +203,7 @@ const CharacterGallery: React.FC<CharacterGalleryProps> = ({
       </div>
 
       {/* Info Banner */}
-      <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4">
+      <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4">
         <div className="flex items-start gap-3">
           <Sparkles className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
           <div>
