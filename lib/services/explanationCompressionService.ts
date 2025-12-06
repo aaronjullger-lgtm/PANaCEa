@@ -627,31 +627,31 @@ export function generateStudyTip(userProfile: UserBiasProfile): string {
   const tips: string[] = [];
   
   if (userProfile.guessingRate > 0.4) {
-    tips.push('💡 Tip: Review diagnostic criteria before attempting questions to reduce guessing.');
+    tips.push('[!] Tip: Review diagnostic criteria before attempting questions to reduce guessing.');
   }
   
   if (userProfile.overthinkingRate > 0.4) {
-    tips.push('💡 Tip: Trust your initial instinct. Practice first-line treatments to build confidence.');
+    tips.push('[!] Tip: Trust your initial instinct. Practice first-line treatments to build confidence.');
   }
   
   if (userProfile.avgTimePerQuestion > 90) {
-    tips.push('💡 Tip: Practice timed drills to improve reading speed and pattern recognition.');
+    tips.push('[!] Tip: Practice timed drills to improve reading speed and pattern recognition.');
   }
   
   if (userProfile.avgTimePerQuestion < 30) {
-    tips.push('💡 Tip: Slow down and read carefully. Speed without accuracy won\'t help on exam day.');
+    tips.push('[!] Tip: Slow down and read carefully. Speed without accuracy won\'t help on exam day.');
   }
   
   if (userProfile.commonErrors.includes('misread')) {
-    tips.push('💡 Tip: Underline key phrases in the question stem to avoid missing critical details.');
+    tips.push('[!] Tip: Underline key phrases in the question stem to avoid missing critical details.');
   }
   
   if (userProfile.commonErrors.includes('calculation')) {
-    tips.push('💡 Tip: Review common formulas and practice mental math for clinical calculations.');
+    tips.push('[!] Tip: Review common formulas and practice mental math for clinical calculations.');
   }
   
   if (tips.length === 0) {
-    tips.push('💡 Keep up the great work! Consistency is key to PANCE success.');
+    tips.push('[!] Keep up the great work! Consistency is key to PANCE success.');
   }
   
   // Return a random tip from applicable ones

@@ -204,11 +204,11 @@ export function generateStreakWidgetHTML(streakData: StreakData, theme: 'light' 
     </div>
     
     ${streakData.currentStreak > 0 ? `
-      <div class="emoji">${streakData.currentStreak >= 7 ? '🔥' : '⭐'}</div>
+      <div class="emoji">${streakData.currentStreak >= 7 ? '▲' : '★'}</div>
       <div class="streak-number">${streakData.currentStreak}</div>
       <div class="streak-label">${streakData.currentStreak === 1 ? 'Day' : 'Days'} in a row!</div>
     ` : `
-      <div class="emoji">📚</div>
+      <div class="emoji">◆</div>
       <div class="streak-number">0</div>
       <div class="streak-label">Start your streak today!</div>
     `}

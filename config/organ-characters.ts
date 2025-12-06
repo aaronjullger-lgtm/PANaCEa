@@ -58,105 +58,105 @@ export const ORGAN_CHARACTERS: OrganCharacter[] = [
     name: 'Heart',
     description: 'Cardiovascular System character',
     baseVariant: 'heart_base',
-    emoji: '❤️',
+    emoji: '♥',
   },
   {
     system: 'PULM',
     name: 'Lungs',
     description: 'Pulmonary System character',
     baseVariant: 'lungs_base',
-    emoji: '🫁',
+    emoji: '◉◉',
   },
   {
     system: 'GI',
     name: 'Stomach',
     description: 'Gastrointestinal System character',
     baseVariant: 'stomach_base',
-    emoji: '🫃',
+    emoji: '◐',
   },
   {
     system: 'NEURO',
     name: 'Brain',
     description: 'Neurologic System character',
     baseVariant: 'brain_base',
-    emoji: '🧠',
+    emoji: '⚡',
   },
   {
     system: 'MSK',
     name: 'Bone',
     description: 'Musculoskeletal System character',
     baseVariant: 'bone_base',
-    emoji: '🦴',
+    emoji: '∥',
   },
   {
     system: 'RENAL',
     name: 'Kidney',
     description: 'Renal System character',
     baseVariant: 'kidney_base',
-    emoji: '🫘',
+    emoji: '◈',
   },
   {
     system: 'ENDO',
     name: 'Thyroid',
     description: 'Endocrine System character',
     baseVariant: 'thyroid_base',
-    emoji: '🦋',
+    emoji: '⚬',
   },
   {
     system: 'HEME',
     name: 'Blood Cell',
     description: 'Hematologic System character',
     baseVariant: 'blood_base',
-    emoji: '🩸',
+    emoji: '●',
   },
   {
     system: 'DERM',
     name: 'Skin Cell',
     description: 'Dermatologic System character',
     baseVariant: 'skin_base',
-    emoji: '🧴',
+    emoji: '▢',
   },
   {
     system: 'HEENT',
     name: 'Eye',
     description: 'Eyes, Ears, Nose, and Throat character',
     baseVariant: 'eye_base',
-    emoji: '👁️',
+    emoji: '◉',
   },
   {
     system: 'GU',
     name: 'Bladder',
     description: 'Genitourinary System character',
     baseVariant: 'bladder_base',
-    emoji: '💧',
+    emoji: '◎',
   },
   {
     system: 'REPRO',
     name: 'Cell',
     description: 'Reproductive System character',
     baseVariant: 'repro_base',
-    emoji: '🧬',
+    emoji: '✧',
   },
   {
     system: 'ID',
     name: 'Antibody',
     description: 'Infectious Diseases character',
     baseVariant: 'antibody_base',
-    emoji: '🛡️',
+    emoji: '◆',
   },
   {
     system: 'PSYCH',
     name: 'Neurotransmitter',
     description: 'Psychiatry/Behavioral Science character',
     baseVariant: 'neuro_transmitter_base',
-    emoji: '🧘',
+    emoji: '◈',
   },
   {
     system: 'PRO',
     name: 'Stethoscope',
     description: 'Professional Practice character',
     baseVariant: 'stethoscope_base',
-    emoji: '🩺',
+    emoji: '⊕',
   },
 ];
 
@@ -174,7 +174,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '❤️',
+    icon: '♥',
     displayOrder: 1,
   },
   {
@@ -189,7 +189,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Tetralogy of Fallot'
     },
     rarity: 'uncommon',
-    icon: '👢❤️',
+    icon: '♥↗',
     displayOrder: 2,
   },
   {
@@ -203,7 +203,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 100
     },
     rarity: 'uncommon',
-    icon: '💪❤️',
+    icon: '♥+',
     displayOrder: 3,
   },
   {
@@ -218,7 +218,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Takotsubo'
     },
     rarity: 'rare',
-    icon: '💔',
+    icon: '♡',
     displayOrder: 4,
   },
   {
@@ -232,7 +232,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 90
     },
     rarity: 'epic',
-    icon: '💛',
+    icon: '♥*',
     displayOrder: 5,
   },
 
@@ -245,7 +245,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🫁',
+    icon: '◉◉',
     displayOrder: 10,
   },
   {
@@ -260,7 +260,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Pneumothorax'
     },
     rarity: 'uncommon',
-    icon: '🫁💨',
+    icon: '◉○',
     displayOrder: 11,
   },
   {
@@ -275,7 +275,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'COPD'
     },
     rarity: 'uncommon',
-    icon: '🫁🎈',
+    icon: '◉◎',
     displayOrder: 12,
   },
   {
@@ -289,7 +289,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 75
     },
     rarity: 'uncommon',
-    icon: '🫁🌪️',
+    icon: '◉~',
     displayOrder: 13,
   },
   {
@@ -303,7 +303,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 90
     },
     rarity: 'epic',
-    icon: '🫁✨',
+    icon: '◉*',
     displayOrder: 14,
   },
 
@@ -316,7 +316,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🫃',
+    icon: '◐',
     displayOrder: 20,
   },
   {
@@ -331,7 +331,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Peptic Ulcer'
     },
     rarity: 'uncommon',
-    icon: '🫃🔥',
+    icon: '◐×',
     displayOrder: 21,
   },
   {
@@ -346,7 +346,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: "Crohn's Disease"
     },
     rarity: 'rare',
-    icon: '🫃🪨',
+    icon: '◐▪',
     displayOrder: 22,
   },
   {
@@ -361,7 +361,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Appendicitis'
     },
     rarity: 'uncommon',
-    icon: '🫃⚠️',
+    icon: '◐!',
     displayOrder: 23,
   },
 
@@ -374,7 +374,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🧠',
+    icon: '⚡',
     displayOrder: 30,
   },
   {
@@ -389,7 +389,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Stroke'
     },
     rarity: 'uncommon',
-    icon: '🧠⚡',
+    icon: '⚡!',
     displayOrder: 31,
   },
   {
@@ -403,7 +403,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 50
     },
     rarity: 'uncommon',
-    icon: '🧠💫',
+    icon: '⚡~',
     displayOrder: 32,
   },
   {
@@ -417,7 +417,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 95
     },
     rarity: 'legendary',
-    icon: '🧠🌟',
+    icon: '⚡★',
     displayOrder: 33,
   },
 
@@ -430,7 +430,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🦴',
+    icon: '∥',
     displayOrder: 40,
   },
   {
@@ -444,7 +444,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 50
     },
     rarity: 'uncommon',
-    icon: '🦴🩹',
+    icon: '∥×',
     displayOrder: 41,
   },
   {
@@ -459,7 +459,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Osteoporosis'
     },
     rarity: 'uncommon',
-    icon: '🦴🕳️',
+    icon: '∥○',
     displayOrder: 42,
   },
 
@@ -472,7 +472,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🫘',
+    icon: '◈',
     displayOrder: 50,
   },
   {
@@ -487,7 +487,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Nephrolithiasis'
     },
     rarity: 'uncommon',
-    icon: '🫘💎',
+    icon: '◈◆',
     displayOrder: 51,
   },
   {
@@ -502,7 +502,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Polycystic Kidney Disease'
     },
     rarity: 'rare',
-    icon: '🫘🫧',
+    icon: '◈○',
     displayOrder: 52,
   },
 
@@ -515,7 +515,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🦋',
+    icon: '⚬',
     displayOrder: 60,
   },
   {
@@ -530,7 +530,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Hyperthyroidism'
     },
     rarity: 'uncommon',
-    icon: '🦋⚡',
+    icon: '⚬↑',
     displayOrder: 61,
   },
   {
@@ -545,7 +545,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Hypothyroidism'
     },
     rarity: 'uncommon',
-    icon: '🦋😴',
+    icon: '⚬↓',
     displayOrder: 62,
   },
 
@@ -558,7 +558,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🩸',
+    icon: '●',
     displayOrder: 70,
   },
   {
@@ -572,7 +572,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 50
     },
     rarity: 'uncommon',
-    icon: '🩸😓',
+    icon: '○',
     displayOrder: 71,
   },
   {
@@ -587,7 +587,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Sickle Cell Disease'
     },
     rarity: 'rare',
-    icon: '🩸🌙',
+    icon: '◐',
     displayOrder: 72,
   },
 
@@ -600,7 +600,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🧴',
+    icon: '▢',
     displayOrder: 80,
   },
   {
@@ -614,7 +614,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 50
     },
     rarity: 'uncommon',
-    icon: '🧴🔴',
+    icon: '▢▪',
     displayOrder: 81,
   },
   {
@@ -629,7 +629,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Melanoma'
     },
     rarity: 'rare',
-    icon: '🧴⚫',
+    icon: '▢●',
     displayOrder: 82,
   },
 
@@ -642,7 +642,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '👁️',
+    icon: '◉',
     displayOrder: 90,
   },
   {
@@ -656,7 +656,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 50
     },
     rarity: 'uncommon',
-    icon: '👁️🔴',
+    icon: '◉×',
     displayOrder: 91,
   },
   {
@@ -671,7 +671,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Glaucoma'
     },
     rarity: 'rare',
-    icon: '👁️💧',
+    icon: '◉↑',
     displayOrder: 92,
   },
 
@@ -684,7 +684,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '💧',
+    icon: '◎',
     displayOrder: 100,
   },
   {
@@ -699,7 +699,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'UTI'
     },
     rarity: 'uncommon',
-    icon: '💧🔥',
+    icon: '◎×',
     displayOrder: 101,
   },
 
@@ -712,7 +712,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🧬',
+    icon: '✧',
     displayOrder: 110,
   },
   {
@@ -726,7 +726,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 50
     },
     rarity: 'uncommon',
-    icon: '🧬🤰',
+    icon: '✧+',
     displayOrder: 111,
   },
 
@@ -739,7 +739,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🛡️',
+    icon: '◆',
     displayOrder: 120,
   },
   {
@@ -754,7 +754,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'COVID-19'
     },
     rarity: 'uncommon',
-    icon: '🛡️😷',
+    icon: '◆+',
     displayOrder: 121,
   },
   {
@@ -769,7 +769,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Sepsis'
     },
     rarity: 'rare',
-    icon: '🛡️⚔️',
+    icon: '◆×',
     displayOrder: 122,
   },
 
@@ -782,7 +782,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🧘',
+    icon: '◈',
     displayOrder: 130,
   },
   {
@@ -797,7 +797,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'Depression'
     },
     rarity: 'uncommon',
-    icon: '🧘😔',
+    icon: '◈↓',
     displayOrder: 131,
   },
   {
@@ -812,7 +812,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'ADHD'
     },
     rarity: 'uncommon',
-    icon: '🧘⚡',
+    icon: '◈~',
     displayOrder: 132,
   },
 
@@ -825,7 +825,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
     isBase: true,
     unlockCondition: { type: 'default' },
     rarity: 'common',
-    icon: '🩺',
+    icon: '⊕',
     displayOrder: 140,
   },
   {
@@ -839,7 +839,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       value: 95
     },
     rarity: 'legendary',
-    icon: '🩺✨',
+    icon: '⊕★',
     displayOrder: 141,
   },
 
@@ -856,7 +856,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'ecg_drill'
     },
     rarity: 'rare',
-    icon: '📈',
+    icon: '~▬~',
     displayOrder: 200,
   },
   {
@@ -871,7 +871,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'ecg_drill'
     },
     rarity: 'epic',
-    icon: '📈⚡',
+    icon: '~⚡~',
     displayOrder: 201,
   },
   {
@@ -886,7 +886,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'ecg_drill'
     },
     rarity: 'epic',
-    icon: '📈💀',
+    icon: '▬▬▬',
     displayOrder: 202,
   },
   {
@@ -900,7 +900,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'bone_collector'
     },
     rarity: 'legendary',
-    icon: '💀',
+    icon: '☠',
     displayOrder: 210,
   },
   {
@@ -915,7 +915,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'mini_lab'
     },
     rarity: 'legendary',
-    icon: '🧪',
+    icon: '⊙',
     displayOrder: 220,
   },
   {
@@ -930,7 +930,7 @@ export const ORGAN_VARIANTS: OrganVariant[] = [
       condition: 'pharmacology'
     },
     rarity: 'legendary',
-    icon: '💊',
+    icon: '◉',
     displayOrder: 230,
   },
 ];
@@ -950,7 +950,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       value: 50 
     },
     rarity: 'common',
-    icon: '🩺',
+    icon: '⊕',
     displayOrder: 1,
   },
   {
@@ -963,7 +963,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       value: 100 
     },
     rarity: 'common',
-    icon: '🧢',
+    icon: '^',
     displayOrder: 2,
   },
   {
@@ -976,7 +976,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       value: 150 
     },
     rarity: 'common',
-    icon: '😷',
+    icon: '▢',
     displayOrder: 3,
   },
 
@@ -991,7 +991,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       value: 7 
     },
     rarity: 'uncommon',
-    icon: '🔥',
+    icon: '▲',
     displayOrder: 10,
   },
   {
@@ -1017,7 +1017,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       value: 30 
     },
     rarity: 'epic',
-    icon: '👑',
+    icon: '♔',
     displayOrder: 12,
   },
 
@@ -1032,7 +1032,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       achievementId: 'clinical_excellence'
     },
     rarity: 'legendary',
-    icon: '🩺✨',
+    icon: '⊕★',
     displayOrder: 20,
   },
   {
@@ -1045,7 +1045,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       value: 1000 
     },
     rarity: 'epic',
-    icon: '🎓',
+    icon: '▭',
     displayOrder: 21,
   },
   {
@@ -1058,7 +1058,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       achievementId: 'perfect_100'
     },
     rarity: 'legendary',
-    icon: '🏆',
+    icon: '◊',
     displayOrder: 22,
   },
 
@@ -1072,7 +1072,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       type: 'special_event',
     },
     rarity: 'legendary',
-    icon: '🧙',
+    icon: '△',
     displayOrder: 30,
   },
   {
@@ -1085,7 +1085,7 @@ export const ORGAN_ACCESSORIES: OrganAccessory[] = [
       value: 100 
     },
     rarity: 'legendary',
-    icon: '🦸',
+    icon: '▽',
     displayOrder: 31,
   },
 ];
