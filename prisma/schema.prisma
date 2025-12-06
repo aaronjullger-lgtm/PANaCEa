@@ -718,3 +718,263 @@ model UserPearl {
   @@index([viewedAt])
   @@index([userId, markedUseful]) // For filtering favorite pearls
 }
+
+/// Phase 31: Living Medical Brain - Guideline tracking and versioning
+/// Task 113: Guideline Watchdog Bot
+model GuidelineVersion {
+  id              String   @id @default(uuid())
+  source          String   // "AHA", "ADA", "CDC", "USPSTF", "NCCN", etc.
+  guidelineName   String   // "Breast Cancer Screening", "Hypertension Management", etc.
+  version         String   // Version identifier (e.g., "2024", "v1.2")
+  effectiveDate   DateTime // When this version became effective
+  content         Json     // Full guideline content/summary
+  keyChanges      String[] // Major changes from previous version
+  
+  /// Detection metadata
+  detectedAt      DateTime @default(now())
+  detectionMethod String   // "manual", "scraper", "api"
+  confidence      Float    @default(1.0) // 0-1 confidence in change detection
+  
+  /// Review tracking
+  reviewStatus    String   @default("pending") // pending, reviewed, applied
+  reviewedBy      String?  // Admin user ID
+  reviewedAt      DateTime?
+  reviewNotes     String?  @db.Text
+  
+  /// Relations
+  conflicts       GuidelineConflict[]
+  
+  @@unique([source, guidelineName, version])
+  @@index([source])
+  @@index([guidelineName])
+  @@index([effectiveDate])
+  @@index([reviewStatus])
+  @@index([detectedAt])
+}
+
+/// Questions flagged due to guideline changes
+/// Task 113: Guideline Watchdog Bot
+model GuidelineConflict {
+  id                String   @id @default(uuid())
+  guidelineVersionId String
+  questionId        String   // Question that may be outdated
+  conditionId       String?
+  system            String?
+  
+  /// Conflict details
+  conflictType      String   // "outdated_recommendation", "changed_criteria", "deprecated_drug", etc.
+  description       String   @db.Text
+  severity          String   // "critical", "high", "medium", "low"
+  
+  /// Review queue
+  status            String   @default("flagged") // flagged, under_review, resolved, dismissed
+  assignedTo        String?  // Admin user ID
+  reviewedBy        String?
+  reviewedAt        DateTime?
+  resolution        String?  @db.Text // How was this resolved
+  
+  /// Timestamps
+  detectedAt        DateTime @default(now())
+  resolvedAt        DateTime?
+  
+  guidelineVersion  GuidelineVersion @relation(fields: [guidelineVersionId], references: [id], onDelete: Cascade)
+  
+  @@index([guidelineVersionId])
+  @@index([questionId])
+  @@index([status])
+  @@index([severity])
+  @@index([detectedAt])
+  @@index([status, severity]) // For review queue sorting
+}
+
+/// NCCPA Blueprint configuration and tracking
+/// Task 114: Blueprint Drift Detection
+model NCCPABlueprint {
+  id              String   @id @default(uuid())
+  version         String   // Blueprint version (e.g., "2024", "2025")
+  effectiveDate   DateTime // When this blueprint became active
+  isActive        Boolean  @default(false) // Only one should be active
+  
+  /// System distribution requirements
+  systemWeights   Json     // { "CV": 0.13, "PULM": 0.12, etc. }
+  
+  /// Metadata
+  createdAt       DateTime @default(now())
+  createdBy       String?  // Admin user ID
+  notes           String?  @db.Text
+  
+  @@unique([version])
+  @@index([version])
+  @@index([isActive])
+  @@index([effectiveDate])
+}
+
+/// Content distribution audit results
+/// Task 114: Blueprint Drift Detection
+model ContentDriftReport {
+  id                String   @id @default(uuid())
+  blueprintId       String   // Reference to NCCPABlueprint
+  reportDate        DateTime @default(now())
+  
+  /// Audit results
+  totalQuestions    Int
+  systemBreakdown   Json     // { "CV": { count: 500, target: 650, drift: -150 }, ... }
+  driftSummary      Json     // Summary statistics
+  
+  /// Alert thresholds
+  hasSignificantDrift Boolean @default(false) // Drift > 10%
+  alertsSent        Boolean  @default(false)
+  alertDetails      Json?    // Which systems need attention
+  
+  @@index([blueprintId])
+  @@index([reportDate])
+  @@index([hasSignificantDrift])
+}
+
+/// Question verification and re-validation
+/// Task 115: Fact-Check Re-Verification Agent
+model QuestionVerification {
+  id                String   @id @default(uuid())
+  questionId        String   // Question being verified
+  conditionId       String?
+  system            String?
+  
+  /// Verification details
+  verificationType  String   // "scheduled_6month", "guideline_change", "user_flagged"
+  verificationDate  DateTime @default(now())
+  
+  /// AI verification result
+  aiModel           String   // "gpt-5", "med-palm", etc.
+  isAccurate        Boolean? // AI's assessment
+  confidence        Float?   // 0-1 confidence score
+  aiResponse        Json?    // Full AI response
+  
+  /// Issues found
+  issues            String[] // List of specific concerns
+  recommendedAction String   // "approve", "update", "quarantine", "delete"
+  
+  /// Review tracking
+  status            String   @default("pending") // pending, reviewed, quarantined, approved
+  reviewedBy        String?  // Admin user ID
+  reviewedAt        DateTime?
+  reviewNotes       String?  @db.Text
+  
+  /// Quarantine details
+  quarantinedAt     DateTime?
+  quarantineReason  String?  @db.Text
+  
+  @@index([questionId])
+  @@index([verificationType])
+  @@index([verificationDate])
+  @@index([status])
+  @@index([isAccurate])
+  @@index([questionId, verificationDate]) // For tracking verification history
+}
+
+/// User-reported staleness flags
+/// Task 116: User-Driven Staleness Reporting
+model StalenessReport {
+  id              String   @id @default(uuid())
+  userId          String   // User who reported
+  userEmail       String?
+  questionId      String   // Question reported as outdated
+  conditionId     String?
+  system          String?
+  
+  /// Report details
+  reportType      String   // "outdated_guideline", "changed_practice", "incorrect_drug", etc.
+  description     String   @db.Text
+  evidenceUrl     String?  // Optional link to evidence
+  
+  /// Crowdsourced validation
+  confirmations   Int      @default(1) // How many users reported same issue
+  confidence      Float    @default(0.0) // Calculated confidence based on confirmations
+  
+  /// Status tracking
+  status          String   @default("pending") // pending, auto_hidden, under_review, resolved, invalid
+  autoHidden      Boolean  @default(false) // Auto-hidden after 3 confirmations
+  autoHiddenAt    DateTime?
+  
+  /// Admin review
+  reviewedBy      String?  // Admin user ID
+  reviewedAt      DateTime?
+  resolution      String?  @db.Text
+  isValid         Boolean? // Was the report valid?
+  
+  /// Bounty hunter rewards
+  rewardGranted   Boolean  @default(false)
+  rewardPoints    Int      @default(0)
+  rewardGrantedAt DateTime?
+  
+  /// Timestamps
+  reportedAt      DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([questionId])
+  @@index([status])
+  @@index([reportType])
+  @@index([confirmations])
+  @@index([reportedAt])
+  @@index([questionId, reportedAt]) // For tracking reports on same question
+}
+
+/// Bounty hunter rewards for valid staleness reports
+/// Task 116: User-Driven Staleness Reporting
+model BountyReward {
+  id              String   @id @default(uuid())
+  userId          String
+  reportId        String   // Reference to StalenessReport
+  
+  /// Reward details
+  rewardType      String   // "staleness_report", "error_detection", "guideline_update"
+  points          Int      // Reward points earned
+  description     String   // What they earned it for
+  
+  /// Metadata
+  awardedAt       DateTime @default(now())
+  awardedBy       String?  // Admin user ID or "system"
+  
+  @@index([userId])
+  @@index([reportId])
+  @@index([awardedAt])
+  @@index([userId, awardedAt]) // For user reward history
+}
+
+/// Question migration history for guideline updates
+/// Task 117: Version 2.0 Auto-Migration
+model QuestionMigration {
+  id                  String   @id @default(uuid())
+  originalQuestionId  String   // Original question
+  newQuestionId       String   // Migrated/updated version
+  
+  /// Migration details
+  migrationType       String   // "guideline_update", "drug_change", "criteria_change"
+  guidelineChange     String?  // Reference to guideline that changed
+  reasonForMigration  String   @db.Text
+  
+  /// AI migration details
+  aiModel             String?  // Model used for migration
+  migrationPrompt     String?  @db.Text
+  changesApplied      Json     // What specifically was changed
+  
+  /// Content comparison
+  oldContent          Json     // Snapshot of old question
+  newContent          Json     // New question content
+  
+  /// Review and approval
+  status              String   @default("pending") // pending, approved, rejected, applied
+  reviewedBy          String?  // Admin user ID
+  reviewedAt          DateTime?
+  approvalNotes       String?  @db.Text
+  
+  /// Timestamps
+  migratedAt          DateTime @default(now())
+  appliedAt           DateTime? // When new version went live
+  
+  @@index([originalQuestionId])
+  @@index([newQuestionId])
+  @@index([migrationType])
+  @@index([status])
+  @@index([migratedAt])
+}
