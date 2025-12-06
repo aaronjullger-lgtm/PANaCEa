@@ -155,32 +155,48 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
     return grid;
   }, [weeks]);
   
-  // Get month labels for the header
+  // Get month labels for the header - aligned with columns
   const monthLabels = useMemo(() => {
-    const labels: { month: string; colSpan: number }[] = [];
+    const labels: { month: string; startCol: number; endCol: number }[] = [];
     let currentMonth = -1;
-    let colCount = 0;
+    let monthStartCol = 0;
     
-    // Check first row (Sunday) for month changes
-    for (const date of dateGrid[0]) {
-      if (date) {
-        const month = date.getMonth();
-        if (month !== currentMonth) {
-          if (currentMonth !== -1) {
-            labels.push({ month: MONTHS[currentMonth], colSpan: colCount });
-          }
-          currentMonth = month;
-          colCount = 1;
-        } else {
-          colCount++;
+    // Iterate through columns to find month boundaries
+    const numCols = dateGrid[0].length;
+    for (let colIdx = 0; colIdx < numCols; colIdx++) {
+      // Check the first non-null date in this column to determine the month
+      let colMonth = -1;
+      for (let rowIdx = 0; rowIdx < dateGrid.length; rowIdx++) {
+        const date = dateGrid[rowIdx][colIdx];
+        if (date) {
+          colMonth = date.getMonth();
+          break;
         }
-      } else {
-        colCount++;
+      }
+      
+      if (colMonth !== -1) {
+        if (colMonth !== currentMonth) {
+          // Month changed, save previous month label
+          if (currentMonth !== -1) {
+            labels.push({ 
+              month: MONTHS[currentMonth], 
+              startCol: monthStartCol, 
+              endCol: colIdx - 1 
+            });
+          }
+          currentMonth = colMonth;
+          monthStartCol = colIdx;
+        }
       }
     }
     
+    // Add final month label
     if (currentMonth !== -1) {
-      labels.push({ month: MONTHS[currentMonth], colSpan: colCount });
+      labels.push({ 
+        month: MONTHS[currentMonth], 
+        startCol: monthStartCol, 
+        endCol: numCols - 1 
+      });
     }
     
     return labels;
@@ -239,16 +255,27 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
         </div>
       </div>
       
-      {/* Month labels */}
-      <div className="flex mb-1 ml-8 w-full">
-        {monthLabels.map((label, idx) => (
-          <div
-            key={idx}
-            className="text-xs text-slate-600 dark:text-slate-400 flex-1"
-          >
-            {label.month}
-          </div>
-        ))}
+      {/* Month labels - positioned above their corresponding columns */}
+      <div className="flex mb-1 ml-8" style={{ position: 'relative', width: 'calc(100% - 2rem)' }}>
+        {monthLabels.map((label, idx) => {
+          const totalCols = dateGrid[0].length;
+          const width = ((label.endCol - label.startCol + 1) / totalCols) * 100;
+          const left = (label.startCol / totalCols) * 100;
+          
+          return (
+            <div
+              key={idx}
+              className="text-xs text-slate-600 dark:text-slate-400 font-medium"
+              style={{ 
+                position: 'absolute',
+                left: `${left}%`,
+                width: `${width}%`,
+              }}
+            >
+              {label.month}
+            </div>
+          );
+        })}
       </div>
       
       {/* Grid - Full width with evenly distributed squares */}

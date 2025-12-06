@@ -58,17 +58,28 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
     return '';
   }, [selectedWidget, theme, streakData, questionOfDay]);
 
-  // Generate embed code
+  // Generate embed code using server-hosted widget URLs
   const embedCode = useMemo(() => {
-    // Create a data URI for the widget HTML
-    const dataUri = `data:text/html;base64,${btoa(widgetHTML)}`;
+    // Use server-hosted widget URLs instead of data URIs
+    // This makes them compatible with Notion's security policies
+    const serverUrl = process.env.VITE_BACKEND_URL || 'http://localhost:3001';
+    const userId = 'YOUR_USER_ID'; // TODO: Get from auth context
+    
+    let widgetPath = '';
+    if (selectedWidget === 'streak') {
+      widgetPath = `/widgets/streak/${userId}?theme=${theme}`;
+    } else if (selectedWidget === 'question-of-day') {
+      widgetPath = `/widgets/question-of-day/${userId}?theme=${theme}`;
+    }
+    
+    const widgetUrl = `${serverUrl}${widgetPath}`;
     
     if (embedFormat === 'obsidian') {
-      return generateObsidianEmbed(dataUri);
+      return generateObsidianEmbed(widgetUrl);
     } else {
-      return generateEmbedCode(dataUri, selectedWidget === 'streak' ? 300 : 450);
+      return generateEmbedCode(widgetUrl, selectedWidget === 'streak' ? 300 : 450);
     }
-  }, [widgetHTML, embedFormat, selectedWidget]);
+  }, [embedFormat, selectedWidget, theme]);
 
   const handleCopyCode = async () => {
     try {
