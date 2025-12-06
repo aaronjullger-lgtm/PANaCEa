@@ -138,10 +138,10 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
                     w-8 h-8 rounded-lg flex items-center justify-center
                     transition-colors duration-200
                     ${hasStudied
-                      ? 'bg-gradient-to-br from-orange-400 to-red-500 text-white'
-                      : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
+                      ? 'bg-[var(--color-accent)] text-white'
+                      : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
                     }
-                    ${isCurrentDay ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-800' : ''}
+                    ${isCurrentDay ? 'ring-2 ring-[var(--color-accent)] ring-offset-2' : ''}
                   `}
                   title={hasStudied ? `Studied on ${date}` : `No study on ${date}`}
                 >
@@ -159,7 +159,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 p-3 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg border border-orange-200 dark:border-orange-800"
+          className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >
           <p className="text-sm text-slate-700 dark:text-slate-300 text-center">
             {currentStreak > 0 
@@ -175,7 +175,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-200 dark:border-green-800"
+          className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >
           <p className="text-sm text-green-700 dark:text-green-300 text-center flex items-center justify-center gap-2">
             <CheckCircle className="w-4 h-4" />

@@ -287,7 +287,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
   // Phase 38: Daily Rituals
   {
     id: 'medical_wordle',
-    label: 'Medical Wordle',
+    label: 'Daily Term Challenge',
     description: 'Daily medical word guessing game. 6 tries to guess the drug or condition!',
     category: 'recall',
     iconName: 'Hash',

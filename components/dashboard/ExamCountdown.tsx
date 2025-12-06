@@ -106,7 +106,7 @@ export function ExamCountdown({ examDate, onSetDate, onHide }: ExamCountdownProp
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative bg-gradient-to-r from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded-lg p-4 overflow-hidden"
+      className="relative bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg p-4 overflow-hidden"
     >
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-accent)]/5 rounded-full blur-3xl" />

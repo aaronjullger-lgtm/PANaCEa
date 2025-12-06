@@ -448,32 +448,34 @@ const App: React.FC = () => {
       {/* Premium Glass Header - Elegant and professional */}
       <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <motion.button
+            onClick={() => setView("menu")}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            aria-label="Return to Dashboard"
+          >
             {/* Favicon icons - opposites for light/dark mode */}
             <motion.img 
               src="/Favicon.svg"
               alt="PANaCEa Icon"
               className="h-10 sm:h-12 w-auto dark:hidden"
-              whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             />
             <motion.img 
               src="/favicondarkmodeTP.svg"
               alt="PANaCEa Icon"
               className="h-10 sm:h-12 w-auto hidden dark:block"
-              whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             />
             {/* PANaCEa text with Poppins Bold font */}
-            <motion.span 
+            <span 
               className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)]"
               style={{ fontFamily: "'Poppins', sans-serif" }}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.2 }}
             >
               PANaCEa
-            </motion.span>
-          </div>
+            </span>
+          </motion.button>
           <div className="flex items-center gap-2">
             <motion.button
               onClick={() => setIsShortcutsModalOpen(true)}
@@ -521,7 +523,7 @@ const App: React.FC = () => {
         />
       </Suspense>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 md:py-10 pb-24">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24">
         {isLoading && <Loader forceDark={view === "imaging_drill"} />}
         {error && (
           <motion.div 

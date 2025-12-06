@@ -19,35 +19,30 @@ const CATEGORY_CARDS: Array<{
   title: string;
   description: string;
   icon: React.ReactNode;
-  gradient: string;
 }> = [
   {
     id: 'ecg',
     title: 'ECG',
     description: 'Electrocardiogram interpretation',
     icon: <ActivityIcon className="w-8 h-8" />,
-    gradient: 'from-emerald-600 to-teal-700',
   },
   {
     id: 'derm',
     title: 'Clinical Presentation Mode',
     description: 'Dermatology & clinical findings identification',
     icon: <Scan className="w-8 h-8" />,
-    gradient: 'from-violet-600 to-purple-700',
   },
   {
     id: 'radiology',
     title: 'Radiology',
     description: 'X-ray and imaging analysis',
     icon: <FileImage className="w-8 h-8" />,
-    gradient: 'from-sky-600 to-blue-700',
   },
   {
     id: 'random',
     title: 'Random Mix',
     description: 'All categories combined',
     icon: <Shuffle className="w-8 h-8" />,
-    gradient: 'from-orange-600 to-red-700',
   },
 ];
 
@@ -195,25 +190,24 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                 whileTap="tap"
                 transition={{ duration: 0.3, delay: index * 0.1 }}
                 onClick={() => handleCategorySelect(card.id)}
-                className={`relative p-6 rounded-2xl bg-gradient-to-br ${card.gradient} text-left shadow-xl overflow-hidden group`}
+                className="relative p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:bg-[var(--color-bg-tertiary)] text-left shadow-lg hover:shadow-xl overflow-hidden group transition-all"
               >
-                {/* Background glow effect */}
-                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
                 <div className="relative z-10">
-                  <div className="mb-4 p-3 bg-white/20 rounded-xl w-fit">
-                    {card.icon}
+                  <div className="mb-4 p-3 bg-[var(--color-accent)]/10 rounded-xl w-fit">
+                    <div className="text-[var(--color-accent)]">
+                      {card.icon}
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-1">
+                  <h3 className="text-xl font-bold text-[var(--color-text-primary)] mb-1">
                     {card.title}
                   </h3>
-                  <p className="text-white/80 text-sm">
+                  <p className="text-[var(--color-text-secondary)] text-sm">
                     {card.description}
                   </p>
                 </div>
 
                 {/* Arrow indicator */}
-                <ArrowRight className="absolute bottom-4 right-4 w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="absolute bottom-4 right-4 w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] group-hover:translate-x-1 transition-all" />
               </motion.button>
             ))}
           </div>

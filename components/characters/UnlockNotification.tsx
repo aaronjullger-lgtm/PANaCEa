@@ -30,7 +30,7 @@ const UnlockNotification: React.FC<UnlockNotificationProps> = ({
       exit={{ opacity: 0, y: 50 }}
       className="fixed bottom-4 right-4 z-[60] max-w-sm"
     >
-      <div className="bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl shadow-2xl p-6 text-white">
+      <div className="bg-[var(--color-accent)] rounded-xl shadow-2xl p-6 text-white dark:text-[var(--color-bg-primary)]">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-6 h-6" />

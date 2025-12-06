@@ -5,9 +5,9 @@
  */
 
 import React, { useState } from 'react';
-import { UserButton, useUser, useClerk } from '@clerk/clerk-react';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cloud, CloudOff, Settings, LogOut, CheckCircle, XCircle } from 'lucide-react';
+import { Cloud, Settings, LogOut, CheckCircle, XCircle } from 'lucide-react';
 import { getTimeBasedGreeting } from '../lib/utils/timeUtils';
 
 interface AccountFooterProps {
@@ -80,17 +80,8 @@ export function AccountFooter({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="w-8 h-8">
-              <UserButton 
-                appearance={{
-                  elements: {
-                    avatarBox: 'w-8 h-8 ring-2 ring-[var(--color-accent)]/20',
-                    // Hide Clerk branding and development indicators
-                    footer: 'hidden',
-                    userButtonPopoverFooter: 'hidden',
-                  },
-                }}
-              />
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-white font-bold">
+              {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() || 'S'}
             </div>
             <span className="text-sm font-semibold text-[var(--color-text-primary)] hidden sm:inline">
               {user?.firstName || 'Student'}
@@ -140,17 +131,8 @@ export function AccountFooter({
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10">
-                    <UserButton 
-                      appearance={{
-                        elements: {
-                          avatarBox: 'w-10 h-10 ring-2 ring-[var(--color-accent)]/30',
-                          // Hide Clerk branding and development indicators
-                          footer: 'hidden',
-                          userButtonPopoverFooter: 'hidden',
-                        },
-                      }}
-                    />
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-white font-bold text-lg">
+                    {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() || 'S'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-[var(--color-text-primary)] truncate">
