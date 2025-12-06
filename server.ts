@@ -566,6 +566,368 @@ app.post('/api/branches/:branchName/merge',
   }
 );
 
+// Hybrid Content Engine API Endpoints (Tasks 108-112)
+
+// Task 108: Staging Lake Architecture - Save question to staging
+app.post('/api/questions/staging',
+  validateRequired(['questionData']),
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { saveToStaging } = await import('./services/stagingQuestionService');
+      const question = await saveToStaging(req.body.questionData);
+
+      res.json({ success: true, stagingQuestion: question });
+    } catch (error) {
+      console.error('Failed to save to staging:', error);
+      res.status(500).json({ success: false, error: 'Failed to save to staging' });
+    }
+  }
+);
+
+// Task 108: Run adequacy check on staging question
+app.post('/api/questions/staging/:id/check',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { runAdequacyCheck } = await import('./services/stagingQuestionService');
+      const result = await runAdequacyCheck(req.params.id);
+
+      res.json({ success: true, adequacyCheck: result });
+    } catch (error) {
+      console.error('Failed to run adequacy check:', error);
+      res.status(500).json({ success: false, error: 'Failed to run adequacy check' });
+    }
+  }
+);
+
+// Task 108: Process staging queue (batch processing)
+app.post('/api/questions/staging/process',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { processStagingQueue } = await import('./services/stagingQuestionService');
+      const { limit = 10 } = req.body;
+      const results = await processStagingQueue(limit);
+
+      res.json({ success: true, results });
+    } catch (error) {
+      console.error('Failed to process staging queue:', error);
+      res.status(500).json({ success: false, error: 'Failed to process staging queue' });
+    }
+  }
+);
+
+// Task 108: Get staging statistics
+app.get('/api/questions/staging/stats',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({ success: true, stats: {} });
+      }
+
+      const { getStagingStats } = await import('./services/stagingQuestionService');
+      const stats = await getStagingStats();
+
+      res.json({ success: true, stats });
+    } catch (error) {
+      console.error('Failed to get staging stats:', error);
+      res.status(500).json({ success: false, error: 'Failed to get staging stats' });
+    }
+  }
+);
+
+// Task 109: Get questions with no-repeat logic
+app.post('/api/questions/no-repeat',
+  validateRequired(['userId', 'filter']),
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { getQuestionsWithNoRepeat } = await import('./services/noRepeatService');
+      const { userId, filter, limit = 10 } = req.body;
+      const result = await getQuestionsWithNoRepeat(userId, filter, limit);
+
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error('Failed to get questions:', error);
+      res.status(500).json({ success: false, error: 'Failed to get questions' });
+    }
+  }
+);
+
+// Task 109: Record question seen
+app.post('/api/questions/history',
+  validateRequired(['userId', 'questionId', 'metadata']),
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { recordQuestionSeen } = await import('./services/noRepeatService');
+      const { userId, questionId, metadata } = req.body;
+      await recordQuestionSeen(userId, questionId, metadata);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to record question history:', error);
+      res.status(500).json({ success: false, error: 'Failed to record question history' });
+    }
+  }
+);
+
+// Task 109: Get golden repository statistics
+app.get('/api/questions/repository/stats',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({ success: true, stats: { totalQuestions: 0 } });
+      }
+
+      const { getRepositoryStats } = await import('./services/noRepeatService');
+      const stats = await getRepositoryStats();
+
+      res.json({ success: true, stats });
+    } catch (error) {
+      console.error('Failed to get repository stats:', error);
+      res.status(500).json({ success: false, error: 'Failed to get repository stats' });
+    }
+  }
+);
+
+// Task 111: Create question seed
+app.post('/api/questions/seeds',
+  validateRequired(['seedData']),
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { createQuestionSeed } = await import('./services/questionSeedService');
+      const seed = await createQuestionSeed(req.body.seedData);
+
+      res.json({ success: true, seed });
+    } catch (error) {
+      console.error('Failed to create question seed:', error);
+      res.status(500).json({ success: false, error: 'Failed to create question seed' });
+    }
+  }
+);
+
+// Task 111: Assemble question from seed
+app.get('/api/questions/seeds/:id/assemble',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { assembleQuestionFromSeed } = await import('./services/questionSeedService');
+      const question = await assembleQuestionFromSeed(req.params.id);
+
+      res.json({ success: true, question });
+    } catch (error) {
+      console.error('Failed to assemble question:', error);
+      res.status(500).json({ success: false, error: 'Failed to assemble question' });
+    }
+  }
+);
+
+// Task 111: Assemble multiple questions from seeds with filter
+app.post('/api/questions/seeds/assemble',
+  validateRequired(['filter', 'count']),
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { assembleQuestionsFromSeeds } = await import('./services/questionSeedService');
+      const { filter, count } = req.body;
+      const questions = await assembleQuestionsFromSeeds(filter, count);
+
+      res.json({ success: true, questions });
+    } catch (error) {
+      console.error('Failed to assemble questions:', error);
+      res.status(500).json({ success: false, error: 'Failed to assemble questions' });
+    }
+  }
+);
+
+// Task 111: Get seed statistics
+app.get('/api/questions/seeds/stats',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({ success: true, stats: {} });
+      }
+
+      const { getSeedStats } = await import('./services/questionSeedService');
+      const stats = await getSeedStats();
+
+      res.json({ success: true, stats });
+    } catch (error) {
+      console.error('Failed to get seed stats:', error);
+      res.status(500).json({ success: false, error: 'Failed to get seed stats' });
+    }
+  }
+);
+
+// Task 112: Extract clinical pearl from explanation
+app.post('/api/pearls/extract',
+  validateRequired(['questionId', 'explanation']),
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { createClinicalPearl } = await import('./services/clinicalPearlService');
+      const { questionId, explanation, metadata } = req.body;
+      const pearl = await createClinicalPearl(questionId, explanation, metadata);
+
+      res.json({ success: true, pearl });
+    } catch (error) {
+      console.error('Failed to extract pearl:', error);
+      res.status(500).json({ success: false, error: 'Failed to extract pearl' });
+    }
+  }
+);
+
+// Task 112: Get daily pearl
+app.get('/api/pearls/daily',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({ success: true, pearl: null });
+      }
+
+      const { getDailyPearl } = await import('./services/clinicalPearlService');
+      const { userId } = req.query;
+      const pearl = await getDailyPearl(userId as string);
+
+      res.json({ success: true, pearl });
+    } catch (error) {
+      console.error('Failed to get daily pearl:', error);
+      res.status(500).json({ success: false, error: 'Failed to get daily pearl' });
+    }
+  }
+);
+
+// Task 112: Get user's pearls (Review My Pearls)
+app.get('/api/pearls/user/:userId',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({ success: true, pearls: [] });
+      }
+
+      const { getUserPearls } = await import('./services/clinicalPearlService');
+      const { userId } = req.params;
+      const { limit = 20 } = req.query;
+      const pearls = await getUserPearls(userId, Number(limit));
+
+      res.json({ success: true, pearls });
+    } catch (error) {
+      console.error('Failed to get user pearls:', error);
+      res.status(500).json({ success: false, error: 'Failed to get user pearls' });
+    }
+  }
+);
+
+// Task 112: Get user's favorite pearls
+app.get('/api/pearls/user/:userId/favorites',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({ success: true, pearls: [] });
+      }
+
+      const { getUserFavoritePearls } = await import('./services/clinicalPearlService');
+      const { userId } = req.params;
+      const pearls = await getUserFavoritePearls(userId);
+
+      res.json({ success: true, pearls });
+    } catch (error) {
+      console.error('Failed to get favorite pearls:', error);
+      res.status(500).json({ success: false, error: 'Failed to get favorite pearls' });
+    }
+  }
+);
+
+// Task 112: Mark pearl as useful
+app.post('/api/pearls/:pearlId/useful',
+  validateRequired(['userId']),
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ success: false, error: 'Database not configured' });
+      }
+
+      const { markPearlUseful } = await import('./services/clinicalPearlService');
+      const { pearlId } = req.params;
+      const { userId, notes } = req.body;
+      await markPearlUseful(userId, pearlId, notes);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Failed to mark pearl as useful:', error);
+      res.status(500).json({ success: false, error: 'Failed to mark pearl as useful' });
+    }
+  }
+);
+
+// Task 112: Search pearls
+app.post('/api/pearls/search',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({ success: true, pearls: [] });
+      }
+
+      const { searchPearls } = await import('./services/clinicalPearlService');
+      const pearls = await searchPearls(req.body);
+
+      res.json({ success: true, pearls });
+    } catch (error) {
+      console.error('Failed to search pearls:', error);
+      res.status(500).json({ success: false, error: 'Failed to search pearls' });
+    }
+  }
+);
+
+// Task 112: Get pearl statistics
+app.get('/api/pearls/stats',
+  async (req: Request, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.json({ success: true, stats: {} });
+      }
+
+      const { getPearlStats } = await import('./services/clinicalPearlService');
+      const stats = await getPearlStats();
+
+      res.json({ success: true, stats });
+    } catch (error) {
+      console.error('Failed to get pearl stats:', error);
+      res.status(500).json({ success: false, error: 'Failed to get pearl stats' });
+    }
+  }
+);
+
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled error:', err);
