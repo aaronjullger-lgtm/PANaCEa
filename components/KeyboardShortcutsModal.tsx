@@ -23,7 +23,8 @@ const SHORTCUTS: ShortcutItem[] = [
   { keys: ['Enter'], description: 'Proceed to next question', category: 'quiz' },
   { keys: ['Esc'], description: 'Return to dashboard', category: 'quiz' },
   // General shortcuts
-  { keys: ['⌘/Ctrl', 'K'], description: 'Open keyboard shortcuts', category: 'general' },
+  { keys: ['⌘/Ctrl', 'K'], description: 'Open command palette (quick navigation)', category: 'general' },
+  { keys: ['⌘/Ctrl', '/'], description: 'Open keyboard shortcuts', category: 'general' },
 ];
 
 const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({

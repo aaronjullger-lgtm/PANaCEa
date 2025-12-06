@@ -41,7 +41,7 @@ describe('TrainingMenu Component Logic', () => {
     const expectedIconNames = [
       'Brain', 'Image', 'Zap', 'GitCompare', 'FileText', 'Flame', 'ClipboardList',
       'Activity', 'Scan', 'FileCheck', 'Layers', 'Pill', 'Beaker', 'Droplets', 'MessageSquare',
-      'Siren', 'Calendar', 'Trophy', 'Clock', 'Headphones'
+      'Siren', 'Calendar', 'Trophy', 'Clock', 'Headphones', 'GraduationCap'
     ];
     
     it('should have valid icon names for all modes', () => {
@@ -61,7 +61,7 @@ describe('TrainingMenu Component Logic', () => {
   describe('Theme Background Mapping', () => {
     const validThemes = [
       'stone', 'slate', 'amber', 'blue', 'teal', 'red', 'emerald',
-      'rose', 'pink', 'violet', 'cyan', 'purple', 'orange'
+      'rose', 'pink', 'violet', 'cyan', 'purple', 'orange', 'indigo'
     ];
     
     it('should have valid theme values for all modes', () => {
@@ -85,6 +85,7 @@ describe('TrainingMenu Component Logic', () => {
         cyan: 'bg-cyan-100',
         purple: 'bg-purple-100',
         orange: 'bg-orange-100',
+        indigo: 'bg-indigo-100',
       };
 
       MODE_REGISTRY.forEach((mode) => {

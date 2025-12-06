@@ -24,6 +24,8 @@ export type TrainingModeId =
   | 'fluid_electrolyte'
   | 'antibiotic_mode'
   | 'patient_encounter'
+  | 'ar_anatomy'
+  | 'panre_la'
   | 'code_blue_speed'
   | 'diagnosisdle'
   | 'grand_rounds'
@@ -205,6 +207,26 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     route: '/drill/patient-encounter',
     isComingSoon: false,
   },
+  {
+    id: 'ar_anatomy',
+    label: '3D Anatomy AR',
+    description: 'Augmented reality 3D anatomy visualization.',
+    category: 'visual',
+    iconName: 'Scan',
+    theme: 'violet',
+    route: '/ar-anatomy',
+    isComingSoon: false,
+  },
+  {
+    id: 'panre_la',
+    label: 'PANRE-LA Simulator',
+    description: 'Practice longitudinal assessment format with quarterly tracking.',
+    category: 'mastery',
+    iconName: 'GraduationCap',
+    theme: 'indigo',
+    route: '/panre-la',
+    isComingSoon: false,
+  },
   // Phase 7: Engagement & Sticky Features
   {
     id: 'code_blue_speed',
@@ -278,6 +300,8 @@ export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = [
   'fluid_electrolyte',
   'antibiotic_mode',
   'patient_encounter',
+  'ar_anatomy',
+  'panre_la',
   'code_blue_speed',
   'diagnosisdle',
   'grand_rounds',
