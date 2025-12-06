@@ -242,7 +242,7 @@ describe('Widget Service', () => {
       
       const html = generateStreakWidgetHTML(streakData);
       
-      expect(html).toContain('🔥');
+      expect(html).toContain('▲');
     });
 
     it('should show star emoji for shorter streak', () => {
@@ -254,7 +254,7 @@ describe('Widget Service', () => {
       
       const html = generateStreakWidgetHTML(streakData);
       
-      expect(html).toContain('⭐');
+      expect(html).toContain('★');
     });
 
     it('should handle zero streak', () => {
@@ -267,7 +267,7 @@ describe('Widget Service', () => {
       const html = generateStreakWidgetHTML(streakData);
       
       expect(html).toContain('Start your streak today');
-      expect(html).toContain('📚');
+      expect(html).toContain('◆');
     });
   });
 
