@@ -24,6 +24,8 @@ import { ClearHighlightIcon } from "./icons/ClearHighlightIcon";
 import AnswerChoice from "./quiz/AnswerChoice";
 import ErrorTagger from "./quiz/ErrorTagger";
 import Loader from "./Loader";
+import WellnessCheckModal from "./wellness/WellnessCheckModal";
+import { recordCircadianPerformance } from "../services/circadianAnalyticsService";
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -230,6 +232,12 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Track if we're actively generating a question in the background
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
 
+  // Wellness check state
+  const [showWellnessModal, setShowWellnessModal] = useState(false);
+  const [wellnessReason, setWellnessReason] = useState<'rapid_questions' | 'late_night' | 'manual'>('rapid_questions');
+  const questionsAnsweredInSession = useRef(0);
+  const sessionStartTime = useRef(Date.now());
+
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -431,8 +439,9 @@ const QuizView: React.FC<QuizViewProps> = ({
       .filter(word => word.length > 0).length;
 
     // Record detailed performance, including system/subcategory/condition
+    const timestamp = Date.now();
     addPerformanceRecord({
-      timestamp: Date.now(),
+      timestamp,
       system: currentQuestion.system ?? null,
       subcategory: currentQuestion.subcategory ?? null,
       conditionId: currentQuestion.conditionId,
@@ -443,6 +452,29 @@ const QuizView: React.FC<QuizViewProps> = ({
       difficulty: sessionSettings.difficulty,
       questionWordCount,
     });
+
+    // Record circadian performance data
+    recordCircadianPerformance({
+      timestamp,
+      isCorrect,
+      topic: currentQuestion.topic,
+    });
+
+    // Track questions answered and check for wellness triggers
+    questionsAnsweredInSession.current += 1;
+
+    // Trigger wellness check after 30 questions
+    if (questionsAnsweredInSession.current > 0 && questionsAnsweredInSession.current % 30 === 0) {
+      setWellnessReason('rapid_questions');
+      setShowWellnessModal(true);
+    }
+
+    // Check if studying late at night (10 PM - 5 AM)
+    const currentHour = new Date().getHours();
+    if ((currentHour >= 22 || currentHour < 5) && questionsAnsweredInSession.current % 15 === 0) {
+      setWellnessReason('late_night');
+      setShowWellnessModal(true);
+    }
   };
 
   const handleExplainDifferently = useCallback(async () => {
@@ -794,6 +826,13 @@ const QuizView: React.FC<QuizViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* Wellness Check Modal */}
+      <WellnessCheckModal
+        isOpen={showWellnessModal}
+        onClose={() => setShowWellnessModal(false)}
+        reason={wellnessReason}
+      />
     </div>
   );
 };

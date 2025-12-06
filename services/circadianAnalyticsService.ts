@@ -198,3 +198,35 @@ export function loadCircadianData(): any {
     return null;
   }
 }
+
+/**
+ * Record a single performance event with circadian tracking
+ * This function stores the raw data for later analysis
+ */
+export function recordCircadianPerformance(record: {
+  timestamp: number;
+  isCorrect: boolean;
+  topic: string;
+}): void {
+  try {
+    const data = loadCircadianData() || { records: [] };
+    data.records = data.records || [];
+    
+    // Add the new record
+    data.records.push({
+      timestamp: record.timestamp,
+      isCorrect: record.isCorrect,
+      topic: record.topic,
+      hour: getHourFromTimestamp(record.timestamp)
+    });
+    
+    // Keep only last 1000 records to prevent storage bloat
+    if (data.records.length > 1000) {
+      data.records = data.records.slice(-1000);
+    }
+    
+    saveCircadianData(data);
+  } catch (error) {
+    console.error('Failed to record circadian performance:', error);
+  }
+}
