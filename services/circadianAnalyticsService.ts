@@ -143,10 +143,11 @@ export function getCircadianInsights(
 
 /**
  * Check if user is studying at an unusual time (late night)
+ * Based on requirement #54: "If a user is active at 3 AM: Pop up a gentle modal"
  */
 export function isLateNightStudying(): boolean {
   const currentHour = new Date().getHours();
-  // 3 AM is explicitly mentioned, but let's check 2 AM - 5 AM range
+  // Check 2 AM - 5 AM range (centered around 3 AM from requirements)
   return currentHour >= 2 && currentHour < 5;
 }
 

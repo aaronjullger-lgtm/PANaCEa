@@ -280,7 +280,8 @@ function calculateProficiency(
     (Date.now() - lastRecord.timestamp) / (1000 * 60 * 60 * 24)
   );
 
-  // Estimate decay rate
+  // Estimate decay rate (percentage points lost per week)
+  // Multiply by 7 to convert from daily to weekly decay
   const decayRate = daysSinceReview > 0
     ? ((peakProficiency - currentProficiency) / daysSinceReview) * 7
     : 0;
@@ -303,8 +304,12 @@ function calculateProficiency(
   };
 }
 
+// Forgetting curve constants
+const CURVE_DECAY_SCALE = 100; // Scaling factor for exponential decay calculation
+
 /**
  * Generate curve data points for visualization
+ * Uses exponential decay: proficiency * e^(-decayRate * days / CURVE_DECAY_SCALE)
  */
 function generateCurveData(proficiency: TopicProficiency): Array<{ x: number; y: number; day: number }> {
   const points = [];
@@ -313,8 +318,8 @@ function generateCurveData(proficiency: TopicProficiency): Array<{ x: number; y:
 
   for (let day = 0; day <= days; day++) {
     const x = (day / days) * 500;
-    // Exponential decay formula
-    const decay = currentProficiency * Math.exp(-decayRate * day / 100);
+    // Exponential decay formula with scaling factor
+    const decay = currentProficiency * Math.exp(-decayRate * day / CURVE_DECAY_SCALE);
     const y = 200 - (decay / 100) * 200;
     points.push({ x, y, day });
   }

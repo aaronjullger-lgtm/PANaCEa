@@ -36,12 +36,30 @@ export const ARAnatomyMode: React.FC<ARAnatomyModeProps> = ({ onClose }) => {
   }, []);
 
   const checkARSupport = async () => {
-    // Check if device supports camera access
+    // Check if device supports camera access and permissions
     try {
-      const hasCamera = await navigator.mediaDevices.enumerateDevices()
-        .then(devices => devices.some(device => device.kind === 'videoinput'));
+      // Check for video input devices
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const hasCamera = devices.some(device => device.kind === 'videoinput');
       
-      setIsARSupported(hasCamera);
+      if (!hasCamera) {
+        setIsARSupported(false);
+        return;
+      }
+
+      // Check camera permissions if API is available
+      if ('permissions' in navigator) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          setIsARSupported(permissionStatus.state !== 'denied');
+        } catch {
+          // Permissions API might not support camera, assume camera is available
+          setIsARSupported(true);
+        }
+      } else {
+        // Permissions API not available, assume camera is available
+        setIsARSupported(true);
+      }
     } catch (error) {
       console.error('Error checking AR support:', error);
       setIsARSupported(false);

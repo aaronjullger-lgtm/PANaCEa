@@ -25,13 +25,25 @@ const STORAGE_KEY_SCHEDULE = 'panceai_watch_schedule_v1';
 const STORAGE_KEY_FLASHCARDS = 'panceai_watch_flashcards_v1';
 const HOURLY_INTERVAL = 60 * 60 * 1000; // 1 hour
 
+// ID generation counter for unique flashcard IDs
+let flashcardIdCounter = 0;
+
+/**
+ * Generate a unique flashcard ID
+ */
+function generateFlashcardId(): string {
+  const timestamp = Date.now();
+  const counter = ++flashcardIdCounter;
+  return `watch_${timestamp}_${counter}`;
+}
+
 /**
  * Generate a micro-flashcard from a question
  */
 export function generateMicroFlashcard(question: Question): WatchFlashcard {
   // Extract key fact or create a simplified version
   const flashcard: WatchFlashcard = {
-    id: `watch_${Date.now()}_${Math.random()}`,
+    id: generateFlashcardId(),
     question: simplifyForWatch(question.question),
     answer: extractKeyAnswer(question),
     category: question.topic,
@@ -209,7 +221,7 @@ function getStoredFlashcards(): WatchFlashcard[] {
  */
 export function generateAntidoteFlashcard(): WatchFlashcard {
   return {
-    id: `antidote_${Date.now()}`,
+    id: generateFlashcardId(),
     question: 'Quick: What is the antidote for Tylenol?',
     answer: 'N-acetylcysteine (NAC) - Give within 8 hours for best results',
     category: 'Toxicology',

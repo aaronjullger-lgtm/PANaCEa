@@ -401,6 +401,9 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
   );
 };
 
+// Grading configuration
+const GRADING_DELAY_MS = 2000; // Time to simulate AI processing
+
 /**
  * Grade SOAP note (simplified AI grading simulation)
  * In production, this would call an LLM API
@@ -410,7 +413,7 @@ async function gradeSOAPNote(
   patientCase: PatientCase
 ): Promise<GradingResult> {
   // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise(resolve => setTimeout(resolve, GRADING_DELAY_MS));
 
   // Simple scoring logic (in production, use LLM)
   const scores = {
@@ -458,12 +461,20 @@ async function gradeSOAPNote(
   };
 }
 
+// Scoring constants for section length evaluation
+const SCORE_EMPTY = 0;
+const SCORE_TOO_SHORT = 50;       // Less than half of minimum length
+const SCORE_MINIMAL = 75;          // Less than minimum length but has content
+const SCORE_BASE = 85;             // Meets minimum length
+const SCORE_BONUS_MAX = 15;        // Maximum bonus points for extra content
+const BONUS_CHARS_PER_POINT = 20;  // Characters needed per bonus point
+
 function calculateSectionScore(text: string, minLength: number): number {
   const length = text.trim().length;
-  if (length === 0) return 0;
-  if (length < minLength * 0.5) return 50;
-  if (length < minLength) return 75;
-  return 85 + Math.min(15, Math.floor((length - minLength) / 20));
+  if (length === 0) return SCORE_EMPTY;
+  if (length < minLength * 0.5) return SCORE_TOO_SHORT;
+  if (length < minLength) return SCORE_MINIMAL;
+  return SCORE_BASE + Math.min(SCORE_BONUS_MAX, Math.floor((length - minLength) / BONUS_CHARS_PER_POINT));
 }
 
 export default SOAPNoteTrainer;

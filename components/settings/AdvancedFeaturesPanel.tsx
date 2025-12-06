@@ -47,6 +47,11 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
 }) => {
   const [wellnessChecksEnabled, setWellnessChecksEnabled] = useState(true);
   const [watchNotificationsEnabled, setWatchNotificationsEnabled] = useState(false);
+
+  useEffect(() => {
+    const savedWatch = localStorage.getItem('panceai_watch_enabled');
+    if (savedWatch) setWatchNotificationsEnabled(savedWatch === 'true');
+  }, []);
   const [hapticEnabled, setHapticEnabled] = useState(true);
   const [selectedPersona, setSelectedPersona] = useState<AttendingPersona>('professor');
   const [spanishMode, setSpanishMode] = useState<SpanishMode>('english');
@@ -172,7 +177,11 @@ export const AdvancedFeaturesPanel: React.FC<AdvancedFeaturesPanelProps> = ({
               </p>
             </div>
             <button
-              onClick={() => setWatchNotificationsEnabled(!watchNotificationsEnabled)}
+              onClick={() => {
+                const newValue = !watchNotificationsEnabled;
+                setWatchNotificationsEnabled(newValue);
+                localStorage.setItem('panceai_watch_enabled', newValue.toString());
+              }}
               className={`p-2 rounded-lg transition-colors ${
                 watchNotificationsEnabled
                   ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'

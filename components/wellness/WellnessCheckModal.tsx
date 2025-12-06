@@ -24,6 +24,7 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
   const [isBreathing, setIsBreathing] = useState(false);
   const [breathingPhase, setBreathingPhase] = useState<BreathingPhase>('idle');
   const [countdown, setCountdown] = useState(0);
+  const breathingActiveRef = React.useRef(false);
 
   const reasonMessages = {
     rapid_questions: "You've been answering questions rapidly. Great focus!",
@@ -34,36 +35,51 @@ export const WellnessCheckModal: React.FC<WellnessCheckModalProps> = ({
   // 4-7-8 Breathing Technique Timer
   useEffect(() => {
     if (!isBreathing) {
+      breathingActiveRef.current = false;
       setBreathingPhase('idle');
       return;
     }
 
+    breathingActiveRef.current = true;
+
     const breathingCycle = async () => {
+      if (!breathingActiveRef.current) return;
+
       // Inhale for 4 seconds
       setBreathingPhase('inhale');
       setCountdown(4);
       await runCountdown(4);
+
+      if (!breathingActiveRef.current) return;
 
       // Hold for 7 seconds
       setBreathingPhase('hold');
       setCountdown(7);
       await runCountdown(7);
 
+      if (!breathingActiveRef.current) return;
+
       // Exhale for 8 seconds
       setBreathingPhase('exhale');
       setCountdown(8);
       await runCountdown(8);
 
+      if (!breathingActiveRef.current) return;
+
       // Brief pause before next cycle
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Continue if still breathing
-      if (isBreathing) {
+      if (breathingActiveRef.current) {
         breathingCycle();
       }
     };
 
     breathingCycle();
+
+    return () => {
+      breathingActiveRef.current = false;
+    };
   }, [isBreathing]);
 
   const runCountdown = (seconds: number): Promise<void> => {

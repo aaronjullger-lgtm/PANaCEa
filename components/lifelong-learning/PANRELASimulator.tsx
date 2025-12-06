@@ -463,8 +463,24 @@ export const PANRELASimulator: React.FC<PANRELASimulatorProps> = ({ onComplete }
   );
 };
 
+/**
+ * Calculate the end date for a given quarter
+ * Handles year rollover for Q1 assessments
+ */
 function getQuarterEndDate(quarter: QuarterlyBlock): string {
-  const year = new Date().getFullYear();
+  const today = new Date();
+  const currentMonth = today.getMonth(); // 0-11
+  let year = today.getFullYear();
+
+  // Quarter end months: Q1=2 (March), Q2=5 (June), Q3=8 (Sept), Q4=11 (Dec)
+  const quarterEndMonths = [2, 5, 8, 11];
+  const quarterEndMonth = quarterEndMonths[quarter - 1];
+
+  // If we're past the quarter end date, use next year
+  if (currentMonth > quarterEndMonth) {
+    year += 1;
+  }
+
   const endDates = {
     1: `March 31, ${year}`,
     2: `June 30, ${year}`,
