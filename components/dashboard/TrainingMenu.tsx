@@ -211,17 +211,17 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             disabled={option.disabled}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
               focus === option.value
-                ? 'bg-[#364154] text-[#E9ECF1] shadow-sm dark:bg-[#364154]'
+                ? 'bg-[#1F283A] text-[#E9ECF1] shadow-md dark:bg-[#E9ECF1] dark:text-[#1F283A]'
                 : option.disabled
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-700 dark:text-slate-500'
-                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-600'
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-500'
+                : 'bg-white text-[#364154] hover:bg-slate-50 border border-slate-200 shadow-sm dark:bg-[#1F283A] dark:text-[#E9ECF1] dark:border-slate-700 dark:hover:bg-[#364154]'
             }`}
           >
             {option.value === 'due' && <Clock className="w-3.5 h-3.5" />}
             {option.label}
             {option.count !== undefined && option.count > 0 && (
               <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                focus === option.value ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-300'
+                focus === option.value ? 'bg-white/20 text-white dark:bg-[#1F283A]/20 dark:text-[#1F283A]' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
               }`}>
                 {option.count}
               </span>
@@ -233,96 +233,113 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   };
 
   /**
-   * Get special styling for specific drill modes
+   * Get special styling for specific drill modes - Clinical Theme
    */
   const getDrillModeStyles = (modeId: string): { 
     background: string; 
     border: string;
     overlay?: string;
     iconBg: string;
+    iconColor: string;
   } => {
+    // Clinical Theme: Clean whites/navy with subtle color accents
+    const baseStyles = {
+      light: 'bg-white dark:bg-[#1F283A]',
+      border: 'border-slate-200 dark:border-slate-700',
+      iconBg: 'bg-[#E9ECF1] dark:bg-[#364154]',
+    };
+
     switch (modeId) {
       case 'photo_drill':
         return {
-          background: 'bg-gradient-to-br from-slate-100 to-slate-200',
-          border: 'border-slate-300',
-          overlay: 'before:absolute before:inset-0 before:bg-[url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Cpath d=\'M10 50 Q25 30 40 50 T70 50 T100 50\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'0.5\' opacity=\'0.3\'/%3E%3Cpath d=\'M10 60 Q25 40 40 60 T70 60 T100 60\' fill=\'none\' stroke=\'%2394a3b8\' stroke-width=\'0.5\' opacity=\'0.2\'/%3E%3C/svg%3E")] before:opacity-30 before:rounded-2xl',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-slate-600 dark:text-slate-300',
         };
       case 'ecg_drill':
         return {
-          background: 'bg-gradient-to-br from-rose-50 to-rose-100',
-          border: 'border-rose-200',
-          overlay: 'before:absolute before:inset-0 before:bg-[url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Cpath d=\'M0 50 L20 50 L25 30 L30 70 L35 40 L40 60 L45 50 L100 50\' fill=\'none\' stroke=\'%23fb7185\' stroke-width=\'1\' opacity=\'0.3\'/%3E%3C/svg%3E")] before:opacity-40 before:rounded-2xl',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-rose-600 dark:text-rose-400',
         };
       case 'derm_drill':
         return {
-          background: 'bg-gradient-to-br from-pink-50 to-pink-100',
-          border: 'border-pink-200',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-pink-600 dark:text-pink-400',
         };
       case 'imaging_drill':
         return {
-          background: 'bg-gradient-to-br from-slate-100 to-slate-200',
-          border: 'border-slate-300',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-slate-600 dark:text-slate-300',
         };
       case 'mini_lab':
         return {
-          background: 'bg-gradient-to-br from-emerald-50 to-emerald-100',
-          border: 'border-emerald-200',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-emerald-600 dark:text-emerald-400',
         };
       case 'rapid_recall':
         return {
-          background: 'bg-gradient-to-br from-amber-50 to-amber-100',
-          border: 'border-amber-200',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-amber-600 dark:text-amber-400',
         };
       case 'ddx_compare':
         return {
-          background: 'bg-gradient-to-br from-blue-50 to-blue-100',
-          border: 'border-blue-200',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-blue-600 dark:text-blue-400',
         };
       case 'guideline_drill':
         return {
-          background: 'bg-gradient-to-br from-teal-50 to-teal-100',
-          border: 'border-teal-200',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-teal-600 dark:text-teal-400',
         };
       case 'condition_drill':
         return {
-          background: 'bg-gradient-to-br from-violet-50 to-violet-100',
-          border: 'border-violet-200',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-violet-600 dark:text-violet-400',
         };
       case 'first_line_treatment':
         return {
-          background: 'bg-gradient-to-br from-cyan-50 to-cyan-100',
-          border: 'border-cyan-200',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-cyan-600 dark:text-cyan-400',
         };
       case 'pharmacology':
         return {
-          background: 'bg-gradient-to-br from-purple-50 to-purple-100',
-          border: 'border-purple-200',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-purple-600 dark:text-purple-400',
         };
       case 'mastery_drill':
         return {
-          background: streakHighScore > 0 
-            ? 'bg-gradient-to-br from-orange-100 via-red-100 to-orange-100' 
-            : 'bg-gradient-to-br from-red-50 to-red-100',
-          border: streakHighScore > 0 ? 'border-orange-300 ring-2 ring-orange-400/50' : 'border-red-200',
-          iconBg: 'bg-white/80',
+          background: baseStyles.light,
+          border: streakHighScore > 0 ? 'border-orange-300 ring-2 ring-orange-400/50 dark:border-orange-600 dark:ring-orange-500/50' : baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-orange-600 dark:text-orange-400',
         };
       default:
         return {
-          background: getThemeBackground(MODE_REGISTRY.find(m => m.id === modeId)?.theme || 'stone'),
-          border: 'border-[var(--color-border)]',
-          iconBg: 'bg-white/60',
+          background: baseStyles.light,
+          border: baseStyles.border,
+          iconBg: baseStyles.iconBg,
+          iconColor: 'text-[#364154] dark:text-[#E9ECF1]',
         };
     }
   };
@@ -362,7 +379,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   };
 
   /**
-   * Render drill mode card with unique styling per mode
+   * Render drill mode card with unique styling per mode - Clinical Theme
    */
   const renderDrillCard = (mode: TrainingModeConfig) => {
     const ICON_MAP = getIconMap();
@@ -382,16 +399,15 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           text-left transition-all duration-200
           ${styles.background}
           ${styles.border}
-          ${styles.overlay || ''}
           ${isDisabled 
             ? 'opacity-50 cursor-not-allowed grayscale' 
-            : 'hover:scale-[1.02] cursor-pointer shadow-sm hover:shadow-lg'
+            : 'hover:scale-[1.02] cursor-pointer shadow-md hover:shadow-xl'
           }
           ${isStreakMode && streakHighScore > 0 ? 'animate-pulse-subtle' : ''}
         `}
       >
         {isDisabled && (
-          <span className="absolute top-2 right-2 text-xs font-medium text-slate-500 bg-white/80 px-2 py-0.5 rounded-full z-10">
+          <span className="absolute top-2 right-2 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full z-10">
             Coming Soon
           </span>
         )}
@@ -406,17 +422,16 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         
         <div className="flex flex-col gap-3 relative z-[1]">
           <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shadow-sm`}>
-            <IconComponent className={`w-5 h-5 ${isStreakMode && streakHighScore > 0 ? 'text-orange-600' : 'text-slate-600'}`} />
+            <IconComponent className={`w-5 h-5 ${styles.iconColor}`} />
           </div>
           <div>
-            {/* Use dark text colors on light tile backgrounds for readability in dark mode */}
-            <h3 className="font-semibold text-slate-800 text-base flex items-center gap-2">
+            <h3 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1] text-base flex items-center gap-2">
               {mode.label}
               {isStreakMode && streakHighScore > 0 && (
                 <Flame className="w-4 h-4 text-orange-500" />
               )}
             </h3>
-            <p className="text-sm text-slate-600 mt-1 line-clamp-2">{getDrillDescription(mode)}</p>
+            <p className="text-sm text-[#364154] dark:text-[#cbd5e1] mt-1 line-clamp-2">{getDrillDescription(mode)}</p>
           </div>
         </div>
       </button>
@@ -427,19 +442,19 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     <div className="space-y-6">
       {/* Section A: The Core Adaptive Card */}
       {coreMode && (
-        <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+        <div className="bg-white dark:bg-[#1F283A] rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Left side: Icon and content */}
             <div className="flex-1">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-600">
-                  <Brain className="w-7 h-7 text-slate-600 dark:text-slate-300" />
+                <div className="w-14 h-14 rounded-2xl bg-[#E9ECF1] dark:bg-[#364154] flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-600">
+                  <Brain className="w-7 h-7 text-[#1F283A] dark:text-[#E9ECF1]" />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  <h2 className="text-xl font-bold text-[#1F283A] dark:text-[#E9ECF1]">
                     Core PANCE Simulation
                   </h2>
-                  <p className="text-slate-600 dark:text-slate-300 mt-1 min-h-[3rem] transition-all duration-200">
+                  <p className="text-[#364154] dark:text-[#cbd5e1] mt-1 min-h-[3rem] transition-all duration-200">
                     {getFocusDescription()}
                   </p>
                 </div>
@@ -456,7 +471,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               <button
                 type="button"
                 onClick={handleCoreStart}
-                className="w-full md:w-auto px-8 py-3.5 bg-[#364154] text-[#E9ECF1] font-semibold rounded-xl hover:bg-[#1F283A] transition-colors shadow-md hover:shadow-lg"
+                className="w-full md:w-auto px-8 py-3.5 bg-[#1F283A] text-[#E9ECF1] dark:bg-[#E9ECF1] dark:text-[#1F283A] font-semibold rounded-xl hover:bg-[#364154] dark:hover:bg-white transition-colors shadow-md hover:shadow-lg"
               >
                 Start Session
               </button>
@@ -467,7 +482,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
       {/* Section B: The Bento Grid */}
       <div>
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">Drill Modes</h3>
+        <h3 className="text-lg font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-4">Drill Modes</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {drillModes.map((mode) => renderDrillCard(mode))}
         </div>

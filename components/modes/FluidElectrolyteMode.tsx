@@ -94,108 +94,152 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
     handleNext();
   };
 
-  // Landing Page
+  // Landing Page - Clinical White/Navy Theme
   if (viewState === 'landing') {
     return (
-      <MiniModeLayout title="Hydro-Mode" subtitle="Fluid & Electrolyte Management" icon={Droplets}>
-        <MiniModeHeader 
-          title="Hydro-Mode" 
-          subtitle="Fluid & Electrolyte Management" 
-          icon={Droplets}
-          onExit={onExit}
-        />
+      <div className="min-h-screen bg-white dark:bg-[#1F283A] text-[#1F283A] dark:text-[#E9ECF1] transition-colors duration-300">
+        {/* Header */}
+        <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1F283A] sticky top-0 z-10 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-[#E9ECF1] dark:bg-[#364154] flex items-center justify-center shadow-sm">
+                <Droplets className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Hydro-Mode</h1>
+                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Fluid & Electrolyte Management</p>
+              </div>
+            </div>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#364154] dark:hover:bg-slate-700 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
 
-        <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="max-w-5xl mx-auto px-4 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center space-y-8"
+            className="space-y-8"
           >
-            <div className="space-y-4">
-              <h2 className={`text-4xl font-bold ${containerText}`}>Master Fluid & Electrolyte Calculations</h2>
-              <p className={`text-xl ${subtleText}`}>
+            {/* Hero Section */}
+            <div className="text-center space-y-4 mb-12">
+              <h2 className="text-4xl font-bold text-[#1F283A] dark:text-[#E9ECF1]">Master Fluid & Electrolyte Calculations</h2>
+              <p className="text-xl text-[#364154] dark:text-[#cbd5e1]">
                 Practice real-world clinical calculations with instant feedback
               </p>
             </div>
 
-            <MiniModeCard className="text-left space-y-6">
-              <h3 className={`text-2xl font-semibold ${containerText}`}>What You'll Practice</h3>
+            {/* Features Card */}
+            <div className="bg-white dark:bg-[#364154] rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-lg space-y-6">
+              <h3 className="text-2xl font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-6">What You'll Practice</h3>
               
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  { title: 'FENa Calculations', desc: 'Fractional excretion of sodium for AKI workup' },
-                  { title: 'Anion Gap', desc: 'Acid-base disorder assessment' },
-                  { title: 'Maintenance Fluids', desc: '4-2-1 rule and pediatric calculations' },
-                  { title: 'Free Water Deficit', desc: 'Hypernatremia management' },
+                  { title: 'FENa Calculations', desc: 'Fractional excretion of sodium for AKI workup', icon: '⚗️' },
+                  { title: 'Anion Gap', desc: 'Acid-base disorder assessment', icon: '📊' },
+                  { title: 'Maintenance Fluids', desc: '4-2-1 rule and pediatric calculations', icon: '💧' },
+                  { title: 'Free Water Deficit', desc: 'Hypernatremia management', icon: '🧮' },
                 ].map((item, i) => (
-                  <div key={i} className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-[var(--color-border)]">
-                    <h4 className={`font-semibold ${containerText} mb-2`}>{item.title}</h4>
-                    <p className={`text-sm ${subtleText}`}>{item.desc}</p>
+                  <div key={i} className="bg-[#E9ECF1] dark:bg-[#1F283A] rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-2xl">{item.icon}</span>
+                      <h4 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1]">{item.title}</h4>
+                    </div>
+                    <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">{item.desc}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 border border-[var(--color-border)]">
-                <p className={`text-sm ${containerText} font-semibold mb-2`}>Features:</p>
-                <ul className={`text-sm ${subtleText} space-y-1 list-disc list-inside`}>
-                  <li>Clinical vignettes with lab values</li>
-                  <li>Formula hints provided for each calculation</li>
-                  <li>Urine chemistry reference table</li>
-                  <li>Margin of error for numeric answers</li>
-                  <li>Detailed explanations and teaching points</li>
+              <div className="bg-cyan-50 dark:bg-cyan-950/30 rounded-xl p-6 border border-cyan-200 dark:border-cyan-900">
+                <p className="text-sm text-[#1F283A] dark:text-[#E9ECF1] font-semibold mb-3 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                  Key Features
+                </p>
+                <ul className="text-sm text-[#364154] dark:text-[#cbd5e1] space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span>Clinical vignettes with realistic lab values</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span>Formula hints provided for each calculation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span>Comprehensive urine chemistry reference table</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span>Reasonable margin of error for numeric answers</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-600 dark:text-cyan-400 mt-0.5">•</span>
+                    <span>Detailed explanations and teaching points</span>
+                  </li>
                 </ul>
               </div>
-            </MiniModeCard>
+            </div>
 
-            <motion.button
-              onClick={handleStart}
-              disabled={isLoading}
-              className={`px-8 py-4 ${accentBg} ${accentText} hover:bg-[#1F283A] 
-                       disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-semibold text-lg
-                       transition-all flex items-center justify-center gap-3 mx-auto shadow-lg`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Loading Case...
-                </>
-              ) : (
-                <>
-                  Start Practice
-                  <Play className="w-5 h-5" />
-                </>
-              )}
-            </motion.button>
+            {/* Start Button */}
+            <div className="text-center">
+              <motion.button
+                onClick={handleStart}
+                disabled={isLoading}
+                className="px-10 py-4 bg-[#1F283A] text-[#E9ECF1] dark:bg-[#E9ECF1] dark:text-[#1F283A] hover:bg-[#364154] dark:hover:bg-white
+                         disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-semibold text-lg
+                         transition-all flex items-center justify-center gap-3 mx-auto shadow-lg hover:shadow-xl"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Loading Case...
+                  </>
+                ) : (
+                  <>
+                    Start Practice
+                    <Play className="w-5 h-5" />
+                  </>
+                )}
+              </motion.button>
+            </div>
           </motion.div>
         </div>
-      </MiniModeLayout>
+      </div>
     );
   }
 
-  // Active Session
+  // Active Session - White Theme Variant
   if (!currentCase) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-950 via-slate-900 to-blue-950 text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#1F283A] text-[#1F283A] dark:text-[#E9ECF1]">
       {/* Header */}
-      <div className="border-b border-cyan-800/30 bg-black/20 backdrop-blur-sm">
+      <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#364154] sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Droplets className="w-8 h-8 text-cyan-400" />
+            <div className="w-10 h-10 rounded-xl bg-[#E9ECF1] dark:bg-[#1F283A] flex items-center justify-center shadow-sm">
+              <Droplets className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold">Hydro-Mode</h1>
-              <p className="text-sm text-cyan-300">Fluid & Electrolyte Management</p>
+              <h1 className="text-xl font-bold">Hydro-Mode</h1>
+              <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Fluid & Electrolyte Management</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-slate-400">Score</p>
-              <p className="text-xl font-bold">
+              <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Score</p>
+              <p className="text-xl font-bold text-[#1F283A] dark:text-[#E9ECF1]">
                 {score.correct}/{score.total}
                 {score.total > 0 && (
-                  <span className="text-sm ml-2 text-cyan-400">
+                  <span className="text-sm ml-2 text-cyan-600 dark:text-cyan-400">
                     ({Math.round((score.correct / score.total) * 100)}%)
                   </span>
                 )}
@@ -203,7 +247,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             </div>
             <button
               onClick={handleReset}
-              className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
+              className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1F283A] dark:hover:bg-slate-700 transition-colors"
               title="Reset Score"
             >
               <RotateCcw className="w-5 h-5" />
@@ -211,7 +255,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
+                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1F283A] dark:hover:bg-slate-700 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -221,7 +265,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="grid md:grid-cols-2 gap-6">
           {/* Left Side: Clinical Vignette + Labs */}
           <motion.div
@@ -230,50 +274,50 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             className="space-y-4"
           >
             {/* Clinical Vignette */}
-            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-cyan-800/30">
-              <h2 className="text-xl font-semibold mb-3 text-cyan-400">
+            <div className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md">
+              <h2 className="text-xl font-semibold mb-3 text-cyan-600 dark:text-cyan-400">
                 {currentCase.title}
               </h2>
-              <p className="text-slate-300 leading-relaxed">
+              <p className="text-[#364154] dark:text-[#cbd5e1] leading-relaxed">
                 {currentCase.vignette}
               </p>
             </div>
 
             {/* Labs */}
-            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-cyan-800/30">
-              <h3 className="text-lg font-semibold mb-4 text-cyan-400">Laboratory Results</h3>
+            <div className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md">
+              <h3 className="text-lg font-semibold mb-4 text-cyan-600 dark:text-cyan-400">Laboratory Results</h3>
               
               {currentCase.labs.bmp && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-slate-400 mb-2">Basic Metabolic Panel</h4>
+                  <h4 className="text-sm font-semibold text-[#364154] dark:text-[#cbd5e1] mb-2">Basic Metabolic Panel</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex justify-between p-2 bg-slate-900/50 rounded">
-                      <span className="text-slate-400">Sodium:</span>
-                      <span className="font-mono">{currentCase.labs.bmp.sodium} mEq/L</span>
+                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-[#1F283A] rounded border border-slate-200 dark:border-slate-700">
+                      <span className="text-[#364154] dark:text-[#cbd5e1]">Sodium:</span>
+                      <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.labs.bmp.sodium} mEq/L</span>
                     </div>
-                    <div className="flex justify-between p-2 bg-slate-900/50 rounded">
-                      <span className="text-slate-400">Potassium:</span>
-                      <span className="font-mono">{currentCase.labs.bmp.potassium} mEq/L</span>
+                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-[#1F283A] rounded border border-slate-200 dark:border-slate-700">
+                      <span className="text-[#364154] dark:text-[#cbd5e1]">Potassium:</span>
+                      <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.labs.bmp.potassium} mEq/L</span>
                     </div>
-                    <div className="flex justify-between p-2 bg-slate-900/50 rounded">
-                      <span className="text-slate-400">Chloride:</span>
-                      <span className="font-mono">{currentCase.labs.bmp.chloride} mEq/L</span>
+                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-[#1F283A] rounded border border-slate-200 dark:border-slate-700">
+                      <span className="text-[#364154] dark:text-[#cbd5e1]">Chloride:</span>
+                      <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.labs.bmp.chloride} mEq/L</span>
                     </div>
-                    <div className="flex justify-between p-2 bg-slate-900/50 rounded">
-                      <span className="text-slate-400">HCO₃:</span>
-                      <span className="font-mono">{currentCase.labs.bmp.bicarbonate} mEq/L</span>
+                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-[#1F283A] rounded border border-slate-200 dark:border-slate-700">
+                      <span className="text-[#364154] dark:text-[#cbd5e1]">HCO₃:</span>
+                      <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.labs.bmp.bicarbonate} mEq/L</span>
                     </div>
-                    <div className="flex justify-between p-2 bg-slate-900/50 rounded">
-                      <span className="text-slate-400">BUN:</span>
-                      <span className="font-mono">{currentCase.labs.bmp.bun} mg/dL</span>
+                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-[#1F283A] rounded border border-slate-200 dark:border-slate-700">
+                      <span className="text-[#364154] dark:text-[#cbd5e1]">BUN:</span>
+                      <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.labs.bmp.bun} mg/dL</span>
                     </div>
-                    <div className="flex justify-between p-2 bg-slate-900/50 rounded">
-                      <span className="text-slate-400">Creatinine:</span>
-                      <span className="font-mono">{currentCase.labs.bmp.creatinine} mg/dL</span>
+                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-[#1F283A] rounded border border-slate-200 dark:border-slate-700">
+                      <span className="text-[#364154] dark:text-[#cbd5e1]">Creatinine:</span>
+                      <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.labs.bmp.creatinine} mg/dL</span>
                     </div>
-                    <div className="flex justify-between p-2 bg-slate-900/50 rounded">
-                      <span className="text-slate-400">Glucose:</span>
-                      <span className="font-mono">{currentCase.labs.bmp.glucose} mg/dL</span>
+                    <div className="flex justify-between p-2 bg-slate-50 dark:bg-[#1F283A] rounded border border-slate-200 dark:border-slate-700">
+                      <span className="text-[#364154] dark:text-[#cbd5e1]">Glucose:</span>
+                      <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.labs.bmp.glucose} mg/dL</span>
                     </div>
                   </div>
                 </div>
@@ -281,18 +325,18 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
 
               {(currentCase.labs.urineNa || currentCase.labs.urineCr) && (
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-400 mb-2">Urine Studies</h4>
+                  <h4 className="text-sm font-semibold text-[#364154] dark:text-[#cbd5e1] mb-2">Urine Studies</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     {currentCase.labs.urineNa && (
-                      <div className="flex justify-between p-2 bg-slate-900/50 rounded">
-                        <span className="text-slate-400">Urine Na:</span>
-                        <span className="font-mono">{currentCase.labs.urineNa} mEq/L</span>
+                      <div className="flex justify-between p-2 bg-slate-50 dark:bg-[#1F283A] rounded border border-slate-200 dark:border-slate-700">
+                        <span className="text-[#364154] dark:text-[#cbd5e1]">Urine Na:</span>
+                        <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.labs.urineNa} mEq/L</span>
                       </div>
                     )}
                     {currentCase.labs.urineCr && (
-                      <div className="flex justify-between p-2 bg-slate-900/50 rounded">
-                        <span className="text-slate-400">Urine Cr:</span>
-                        <span className="font-mono">{currentCase.labs.urineCr} mg/dL</span>
+                      <div className="flex justify-between p-2 bg-slate-50 dark:bg-[#1F283A] rounded border border-slate-200 dark:border-slate-700">
+                        <span className="text-[#364154] dark:text-[#cbd5e1]">Urine Cr:</span>
+                        <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.labs.urineCr} mg/dL</span>
                       </div>
                     )}
                   </div>
@@ -301,14 +345,14 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             </div>
 
             {/* Question */}
-            <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 backdrop-blur rounded-xl p-6 border border-cyan-600/30">
-              <h3 className="text-lg font-semibold mb-2 text-cyan-300">Question</h3>
-              <p className="text-slate-200 mb-4">{currentCase.question}</p>
+            <div className="bg-cyan-50 dark:bg-cyan-950/30 rounded-xl p-6 border border-cyan-200 dark:border-cyan-900 shadow-md">
+              <h3 className="text-lg font-semibold mb-2 text-cyan-600 dark:text-cyan-400">Question</h3>
+              <p className="text-[#1F283A] dark:text-[#E9ECF1] mb-4 font-medium">{currentCase.question}</p>
               
               {currentCase.calculationHint && (
-                <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
-                  <p className="text-xs font-semibold text-slate-400 mb-1">Formula Hint:</p>
-                  <p className="text-sm text-slate-300 font-mono">{currentCase.calculationHint}</p>
+                <div className="bg-white dark:bg-[#1F283A] rounded-lg p-3 mb-4 border border-slate-200 dark:border-slate-700">
+                  <p className="text-xs font-semibold text-[#364154] dark:text-[#cbd5e1] mb-1">Formula Hint:</p>
+                  <p className="text-sm text-[#1F283A] dark:text-[#E9ECF1] font-mono">{currentCase.calculationHint}</p>
                 </div>
               )}
 
@@ -324,11 +368,12 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   placeholder="Enter your answer"
                   disabled={isSubmitted}
                   autoComplete="off"
-                  className="flex-1 px-4 py-3 bg-slate-900/70 border border-cyan-800/50 rounded-lg 
-                           text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500
-                           disabled:opacity-50 disabled:cursor-not-allowed font-mono text-lg"
+                  className="flex-1 px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg 
+                           text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                           focus:outline-none focus:ring-2 focus:ring-cyan-500 dark:focus:ring-cyan-400 focus:border-transparent
+                           disabled:opacity-50 disabled:cursor-not-allowed font-mono text-lg shadow-sm"
                 />
-                <div className="flex items-center px-3 bg-slate-900/70 border border-cyan-800/50 rounded-lg text-slate-400">
+                <div className="flex items-center px-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg text-[#364154] dark:text-[#cbd5e1] shadow-sm">
                   {currentCase.unit}
                 </div>
               </div>
@@ -338,9 +383,9 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   <button
                     onClick={handleSubmit}
                     disabled={!userAnswer}
-                    className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-700 
-                             disabled:cursor-not-allowed py-3 rounded-lg font-semibold
-                             transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 
+                             disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
+                             transition-colors flex items-center justify-center gap-2 shadow-md"
                   >
                     Submit Answer
                     <ArrowRight className="w-5 h-5" />
@@ -348,8 +393,9 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                 ) : (
                   <button
                     onClick={handleNext}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold
-                             transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 bg-[#1F283A] hover:bg-[#364154] dark:bg-[#E9ECF1] dark:hover:bg-white 
+                             text-[#E9ECF1] dark:text-[#1F283A] py-3 rounded-lg font-semibold
+                             transition-colors flex items-center justify-center gap-2 shadow-md"
                   >
                     Next Case
                     <ArrowRight className="w-5 h-5" />
@@ -365,23 +411,23 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className={`rounded-xl p-6 border ${
+                  className={`rounded-xl p-6 border shadow-md ${
                     isCorrect
-                      ? 'bg-green-900/40 border-green-600/30'
-                      : 'bg-red-900/40 border-red-600/30'
+                      ? 'bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-900'
+                      : 'bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-900'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {isCorrect ? (
-                      <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0 mt-1" />
+                      <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-1" />
                     ) : (
-                      <XCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" />
+                      <XCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
                     )}
                     <div className="flex-1">
-                      <p className={`font-semibold mb-2 ${isCorrect ? 'text-green-300' : 'text-red-300'}`}>
+                      <p className={`font-semibold mb-2 ${isCorrect ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>
                         {feedback}
                       </p>
-                      <p className="text-slate-300 text-sm leading-relaxed">
+                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm leading-relaxed">
                         {currentCase.explanation}
                       </p>
                     </div>
@@ -395,44 +441,44 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-cyan-800/30"
+            className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
           >
-            <h3 className="text-xl font-semibold mb-4 text-cyan-400">Urine Chemistry Reference</h3>
+            <h3 className="text-xl font-semibold mb-4 text-cyan-600 dark:text-cyan-400">Urine Chemistry Reference</h3>
             <div className="space-y-3">
               {URINE_CHEMISTRY_REFERENCE.reference.map((item, index) => (
                 <div
                   key={index}
-                  className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50"
+                  className="p-4 bg-slate-50 dark:bg-[#1F283A] rounded-lg border border-slate-200 dark:border-slate-700"
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className="font-semibold text-slate-200">{item.parameter}</h4>
-                    <span className="text-cyan-400 font-mono text-sm">{item.unit}</span>
+                    <h4 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1]">{item.parameter}</h4>
+                    <span className="text-cyan-600 dark:text-cyan-400 font-mono text-sm">{item.unit}</span>
                   </div>
-                  <p className="text-slate-400 text-sm mb-1">
-                    Normal: <span className="font-mono text-slate-300">{item.normalRange}</span>
+                  <p className="text-[#364154] dark:text-[#cbd5e1] text-sm mb-1">
+                    Normal: <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{item.normalRange}</span>
                   </p>
                   {item.interpretation && (
-                    <p className="text-slate-500 text-xs italic">{item.interpretation}</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs italic">{item.interpretation}</p>
                   )}
                 </div>
               ))}
             </div>
 
             {/* Additional Calculation Tips */}
-            <div className="mt-6 p-4 bg-cyan-900/20 rounded-lg border border-cyan-800/30">
-              <h4 className="font-semibold text-cyan-400 mb-2">Common Calculations</h4>
-              <div className="space-y-2 text-sm text-slate-300">
+            <div className="mt-6 p-4 bg-cyan-50 dark:bg-cyan-950/30 rounded-lg border border-cyan-200 dark:border-cyan-900">
+              <h4 className="font-semibold text-cyan-600 dark:text-cyan-400 mb-3">Common Calculations</h4>
+              <div className="space-y-3 text-sm">
                 <div>
-                  <p className="font-semibold text-slate-200">FENa:</p>
-                  <p className="font-mono text-xs">[(UNa × SCr) / (SNa × UCr)] × 100</p>
+                  <p className="font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-1">FENa:</p>
+                  <p className="font-mono text-xs text-[#364154] dark:text-[#cbd5e1]">[(UNa × SCr) / (SNa × UCr)] × 100</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-200">Anion Gap:</p>
-                  <p className="font-mono text-xs">Na - (Cl + HCO₃)</p>
+                  <p className="font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-1">Anion Gap:</p>
+                  <p className="font-mono text-xs text-[#364154] dark:text-[#cbd5e1]">Na - (Cl + HCO₃)</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-200">Free Water Deficit:</p>
-                  <p className="font-mono text-xs">TBW × [(Na/140) - 1]</p>
+                  <p className="font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-1">Free Water Deficit:</p>
+                  <p className="font-mono text-xs text-[#364154] dark:text-[#cbd5e1]">TBW × [(Na/140) - 1]</p>
                 </div>
               </div>
             </div>

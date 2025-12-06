@@ -141,7 +141,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'Layers',
     theme: 'violet',
     route: '/drill/condition',
-    isComingSoon: false,
+    isComingSoon: true,
   },
   // Pharmacology Modes
   {
