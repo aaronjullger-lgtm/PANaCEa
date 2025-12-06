@@ -40,6 +40,7 @@ const SettingsStatsModal = lazy(() => import("./components/SettingsStatsModal"))
 const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcutsModal"));
 const ARAnatomyMode = lazy(() => import("./components/ar/ARAnatomyMode"));
 const PANRELASimulator = lazy(() => import("./components/lifelong-learning/PANRELASimulator"));
+const CommandPalette = lazy(() => import("./components/CommandPalette"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -119,6 +120,7 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
 
   // ---- Preload large data files in background for better performance ----
   useEffect(() => {
@@ -126,11 +128,16 @@ const App: React.FC = () => {
     preloadData();
   }, []);
 
-  // ---- Global keyboard shortcut for Cmd/Ctrl+K ----
+  // ---- Global keyboard shortcuts ----
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + K to open keyboard shortcuts
+      // Cmd/Ctrl + K to open command palette
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(prev => !prev);
+      }
+      // Cmd/Ctrl + / to open keyboard shortcuts
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') {
         e.preventDefault();
         setIsShortcutsModalOpen(prev => !prev);
       }
@@ -679,6 +686,15 @@ const App: React.FC = () => {
         syncError={syncError}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
       />
+
+      {/* Command Palette */}
+      <Suspense fallback={null}>
+        <CommandPalette
+          isOpen={isCommandPaletteOpen}
+          onClose={() => setIsCommandPaletteOpen(false)}
+          onNavigate={handleNavigateToDrillMode}
+        />
+      </Suspense>
     </div>
   );
 };
