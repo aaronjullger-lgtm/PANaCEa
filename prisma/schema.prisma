@@ -41,7 +41,12 @@ model User {
   
   /// Onboarding fields
   hasCompletedBaseline Boolean @default(false) // Has completed baseline assessment
+  hasCompletedOnboarding Boolean @default(false) // Has completed initial onboarding
   examDate            DateTime? // Target PANCE/PANRE exam date
+  graduationDate      DateTime? // Expected/actual graduation date from PA school
+  school              String?   // PA school/program name
+  currentRotation     String?   // Current clinical rotation (e.g., "Emergency Medicine", "Surgery")
+  yearInProgram       String?   // "Didactic Year 1", "Clinical Year", "Graduated", "Post-Graduate"
   
   /// User's performance records
   performanceRecords PerformanceRecord[]
