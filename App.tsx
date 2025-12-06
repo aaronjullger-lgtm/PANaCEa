@@ -38,6 +38,8 @@ const PatientEncounterMode = lazy(() => import("./components/modes/PatientEncoun
 const IntegrationsHub = lazy(() => import("./components/integrations/IntegrationsHub"));
 const SettingsStatsModal = lazy(() => import("./components/SettingsStatsModal"));
 const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcutsModal"));
+const ARAnatomyMode = lazy(() => import("./components/ar/ARAnatomyMode"));
+const PANRELASimulator = lazy(() => import("./components/lifelong-learning/PANRELASimulator"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -59,7 +61,7 @@ const DRILL_MODE_FLUID_ELECTROLYTE: TrainingModeId = 'fluid_electrolyte';
 const DRILL_MODE_ANTIBIOTIC: TrainingModeId = 'antibiotic_mode';
 const DRILL_MODE_PATIENT_ENCOUNTER: TrainingModeId = 'patient_encounter';
 
-type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter";
+type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "ar_anatomy" | "panre_la";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -364,6 +366,10 @@ const App: React.FC = () => {
       setView('antibiotic_mode');
     } else if (modeId === DRILL_MODE_PATIENT_ENCOUNTER) {
       setView('patient_encounter');
+    } else if (modeId === 'ar_anatomy') {
+      setView('ar_anatomy');
+    } else if (modeId === 'panre_la') {
+      setView('panre_la');
     }
   };
 
@@ -649,6 +655,18 @@ const App: React.FC = () => {
                 missedQuestions={missedQuestions}
                 onBack={() => setView("menu")}
               />
+            </Suspense>
+          )}
+
+          {view === "ar_anatomy" && (
+            <Suspense fallback={<Loader />}>
+              <ARAnatomyMode onClose={() => setView("menu")} />
+            </Suspense>
+          )}
+
+          {view === "panre_la" && (
+            <Suspense fallback={<Loader />}>
+              <PANRELASimulator onExit={() => setView("menu")} />
             </Suspense>
           )}
         </AnimatePresence>
