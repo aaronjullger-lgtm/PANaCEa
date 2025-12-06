@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -22,7 +22,8 @@ import {
   FileJson,
   Check,
   Activity as ActivityIcon,
-  Flame
+  Flame,
+  Sparkles
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
@@ -37,6 +38,9 @@ import {
 } from '@/lib/dashboardUtils';
 import ActivityHeatmap from './analytics/ActivityHeatmap';
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
+
+// Lazy load Character Gallery
+const CharacterGallery = lazy(() => import('./characters/CharacterGallery'));
 
 // Gold Achievement Thresholds - Reserved for extraordinary performance
 const GOLD_ACHIEVEMENT_STREAK_THRESHOLD = 10;
@@ -57,7 +61,7 @@ interface SettingsStatsModalProps {
   onUpdateWidgets?: (widgets: WidgetId[]) => void;
 }
 
-type TabId = 'stats' | 'settings' | 'preferences' | 'activity';
+type TabId = 'stats' | 'settings' | 'preferences' | 'activity' | 'characters';
 
 // Analytics color palette types
 export type AnalyticsPalette = 'default' | 'neon' | 'pastel' | 'high-contrast';
@@ -479,12 +483,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 ) : activeTab === 'activity' ? (
                   <ActivityIcon className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
+                ) : activeTab === 'characters' ? (
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 ) : (
                   <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 )}
               </div>
               <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
-                {activeTab === 'stats' ? 'Statistics' : activeTab === 'preferences' ? 'Dashboard Preferences' : activeTab === 'activity' ? 'Activity' : 'Settings'}
+                {activeTab === 'stats' ? 'Statistics' : activeTab === 'preferences' ? 'Dashboard Preferences' : activeTab === 'activity' ? 'Activity' : activeTab === 'characters' ? 'Characters' : 'Settings'}
               </h2>
             </div>
             <button
@@ -519,6 +525,18 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
             >
               <ActivityIcon className="w-4 h-4 inline-block mr-1 sm:mr-2" />
               <span>Activity</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('characters')}
+              className={`flex-1 py-2.5 sm:py-3 text-sm font-medium transition-colors ${
+                activeTab === 'characters'
+                  ? 'text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 inline-block mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Characters</span>
+              <span className="sm:hidden">Chars</span>
             </button>
             <button
               onClick={() => setActiveTab('preferences')}
@@ -724,6 +742,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </p>
                 </div>
               </div>
+            ) : activeTab === 'characters' ? (
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-accent)]" />
+                </div>
+              }>
+                <CharacterGallery
+                  performanceData={performanceData}
+                  currentStreak={stats.currentStreak}
+                />
+              </Suspense>
             ) : activeTab === 'preferences' ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Statistics Preferences Panel */}

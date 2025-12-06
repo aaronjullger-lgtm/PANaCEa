@@ -81,6 +81,7 @@ function formatDateKey(date: Date): string {
 
 /**
  * Get month labels for the header
+ * Fixed to properly align with week columns
  */
 function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: number }[] {
   const labels: { month: string; colSpan: number }[] = [];
@@ -89,12 +90,21 @@ function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: 
 
   const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  // Check first row (Sunday) for month changes
-  for (const date of dateGrid[0]) {
+  // Traverse columns (weeks) to build month labels
+  for (let colIdx = 0; colIdx < dateGrid[0].length; colIdx++) {
+    // Check first non-null date in this column
+    let date = null;
+    for (let rowIdx = 0; rowIdx < dateGrid.length; rowIdx++) {
+      if (dateGrid[rowIdx][colIdx]) {
+        date = dateGrid[rowIdx][colIdx];
+        break;
+      }
+    }
+
     if (date) {
       const month = date.getMonth();
       if (month !== currentMonth) {
-        if (currentMonth !== -1) {
+        if (currentMonth !== -1 && colCount > 0) {
           labels.push({ month: MONTHS[currentMonth], colSpan: colCount });
         }
         currentMonth = month;
@@ -103,11 +113,15 @@ function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: 
         colCount++;
       }
     } else {
-      colCount++;
+      // Empty column, still count it
+      if (currentMonth !== -1) {
+        colCount++;
+      }
     }
   }
 
-  if (currentMonth !== -1) {
+  // Push final month
+  if (currentMonth !== -1 && colCount > 0) {
     labels.push({ month: MONTHS[currentMonth], colSpan: colCount });
   }
 
@@ -284,14 +298,16 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
       <div className="overflow-x-auto">
         <div className="inline-block min-w-full">
           {/* Month labels */}
-          <div className="flex mb-2 ml-8">
+          <div className="flex mb-2 ml-8 sm:ml-10">
             {monthLabels.map((label, idx) => (
               <div
                 key={idx}
-                className="text-xs text-[var(--color-text-muted)] font-medium"
+                className="text-[10px] sm:text-xs text-[var(--color-text-muted)] font-medium"
                 style={{ 
-                  width: `${(label.colSpan / dateGrid[0].length) * 100}%`,
-                  minWidth: '40px'
+                  flexGrow: label.colSpan,
+                  flexBasis: 0,
+                  minWidth: `${label.colSpan * 16}px`,
+                  textAlign: 'left'
                 }}
               >
                 {label.month}
@@ -300,13 +316,13 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
           </div>
 
           {/* Grid */}
-          <div className="flex gap-1">
+          <div className="flex gap-0.5 sm:gap-1">
             {/* Day labels - only show Mon/Wed/Fri like GitHub */}
-            <div className="flex flex-col gap-1 pr-2">
+            <div className="flex flex-col gap-0.5 sm:gap-1 pr-1 sm:pr-2">
               {DAYS_OF_WEEK.map((day, idx) => (
                 <div
                   key={day}
-                  className="h-3 text-xs text-[var(--color-text-muted)] flex items-center"
+                  className="h-3 text-[10px] sm:text-xs text-[var(--color-text-muted)] flex items-center w-6 sm:w-8"
                   style={{ visibility: idx === 1 || idx === 3 || idx === 5 ? 'visible' : 'hidden' }}
                 >
                   {day}
@@ -316,7 +332,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
             {/* Date cells */}
             {dateGrid[0].map((_, colIdx) => (
-              <div key={colIdx} className="flex flex-col gap-1">
+              <div key={colIdx} className="flex flex-col gap-0.5 sm:gap-1">
                 {dateGrid.map((row, rowIdx) => {
                   const date = row[colIdx];
                   const dateKey = date ? formatDateKey(date) : null;
@@ -336,7 +352,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
                       whileTap={{ scale: 0.95 }}
                       onClick={(e) => handleDayClick(date, e)}
                       disabled={!date}
-                      className={`w-3 h-3 rounded-sm border transition-all ${
+                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-sm border transition-all ${
                         date 
                           ? `${getIntensityColor(count)} cursor-pointer hover:ring-2 hover:ring-[var(--color-accent)]/50` 
                           : 'bg-transparent border-transparent cursor-default'
