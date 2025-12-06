@@ -117,7 +117,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full">
-          <p className="text-center">Loading today's Medical Wordle...</p>
+          <p className="text-center">Loading today's Daily Term Challenge...</p>
         </div>
       </div>
     );
@@ -135,7 +135,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
           <div className="flex items-center gap-2">
             <Hash className="w-6 h-6 text-green-600" />
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Medical Wordle
+              Daily Term Challenge
             </h2>
           </div>
           <button

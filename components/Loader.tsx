@@ -19,24 +19,24 @@ const Loader: React.FC<LoaderProps> = ({ message = 'Generating...', forceDark = 
     };
   }, []);
 
-  // Determine background and text classes based on forceDark prop
+  // Use theme colors instead of hardcoded colors for light/dark mode consistency
   const bgClass = forceDark 
     ? 'bg-slate-950' 
-    : 'bg-slate-50/80 dark:bg-slate-900/90';
+    : 'bg-[var(--color-bg-primary)]/80 backdrop-blur-md';
   
   const dotClass = forceDark
     ? 'bg-slate-100'
-    : 'bg-slate-900 dark:bg-slate-100';
+    : 'bg-[var(--color-accent)]';
   
   const textClass = forceDark
     ? 'text-slate-200'
-    : 'text-slate-700 dark:text-slate-300';
+    : 'text-[var(--color-text-primary)]';
 
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`fixed inset-0 ${bgClass} backdrop-blur-sm flex flex-col items-center justify-center z-50`}
+      className={`fixed inset-0 ${bgClass} flex flex-col items-center justify-center z-50`}
     >
       <div className="flex space-x-2">
         <motion.div 
