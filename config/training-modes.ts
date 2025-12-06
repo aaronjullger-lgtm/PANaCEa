@@ -30,7 +30,12 @@ export type TrainingModeId =
   | 'diagnosisdle'
   | 'grand_rounds'
   | 'cram_mode'
-  | 'commuter_mode';
+  | 'commuter_mode'
+  | 'medical_wordle'
+  | 'ventilator_hero'
+  | 'triage_tent'
+  | 'polypharmacy_puzzle'
+  | 'radiology_scroll';
 
 /**
  * Configuration interface for training mode cards.
@@ -279,6 +284,58 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     route: '/drill/commuter',
     isComingSoon: true,
   },
+  // Phase 38: Daily Rituals
+  {
+    id: 'medical_wordle',
+    label: 'Medical Wordle',
+    description: 'Daily medical word guessing game. 6 tries to guess the drug or condition!',
+    category: 'recall',
+    iconName: 'Hash',
+    theme: 'green',
+    route: '/drill/medical-wordle',
+    isComingSoon: false,
+  },
+  // Phase 40: High-Fidelity Clinical Simulation
+  {
+    id: 'ventilator_hero',
+    label: 'Ventilator Hero',
+    description: 'Adjust vent settings to manage ARDS, COPD, and critical patients.',
+    category: 'clinical',
+    iconName: 'Wind',
+    theme: 'blue',
+    route: '/drill/ventilator-hero',
+    isComingSoon: false,
+  },
+  {
+    id: 'triage_tent',
+    label: 'Triage Tent',
+    description: 'Mass casualty triage. Swipe to categorize victims using START protocol.',
+    category: 'clinical',
+    iconName: 'AlertTriangle',
+    theme: 'red',
+    route: '/drill/triage-tent',
+    isComingSoon: false,
+  },
+  {
+    id: 'polypharmacy_puzzle',
+    label: 'Polypharmacy Puzzle',
+    description: 'Geriatrics deprescribing challenge. Which meds can be safely stopped?',
+    category: 'clinical',
+    iconName: 'PillBottle',
+    theme: 'amber',
+    route: '/drill/polypharmacy',
+    isComingSoon: false,
+  },
+  {
+    id: 'radiology_scroll',
+    label: 'Radiology Scroll',
+    description: 'Interactive DICOM viewer. Scroll through CT/MRI slices to find pathology.',
+    category: 'visual',
+    iconName: 'Layers',
+    theme: 'slate',
+    route: '/drill/radiology-scroll',
+    isComingSoon: false,
+  },
 ];
 
 /**
@@ -306,7 +363,12 @@ export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = [
   'diagnosisdle',
   'grand_rounds',
   'cram_mode',
-  'commuter_mode'
+  'commuter_mode',
+  'medical_wordle',
+  'ventilator_hero',
+  'triage_tent',
+  'polypharmacy_puzzle',
+  'radiology_scroll'
 ];
 
 /**
@@ -331,5 +393,10 @@ export const ALL_MINI_MODES: TrainingModeId[] = [
   'diagnosisdle',
   'grand_rounds',
   'cram_mode',
-  'commuter_mode'
+  'commuter_mode',
+  'medical_wordle',
+  'ventilator_hero',
+  'triage_tent',
+  'polypharmacy_puzzle',
+  'radiology_scroll'
 ];

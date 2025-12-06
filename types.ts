@@ -142,3 +142,75 @@ export const YEAR_IN_PROGRAM_OPTIONS: readonly YearInProgram[] = [
   'Post-Graduate',
   'Preparing for PANCE',
 ] as const;
+
+// Specialty CAQ Tracks (DLC Packs)
+export type SpecialtyTrack = 
+  | 'orthopedics'
+  | 'dermatology'
+  | 'psychiatry'
+  | 'emergency_medicine';
+
+export interface SpecialtyCAQPack {
+  id: SpecialtyTrack;
+  name: string;
+  description: string;
+  isPurchased?: boolean;
+  releaseDate?: string;
+}
+
+// OSCE/Patient Encounter Configuration
+export interface OSCEConfiguration {
+  enableVoiceMode?: boolean; // Voice-to-Voice option
+  aiDifficultyLevel?: 'cooperative' | 'difficult' | 'very_difficult';
+  resourceLimited?: boolean; // Disables CT/MRI options
+  culturalCompetency?: boolean; // Enable cultural vignettes
+}
+
+// Daily Ritual Features
+export interface DailyRitualData {
+  medicalWordle?: MedicalWordleGame;
+  thisDayInMedicine?: HistoricalMedicalEvent;
+  streakFreezes?: number; // Count of available streak freezes
+}
+
+export interface MedicalWordleGame {
+  id: string;
+  date: string; // ISO date
+  targetWord: string;
+  category: 'drug' | 'condition' | 'anatomy';
+  attempts?: string[];
+  solved?: boolean;
+  hints?: {
+    class?: string; // e.g., "Antibiotic", "3rd Generation"
+    system?: string;
+  };
+}
+
+export interface HistoricalMedicalEvent {
+  id: string;
+  date: string; // MM-DD format
+  year: number;
+  title: string;
+  description: string;
+  relatedQuestions?: string[]; // Question IDs
+}
+
+// Unit Preferences
+export type UnitSystem = 'us' | 'si';
+export type DrugNamingConvention = 'us' | 'uk' | 'global';
+
+export interface UserPreferences {
+  unitSystem?: UnitSystem;
+  drugNaming?: DrugNamingConvention;
+  enableSmartWatchSync?: boolean;
+}
+
+// Smart Watch Data
+export interface SmartWatchComplication {
+  daysUntilExam?: number;
+  dailyProgress?: {
+    current: number;
+    goal: number;
+  };
+  currentStreak?: number;
+}
