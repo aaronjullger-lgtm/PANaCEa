@@ -7,6 +7,9 @@ import type { UnitSystem, DrugNamingConvention } from '@/types';
 
 /**
  * Lab value conversion factors and units
+ * Structure: { labName: { us: { unit, factor }, si: { unit, factor } } }
+ * To convert from US to SI: value_si = value_us * si.factor
+ * To convert from SI to US: value_us = value_si / si.factor
  */
 export const LAB_CONVERSIONS = {
   glucose: {

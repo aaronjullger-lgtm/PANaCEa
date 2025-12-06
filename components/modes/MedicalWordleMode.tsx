@@ -66,7 +66,10 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
   const handleSubmitGuess = () => {
     if (!game || gameState !== 'playing') return;
     
-    const normalizedGuess = currentGuess.toUpperCase().padEnd(game.targetWord.length, ' ').slice(0, game.targetWord.length);
+    // Normalize guess to match target word length
+    const uppercaseGuess = currentGuess.toUpperCase();
+    const paddedGuess = uppercaseGuess.padEnd(game.targetWord.length, ' ');
+    const normalizedGuess = paddedGuess.slice(0, game.targetWord.length);
     
     if (normalizedGuess.trim().length < 3) {
       alert('Word too short!');

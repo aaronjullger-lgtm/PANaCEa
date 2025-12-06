@@ -145,6 +145,7 @@ export function evaluateVentilatorSettings(
   // Simplified physiologic model
   let newPo2 = caseData.initialLabs.po2;
   let newPco2 = caseData.initialLabs.pco2;
+  const originalPco2 = caseData.initialLabs.pco2;
   let newPh = caseData.initialLabs.ph;
   
   // FiO2 affects PO2
@@ -162,7 +163,7 @@ export function evaluateVentilatorSettings(
   newPco2 = newPco2 / mvRatio; // Inverse relationship
   
   // Calculate pH from CO2 (Henderson-Hasselbalch approximation)
-  const pco2Change = newPco2 - caseData.initialLabs.pco2;
+  const pco2Change = newPco2 - originalPco2;
   newPh = caseData.initialLabs.ph - (pco2Change * 0.008); // Simplified
   
   // Check against targets

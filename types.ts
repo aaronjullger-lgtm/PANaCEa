@@ -177,7 +177,7 @@ export interface MedicalWordleGame {
   id: string;
   date: string; // ISO date
   targetWord: string;
-  category: 'drug' | 'condition' | 'anatomy';
+  category: 'drugs' | 'conditions' | 'anatomy';
   attempts?: string[];
   solved?: boolean;
   hints?: {

@@ -157,8 +157,8 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
       {/* Earn More Coins */}
       <div className="mt-3 text-center">
         <p className="text-xs text-gray-600 dark:text-gray-400">
-          Earn <span className="font-bold text-yellow-600">{STREAK_FREEZE_CONFIG.coinsPerQuestion}</span> coin per question, 
-          <span className="font-bold text-yellow-600"> {STREAK_FREEZE_CONFIG.coinsPerCorrectAnswer}</span> for correct answers
+          Earn <span className="font-bold text-yellow-600">{STREAK_FREEZE_CONFIG.coinsPerQuestion}</span> coins per question, 
+          <span className="font-bold text-yellow-600"> {STREAK_FREEZE_CONFIG.coinsPerCorrectAnswer}</span> coins for correct answers
         </p>
       </div>
     </div>

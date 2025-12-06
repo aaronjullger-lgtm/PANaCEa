@@ -224,7 +224,7 @@ export const TRIAGE_VICTIMS: TriageVictim[] = [
   },
   {
     id: 'victim-012',
-    age: 72,
+    age: 28,
     sex: 'F',
     presentation: 'Pregnant (30 weeks), abdominal pain, contractions, stable BP',
     vitalSigns: {
