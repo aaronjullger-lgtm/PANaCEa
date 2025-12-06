@@ -132,3 +132,13 @@ export interface UserProfile {
   yearInProgram?: YearInProgram;
   hasCompletedOnboarding: boolean;
 }
+
+// Constants for dropdown options
+export const YEAR_IN_PROGRAM_OPTIONS: readonly YearInProgram[] = [
+  'Didactic Year 1',
+  'Didactic Year 2',
+  'Clinical Year',
+  'Graduated',
+  'Post-Graduate',
+  'Preparing for PANCE',
+] as const;

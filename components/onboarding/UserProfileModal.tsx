@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { RotationSelector } from './RotationSelector';
 import type { UserProfile, YearInProgram, ClinicalRotation } from '@/types';
+import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -22,15 +23,6 @@ interface UserProfileModalProps {
   onSkip?: () => void;
   canSkip?: boolean;
 }
-
-const YEAR_OPTIONS: YearInProgram[] = [
-  'Didactic Year 1',
-  'Didactic Year 2',
-  'Clinical Year',
-  'Graduated',
-  'Post-Graduate',
-  'Preparing for PANCE',
-];
 
 export function UserProfileModal({ 
   isOpen, 
@@ -182,7 +174,7 @@ export function UserProfileModal({
                     Where are you in your PA journey?
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {YEAR_OPTIONS.map((year) => (
+                    {YEAR_IN_PROGRAM_OPTIONS.map((year) => (
                       <button
                         key={year}
                         onClick={() => setYearInProgram(year)}

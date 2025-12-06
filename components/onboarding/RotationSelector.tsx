@@ -69,7 +69,7 @@ export function RotationSelector({ value, onChange, label = 'Current Rotation', 
               className={`
                 p-3 rounded-lg border-2 transition-all text-left
                 ${isSelected 
-                  ? `border-${option.color}-500 bg-${option.color}-50 dark:bg-${option.color}-900/20` 
+                  ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10' 
                   : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--color-bg-secondary)]'
                 }
               `}
@@ -79,7 +79,7 @@ export function RotationSelector({ value, onChange, label = 'Current Rotation', 
               <div className="flex items-center gap-2">
                 <Icon 
                   className={`w-4 h-4 flex-shrink-0 ${
-                    isSelected ? `text-${option.color}-600 dark:text-${option.color}-400` : 'text-[var(--color-text-muted)]'
+                    isSelected ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]'
                   }`} 
                 />
                 <span className={`text-sm font-medium ${
