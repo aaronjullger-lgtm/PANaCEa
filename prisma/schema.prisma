@@ -587,3 +587,134 @@ model BranchChange {
   @@index([conditionId])
   @@index([createdAt])
 }
+
+/// Staging area for AI-generated questions before they go live
+/// Task 108: The "Staging Lake" Architecture
+model StagingQuestion {
+  id                String   @id @default(uuid())
+  questionType      String   // "vignette", "mcq", "clinical"
+  system            String?  // System code (CV, PULM, GI, etc.)
+  conditionId       String?  // Related condition
+  difficulty        String   // "easy", "medium", "hard"
+  questionData      Json     // Full question structure
+  
+  /// Adequacy check results
+  adequacyStatus    String   @default("pending") // pending, pass, fail, flagged
+  adequacyScore     Float?   // 0-1 quality score from cheaper AI model
+  adequacyDetails   Json?    // Detailed check results
+  hasCorrectAnswer  Boolean  @default(false)
+  explanationLength Int      @default(0) // Word count
+  hasMedicalErrors  Boolean  @default(false)
+  
+  /// Workflow tracking
+  generatedAt       DateTime @default(now())
+  checkedAt         DateTime?
+  promotedAt        DateTime? // When moved to live questions
+  status            String   @default("staging") // staging, live, discarded, flagged_for_review
+  
+  @@index([adequacyStatus])
+  @@index([status])
+  @@index([questionType])
+  @@index([system])
+  @@index([generatedAt])
+}
+
+/// Track every question a user has seen for no-repeat logic
+/// Task 109: "Infinite" No-Repeat Logic
+model UserQuestionHistory {
+  id              String   @id @default(uuid())
+  userId          String
+  questionId      String   // Unique identifier for the question
+  questionType    String   // "vignette", "mcq", "clinical"
+  system          String?  // System code
+  conditionId     String?  // Related condition
+  seenAt          DateTime @default(now())
+  wasCorrect      Boolean? // Track if user got it right
+  
+  @@unique([userId, questionId])
+  @@index([userId])
+  @@index([userId, system]) // For filtering by system
+  @@index([userId, conditionId]) // For filtering by condition
+  @@index([questionId])
+  @@index([seenAt])
+}
+
+/// Store question "seeds" for runtime permutation generation
+/// Task 111: "Vignette Permutation" Storage
+model QuestionSeed {
+  id              String   @id @default(uuid())
+  conditionId     String   // Core medical condition/pathology
+  questionType    String   // "vignette", "mcq", "clinical"
+  system          String?  // System code
+  
+  /// Seed data for permutations
+  corePathology   String   // Core concept (e.g., "Appendicitis", "MI")
+  variables       Json     // Variables for permutation: { "Age": [10, 25, 60], "Presentation": [...] }
+  template        String   @db.Text // Template with placeholders
+  
+  /// Question structure
+  correctAnswer   String
+  explanation     String   @db.Text
+  distractors     Json     // Array of distractor options
+  difficulty      String   // "easy", "medium", "hard"
+  
+  /// Metadata
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  usageCount      Int      @default(0) // How many times this seed has been used
+  lastUsedAt      DateTime?
+  
+  @@index([conditionId])
+  @@index([questionType])
+  @@index([system])
+  @@index([usageCount])
+}
+
+/// Clinical pearls extracted from question explanations
+/// Task 112: The "Pearl" Harvester
+model ClinicalPearl {
+  id              String   @id @default(uuid())
+  questionId      String   // Source question
+  conditionId     String?  // Related condition
+  system          String?  // System code
+  
+  /// Pearl content
+  pearlText       String   @db.Text // The 1-sentence clinical takeaway
+  fullExplanation String   @db.Text // Full explanation context
+  
+  /// Categorization
+  category        String?  // "diagnosis", "treatment", "pathophysiology", etc.
+  tags            String[] // Keywords for filtering
+  difficulty      String?  // "easy", "medium", "hard"
+  
+  /// User engagement
+  viewCount       Int      @default(0)
+  usefulVotes     Int      @default(0)
+  
+  /// Metadata
+  extractedAt     DateTime @default(now())
+  extractedBy     String   @default("ai") // "ai" or user ID
+  
+  @@index([questionId])
+  @@index([conditionId])
+  @@index([system])
+  @@index([category])
+  @@index([tags])
+  @@index([extractedAt])
+}
+
+/// Track which pearls users have viewed (for "Review My Pearls")
+model UserPearl {
+  id              String   @id @default(uuid())
+  userId          String
+  pearlId         String
+  viewedAt        DateTime @default(now())
+  markedUseful    Boolean  @default(false)
+  notes           String?  @db.Text // User's personal notes on the pearl
+  
+  @@unique([userId, pearlId])
+  @@index([userId])
+  @@index([pearlId])
+  @@index([viewedAt])
+  @@index([userId, markedUseful]) // For filtering favorite pearls
+}
