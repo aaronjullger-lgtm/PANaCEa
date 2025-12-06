@@ -12,8 +12,19 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "../lib/prisma";
 
 const API_KEY = process.env.GEMINI_API_KEY;
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
-const cheapModel = genAI?.getGenerativeModel({ model: "gemini-1.5-flash" }); // Cheaper, faster model
+
+// Lazy initialization of AI model to improve testability and error handling
+let cheapModel: any = null;
+function getCheapModel() {
+  if (!API_KEY) {
+    return null;
+  }
+  if (!cheapModel) {
+    const genAI = new GoogleGenerativeAI(API_KEY);
+    cheapModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  }
+  return cheapModel;
+}
 
 interface AdequacyCheckResult {
   isValid: boolean;
@@ -66,7 +77,8 @@ export async function runAdequacyCheck(stagingQuestionId: string): Promise<Adequ
   let hasMedicalErrors = false;
   let aiDetails = "";
 
-  if (cheapModel) {
+  const model = getCheapModel();
+  if (model) {
     try {
       const prompt = `
 You are a medical accuracy checker. Review this question and explanation for any medical inaccuracies or errors.
@@ -83,7 +95,7 @@ Respond with JSON only:
 }
 `;
 
-      const result = await cheapModel.generateContent(prompt);
+      const result = await model.generateContent(prompt);
       const response = result.response.text();
       const sanitized = response.replace(/```json|```/g, "").trim();
 

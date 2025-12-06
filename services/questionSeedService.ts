@@ -86,6 +86,16 @@ export async function assembleQuestionFromSeed(seedId: string) {
     },
   });
 
+  // Shuffle options using Fisher-Yates algorithm for unbiased randomization
+  const shuffleArray = (array: any[]) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  };
+
   // Return assembled question
   const questionData = seed.questionData || {};
   const assembledQuestion = {
@@ -95,7 +105,7 @@ export async function assembleQuestionFromSeed(seedId: string) {
     type: seed.questionType,
     question: questionText,
     correctAnswer: seed.correctAnswer,
-    options: [seed.correctAnswer, ...(seed.distractors as any)].sort(() => Math.random() - 0.5),
+    options: shuffleArray([seed.correctAnswer, ...(seed.distractors as any)]),
     explanation: {
       rationale: seed.explanation,
     },
@@ -247,17 +257,20 @@ export async function previewSeedPermutations(seedId: string, limit: number = 10
     }
   }
 
-  // Generate sample permutations
+  // Generate sample permutations with balanced distribution
   const samples = [];
   for (let i = 0; i < Math.min(limit, totalPermutations); i++) {
     const selectedVariables: Record<string, any> = {};
 
+    // Use a more balanced distribution algorithm
+    // Calculate the index for each variable independently
+    let tempIndex = i;
     for (const key of variableKeys) {
       const values = variables[key];
       if (Array.isArray(values) && values.length > 0) {
-        // For preview, we can use a deterministic selection
-        const index = i % values.length;
+        const index = tempIndex % values.length;
         selectedVariables[key] = values[index];
+        tempIndex = Math.floor(tempIndex / values.length);
       }
     }
 

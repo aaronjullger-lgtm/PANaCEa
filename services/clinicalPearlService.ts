@@ -11,8 +11,19 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "../lib/prisma";
 
 const API_KEY = process.env.GEMINI_API_KEY;
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
-const model = genAI?.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// Lazy initialization of AI model to improve testability and error handling
+let aiModel: any = null;
+function getAIModel() {
+  if (!API_KEY) {
+    return null;
+  }
+  if (!aiModel) {
+    const genAI = new GoogleGenerativeAI(API_KEY);
+    aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  }
+  return aiModel;
+}
 
 interface ExtractedPearl {
   pearlText: string;
@@ -30,6 +41,7 @@ export async function extractPearlFromExplanation(
     system?: string;
   }
 ): Promise<ExtractedPearl | null> {
+  const model = getAIModel();
   if (!model) {
     console.warn("AI model not available for pearl extraction");
     return null;
@@ -412,8 +424,10 @@ export async function getPearlStats() {
  */
 export async function getPearlOfTheDay(date?: Date) {
   const today = date || new Date();
+  // Calculate day of year: use January 1st as start (month 0, day 1)
+  const startOfYear = new Date(today.getFullYear(), 0, 1);
   const dayOfYear = Math.floor(
-    (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
+    (today.getTime() - startOfYear.getTime()) / 86400000
   );
 
   const count = await prisma.clinicalPearl.count();

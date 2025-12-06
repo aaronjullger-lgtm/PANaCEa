@@ -189,6 +189,9 @@ export async function getQuestionsWithNoRepeat(
 /**
  * Generate new questions on-the-fly for a specific filter
  * This is the expensive/slow fallback operation
+ * 
+ * Note: This function requires integration with your condition data source.
+ * Implement conditionDataLoader to fetch actual medical content.
  */
 export async function generateQuestionsForFilter(
   filter: QuestionFilter,
@@ -198,14 +201,16 @@ export async function generateQuestionsForFilter(
     throw new Error("Cannot generate questions without conditionId");
   }
 
-  // This would integrate with your existing condition data source
-  // For now, we'll create a placeholder
-  const conditionData = {
-    condition: filter.conditionId,
-    sections: {
-      overview: "Condition data would be loaded here",
-    },
-  };
+  // TODO: Replace with actual condition data loader
+  // Example: const conditionData = await loadConditionData(filter.conditionId);
+  throw new Error(
+    "generateQuestionsForFilter requires integration with condition data source. " +
+    "Please implement a condition data loader that fetches medical content for the given conditionId."
+  );
+
+  /* 
+  // Example implementation when condition loader is ready:
+  const conditionData = await loadConditionData(filter.conditionId);
 
   const generatedQuestions = [];
 
@@ -240,6 +245,7 @@ export async function generateQuestionsForFilter(
   }
 
   return generatedQuestions;
+  */
 }
 
 /**
