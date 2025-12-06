@@ -62,8 +62,11 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
   const embedCode = useMemo(() => {
     // Use server-hosted widget URLs instead of data URIs
     // This makes them compatible with Notion's security policies
-    const serverUrl = process.env.VITE_BACKEND_URL || 'http://localhost:3001';
-    const userId = 'YOUR_USER_ID'; // TODO: Get from auth context
+    const serverUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+    
+    // TODO: Get actual userId from authentication context
+    // For now, provide instructions to replace placeholder
+    const userId = 'YOUR_USER_ID';
     
     let widgetPath = '';
     if (selectedWidget === 'streak') {
@@ -261,13 +264,19 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
           How to Embed:
         </h3>
         <div className="space-y-2">
+          <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded border border-yellow-300 dark:border-yellow-700 mb-2">
+            <p className="text-xs font-medium text-yellow-900 dark:text-yellow-300">
+              ⚠️ Important: Replace YOUR_USER_ID in the URL with your actual user ID before embedding.
+            </p>
+          </div>
           <div>
             <p className="text-xs font-medium text-indigo-800 dark:text-indigo-400 mb-1">
               Notion:
             </p>
             <ol className="text-xs text-indigo-700 dark:text-indigo-400 space-y-0.5 list-decimal list-inside pl-2">
+              <li>Replace YOUR_USER_ID in the URL with your user ID</li>
               <li>Type /embed in your Notion page</li>
-              <li>Paste the HTML embed code</li>
+              <li>Paste the widget URL (not the full iframe code)</li>
               <li>Click "Embed link"</li>
             </ol>
           </div>
@@ -276,6 +285,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
               Obsidian:
             </p>
             <ol className="text-xs text-indigo-700 dark:text-indigo-400 space-y-0.5 list-decimal list-inside pl-2">
+              <li>Replace YOUR_USER_ID in the code with your user ID</li>
               <li>Switch to Obsidian embed format above</li>
               <li>Copy and paste the code block into your note</li>
               <li>Switch to preview mode to see the widget</li>

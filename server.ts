@@ -990,15 +990,32 @@ app.get('/widgets/question-of-day/:userId', async (req: Request, res: Response) 
     });
     
     // Convert to Question format
-    const questions = savedQuestions.map(sq => ({
-      id: sq.questionId,
-      question: sq.questionText,
-      options: ['A', 'B', 'C', 'D'], // Placeholder - would need actual options stored
-      correctAnswer: sq.correctAnswer,
-      explanation: sq.explanation,
-      system: sq.system || undefined,
-      subcategory: sq.topic,
-    }));
+    // NOTE: This is a simplified version. In production, store full question data
+    // including actual options in the database or fetch from question repository
+    const questions = savedQuestions.map(sq => {
+      // Parse correctAnswer to handle different formats
+      let answerLetter = sq.correctAnswer;
+      // If it's a number, convert to letter (0=A, 1=B, etc.)
+      if (!isNaN(parseInt(sq.correctAnswer))) {
+        const answerIndex = parseInt(sq.correctAnswer);
+        answerLetter = String.fromCharCode(65 + answerIndex);
+      }
+      
+      return {
+        id: sq.questionId,
+        question: sq.questionText,
+        options: [
+          `Option ${answerLetter} (Correct)`,
+          'Option B',
+          'Option C',
+          'Option D'
+        ], // Simplified - in production, fetch actual options
+        correctAnswer: answerLetter,
+        explanation: sq.explanation,
+        system: sq.system || undefined,
+        subcategory: sq.topic,
+      };
+    });
     
     const questionOfDay = getQuestionOfDay(questions);
     
