@@ -232,7 +232,12 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Track if we're actively generating a question in the background
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
 
-  // Wellness check state
+  // Wellness check state and constants
+  const WELLNESS_CHECK_QUESTION_THRESHOLD = 30;
+  const LATE_NIGHT_START_HOUR = 22;
+  const LATE_NIGHT_END_HOUR = 5;
+  const LATE_NIGHT_CHECK_INTERVAL = 15;
+  
   const [showWellnessModal, setShowWellnessModal] = useState(false);
   const [wellnessReason, setWellnessReason] = useState<'rapid_questions' | 'late_night' | 'manual'>('rapid_questions');
   const questionsAnsweredInSession = useRef(0);
@@ -463,15 +468,16 @@ const QuizView: React.FC<QuizViewProps> = ({
     // Track questions answered and check for wellness triggers
     questionsAnsweredInSession.current += 1;
 
-    // Trigger wellness check after 30 questions
-    if (questionsAnsweredInSession.current > 0 && questionsAnsweredInSession.current % 30 === 0) {
+    // Trigger wellness check after threshold questions
+    if (questionsAnsweredInSession.current > 0 && questionsAnsweredInSession.current % WELLNESS_CHECK_QUESTION_THRESHOLD === 0) {
       setWellnessReason('rapid_questions');
       setShowWellnessModal(true);
     }
 
-    // Check if studying late at night (10 PM - 5 AM)
+    // Check if studying late at night
     const currentHour = new Date().getHours();
-    if ((currentHour >= 22 || currentHour < 5) && questionsAnsweredInSession.current % 15 === 0) {
+    if ((currentHour >= LATE_NIGHT_START_HOUR || currentHour < LATE_NIGHT_END_HOUR) && 
+        questionsAnsweredInSession.current % LATE_NIGHT_CHECK_INTERVAL === 0) {
       setWellnessReason('late_night');
       setShowWellnessModal(true);
     }

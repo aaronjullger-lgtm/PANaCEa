@@ -16,6 +16,17 @@ interface GenerateDraftRequest {
   subcategory?: string;
 }
 
+/**
+ * Utility function to clean AI-generated JSON responses
+ * Removes markdown code blocks and extra whitespace
+ */
+function cleanAIJsonResponse(text: string): string {
+  return text
+    .replace(/```json\s*/g, '')
+    .replace(/```\s*/g, '')
+    .trim();
+}
+
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
@@ -98,10 +109,7 @@ Ensure all information is accurate, concise, and suitable for PA students prepar
     const text = response.text();
 
     // Parse AI response
-    const cleanedText = text
-      .replace(/```json\s*/g, '')
-      .replace(/```\s*/g, '')
-      .trim();
+    const cleanedText = cleanAIJsonResponse(text);
 
     let aiContent;
     try {
