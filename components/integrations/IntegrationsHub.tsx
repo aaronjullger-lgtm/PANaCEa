@@ -12,6 +12,8 @@ import { ArrowLeft } from 'lucide-react';
 import { AnkiExportPanel } from './AnkiExportPanel';
 import { CalendarSyncPanel } from './CalendarSyncPanel';
 import { WidgetPanel } from './WidgetPanel';
+import { TodoistExportPanel } from './TodoistExportPanel';
+import { TrelloExportPanel } from './TrelloExportPanel';
 import type { Question, PerformanceRecord } from '../../types';
 
 interface IntegrationsHubProps {
@@ -22,7 +24,7 @@ interface IntegrationsHubProps {
   onBack?: () => void;
 }
 
-type IntegrationTab = 'anki' | 'calendar' | 'widgets';
+type IntegrationTab = 'anki' | 'calendar' | 'widgets' | 'todoist' | 'trello';
 
 export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
   performanceData,
@@ -52,12 +54,12 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
             Study Ecosystem Integrations
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Connect PANaCEa with your favorite study tools: Anki, Google Calendar, Notion, and more.
+            Connect PANaCEa with your favorite study tools: Anki, Google Calendar, Todoist, Trello, Notion, and more.
           </p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6 overflow-x-auto">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           <button
             onClick={() => setActiveTab('anki')}
             className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
@@ -76,7 +78,27 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
             }`}
           >
-            📅 Life Scheduler
+            📅 Calendar Sync
+          </button>
+          <button
+            onClick={() => setActiveTab('todoist')}
+            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+              activeTab === 'todoist'
+                ? 'bg-red-600 text-white shadow-lg'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            ✓ Todoist
+          </button>
+          <button
+            onClick={() => setActiveTab('trello')}
+            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+              activeTab === 'trello'
+                ? 'bg-blue-500 text-white shadow-lg'
+                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            📋 Trello
           </button>
           <button
             onClick={() => setActiveTab('widgets')}
@@ -86,7 +108,7 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
             }`}
           >
-            🔗 Notion/Obsidian Widgets
+            🔗 Widgets
           </button>
         </div>
 
@@ -110,6 +132,23 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
             </div>
           )}
 
+          {activeTab === 'todoist' && (
+            <div className="animate-fadeIn">
+              <TodoistExportPanel
+                missedQuestions={missedQuestions}
+                userExamDate={userExamDate}
+              />
+            </div>
+          )}
+
+          {activeTab === 'trello' && (
+            <div className="animate-fadeIn">
+              <TrelloExportPanel
+                userExamDate={userExamDate}
+              />
+            </div>
+          )}
+
           {activeTab === 'widgets' && (
             <div className="animate-fadeIn">
               <WidgetPanel
@@ -121,7 +160,7 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
         </div>
 
         {/* Feature Comparison */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
               Why Anki?
@@ -139,6 +178,26 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
             <p className="text-xs text-gray-600 dark:text-gray-400">
               Turn your exam date into a structured plan. Never wonder "what should I study today?"
               with automated daily study blocks.
+            </p>
+          </div>
+          
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+              Why Todoist?
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Manage your study tasks alongside life's other priorities. Smart scheduling and
+              cross-platform sync keep you organized everywhere.
+            </p>
+          </div>
+          
+          <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+              Why Trello?
+            </h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Visual progress tracking with Kanban boards. Drag cards as you complete topics and
+              see your progress at a glance.
             </p>
           </div>
           
