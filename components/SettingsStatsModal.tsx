@@ -899,7 +899,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                       </label>
                       <select
                         value={userProfile.yearInProgram || ''}
-                        onChange={(e) => handleUpdateYearInProgram(e.target.value as YearInProgram)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value && YEAR_IN_PROGRAM_OPTIONS.includes(value as YearInProgram)) {
+                            handleUpdateYearInProgram(value as YearInProgram);
+                          }
+                        }}
                         className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
                           text-[var(--color-text-primary)]
                           focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent

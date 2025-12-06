@@ -261,7 +261,7 @@ export function UserProfileModal({
                   flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg 
                   font-medium transition-all
                   ${(step === 1 && !canProceedStep1)
-                    ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                    ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed opacity-50'
                     : 'bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)]'
                   }
                 `}

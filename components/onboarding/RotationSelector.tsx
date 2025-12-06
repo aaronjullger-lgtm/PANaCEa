@@ -41,10 +41,10 @@ const ROTATION_OPTIONS: RotationOption[] = [
   { value: 'Surgery', label: 'Surgery', icon: Scissors },
   { value: 'Pediatrics', label: 'Pediatrics', icon: Baby },
   { value: 'Psychiatry', label: 'Psychiatry', icon: Brain },
-  { value: 'Obstetrics & Gynecology', label: 'OB/GYN', icon: Heart },
+  { value: 'Obstetrics & Gynecology', label: 'OB/GYN', icon: UserCheck },
   { value: 'Cardiology', label: 'Cardiology', icon: Heart },
   { value: 'Orthopedics', label: 'Orthopedics', icon: Bone },
-  { value: 'Dermatology', label: 'Dermatology', icon: Eye },
+  { value: 'Dermatology', label: 'Dermatology', icon: Pill },
   { value: 'Neurology', label: 'Neurology', icon: Brain },
   { value: 'Other', label: 'Other', icon: Sparkles },
 ];
