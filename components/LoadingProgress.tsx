@@ -56,10 +56,9 @@ export const LoadingProgress: React.FC<LoadingProgressProps> = ({
           className="fixed top-0 left-0 right-0 z-50 h-1 bg-transparent"
         >
           <motion.div
-            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400"
+            className="h-full bg-[var(--color-accent)]"
             style={{
               width: `${progress}%`,
-              boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
             }}
             initial={{ width: '0%' }}
             animate={{ width: `${progress}%` }}
@@ -87,10 +86,7 @@ export const TopBarLoader: React.FC<{ isLoading: boolean }> = ({ isLoading }) =>
           animate={{ scaleX: 1 }}
           exit={{ scaleX: 0 }}
           transition={{ duration: 1.5, ease: 'easeInOut' }}
-          className="fixed top-0 left-0 right-0 h-1 z-50 origin-left"
-          style={{
-            background: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899)',
-          }}
+          className="fixed top-0 left-0 right-0 h-1 z-50 origin-left bg-[var(--color-accent)]"
         />
       )}
     </AnimatePresence>

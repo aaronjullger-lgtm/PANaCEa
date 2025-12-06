@@ -523,7 +523,7 @@ const App: React.FC = () => {
         />
       </Suspense>
 
-      <div className="max-w-4xl mx-auto px-4 py-6 md:py-10 pb-24">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24">
         {isLoading && <Loader forceDark={view === "imaging_drill"} />}
         {error && (
           <motion.div 

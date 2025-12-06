@@ -18,7 +18,7 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-700"
+      className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]"
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
