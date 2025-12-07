@@ -469,24 +469,60 @@ app.post('/api/questions/generate',
         });
       }
       
-      // Generate new question (placeholder - integrate with actual question generation)
-      // TODO: In production, integrate with actual AI question generation service
-      // For now, return an indication that generation would happen here
-      const newQuestion = {
-        id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        type: questionType,
-        system: system || null,
-        difficulty: difficulty || 'medium',
-        text: `This is a placeholder. In production, this would be an AI-generated ${questionType} question about: ${queryText}`,
-        options: questionType === 'mcq' ? ['Option A', 'Option B', 'Option C', 'Option D'] : undefined,
-        correctAnswer: questionType === 'mcq' ? 'Option A' : undefined,
-        explanation: 'Placeholder explanation. In production, this would contain detailed medical explanation.',
-        generatedAt: new Date().toISOString(),
-        metadata: {
-          originalQuery: queryText,
-          cached: false,
+      // Generate new question using AI question generation service
+      let newQuestion = null;
+      
+      try {
+        // Try to load condition data and generate question
+        const { loadConditionData } = await import('./services/conditionDataLoader');
+        const { generateSingleQuestion } = await import('./lib/questionGenerator');
+        
+        // Load condition data based on query text
+        const conditionData = await loadConditionData(queryText);
+        
+        if (conditionData) {
+          // Generate question using AI
+          const generatedQ = await generateSingleQuestion(
+            conditionData as any,
+            questionType as any
+          );
+          
+          if (generatedQ) {
+            newQuestion = {
+              ...generatedQ,
+              system: system || conditionData.system,
+              difficulty: difficulty || 'medium',
+              generatedAt: new Date().toISOString(),
+              metadata: {
+                originalQuery: queryText,
+                cached: false,
+              }
+            };
+          }
         }
-      };
+      } catch (generationError) {
+        console.error('Failed to generate question with AI:', generationError);
+      }
+      
+      // Fallback to placeholder if generation failed
+      if (!newQuestion) {
+        newQuestion = {
+          id: `q_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          type: questionType,
+          system: system || null,
+          difficulty: difficulty || 'medium',
+          text: `Unable to generate question for: ${queryText}. Please try a different condition or query.`,
+          options: questionType === 'mcq' ? ['Option A', 'Option B', 'Option C', 'Option D'] : undefined,
+          correctAnswer: questionType === 'mcq' ? 'Option A' : undefined,
+          explanation: 'Question generation failed. This is a placeholder response.',
+          generatedAt: new Date().toISOString(),
+          metadata: {
+            originalQuery: queryText,
+            cached: false,
+            generationFailed: true,
+          }
+        };
+      }
       
       // Cache the generated question
       await cacheGeneratedQuestion({
