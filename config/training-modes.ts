@@ -27,7 +27,6 @@ export type TrainingModeId =
   | 'ar_anatomy'
   | 'panre_la'
   | 'code_blue_speed'
-  | 'diagnosisdle'
   | 'grand_rounds'
   | 'cram_mode'
   | 'commuter_mode'
@@ -241,17 +240,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'Siren',
     theme: 'red',
     route: '/drill/code-blue',
-    isComingSoon: true,
-  },
-  {
-    id: 'diagnosisdle',
-    label: 'Diagnosisdle',
-    description: 'Daily mystery case. Wordle-style progressive clues.',
-    category: 'mastery',
-    iconName: 'Calendar',
-    theme: 'purple',
-    route: '/drill/diagnosisdle',
-    isComingSoon: true,
+    isComingSoon: false,
   },
   {
     id: 'grand_rounds',
@@ -261,7 +250,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'Trophy',
     theme: 'amber',
     route: '/drill/grand-rounds',
-    isComingSoon: true,
+    isComingSoon: false,
   },
   {
     id: 'cram_mode',
@@ -360,7 +349,6 @@ export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = [
   'ar_anatomy',
   'panre_la',
   'code_blue_speed',
-  'diagnosisdle',
   'grand_rounds',
   'cram_mode',
   'commuter_mode',
@@ -390,7 +378,6 @@ export const ALL_MINI_MODES: TrainingModeId[] = [
   'antibiotic_mode',
   'patient_encounter',
   'code_blue_speed',
-  'diagnosisdle',
   'grand_rounds',
   'cram_mode',
   'commuter_mode',
