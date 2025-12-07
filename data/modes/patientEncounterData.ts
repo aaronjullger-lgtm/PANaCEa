@@ -221,23 +221,40 @@ export function evaluateQuestion(
  * Helper function to get response based on keyword and patient data
  */
 function getResponseForKeyword(keyword: string, patientCase: PatientEncounterCase): string {
-  // Check history data
-  if (patientCase.historyData[keyword]) {
-    return patientCase.historyData[keyword];
+  const lowerKeyword = keyword.toLowerCase();
+  
+  // Check history data (case-insensitive)
+  for (const [key, value] of Object.entries(patientCase.historyData)) {
+    if (key.toLowerCase() === lowerKeyword || lowerKeyword.includes(key.toLowerCase())) {
+      return value;
+    }
   }
   
-  // Check physical exam data
-  if (patientCase.physicalExamData[keyword]) {
-    return patientCase.physicalExamData[keyword];
+  // Check physical exam data (case-insensitive)
+  for (const [key, value] of Object.entries(patientCase.physicalExamData)) {
+    if (key.toLowerCase() === lowerKeyword || lowerKeyword.includes(key.toLowerCase())) {
+      return value;
+    }
   }
   
-  // Check lab data
-  if (patientCase.labData[keyword]) {
-    return patientCase.labData[keyword];
+  // Check lab data (case-insensitive)
+  for (const [key, value] of Object.entries(patientCase.labData)) {
+    if (key.toLowerCase() === lowerKeyword || lowerKeyword.includes(key.toLowerCase())) {
+      return value;
+    }
+  }
+  
+  // Provide more specific responses based on common keywords
+  if (lowerKeyword.includes('pain')) {
+    return `Regarding the pain: ${patientCase.historyData['character'] || 'The patient describes discomfort'}.`;
+  }
+  
+  if (lowerKeyword.includes('vital') || lowerKeyword.includes('blood pressure') || lowerKeyword.includes('bp')) {
+    return `Blood pressure: ${patientCase.vitalSigns.bp}, Heart rate: ${patientCase.vitalSigns.hr}, Temperature: ${patientCase.vitalSigns.temp}°F`;
   }
   
   // Generic response if no specific data found
-  return `The patient reports: "${keyword}" - information available in the chart.`;
+  return `The patient responds: I can provide information about that. Please ask about specific aspects like symptoms, history, physical findings, or test results.`;
 }
 
 /**

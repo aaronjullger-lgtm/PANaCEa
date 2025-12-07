@@ -56,11 +56,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
     setCurrentQuestion('');
 
-    // Haptic feedback based on relevance
+    // Haptic feedback and visual notification based on relevance
     if (relevance === 'essential') {
       hapticSuccess();
+      // Show success indicator (handled by UI)
     } else if (relevance === 'unnecessary') {
       hapticError();
+      // Show warning indicator (handled by UI)
     }
   };
 

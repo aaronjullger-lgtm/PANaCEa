@@ -589,10 +589,25 @@
   .condition-card {
     padding: 16px;
     margin-bottom: 20px;
+    overflow-x: auto;
   }
   
   .condition-section-title {
     font-size: 1.2rem;
+  }
+  
+  .condition-content {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  .condition-content table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
   }
   
   .condition-modal-header {
