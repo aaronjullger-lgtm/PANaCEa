@@ -271,7 +271,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'Clock',
     theme: 'orange',
     route: '/drill/cram',
-    isComingSoon: true,
+    isComingSoon: false,
   },
   // Phase 8: Accessibility & Commuter Learning
   {
