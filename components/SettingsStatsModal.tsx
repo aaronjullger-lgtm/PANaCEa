@@ -43,6 +43,9 @@ import {
   saveWidgetPreferences as saveWidgetPrefs 
 } from '@/lib/dashboardUtils';
 import ActivityHeatmap from './analytics/ActivityHeatmap';
+import DecisionTimeAnalysis from './analytics/DecisionTimeAnalysis';
+import LongitudinalProgressDashboard from './analytics/LongitudinalProgressDashboard';
+import WeaknessCheatsheetExporter from './analytics/WeaknessCheatsheetExporter';
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 
 // Lazy load Character Gallery
@@ -732,6 +735,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </div>
                 )}
                 
+                {/* Decision Time Analysis */}
+                <DecisionTimeAnalysis 
+                  performanceData={performanceData}
+                  theme={theme}
+                />
+                
                 {/* Toggle for Lifetime Stats */}
                 <div className="flex justify-center">
                   <button
@@ -754,6 +763,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               </div>
             ) : activeTab === 'activity' ? (
               <div className="space-y-4 sm:space-y-6">
+                {/* Longitudinal Progress Dashboard */}
+                <LongitudinalProgressDashboard
+                  performanceData={performanceData}
+                  userYearInProgram={userProfile.yearInProgram}
+                  theme={theme}
+                />
+
                 {/* Activity Heatmap */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 sm:p-6">
                   <ActivityHeatmap 
@@ -782,6 +798,12 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   onResetToDefaults={handleResetWidgets}
                 />
                 
+                {/* Weakness Cheatsheet Export */}
+                <WeaknessCheatsheetExporter
+                  performanceData={performanceData}
+                  theme={theme}
+                />
+
                 {/* Export Data Section */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-3">
