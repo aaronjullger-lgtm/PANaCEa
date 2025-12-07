@@ -189,9 +189,6 @@ export async function getQuestionsWithNoRepeat(
 /**
  * Generate new questions on-the-fly for a specific filter
  * This is the expensive/slow fallback operation
- * 
- * Note: This function requires integration with your condition data source.
- * Implement conditionDataLoader to fetch actual medical content.
  */
 export async function generateQuestionsForFilter(
   filter: QuestionFilter,
@@ -201,24 +198,34 @@ export async function generateQuestionsForFilter(
     throw new Error("Cannot generate questions without conditionId");
   }
 
-  // TODO: Replace with actual condition data loader
-  // Example: const conditionData = await loadConditionData(filter.conditionId);
-  throw new Error(
-    "generateQuestionsForFilter requires integration with condition data source. " +
-    "Please implement a condition data loader that fetches medical content for the given conditionId."
-  );
-
-  /* 
-  // Example implementation when condition loader is ready:
+  const { loadConditionData } = await import("./conditionDataLoader");
+  
+  // Load condition data
   const conditionData = await loadConditionData(filter.conditionId);
+  
+  if (!conditionData) {
+    throw new Error(`Condition data not found for: ${filter.conditionId}`);
+  }
 
   const generatedQuestions = [];
 
   for (let i = 0; i < count; i++) {
     try {
       // Generate question using existing generator
+      // Transform loaded data to match ConditionData interface
+      const transformedCondition = {
+        condition: conditionData.name,
+        sections: {
+          overview: conditionData.content.overview || '',
+          etiology: conditionData.content.etiologyPathophysiology || '',
+          clinicalPresentation: conditionData.content.clinicalPresentation || '',
+          diagnostics: conditionData.content.diagnostics?.notes || '',
+          treatment: (conditionData.content.treatment || conditionData.content.management || []).join('\n'),
+        }
+      };
+      
       const question = await generateSingleQuestion(
-        conditionData,
+        transformedCondition,
         (filter.questionType as any) || "mcq"
       );
 
@@ -226,7 +233,7 @@ export async function generateQuestionsForFilter(
         // Save to staging
         const staged = await saveToStaging({
           ...question,
-          system: filter.system,
+          system: filter.system || conditionData.system,
           difficulty: filter.difficulty || "medium",
         });
 
@@ -245,7 +252,6 @@ export async function generateQuestionsForFilter(
   }
 
   return generatedQuestions;
-  */
 }
 
 /**

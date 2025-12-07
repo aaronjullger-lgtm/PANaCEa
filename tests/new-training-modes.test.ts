@@ -33,7 +33,7 @@ describe('New Training Modes Configuration', () => {
   it('should have medical_wordle in MODE_REGISTRY', () => {
     const wordleMode = MODE_REGISTRY.find(m => m.id === 'medical_wordle');
     expect(wordleMode).toBeDefined();
-    expect(wordleMode?.label).toBe('Medical Wordle');
+    expect(wordleMode?.label).toBe('Daily Term Challenge');
   });
 
   it('should have ventilator_hero in MODE_REGISTRY', () => {

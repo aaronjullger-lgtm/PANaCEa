@@ -45,6 +45,7 @@ const SettingsStatsModal = lazy(() => import("./components/SettingsStatsModal"))
 const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcutsModal"));
 const ARAnatomyMode = lazy(() => import("./components/ar/ARAnatomyMode"));
 const PANRELASimulator = lazy(() => import("./components/lifelong-learning/PANRELASimulator"));
+const CramMode = lazy(() => import("./components/modes/CramMode"));
 const CommandPalette = lazy(() => import("./components/CommandPalette"));
 const UserProfileModal = lazy(() => import("./components/onboarding/UserProfileModal"));
 
@@ -409,6 +410,8 @@ const App: React.FC = () => {
       setView('ar_anatomy');
     } else if (modeId === 'panre_la') {
       setView('panre_la');
+    } else if (modeId === 'cram_mode') {
+      setView('cram_mode');
     }
   };
 
@@ -708,6 +711,12 @@ const App: React.FC = () => {
           {view === "panre_la" && (
             <Suspense fallback={<Loader />}>
               <PANRELASimulator onExit={() => setView("menu")} />
+            </Suspense>
+          )}
+
+          {view === "cram_mode" && (
+            <Suspense fallback={<Loader />}>
+              <CramMode onExit={() => setView("menu")} />
             </Suspense>
           )}
         </AnimatePresence>

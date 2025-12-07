@@ -7,6 +7,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Code, Copy, CheckCircle, RefreshCw } from 'lucide-react';
+import { useUser } from '@clerk/clerk-react';
 import {
   calculateStreak,
   generateStreakWidgetHTML,
@@ -30,6 +31,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
   performanceData,
   missedQuestions,
 }) => {
+  const { user } = useUser();
   const [selectedWidget, setSelectedWidget] = useState<WidgetType>('streak');
   const [theme, setTheme] = useState<Theme>('light');
   const [embedFormat, setEmbedFormat] = useState<EmbedFormat>('html');
@@ -64,9 +66,8 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
     // This makes them compatible with Notion's security policies
     const serverUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
     
-    // TODO: Get actual userId from authentication context
-    // For now, provide instructions to replace placeholder
-    const userId = 'YOUR_USER_ID';
+    // Get actual userId from authentication context
+    const userId = user?.id || 'YOUR_USER_ID';
     
     let widgetPath = '';
     if (selectedWidget === 'streak') {
@@ -82,7 +83,7 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
     } else {
       return generateEmbedCode(widgetUrl, selectedWidget === 'streak' ? 300 : 450);
     }
-  }, [embedFormat, selectedWidget, theme]);
+  }, [embedFormat, selectedWidget, theme, user]);
 
   const handleCopyCode = async () => {
     try {
