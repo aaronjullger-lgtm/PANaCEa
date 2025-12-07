@@ -309,8 +309,9 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
           <div className="flex mb-2 ml-8 sm:ml-10">
             {monthLabels.map((label, idx) => {
               // Calculate the width based on column count with proper cell and gap sizing
-              // Each cell is ~14px (w-3.5) + 4px gap = 18px per column
-              const width = label.colSpan * 18;
+              // CELL_WIDTH_WITH_GAP = cell width (14px for w-3.5) + gap (4px) = 18px per column
+              const CELL_WIDTH_WITH_GAP = 18;
+              const width = label.colSpan * CELL_WIDTH_WITH_GAP;
               return (
                 <div
                   key={idx}

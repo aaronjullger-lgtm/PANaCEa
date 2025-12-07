@@ -87,14 +87,19 @@ const SAMPLE_QUESTIONS: QuizQuestion[] = [
   }
 ];
 
+// Constants for mock participant generation
+const MOCK_PARTICIPANT_NAMES = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Iris', 'Jack'];
+const DEFAULT_PARTICIPANT_COUNT = 10;
+const MAX_INITIAL_SCORE = 500;
+const MAX_INITIAL_CORRECT = 5;
+
 // Generate mock participants
-const generateMockParticipants = (count: number = 10): Participant[] => {
-  const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Iris', 'Jack'];
-  return names.slice(0, count).map((name, index) => ({
+const generateMockParticipants = (count: number = DEFAULT_PARTICIPANT_COUNT): Participant[] => {
+  return MOCK_PARTICIPANT_NAMES.slice(0, count).map((name, index) => ({
     id: `participant-${index}`,
     name,
-    score: Math.floor(Math.random() * 500),
-    correctAnswers: Math.floor(Math.random() * 5)
+    score: Math.floor(Math.random() * MAX_INITIAL_SCORE),
+    correctAnswers: Math.floor(Math.random() * MAX_INITIAL_CORRECT)
   }));
 };
 
