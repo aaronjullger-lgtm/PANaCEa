@@ -1,6 +1,34 @@
 import type { PerformanceRecord } from '@/types';
 
 /**
+ * Parameters for AI tutor answer analysis
+ */
+export interface AnalyzeAnswerParams {
+  questionText: string;
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  explanation: string;
+  condition: string;
+}
+
+/**
+ * Analyze user's answer and provide Socratic dialogue response
+ * This is a placeholder that returns a helpful response. In production,
+ * this would call an AI API for dynamic responses.
+ */
+export async function analyzeAnswer(params: AnalyzeAnswerParams): Promise<string> {
+  const { questionText, isCorrect, explanation, condition } = params;
+  
+  // Simple fallback response - in production, this would call Gemini API
+  if (!isCorrect) {
+    return `Let's break this down together. When thinking about ${condition}, remember these key points:\n\n${explanation}\n\nWhat specific part would you like me to clarify?`;
+  }
+  
+  return `Great job! You got it right. ${explanation}\n\nDo you have any questions about the underlying concept?`;
+}
+
+/**
  * User metrics for AI coaching analysis
  */
 export interface UserMetrics {

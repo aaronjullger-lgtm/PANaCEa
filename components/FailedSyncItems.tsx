@@ -5,9 +5,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Copy, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Copy, Trash2, X, CheckCircle } from 'lucide-react';
 import { getDeadLetterQueue } from '../lib/services/sync/offlineSync';
 import type { SyncOperation } from '../lib/services/sync/offlineSync';
+
+// Use the same constant as offlineSync to avoid hardcoding
+const DEAD_LETTER_QUEUE_KEY = 'panacea_dead_letter_queue';
 
 interface FailedSyncItemsProps {
   isOpen: boolean;
@@ -16,6 +19,8 @@ interface FailedSyncItemsProps {
 
 export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClose }) => {
   const [failedItems, setFailedItems] = useState<SyncOperation[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showConfirmClear, setShowConfirmClear] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -27,21 +32,21 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
   const handleCopyItem = (item: SyncOperation) => {
     const text = JSON.stringify(item.data, null, 2);
     navigator.clipboard.writeText(text).then(() => {
-      alert('Item data copied to clipboard');
+      setCopiedId(item.id);
+      setTimeout(() => setCopiedId(null), 2000);
     });
   };
 
   const handleRemoveItem = (itemId: string) => {
     const updatedItems = failedItems.filter(item => item.id !== itemId);
     setFailedItems(updatedItems);
-    localStorage.setItem('panacea_dead_letter_queue', JSON.stringify(updatedItems));
+    localStorage.setItem(DEAD_LETTER_QUEUE_KEY, JSON.stringify(updatedItems));
   };
 
   const handleClearAll = () => {
-    if (confirm('Are you sure you want to clear all failed items? This cannot be undone.')) {
-      setFailedItems([]);
-      localStorage.removeItem('panacea_dead_letter_queue');
-    }
+    setFailedItems([]);
+    localStorage.removeItem(DEAD_LETTER_QUEUE_KEY);
+    setShowConfirmClear(false);
   };
 
   if (!isOpen) return null;
@@ -104,10 +109,14 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleCopyItem(item)}
-                          className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+                          className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors relative"
                           title="Copy data to clipboard"
                         >
-                          <Copy className="w-4 h-4" />
+                          {copiedId === item.id ? (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
                         </button>
                         <button
                           onClick={() => handleRemoveItem(item.id)}
@@ -130,17 +139,39 @@ export const FailedSyncItems: React.FC<FailedSyncItemsProps> = ({ isOpen, onClos
           {/* Footer */}
           {failedItems.length > 0 && (
             <div className="border-t border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50">
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  You can copy the data manually or clear these items
-                </p>
-                <button
-                  onClick={handleClearAll}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                >
-                  Clear All
-                </button>
-              </div>
+              {showConfirmClear ? (
+                <div className="flex flex-col gap-3">
+                  <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                    Are you sure you want to clear all failed items? This cannot be undone.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={() => setShowConfirmClear(false)}
+                      className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-slate-100 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleClearAll}
+                      className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      Yes, Clear All
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    You can copy the data manually or clear these items
+                  </p>
+                  <button
+                    onClick={() => setShowConfirmClear(true)}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </motion.div>
