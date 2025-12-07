@@ -481,9 +481,21 @@ app.post('/api/questions/generate',
         const conditionData = await loadConditionData(queryText);
         
         if (conditionData) {
+          // Transform loaded data to match ConditionData interface
+          const transformedCondition = {
+            condition: conditionData.name,
+            sections: {
+              overview: conditionData.content.overview || '',
+              etiology: conditionData.content.etiologyPathophysiology || '',
+              clinicalPresentation: conditionData.content.clinicalPresentation || '',
+              diagnostics: conditionData.content.diagnostics?.notes || '',
+              treatment: (conditionData.content.treatment || conditionData.content.management || []).join('\n'),
+            }
+          };
+          
           // Generate question using AI
           const generatedQ = await generateSingleQuestion(
-            conditionData as any,
+            transformedCondition,
             questionType as any
           );
           

@@ -212,8 +212,20 @@ export async function generateQuestionsForFilter(
   for (let i = 0; i < count; i++) {
     try {
       // Generate question using existing generator
+      // Transform loaded data to match ConditionData interface
+      const transformedCondition = {
+        condition: conditionData.name,
+        sections: {
+          overview: conditionData.content.overview || '',
+          etiology: conditionData.content.etiologyPathophysiology || '',
+          clinicalPresentation: conditionData.content.clinicalPresentation || '',
+          diagnostics: conditionData.content.diagnostics?.notes || '',
+          treatment: (conditionData.content.treatment || conditionData.content.management || []).join('\n'),
+        }
+      };
+      
       const question = await generateSingleQuestion(
-        conditionData as any,
+        transformedCondition,
         (filter.questionType as any) || "mcq"
       );
 

@@ -155,8 +155,11 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
     const namePart = parts.slice(2).join('__').replace(/_/g, ' ');
     
     // Get metadata from registry
+    const validSystems = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'ENDO', 'HEME', 'ID', 'RENAL', 'REPRO', 'DERM', 'GU', 'HEENT', 'PSYCH', 'PRO'];
+    const systemCode = validSystems.includes(system) ? system as SystemCode : 'PRO' as SystemCode;
+    
     const meta = findConditionMeta(namePart) || {
-      system: system as any,
+      system: systemCode,
       subcategory,
       condition: namePart,
     };
