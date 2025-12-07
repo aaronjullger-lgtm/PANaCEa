@@ -15,6 +15,7 @@ import {
   AlertCircle,
   FileText,
   Link as LinkIcon,
+  Sparkles,
 } from 'lucide-react';
 import type { MedicalContent } from '../../types/admin-cms';
 
@@ -29,6 +30,7 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
   const [editedContent, setEditedContent] = useState<Partial<MedicalContent>>({});
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -113,6 +115,48 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
     }
   };
 
+  const handleGenerateWithAI = async () => {
+    if (!content?.condition || !content?.system) {
+      setValidationErrors(['Condition name and system are required to generate content']);
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      const response = await fetch('/api/admin/generate-draft', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conditionName: content.condition,
+          system: content.system,
+          subcategory: content.subcategory,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to generate content');
+      }
+
+      const result = await response.json();
+      const generatedContent = result.content;
+
+      // Update the editor with AI-generated content
+      setEditedContent(prev => ({
+        ...prev,
+        content: generatedContent.content,
+      }));
+      setHasChanges(true);
+    } catch (error: any) {
+      console.error('Failed to generate content:', error);
+      setValidationErrors([error.message || 'Failed to generate content with AI']);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   if (!content) {
     return null;
   }
@@ -171,6 +215,24 @@ export function ContentEditor({ content, onSave, onClose, userRole }: ContentEdi
                   <>
                     <Save className="w-4 h-4" />
                     Save Draft
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleGenerateWithAI}
+                disabled={generating}
+                className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Generate content with AI"
+              >
+                {generating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Generate with AI
                   </>
                 )}
               </button>

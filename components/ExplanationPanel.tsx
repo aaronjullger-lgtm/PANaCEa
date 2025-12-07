@@ -12,7 +12,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, BookOpen, Lightbulb, AlertCircle, HelpCircle, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronUp, ThumbsUp, ThumbsDown, BookOpen, Lightbulb, AlertCircle, HelpCircle, ExternalLink, MessageCircle } from 'lucide-react';
 import { 
   compressToBullets, 
   extractBuzzwords, 
@@ -22,6 +22,7 @@ import {
 import ErrorTagger from './quiz/ErrorTagger';
 import type { ErrorTag } from '../types';
 import { getConditionByIdSync, loadConditions } from '../lib/loadConditions';
+import { analyzeAnswer } from '../services/CoachingService';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;
@@ -217,6 +218,11 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   basicScienceLinks = [],
   conditionId,
 }) => {
+  const [showTutor, setShowTutor] = useState(false);
+  const [tutorQuestion, setTutorQuestion] = useState('');
+  const [tutorResponse, setTutorResponse] = useState('');
+  const [loadingTutor, setLoadingTutor] = useState(false);
+
   // Process explanation using the compression service
   const processedContent = useMemo(() => {
     return highYieldPackage(explanation, condition);
@@ -250,6 +256,28 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
       loadBasicScienceLinks();
     }
   }, [conditionId, basicScienceLinks.length]);
+
+  const handleAskTutor = async () => {
+    if (!tutorQuestion.trim()) return;
+    
+    setLoadingTutor(true);
+    try {
+      const response = await analyzeAnswer({
+        questionText: tutorQuestion,
+        userAnswer: '',
+        correctAnswer: '',
+        isCorrect: isCorrect,
+        explanation: explanation,
+        condition: condition,
+      });
+      setTutorResponse(response);
+    } catch (error) {
+      console.error('Failed to get tutor response:', error);
+      setTutorResponse('Sorry, I encountered an error. Please try again.');
+    } finally {
+      setLoadingTutor(false);
+    }
+  };
 
   return (
     <motion.div
@@ -363,20 +391,75 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
 
         {/* Actions Row */}
         <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
-          {/* Teach Me This Button */}
-          {onTeach && (
+          <div className="flex flex-wrap gap-2">
+            {/* Teach Me This Button */}
+            {onTeach && (
+              <button
+                onClick={onTeach}
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
+              >
+                <BookOpen className="w-4 h-4" />
+                Teach Me This
+              </button>
+            )}
+
+            {/* Ask Tutor Button */}
             <button
-              onClick={onTeach}
-              className="flex items-center gap-2 px-4 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
+              onClick={() => setShowTutor(!showTutor)}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white font-semibold rounded-lg hover:bg-purple-600 transition-colors shadow-md"
             >
-              <BookOpen className="w-4 h-4" />
-              Teach Me This
+              <MessageCircle className="w-4 h-4" />
+              Ask Tutor
             </button>
-          )}
+          </div>
 
           {/* Feedback Buttons */}
           <FeedbackButtons onFeedback={onFeedback} />
         </div>
+
+        {/* AI Tutor Section */}
+        <AnimatePresence>
+          {showTutor && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mt-4 pt-4 border-t border-slate-200/60 dark:border-slate-700/60"
+            >
+              <div className="space-y-3">
+                <SectionHeader 
+                  icon={<MessageCircle className="w-5 h-5" />} 
+                  title="Ask Your Virtual Tutor" 
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={tutorQuestion}
+                    onChange={(e) => setTutorQuestion(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAskTutor()}
+                    placeholder="Why isn't it B? or Explain like I'm 5..."
+                    className="flex-1 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <button
+                    onClick={handleAskTutor}
+                    disabled={!tutorQuestion.trim() || loadingTutor}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loadingTutor ? 'Thinking...' : 'Ask'}
+                  </button>
+                </div>
+                {tutorResponse && (
+                  <div className="p-4 bg-purple-50/80 dark:bg-purple-900/20 rounded-lg border border-purple-200/60 dark:border-purple-700/40">
+                    <p className="text-sm text-purple-900 dark:text-purple-100 leading-relaxed whitespace-pre-wrap">
+                      {tutorResponse}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </GlassPanel>
     </motion.div>
   );

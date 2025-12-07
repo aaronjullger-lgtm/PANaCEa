@@ -17,7 +17,8 @@ export interface SyncOperation {
 }
 
 const STORAGE_KEY = 'panacea_offline_queue';
-const MAX_ATTEMPTS = 3;
+const DEAD_LETTER_QUEUE_KEY = 'panacea_dead_letter_queue';
+const MAX_ATTEMPTS = 5;
 const RETRY_DELAY = 2000; // 2 seconds
 const DEBOUNCE_DELAY = 500; // 500ms as per spec
 
@@ -43,6 +44,43 @@ function saveQueue(queue: SyncOperation[]): void {
   } catch (error) {
     console.error('[OfflineSync] Failed to save queue:', error);
   }
+}
+
+/**
+ * Get dead letter queue from localStorage
+ */
+export function getDeadLetterQueue(): SyncOperation[] {
+  try {
+    const stored = localStorage.getItem(DEAD_LETTER_QUEUE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('[OfflineSync] Failed to read dead letter queue:', error);
+    return [];
+  }
+}
+
+/**
+ * Save dead letter queue to localStorage
+ */
+function saveDeadLetterQueue(queue: SyncOperation[]): void {
+  try {
+    localStorage.setItem(DEAD_LETTER_QUEUE_KEY, JSON.stringify(queue));
+  } catch (error) {
+    console.error('[OfflineSync] Failed to save dead letter queue:', error);
+  }
+}
+
+/**
+ * Move failed operation to dead letter queue
+ */
+function moveToDeadLetterQueue(op: SyncOperation): void {
+  const deadLetterQueue = getDeadLetterQueue();
+  deadLetterQueue.push({
+    ...op,
+    status: 'failed',
+  });
+  saveDeadLetterQueue(deadLetterQueue);
+  console.warn(`[OfflineSync] Moved to dead letter queue: ${op.operation} (${op.id})`);
 }
 
 /**
@@ -103,16 +141,18 @@ export async function processQueue(): Promise<void> {
     } catch (error: any) {
       op.attempts++;
       if (op.attempts >= MAX_ATTEMPTS) {
+        // Permanent failure - move to dead letter queue
+        moveToDeadLetterQueue(op);
         op.status = 'failed';
-        console.error(`[OfflineSync] ✗ Failed: ${op.operation} (${op.id}) after ${op.attempts} attempts`);
+        console.error(`[OfflineSync] ✗ Permanent failure: ${op.operation} (${op.id}) after ${op.attempts} attempts`);
       } else {
         console.warn(`[OfflineSync] Retry ${op.attempts}/${MAX_ATTEMPTS}: ${op.operation} (${op.id})`);
       }
     }
   }
 
-  // Update queue - remove synced items, keep failed for manual review
-  const updatedQueue = queue.filter(op => op.status !== 'synced');
+  // Update queue - remove synced and permanently failed items
+  const updatedQueue = queue.filter(op => op.status === 'pending');
   saveQueue(updatedQueue);
 
   // If there are still pending items, schedule another retry
