@@ -1,7 +1,12 @@
 /**
  * Weakness Cheatsheet Exporter Component
  * 
- * UI component for generating and exporting weakness study guides
+ * UI component for generating and exporting weakness study guides.
+ * 
+ * Note: This component generates a simplified cheatsheet based on performance
+ * data only. Full question details (including options and explanations) are
+ * not available in this context. The generated PDF includes condition names,
+ * topics, and error counts for focused review planning.
  */
 
 import React, { useState, useMemo } from 'react';

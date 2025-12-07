@@ -12,6 +12,7 @@ export interface CheatsheetOptions {
   days?: number; // Number of days to look back (default: 30)
   minErrors?: number; // Minimum errors in a category to include (default: 1)
   includeCorrectAnswers?: boolean; // Include correct answers in export (default: true)
+  maxQuestionsPerSystem?: number; // Maximum questions per system (default: 10)
 }
 
 interface CategoryWeakness {
@@ -82,9 +83,10 @@ function identifyWeaknesses(
 
     // Find relevant questions from allQuestions
     const errorConditionIds = new Set(errors.map((e) => e.conditionId));
+    const maxQuestions = options.maxQuestionsPerSystem || 10;
     const relevantQuestions = allQuestions
       .filter((q) => errorConditionIds.has(q.conditionId))
-      .slice(0, 10); // Limit to 10 questions per system for readability
+      .slice(0, maxQuestions); // Limit questions per system for readability
 
     if (relevantQuestions.length === 0) return;
 

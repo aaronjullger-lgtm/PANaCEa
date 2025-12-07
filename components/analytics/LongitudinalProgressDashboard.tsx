@@ -187,6 +187,13 @@ function calculateQuarterlyPhases(sorted: PerformanceRecord[]): TimelinePhase[] 
   return phases.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 }
 
+// Mastery score calculation constants
+const MAX_VOLUME_BONUS = 10;
+const VOLUME_BONUS_THRESHOLD = 100; // Questions needed for max volume bonus
+const CONSISTENCY_BONUS = 5;
+const CONSISTENCY_THRESHOLD = 80; // Accuracy percentage for consistency bonus
+const MAX_MASTERY_SCORE = 100;
+
 /**
  * Calculate mastery score (weighted by volume and accuracy)
  * Score ranges from 0-100
@@ -201,16 +208,16 @@ function calculateMasteryScore(
   // Base score is accuracy
   let score = accuracy;
   
-  // Volume bonus: diminishing returns after 100 questions
-  const volumeBonus = Math.min(10, (total / 100) * 10);
+  // Volume bonus: diminishing returns after VOLUME_BONUS_THRESHOLD questions
+  const volumeBonus = Math.min(MAX_VOLUME_BONUS, (total / VOLUME_BONUS_THRESHOLD) * MAX_VOLUME_BONUS);
   score += volumeBonus;
   
   // Consistency bonus: if accuracy is consistently high
-  if (accuracy >= 80) {
-    score += 5;
+  if (accuracy >= CONSISTENCY_THRESHOLD) {
+    score += CONSISTENCY_BONUS;
   }
   
-  return Math.min(100, Math.round(score));
+  return Math.min(MAX_MASTERY_SCORE, Math.round(score));
 }
 
 /**

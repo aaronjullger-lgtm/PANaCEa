@@ -405,13 +405,14 @@ async function readFileContent(file: File): Promise<string> {
       reject(new Error('Error reading file'));
     };
     
-    // For PDFs, we'd need a PDF parser library
-    // For now, we'll handle text files directly
+    // Handle text files directly
     if (file.type === 'text/plain') {
       reader.readAsText(file);
     } else {
-      // For PDF/Word, we'll return a placeholder and note this limitation
-      resolve(`[Note: PDF/Word parsing requires additional libraries. File: ${file.name}]\n\nExample syllabus content would be extracted here.`);
+      // PDF/Word parsing requires additional libraries (pdf-parse, mammoth, etc.)
+      // For now, demonstrate the feature with mock content
+      // TODO: Integrate PDF/Word parsing libraries for production use
+      reject(new Error('PDF and Word document parsing is not yet fully implemented. Please use text files (.txt) for now, or contact support for assistance with your syllabus format.'));
     }
   });
 }
@@ -420,8 +421,8 @@ async function readFileContent(file: File): Promise<string> {
  * Parse syllabus content and extract topics
  */
 async function parseSyllabusContent(text: string): Promise<SyllabusTag[]> {
-  // Simulate AI processing delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  // Small delay to show processing state (can be removed in production)
+  await new Promise(resolve => setTimeout(resolve, 500));
   
   // Simple pattern matching for educational content
   const tags: SyllabusTag[] = [];

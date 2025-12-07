@@ -144,7 +144,13 @@ export default function DecisionTimeAnalysis({
     const sortedTimes = [...stats]
       .map((s) => s.avgTimeSeconds)
       .sort((a, b) => a - b);
-    return sortedTimes[Math.floor(sortedTimes.length / 2)];
+    
+    // Correct median calculation for even-length arrays
+    const mid = Math.floor(sortedTimes.length / 2);
+    if (sortedTimes.length % 2 === 0) {
+      return (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+    }
+    return sortedTimes[mid];
   }, [stats]);
 
   if (stats.length === 0) {
