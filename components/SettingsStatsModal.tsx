@@ -1196,11 +1196,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                     {/* Engagement Modes (Phase 7) */}
                     <div className="mb-2">
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Engagement (Coming Soon)</div>
-                      <div className="grid grid-cols-2 gap-2 opacity-60">
+                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Engagement Modes</div>
+                      <div className="grid grid-cols-2 gap-2">
                         {[
                           { id: 'code_blue_speed', label: 'Code Blue', desc: 'ACLS/PALS speed' },
-                          { id: 'diagnosisdle', label: 'Diagnosisdle', desc: 'Daily mystery' },
                           { id: 'grand_rounds', label: 'Grand Rounds', desc: 'Live competition' },
                           { id: 'cram_mode', label: 'Cram Button', desc: '50 high-yield Qs' }
                         ].map(mode => (

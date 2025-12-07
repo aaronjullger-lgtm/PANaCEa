@@ -40,6 +40,8 @@ const GuidelineDrillSession = lazy(() => import("./components/drill/GuidelineDri
 const FluidElectrolyteMode = lazy(() => import("./components/modes/FluidElectrolyteMode"));
 const AntibioticMode = lazy(() => import("./components/modes/AntibioticMode"));
 const PatientEncounterMode = lazy(() => import("./components/modes/PatientEncounterMode"));
+const CodeBlueSpeedMode = lazy(() => import("./components/modes/CodeBlueSpeedMode"));
+const GrandRoundsMode = lazy(() => import("./components/modes/GrandRoundsMode"));
 const IntegrationsHub = lazy(() => import("./components/integrations/IntegrationsHub"));
 const SettingsStatsModal = lazy(() => import("./components/SettingsStatsModal"));
 const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcutsModal"));
@@ -68,8 +70,11 @@ const DRILL_MODE_GUIDELINE: TrainingModeId = 'guideline_drill';
 const DRILL_MODE_FLUID_ELECTROLYTE: TrainingModeId = 'fluid_electrolyte';
 const DRILL_MODE_ANTIBIOTIC: TrainingModeId = 'antibiotic_mode';
 const DRILL_MODE_PATIENT_ENCOUNTER: TrainingModeId = 'patient_encounter';
+const DRILL_MODE_CODE_BLUE: TrainingModeId = 'code_blue_speed';
+const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
+const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
 
-type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "ar_anatomy" | "panre_la";
+type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "ar_anatomy" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -406,11 +411,15 @@ const App: React.FC = () => {
       setView('antibiotic_mode');
     } else if (modeId === DRILL_MODE_PATIENT_ENCOUNTER) {
       setView('patient_encounter');
+    } else if (modeId === DRILL_MODE_CODE_BLUE) {
+      setView('code_blue_speed');
+    } else if (modeId === DRILL_MODE_GRAND_ROUNDS) {
+      setView('grand_rounds');
     } else if (modeId === 'ar_anatomy') {
       setView('ar_anatomy');
     } else if (modeId === 'panre_la') {
       setView('panre_la');
-    } else if (modeId === 'cram_mode') {
+    } else if (modeId === DRILL_MODE_CRAM) {
       setView('cram_mode');
     }
   };
@@ -717,6 +726,18 @@ const App: React.FC = () => {
           {view === "cram_mode" && (
             <Suspense fallback={<Loader />}>
               <CramMode onExit={() => setView("menu")} />
+            </Suspense>
+          )}
+
+          {view === "code_blue_speed" && (
+            <Suspense fallback={<Loader />}>
+              <CodeBlueSpeedMode onExit={() => setView("menu")} />
+            </Suspense>
+          )}
+
+          {view === "grand_rounds" && (
+            <Suspense fallback={<Loader />}>
+              <GrandRoundsMode onExit={() => setView("menu")} />
             </Suspense>
           )}
         </AnimatePresence>

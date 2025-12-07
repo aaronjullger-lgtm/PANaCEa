@@ -81,7 +81,7 @@ function formatDateKey(date: Date): string {
 
 /**
  * Get month labels for the header
- * Fixed to properly align with week columns
+ * Fixed to properly align with week columns by checking the most common month in each column
  */
 function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: number }[] {
   const labels: { month: string; colSpan: number }[] = [];
@@ -92,29 +92,37 @@ function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: 
 
   // Traverse columns (weeks) to build month labels
   for (let colIdx = 0; colIdx < dateGrid[0].length; colIdx++) {
-    // Check first non-null date in this column
-    let date = null;
+    // Get the most common month in this column (week)
+    const monthCounts = new Map<number, number>();
+    let hasValidDate = false;
+    
     for (let rowIdx = 0; rowIdx < dateGrid.length; rowIdx++) {
-      if (dateGrid[rowIdx][colIdx]) {
-        date = dateGrid[rowIdx][colIdx];
-        break;
+      const date = dateGrid[rowIdx][colIdx];
+      if (date) {
+        hasValidDate = true;
+        const month = date.getMonth();
+        monthCounts.set(month, (monthCounts.get(month) || 0) + 1);
       }
     }
 
-    if (date) {
-      const month = date.getMonth();
-      if (month !== currentMonth) {
+    if (hasValidDate) {
+      // Find the month with most occurrences in this column
+      let dominantMonth = -1;
+      let maxCount = 0;
+      monthCounts.forEach((count, month) => {
+        if (count > maxCount) {
+          maxCount = count;
+          dominantMonth = month;
+        }
+      });
+
+      if (dominantMonth !== currentMonth) {
         if (currentMonth !== -1 && colCount > 0) {
           labels.push({ month: MONTHS[currentMonth], colSpan: colCount });
         }
-        currentMonth = month;
+        currentMonth = dominantMonth;
         colCount = 1;
       } else {
-        colCount++;
-      }
-    } else {
-      // Empty column, still count it
-      if (currentMonth !== -1) {
         colCount++;
       }
     }
@@ -299,20 +307,26 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
         <div className="inline-block min-w-full">
           {/* Month labels */}
           <div className="flex mb-2 ml-8 sm:ml-10">
-            {monthLabels.map((label, idx) => (
-              <div
-                key={idx}
-                className="text-[10px] sm:text-xs text-[var(--color-text-muted)] font-medium"
-                style={{ 
-                  flexGrow: label.colSpan,
-                  flexBasis: 0,
-                  minWidth: `${label.colSpan * 16}px`,
-                  textAlign: 'left'
-                }}
-              >
-                {label.month}
-              </div>
-            ))}
+            {monthLabels.map((label, idx) => {
+              // Calculate the width based on column count with proper cell and gap sizing
+              // CELL_WIDTH_WITH_GAP = cell width (14px for w-3.5) + gap (4px) = 18px per column
+              const CELL_WIDTH_WITH_GAP = 18;
+              const width = label.colSpan * CELL_WIDTH_WITH_GAP;
+              return (
+                <div
+                  key={idx}
+                  className="text-[10px] sm:text-xs text-[var(--color-text-muted)] font-medium"
+                  style={{ 
+                    width: `${width}px`,
+                    minWidth: `${width}px`,
+                    textAlign: 'left',
+                    paddingLeft: '2px'
+                  }}
+                >
+                  {label.month}
+                </div>
+              );
+            })}
           </div>
 
           {/* Grid */}
