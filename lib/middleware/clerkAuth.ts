@@ -62,15 +62,15 @@ export async function requireAuth(
     }
 
     if (debug) {
-      console.log('[Auth Debug] Attempting to verify token with leeway: 60 seconds');
+      console.log('[Auth Debug] Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)');
       console.log('[Auth Debug] Current server time:', new Date().toISOString());
     }
 
     // Verify the token using Clerk's standalone verifyToken function
-    // Use leeway to tolerate clock skew (60 seconds to handle time discrepancies)
+    // Use clockSkewInMs to tolerate clock skew (60000ms = 60 seconds to handle time discrepancies)
     const verifiedToken = await verifyToken(token, {
       secretKey,
-      leeway: 60,
+      clockSkewInMs: 60000,
     });
 
     if (!verifiedToken || !verifiedToken.sub) {
@@ -176,12 +176,12 @@ export async function optionalAuth(
 
     try {
       if (debug) {
-        console.log('[Auth Debug] Optional auth: Attempting to verify token with leeway: 60 seconds');
+        console.log('[Auth Debug] Optional auth: Attempting to verify token with clock skew tolerance: 60000ms (60 seconds)');
       }
       
       const verifiedToken = await verifyToken(token, {
         secretKey,
-        leeway: 60,
+        clockSkewInMs: 60000,
       });
 
       if (verifiedToken && verifiedToken.sub) {

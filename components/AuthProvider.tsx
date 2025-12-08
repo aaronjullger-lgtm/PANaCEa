@@ -11,7 +11,8 @@ interface AuthProviderProps {
 }
 
 // Get publishable key from environment variable
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
+// @ts-ignore - import.meta.env is available in Vite but may not be typed
+const CLERK_PUBLISHABLE_KEY = import.meta.env?.VITE_CLERK_PUBLISHABLE_KEY || '';
 
 // Error message when Clerk publishable key is missing
 const MISSING_KEY_ERROR = `Missing Publishable Key for Clerk!
@@ -33,8 +34,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   // Enable debug mode in development or when explicitly enabled
-  const isDevelopment = import.meta.env.DEV;
-  const debugEnabled = isDevelopment || import.meta.env.VITE_CLERK_DEBUG === 'true';
+  // @ts-ignore - import.meta.env is available in Vite but may not be typed
+  const isDevelopment = import.meta.env?.DEV;
+  // @ts-ignore - import.meta.env is available in Vite but may not be typed
+  const debugEnabled = isDevelopment || import.meta.env?.VITE_CLERK_DEBUG === 'true';
 
   if (debugEnabled) {
     console.log('[Clerk] Debug mode enabled');
