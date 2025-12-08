@@ -102,9 +102,10 @@ export function useUserStats(): UseUserStatsResult {
     setSyncError(null);
 
     try {
+      // Get fresh token from Clerk
       const token = await getToken();
       if (!token) {
-        throw new Error('Failed to get authentication token');
+        throw new Error('Failed to get authentication token. Please try signing in again.');
       }
 
       // Get SRS items from srsService
@@ -127,8 +128,13 @@ export function useUserStats(): UseUserStatsResult {
         }),
       });
 
+      if (response.status === 401) {
+        throw new Error('Authentication failed: Your session may have expired. Please sign in again.');
+      }
+
       if (!response.ok) {
-        throw new Error(`Sync failed: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`Sync failed with status ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
