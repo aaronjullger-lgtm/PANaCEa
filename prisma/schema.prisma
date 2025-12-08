@@ -3,14 +3,20 @@
 //
 // Learn more about Prisma at: https://www.prisma.io/docs
 //
+// Supabase Setup:
+// 1. Create a Supabase project at https://supabase.com
+// 2. Get your connection string from Project Settings > Database
+// 3. For connection pooling (recommended for serverless):
+//    - Use the "Transaction" mode connection string
+//    - Add ?pgbouncer=true to the connection string
+// 4. Set DATABASE_URL in your .env file
+//
 // To apply migrations:
-// 1. Run: npx prisma migrate dev --name init_media_assets
+// 1. Run: npx prisma migrate dev --name init_schema
 // 2. Run: npx prisma generate
 //
-// Note: Prisma is not yet installed in this project. To add Prisma support:
-// 1. npm install prisma --save-dev
-// 2. npm install @prisma/client
-// 3. npx prisma init (if starting fresh, skip if using this file)
+// To push schema to Supabase (for initial setup):
+// Run: npx prisma db push
 
 generator client {
   provider = "prisma-client-js"
@@ -19,6 +25,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL") // Optional: For migrations, bypass pooler
 }
 
 /// Represents a user in the learning platform, linked to Clerk authentication

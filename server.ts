@@ -1197,6 +1197,78 @@ app.get('/widgets/stats/:userId', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================================================
+// Media Management API Endpoints (Supabase Storage)
+// ============================================================================
+
+// Upload media to Supabase Storage
+app.post('/api/media/upload', async (req: Request, res: Response) => {
+  try {
+    const uploadHandler = await import('./functions/api/media/upload');
+    await uploadHandler.default(req, res);
+  } catch (error) {
+    console.error('Error in media upload:', error);
+    res.status(500).json({ error: 'Failed to upload media' });
+  }
+});
+
+// List media assets
+app.get('/api/media/list', async (req: Request, res: Response) => {
+  try {
+    const listHandler = await import('./functions/api/media/list');
+    await listHandler.default(req, res);
+  } catch (error) {
+    console.error('Error listing media:', error);
+    res.status(500).json({ error: 'Failed to list media' });
+  }
+});
+
+// ============================================================================
+// Question Management API Endpoints (Smart Storage with No-Repeat)
+// ============================================================================
+
+// Fetch questions for a user (with no-repeat logic)
+app.post('/api/questions/fetch', async (req: Request, res: Response) => {
+  try {
+    const fetchHandler = await import('./functions/api/questions/fetch');
+    await fetchHandler.default(req, res);
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    res.status(500).json({ error: 'Failed to fetch questions' });
+  }
+});
+
+// Record that a user has seen a question
+app.post('/api/questions/record', async (req: Request, res: Response) => {
+  try {
+    const recordHandler = await import('./functions/api/questions/record');
+    await recordHandler.default(req, res);
+  } catch (error) {
+    console.error('Error recording question:', error);
+    res.status(500).json({ error: 'Failed to record question' });
+  }
+});
+
+// Get question repository statistics
+app.get('/api/questions/stats', async (req: Request, res: Response) => {
+  try {
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Database not configured' });
+    }
+
+    const { getRepositoryStats } = await import('./services/noRepeatService');
+    const stats = await getRepositoryStats();
+    
+    res.json({
+      success: true,
+      stats,
+    });
+  } catch (error) {
+    console.error('Error getting stats:', error);
+    res.status(500).json({ error: 'Failed to get statistics' });
+  }
+});
+
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled error:', err);
