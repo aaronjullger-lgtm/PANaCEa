@@ -378,11 +378,24 @@ export function clearPendingOperations(): void {
 
 /**
  * Setup automatic sync on connection restore
+ * @param getToken - Optional async function to retrieve current authentication token
  */
-export function setupAutoSync(authToken?: string): () => void {
+export function setupAutoSync(getToken?: () => Promise<string | null>): () => void {
   const handleOnline = async () => {
     console.log('[OfflineSync] Connection restored, syncing...');
     setOfflineMode(false);
+    
+    // Get fresh token if function provided
+    let authToken: string | undefined;
+    if (getToken) {
+      try {
+        const token = await getToken();
+        authToken = token || undefined;
+      } catch (error) {
+        console.error('[OfflineSync] Failed to get auth token:', error);
+      }
+    }
+    
     await syncPendingOperations(authToken);
   };
   
