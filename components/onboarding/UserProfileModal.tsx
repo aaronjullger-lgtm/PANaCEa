@@ -173,23 +173,19 @@ export function UserProfileModal({
                     <GraduationCap className="w-4 h-4" />
                     Where are you in your PA journey?
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {YEAR_IN_PROGRAM_OPTIONS.map((year) => (
                       <button
                         key={year}
                         onClick={() => setYearInProgram(year)}
                         type="button"
-                        className={`
-                          p-3 rounded-lg border-2 transition-all text-left
-                          ${yearInProgram === year
-                            ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                            : 'border-[var(--color-border)] hover:border-[var(--color-border-hover)] bg-[var(--color-bg-secondary)]'
-                          }
-                        `}
+                        className={`pill-select ${
+                          yearInProgram === year
+                            ? 'pill-select-active'
+                            : 'pill-select-inactive'
+                        }`}
                       >
-                        <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                          {year}
-                        </span>
+                        {year}
                       </button>
                     ))}
                   </div>

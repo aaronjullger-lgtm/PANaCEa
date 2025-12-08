@@ -86,7 +86,7 @@ export function LandingPage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             onClick={() => setShowSignIn(true)}
-            className="px-6 py-2.5 bg-[#1F283A] hover:bg-[#364154] dark:bg-[#E9ECF1] dark:hover:bg-white text-white dark:text-[#101729] rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+            className="px-6 py-2.5 bg-[#0284C7] hover:bg-[#0369a1] text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -122,7 +122,7 @@ export function LandingPage() {
           >
             <motion.button
               onClick={() => setShowSignIn(true)}
-              className="group px-8 py-4 bg-[#1F283A] hover:bg-[#364154] dark:bg-[#E9ECF1] dark:hover:bg-white text-white dark:text-[#101729] rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+              className="group px-8 py-4 bg-[#0284C7] hover:bg-[#0369a1] text-white rounded-lg font-bold text-lg shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -262,7 +262,7 @@ export function LandingPage() {
           </p>
           <motion.button
             onClick={() => setShowSignIn(true)}
-            className="px-10 py-5 bg-[#1F283A] hover:bg-[#364154] dark:bg-[#E9ECF1] dark:hover:bg-white text-white dark:text-[#101729] rounded-lg font-bold text-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-3 mx-auto"
+            className="px-10 py-5 bg-[#0284C7] hover:bg-[#0369a1] text-white rounded-lg font-bold text-xl shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-3 mx-auto"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
