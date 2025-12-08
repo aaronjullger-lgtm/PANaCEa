@@ -146,8 +146,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     });
     return createErrorResponse('Internal server error', 500);
   } finally {
-    // Clean up Prisma connection
-    // Note: Cloudflare Pages doesn't support waitUntil, so we disconnect synchronously
+    // Clean up Prisma connection asynchronously
     await prisma.$disconnect().catch((err) => {
       console.error('[SYNC GET] Error disconnecting Prisma:', err);
     });
@@ -197,10 +196,12 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       if (payload.performanceRecords?.length) {
         console.log('[SYNC POST] Upserting performance records:', payload.performanceRecords.length);
         for (const record of payload.performanceRecords) {
+          // Ensure we use a consistent ID for both where and create
+          const recordId = record.id || crypto.randomUUID();
           await tx.performanceRecord.upsert({
-            where: { id: record.id || crypto.randomUUID() },
+            where: { id: recordId },
             create: {
-              id: record.id || crypto.randomUUID(),
+              id: recordId,
               userId: internalUserId,
               topic: record.topic,
               system: record.system || null,
@@ -328,7 +329,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     });
     return createErrorResponse('Internal server error', 500);
   } finally {
-    // Clean up Prisma connection
+    // Clean up Prisma connection asynchronously
     await prisma.$disconnect().catch((err) => {
       console.error('[SYNC POST] Error disconnecting Prisma:', err);
     });
