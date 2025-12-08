@@ -3,9 +3,11 @@
  * 
  * Fetches medical images from the database/storage for photo drill modes
  * Replaces placeholder images with actual medical images from Supabase
+ * Only fetches APPROVED images for use in production
  */
 
 import { getMediaByConditionName } from '../../services/mediaStorageService';
+import { prisma } from '../prisma';
 
 export type PhotoCategory = 'ecg' | 'derm' | 'radiology';
 
@@ -18,23 +20,46 @@ export interface PhotoInfo {
 
 /**
  * Get image URL for a medical condition
- * First checks database for real images, falls back to placeholder
+ * First checks database for APPROVED images only, falls back to placeholder
  */
 export async function getImageForCondition(
   conditionName: string,
   category: PhotoCategory
 ): Promise<PhotoInfo> {
   try {
-    // Try to fetch from database
-    const media = await getMediaByConditionName(conditionName);
+    // Find the condition
+    const condition = await prisma.condition.findFirst({
+      where: {
+        name: {
+          equals: conditionName,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (!condition) {
+      return getPlaceholderImage(conditionName, category);
+    }
+
+    // Fetch ONLY approved media for this condition
+    const approvedMedia = await prisma.mediaAsset.findMany({
+      where: {
+        conditionId: condition.id,
+        approvalStatus: 'approved', // CRITICAL: Only approved images
+        isClinical: true, // Only clinical images
+      },
+      orderBy: {
+        qualityScore: 'desc', // Highest quality first
+      },
+      take: 1,
+    });
     
-    if (media && media.length > 0) {
-      // Use the first available image
-      const firstImage = media[0];
+    if (approvedMedia && approvedMedia.length > 0) {
+      const firstImage = approvedMedia[0];
       
       return {
-        imageUrl: firstImage.originalUrl,
-        thumbnailUrl: firstImage.thumbnailUrl,
+        imageUrl: firstImage.originalUrl || '',
+        thumbnailUrl: firstImage.thumbnailUrl || undefined,
         educationalCaption: firstImage.description || getDefaultCaption(conditionName, category),
         keyFindings: firstImage.tags || getDefaultFindings(conditionName),
       };
@@ -49,6 +74,7 @@ export async function getImageForCondition(
 
 /**
  * Get multiple images for a condition (for cases with multiple examples)
+ * Only fetches APPROVED clinical images
  */
 export async function getImagesForCondition(
   conditionName: string,
@@ -56,12 +82,37 @@ export async function getImagesForCondition(
   limit: number = 3
 ): Promise<PhotoInfo[]> {
   try {
-    const media = await getMediaByConditionName(conditionName);
+    // Find the condition
+    const condition = await prisma.condition.findFirst({
+      where: {
+        name: {
+          equals: conditionName,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (!condition) {
+      return [getPlaceholderImage(conditionName, category)];
+    }
+
+    // Fetch ONLY approved clinical media
+    const approvedMedia = await prisma.mediaAsset.findMany({
+      where: {
+        conditionId: condition.id,
+        approvalStatus: 'approved',
+        isClinical: true,
+      },
+      orderBy: {
+        qualityScore: 'desc',
+      },
+      take: limit,
+    });
     
-    if (media && media.length > 0) {
-      return media.slice(0, limit).map(m => ({
-        imageUrl: m.originalUrl,
-        thumbnailUrl: m.thumbnailUrl,
+    if (approvedMedia && approvedMedia.length > 0) {
+      return approvedMedia.map(m => ({
+        imageUrl: m.originalUrl || '',
+        thumbnailUrl: m.thumbnailUrl || undefined,
         educationalCaption: m.description || getDefaultCaption(conditionName, category),
         keyFindings: m.tags || getDefaultFindings(conditionName),
       }));
@@ -75,12 +126,30 @@ export async function getImagesForCondition(
 }
 
 /**
- * Check if real images exist for a condition
+ * Check if APPROVED real images exist for a condition
  */
 export async function hasRealImages(conditionName: string): Promise<boolean> {
   try {
-    const media = await getMediaByConditionName(conditionName);
-    return media && media.length > 0;
+    const condition = await prisma.condition.findFirst({
+      where: {
+        name: {
+          equals: conditionName,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (!condition) return false;
+
+    const count = await prisma.mediaAsset.count({
+      where: {
+        conditionId: condition.id,
+        approvalStatus: 'approved',
+        isClinical: true,
+      },
+    });
+
+    return count > 0;
   } catch (error) {
     return false;
   }

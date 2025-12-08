@@ -7,6 +7,8 @@
 
 import { supabaseAdmin, getStorageUrl } from '../lib/supabase';
 import { prisma } from '../lib/prisma';
+import { processUploadedMedia } from './mediaApprovalService';
+import { optimizeImage } from './imageQualityService';
 
 const MEDIA_BUCKET = 'medical-images';
 
@@ -36,9 +38,9 @@ export interface MediaAssetInfo {
 }
 
 /**
- * Upload a media file to Supabase Storage
+ * Upload a media file to Supabase Storage with quality assessment
  */
-export async function uploadMedia(options: UploadMediaOptions): Promise<MediaAssetInfo> {
+export async function uploadMedia(options: UploadMediaOptions): Promise<MediaAssetInfo & { qualityScore?: number; autoApproved?: boolean }> {
   const { file, filename, category, conditionId, tags = [], description, altText, uploadedBy } = options;
 
   // Sanitize filename: remove spaces, special chars, make lowercase
@@ -47,6 +49,19 @@ export async function uploadMedia(options: UploadMediaOptions): Promise<MediaAss
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9.-]/g, '');
 
+  // Convert file to buffer for processing
+  let imageBuffer: Buffer;
+  if (file instanceof Buffer) {
+    imageBuffer = file;
+  } else if ('arrayBuffer' in file) {
+    imageBuffer = Buffer.from(await file.arrayBuffer());
+  } else {
+    throw new Error('Unsupported file type');
+  }
+
+  // Optimize image before upload
+  const optimizedBuffer = await optimizeImage(imageBuffer);
+
   // Build storage path: category/filename
   const storagePath = `${category}/${sanitizedFilename}`;
 
@@ -54,7 +69,7 @@ export async function uploadMedia(options: UploadMediaOptions): Promise<MediaAss
     // Upload to Supabase Storage
     const { data, error } = await supabaseAdmin.storage
       .from(MEDIA_BUCKET)
-      .upload(storagePath, file, {
+      .upload(storagePath, optimizedBuffer, {
         contentType: getContentType(sanitizedFilename),
         cacheControl: '3600', // Cache for 1 hour
         upsert: true, // Allow overwriting existing files
@@ -67,15 +82,7 @@ export async function uploadMedia(options: UploadMediaOptions): Promise<MediaAss
     // Get public URL
     const publicUrl = getStorageUrl(MEDIA_BUCKET, storagePath);
 
-    // Get file size (if available)
-    let fileSize: number | undefined;
-    if (file instanceof Buffer) {
-      fileSize = file.length;
-    } else if ('size' in file) {
-      fileSize = file.size;
-    }
-
-    // Save metadata to database
+    // Save metadata to database (with pending approval status)
     const mediaAsset = await prisma.mediaAsset.create({
       data: {
         type: getCategoryType(category),
@@ -86,10 +93,18 @@ export async function uploadMedia(options: UploadMediaOptions): Promise<MediaAss
         description,
         altText,
         mimeType: getContentType(sanitizedFilename),
-        fileSize,
+        fileSize: optimizedBuffer.length,
         uploadedBy: uploadedBy || null,
+        approvalStatus: 'pending', // Start as pending
       },
     });
+
+    // Process upload with quality assessment
+    const { assessment, autoApproved } = await processUploadedMedia(
+      mediaAsset.id,
+      optimizedBuffer,
+      category
+    );
 
     return {
       id: mediaAsset.id,
@@ -100,6 +115,8 @@ export async function uploadMedia(options: UploadMediaOptions): Promise<MediaAss
       description,
       altText,
       conditionId,
+      qualityScore: assessment.qualityScore,
+      autoApproved,
     };
   } catch (error) {
     console.error('Error uploading media:', error);
