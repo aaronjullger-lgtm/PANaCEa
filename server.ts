@@ -1223,6 +1223,51 @@ app.get('/api/media/list', async (req: Request, res: Response) => {
   }
 });
 
+// Get pending media (admin-only)
+app.get('/api/media/pending', async (req: Request, res: Response) => {
+  try {
+    // TODO: Add admin authentication middleware
+    // import { requireAdmin } from './lib/middleware/adminAuth';
+    // This endpoint should be protected with requireAdmin middleware
+    
+    const pendingHandler = await import('./functions/api/media/pending');
+    await pendingHandler.default(req, res);
+  } catch (error) {
+    console.error('Error getting pending media:', error);
+    res.status(500).json({ error: 'Failed to get pending media' });
+  }
+});
+
+// Approve or reject media (admin-only)
+app.post('/api/media/approve', async (req: Request, res: Response) => {
+  try {
+    // TODO: Add admin authentication middleware
+    // import { requireAdmin } from './lib/middleware/adminAuth';
+    // This endpoint should be protected with requireAdmin middleware
+    
+    const approveHandler = await import('./functions/api/media/approve');
+    await approveHandler.default(req, res);
+  } catch (error) {
+    console.error('Error approving media:', error);
+    res.status(500).json({ error: 'Failed to approve media' });
+  }
+});
+
+// Get media approval stats (admin-only)
+app.get('/api/media/stats', async (req: Request, res: Response) => {
+  try {
+    // TODO: Add admin authentication middleware
+    // import { requireAdmin } from './lib/middleware/adminAuth';
+    // This endpoint should be protected with requireAdmin middleware
+    
+    const statsHandler = await import('./functions/api/media/stats');
+    await statsHandler.default(req, res);
+  } catch (error) {
+    console.error('Error getting media stats:', error);
+    res.status(500).json({ error: 'Failed to get stats' });
+  }
+});
+
 // ============================================================================
 // Question Management API Endpoints (Smart Storage with No-Repeat)
 // ============================================================================
