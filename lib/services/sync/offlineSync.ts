@@ -117,8 +117,9 @@ export function queueOperation(
 
 /**
  * Process queued operations
+ * @param token - Optional authentication token for authenticated requests
  */
-export async function processQueue(): Promise<void> {
+export async function processQueue(token?: string): Promise<void> {
   if (!navigator.onLine) {
     console.log('[OfflineSync] Offline - skipping queue processing');
     return;
@@ -135,7 +136,7 @@ export async function processQueue(): Promise<void> {
 
   for (const op of pending) {
     try {
-      await syncOperation(op);
+      await syncOperation(op, token);
       op.status = 'synced';
       console.log(`[OfflineSync] ✓ Synced: ${op.operation} (${op.id})`);
     } catch (error: any) {
@@ -158,21 +159,28 @@ export async function processQueue(): Promise<void> {
   // If there are still pending items, schedule another retry
   const stillPending = updatedQueue.filter(op => op.status === 'pending');
   if (stillPending.length > 0) {
-    setTimeout(() => processQueue(), RETRY_DELAY);
+    setTimeout(() => processQueue(token), RETRY_DELAY);
   }
 }
 
 /**
  * Sync a single operation to the server
  */
-async function syncOperation(op: SyncOperation): Promise<void> {
+async function syncOperation(op: SyncOperation, token?: string): Promise<void> {
   const endpoint = getEndpointForOperation(op.operation);
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  
+  // Attach authentication token if provided
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   
   const response = await fetch(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify(op.data),
   });
 
@@ -205,6 +213,12 @@ function getEndpointForOperation(operation: SyncOperation['operation']): string 
  * 
  * Note: Map is automatically cleaned up when timeout executes.
  * For long-running apps, consider periodic cleanup of stale entries.
+ * 
+ * @param key - Unique key for this operation (for debouncing)
+ * @param operation - Type of operation to perform
+ * @param data - Data to sync
+ * @param delay - Debounce delay in milliseconds
+ * @param token - Optional authentication token for authenticated requests
  */
 const debouncedSaves = new Map<string, NodeJS.Timeout>();
 
@@ -212,7 +226,8 @@ export function debouncedSave(
   key: string,
   operation: SyncOperation['operation'],
   data: any,
-  delay: number = DEBOUNCE_DELAY
+  delay: number = DEBOUNCE_DELAY,
+  token?: string
 ): void {
   // Clear existing timeout for this key
   const existing = debouncedSaves.get(key);
@@ -231,7 +246,7 @@ export function debouncedSave(
         timestamp: Date.now(),
         attempts: 0,
         status: 'pending',
-      }).catch(() => {
+      }, token).catch(() => {
         // If fails, queue for retry
         queueOperation(operation, data);
       });
@@ -284,12 +299,20 @@ export function getQueueStatus(): {
 }
 
 /**
- * Set up automatic sync retry on connection restore
+ * Helper to retrieve token from getToken function
  */
-export function setupAutoSync(): void {
+function retrieveToken(getToken?: () => string | null): string | undefined {
+  return getToken ? getToken() || undefined : undefined;
+}
+
+/**
+ * Set up automatic sync retry on connection restore
+ * @param getToken - Optional function to retrieve current authentication token
+ */
+export function setupAutoSync(getToken?: () => string | null): void {
   window.addEventListener('online', () => {
     console.log('[OfflineSync] Connection restored - processing queue');
-    processQueue();
+    processQueue(retrieveToken(getToken));
   });
 
   window.addEventListener('offline', () => {
@@ -298,6 +321,8 @@ export function setupAutoSync(): void {
 
   // Process queue on page load
   if (navigator.onLine) {
-    setTimeout(() => processQueue(), 1000);
+    setTimeout(() => {
+      processQueue(retrieveToken(getToken));
+    }, 1000);
   }
 }
