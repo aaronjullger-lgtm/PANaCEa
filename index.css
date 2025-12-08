@@ -7,6 +7,15 @@
 @tailwind utilities;
 
 /* -----------------------------------------------------
+   PREVENT HORIZONTAL SCROLLING ON MOBILE
+------------------------------------------------------ */
+
+body,
+#root {
+  overflow-x: hidden;
+}
+
+/* -----------------------------------------------------
    GLOBAL BUTTON COMPONENT CLASSES
 ------------------------------------------------------ */
 
@@ -77,15 +86,13 @@
   }
 
   .pill-select-active {
-    @apply bg-clinical-blue text-white shadow-md
-           dark:bg-clinical-blue dark:text-white;
+    @apply bg-[#0284C7] text-white
+           dark:bg-[#0284C7] dark:text-white;
   }
 
   .pill-select-inactive {
-    @apply bg-slate-100 text-slate-700 border border-slate-200
-           hover:bg-slate-200 hover:border-slate-300
-           dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700
-           dark:hover:bg-slate-700 dark:hover:border-slate-600;
+    @apply bg-slate-100 text-slate-700 border border-transparent
+           dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700;
   }
 
   .pill-select-disabled {

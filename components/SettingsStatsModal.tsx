@@ -531,7 +531,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)]"
+          className="bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)] dark:border-slate-700"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
@@ -548,7 +548,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--color-accent)]" />
                 )}
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">
+              <h2 className="text-lg sm:text-xl font-bold text-[var(--color-text-primary)] dark:text-slate-100">
                 {activeTab === 'stats' ? 'Statistics' : activeTab === 'preferences' ? 'Dashboard Preferences' : activeTab === 'activity' ? 'Activity' : 'Settings'}
               </h2>
             </div>
@@ -629,8 +629,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               <div className="space-y-4 sm:space-y-6">
                 {/* Motivational Message - Low Stakes Approach */}
                 <div className="card-premium-glass p-4 rounded-xl">
-                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                    <strong className="text-[var(--color-text-primary)]">Focus on your current form.</strong> Your recent effort matters more than past mistakes—every session is a fresh opportunity to improve.
+                  <p className="text-sm text-[var(--color-text-secondary)] dark:text-slate-100 leading-relaxed">
+                    <strong className="text-[var(--color-text-primary)] dark:text-slate-100">Focus on your current form.</strong> Your recent effort matters more than past mistakes—every session is a fresh opportunity to improve.
                   </p>
                 </div>
 
@@ -731,7 +731,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* System Breakdown */}
                 {stats.systemBreakdown.length > 0 && (
                   <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
-                    <h3 className="font-medium text-[var(--color-text-primary)] mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)] dark:text-slate-100 mb-3">
                       Performance by System
                     </h3>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -885,9 +885,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-4">
                     <User className="w-5 h-5 text-[var(--color-accent)]" />
-                    <h3 className="font-medium text-[var(--color-text-primary)]">Your Profile</h3>
+                    <h3 className="font-medium text-[var(--color-text-primary)] dark:text-slate-100">Your Profile</h3>
                   </div>
-                  <p className="text-xs text-[var(--color-text-muted)] mb-4">
+                  <p className="text-xs text-[var(--color-text-muted)] dark:text-slate-100 mb-4">
                     Keep your information updated to help us personalize your learning experience.
                   </p>
                   
