@@ -103,7 +103,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const coreMode = MODE_REGISTRY.find((mode) => mode.category === 'core' && mode.id === 'core_adaptive');
 
   // Filter out the core category and condition_drill (accessed via Condition Page) for the Bento grid
-  const drillModes = MODE_REGISTRY.filter((mode) => mode.category !== 'core' && mode.id !== 'condition_drill');
+  // condition_drill is hidden from the main menu but users can access it via the Condition Page
+  const HIDDEN_DRILL_MODES: TrainingModeId[] = ['condition_drill'];
+  const drillModes = MODE_REGISTRY.filter((mode) => mode.category !== 'core' && !HIDDEN_DRILL_MODES.includes(mode.id));
 
   /**
    * Get focus-specific description text
@@ -424,7 +426,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shadow-sm`}>
             <IconComponent className={`w-5 h-5 ${styles.iconColor}`} />
           </div>
-          <div className="min-h-[4rem]">
+          <div className="card-content-min">
             <h3 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1] text-base flex items-center gap-2">
               {mode.label}
               {isStreakMode && streakHighScore > 0 && (
