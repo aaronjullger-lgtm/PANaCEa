@@ -6,6 +6,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
 
 // ============================================================================
 // Types
@@ -34,7 +35,6 @@ interface HeatmapCalendarProps {
 // Constants
 // ============================================================================
 
-const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // Color scales for different metrics - using consistent UI theme colors
@@ -98,9 +98,8 @@ function formatDate(date: Date): string {
 function generateDateRange(weeks: number): Date[] {
   const dates: Date[] = [];
   
-  // Get today in UTC to ensure consistency regardless of client timezone
-  const now = new Date();
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+  // Get today in UTC using the helper function to ensure consistency
+  const today = getTodayUTC();
   
   // Get day of week in UTC (0 = Sunday, 6 = Saturday)
   const todayDayOfWeek = today.getUTCDay();
@@ -289,7 +288,7 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       <div className="flex w-full">
         {/* Day labels - show only Mon/Wed/Fri like GitHub */}
         <div className="flex flex-col gap-0.5 mr-2 flex-shrink-0">
-          {DAYS_OF_WEEK.map((day, idx) => (
+          {DAY_NAMES.map((day, idx) => (
             <div
               key={idx}
               className="h-3 text-xs text-slate-600 dark:text-slate-400 flex items-center"

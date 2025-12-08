@@ -4,6 +4,7 @@
  */
 
 import { getPrismaClient } from '../db';
+import { getTodayUTC } from '../utils/timeUtils';
 
 const getPrisma = () => getPrismaClient();
 
@@ -20,15 +21,14 @@ export interface StreakInfo {
  * Using UTC ensures consistent date calculations regardless of client/server timezone
  */
 function getTodayDate(): Date {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+  return getTodayUTC();
 }
 
 /**
  * Get yesterday's date in UTC
  */
 function getYesterdayDate(): Date {
-  const today = getTodayDate();
+  const today = getTodayUTC();
   const yesterday = new Date(today);
   yesterday.setUTCDate(yesterday.getUTCDate() - 1);
   return yesterday;

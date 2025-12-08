@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
 import DayCellPopover, { DayActivityData } from './DayCellPopover';
+import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
 
 interface ActivityHeatmapProps {
   performanceData: PerformanceRecord[];
@@ -55,9 +56,8 @@ function getIntensityColor(count: number): string {
 function generateDateRange(weeks: number): Date[] {
   const dates: Date[] = [];
   
-  // Get today in UTC
-  const now = new Date();
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+  // Get today in UTC using the helper function
+  const today = getTodayUTC();
   
   // Get day of week in UTC (0 = Sunday, 6 = Saturday)
   const todayDayOfWeek = today.getUTCDay();
@@ -286,7 +286,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
     setPopoverPosition(undefined);
   }, []);
 
-  const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const DAYS_OF_WEEK = DAY_NAMES;
 
   // Check if there's any activity data
   const hasActivity = performanceData.length > 0;

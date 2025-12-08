@@ -4,6 +4,11 @@
  */
 
 /**
+ * Day names for calendar displays
+ */
+export const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
+/**
  * Get current UTC date normalized to midnight
  * This ensures consistent date calculations regardless of client timezone
  * @returns Date object set to midnight UTC
