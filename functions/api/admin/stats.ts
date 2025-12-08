@@ -34,33 +34,19 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       return createErrorResponse('Unauthorized', 401);
     }
 
-    // Note: In a real implementation, we'd fetch the user's role from the database
-    // For now, this is a placeholder. In production:
-    // const user = await prisma.user.findUnique({
-    //   where: { clerkId: authContext.userId },
-    //   select: { role: true }
-    // });
-    //
-    // if (!user || !isAdmin(user.role as any)) {
-    //   return createErrorResponse('Forbidden', 403);
-    // }
-
-    // Placeholder check - in production this would verify actual role from DB
-    // For now, we'll return stats for any authenticated user
-    // TODO: Add proper role checking when database is connected
-
-    // Note: In Cloudflare Workers/Pages Functions, we can't use Prisma directly
-    // In production, you'd use Prisma Data Proxy or D1 to query:
-    // const [totalUsers, activeToday, totalSessions] = await Promise.all([
-    //   prisma.user.count(),
-    //   prisma.dailyStreak.count({
-    //     where: { date: new Date().toISOString().split('T')[0] }
-    //   }),
-    //   prisma.performanceRecord.count()
-    // ]);
-
+    // Note: This endpoint is designed for Cloudflare Workers/Pages Functions
+    // For full database functionality, use the Express server endpoints at /api/admin/*
+    // instead of these Cloudflare Functions
+    
+    // In Cloudflare environment, we have limited options:
+    // 1. Use Prisma Data Proxy for database access
+    // 2. Use Cloudflare D1 (their serverless SQL database)
+    // 3. Call the Express API server from here
+    
+    // For now, we return basic info and recommend using the main server API
     const response = {
       success: true,
+      message: 'For full admin statistics, please use the main server endpoint at /api/admin/stats',
       data: {
         totalUsers: 0,
         activeUsersToday: 0,
@@ -68,6 +54,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
         averageAccuracy: 0,
         popularSystems: [],
       },
+      note: 'Database connection is configured in the main Express server. Use /api/admin/stats on the server for full statistics.',
     };
 
     return createSuccessResponse(response);
