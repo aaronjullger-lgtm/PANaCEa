@@ -184,6 +184,14 @@ model MediaAsset {
   confidence  Float      @default(0) // AI matching confidence score (0-1)
   aiMetadata  Json?      // Additional AI analysis data
   
+  /// Approval workflow for quality control
+  approvalStatus String   @default("pending") // "pending" | "approved" | "rejected"
+  approvedBy     String?  // User ID who approved/rejected
+  approvedAt     DateTime? // When approval decision was made
+  rejectionReason String? @db.Text // Why rejected (if applicable)
+  qualityScore   Float?   // 0-100 quality assessment score
+  isClinical     Boolean  @default(false) // Is this a clinical image (vs diagram/illustration)?
+  
   /// Upload tracking
   uploadedBy  String?    // User ID
   uploadedAt  DateTime   @default(now())
@@ -198,6 +206,8 @@ model MediaAsset {
   @@index([filename])
   @@index([tags])
   @@index([uploadedBy])
+  @@index([approvalStatus])
+  @@index([approvedAt])
 }
 
 /// Represents an achievement earned by a user
@@ -474,6 +484,56 @@ model SyncQueue {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+/// Represents educational resources (textbooks, lectures, PDFs)
+model EducationalResource {
+  id              String   @id @default(uuid())
+  title           String
+  resourceType    String   // "textbook" | "lecture" | "pdf" | "video" | "slides"
+  fileUrl         String?  // Storage URL for the resource
+  originalFilename String? // Original file name when uploaded
+  
+  /// Content extraction
+  extractedText   String?  @db.Text // Full text extracted from resource
+  summary         String?  @db.Text // AI-generated summary
+  keyTopics       String[] // Extracted medical topics/conditions
+  
+  /// Metadata
+  author          String?
+  source          String?  // Textbook name, lecture series, etc.
+  pageNumber      Int?     // For textbook excerpts
+  duration        Int?     // For videos/lectures (in seconds)
+  mimeType        String?
+  fileSize        Int?
+  
+  /// Linkage to conditions
+  conditionIds    String[] // Array of related condition IDs
+  systemCodes     String[] // CV, PULM, GI, etc.
+  
+  /// Approval workflow
+  approvalStatus  String   @default("pending") // "pending" | "approved" | "rejected"
+  approvedBy      String?
+  approvedAt      DateTime?
+  rejectionReason String?  @db.Text
+  qualityScore    Float?   // 0-100 quality/relevance score
+  
+  /// Tracking
+  uploadedBy      String?
+  uploadedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  /// Usage analytics
+  viewCount       Int      @default(0)
+  lastAccessedAt  DateTime?
+  
+  @@index([resourceType])
+  @@index([approvalStatus])
+  @@index([keyTopics])
+  @@index([systemCodes])
+  @@index([uploadedBy])
+  @@index([approvedAt])
 }
 
 /// Represents a flagged question reported by a user
