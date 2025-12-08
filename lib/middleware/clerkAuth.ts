@@ -25,21 +25,31 @@ export async function requireAuth(
   res: Response,
   next: NextFunction
 ): Promise<void> {
+  const debug = process.env.CLERK_AUTH_DEBUG === 'true';
+  
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
+      if (debug) {
+        console.log('[Auth Debug] No authorization header present');
+      }
       res.status(401).json({
         error: 'Unauthorized',
         message: 'Authorization header is required',
+        ...(debug && { reason: 'missing-authorization-header' }),
       });
       return;
     }
 
     if (!authHeader.startsWith('Bearer ')) {
+      if (debug) {
+        console.log('[Auth Debug] Invalid authorization header format:', authHeader.substring(0, 20));
+      }
       res.status(401).json({
         error: 'Unauthorized',
         message: 'Invalid authorization header format. Expected: Bearer <token>',
+        ...(debug && { reason: 'invalid-authorization-format' }),
       });
       return;
     }
@@ -51,19 +61,32 @@ export async function requireAuth(
       throw new Error('CLERK_SECRET_KEY is not configured');
     }
 
+    if (debug) {
+      console.log('[Auth Debug] Attempting to verify token with leeway: 60 seconds');
+      console.log('[Auth Debug] Current server time:', new Date().toISOString());
+    }
+
     // Verify the token using Clerk's standalone verifyToken function
-    // Use leeway to tolerate clock skew (5 seconds)
+    // Use leeway to tolerate clock skew (60 seconds to handle time discrepancies)
     const verifiedToken = await verifyToken(token, {
       secretKey,
-      leeway: 5,
+      leeway: 60,
     });
 
     if (!verifiedToken || !verifiedToken.sub) {
+      if (debug) {
+        console.log('[Auth Debug] Token verification returned invalid or missing subject');
+      }
       res.status(401).json({
         error: 'Unauthorized',
         message: 'Invalid or expired token',
+        ...(debug && { reason: 'invalid-token-or-missing-subject' }),
       });
       return;
+    }
+
+    if (debug) {
+      console.log('[Auth Debug] Token verified successfully for user:', verifiedToken.sub);
     }
 
     // Attach auth context to request
@@ -77,25 +100,42 @@ export async function requireAuth(
     console.error('[Auth] Token verification failed:', {
       message: error.message,
       name: error.name,
+      stack: debug ? error.stack : undefined,
     });
 
     // Provide specific error messages based on error type
     let message = 'Authentication failed';
+    let reason = 'unknown-error';
     
     if (error.message) {
       const errorMsg = error.message.toLowerCase();
       if (errorMsg.includes('expired')) {
         message = 'Token has expired. Please sign in again.';
+        reason = 'token-expired';
+      } else if (errorMsg.includes('not active') || errorMsg.includes('nbf')) {
+        message = 'Token is not yet active. This may be due to clock skew between client and server.';
+        reason = 'token-not-active-yet';
       } else if (errorMsg.includes('signature')) {
         message = 'Invalid token signature';
+        reason = 'invalid-signature';
       } else if (errorMsg.includes('issuer')) {
         message = 'Invalid token issuer';
+        reason = 'invalid-issuer';
       }
+    }
+
+    if (debug) {
+      console.error('[Auth Debug] Full error details:', {
+        reason,
+        message: error.message,
+        serverTime: new Date().toISOString(),
+      });
     }
 
     res.status(401).json({
       error: 'Unauthorized',
       message,
+      ...(debug && { reason, details: error.message }),
     });
   }
 }
@@ -109,11 +149,16 @@ export async function optionalAuth(
   res: Response,
   next: NextFunction
 ): Promise<void> {
+  const debug = process.env.CLERK_AUTH_DEBUG === 'true';
+  
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       // No auth provided, continue without auth context
+      if (debug) {
+        console.log('[Auth Debug] Optional auth: No valid authorization header, continuing without auth');
+      }
       next();
       return;
     }
@@ -122,14 +167,21 @@ export async function optionalAuth(
     const secretKey = process.env.CLERK_SECRET_KEY;
 
     if (!secretKey) {
+      if (debug) {
+        console.log('[Auth Debug] Optional auth: CLERK_SECRET_KEY not configured');
+      }
       next();
       return;
     }
 
     try {
+      if (debug) {
+        console.log('[Auth Debug] Optional auth: Attempting to verify token with leeway: 60 seconds');
+      }
+      
       const verifiedToken = await verifyToken(token, {
         secretKey,
-        leeway: 5,
+        leeway: 60,
       });
 
       if (verifiedToken && verifiedToken.sub) {
@@ -137,15 +189,28 @@ export async function optionalAuth(
           userId: verifiedToken.sub,
           sessionId: verifiedToken.sid || undefined,
         };
+        if (debug) {
+          console.log('[Auth Debug] Optional auth: Token verified successfully for user:', verifiedToken.sub);
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       // Ignore token verification errors for optional auth
-      console.warn('[Auth] Optional auth token verification failed:', error);
+      if (debug) {
+        console.warn('[Auth Debug] Optional auth token verification failed:', {
+          message: error.message,
+          reason: error.message?.includes('not active') ? 'token-not-active-yet' : 'unknown',
+        });
+      } else {
+        console.warn('[Auth] Optional auth token verification failed');
+      }
     }
 
     next();
   } catch (error) {
     // Never fail on optional auth
+    if (debug) {
+      console.log('[Auth Debug] Optional auth: Unexpected error, continuing without auth');
+    }
     next();
   }
 }
