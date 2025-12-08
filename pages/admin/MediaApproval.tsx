@@ -1,0 +1,748 @@
+/**
+ * Media Approval Page
+ * 
+ * Admin interface for reviewing and approving uploaded medical images and educational resources.
+ * Implements the "Upload -> AI Check -> Human Approve -> Live" workflow.
+ * 
+ * Features:
+ * - Gallery view of pending media with filters
+ * - Full preview with AI metadata and quality scores
+ * - Batch approval/rejection actions
+ * - Search and filter capabilities
+ */
+
+import React, { useState, useEffect } from 'react';
+import { X, Check, ThumbsDown, Eye, AlertCircle, TrendingUp, Filter, Search, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface MediaAsset {
+  id: string;
+  filename: string;
+  originalUrl: string;
+  thumbnailUrl?: string;
+  type: string;
+  mediaType: string; // 'image' | 'pdf' | 'video' | 'audio'
+  tags: string[];
+  description?: string;
+  qualityScore?: number;
+  isClinical: boolean;
+  folder: string;
+  status: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+  aiMetadata?: {
+    assessment?: {
+      issues: string[];
+      recommendations: string[];
+      aiAnalysis?: {
+        description: string;
+        clinicalFeatures: string[];
+        diagnosticQuality: string;
+      };
+    };
+  };
+  condition?: {
+    id: string;
+    name: string;
+    system: string;
+  };
+  sourceUrl?: string;
+  citation?: string;
+  textContent?: string;
+  pageCount?: number;
+  duration?: number;
+}
+
+interface ApprovalStats {
+  pending: number;
+  approved: number;
+  rejected: number;
+  total: number;
+  approvalRate: number;
+}
+
+interface MediaApprovalProps {
+  onClose?: () => void;
+}
+
+export function MediaApproval({ onClose }: MediaApprovalProps) {
+  const [pendingMedia, setPendingMedia] = useState<MediaAsset[]>([]);
+  const [stats, setStats] = useState<ApprovalStats | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<MediaAsset | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
+  
+  // TODO: Get user from auth context
+  const currentUserId = 'current-user';
+
+  useEffect(() => {
+    loadPendingMedia();
+  }, [filter]);
+
+  const loadPendingMedia = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        includeStats: 'true',
+      });
+      
+      if (filter !== 'all') {
+        params.append('category', filter);
+      }
+
+      const response = await fetch(`/api/media/pending?${params}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setPendingMedia(data.media || []);
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Error loading pending media:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (mediaId: string) => {
+    try {
+      const response = await fetch('/api/media/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'approve',
+          mediaId,
+          approvedBy: currentUserId,
+        }),
+      });
+
+      if (response.ok) {
+        setPendingMedia(prev => prev.filter(m => m.id !== mediaId));
+        setSelectedItems(prev => {
+          const next = new Set(prev);
+          next.delete(mediaId);
+          return next;
+        });
+        loadPendingMedia();
+        setSelectedMedia(null);
+      }
+    } catch (error) {
+      console.error('Error approving media:', error);
+    }
+  };
+
+  const handleReject = async (mediaId: string, reason: string) => {
+    try {
+      const response = await fetch('/api/media/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reject',
+          mediaId,
+          approvedBy: currentUserId,
+          rejectionReason: reason,
+        }),
+      });
+
+      if (response.ok) {
+        setPendingMedia(prev => prev.filter(m => m.id !== mediaId));
+        setSelectedItems(prev => {
+          const next = new Set(prev);
+          next.delete(mediaId);
+          return next;
+        });
+        loadPendingMedia();
+        setSelectedMedia(null);
+        setShowRejectionModal(false);
+        setRejectionReason('');
+      }
+    } catch (error) {
+      console.error('Error rejecting media:', error);
+    }
+  };
+
+  const handleBatchApprove = async () => {
+    const promises = Array.from(selectedItems).map(id => handleApprove(id));
+    await Promise.all(promises);
+    setSelectedItems(new Set());
+    setBatchMode(false);
+  };
+
+  const handleBatchReject = () => {
+    setShowRejectionModal(true);
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const getQualityBadgeColor = (score?: number) => {
+    if (!score) return 'bg-gray-500';
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  const getMediaTypeIcon = (mediaType: string) => {
+    switch (mediaType) {
+      case 'pdf': return '📄';
+      case 'video': return '🎥';
+      case 'audio': return '🎵';
+      default: return '🖼️';
+    }
+  };
+
+  const filteredMedia = pendingMedia.filter(media => {
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      return (
+        media.filename.toLowerCase().includes(search) ||
+        media.tags.some(tag => tag.toLowerCase().includes(search)) ||
+        media.description?.toLowerCase().includes(search)
+      );
+    }
+    return true;
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading pending media...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0F1419] p-6">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Media Approval Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Review and approve uploaded medical images and educational resources
+            </p>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          )}
+        </div>
+
+        {/* Action Bar */}
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={() => setBatchMode(!batchMode)}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              batchMode
+                ? 'bg-blue-600 text-white'
+                : 'bg-white dark:bg-[#1F283A] text-gray-700 dark:text-gray-300'
+            }`}
+          >
+            {batchMode ? 'Cancel Batch' : 'Batch Mode'}
+          </button>
+          
+          {batchMode && selectedItems.size > 0 && (
+            <>
+              <button
+                onClick={handleBatchApprove}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                Approve {selectedItems.size}
+              </button>
+              <button
+                onClick={handleBatchReject}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              >
+                <ThumbsDown className="w-4 h-4" />
+                Reject {selectedItems.size}
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={loadPendingMedia}
+            className="ml-auto p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            title="Refresh"
+          >
+            <RefreshCw className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search media by filename, tags, or description..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1F283A] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+      </div>
+
+      {/* Stats */}
+      {stats && (
+        <div className="max-w-7xl mx-auto mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <motion.div
+            className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pending</p>
+                <p className="text-3xl font-bold text-orange-600">{stats.pending}</p>
+              </div>
+              <AlertCircle className="w-8 h-8 text-orange-500" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approved</p>
+                <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
+              </div>
+              <Check className="w-8 h-8 text-green-500" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Rejected</p>
+                <p className="text-3xl font-bold text-red-600">{stats.rejected}</p>
+              </div>
+              <ThumbsDown className="w-8 h-8 text-red-500" />
+            </div>
+          </motion.div>
+
+          <motion.div
+            className="bg-white dark:bg-[#1F283A] rounded-lg p-6 shadow-sm"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Approval Rate</p>
+                <p className="text-3xl font-bold text-blue-600">{stats.approvalRate}%</p>
+              </div>
+              <TrendingUp className="w-8 h-8 text-blue-500" />
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="max-w-7xl mx-auto mb-6">
+        <div className="flex items-center gap-2">
+          <Filter className="w-5 h-5 text-gray-500" />
+          {['all', 'ecg', 'derm', 'radiology', 'labs', 'diagrams', 'pdf', 'video'].map(category => (
+            <button
+              key={category}
+              onClick={() => setFilter(category)}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                filter === category
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white dark:bg-[#1F283A] text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#364154]'
+              }`}
+            >
+              {category.charAt(0).toUpperCase() + category.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Media Grid */}
+      <div className="max-w-7xl mx-auto">
+        {filteredMedia.length === 0 ? (
+          <div className="bg-white dark:bg-[#1F283A] rounded-lg p-12 text-center">
+            <Check className="w-16 h-16 text-green-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              All caught up!
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              {searchTerm ? 'No media matches your search.' : 'No pending media to review at this time.'}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <AnimatePresence>
+              {filteredMedia.map(media => (
+                <motion.div
+                  key={media.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className={`bg-white dark:bg-[#1F283A] rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${
+                    selectedItems.has(media.id) ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                >
+                  {/* Image Preview */}
+                  <div
+                    className="relative h-48 bg-gray-200 dark:bg-gray-800 cursor-pointer"
+                    onClick={() => !batchMode && setSelectedMedia(media)}
+                  >
+                    {batchMode && (
+                      <div className="absolute top-2 left-2 z-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.has(media.id)}
+                          onChange={() => toggleSelection(media.id)}
+                          className="w-5 h-5 rounded"
+                        />
+                      </div>
+                    )}
+                    
+                    {media.mediaType === 'image' ? (
+                      <img
+                        src={media.thumbnailUrl || media.originalUrl}
+                        alt={media.filename}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-6xl">
+                        {getMediaTypeIcon(media.mediaType)}
+                      </div>
+                    )}
+                    
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <span
+                        className={`${getQualityBadgeColor(media.qualityScore)} text-white text-xs font-bold px-2 py-1 rounded`}
+                      >
+                        {media.qualityScore || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-white truncate flex-1">
+                        {media.filename}
+                      </h3>
+                      <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded ml-2">
+                        {media.mediaType}
+                      </span>
+                    </div>
+
+                    {media.condition && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {media.condition.name}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {media.tags.slice(0, 3).map(tag => (
+                        <span
+                          key={tag}
+                          className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {media.tags.length > 3 && (
+                        <span className="text-xs text-gray-500">+{media.tags.length - 3}</span>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    {!batchMode && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApprove(media.id)}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Check className="w-4 h-4" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedMedia(media);
+                            setShowRejectionModal(true);
+                          }}
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        >
+                          <ThumbsDown className="w-4 h-4" />
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => setSelectedMedia(media)}
+                          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded-lg transition-colors"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+
+      {/* Detail Modal */}
+      {selectedMedia && !showRejectionModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-[#1F283A] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Media Details
+                </h2>
+                <button
+                  onClick={() => setSelectedMedia(null)}
+                  className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Full Media Preview */}
+              {selectedMedia.mediaType === 'image' ? (
+                <img
+                  src={selectedMedia.originalUrl}
+                  alt={selectedMedia.filename}
+                  className="w-full rounded-lg mb-6"
+                />
+              ) : (
+                <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-lg mb-6 flex items-center justify-center text-8xl">
+                  {getMediaTypeIcon(selectedMedia.mediaType)}
+                </div>
+              )}
+
+              {/* Metadata */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Quality Score</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {selectedMedia.qualityScore || 'N/A'}/100
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Clinical Image</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {selectedMedia.isClinical ? 'Yes' : 'No'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Media Type</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {selectedMedia.mediaType}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Folder</p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {selectedMedia.folder}
+                  </p>
+                </div>
+              </div>
+
+              {/* Additional fields for PDFs/Videos */}
+              {(selectedMedia.pageCount || selectedMedia.duration) && (
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  {selectedMedia.pageCount && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pages</p>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {selectedMedia.pageCount}
+                      </p>
+                    </div>
+                  )}
+                  {selectedMedia.duration && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Duration</p>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {Math.floor(selectedMedia.duration / 60)}:{(selectedMedia.duration % 60).toString().padStart(2, '0')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Source and Citation */}
+              {(selectedMedia.sourceUrl || selectedMedia.citation) && (
+                <div className="mb-6">
+                  {selectedMedia.citation && (
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Citation</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 italic">
+                        {selectedMedia.citation}
+                      </p>
+                    </div>
+                  )}
+                  {selectedMedia.sourceUrl && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Source URL</p>
+                      <a
+                        href={selectedMedia.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        {selectedMedia.sourceUrl}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* AI Analysis */}
+              {selectedMedia.aiMetadata?.assessment?.aiAnalysis && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">AI Analysis</h3>
+                  <p className="text-gray-700 dark:text-gray-300 mb-3">
+                    {selectedMedia.aiMetadata.assessment.aiAnalysis.description}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    Diagnostic Quality: <span className="font-medium">
+                      {selectedMedia.aiMetadata.assessment.aiAnalysis.diagnosticQuality}
+                    </span>
+                  </p>
+                  {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.length > 0 && (
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Clinical Features:</p>
+                      <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
+                        {selectedMedia.aiMetadata.assessment.aiAnalysis.clinicalFeatures.map((feature, idx) => (
+                          <li key={idx}>{feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Issues and Recommendations */}
+              {selectedMedia.aiMetadata?.assessment && (
+                <>
+                  {selectedMedia.aiMetadata.assessment.issues.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Issues</h3>
+                      <ul className="list-disc list-inside text-red-600 dark:text-red-400">
+                        {selectedMedia.aiMetadata.assessment.issues.map((issue, idx) => (
+                          <li key={idx}>{issue}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {selectedMedia.aiMetadata.assessment.recommendations.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Recommendations</h3>
+                      <ul className="list-disc list-inside text-blue-600 dark:text-blue-400">
+                        {selectedMedia.aiMetadata.assessment.recommendations.map((rec, idx) => (
+                          <li key={idx}>{rec}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleApprove(selectedMedia.id)}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <Check className="w-5 h-5" />
+                  Approve for Use
+                </button>
+                <button
+                  onClick={() => setShowRejectionModal(true)}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <ThumbsDown className="w-5 h-5" />
+                  Reject
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Rejection Modal */}
+      {showRejectionModal && selectedMedia && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-[#1F283A] rounded-lg max-w-md w-full p-6"
+          >
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              Reject Media
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Please provide a reason for rejection:
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              className="w-full h-32 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white mb-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="e.g., Poor image quality, not clinically relevant, duplicate..."
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRejectionModal(false);
+                  setRejectionReason('');
+                }}
+                className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleReject(selectedMedia.id, rejectionReason)}
+                disabled={!rejectionReason.trim()}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                Confirm Rejection
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default MediaApproval;
