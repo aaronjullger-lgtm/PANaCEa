@@ -3,10 +3,11 @@
  * Abstracts localStorage vs cloud storage based on authentication state
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
 import type { PerformanceRecord, Question } from '../types';
 import { getAllSRSItems, loadSRSItemsFromCloud } from '../lib/services/srsService';
+import { createDebouncedFunction } from '../lib/utils/debounce';
 
 const PERFORMANCE_KEY = 'panceai_performance_v2';
 const MISSED_KEY = 'panceai_missed_v2';
@@ -75,6 +76,9 @@ export function useUserStats(): UseUserStatsResult {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+
+  // Create debounced sync function with ref to prevent recreating on each render
+  const debouncedSyncRef = useRef<ReturnType<typeof createDebouncedFunction> | null>(null);
 
   // Save to localStorage whenever data changes (for offline support)
   useEffect(() => {
@@ -225,6 +229,18 @@ export function useUserStats(): UseUserStatsResult {
     }
   }, [isSignedIn, user, getToken]);
 
+  // Initialize debounced sync function
+  useEffect(() => {
+    debouncedSyncRef.current = createDebouncedFunction(syncToCloud, 2000);
+    
+    // Cleanup on unmount
+    return () => {
+      if (debouncedSyncRef.current) {
+        debouncedSyncRef.current.cancel();
+      }
+    };
+  }, [syncToCloud]);
+
   // Auto-sync when user signs in (only once per session)
   useEffect(() => {
     if (isSignedIn && user) {
@@ -240,35 +256,28 @@ export function useUserStats(): UseUserStatsResult {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]); // Only trigger on sign-in state change, not on every clerkId change
 
-  // Wrapper setters that also trigger cloud sync
-  // Note: These use a simple delay for sync. In production, consider using
-  // a debouncing library or queue-based sync for better reliability
+  // Wrapper setters that also trigger cloud sync with proper debouncing
   const setPerformanceData = useCallback((data: PerformanceRecord[] | ((prev: PerformanceRecord[]) => PerformanceRecord[])) => {
     setPerformanceDataState(data);
-    // Trigger sync after a delay (simple debounce)
-    // In production, use a proper debouncing utility
-    if (isSignedIn) {
-      const timeoutId = setTimeout(() => syncToCloud(), 2000);
-      // Note: Cleanup would be needed if component unmounts
-      return () => clearTimeout(timeoutId);
+    // Trigger debounced sync if signed in
+    if (isSignedIn && debouncedSyncRef.current) {
+      debouncedSyncRef.current.debounced();
     }
-  }, [isSignedIn, syncToCloud]);
+  }, [isSignedIn]);
 
   const setMissedQuestions = useCallback((data: Question[] | ((prev: Question[]) => Question[])) => {
     setMissedQuestionsState(data);
-    if (isSignedIn) {
-      const timeoutId = setTimeout(() => syncToCloud(), 2000);
-      return () => clearTimeout(timeoutId);
+    if (isSignedIn && debouncedSyncRef.current) {
+      debouncedSyncRef.current.debounced();
     }
-  }, [isSignedIn, syncToCloud]);
+  }, [isSignedIn]);
 
   const setFlaggedQuestions = useCallback((data: Question[] | ((prev: Question[]) => Question[])) => {
     setFlaggedQuestionsState(data);
-    if (isSignedIn) {
-      const timeoutId = setTimeout(() => syncToCloud(), 2000);
-      return () => clearTimeout(timeoutId);
+    if (isSignedIn && debouncedSyncRef.current) {
+      debouncedSyncRef.current.debounced();
     }
-  }, [isSignedIn, syncToCloud]);
+  }, [isSignedIn]);
 
   return {
     performanceData,

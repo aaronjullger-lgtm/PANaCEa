@@ -9,17 +9,41 @@ import type {
 
 const STORAGE_KEY = "pance_performance_v1";
 
+// ---- In-memory cache to reduce localStorage reads ----
+let cachedRecords: PerformanceRecord[] | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_TTL = 5000; // 5 seconds cache TTL
+
 // ---- Low-level helpers ----
 
 function loadAllRecords(): PerformanceRecord[] {
   if (typeof window === "undefined") return [];
+  
+  // Return cached records if valid
+  const now = Date.now();
+  if (cachedRecords && (now - cacheTimestamp) < CACHE_TTL) {
+    return cachedRecords;
+  }
+  
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) {
+      cachedRecords = [];
+      cacheTimestamp = now;
+      return [];
+    }
     const parsed = JSON.parse(raw) as PerformanceRecord[];
-    if (!Array.isArray(parsed)) return [];
+    if (!Array.isArray(parsed)) {
+      cachedRecords = [];
+      cacheTimestamp = now;
+      return [];
+    }
+    cachedRecords = parsed;
+    cacheTimestamp = now;
     return parsed;
   } catch {
+    cachedRecords = [];
+    cacheTimestamp = now;
     return [];
   }
 }
@@ -28,9 +52,18 @@ function saveAllRecords(records: PerformanceRecord[]) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    // Update cache
+    cachedRecords = records;
+    cacheTimestamp = Date.now();
   } catch (err) {
     console.error("Failed to save performance records", err);
   }
+}
+
+// ---- Clear cache when needed ----
+export function clearPerformanceCache() {
+  cachedRecords = null;
+  cacheTimestamp = 0;
 }
 
 // ---- Public: record a single question outcome ----

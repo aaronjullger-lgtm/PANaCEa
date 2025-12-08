@@ -86,20 +86,37 @@ export async function loadLabCases(): Promise<any> {
 /**
  * Preload data in the background to improve perceived performance.
  * Call this after the initial app load to warm up the cache.
+ * Uses requestIdleCallback for better performance if available.
  */
 export function preloadData(): void {
-  // Preload in the background without blocking
-  setTimeout(() => {
-    loadDrugData().catch(() => {
-      // Silently fail - will retry when actually needed
-    });
+  const preloadTask = () => {
+    // Load data in order of likely usage (most common first)
     loadConditionContent().catch(() => {
       // Silently fail - will retry when actually needed
     });
-    loadLabCases().catch(() => {
-      // Silently fail - will retry when actually needed
-    });
-  }, 2000); // Wait 2 seconds after app load
+    
+    // Delay drug data slightly to prioritize condition content
+    setTimeout(() => {
+      loadDrugData().catch(() => {
+        // Silently fail - will retry when actually needed
+      });
+    }, 500);
+    
+    // Lab cases are least commonly used, load last
+    setTimeout(() => {
+      loadLabCases().catch(() => {
+        // Silently fail - will retry when actually needed
+      });
+    }, 1000);
+  };
+
+  // Use requestIdleCallback if available for better performance
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+    window.requestIdleCallback(preloadTask, { timeout: 3000 });
+  } else {
+    // Fallback to setTimeout with slightly longer delay for older browsers
+    setTimeout(preloadTask, 2000);
+  }
 }
 
 /**

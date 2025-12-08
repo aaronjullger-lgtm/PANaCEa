@@ -105,18 +105,33 @@ const RECENT_HISTORY_COUNT = 10;
 
 // Shuffle helpers
 /**
- * Helper to get enabled systems from localStorage
+ * Helper to get enabled systems from localStorage with caching
  */
+let cachedEnabledSystems: Set<SystemCode> | null = null;
+let enabledSystemsCacheKey: string | null = null;
+
 function getEnabledSystems(): Set<SystemCode> {
   const saved = localStorage.getItem('panceai_enabled_systems');
+  
+  // Return cached result if localStorage value hasn't changed
+  if (saved === enabledSystemsCacheKey && cachedEnabledSystems) {
+    return cachedEnabledSystems;
+  }
+  
+  // Update cache
+  enabledSystemsCacheKey = saved;
+  
   if (saved) {
     try {
-      return new Set(JSON.parse(saved) as SystemCode[]);
+      cachedEnabledSystems = new Set(JSON.parse(saved) as SystemCode[]);
+      return cachedEnabledSystems;
     } catch {
-      return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+      cachedEnabledSystems = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+      return cachedEnabledSystems;
     }
   }
-  return new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+  cachedEnabledSystems = new Set(Object.keys(ABBREVIATION_TO_TOPIC_MAP) as SystemCode[]);
+  return cachedEnabledSystems;
 }
 
 export function refillShuffledContentQueue() {
