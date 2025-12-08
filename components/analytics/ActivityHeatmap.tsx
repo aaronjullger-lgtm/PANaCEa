@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
 import DayCellPopover, { DayActivityData } from './DayCellPopover';
+import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
 
 interface ActivityHeatmapProps {
   performanceData: PerformanceRecord[];
@@ -50,23 +51,28 @@ function getIntensityColor(count: number): string {
 
 /**
  * Generate date range for the heatmap grid
+ * Uses UTC dates to ensure consistency regardless of client timezone
  */
 function generateDateRange(weeks: number): Date[] {
   const dates: Date[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  
+  // Get today in UTC using the helper function
+  const today = getTodayUTC();
+  
+  // Get day of week in UTC (0 = Sunday, 6 = Saturday)
+  const todayDayOfWeek = today.getUTCDay();
 
   // Start from the beginning of the week, X weeks ago
   const startDate = new Date(today);
-  startDate.setDate(today.getDate() - (weeks * 7) - today.getDay());
+  startDate.setUTCDate(today.getUTCDate() - (weeks * 7) - todayDayOfWeek);
 
   const endDate = new Date(today);
-  endDate.setDate(today.getDate() + (6 - today.getDay()));
+  endDate.setUTCDate(today.getUTCDate() + (6 - todayDayOfWeek));
 
   const current = new Date(startDate);
   while (current <= endDate) {
     dates.push(new Date(current));
-    current.setDate(current.getDate() + 1);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
 
   return dates;
@@ -100,7 +106,8 @@ function getMonthLabels(dateGrid: (Date | null)[][]): { month: string; colSpan: 
       const date = dateGrid[rowIdx][colIdx];
       if (date) {
         hasValidDate = true;
-        const month = date.getMonth();
+        // Use UTC month to ensure consistency
+        const month = date.getUTCMonth();
         monthCounts.set(month, (monthCounts.get(month) || 0) + 1);
       }
     }
@@ -208,7 +215,8 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
     const grid: (Date | null)[][] = Array(7).fill(null).map(() => []);
 
     for (const date of dates) {
-      const dayOfWeek = date.getDay();
+      // Use UTC day of week to ensure consistency
+      const dayOfWeek = date.getUTCDay();
       grid[dayOfWeek].push(date);
     }
 
@@ -278,7 +286,7 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
     setPopoverPosition(undefined);
   }, []);
 
-  const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const DAYS_OF_WEEK = DAY_NAMES;
 
   // Check if there's any activity data
   const hasActivity = performanceData.length > 0;

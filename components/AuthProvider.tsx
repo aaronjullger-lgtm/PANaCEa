@@ -11,7 +11,8 @@ interface AuthProviderProps {
 }
 
 // Get publishable key from environment variable
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
+// @ts-ignore - import.meta.env is available in Vite but may not be typed
+const CLERK_PUBLISHABLE_KEY = import.meta.env?.VITE_CLERK_PUBLISHABLE_KEY || '';
 
 // Error message when Clerk publishable key is missing
 const MISSING_KEY_ERROR = `Missing Publishable Key for Clerk!
@@ -32,9 +33,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     throw new Error(MISSING_KEY_ERROR);
   }
 
+  // Enable debug mode in development or when explicitly enabled
+  // @ts-ignore - import.meta.env is available in Vite but may not be typed
+  const isDevelopment = import.meta.env?.DEV;
+  // @ts-ignore - import.meta.env is available in Vite but may not be typed
+  const debugEnabled = isDevelopment || import.meta.env?.VITE_CLERK_DEBUG === 'true';
+
+  if (debugEnabled) {
+    console.log('[Clerk] Debug mode enabled');
+    console.log('[Clerk] Publishable key:', CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
+    console.log('[Clerk] Client time:', new Date().toISOString());
+    console.log('[Clerk] Client timezone offset:', new Date().getTimezoneOffset());
+  }
+
   return (
     <ClerkProvider 
       publishableKey={CLERK_PUBLISHABLE_KEY}
+      telemetry={debugEnabled ? { disabled: false, debug: true } : undefined}
       appearance={{
         elements: {
           // Hide Clerk branding and development mode indicators

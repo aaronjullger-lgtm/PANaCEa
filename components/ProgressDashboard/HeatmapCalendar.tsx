@@ -6,6 +6,7 @@
  */
 
 import React, { useMemo } from 'react';
+import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
 
 // ============================================================================
 // Types
@@ -34,7 +35,6 @@ interface HeatmapCalendarProps {
 // Constants
 // ============================================================================
 
-const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // Color scales for different metrics - using consistent UI theme colors
@@ -97,20 +97,24 @@ function formatDate(date: Date): string {
 
 function generateDateRange(weeks: number): Date[] {
   const dates: Date[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  
+  // Get today in UTC using the helper function to ensure consistency
+  const today = getTodayUTC();
+  
+  // Get day of week in UTC (0 = Sunday, 6 = Saturday)
+  const todayDayOfWeek = today.getUTCDay();
   
   // Start from the beginning of the week, X weeks ago
   const startDate = new Date(today);
-  startDate.setDate(today.getDate() - (weeks * 7) - today.getDay());
+  startDate.setUTCDate(today.getUTCDate() - (weeks * 7) - todayDayOfWeek);
   
   const endDate = new Date(today);
-  endDate.setDate(today.getDate() + (6 - today.getDay()));
+  endDate.setUTCDate(today.getUTCDate() + (6 - todayDayOfWeek));
   
   const current = new Date(startDate);
   while (current <= endDate) {
     dates.push(new Date(current));
-    current.setDate(current.getDate() + 1);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
   
   return dates;
@@ -140,7 +144,8 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
     const grid: (Date | null)[][] = Array(7).fill(null).map(() => []);
     
     for (const date of dates) {
-      const dayOfWeek = date.getDay();
+      // Use UTC day of week to ensure consistency
+      const dayOfWeek = date.getUTCDay();
       grid[dayOfWeek].push(date);
     }
     
@@ -169,7 +174,8 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       for (let rowIdx = 0; rowIdx < dateGrid.length; rowIdx++) {
         const date = dateGrid[rowIdx][colIdx];
         if (date) {
-          colMonth = date.getMonth();
+          // Use UTC month to ensure consistency
+          colMonth = date.getUTCMonth();
           break;
         }
       }
@@ -282,7 +288,7 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       <div className="flex w-full">
         {/* Day labels - show only Mon/Wed/Fri like GitHub */}
         <div className="flex flex-col gap-0.5 mr-2 flex-shrink-0">
-          {DAYS_OF_WEEK.map((day, idx) => (
+          {DAY_NAMES.map((day, idx) => (
             <div
               key={idx}
               className="h-3 text-xs text-slate-600 dark:text-slate-400 flex items-center"

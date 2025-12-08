@@ -6,6 +6,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Flame, TrendingUp, Calendar, Award, CheckCircle } from 'lucide-react';
+import { getTodayUTC, DAY_NAMES } from '../lib/utils/timeUtils';
 
 interface StreakTrackerProps {
   currentStreak: number;
@@ -20,13 +21,15 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
   lastStudyDate,
   streakHistory = [],
 }) => {
-  const today = new Date().toISOString().split('T')[0];
+  // Use UTC date to ensure consistency regardless of client timezone
+  const todayUTC = getTodayUTC();
+  const today = todayUTC.toISOString().split('T')[0];
   const studiedToday = lastStudyDate === today;
   
-  // Get last 7 days for mini calendar
+  // Get last 7 days for mini calendar using UTC
   const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
+    const date = new Date(todayUTC);
+    date.setUTCDate(todayUTC.getUTCDate() - (6 - i));
     return date.toISOString().split('T')[0];
   });
   
@@ -119,7 +122,8 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           {last7Days.map((date, index) => {
             const hasStudied = hasStudiedOnDate(date);
             const isCurrentDay = isToday(date);
-            const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date(date).getDay()];
+            // Use UTC day to ensure consistency
+            const dayName = DAY_NAMES[new Date(date + 'T00:00:00Z').getUTCDay()];
             
             return (
               <motion.div
