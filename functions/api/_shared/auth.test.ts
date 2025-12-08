@@ -67,7 +67,7 @@ describe('Authentication Diagnostics', () => {
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[AUTH] Authorization header format is invalid'),
-        expect.stringContaining('InvalidFormat')
+        expect.stringContaining('InvalidFor')
       );
     });
 
@@ -230,7 +230,7 @@ describe('Authentication Diagnostics', () => {
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[AUTH] CLERK_SECRET_KEY has invalid format'),
-        expect.stringContaining('pk_test_')
+        'pk_t***'
       );
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AUTH] Note: Public keys (pk_*) cannot be used as secret keys'
@@ -250,7 +250,7 @@ describe('Authentication Diagnostics', () => {
       expect(result).toBeNull();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.stringContaining('[AUTH] CLERK_SECRET_KEY has invalid format'),
-        'invalid_'
+        'inva***'
       );
     });
 

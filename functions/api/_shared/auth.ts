@@ -67,7 +67,7 @@ export async function verifyAuthToken(
 
   if (!authHeader.startsWith('Bearer ')) {
     console.error('[AUTH] Authorization header format is invalid. Expected "Bearer <token>", got:', 
-      authHeader.substring(0, 20) + '...');
+      authHeader.substring(0, 10) + '...');
     return null;
   }
 
@@ -99,7 +99,11 @@ export async function verifyAuthToken(
     // Verify the token using Clerk's secure verification
     const verifiedToken = await clerkClient.verifyToken(token);
 
-    console.log('[AUTH] Token verification successful for user:', verifiedToken.sub);
+    if (isTestEnv) {
+      console.log('[AUTH] Token verification successful for user:', verifiedToken.sub);
+    } else {
+      console.log('[AUTH] Token verification successful');
+    }
     return verifiedToken.sub || null;
   } catch (error) {
     // Phase 2.1: Retrieve error details (limited to essential info)
@@ -193,10 +197,12 @@ export async function authenticateRequest(
   // Phase 1.2: Check key format (should start with sk_test_ or sk_live_)
   if (!secretKey.startsWith('sk_test_') && !secretKey.startsWith('sk_live_')) {
     console.error('[AUTH] CLERK_SECRET_KEY has invalid format. Expected to start with "sk_test_" or "sk_live_", got:', 
-      secretKey.substring(0, 8));
+      secretKey.substring(0, 4) + '***');
     console.error('[AUTH] Note: Public keys (pk_*) cannot be used as secret keys');
     return null;
   }
+
+  const isTestEnv = secretKey.startsWith('sk_test_');
 
   // Phase 1.3: Log masked key for verification (first/last 5 characters only)
   console.log('[AUTH] Secret key verified (masked):', maskSecretKey(secretKey));
@@ -210,7 +216,11 @@ export async function authenticateRequest(
     return null;
   }
 
-  console.log('[AUTH] Authentication successful for user:', userId);
+  if (isTestEnv) {
+    console.log('[AUTH] Authentication successful for user:', userId);
+  } else {
+    console.log('[AUTH] Authentication successful');
+  }
   return {
     userId,
     clerkId: userId,
