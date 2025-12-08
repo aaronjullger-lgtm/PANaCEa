@@ -246,7 +246,7 @@ export function DrillLandingPage({
           >
             <button
               onClick={onViewHistory}
-              className="btn-secondary"
+              className="btn-ghost"
             >
               View History & Stats
             </button>

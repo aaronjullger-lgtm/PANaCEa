@@ -299,14 +299,20 @@ export function getQueueStatus(): {
 }
 
 /**
+ * Helper to retrieve token from getToken function
+ */
+function retrieveToken(getToken?: () => string | null): string | undefined {
+  return getToken ? getToken() || undefined : undefined;
+}
+
+/**
  * Set up automatic sync retry on connection restore
  * @param getToken - Optional function to retrieve current authentication token
  */
 export function setupAutoSync(getToken?: () => string | null): void {
   window.addEventListener('online', () => {
     console.log('[OfflineSync] Connection restored - processing queue');
-    const token = getToken ? getToken() : undefined;
-    processQueue(token);
+    processQueue(retrieveToken(getToken));
   });
 
   window.addEventListener('offline', () => {
@@ -316,8 +322,7 @@ export function setupAutoSync(getToken?: () => string | null): void {
   // Process queue on page load
   if (navigator.onLine) {
     setTimeout(() => {
-      const token = getToken ? getToken() : undefined;
-      processQueue(token);
+      processQueue(retrieveToken(getToken));
     }, 1000);
   }
 }

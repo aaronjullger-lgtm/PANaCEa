@@ -62,20 +62,25 @@ interface KeybindProviderProps {
 
 export function KeybindProvider({ children }: KeybindProviderProps) {
   const [keybinds, setKeybinds] = useState<Map<KeybindAction, KeybindConfig>>(() => {
-    // Load from localStorage
-    const stored = localStorage.getItem('panacea_keybinds');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as KeybindConfig[];
-        return new Map(parsed.map(config => [config.action, config]));
-      } catch {
-        // Fall back to defaults
-      }
-    }
     return new Map(DEFAULT_KEYBINDS.map(config => [config.action, config]));
   });
 
   const [isKeybindActive, setKeybindActive] = useState(true);
+
+  // Load from localStorage on mount (client-side only)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const stored = localStorage.getItem('panacea_keybinds');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as KeybindConfig[];
+        setKeybinds(new Map(parsed.map(config => [config.action, config])));
+      } catch (error) {
+        console.error('[KeybindContext] Failed to load keybinds from localStorage:', error);
+      }
+    }
+  }, []);
 
   // Save to localStorage whenever keybinds change
   useEffect(() => {

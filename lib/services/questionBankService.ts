@@ -181,7 +181,8 @@ export async function fetchQuestionHybrid(
     console.log('[QuestionBank] ✓ Using question from database');
     
     // Mark as used (fire and forget)
-    if (userId) {
+    // Note: conditionId is used as the unique question identifier in the Question interface
+    if (userId && question.conditionId) {
       markQuestionAsUsed(question.conditionId, userId);
     }
     
