@@ -289,9 +289,95 @@ function findBestMatch(
 }
 
 /**
+ * Save links to database
+ * NOTE: Requires DATABASE_URL to be set in environment
+ */
+async function saveToDatabase(links: MediaLink[]): Promise<{
+  successful: number;
+  failed: number;
+  errors: string[];
+}> {
+  const result = {
+    successful: 0,
+    failed: 0,
+    errors: [] as string[],
+  };
+
+  // Dynamic import to avoid requiring database in all cases
+  try {
+    const { prisma } = await import("../lib/prisma.js");
+
+    console.log("  Connecting to database...");
+
+    for (const link of links) {
+      try {
+        // Find the condition in the database
+        const condition = await prisma.condition.findFirst({
+          where: { name: link.conditionId },
+        });
+
+        if (!condition) {
+          result.failed++;
+          result.errors.push(`Condition not found: ${link.conditionId}`);
+          continue;
+        }
+
+        // Check if media asset already exists
+        const existing = await prisma.mediaAsset.findFirst({
+          where: { filename: link.filename },
+        });
+
+        if (existing) {
+          // Update existing record
+          await prisma.mediaAsset.update({
+            where: { id: existing.id },
+            data: {
+              conditionId: condition.id,
+              tags: link.tags,
+              confidence: link.confidence,
+              status: link.confidence > 0.9 ? "approved" : "pending_review",
+              folder: link.confidence > 0.9 ? "clinical_verified" : "inbox",
+            },
+          });
+          console.log(`    ✓ Updated: ${link.filename}`);
+        } else {
+          // Create new record
+          await prisma.mediaAsset.create({
+            data: {
+              filename: link.filename,
+              type: link.type,
+              conditionId: condition.id,
+              tags: link.tags,
+              confidence: link.confidence,
+              status: link.confidence > 0.9 ? "approved" : "pending_review",
+              folder: link.confidence > 0.9 ? "clinical_verified" : "inbox",
+              mediaType: "image", // Default to image
+              approvalStatus: "pending",
+            },
+          });
+          console.log(`    ✓ Created: ${link.filename}`);
+        }
+
+        result.successful++;
+      } catch (error: any) {
+        result.failed++;
+        result.errors.push(`${link.filename}: ${error.message}`);
+      }
+    }
+
+    await prisma.$disconnect();
+  } catch (error: any) {
+    console.error("  ❌ Database connection failed:", error.message);
+    result.errors.push(`Database error: ${error.message}`);
+  }
+
+  return result;
+}
+
+/**
  * Main execution function
  */
-function run(): void {
+async function run(): Promise<void> {
   const basePath = process.cwd();
 
   console.log("Media Integrator - Starting...\n");
@@ -337,8 +423,8 @@ function run(): void {
   console.log(`  Successful matches: ${links.length}`);
   console.log(`  Unresolved/Ambiguous: ${audits.length}\n`);
 
-  // Step 4: Write output files
-  console.log("Step 4: Writing output files...");
+  // Step 4: Write output files (backup)
+  console.log("Step 4: Writing output files (backup)...");
 
   // Ensure output directory exists
   const outputDir = path.resolve(basePath, "output");
@@ -347,7 +433,7 @@ function run(): void {
     console.log(`  Created output directory: ${outputDir}`);
   }
 
-  // Write media links
+  // Write media links (JSON backup)
   const linksPath = path.resolve(basePath, OUTPUT_LINKS_PATH);
   fs.writeFileSync(linksPath, JSON.stringify(links, null, 2));
   console.log(`  Written: ${linksPath}`);
@@ -357,8 +443,47 @@ function run(): void {
   fs.writeFileSync(auditPath, JSON.stringify(audits, null, 2));
   console.log(`  Written: ${auditPath}`);
 
+  // Step 5: Save to database
+  if (process.env.DATABASE_URL && links.length > 0) {
+    console.log("\nStep 5: Saving to database...");
+    const dbResult = await saveToDatabase(links);
+
+    console.log(`\n  Database Results:`);
+    console.log(`  ✅ Successful: ${dbResult.successful}`);
+    console.log(`  ❌ Failed: ${dbResult.failed}`);
+
+    if (dbResult.errors.length > 0) {
+      console.log(`\n  Errors:`);
+      dbResult.errors.slice(0, 10).forEach((err) => {
+        console.log(`    - ${err}`);
+      });
+      if (dbResult.errors.length > 10) {
+        console.log(`    ... and ${dbResult.errors.length - 10} more`);
+      }
+    }
+  } else {
+    console.log("\nStep 5: Skipping database save");
+    if (!process.env.DATABASE_URL) {
+      console.log("  ℹ️  DATABASE_URL not set. Set it to enable database integration.");
+    }
+    if (links.length === 0) {
+      console.log("  ℹ️  No successful matches to save.");
+    }
+  }
+
   console.log("\nMedia Integrator - Complete!");
+  console.log("\nSummary:");
+  console.log(`  Total scanned: ${assets.length}`);
+  console.log(`  Matched: ${links.length}`);
+  console.log(`  Unmatched: ${audits.length}`);
+  console.log(`\nNext steps:`);
+  console.log(`  1. Review audit file: ${auditPath}`);
+  console.log(`  2. Check database records with: npm run db:studio`);
+  console.log(`  3. Process unmatched files manually if needed`);
 }
 
 // Execute the script
-run();
+run().catch((error) => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});
