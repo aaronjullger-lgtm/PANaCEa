@@ -35,7 +35,14 @@ function decodeJwtPayload(token: string): any {
     if (parts.length !== 3) {
       return null;
     }
-    const payload = parts[1];
+    // JWT uses base64url encoding, not standard base64
+    // Replace URL-safe characters and add padding if needed
+    let payload = parts[1];
+    payload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    // Add padding if needed
+    while (payload.length % 4 !== 0) {
+      payload += '=';
+    }
     const decoded = Buffer.from(payload, 'base64').toString('utf-8');
     return JSON.parse(decoded);
   } catch (error) {
@@ -182,17 +189,16 @@ export async function authenticateRequest(
   }
 
   // Phase 1.1: Check key format (should start with sk_test_ or sk_live_)
-  const keyPrefix = secretKey.substring(0, 8);
-  if (!keyPrefix.startsWith('sk_test_') && !keyPrefix.startsWith('sk_live_')) {
+  if (!secretKey.startsWith('sk_test_') && !secretKey.startsWith('sk_live_')) {
     console.error('[AUTH] CLERK_SECRET_KEY has invalid format. Expected to start with "sk_test_" or "sk_live_", got:', 
-      keyPrefix);
+      secretKey.substring(0, 8));
     console.error('[AUTH] Note: Public keys (pk_*) cannot be used as secret keys');
     return null;
   }
 
   // Phase 1.2: Log masked key for verification (first/last 5 characters only)
   console.log('[AUTH] Secret key verified (masked):', maskSecretKey(secretKey));
-  console.log('[AUTH] Secret key environment:', keyPrefix.startsWith('sk_test_') ? 'test' : 'live');
+  console.log('[AUTH] Secret key environment:', secretKey.startsWith('sk_test_') ? 'test' : 'live');
 
   const authHeader = request.headers.get('Authorization');
   const userId = await verifyAuthToken(authHeader, secretKey);
