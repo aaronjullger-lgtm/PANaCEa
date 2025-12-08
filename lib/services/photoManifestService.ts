@@ -6,7 +6,6 @@
  * Only fetches APPROVED images for use in production
  */
 
-import { getMediaByConditionName } from '../../services/mediaStorageService';
 import { prisma } from '../prisma';
 
 export type PhotoCategory = 'ecg' | 'derm' | 'radiology';

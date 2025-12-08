@@ -30,10 +30,12 @@ export interface ApprovalDecision {
  * Process uploaded media with quality assessment
  * Auto-approves high-quality images, others go to pending
  */
+export type MediaCategory = 'ecg' | 'derm' | 'radiology' | 'labs' | 'diagrams';
+
 export async function processUploadedMedia(
   mediaId: string,
   imageBuffer: Buffer,
-  category: string
+  category: MediaCategory
 ): Promise<{
   assessment: QualityAssessment;
   autoApproved: boolean;
@@ -305,8 +307,16 @@ export async function reassessMedia(mediaId: string): Promise<QualityAssessment>
   }
 
   // Download the image
-  const response = await fetch(media.originalUrl);
-  const imageBuffer = Buffer.from(await response.arrayBuffer());
+  let imageBuffer: Buffer;
+  try {
+    const response = await fetch(media.originalUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+    imageBuffer = Buffer.from(await response.arrayBuffer());
+  } catch (error) {
+    throw new Error(`Failed to download image for re-assessment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 
   // Re-assess quality
   const assessment = await assessImageQuality(imageBuffer, media.type);

@@ -154,12 +154,15 @@ async function processResourceContent(
   };
 }
 
+// Constants for content processing
+const MAX_CONTENT_ANALYSIS_LENGTH = 10000; // Characters to analyze with AI
+
 /**
  * Extract text from PDF using AI vision
+ * TODO: Replace with proper PDF parsing library (pdf-parse) for production
+ * to reduce AI API costs and improve reliability
  */
 async function extractTextFromPDF(pdfBuffer: Buffer): Promise<string> {
-  // For MVP, we'll use AI to read the PDF
-  // In production, consider using pdf-parse or pdf.js
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
   const base64Pdf = pdfBuffer.toString('base64');
@@ -218,7 +221,7 @@ async function analyzeEducationalContent(text: string): Promise<{
 4. Quality score (0-100) based on educational value, accuracy, and completeness
 
 Content:
-${text.substring(0, 10000)}
+${text.substring(0, MAX_CONTENT_ANALYSIS_LENGTH)}
 
 Respond in JSON format:
 {

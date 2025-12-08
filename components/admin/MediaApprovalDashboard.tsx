@@ -54,6 +54,11 @@ export function MediaApprovalDashboard() {
   const [filter, setFilter] = useState<string>('all');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectionModal, setShowRejectionModal] = useState(false);
+  
+  // TODO: Replace with actual auth context
+  // import { useUser } from '@clerk/clerk-react';
+  // const { user } = useUser();
+  const currentUserId = 'current-user'; // Placeholder - MUST be replaced with actual user ID
 
   useEffect(() => {
     loadPendingMedia();
@@ -92,7 +97,7 @@ export function MediaApprovalDashboard() {
         body: JSON.stringify({
           action: 'approve',
           mediaId,
-          approvedBy: 'current-user', // TODO: Get from auth context
+          approvedBy: currentUserId,
         }),
       });
 
@@ -116,7 +121,7 @@ export function MediaApprovalDashboard() {
         body: JSON.stringify({
           action: 'reject',
           mediaId,
-          approvedBy: 'current-user', // TODO: Get from auth context
+          approvedBy: currentUserId,
           rejectionReason: reason,
         }),
       });
