@@ -112,6 +112,11 @@ describe('Authentication Diagnostics', () => {
         '[AUTH] Token verification successful for user:',
         'user_123'
       );
+      // Verify that leeway option is passed to verifyToken
+      expect(mockVerifyToken).toHaveBeenCalledWith(
+        mockToken,
+        expect.objectContaining({ leeway: 5 })
+      );
     });
 
     it('should detect and log expired tokens', async () => {
@@ -134,6 +139,39 @@ describe('Authentication Diagnostics', () => {
       );
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AUTH] Root Cause: Token Expiration'
+      );
+      // Verify that leeway option is passed even for expired tokens
+      expect(mockVerifyToken).toHaveBeenCalledWith(
+        mockToken,
+        expect.objectContaining({ leeway: 5 })
+      );
+    });
+
+    it('should pass leeway option to handle clock skew within tolerance', async () => {
+      // Create a token that would be expired without leeway (3 seconds ago)
+      // but should be accepted with 5 second leeway
+      const mockToken = createMockJWT({
+        sub: 'user_456',
+        iss: 'https://clerk.test.com',
+        exp: Math.floor(Date.now() / 1000) - 3, // expired 3 seconds ago
+        iat: Math.floor(Date.now() / 1000) - 3603,
+      });
+
+      // Mock successful verification (as if leeway allowed it)
+      const mockVerifyToken = vi.fn().mockResolvedValue({ sub: 'user_456' });
+      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+
+      const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
+      
+      expect(result).toBe('user_456');
+      // Verify that verifyToken is called with leeway option
+      expect(mockVerifyToken).toHaveBeenCalledWith(
+        mockToken,
+        expect.objectContaining({ leeway: 5 })
+      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        '[AUTH] Token verification successful for user:',
+        'user_456'
       );
     });
 

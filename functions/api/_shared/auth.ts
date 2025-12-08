@@ -96,8 +96,12 @@ export async function verifyAuthToken(
 
     const clerkClient = createClerkClient({ secretKey });
 
-    // Verify the token using Clerk's secure verification
-    const verifiedToken = await clerkClient.verifyToken(token);
+    // Verify the token using Clerk's secure verification.
+    // ADD THE leeway OPTION to tolerate clock skew (e.g., 5 seconds)
+    const verifiedToken = await clerkClient.verifyToken(token, {
+      // This is the critical change for clock skew/timing issues
+      leeway: 5
+    });
 
     if (isTestEnv) {
       console.log('[AUTH] Token verification successful for user:', verifiedToken.sub);
