@@ -1,6 +1,9 @@
 /**
  * User data synchronization endpoint
  * Handles uploading local data and downloading cloud data
+ * 
+ * DEPLOYMENT NOTE: Clock skew fix with leeway: 5 is active in auth.ts (line 103)
+ * This ensures tokens are accepted within a 5-second clock tolerance window.
  */
 
 import { PrismaClient } from '@prisma/client';
