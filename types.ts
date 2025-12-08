@@ -1,3 +1,11 @@
+/**
+ * @deprecated This file is being consolidated into src/types/index.ts
+ * New code should import from 'src/types' instead of './types'
+ * 
+ * Note: This file is still widely used throughout the codebase.
+ * Migration is planned but not yet implemented.
+ */
+
 export interface Question {
   question: string;
   options: string[];
