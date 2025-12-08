@@ -155,8 +155,14 @@ function rateLimit(maxRequests: number, windowMs: number) {
 // Apply rate limiting to API endpoints (100 requests per 15 minutes)
 app.use('/api', rateLimit(100, 15 * 60 * 1000));
 
-// API sync endpoint with authentication
-app.get('/api/sync', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+// Stricter rate limit for sync endpoints (30 requests per 5 minutes)
+// This prevents abuse while allowing reasonable sync frequency
+const syncRateLimit = rateLimit(30, 5 * 60 * 1000);
+
+// API sync endpoint with authentication and rate limiting
+// Rate limiting: 30 requests per 5 minutes (in addition to global /api rate limit)
+// Authentication: Clerk JWT token required via requireAuth middleware
+app.get('/api/sync', requireAuth, syncRateLimit, (req: AuthenticatedRequest, res: Response) => {
   // User is authenticated, req.auth contains userId
   res.json({
     success: true,
@@ -168,7 +174,9 @@ app.get('/api/sync', requireAuth, (req: AuthenticatedRequest, res: Response) => 
   });
 });
 
-app.post('/api/sync', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+// Rate limiting: 30 requests per 5 minutes (in addition to global /api rate limit)
+// Authentication: Clerk JWT token required via requireAuth middleware
+app.post('/api/sync', requireAuth, syncRateLimit, (req: AuthenticatedRequest, res: Response) => {
   // User is authenticated, req.auth contains userId
   console.log('Sync request received from user:', req.auth?.userId, {
     performanceRecords: req.body.performanceRecords?.length || 0,
