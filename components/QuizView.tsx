@@ -589,13 +589,13 @@ const QuizView: React.FC<QuizViewProps> = ({
         <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
           <button
             onClick={onShowMenu}
-            className="px-6 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
+            className="btn-glass px-6 py-2"
           >
             Back to Dashboard
           </button>
           <button
             onClick={onEndSession}
-            className="px-6 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] font-semibold rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors border border-[var(--color-border)]"
+            className="btn-secondary px-6 py-2"
           >
             End Session
           </button>
@@ -726,7 +726,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         <div className="mt-6 text-center animate-fade-in">
           <button
             onClick={handleSubmitAnswer}
-            className="px-8 py-3 bg-[#E6A495] text-[#8B4513] dark:text-white font-bold rounded-lg hover:bg-[#d99282] transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+            className="btn-glass px-8 py-3"
           >
             Submit Answer
           </button>
@@ -783,7 +783,7 @@ const QuizView: React.FC<QuizViewProps> = ({
                 <button
                   onClick={handleExplainDifferently}
                   disabled={isExplainerLoading}
-                  className="px-4 py-2 bg-[#E6A495] text-[var(--color-accent)] font-semibold rounded-lg hover:bg-[#d99282] transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
+                  className="btn-glass px-4 py-2 text-sm"
                 >
                   {isExplainerLoading
                     ? "Thinking..."
