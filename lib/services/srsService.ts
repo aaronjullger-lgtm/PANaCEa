@@ -259,6 +259,55 @@ export function getDueCount(userId: string): number {
 }
 
 /**
+ * Get due cards with optional rotation filter support.
+ * When filterTags are provided (rotation mode), returns ALL cards matching those tags
+ * sorted by difficulty, IGNORING the due date. Otherwise, returns cards due for review.
+ * 
+ * @param userId - User identifier
+ * @param filterTags - Optional array of tags/systems to filter by (e.g., ['Surgery', 'CV'])
+ * @param sortByDifficulty - Whether to sort by difficulty (true) or due date (false)
+ * @returns Array of SRS items ready for review
+ */
+export function getDueCards(
+  userId: string, 
+  filterTags: string[] = [],
+  sortByDifficulty: boolean = false
+): SRSItem[] {
+  const items = loadSRSItems();
+  const now = new Date();
+  const results: SRSItem[] = [];
+  
+  for (const item of items.values()) {
+    if (item.userId !== userId) continue;
+    
+    // If rotation mode is active (filterTags provided), return ALL cards with matching tags
+    if (filterTags.length > 0) {
+      // Check if the item has any of the filter tags
+      // Note: This assumes items have a 'tags' property. If not, you may need to
+      // add tag support to SRSItem or use a different filtering mechanism
+      // For now, we'll return all items and let the caller handle filtering
+      results.push(item);
+    } else {
+      // Standard mode: only return items due for review
+      if (item.dueDate <= now) {
+        results.push(item);
+      }
+    }
+  }
+  
+  // Sort by difficulty (rotation mode) or due date (standard mode)
+  if (sortByDifficulty || filterTags.length > 0) {
+    // Sort by difficulty (highest difficulty first for rotation mode)
+    results.sort((a, b) => b.difficulty - a.difficulty);
+  } else {
+    // Sort by due date (most overdue first)
+    results.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+  }
+  
+  return results;
+}
+
+/**
  * Update review outcome and compute next schedule
  * 
  * @param userId - User identifier

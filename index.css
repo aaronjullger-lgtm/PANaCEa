@@ -7,6 +7,26 @@
 @tailwind utilities;
 
 /* -----------------------------------------------------
+   GLOBAL BUTTON COMPONENT CLASSES
+------------------------------------------------------ */
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors
+           bg-blue-600 text-white
+           hover:bg-blue-700
+           dark:bg-blue-500 dark:hover:bg-blue-400;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors
+           bg-white text-slate-900 border border-slate-200
+           hover:bg-slate-50
+           dark:bg-slate-800 dark:text-slate-100 dark:border-slate-700 dark:hover:bg-slate-700;
+  }
+}
+
+/* -----------------------------------------------------
    CSS CUSTOM PROPERTIES
 ------------------------------------------------------ */
 
