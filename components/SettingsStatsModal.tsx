@@ -937,6 +937,32 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         />
                       </div>
                     )}
+
+                    {/* Certified PA Toggle */}
+                    <div>
+                      <label className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors">
+                        <div className="flex items-center gap-3">
+                          <GraduationCap className="w-4 h-4 text-[var(--color-text-muted)]" />
+                          <div>
+                            <div className="font-medium text-[var(--color-text-primary)]">
+                              Certified PA
+                            </div>
+                            <div className="text-xs text-[var(--color-text-muted)]">
+                              Enable PANRE-LA Simulator access
+                            </div>
+                          </div>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={userProfile.isCertifiedPA || false}
+                          onChange={(e) => {
+                            const updated = updateUserProfile({ isCertifiedPA: e.target.checked });
+                            setUserProfile(updated);
+                          }}
+                          className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700"
+                        />
+                      </label>
+                    </div>
                   </div>
                 </div>
 
