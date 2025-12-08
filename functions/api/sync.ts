@@ -3,8 +3,7 @@
  * Handles uploading local data and downloading cloud data
  */
 
-// CHANGE 1: Use 'Client' (WebSockets) instead of 'neon' (HTTP) for transaction support
-import { Client } from '@neondatabase/serverless';
+import { PrismaClient } from '@prisma/client';
 import {
   type Env,
   authenticateRequest,
@@ -41,29 +40,39 @@ export async function onRequestOptions(): Promise<Response> {
 
 /**
  * Helper: Resolve Clerk ID to Internal DB ID
- * Now accepts a 'Client' instance instead of 'neon' sql tag
+ * Uses Prisma ORM for database operations
  */
-async function resolveUserId(client: Client, clerkId: string): Promise<string> {
-  // 1. Try to find existing user
-  const { rows } = await client.query(
-    'SELECT id FROM "User" WHERE "clerkId" = $1', 
-    [clerkId]
-  );
+async function resolveUserId(prisma: PrismaClient, clerkId: string): Promise<string> {
+  try {
+    // 1. Try to find existing user
+    const existingUser = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true },
+    });
 
-  if (rows.length > 0) {
-    return rows[0].id;
+    if (existingUser) {
+      return existingUser.id;
+    }
+
+    // 2. User doesn't exist, create them
+    // Note: Using a placeholder email. Ideally, extract real email from auth context if available.
+    const newUser = await prisma.user.create({
+      data: {
+        clerkId,
+        email: `${clerkId}@placeholder.panacea.app`,
+      },
+      select: { id: true },
+    });
+
+    return newUser.id;
+  } catch (error) {
+    console.error('[SYNC] Error resolving user ID:', {
+      clerkId,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
   }
-
-  // 2. User doesn't exist, create them
-  // Note: Using a placeholder email. Ideally, extract real email from auth context if available.
-  const insertResult = await client.query(
-    `INSERT INTO "User" ("clerkId", "email", "updatedAt") 
-     VALUES ($1, $2, NOW()) 
-     RETURNING id`,
-    [clerkId, `${clerkId}@placeholder.panacea.app`]
-  );
-
-  return insertResult.rows[0].id;
 }
 
 /**
@@ -72,51 +81,75 @@ async function resolveUserId(client: Client, clerkId: string): Promise<string> {
 export async function onRequestGet(context: PagesContext): Promise<Response> {
   const { request, env } = context;
 
-  // CHANGE 2: Initialize Client
-  const client = new Client(env.DATABASE_URL);
+  // Initialize Prisma client
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: env.DATABASE_URL,
+      },
+    },
+  });
 
   try {
-    // CHANGE 3: Must explicitly connect
-    await client.connect();
-
+    console.log('[SYNC GET] Starting authentication');
     const authContext = await authenticateRequest(request, env);
 
     if (!authContext) {
+      console.error('[SYNC GET] Authentication failed');
       return createErrorResponse('Unauthorized', 401);
     }
 
     const { clerkId } = authContext;
+    console.log('[SYNC GET] Authentication successful, resolving user ID');
 
     // Resolve clerkId to internal userId
-    const internalUserId = await resolveUserId(client, clerkId);
+    const internalUserId = await resolveUserId(prisma, clerkId);
+    console.log('[SYNC GET] User ID resolved, fetching data');
 
     // Fetch all user data (execute in parallel)
-    const [perfRes, srsRes, savedRes] = await Promise.all([
-      client.query('SELECT * FROM "PerformanceRecord" WHERE "userId" = $1', [internalUserId]),
-      client.query('SELECT * FROM "SRSItem" WHERE "userId" = $1', [internalUserId]),
-      client.query('SELECT * FROM "SavedQuestion" WHERE "userId" = $1', [internalUserId])
+    const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
+      prisma.performanceRecord.findMany({
+        where: { userId: internalUserId },
+      }),
+      prisma.sRSItem.findMany({
+        where: { userId: internalUserId },
+      }),
+      prisma.savedQuestion.findMany({
+        where: { userId: internalUserId },
+      }),
     ]);
+
+    console.log('[SYNC GET] Data fetched successfully:', {
+      performanceRecords: performanceRecords.length,
+      srsItems: srsItems.length,
+      savedQuestions: savedQuestions.length,
+    });
 
     const response: SyncResponse = {
       success: true,
       message: 'Data retrieved successfully',
       data: {
-        performanceRecords: perfRes.rows.map(r => ({
-           ...r,
-           timestamp: Number(r.timestamp) // Handle BigInt if present
+        performanceRecords: performanceRecords.map(r => ({
+          ...r,
+          timestamp: Number(r.timestamp), // Handle BigInt if present
         })),
-        srsItems: srsRes.rows,
-        savedQuestions: savedRes.rows,
+        srsItems,
+        savedQuestions,
       },
     };
 
     return createSuccessResponse(response);
   } catch (error) {
-    console.error('Sync GET error:', error);
+    console.error('[SYNC GET] Error occurred:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return createErrorResponse('Internal server error', 500);
   } finally {
-    // CHANGE 4: Must explicitly close connection
-    context.waitUntil(client.end());
+    // Clean up Prisma connection asynchronously
+    await prisma.$disconnect().catch((err) => {
+      console.error('[SYNC GET] Error disconnecting Prisma:', err);
+    });
   }
 }
 
@@ -125,153 +158,180 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
  */
 export async function onRequestPost(context: PagesContext): Promise<Response> {
   const { request, env } = context;
-  const client = new Client(env.DATABASE_URL);
+  
+  // Initialize Prisma client
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: env.DATABASE_URL,
+      },
+    },
+  });
 
   try {
-    await client.connect();
-
+    console.log('[SYNC POST] Starting authentication');
     const authContext = await authenticateRequest(request, env);
 
     if (!authContext) {
+      console.error('[SYNC POST] Authentication failed');
       return createErrorResponse('Unauthorized', 401);
     }
 
     const { clerkId } = authContext;
+    console.log('[SYNC POST] Parsing request payload');
     const payload: SyncPayload = await request.json();
 
     if (payload.userId !== clerkId) {
+      console.error('[SYNC POST] User ID mismatch:', { expected: clerkId, received: payload.userId });
       return createErrorResponse('User ID mismatch', 403);
     }
 
-    const internalUserId = await resolveUserId(client, clerkId);
+    console.log('[SYNC POST] Resolving user ID');
+    const internalUserId = await resolveUserId(prisma, clerkId);
 
-    // Begin transaction (Now works because we are using Client/WebSockets)
-    await client.query('BEGIN');
-
-    try {
+    console.log('[SYNC POST] Starting transaction');
+    // Begin transaction with Prisma
+    await prisma.$transaction(async (tx) => {
       // 1. Insert PerformanceRecords
       if (payload.performanceRecords?.length) {
+        console.log('[SYNC POST] Upserting performance records:', payload.performanceRecords.length);
         for (const record of payload.performanceRecords) {
-          // Note: using $1, $2 syntax for Client
-          await client.query(
-            `INSERT INTO "PerformanceRecord" (
-              "id", "userId", "topic", "system", "focus", "difficulty",
-              "isCorrect", "timestamp", "questionWordCount", "errorTag",
-              "subcategoryName", "conditionName"
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-             ON CONFLICT ("id") DO NOTHING`,
-            [
-              record.id || crypto.randomUUID(), // Ensure ID exists
-              internalUserId,
-              record.topic,
-              record.system || null,
-              record.focus,
-              record.difficulty,
-              record.isCorrect,
-              record.timestamp,
-              record.questionWordCount || null,
-              record.errorTag || null,
-              record.subcategoryName || null,
-              record.conditionName || null
-            ]
-          );
+          // Ensure we use a consistent ID for both where and create
+          const recordId = record.id || crypto.randomUUID();
+          await tx.performanceRecord.upsert({
+            where: { id: recordId },
+            create: {
+              id: recordId,
+              userId: internalUserId,
+              topic: record.topic,
+              system: record.system || null,
+              focus: record.focus,
+              difficulty: record.difficulty,
+              isCorrect: record.isCorrect,
+              timestamp: BigInt(record.timestamp),
+              questionWordCount: record.questionWordCount || null,
+              errorTag: record.errorTag || null,
+              subcategoryName: record.subcategoryName || null,
+              conditionName: record.conditionName || null,
+            },
+            update: {}, // Do nothing on conflict
+          });
         }
       }
 
       // 2. Upsert SRSItems
       if (payload.srsItems?.length) {
+        console.log('[SYNC POST] Upserting SRS items:', payload.srsItems.length);
         for (const item of payload.srsItems) {
-          await client.query(
-            `INSERT INTO "SRSItem" (
-              "userId", "questionId", "interval", "repetition",
-              "easiness", "dueDate", "lastReviewed", "quality", "difficulty",
-              "stabilityScore", "updatedAt"
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
-             ON CONFLICT ("userId", "questionId") DO UPDATE SET
-               "interval" = EXCLUDED."interval",
-               "repetition" = EXCLUDED."repetition",
-               "easiness" = EXCLUDED."easiness",
-               "dueDate" = EXCLUDED."dueDate",
-               "lastReviewed" = EXCLUDED."lastReviewed",
-               "quality" = EXCLUDED."quality",
-               "difficulty" = EXCLUDED."difficulty",
-               "stabilityScore" = EXCLUDED."stabilityScore",
-               "updatedAt" = NOW()`,
-            [
-              internalUserId,
-              item.questionId,
-              item.interval,
-              item.repetition,
-              item.easiness,
-              item.dueDate,
-              item.lastReviewed,
-              item.quality,
-              item.difficulty,
-              item.stabilityScore
-            ]
-          );
+          await tx.sRSItem.upsert({
+            where: {
+              userId_questionId: {
+                userId: internalUserId,
+                questionId: item.questionId,
+              },
+            },
+            create: {
+              userId: internalUserId,
+              questionId: item.questionId,
+              interval: item.interval,
+              repetition: item.repetition,
+              easiness: item.easiness,
+              dueDate: new Date(item.dueDate),
+              lastReviewed: new Date(item.lastReviewed),
+              quality: item.quality,
+              difficulty: item.difficulty,
+              stabilityScore: item.stabilityScore,
+            },
+            update: {
+              interval: item.interval,
+              repetition: item.repetition,
+              easiness: item.easiness,
+              dueDate: new Date(item.dueDate),
+              lastReviewed: new Date(item.lastReviewed),
+              quality: item.quality,
+              difficulty: item.difficulty,
+              stabilityScore: item.stabilityScore,
+            },
+          });
         }
       }
 
       // 3. Upsert SavedQuestions
       if (payload.savedQuestions?.length) {
+        console.log('[SYNC POST] Upserting saved questions:', payload.savedQuestions.length);
         for (const question of payload.savedQuestions) {
-          await client.query(
-            `INSERT INTO "SavedQuestion" (
-               "userId", "questionId", "questionText", "correctAnswer",
-               "explanation", "topic", "system", "type", "userNote",
-               "repetitionLevel", "nextReviewDate", "updatedAt"
-             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
-             ON CONFLICT ("userId", "questionId", "type") DO UPDATE SET
-               "userNote" = EXCLUDED."userNote",
-               "repetitionLevel" = EXCLUDED."repetitionLevel",
-               "nextReviewDate" = EXCLUDED."nextReviewDate",
-               "updatedAt" = NOW()`,
-            [
-              internalUserId,
-              question.questionId,
-              question.questionText,
-              question.correctAnswer,
-              question.explanation,
-              question.topic,
-              question.system || null,
-              question.type,
-              question.userNote || null,
-              question.repetitionLevel || 1,
-              question.nextReviewDate || null
-            ]
-          );
+          await tx.savedQuestion.upsert({
+            where: {
+              userId_questionId_type: {
+                userId: internalUserId,
+                questionId: question.questionId,
+                type: question.type,
+              },
+            },
+            create: {
+              userId: internalUserId,
+              questionId: question.questionId,
+              questionText: question.questionText,
+              correctAnswer: question.correctAnswer,
+              explanation: question.explanation,
+              topic: question.topic,
+              system: question.system || null,
+              type: question.type,
+              userNote: question.userNote || null,
+              repetitionLevel: question.repetitionLevel || 1,
+              nextReviewDate: question.nextReviewDate || null,
+            },
+            update: {
+              userNote: question.userNote || null,
+              repetitionLevel: question.repetitionLevel || 1,
+              nextReviewDate: question.nextReviewDate || null,
+            },
+          });
         }
       }
+    });
 
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    }
+    console.log('[SYNC POST] Transaction completed, fetching updated data');
 
     // Return updated data
-    const [perfRes, srsRes, savedRes] = await Promise.all([
-      client.query('SELECT * FROM "PerformanceRecord" WHERE "userId" = $1', [internalUserId]),
-      client.query('SELECT * FROM "SRSItem" WHERE "userId" = $1', [internalUserId]),
-      client.query('SELECT * FROM "SavedQuestion" WHERE "userId" = $1', [internalUserId])
+    const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
+      prisma.performanceRecord.findMany({
+        where: { userId: internalUserId },
+      }),
+      prisma.sRSItem.findMany({
+        where: { userId: internalUserId },
+      }),
+      prisma.savedQuestion.findMany({
+        where: { userId: internalUserId },
+      }),
     ]);
+
+    console.log('[SYNC POST] Data synced successfully');
 
     const response: SyncResponse = {
       success: true,
       message: 'Data synced successfully',
       data: {
-        performanceRecords: perfRes.rows.map(r => ({...r, timestamp: Number(r.timestamp)})),
-        srsItems: srsRes.rows,
-        savedQuestions: savedRes.rows,
+        performanceRecords: performanceRecords.map(r => ({
+          ...r,
+          timestamp: Number(r.timestamp),
+        })),
+        srsItems,
+        savedQuestions,
       },
     };
 
     return createSuccessResponse(response);
   } catch (error) {
-    console.error('Sync POST error:', error);
+    console.error('[SYNC POST] Error occurred:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return createErrorResponse('Internal server error', 500);
   } finally {
-    context.waitUntil(client.end());
+    // Clean up Prisma connection asynchronously
+    await prisma.$disconnect().catch((err) => {
+      console.error('[SYNC POST] Error disconnecting Prisma:', err);
+    });
   }
 }
