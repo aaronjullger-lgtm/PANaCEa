@@ -85,10 +85,12 @@ function moveToDeadLetterQueue(op: SyncOperation): void {
 
 /**
  * Add operation to offline queue
+ * @param token - Optional authentication token for authenticated requests
  */
 export function queueOperation(
   operation: SyncOperation['operation'],
-  data: any
+  data: any,
+  token?: string
 ): string {
   const id = `${operation}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
@@ -109,7 +111,7 @@ export function queueOperation(
   
   // Try to sync immediately if online
   if (navigator.onLine) {
-    setTimeout(() => processQueue(), 100);
+    setTimeout(() => processQueue(token), 100);
   }
 
   return id;
@@ -248,11 +250,11 @@ export function debouncedSave(
         status: 'pending',
       }, token).catch(() => {
         // If fails, queue for retry
-        queueOperation(operation, data);
+        queueOperation(operation, data, token);
       });
     } else {
       // Queue immediately if offline
-      queueOperation(operation, data);
+      queueOperation(operation, data, token);
     }
     // Clean up this entry from the map
     debouncedSaves.delete(key);

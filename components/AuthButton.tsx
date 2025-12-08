@@ -35,14 +35,14 @@ export function AuthButton({ isSyncing, lastSyncTime, syncError }: AuthButtonPro
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col sm:flex-row items-center justify-center gap-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800/50 dark:to-slate-700/50 rounded-2xl border border-blue-200/50 dark:border-slate-600/50"
+      className="flex flex-col sm:flex-row items-center justify-center gap-4 p-6 bg-[var(--color-bg-secondary)] rounded-2xl border border-[var(--color-border)]"
     >
       {/* User Profile Section */}
       <div className="flex items-center gap-3">
         <UserButton 
           appearance={{
             elements: {
-              avatarBox: 'w-12 h-12 ring-2 ring-blue-500/20 bg-slate-200 dark:bg-slate-700',
+              avatarBox: 'w-12 h-12 ring-1 ring-[var(--color-border)] bg-[var(--color-bg-primary)] dark:bg-slate-700 dark:ring-white/20',
               userButtonAvatarBox: 'dark:bg-slate-700',
               avatarImage: 'dark:brightness-110',
             },
@@ -62,14 +62,14 @@ export function AuthButton({ isSyncing, lastSyncTime, syncError }: AuthButtonPro
       </div>
 
       {/* Sync Status Indicator */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-white/60 dark:bg-slate-900/30 rounded-lg border border-slate-200/50 dark:border-slate-700/50">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
         {isSyncing ? (
           <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
             <Cloud className="w-4 h-4 animate-pulse" />
             <span className="text-xs font-medium">Syncing...</span>
           </div>
         ) : syncError ? (
-          <div className="flex items-center gap-1.5 text-red-500">
+          <div className="flex items-center gap-1.5 text-red-500 dark:text-red-400">
             <CloudOff className="w-4 h-4" />
             <span className="text-xs font-medium">Sync error</span>
           </div>
