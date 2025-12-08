@@ -400,38 +400,72 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       };
     }
 
-    const totalQuestions = performanceData.length;
-    const totalCorrect = performanceData.filter(r => r.isCorrect).length;
-    const overallAccuracy = calculateAccuracy(totalCorrect, totalQuestions);
-
     // Calculate streaks using utility function
     const { current: currentStreak, best: bestStreak } = calculateStreaks(performanceData);
 
-    // Today's stats
+    // Precompute date strings and week threshold once
     const today = new Date().toISOString().split('T')[0];
-    const todayRecords = performanceData.filter(r => 
-      new Date(r.timestamp).toISOString().split('T')[0] === today
-    );
-    const todayQuestions = todayRecords.length;
-    const todayCorrect = todayRecords.filter(r => r.isCorrect).length;
-
-    // This week's stats
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const weekRecords = performanceData.filter(r => r.timestamp > weekAgo);
-    const weekQuestions = weekRecords.length;
-    const weekCorrect = weekRecords.filter(r => r.isCorrect).length;
 
-    // System breakdown
+    // Single pass through performanceData for multiple aggregations
+    let totalCorrect = 0;
+    let todayCorrect = 0;
+    let todayQuestions = 0;
+    let weekCorrect = 0;
+    let weekQuestions = 0;
+    let last50Correct = 0;
+    let prev50Correct = 0;
     const systemMap = new Map<string, { correct: number; total: number }>();
-    performanceData.forEach(r => {
+    const uniqueDays = new Set<string>();
+
+    const totalQuestions = performanceData.length;
+    const last50Start = Math.max(0, totalQuestions - 50);
+    const prev50Start = Math.max(0, totalQuestions - 100);
+    const prev50End = Math.max(0, totalQuestions - 50);
+
+    performanceData.forEach((r, index) => {
+      // Overall stats
+      if (r.isCorrect) totalCorrect++;
+
+      // Date parsing (cache result)
+      const recordDate = new Date(r.timestamp).toISOString().split('T')[0];
+      uniqueDays.add(recordDate);
+
+      // Today's stats
+      if (recordDate === today) {
+        todayQuestions++;
+        if (r.isCorrect) todayCorrect++;
+      }
+
+      // Week stats
+      if (r.timestamp > weekAgo) {
+        weekQuestions++;
+        if (r.isCorrect) weekCorrect++;
+      }
+
+      // System breakdown
       if (r.system && r.system !== 'OTHER') {
-        const existing = systemMap.get(r.system) || { correct: 0, total: 0 };
-        systemMap.set(r.system, {
-          correct: existing.correct + (r.isCorrect ? 1 : 0),
-          total: existing.total + 1,
-        });
+        const existing = systemMap.get(r.system);
+        if (existing) {
+          existing.total++;
+          if (r.isCorrect) existing.correct++;
+        } else {
+          systemMap.set(r.system, {
+            correct: r.isCorrect ? 1 : 0,
+            total: 1,
+          });
+        }
+      }
+
+      // Recent trend (last 50 vs previous 50)
+      if (index >= last50Start) {
+        if (r.isCorrect) last50Correct++;
+      } else if (index >= prev50Start && index < prev50End) {
+        if (r.isCorrect) prev50Correct++;
       }
     });
+
+    const overallAccuracy = calculateAccuracy(totalCorrect, totalQuestions);
 
     const systemBreakdown = Array.from(systemMap.entries())
       .map(([system, data]) => ({
@@ -443,21 +477,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       }))
       .sort((a, b) => b.total - a.total);
 
-    // Recent trend (last 50 vs previous 50)
-    const last50 = performanceData.slice(-50);
-    const prev50 = performanceData.slice(-100, -50);
-    const last50Accuracy = last50.length > 0 
-      ? last50.filter(r => r.isCorrect).length / last50.length 
-      : 0;
-    const prev50Accuracy = prev50.length > 0 
-      ? prev50.filter(r => r.isCorrect).length / prev50.length 
-      : 0;
+    // Recent trend calculation
+    const last50Count = Math.min(50, totalQuestions);
+    const prev50Count = Math.min(50, Math.max(0, totalQuestions - 50));
+    const last50Accuracy = last50Count > 0 ? last50Correct / last50Count : 0;
+    const prev50Accuracy = prev50Count > 0 ? prev50Correct / prev50Count : 0;
     const recentTrend = Math.round((last50Accuracy - prev50Accuracy) * 100);
 
-    // Study days
-    const uniqueDays = new Set(
-      performanceData.map(r => new Date(r.timestamp).toISOString().split('T')[0])
-    );
     const studyDays = uniqueDays.size;
     const avgQuestionsPerDay = studyDays > 0 ? Math.round(totalQuestions / studyDays) : 0;
 
