@@ -401,6 +401,13 @@ const QuizView: React.FC<QuizViewProps> = ({
         }
       }
 
+      // Enter to submit selected answer (if not yet submitted)
+      if (!isAnswered && selectedAnswerIndex !== null && event.key === "Enter") {
+        event.preventDefault();
+        handleSubmitAnswer();
+        return;
+      }
+
       // Space to reveal explanation (toggle showRationale)
       if (isAnswered && event.key === " " && !event.ctrlKey && !event.metaKey) {
         event.preventDefault();
@@ -408,7 +415,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         return;
       }
 
-      // Cmd/Ctrl + Enter OR just Enter to go to next question
+      // Cmd/Ctrl + Enter OR just Enter to go to next question (after answered)
       if (isAnswered && event.key === "Enter") {
         event.preventDefault();
         nextButtonRef.current?.click();
@@ -419,15 +426,22 @@ const QuizView: React.FC<QuizViewProps> = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isAnswered, handleToggleEliminate, eliminatedAnswers, currentQuestion, onShowMenu]);
+  }, [isAnswered, selectedAnswerIndex, handleToggleEliminate, eliminatedAnswers, currentQuestion, onShowMenu, handleSubmitAnswer]);
 
   const handleOptionClick = (index: number) => {
-    // Guard against selecting eliminated answers
+    // Guard against selecting eliminated answers or already answered questions
     if (isAnswered || !currentQuestion || eliminatedAnswers.has(index)) return;
 
+    // Just select the option, don't submit yet
     setSelectedAnswerIndex(index);
+  };
+
+  const handleSubmitAnswer = () => {
+    // Guard against submitting without selection
+    if (selectedAnswerIndex === null || !currentQuestion || isAnswered) return;
+
     setIsAnswered(true);
-    const isCorrect = index === currentQuestion.correctAnswerIndex;
+    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
 
     if (sessionSettings.focus === "review") {
       updateReviewQuestion(currentQuestion, isCorrect);
@@ -575,13 +589,13 @@ const QuizView: React.FC<QuizViewProps> = ({
         <div className="flex flex-col sm:flex-row gap-2 justify-center mt-2">
           <button
             onClick={onShowMenu}
-            className="px-6 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 font-semibold rounded-lg hover:bg-[var(--color-accent-hover)] transition-colors shadow-md"
+            className="btn-glass px-6 py-2"
           >
             Back to Dashboard
           </button>
           <button
             onClick={onEndSession}
-            className="px-6 py-2 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] font-semibold rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors border border-[var(--color-border)]"
+            className="btn-secondary px-6 py-2"
           >
             End Session
           </button>
@@ -707,6 +721,21 @@ const QuizView: React.FC<QuizViewProps> = ({
         })}
       </div>
 
+      {/* SUBMIT BUTTON - Only show when answer is selected but not yet submitted */}
+      {!isAnswered && selectedAnswerIndex !== null && (
+        <div className="mt-6 text-center animate-fade-in">
+          <button
+            onClick={handleSubmitAnswer}
+            className="btn-glass px-8 py-3"
+          >
+            Submit Answer
+          </button>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+            Press <kbd className="px-2 py-1 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded text-xs font-mono">Enter</kbd> to submit
+          </p>
+        </div>
+      )}
+
       {/* FEEDBACK / RATIONALE */}
       {isAnswered && (
         <div className="mt-6 animate-fade-in space-y-4">
@@ -754,7 +783,7 @@ const QuizView: React.FC<QuizViewProps> = ({
                 <button
                   onClick={handleExplainDifferently}
                   disabled={isExplainerLoading}
-                  className="px-4 py-2 bg-[#E6A495] text-[var(--color-accent)] font-semibold rounded-lg hover:bg-[#d99282] transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
+                  className="btn-glass px-4 py-2 text-sm"
                 >
                   {isExplainerLoading
                     ? "Thinking..."

@@ -300,29 +300,48 @@ export function getQueueStatus(): {
 
 /**
  * Helper to retrieve token from getToken function
+ * Handles async token retrieval from Clerk
  */
-function retrieveToken(getToken?: () => string | null): string | undefined {
-  return getToken ? getToken() || undefined : undefined;
+async function retrieveToken(getToken?: () => Promise<string | null>): Promise<string | undefined> {
+  if (!getToken) return undefined;
+  try {
+    const token = await getToken();
+    return token || undefined;
+  } catch (error) {
+    console.error('[OfflineSync] Failed to retrieve token:', error);
+    return undefined;
+  }
 }
 
 /**
  * Set up automatic sync retry on connection restore
- * @param getToken - Optional function to retrieve current authentication token
+ * @param getToken - Optional async function to retrieve current authentication token from Clerk
  */
-export function setupAutoSync(getToken?: () => string | null): void {
-  window.addEventListener('online', () => {
+export function setupAutoSync(getToken?: () => Promise<string | null>): () => void {
+  const handleOnline = async () => {
     console.log('[OfflineSync] Connection restored - processing queue');
-    processQueue(retrieveToken(getToken));
-  });
+    const token = await retrieveToken(getToken);
+    await processQueue(token);
+  };
 
-  window.addEventListener('offline', () => {
+  const handleOffline = () => {
     console.log('[OfflineSync] Connection lost - operations will be queued');
-  });
+  };
+
+  window.addEventListener('online', handleOnline);
+  window.addEventListener('offline', handleOffline);
 
   // Process queue on page load
   if (navigator.onLine) {
-    setTimeout(() => {
-      processQueue(retrieveToken(getToken));
+    setTimeout(async () => {
+      const token = await retrieveToken(getToken);
+      await processQueue(token);
     }, 1000);
   }
+
+  // Return cleanup function
+  return () => {
+    window.removeEventListener('online', handleOnline);
+    window.removeEventListener('offline', handleOffline);
+  };
 }

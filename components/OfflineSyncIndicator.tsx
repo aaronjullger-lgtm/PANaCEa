@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { WifiOff, Wifi, CloudOff, Cloud, Loader2 } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 import {
   getSyncStatus,
   syncPendingOperations,
@@ -19,6 +20,7 @@ interface SyncStatus {
 }
 
 export function OfflineSyncIndicator() {
+  const { getToken } = useAuth();
   const [status, setStatus] = useState<SyncStatus>({
     pendingCount: 0,
     lastSyncTime: null,
@@ -37,14 +39,21 @@ export function OfflineSyncIndicator() {
     updateStatus();
     const interval = setInterval(updateStatus, 5000); // Check every 5 seconds
 
-    // Setup automatic sync
-    const cleanup = setupAutoSync();
+    // Setup automatic sync with token from Clerk
+    const cleanup = setupAutoSync(async () => {
+      try {
+        return await getToken();
+      } catch (error) {
+        console.error('[OfflineSyncIndicator] Failed to get token:', error);
+        return null;
+      }
+    });
 
     return () => {
       clearInterval(interval);
       cleanup();
     };
-  }, []);
+  }, [getToken]);
 
   // Manual sync trigger
   const handleManualSync = async () => {
@@ -52,7 +61,9 @@ export function OfflineSyncIndicator() {
 
     setSyncing(true);
     try {
-      await syncPendingOperations();
+      // Get fresh token from Clerk before syncing
+      const token = await getToken();
+      await syncPendingOperations(token || undefined);
       setStatus(getSyncStatus());
     } catch (error) {
       console.error('Manual sync failed:', error);

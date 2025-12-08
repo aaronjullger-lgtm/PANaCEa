@@ -57,8 +57,9 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
     ref
   ) => {
     const handleMainClick = (e: React.MouseEvent) => {
-      // Don't select if the answer is eliminated or already answered
+      // Don't select if already answered or if the answer is eliminated
       if (isAnswered || isEliminated) return;
+      // Allow selecting/deselecting before submitting
       onSelect(index);
     };
 
@@ -93,6 +94,10 @@ const AnswerChoice = React.forwardRef<HTMLButtonElement, AnswerChoiceProps>(
         buttonClasses +=
           ' bg-[var(--color-card-bg)] border border-[var(--color-border)] text-[var(--color-text-primary)] opacity-60 shadow-sm';
       }
+    } else if (isSelected && !isAnswered) {
+      // Selected but not yet submitted - show highlighted state
+      buttonClasses +=
+        ' bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 shadow-md text-[var(--color-text-primary)] font-semibold';
     } else {
       // Default hoverable state - use CSS variable for hover background to work in both light and dark mode
       buttonClasses +=
