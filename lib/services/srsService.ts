@@ -259,6 +259,61 @@ export function getDueCount(userId: string): number {
 }
 
 /**
+ * Get due cards with optional rotation filter support.
+ * When filterTags are provided (rotation mode), returns ALL cards sorted by difficulty,
+ * IGNORING the due date. Otherwise, returns only cards due for review.
+ * 
+ * Note: This function provides the infrastructure for rotation mode. To fully implement
+ * tag filtering, you'll need to either:
+ * 1. Add a 'tags' or 'system' property to SRSItem interface
+ * 2. Pass a filter function as a parameter
+ * 3. Filter the results at the call site using question metadata
+ * 
+ * @param userId - User identifier
+ * @param filterTags - Optional array of tags/systems to filter by (e.g., ['Surgery', 'CV'])
+ *                     When provided, enables rotation mode (ignores due dates, sorts by difficulty)
+ * @param sortByDifficulty - Whether to sort by difficulty (true) or due date (false)
+ * @returns Array of SRS items ready for review
+ */
+export function getDueCards(
+  userId: string, 
+  filterTags: string[] = [],
+  sortByDifficulty: boolean = false
+): SRSItem[] {
+  const items = loadSRSItems();
+  const now = new Date();
+  const results: SRSItem[] = [];
+  
+  for (const item of items.values()) {
+    if (item.userId !== userId) continue;
+    
+    // If rotation mode is active (filterTags provided), return ALL cards
+    // The caller should filter by tags using question metadata since
+    // SRSItem stores questionId, not tags directly
+    if (filterTags.length > 0) {
+      // Rotation mode: include all cards regardless of due date
+      results.push(item);
+    } else {
+      // Standard mode: only return items due for review
+      if (item.dueDate <= now) {
+        results.push(item);
+      }
+    }
+  }
+  
+  // Sort by difficulty (rotation mode) or due date (standard mode)
+  if (sortByDifficulty || filterTags.length > 0) {
+    // Sort by difficulty (highest difficulty first for rotation mode)
+    results.sort((a, b) => b.difficulty - a.difficulty);
+  } else {
+    // Sort by due date (most overdue first)
+    results.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+  }
+  
+  return results;
+}
+
+/**
  * Update review outcome and compute next schedule
  * 
  * @param userId - User identifier
