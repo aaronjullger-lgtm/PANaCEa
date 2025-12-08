@@ -69,7 +69,7 @@ export async function requireAuth(
     // Attach auth context to request
     req.auth = {
       userId: verifiedToken.sub,
-      sessionId: verifiedToken.sid,
+      sessionId: verifiedToken.sid || undefined,
     };
 
     next();
@@ -135,7 +135,7 @@ export async function optionalAuth(
       if (verifiedToken && verifiedToken.sub) {
         req.auth = {
           userId: verifiedToken.sub,
-          sessionId: verifiedToken.sid,
+          sessionId: verifiedToken.sid || undefined,
         };
       }
     } catch (error) {
