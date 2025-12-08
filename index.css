@@ -70,6 +70,28 @@
            disabled:opacity-50 disabled:cursor-not-allowed
            dark:text-white dark:hover:bg-[#cc8471];
   }
+
+  /* Pill Selection Controls - Medical Theme with High Contrast */
+  .pill-select {
+    @apply px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 cursor-pointer;
+  }
+
+  .pill-select-active {
+    @apply bg-clinical-blue text-white shadow-md
+           dark:bg-clinical-blue dark:text-white;
+  }
+
+  .pill-select-inactive {
+    @apply bg-slate-100 text-slate-700 border border-slate-200
+           hover:bg-slate-200 hover:border-slate-300
+           dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700
+           dark:hover:bg-slate-700 dark:hover:border-slate-600;
+  }
+
+  .pill-select-disabled {
+    @apply bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-50
+           dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700;
+  }
 }
 
 /* -----------------------------------------------------
@@ -728,4 +750,45 @@
 .dark .card-glass {
   background: rgba(30, 41, 59, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ===============================================
+   SCROLLBAR STYLING FOR DARK MODE
+   =============================================== */
+
+/* Ensure scrollbars respect dark mode color scheme */
+.dark {
+  color-scheme: dark;
+}
+
+/* Custom scrollbar styling for better dark mode experience */
+.scrollable-area {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.scrollable-area::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollable-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollable-area::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.scrollable-area::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+.dark .scrollable-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark .scrollable-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }

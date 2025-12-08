@@ -102,8 +102,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   // Get the core adaptive mode from registry
   const coreMode = MODE_REGISTRY.find((mode) => mode.category === 'core' && mode.id === 'core_adaptive');
 
-  // Filter out the core category for the Bento grid
-  const drillModes = MODE_REGISTRY.filter((mode) => mode.category !== 'core');
+  // Filter out the core category and condition_drill (accessed via Condition Page) for the Bento grid
+  const drillModes = MODE_REGISTRY.filter((mode) => mode.category !== 'core' && mode.id !== 'condition_drill');
 
   /**
    * Get focus-specific description text
@@ -424,7 +424,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shadow-sm`}>
             <IconComponent className={`w-5 h-5 ${styles.iconColor}`} />
           </div>
-          <div>
+          <div className="min-h-[4rem]">
             <h3 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1] text-base flex items-center gap-2">
               {mode.label}
               {isStreakMode && streakHighScore > 0 && (
@@ -483,7 +483,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       {/* Section B: The Bento Grid */}
       <div>
         <h3 className="text-lg font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-4">Drill Modes</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {drillModes.map((mode) => renderDrillCard(mode))}
         </div>
       </div>
