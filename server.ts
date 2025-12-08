@@ -15,6 +15,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { config } from 'dotenv';
 import { sanitizeBody, validateRequired, validateEnum } from './lib/middleware/validation';
+import { requireAuth, AuthenticatedRequest } from './lib/middleware/clerkAuth';
 
 // Load environment variables
 config();
@@ -154,8 +155,9 @@ function rateLimit(maxRequests: number, windowMs: number) {
 // Apply rate limiting to API endpoints (100 requests per 15 minutes)
 app.use('/api', rateLimit(100, 15 * 60 * 1000));
 
-// API sync endpoint (placeholder - should integrate with Prisma)
-app.get('/api/sync', (req: Request, res: Response) => {
+// API sync endpoint with authentication
+app.get('/api/sync', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+  // User is authenticated, req.auth contains userId
   res.json({
     success: true,
     data: {
@@ -166,9 +168,9 @@ app.get('/api/sync', (req: Request, res: Response) => {
   });
 });
 
-app.post('/api/sync', (req: Request, res: Response) => {
-  // In production, this would sync data to database
-  console.log('Sync request received:', {
+app.post('/api/sync', requireAuth, (req: AuthenticatedRequest, res: Response) => {
+  // User is authenticated, req.auth contains userId
+  console.log('Sync request received from user:', req.auth?.userId, {
     performanceRecords: req.body.performanceRecords?.length || 0,
     srsItems: req.body.srsItems?.length || 0,
     savedQuestions: req.body.savedQuestions?.length || 0
