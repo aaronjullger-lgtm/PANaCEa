@@ -47,16 +47,16 @@ const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.get
 
 **Key Changes:**
 ```typescript
-// Before: Only 5 seconds tolerance
+// Before: Default 5000ms (5 seconds) tolerance
 const verifiedToken = await verifyToken(token, {
   secretKey,
-  leeway: 5,
+  // clockSkewInMs: 5000 (default if not specified)
 });
 
-// After: 60 seconds tolerance to handle clock skew
+// After: 60000ms (60 seconds) tolerance to handle clock skew
 const verifiedToken = await verifyToken(token, {
   secretKey,
-  leeway: 60,
+  clockSkewInMs: 60000,
 });
 ```
 
