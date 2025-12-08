@@ -260,11 +260,18 @@ export function getDueCount(userId: string): number {
 
 /**
  * Get due cards with optional rotation filter support.
- * When filterTags are provided (rotation mode), returns ALL cards matching those tags
- * sorted by difficulty, IGNORING the due date. Otherwise, returns cards due for review.
+ * When filterTags are provided (rotation mode), returns ALL cards sorted by difficulty,
+ * IGNORING the due date. Otherwise, returns only cards due for review.
+ * 
+ * Note: This function provides the infrastructure for rotation mode. To fully implement
+ * tag filtering, you'll need to either:
+ * 1. Add a 'tags' or 'system' property to SRSItem interface
+ * 2. Pass a filter function as a parameter
+ * 3. Filter the results at the call site using question metadata
  * 
  * @param userId - User identifier
  * @param filterTags - Optional array of tags/systems to filter by (e.g., ['Surgery', 'CV'])
+ *                     When provided, enables rotation mode (ignores due dates, sorts by difficulty)
  * @param sortByDifficulty - Whether to sort by difficulty (true) or due date (false)
  * @returns Array of SRS items ready for review
  */
@@ -280,12 +287,11 @@ export function getDueCards(
   for (const item of items.values()) {
     if (item.userId !== userId) continue;
     
-    // If rotation mode is active (filterTags provided), return ALL cards with matching tags
+    // If rotation mode is active (filterTags provided), return ALL cards
+    // The caller should filter by tags using question metadata since
+    // SRSItem stores questionId, not tags directly
     if (filterTags.length > 0) {
-      // Check if the item has any of the filter tags
-      // Note: This assumes items have a 'tags' property. If not, you may need to
-      // add tag support to SRSItem or use a different filtering mechanism
-      // For now, we'll return all items and let the caller handle filtering
+      // Rotation mode: include all cards regardless of due date
       results.push(item);
     } else {
       // Standard mode: only return items due for review
