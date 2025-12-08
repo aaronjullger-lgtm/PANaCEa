@@ -401,6 +401,13 @@ const QuizView: React.FC<QuizViewProps> = ({
         }
       }
 
+      // Enter to submit selected answer (if not yet submitted)
+      if (!isAnswered && selectedAnswerIndex !== null && event.key === "Enter") {
+        event.preventDefault();
+        handleSubmitAnswer();
+        return;
+      }
+
       // Space to reveal explanation (toggle showRationale)
       if (isAnswered && event.key === " " && !event.ctrlKey && !event.metaKey) {
         event.preventDefault();
@@ -408,7 +415,7 @@ const QuizView: React.FC<QuizViewProps> = ({
         return;
       }
 
-      // Cmd/Ctrl + Enter OR just Enter to go to next question
+      // Cmd/Ctrl + Enter OR just Enter to go to next question (after answered)
       if (isAnswered && event.key === "Enter") {
         event.preventDefault();
         nextButtonRef.current?.click();
@@ -419,15 +426,22 @@ const QuizView: React.FC<QuizViewProps> = ({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isAnswered, handleToggleEliminate, eliminatedAnswers, currentQuestion, onShowMenu]);
+  }, [isAnswered, selectedAnswerIndex, handleToggleEliminate, eliminatedAnswers, currentQuestion, onShowMenu, handleSubmitAnswer]);
 
   const handleOptionClick = (index: number) => {
-    // Guard against selecting eliminated answers
+    // Guard against selecting eliminated answers or already answered questions
     if (isAnswered || !currentQuestion || eliminatedAnswers.has(index)) return;
 
+    // Just select the option, don't submit yet
     setSelectedAnswerIndex(index);
+  };
+
+  const handleSubmitAnswer = () => {
+    // Guard against submitting without selection
+    if (selectedAnswerIndex === null || !currentQuestion || isAnswered) return;
+
     setIsAnswered(true);
-    const isCorrect = index === currentQuestion.correctAnswerIndex;
+    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
 
     if (sessionSettings.focus === "review") {
       updateReviewQuestion(currentQuestion, isCorrect);
@@ -706,6 +720,21 @@ const QuizView: React.FC<QuizViewProps> = ({
           );
         })}
       </div>
+
+      {/* SUBMIT BUTTON - Only show when answer is selected but not yet submitted */}
+      {!isAnswered && selectedAnswerIndex !== null && (
+        <div className="mt-6 text-center animate-fade-in">
+          <button
+            onClick={handleSubmitAnswer}
+            className="px-8 py-3 bg-[#E6A495] text-[#8B4513] dark:text-white font-bold rounded-lg hover:bg-[#d99282] transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Submit Answer
+          </button>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">
+            Press <kbd className="px-2 py-1 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded text-xs font-mono">Enter</kbd> to submit
+          </p>
+        </div>
+      )}
 
       {/* FEEDBACK / RATIONALE */}
       {isAnswered && (
