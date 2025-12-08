@@ -74,19 +74,23 @@ export async function verifyAuthToken(
   try {
     const token = authHeader.substring(7);
     
-    // Phase 2.2: Identify token claims for diagnostics
-    const payload = decodeJwtPayload(token);
-    if (payload) {
-      console.log('[AUTH] Token payload claims:', {
-        exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'missing',
-        iss: payload.iss || 'missing',
-        iat: payload.iat ? new Date(payload.iat * 1000).toISOString() : 'missing',
-      });
-      
-      // Check if token is expired
-      if (payload.exp && payload.exp < Date.now() / 1000) {
-        console.error('[AUTH] Token is expired. Expiration time:', 
-          new Date(payload.exp * 1000).toISOString());
+    // Phase 2.2: Identify token claims for diagnostics (only in test/dev environments)
+    const isTestEnv = secretKey.startsWith('sk_test_');
+    if (isTestEnv) {
+      const payload = decodeJwtPayload(token);
+      if (payload) {
+        // Only log non-sensitive claims for diagnostics
+        console.log('[AUTH] Token payload claims:', {
+          exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'missing',
+          iss: payload.iss || 'missing',
+          iat: payload.iat ? new Date(payload.iat * 1000).toISOString() : 'missing',
+        });
+        
+        // Check if token is expired
+        if (payload.exp && payload.exp < Date.now() / 1000) {
+          console.error('[AUTH] Token is expired. Expiration time:', 
+            new Date(payload.exp * 1000).toISOString());
+        }
       }
     }
 
@@ -98,12 +102,10 @@ export async function verifyAuthToken(
     console.log('[AUTH] Token verification successful for user:', verifiedToken.sub);
     return verifiedToken.sub || null;
   } catch (error) {
-    // Phase 2.1: Retrieve full error details
+    // Phase 2.1: Retrieve error details (limited to essential info)
     console.error('[AUTH] Token verification failed with detailed error:', {
       message: error instanceof Error ? error.message : String(error),
       name: error instanceof Error ? error.name : 'Unknown',
-      stack: error instanceof Error ? error.stack : undefined,
-      fullError: JSON.stringify(error, Object.getOwnPropertyNames(error))
     });
     
     // Log specific error patterns to help identify root cause
@@ -188,7 +190,7 @@ export async function authenticateRequest(
     return null;
   }
 
-  // Phase 1.1: Check key format (should start with sk_test_ or sk_live_)
+  // Phase 1.2: Check key format (should start with sk_test_ or sk_live_)
   if (!secretKey.startsWith('sk_test_') && !secretKey.startsWith('sk_live_')) {
     console.error('[AUTH] CLERK_SECRET_KEY has invalid format. Expected to start with "sk_test_" or "sk_live_", got:', 
       secretKey.substring(0, 8));
@@ -196,7 +198,7 @@ export async function authenticateRequest(
     return null;
   }
 
-  // Phase 1.2: Log masked key for verification (first/last 5 characters only)
+  // Phase 1.3: Log masked key for verification (first/last 5 characters only)
   console.log('[AUTH] Secret key verified (masked):', maskSecretKey(secretKey));
   console.log('[AUTH] Secret key environment:', secretKey.startsWith('sk_test_') ? 'test' : 'live');
 

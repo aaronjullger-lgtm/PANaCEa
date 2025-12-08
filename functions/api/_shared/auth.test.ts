@@ -14,6 +14,26 @@ vi.mock('@clerk/backend', () => ({
 
 import { createClerkClient } from '@clerk/backend';
 
+/**
+ * Helper function to create base64url encoded JWT token for testing
+ * Base64url encoding replaces + with -, / with _, and removes padding =
+ */
+function createMockJWT(payload: any): string {
+  const header = { alg: 'RS256', typ: 'JWT' };
+  
+  // Encode to base64url (not standard base64)
+  const encodeBase64Url = (obj: any): string => {
+    const base64 = Buffer.from(JSON.stringify(obj)).toString('base64');
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  };
+  
+  const headerEncoded = encodeBase64Url(header);
+  const payloadEncoded = encodeBase64Url(payload);
+  const signature = 'mock_signature';
+  
+  return `${headerEncoded}.${payloadEncoded}.${signature}`;
+}
+
 describe('Authentication Diagnostics', () => {
   let consoleErrorSpy: any;
   let consoleLogSpy: any;
@@ -66,16 +86,13 @@ describe('Authentication Diagnostics', () => {
     const validSecretKey = 'sk_test_1234567890abcdefghijklmnopqrstuvwxyz';
 
     it('should decode and log JWT token claims', async () => {
-      // Create a mock JWT token with valid structure
-      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64');
-      const payload = Buffer.from(JSON.stringify({
+      // Create a mock JWT token with valid structure using base64url encoding
+      const mockToken = createMockJWT({
         sub: 'user_123',
         iss: 'https://clerk.test.com',
         exp: Math.floor(Date.now() / 1000) + 3600, // expires in 1 hour
         iat: Math.floor(Date.now() / 1000),
-      })).toString('base64');
-      const signature = 'mock_signature';
-      const mockToken = `${header}.${payload}.${signature}`;
+      });
 
       const mockVerifyToken = vi.fn().mockResolvedValue({ sub: 'user_123' });
       (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
@@ -98,15 +115,12 @@ describe('Authentication Diagnostics', () => {
     });
 
     it('should detect and log expired tokens', async () => {
-      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64');
-      const payload = Buffer.from(JSON.stringify({
+      const mockToken = createMockJWT({
         sub: 'user_123',
         iss: 'https://clerk.test.com',
         exp: Math.floor(Date.now() / 1000) - 3600, // expired 1 hour ago
         iat: Math.floor(Date.now() / 1000) - 7200,
-      })).toString('base64');
-      const signature = 'mock_signature';
-      const mockToken = `${header}.${payload}.${signature}`;
+      });
 
       const mockVerifyToken = vi.fn().mockRejectedValue(new Error('Token expired'));
       (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
@@ -124,15 +138,12 @@ describe('Authentication Diagnostics', () => {
     });
 
     it('should log detailed error for signature verification failure', async () => {
-      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64');
-      const payload = Buffer.from(JSON.stringify({
+      const mockToken = createMockJWT({
         sub: 'user_123',
         iss: 'https://clerk.test.com',
         exp: Math.floor(Date.now() / 1000) + 3600,
         iat: Math.floor(Date.now() / 1000),
-      })).toString('base64');
-      const signature = 'invalid_signature';
-      const mockToken = `${header}.${payload}.${signature}`;
+      });
 
       const mockVerifyToken = vi.fn().mockRejectedValue(new Error('Signature verification failed'));
       (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
@@ -153,15 +164,12 @@ describe('Authentication Diagnostics', () => {
     });
 
     it('should log detailed error for invalid issuer', async () => {
-      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64');
-      const payload = Buffer.from(JSON.stringify({
+      const mockToken = createMockJWT({
         sub: 'user_123',
         iss: 'https://wrong-issuer.com',
         exp: Math.floor(Date.now() / 1000) + 3600,
         iat: Math.floor(Date.now() / 1000),
-      })).toString('base64');
-      const signature = 'mock_signature';
-      const mockToken = `${header}.${payload}.${signature}`;
+      });
 
       const mockVerifyToken = vi.fn().mockRejectedValue(new Error('Invalid issuer'));
       (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
@@ -175,15 +183,12 @@ describe('Authentication Diagnostics', () => {
     });
 
     it('should log detailed error for unknown errors', async () => {
-      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64');
-      const payload = Buffer.from(JSON.stringify({
+      const mockToken = createMockJWT({
         sub: 'user_123',
         iss: 'https://clerk.test.com',
         exp: Math.floor(Date.now() / 1000) + 3600,
         iat: Math.floor(Date.now() / 1000),
-      })).toString('base64');
-      const signature = 'mock_signature';
-      const mockToken = `${header}.${payload}.${signature}`;
+      });
 
       const mockVerifyToken = vi.fn().mockRejectedValue(new Error('Some unexpected error'));
       (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
@@ -301,15 +306,12 @@ describe('Authentication Diagnostics', () => {
       const env: Env = {
         CLERK_SECRET_KEY: 'sk_test_1234567890abcdefghijklmnopqrstuvwxyz',
       };
-      const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64');
-      const payload = Buffer.from(JSON.stringify({
+      const mockToken = createMockJWT({
         sub: 'user_123',
         iss: 'https://clerk.test.com',
         exp: Math.floor(Date.now() / 1000) + 3600,
         iat: Math.floor(Date.now() / 1000),
-      })).toString('base64');
-      const signature = 'mock_signature';
-      const mockToken = `${header}.${payload}.${signature}`;
+      });
 
       const request = new Request('https://example.com', {
         headers: { Authorization: `Bearer ${mockToken}` },
