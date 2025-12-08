@@ -12,6 +12,7 @@ const STORAGE_KEY = "pance_performance_v1";
 // ---- In-memory cache to reduce localStorage reads ----
 let cachedRecords: PerformanceRecord[] | null = null;
 let cacheTimestamp: number = 0;
+let cachedStorageValue: string | null = null; // Track localStorage value for cross-tab invalidation
 const CACHE_TTL = 5000; // 5 seconds cache TTL
 
 // ---- Low-level helpers ----
@@ -19,31 +20,39 @@ const CACHE_TTL = 5000; // 5 seconds cache TTL
 function loadAllRecords(): PerformanceRecord[] {
   if (typeof window === "undefined") return [];
   
-  // Return cached records if valid
+  const raw = localStorage.getItem(STORAGE_KEY);
   const now = Date.now();
-  if (cachedRecords && (now - cacheTimestamp) < CACHE_TTL) {
+  
+  // Check if cache is valid: not expired AND localStorage hasn't changed (cross-tab support)
+  if (cachedRecords && 
+      (now - cacheTimestamp) < CACHE_TTL && 
+      raw === cachedStorageValue) {
     return cachedRecords;
   }
   
+  // Cache miss or invalidated - reload from localStorage
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       cachedRecords = [];
       cacheTimestamp = now;
+      cachedStorageValue = raw;
       return [];
     }
     const parsed = JSON.parse(raw) as PerformanceRecord[];
     if (!Array.isArray(parsed)) {
       cachedRecords = [];
       cacheTimestamp = now;
+      cachedStorageValue = raw;
       return [];
     }
     cachedRecords = parsed;
     cacheTimestamp = now;
+    cachedStorageValue = raw;
     return parsed;
   } catch {
     cachedRecords = [];
     cacheTimestamp = now;
+    cachedStorageValue = raw;
     return [];
   }
 }
@@ -51,10 +60,12 @@ function loadAllRecords(): PerformanceRecord[] {
 function saveAllRecords(records: PerformanceRecord[]) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    // Update cache
+    const serialized = JSON.stringify(records);
+    localStorage.setItem(STORAGE_KEY, serialized);
+    // Update cache with new value
     cachedRecords = records;
     cacheTimestamp = Date.now();
+    cachedStorageValue = serialized;
   } catch (err) {
     console.error("Failed to save performance records", err);
   }

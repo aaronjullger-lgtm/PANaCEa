@@ -93,7 +93,7 @@ export function clearCache(): void {
  * This is more efficient than multiple individual sets
  * @param items - Array of {key, value} pairs to set
  */
-export function batchSetItems(items: Array<{ key: string; value: any }>): void {
+export function batchSetItems<T = any>(items: Array<{ key: string; value: T }>): void {
   if (typeof window === 'undefined') return;
 
   const now = Date.now();

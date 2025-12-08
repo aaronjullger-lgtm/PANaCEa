@@ -424,10 +424,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     const prev50End = Math.max(0, totalQuestions - 50);
 
     performanceData.forEach((r, index) => {
-      const isCorrect = r.isCorrect;
-      
       // Overall stats
-      if (isCorrect) totalCorrect++;
+      if (r.isCorrect) totalCorrect++;
 
       // Date parsing (cache result)
       const recordDate = new Date(r.timestamp).toISOString().split('T')[0];
@@ -436,13 +434,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       // Today's stats
       if (recordDate === today) {
         todayQuestions++;
-        if (isCorrect) todayCorrect++;
+        if (r.isCorrect) todayCorrect++;
       }
 
       // Week stats
       if (r.timestamp > weekAgo) {
         weekQuestions++;
-        if (isCorrect) weekCorrect++;
+        if (r.isCorrect) weekCorrect++;
       }
 
       // System breakdown
@@ -450,10 +448,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         const existing = systemMap.get(r.system);
         if (existing) {
           existing.total++;
-          if (isCorrect) existing.correct++;
+          if (r.isCorrect) existing.correct++;
         } else {
           systemMap.set(r.system, {
-            correct: isCorrect ? 1 : 0,
+            correct: r.isCorrect ? 1 : 0,
             total: 1,
           });
         }
@@ -461,9 +459,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
       // Recent trend (last 50 vs previous 50)
       if (index >= last50Start) {
-        if (isCorrect) last50Correct++;
+        if (r.isCorrect) last50Correct++;
       } else if (index >= prev50Start && index < prev50End) {
-        if (isCorrect) prev50Correct++;
+        if (r.isCorrect) prev50Correct++;
       }
     });
 
