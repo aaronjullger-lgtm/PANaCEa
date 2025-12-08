@@ -54,8 +54,8 @@ export function getStorageUrl(bucket: string, path: string): string {
  */
 export async function checkSupabaseConnection(): Promise<boolean> {
   try {
-    // Simple query to test connection
-    const { error } = await supabase.from('User').select('count', { count: 'exact', head: true });
+    // Simple query to test connection - using lowercase table name as per Prisma convention
+    const { error } = await supabase.from('user').select('count', { count: 'exact', head: true });
     return !error;
   } catch (error) {
     console.error('Supabase connection check failed:', error);

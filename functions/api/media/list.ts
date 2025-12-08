@@ -26,8 +26,13 @@ export default async function handler(req: Request, res: Response) {
       // Get media for specific condition
       media = await getMediaByCondition(conditionId);
     } else if (category && typeof category === 'string') {
+      // Validate category
+      const validCategories = ['ecg', 'derm', 'radiology', 'labs', 'diagrams'];
+      if (!validCategories.includes(category)) {
+        return res.status(400).json({ error: 'Invalid category' });
+      }
       // Get media by category
-      media = await getMediaByCategory(category as any);
+      media = await getMediaByCategory(category as 'ecg' | 'derm' | 'radiology' | 'labs' | 'diagrams');
     } else if (tags) {
       // Search by tags
       const tagArray = typeof tags === 'string' ? tags.split(',') : [];

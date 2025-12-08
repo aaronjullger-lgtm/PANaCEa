@@ -410,9 +410,10 @@ async function readFileContent(file: File): Promise<string> {
       reader.readAsText(file);
     } else {
       // PDF/Word parsing requires additional libraries (pdf-parse, mammoth, etc.)
-      // For now, demonstrate the feature with mock content
-      // TODO: Integrate PDF/Word parsing libraries for production use
-      reject(new Error('PDF and Word document parsing is not yet fully implemented. Please use text files (.txt) for now, or contact support for assistance with your syllabus format.'));
+      // These libraries add significant bundle size (~500KB+) and are not critical for MVP
+      // Feature Request: Add PDF/Word parsing in future iteration
+      // For now, users can copy-paste content from PDFs into .txt files
+      reject(new Error('PDF and Word document parsing is not yet fully implemented. Please use text files (.txt) for now. You can copy content from your PDF/Word document and save it as a .txt file, or contact support for assistance.'));
     }
   });
 }

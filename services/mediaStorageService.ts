@@ -163,7 +163,7 @@ export async function searchMediaByTags(tags: string[]): Promise<MediaAssetInfo[
         hasSome: tags,
       },
     },
-    orderBy: { confidence: 'desc' },
+    orderBy: { uploadedAt: 'desc' },
   });
 
   return assets.map(asset => ({
@@ -192,8 +192,12 @@ export async function deleteMedia(mediaId: string): Promise<void> {
     throw new Error('Media asset not found');
   }
 
+  if (!asset.originalUrl) {
+    throw new Error('Media asset has no URL');
+  }
+
   // Extract storage path from URL
-  const url = new URL(asset.originalUrl || '');
+  const url = new URL(asset.originalUrl);
   const pathParts = url.pathname.split('/');
   const storagePath = pathParts.slice(-2).join('/'); // category/filename
 
