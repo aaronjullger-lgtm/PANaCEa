@@ -295,7 +295,7 @@ function generateReport() {
  */
 async function main() {
   console.log('🚀 Starting Data Migration: Static Files → Database');
-  console.log('=' .repeat(60));
+  console.log('='.repeat(60));
   console.log('⚠️  IMPORTANT: This does NOT delete any static files!');
   console.log('   All original files remain as backup.');
   console.log('=' .repeat(60));

@@ -14,6 +14,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, ThumbsDown, Eye, AlertCircle, TrendingUp, Filter, Search, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUser } from '@clerk/clerk-react';
 
 interface MediaAsset {
   id: string;
@@ -77,8 +78,9 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   
-  // TODO: Get user from auth context
-  const currentUserId = 'current-user';
+  // Get authenticated user from Clerk
+  const { user } = useUser();
+  const currentUserId = user?.id || 'unknown-user';
 
   useEffect(() => {
     loadPendingMedia();
