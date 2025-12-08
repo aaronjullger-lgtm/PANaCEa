@@ -16,21 +16,21 @@ export interface StreakInfo {
 }
 
 /**
- * Get current date in YYYY-MM-DD format (local timezone)
+ * Get current date in UTC (normalized to midnight)
+ * Using UTC ensures consistent date calculations regardless of client/server timezone
  */
 function getTodayDate(): Date {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
 }
 
 /**
- * Get yesterday's date
+ * Get yesterday's date in UTC
  */
 function getYesterdayDate(): Date {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  yesterday.setHours(0, 0, 0, 0);
+  const today = getTodayDate();
+  const yesterday = new Date(today);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
   return yesterday;
 }
 

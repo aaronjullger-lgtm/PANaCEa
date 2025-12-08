@@ -32,9 +32,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     throw new Error(MISSING_KEY_ERROR);
   }
 
+  // Enable debug mode in development or when explicitly enabled
+  const isDevelopment = import.meta.env.DEV;
+  const debugEnabled = isDevelopment || import.meta.env.VITE_CLERK_DEBUG === 'true';
+
+  if (debugEnabled) {
+    console.log('[Clerk] Debug mode enabled');
+    console.log('[Clerk] Publishable key:', CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
+    console.log('[Clerk] Client time:', new Date().toISOString());
+    console.log('[Clerk] Client timezone offset:', new Date().getTimezoneOffset());
+  }
+
   return (
     <ClerkProvider 
       publishableKey={CLERK_PUBLISHABLE_KEY}
+      telemetry={debugEnabled ? { disabled: false, debug: true } : undefined}
       appearance={{
         elements: {
           // Hide Clerk branding and development mode indicators

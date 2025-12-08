@@ -4,6 +4,16 @@
  */
 
 /**
+ * Get current UTC date normalized to midnight
+ * This ensures consistent date calculations regardless of client timezone
+ * @returns Date object set to midnight UTC
+ */
+export function getTodayUTC(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+}
+
+/**
  * Get a time-based greeting based on the current hour
  * @returns A greeting string (Good morning, Good afternoon, or Good evening)
  */

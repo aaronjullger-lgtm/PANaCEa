@@ -97,20 +97,25 @@ function formatDate(date: Date): string {
 
 function generateDateRange(weeks: number): Date[] {
   const dates: Date[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  
+  // Get today in UTC to ensure consistency regardless of client timezone
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+  
+  // Get day of week in UTC (0 = Sunday, 6 = Saturday)
+  const todayDayOfWeek = today.getUTCDay();
   
   // Start from the beginning of the week, X weeks ago
   const startDate = new Date(today);
-  startDate.setDate(today.getDate() - (weeks * 7) - today.getDay());
+  startDate.setUTCDate(today.getUTCDate() - (weeks * 7) - todayDayOfWeek);
   
   const endDate = new Date(today);
-  endDate.setDate(today.getDate() + (6 - today.getDay()));
+  endDate.setUTCDate(today.getUTCDate() + (6 - todayDayOfWeek));
   
   const current = new Date(startDate);
   while (current <= endDate) {
     dates.push(new Date(current));
-    current.setDate(current.getDate() + 1);
+    current.setUTCDate(current.getUTCDate() + 1);
   }
   
   return dates;
@@ -140,7 +145,8 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
     const grid: (Date | null)[][] = Array(7).fill(null).map(() => []);
     
     for (const date of dates) {
-      const dayOfWeek = date.getDay();
+      // Use UTC day of week to ensure consistency
+      const dayOfWeek = date.getUTCDay();
       grid[dayOfWeek].push(date);
     }
     
@@ -169,7 +175,8 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       for (let rowIdx = 0; rowIdx < dateGrid.length; rowIdx++) {
         const date = dateGrid[rowIdx][colIdx];
         if (date) {
-          colMonth = date.getMonth();
+          // Use UTC month to ensure consistency
+          colMonth = date.getUTCMonth();
           break;
         }
       }
