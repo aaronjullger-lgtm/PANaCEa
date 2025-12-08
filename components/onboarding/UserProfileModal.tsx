@@ -154,10 +154,10 @@ export function UserProfileModal({
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
                     <Calendar className="w-4 h-4" />
-                    Expected/Actual Graduation Date
+                    Expected/Actual Graduation Month
                   </label>
                   <input
-                    type="date"
+                    type="month"
                     value={graduationDate}
                     onChange={(e) => setGraduationDate(e.target.value)}
                     className="w-full px-4 py-3 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg 

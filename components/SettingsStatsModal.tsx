@@ -505,7 +505,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-[var(--color-bg-tertiary)] rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)]"
+          className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)]"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
@@ -598,7 +598,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="overflow-y-auto max-h-[calc(90vh-140px)] p-4 sm:p-6">
+          <div className="overflow-y-auto max-h-[calc(90vh-140px)] p-4 sm:p-6 scrollable-area">
             {activeTab === 'stats' ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Motivational Message - Low Stakes Approach */}
@@ -888,10 +888,10 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                     <div>
                       <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
                         <Calendar className="w-4 h-4" />
-                        Expected/Actual Graduation Date
+                        Expected/Actual Graduation Month
                       </label>
                       <input
-                        type="date"
+                        type="month"
                         value={userProfile.graduationDate || ''}
                         onChange={(e) => handleUpdateGraduationDate(e.target.value)}
                         className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 

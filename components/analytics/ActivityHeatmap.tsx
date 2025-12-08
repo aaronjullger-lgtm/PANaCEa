@@ -280,13 +280,47 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
 
   const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  // Check if there's any activity data
+  const hasActivity = performanceData.length > 0;
+
   return (
     <div className="w-full">
-      {/* Legend */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
-          Activity Heatmap
-        </h3>
+      {/* Empty State */}
+      {!hasActivity && (
+        <div className="flex flex-col items-center justify-center py-12 px-4 bg-[var(--color-bg-secondary)] rounded-xl">
+          <div className="mb-4">
+            <svg 
+              className="w-20 h-20 text-[var(--color-text-muted)] opacity-50" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth={1.5} 
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+            No Activity Yet
+          </h3>
+          <p className="text-sm text-[var(--color-text-muted)] text-center max-w-sm">
+            Your study activity will appear here once you start answering questions. 
+            Begin your first session to see your progress!
+          </p>
+        </div>
+      )}
+
+      {/* Heatmap Content */}
+      {hasActivity && (
+        <>
+          {/* Legend */}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+              Activity Heatmap
+            </h3>
         <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
           <span>Less</span>
           <div className="flex gap-1">
@@ -381,13 +415,15 @@ const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({
         </div>
       </div>
 
-      {/* Popover */}
-      {selectedDay && (
-        <DayCellPopover
-          data={selectedDay}
-          position={popoverPosition}
-          onClose={handleClosePopover}
-        />
+          {/* Popover */}
+          {selectedDay && (
+            <DayCellPopover
+              data={selectedDay}
+              position={popoverPosition}
+              onClose={handleClosePopover}
+            />
+          )}
+        </>
       )}
     </div>
   );
