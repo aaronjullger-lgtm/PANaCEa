@@ -78,7 +78,7 @@ fi
 
 # Step 2: Install Dependencies
 echo -e "${BLUE}[2/6] Installing dependencies...${NC}"
-npm install
+npm ci
 echo -e "${GREEN}✓ Dependencies installed${NC}"
 echo ""
 

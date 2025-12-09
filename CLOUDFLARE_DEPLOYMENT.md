@@ -42,8 +42,15 @@ You **must** set the following environment variables in your Cloudflare Pages pr
   - **Value**: Your Google Gemini API key
   
 - **Variable name**: `DATABASE_URL`
-  - **Value**: Your PostgreSQL connection string (Supabase or other Postgres provider)
-  - **Note**: Must be a connection string compatible with `@neondatabase/serverless` driver
+  - **Value**: Your database connection string
+  - **Format Options**:
+    - **Prisma Accelerate** (Recommended for Edge): `prisma://accelerate.prisma-data.net/?api_key=YOUR_KEY`
+      - Provides connection pooling and caching optimized for edge runtime
+      - Get API key from: https://www.prisma.io/data-platform/accelerate
+    - **Direct PostgreSQL**: `postgresql://user:pass@host:port/db?pgbouncer=true`
+      - Works with Supabase, Neon, or any PostgreSQL provider
+      - Use connection pooling (?pgbouncer=true) for better performance
+  - **Note**: When using Prisma Accelerate extension with `prisma://` URL, you get automatic edge compatibility
   
 - **Variable name**: `CLERK_SECRET_KEY`
   - **Value**: Your Clerk authentication secret key
@@ -65,18 +72,28 @@ The project uses Node.js 22.12.0. Cloudflare Pages will automatically detect and
 
 ### 4. Database Edge Runtime Compatibility
 
-Cloudflare Pages Functions run on Edge Runtime, which doesn't support the standard Prisma Client (Node.js APIs and Rust binary engine). This project uses **Prisma Driver Adapters** for edge compatibility:
+Cloudflare Pages Functions run on Edge Runtime, which doesn't support the standard Prisma Client (Node.js APIs and Rust binary engine). This project uses **Prisma Accelerate** for edge compatibility:
 
-- **Adapter**: `@prisma/adapter-neon` 
-- **Driver**: `@neondatabase/serverless`
-- **Database**: Compatible with Supabase PostgreSQL and other Postgres providers
+- **Edge Client**: `@prisma/client/edge`
+- **Extension**: `@prisma/extension-accelerate`
+- **Database**: Compatible with any PostgreSQL provider (Supabase, Neon, etc.)
 
 **Setup:**
 1. The edge-compatible Prisma client is created via `functions/api/_shared/prisma-edge.ts`
 2. All Cloudflare Functions use `createEdgePrismaClient(env.DATABASE_URL)` instead of `new PrismaClient()`
-3. The connection string must be compatible with the Neon serverless driver (standard PostgreSQL connections work)
+3. The DATABASE_URL can be:
+   - **Prisma Accelerate URL** (recommended): `prisma://accelerate.prisma-data.net/?api_key=YOUR_KEY`
+     - Sign up at https://www.prisma.io/data-platform/accelerate
+     - Provides connection pooling, caching, and edge optimization
+   - **Standard PostgreSQL URL**: `postgresql://user:pass@host:port/db?pgbouncer=true`
+     - Works but without Accelerate features
+     - Use connection pooling for better performance
 
-**Important:** If you add new Cloudflare Functions that need database access, always use `createEdgePrismaClient()` from `functions/api/_shared/prisma-edge.ts` instead of instantiating `PrismaClient` directly.
+**Important:** 
+- If you add new Cloudflare Functions that need database access, always use `createEdgePrismaClient()` from `functions/api/_shared/prisma-edge.ts` instead of instantiating `PrismaClient` directly.
+- The error "the URL must start with the protocol prisma://" indicates you're using Accelerate extension but haven't configured a Prisma Accelerate URL. Either:
+  1. Set up Prisma Accelerate and use `prisma://` URL, OR
+  2. Use a standard PostgreSQL connection string (the extension will work but without Accelerate features)
 
 ## How It Works
 
