@@ -14,6 +14,7 @@ import {
   createSuccessResponse,
   handleCorsOptions,
 } from './_shared/auth';
+import { createEdgePrismaClient } from './_shared/prisma-edge';
 
 interface PagesContext {
   request: Request;
@@ -84,14 +85,8 @@ async function resolveUserId(prisma: PrismaClient, clerkId: string): Promise<str
 export async function onRequestGet(context: PagesContext): Promise<Response> {
   const { request, env } = context;
 
-  // Initialize Prisma client
-  const prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: env.DATABASE_URL,
-      },
-    },
-  });
+  // Initialize edge-compatible Prisma client
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     console.log('[SYNC GET] Starting authentication');
@@ -162,14 +157,8 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
 export async function onRequestPost(context: PagesContext): Promise<Response> {
   const { request, env } = context;
   
-  // Initialize Prisma client
-  const prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: env.DATABASE_URL,
-      },
-    },
-  });
+  // Initialize edge-compatible Prisma client
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     console.log('[SYNC POST] Starting authentication');

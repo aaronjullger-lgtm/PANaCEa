@@ -9,6 +9,7 @@ import { authenticateRequest, createErrorResponse, createSuccessResponse, handle
 import { canViewCMS, canEditContent, isAdmin, type UserRole } from '../../_shared/rbac';
 import { PrismaClient } from '@prisma/client';
 import { updateContent } from '../../../../lib/services/cms/contentService';
+import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 
 export async function onRequestGet(context: { request: Request; env: Env; params: { id: string } }) {
   const { request, env, params } = context;
@@ -22,7 +23,7 @@ export async function onRequestGet(context: { request: Request; env: Env; params
     return createErrorResponse('Unauthorized', 401);
   }
 
-  const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     const user = await prisma.user.findUnique({
@@ -69,7 +70,7 @@ export async function onRequestPut(context: { request: Request; env: Env; params
     return createErrorResponse('Unauthorized', 401);
   }
 
-  const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     const user = await prisma.user.findUnique({
@@ -124,7 +125,7 @@ export async function onRequestDelete(context: { request: Request; env: Env; par
     return createErrorResponse('Unauthorized', 401);
   }
 
-  const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     const user = await prisma.user.findUnique({
