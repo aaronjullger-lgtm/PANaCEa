@@ -14,3 +14,4 @@ logs/
 .tmp
 coverage/
 .nyc_output/
+.env.local
