@@ -1,4 +1,4 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 /**
  * Production Database Migration Script
  * 
@@ -8,7 +8,7 @@
  * Usage:
  *   1. Set DATABASE_URL in your .env file to your production database
  *   2. Run: npm run migrate:production
- *   or: tsx scripts/applyProductionMigration.ts
+ *   or: npx tsx scripts/applyProductionMigration.ts
  * 
  * Safety Features:
  *   - Checks if tables already exist
@@ -19,6 +19,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { createInterface } from 'readline';
+import { execSync } from 'child_process';
 
 const prisma = new PrismaClient();
 
@@ -153,12 +154,9 @@ async function applyMigration(): Promise<void> {
   console.log('\n🚀 Applying database migration...\n');
 
   try {
-    // Use Prisma Migrate to apply all pending migrations
-    const { execSync } = await import('child_process');
-    
     console.log('Running: npx prisma migrate deploy');
     
-    const output = execSync('npx prisma migrate deploy', {
+    execSync('npx prisma migrate deploy', {
       cwd: process.cwd(),
       encoding: 'utf-8',
       stdio: 'inherit',

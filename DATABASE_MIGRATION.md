@@ -31,8 +31,9 @@ This is the safest and most reliable method for production deployments.
    ```bash
    # Use the DIRECT connection string (not pooled)
    DATABASE_URL="postgresql://user:password@host:5432/database"
-   # OR for Supabase, use the "Session" mode connection string:
-   DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+   # OR for Supabase, use the "Direct connection" string (NOT the pooler):
+   DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
+   # Note: For migrations, do NOT use the pooler (port 6543), use direct connection (port 5432)
    ```
 
 2. **Generate Prisma Client**

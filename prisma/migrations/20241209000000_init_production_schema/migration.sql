@@ -1,3 +1,6 @@
+-- Enable required PostgreSQL extensions
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
