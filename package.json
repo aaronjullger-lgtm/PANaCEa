@@ -80,5 +80,13 @@
     "tsx": "^4.20.6",
     "typescript": "~5.8.2",
     "vitest": "^4.0.14"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.9.5",
+    "@rollup/rollup-linux-x64-musl": "^4.9.5",
+    "sharp": "^0.33.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
