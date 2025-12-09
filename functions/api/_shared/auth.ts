@@ -2,7 +2,7 @@
  * Shared authentication utilities for API endpoints
  */
 
-import { createClerkClient } from '@clerk/backend';
+import { verifyToken } from '@clerk/backend';
 
 export interface Env {
   DATABASE_URL?: string;
@@ -94,13 +94,12 @@ export async function verifyAuthToken(
       }
     }
 
-    const clerkClient = createClerkClient({ secretKey });
-
     // Verify the token using Clerk's secure verification.
-    // ADD THE leeway OPTION to tolerate clock skew (e.g., 5 seconds)
-    const verifiedToken = await clerkClient.verifyToken(token, {
+    // Pass secretKey in options and add clockSkewInMs to tolerate clock skew (e.g., 5000 ms = 5 seconds)
+    const verifiedToken = await verifyToken(token, {
+      secretKey,
       // This is the critical change for clock skew/timing issues
-      leeway: 5
+      clockSkewInMs: 5000
     });
 
     if (isTestEnv) {

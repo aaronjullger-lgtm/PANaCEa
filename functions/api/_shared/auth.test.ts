@@ -7,12 +7,10 @@ import { verifyAuthToken, authenticateRequest, type Env } from './auth';
 
 // Mock the @clerk/backend module
 vi.mock('@clerk/backend', () => ({
-  createClerkClient: vi.fn(() => ({
-    verifyToken: vi.fn(),
-  })),
+  verifyToken: vi.fn(),
 }));
 
-import { createClerkClient } from '@clerk/backend';
+import { verifyToken as mockVerifyToken } from '@clerk/backend';
 
 /**
  * Helper function to create base64url encoded JWT token for testing
@@ -94,8 +92,7 @@ describe('Authentication Diagnostics', () => {
         iat: Math.floor(Date.now() / 1000),
       });
 
-      const mockVerifyToken = vi.fn().mockResolvedValue({ sub: 'user_123' });
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      (mockVerifyToken as any).mockResolvedValue({ sub: 'user_123' });
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
       
@@ -112,10 +109,10 @@ describe('Authentication Diagnostics', () => {
         '[AUTH] Token verification successful for user:',
         'user_123'
       );
-      // Verify that leeway option is passed to verifyToken
+      // Verify that both secretKey and clockSkewInMs options are passed to verifyToken
       expect(mockVerifyToken).toHaveBeenCalledWith(
         mockToken,
-        expect.objectContaining({ leeway: 5 })
+        expect.objectContaining({ secretKey: validSecretKey, clockSkewInMs: 5000 })
       );
     });
 
@@ -127,8 +124,7 @@ describe('Authentication Diagnostics', () => {
         iat: Math.floor(Date.now() / 1000) - 7200,
       });
 
-      const mockVerifyToken = vi.fn().mockRejectedValue(new Error('Token expired'));
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      (mockVerifyToken as any).mockRejectedValue(new Error('Token expired'));
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
       
@@ -140,10 +136,10 @@ describe('Authentication Diagnostics', () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AUTH] Root Cause: Token Expiration'
       );
-      // Verify that leeway option is passed even for expired tokens
+      // Verify that both secretKey and clockSkewInMs options are passed even for expired tokens
       expect(mockVerifyToken).toHaveBeenCalledWith(
         mockToken,
-        expect.objectContaining({ leeway: 5 })
+        expect.objectContaining({ secretKey: validSecretKey, clockSkewInMs: 5000 })
       );
     });
 
@@ -157,17 +153,16 @@ describe('Authentication Diagnostics', () => {
         iat: Math.floor(Date.now() / 1000) - 3603,
       });
 
-      // Mock successful verification (as if leeway allowed it)
-      const mockVerifyToken = vi.fn().mockResolvedValue({ sub: 'user_456' });
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      // Mock successful verification (as if clockSkewInMs allowed it)
+      (mockVerifyToken as any).mockResolvedValue({ sub: 'user_456' });
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
       
       expect(result).toBe('user_456');
-      // Verify that verifyToken is called with leeway option
+      // Verify that verifyToken is called with both secretKey and clockSkewInMs options
       expect(mockVerifyToken).toHaveBeenCalledWith(
         mockToken,
-        expect.objectContaining({ leeway: 5 })
+        expect.objectContaining({ secretKey: validSecretKey, clockSkewInMs: 5000 })
       );
       expect(consoleLogSpy).toHaveBeenCalledWith(
         '[AUTH] Token verification successful for user:',
@@ -183,8 +178,7 @@ describe('Authentication Diagnostics', () => {
         iat: Math.floor(Date.now() / 1000),
       });
 
-      const mockVerifyToken = vi.fn().mockRejectedValue(new Error('Signature verification failed'));
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      (mockVerifyToken as any).mockRejectedValue(new Error('Signature verification failed'));
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
       
@@ -209,8 +203,7 @@ describe('Authentication Diagnostics', () => {
         iat: Math.floor(Date.now() / 1000),
       });
 
-      const mockVerifyToken = vi.fn().mockRejectedValue(new Error('Invalid issuer'));
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      (mockVerifyToken as any).mockRejectedValue(new Error('Invalid issuer'));
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
       
@@ -228,8 +221,7 @@ describe('Authentication Diagnostics', () => {
         iat: Math.floor(Date.now() / 1000),
       });
 
-      const mockVerifyToken = vi.fn().mockRejectedValue(new Error('Some unexpected error'));
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      (mockVerifyToken as any).mockRejectedValue(new Error('Some unexpected error'));
 
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
       
@@ -301,8 +293,7 @@ describe('Authentication Diagnostics', () => {
       });
 
       // Mock to fail auth so we only test the key logging
-      const mockVerifyToken = vi.fn().mockResolvedValue({ sub: null });
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      (mockVerifyToken as any).mockResolvedValue({ sub: null });
 
       await authenticateRequest(request, env);
       
@@ -325,8 +316,7 @@ describe('Authentication Diagnostics', () => {
       });
 
       // Mock to fail auth so we only test the key logging
-      const mockVerifyToken = vi.fn().mockResolvedValue({ sub: null });
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      (mockVerifyToken as any).mockResolvedValue({ sub: null });
 
       await authenticateRequest(request, env);
       
@@ -355,8 +345,7 @@ describe('Authentication Diagnostics', () => {
         headers: { Authorization: `Bearer ${mockToken}` },
       });
 
-      const mockVerifyToken = vi.fn().mockResolvedValue({ sub: 'user_123' });
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      (mockVerifyToken as any).mockResolvedValue({ sub: 'user_123' });
 
       const result = await authenticateRequest(request, env);
       
@@ -378,8 +367,7 @@ describe('Authentication Diagnostics', () => {
         headers: { Authorization: 'Bearer invalid_token' },
       });
 
-      const mockVerifyToken = vi.fn().mockRejectedValue(new Error('Invalid token'));
-      (createClerkClient as any).mockReturnValue({ verifyToken: mockVerifyToken });
+      (mockVerifyToken as any).mockRejectedValue(new Error('Invalid token'));
 
       const result = await authenticateRequest(request, env);
       
