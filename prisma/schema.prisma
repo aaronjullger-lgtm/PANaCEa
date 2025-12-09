@@ -13,10 +13,14 @@
 //
 // To apply migrations:
 // 1. Run: npx prisma migrate dev --name init_schema
-// 2. Run: npx prisma generate
+// 2. Run: npx prisma generate --accelerate
 //
 // To push schema to Supabase (for initial setup):
 // Run: npx prisma db push
+//
+// For Prisma Accelerate (Edge runtime):
+// Generate with: npx prisma generate --accelerate
+// or: npx prisma generate --no-engine
 
 generator client {
   provider = "prisma-client-js"
