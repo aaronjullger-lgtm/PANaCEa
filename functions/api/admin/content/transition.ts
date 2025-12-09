@@ -16,6 +16,7 @@ import { authenticateRequest, createErrorResponse, createSuccessResponse, handle
 import { canEditContent, canApproveContent, canPublishContent, type UserRole } from '../../_shared/rbac';
 import { PrismaClient } from '@prisma/client';
 import { transitionStatus, type ContentStatus } from '../../../../lib/services/cms/contentService';
+import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -29,7 +30,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     return createErrorResponse('Unauthorized', 401);
   }
 
-  const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     const user = await prisma.user.findUnique({

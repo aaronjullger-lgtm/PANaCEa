@@ -15,6 +15,7 @@
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../../_shared/auth';
 import { canViewCMS, type UserRole } from '../../_shared/rbac';
 import { PrismaClient } from '@prisma/client';
+import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -31,7 +32,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
   }
 
   // Get user from database to check role
-  const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
   
   try {
     const user = await prisma.user.findUnique({

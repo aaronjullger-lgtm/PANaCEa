@@ -16,6 +16,7 @@ import { authenticateRequest, createErrorResponse, createSuccessResponse, handle
 import { canViewCMS, type UserRole } from '../../_shared/rbac';
 import { PrismaClient } from '@prisma/client';
 import { exportAuditLogsToCsv } from '../../../../lib/services/cms/auditLogger';
+import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -29,7 +30,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     return createErrorResponse('Unauthorized', 401);
   }
 
-  const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     const user = await prisma.user.findUnique({
