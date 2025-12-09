@@ -24,6 +24,37 @@ This document describes how to deploy this application on Cloudflare Pages.
    - Cloudflare Pages automatically detects and deploys functions from the `/functions` directory
    - No manual configuration files needed (Pages auto-configures routing)
 
+## Prerequisites: Database Migration
+
+⚠️ **IMPORTANT:** Before deploying to Cloudflare Pages, you **must** set up your database schema first.
+
+If you skip this step, you'll see errors like:
+```
+The table `public.User` does not exist in the current database.
+```
+
+### Apply Database Schema
+
+Follow the detailed guide in [DATABASE_MIGRATION.md](./DATABASE_MIGRATION.md) to set up your production database.
+
+**Quick Start:**
+```bash
+# 1. Set your production DATABASE_URL in .env
+DATABASE_URL="postgresql://your-production-db-connection-string"
+
+# 2. Run the migration script
+npm run migrate:production
+
+# OR manually apply with Prisma
+npx prisma migrate deploy
+```
+
+This creates all 40+ required tables including User, PerformanceRecord, SRSItem, and more.
+
+✅ Once your database is set up, proceed with Cloudflare Pages deployment below.
+
+---
+
 ## Cloudflare Pages Setup
 
 ### 1. Build Configuration
