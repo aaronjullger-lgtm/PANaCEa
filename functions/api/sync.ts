@@ -6,7 +6,6 @@
  * This ensures tokens are accepted within a 5-second clock tolerance window.
  */
 
-import { PrismaClient } from '@prisma/client';
 import {
   type Env,
   authenticateRequest,
@@ -14,7 +13,7 @@ import {
   createSuccessResponse,
   handleCorsOptions,
 } from './_shared/auth';
-import { createEdgePrismaClient } from './_shared/prisma-edge';
+import { createEdgePrismaClient, type EdgePrismaClient } from './_shared/prisma-edge';
 
 interface PagesContext {
   request: Request;
@@ -46,7 +45,7 @@ export async function onRequestOptions(): Promise<Response> {
  * Helper: Resolve Clerk ID to Internal DB ID
  * Uses Prisma ORM for database operations
  */
-async function resolveUserId(prisma: PrismaClient, clerkId: string): Promise<string> {
+async function resolveUserId(prisma: EdgePrismaClient, clerkId: string): Promise<string> {
   try {
     // 1. Try to find existing user
     const existingUser = await prisma.user.findUnique({

@@ -15,6 +15,11 @@ import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
 
 /**
+ * Type for the extended Edge Prisma Client with Accelerate
+ */
+export type EdgePrismaClient = ReturnType<typeof createEdgePrismaClient>;
+
+/**
  * Creates a Prisma Client instance compatible with Cloudflare Edge Runtime
  * using Prisma Accelerate extension for caching and connection pooling.
  * 

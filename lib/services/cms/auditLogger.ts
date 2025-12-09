@@ -6,8 +6,13 @@
  * [Timestamp] [User_ID] [Field_Changed] [Old_Value] -> [New_Value]
  */
 
-import { PrismaClient } from '@prisma/client';
 import type { UserRole } from '../../../functions/api/_shared/rbac';
+
+// Generic Prisma client type that works with both standard and edge clients
+type PrismaClientLike = {
+  contentAuditLog: any;
+  [key: string]: any;
+};
 
 export interface AuditLogData {
   contentId: string;
@@ -29,7 +34,7 @@ export interface AuditLogData {
  * This is an append-only operation for compliance
  */
 export async function createAuditLog(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   data: AuditLogData
 ): Promise<void> {
   await prisma.contentAuditLog.create({
@@ -54,7 +59,7 @@ export async function createAuditLog(
  * Get audit log for a specific content item
  */
 export async function getAuditLog(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   contentId: string,
   options?: {
     limit?: number;
@@ -73,7 +78,7 @@ export async function getAuditLog(
  * Get audit logs for a user
  */
 export async function getUserAuditLogs(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   userId: string,
   options?: {
     limit?: number;

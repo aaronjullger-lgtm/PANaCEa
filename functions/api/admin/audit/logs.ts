@@ -14,7 +14,6 @@
 
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../../_shared/auth';
 import { canViewCMS, type UserRole } from '../../_shared/rbac';
-import { PrismaClient } from '@prisma/client';
 import { exportAuditLogsToCsv } from '../../../../lib/services/cms/auditLogger';
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 

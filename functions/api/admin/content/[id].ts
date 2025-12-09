@@ -7,7 +7,6 @@
 
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../../_shared/auth';
 import { canViewCMS, canEditContent, isAdmin, type UserRole } from '../../_shared/rbac';
-import { PrismaClient } from '@prisma/client';
 import { updateContent } from '../../../../lib/services/cms/contentService';
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 

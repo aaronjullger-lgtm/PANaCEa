@@ -11,7 +11,11 @@
  * For production with high volume, consider Redis + BullMQ.
  */
 
-import { PrismaClient } from '@prisma/client';
+// Generic Prisma client type that works with both standard and edge clients
+type PrismaClientLike = {
+  backgroundJob: any;
+  [key: string]: any;
+};
 
 export type JobType = 
   | 'generate_questions'
@@ -39,7 +43,7 @@ export interface CreateJobOptions {
  * Create a new background job
  */
 export async function createJob(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   options: CreateJobOptions
 ): Promise<any> {
   return prisma.backgroundJob.create({
@@ -57,7 +61,7 @@ export async function createJob(
  * Get next job to process (highest priority, oldest first)
  */
 export async function getNextJob(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   jobTypes?: JobType[]
 ): Promise<any | null> {
   const where: any = {
@@ -101,7 +105,7 @@ export async function getNextJob(
  * Mark job as completed with result
  */
 export async function completeJob(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   jobId: string,
   result?: any
 ): Promise<void> {
@@ -119,7 +123,7 @@ export async function completeJob(
  * Mark job as failed with error message
  */
 export async function failJob(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   jobId: string,
   error: string
 ): Promise<void> {
@@ -159,7 +163,7 @@ export async function failJob(
  * Phase 4: Pre-generate questions during low-traffic hours
  */
 export async function scheduleQuestionGeneration(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   options: {
     system?: string;
     difficulty?: string;
@@ -184,7 +188,7 @@ export async function scheduleQuestionGeneration(
  * Phase 3: Run at 3 AM
  */
 export async function scheduleHealthCheck(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   scheduledFor?: Date
 ): Promise<any> {
   return createJob(prisma, {
@@ -234,7 +238,7 @@ function getNextLowTrafficTime(): Date {
  * Clean up old completed jobs (retention policy)
  */
 export async function cleanupOldJobs(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   retentionDays: number = 30
 ): Promise<number> {
   const cutoffDate = new Date();
@@ -253,7 +257,7 @@ export async function cleanupOldJobs(
 /**
  * Get job statistics
  */
-export async function getJobStats(prisma: PrismaClient): Promise<any> {
+export async function getJobStats(prisma: PrismaClientLike): Promise<any> {
   const [pending, processing, completed, failed] = await Promise.all([
     prisma.backgroundJob.count({ where: { status: 'pending' } }),
     prisma.backgroundJob.count({ where: { status: 'processing' } }),

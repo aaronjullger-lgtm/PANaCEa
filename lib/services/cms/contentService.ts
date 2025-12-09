@@ -5,9 +5,17 @@
  * DRAFT -> PENDING_REVIEW -> APPROVED -> PUBLISHED -> ARCHIVED
  */
 
-import { PrismaClient } from '@prisma/client';
-import { createAuditLog, detectChangedFields, type AuditLogData } from './auditLogger';
 import type { UserRole } from '../../../functions/api/_shared/rbac';
+import { createAuditLog, detectChangedFields, type AuditLogData } from './auditLogger';
+
+// Generic Prisma client type that works with both standard and edge clients
+type PrismaClientLike = {
+  medicalContent: any;
+  contentVersion: any;
+  contentAuditLog: any;
+  $transaction?: any;
+  [key: string]: any;
+};
 
 export type ContentStatus = 'draft' | 'pending_review' | 'approved' | 'published' | 'archived';
 
@@ -31,7 +39,7 @@ export interface ContentTransitionOptions {
  * Create new draft content
  */
 export async function createDraft(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   data: ContentData,
   options: ContentTransitionOptions
 ): Promise<any> {
@@ -70,7 +78,7 @@ export async function createDraft(
  * Update content (creates new version)
  */
 export async function updateContent(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   contentId: string,
   updates: Partial<ContentData>,
   options: ContentTransitionOptions
@@ -134,7 +142,7 @@ export async function updateContent(
  * Transition content to a new status
  */
 export async function transitionStatus(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   contentId: string,
   newStatus: ContentStatus,
   options: ContentTransitionOptions
@@ -205,7 +213,7 @@ export async function transitionStatus(
  * Restore content to a previous version
  */
 export async function restoreVersion(
-  prisma: PrismaClient,
+  prisma: PrismaClientLike,
   contentId: string,
   versionNumber: number,
   options: ContentTransitionOptions

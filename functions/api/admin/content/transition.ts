@@ -14,7 +14,6 @@
 
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../../_shared/auth';
 import { canEditContent, canApproveContent, canPublishContent, type UserRole } from '../../_shared/rbac';
-import { PrismaClient } from '@prisma/client';
 import { transitionStatus, type ContentStatus } from '../../../../lib/services/cms/contentService';
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 
