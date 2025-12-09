@@ -109,7 +109,7 @@ describe('Authentication Diagnostics', () => {
         '[AUTH] Token verification successful for user:',
         'user_123'
       );
-      // Verify that clockSkewInMs option is passed to verifyToken
+      // Verify that both secretKey and clockSkewInMs options are passed to verifyToken
       expect(mockVerifyToken).toHaveBeenCalledWith(
         mockToken,
         expect.objectContaining({ secretKey: validSecretKey, clockSkewInMs: 5000 })
@@ -136,7 +136,7 @@ describe('Authentication Diagnostics', () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AUTH] Root Cause: Token Expiration'
       );
-      // Verify that clockSkewInMs option is passed even for expired tokens
+      // Verify that both secretKey and clockSkewInMs options are passed even for expired tokens
       expect(mockVerifyToken).toHaveBeenCalledWith(
         mockToken,
         expect.objectContaining({ secretKey: validSecretKey, clockSkewInMs: 5000 })
@@ -159,7 +159,7 @@ describe('Authentication Diagnostics', () => {
       const result = await verifyAuthToken(`Bearer ${mockToken}`, validSecretKey);
       
       expect(result).toBe('user_456');
-      // Verify that verifyToken is called with clockSkewInMs option
+      // Verify that verifyToken is called with both secretKey and clockSkewInMs options
       expect(mockVerifyToken).toHaveBeenCalledWith(
         mockToken,
         expect.objectContaining({ secretKey: validSecretKey, clockSkewInMs: 5000 })
