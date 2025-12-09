@@ -47,19 +47,27 @@ export function createEdgePrismaClient(databaseUrl: string) {
     );
   }
 
-  // Log helpful info for debugging (without exposing the full URL)
+  // Validate and log connection info (development only, no sensitive data)
+  const isDevelopment = process.env.NODE_ENV === 'development';
   const urlPrefix = databaseUrl.split('://')[0];
-  console.log(`[Prisma Edge] Creating client with connection protocol: ${urlPrefix}://`);
+  
+  if (isDevelopment) {
+    console.log(`[Prisma Edge] Creating client with connection protocol: ${urlPrefix}://`);
+  }
 
   try {
     // Check if URL is in Accelerate format
     if (databaseUrl.startsWith('prisma://')) {
-      console.log('[Prisma Edge] Using Prisma Accelerate with connection pooling and caching');
+      if (isDevelopment) {
+        console.log('[Prisma Edge] Using Prisma Accelerate with connection pooling and caching');
+      }
     } else if (databaseUrl.startsWith('postgres://') || databaseUrl.startsWith('postgresql://')) {
-      console.log('[Prisma Edge] Using direct PostgreSQL connection');
-      console.log('[Prisma Edge] Note: For Accelerate features (connection pooling, caching), use prisma:// URL');
-      console.log('[Prisma Edge] Visit https://www.prisma.io/data-platform/accelerate to set up Accelerate');
+      if (isDevelopment) {
+        console.log('[Prisma Edge] Using direct PostgreSQL connection');
+        console.log('[Prisma Edge] Tip: For production, consider Prisma Accelerate (prisma:// URL) for better edge performance');
+      }
     } else {
+      // Always warn about unexpected protocols
       console.warn(
         `[Prisma Edge] Warning: Unexpected DATABASE_URL protocol: ${urlPrefix}://. ` +
         'Expected "prisma://" or "postgresql://". Attempting to connect anyway...'
