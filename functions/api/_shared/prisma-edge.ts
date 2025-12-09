@@ -19,11 +19,8 @@ import { PrismaClient } from '@prisma/client';
  * @returns Configured PrismaClient instance
  */
 export function createEdgePrismaClient(databaseUrl: string): PrismaClient {
-  // Create Neon serverless pool
-  const pool = new Pool({ connectionString: databaseUrl });
-  
-  // Create Prisma adapter
-  const adapter = new PrismaNeon(pool);
+  // Create Prisma Neon adapter with connection config
+  const adapter = new PrismaNeon({ connectionString: databaseUrl });
   
   // Create and return Prisma Client with adapter
   return new PrismaClient({ adapter });

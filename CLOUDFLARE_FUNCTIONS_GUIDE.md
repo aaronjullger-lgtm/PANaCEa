@@ -50,16 +50,33 @@ Or via GitHub integration:
 
 Once deployed, the error message **"Variables cannot be added to a Worker that only has static assets"** will be **GONE** because Cloudflare will detect your Functions folder.
 
-To add your API key:
+To add your environment variables:
 
 1. **Go to Cloudflare Dashboard**
    - Navigate to your Pages project
    - Click on **Settings** → **Environment variables**
 
-2. **Add the Variable**
+2. **Add Required Variables**
+   
+   **GEMINI_API_KEY** (Required for AI features):
    - Click **"Add variable"**
    - **Name**: `GEMINI_API_KEY`
    - **Value**: Your Google Gemini API key
+   - **Environment**: Select both "Production" and "Preview"
+   - Click **"Save"**
+   
+   **DATABASE_URL** (Required for database functions):
+   - Click **"Add variable"**
+   - **Name**: `DATABASE_URL`
+   - **Value**: Your PostgreSQL connection string (Supabase or compatible provider)
+   - **Environment**: Select both "Production" and "Preview"
+   - Click **"Save"**
+   - **Note**: Must be compatible with `@neondatabase/serverless` driver
+   
+   **CLERK_SECRET_KEY** (Required for authentication):
+   - Click **"Add variable"**
+   - **Name**: `CLERK_SECRET_KEY`
+   - **Value**: Your Clerk authentication secret key
    - **Environment**: Select both "Production" and "Preview"
    - Click **"Save"**
 
@@ -143,6 +160,17 @@ This means:
 **Solution**: The function already includes CORS headers, but verify:
 - `onRequestOptions` handler is exported
 - All responses include `Access-Control-Allow-Origin: *`
+
+### Issue: PrismaClientValidationError on Edge Runtime
+
+**Cause**: Standard Prisma Client uses Node.js APIs not available in Cloudflare Edge Runtime.
+
+**Solution**: This has been fixed! All database functions now use `createEdgePrismaClient()` which provides edge-compatible Prisma access using driver adapters.
+
+**For new functions**:
+1. Import the helper: `import { createEdgePrismaClient } from './_shared/prisma-edge'`
+2. Create client: `const prisma = createEdgePrismaClient(env.DATABASE_URL)`
+3. Never use: `new PrismaClient()` directly in Cloudflare Functions
 
 ## Technical Details
 

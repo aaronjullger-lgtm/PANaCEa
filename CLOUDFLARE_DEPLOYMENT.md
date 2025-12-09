@@ -36,10 +36,17 @@ In your Cloudflare Pages project settings, configure:
 
 ### 2. Environment Variables
 
-You **must** set the following environment variable in your Cloudflare Pages project:
+You **must** set the following environment variables in your Cloudflare Pages project:
 
 - **Variable name**: `GEMINI_API_KEY`
-- **Value**: Your Google Gemini API key
+  - **Value**: Your Google Gemini API key
+  
+- **Variable name**: `DATABASE_URL`
+  - **Value**: Your PostgreSQL connection string (Supabase or other Postgres provider)
+  - **Note**: Must be a connection string compatible with `@neondatabase/serverless` driver
+  
+- **Variable name**: `CLERK_SECRET_KEY`
+  - **Value**: Your Clerk authentication secret key
 
 #### How to set environment variables in Cloudflare Pages:
 
@@ -55,6 +62,21 @@ You **must** set the following environment variable in your Cloudflare Pages pro
 ### 3. Node.js Version
 
 The project uses Node.js 22.12.0. Cloudflare Pages will automatically detect and use the appropriate version based on your package.json engines field or their default version.
+
+### 4. Database Edge Runtime Compatibility
+
+Cloudflare Pages Functions run on Edge Runtime, which doesn't support the standard Prisma Client (Node.js APIs and Rust binary engine). This project uses **Prisma Driver Adapters** for edge compatibility:
+
+- **Adapter**: `@prisma/adapter-neon` 
+- **Driver**: `@neondatabase/serverless`
+- **Database**: Compatible with Supabase PostgreSQL and other Postgres providers
+
+**Setup:**
+1. The edge-compatible Prisma client is created via `functions/api/_shared/prisma-edge.ts`
+2. All Cloudflare Functions use `createEdgePrismaClient(env.DATABASE_URL)` instead of `new PrismaClient()`
+3. The connection string must be compatible with the Neon serverless driver (standard PostgreSQL connections work)
+
+**Important:** If you add new Cloudflare Functions that need database access, always use `createEdgePrismaClient()` from `functions/api/_shared/prisma-edge.ts` instead of instantiating `PrismaClient` directly.
 
 ## How It Works
 
