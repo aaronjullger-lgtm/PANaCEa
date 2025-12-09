@@ -52,15 +52,50 @@ View your app in AI Studio: https://ai.studio/apps/drive/1XKKOL9unGhpt6WDahRfrws
 4. **Open your browser:**
    Navigate to `http://localhost:3000`
 
+## Deploy to Production
+
+⚠️ **Before deploying to production, you MUST set up your database first!**
+
+### Quick Production Setup:
+
+1. **Set up your database:**
+   ```bash
+   # Set production DATABASE_URL in .env
+   DATABASE_URL="postgresql://your-production-db-url"
+   
+   # Run database migration
+   npm run migrate:production
+   ```
+
+2. **Deploy to Cloudflare Pages:**
+   - Follow the step-by-step guide: [PRODUCTION_DEPLOYMENT_CHECKLIST.md](PRODUCTION_DEPLOYMENT_CHECKLIST.md)
+   - Detailed deployment instructions: [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md)
+
+📖 **Read the comprehensive guides:**
+- [DATABASE_MIGRATION.md](DATABASE_MIGRATION.md) - Database setup and migration
+- [PRODUCTION_DEPLOYMENT_CHECKLIST.md](PRODUCTION_DEPLOYMENT_CHECKLIST.md) - Complete deployment checklist
+- [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md) - Cloudflare Pages configuration
+
 ## Available Scripts
 
+### Development Scripts
 - `npm run dev` - Start frontend development server
 - `npm run dev:server` - Start backend server with hot reload
 - `npm run dev:all` - Start both frontend and backend concurrently
-- `npm run build` - Build frontend for production
-- `npm run build:server` - Build backend for production
 - `npm run preview` - Preview production build
 - `npm test` - Run test suite
+
+### Build Scripts
+- `npm run build` - Build frontend for production
+- `npm run build:server` - Build backend for production
+
+### Database Scripts
+- `npm run migrate:production` - Apply database migrations to production (interactive)
+- `npm run db:migrate:deploy` - Deploy migrations (non-interactive)
+- `npm run db:migrate:dev` - Create and apply migrations in development
+- `npm run db:generate` - Generate Prisma client
+- `npm run db:push` - Push schema to database (development only)
+- `npm run db:studio` - Open Prisma Studio database GUI
 
 **Note:** The Vite development server proxies requests to `/geminiProxy` to `http://localhost:3001`. The backend server must be running for AI features to work.
 
