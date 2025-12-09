@@ -1,6 +1,0 @@
-name = "panacea"
-pages_build_output_dir = "dist"
-compatibility_date = "2023-12-01"
-
-[vars]
-NODE_ENV = "production"
