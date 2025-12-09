@@ -1,26 +1,28 @@
 /**
- * Prisma Client for Cloudflare Edge Runtime
+ * Prisma Client for Cloudflare Edge Runtime with Accelerate
  * 
  * This module provides a Prisma Client configured for Cloudflare Pages Functions
- * which run on Edge Runtime and don't support the standard Prisma Client.
+ * which run on Edge Runtime. Uses Prisma Accelerate extension for optimal 
+ * Edge runtime compatibility and caching support.
  * 
- * Uses @neondatabase/serverless driver adapter which is compatible with
- * Supabase PostgreSQL connections.
+ * For Neon database connections, use the Prisma Accelerate connection string
+ * which handles Edge runtime compatibility automatically.
+ * 
+ * @see https://www.prisma.io/docs/accelerate
  */
 
-import { PrismaNeon } from '@prisma/adapter-neon';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client/edge';
+import { withAccelerate } from '@prisma/extension-accelerate';
 
 /**
  * Creates a Prisma Client instance compatible with Cloudflare Edge Runtime
+ * using Prisma Accelerate extension for caching and connection pooling.
  * 
- * @param databaseUrl - PostgreSQL connection string from environment
- * @returns Configured PrismaClient instance
+ * @param databaseUrl - Prisma Accelerate connection string from environment
+ * @returns Configured PrismaClient instance with Accelerate extension
  */
-export function createEdgePrismaClient(databaseUrl: string): PrismaClient {
-  // Create Prisma Neon adapter with connection config
-  const adapter = new PrismaNeon({ connectionString: databaseUrl });
-  
-  // Create and return Prisma Client with adapter
-  return new PrismaClient({ adapter });
+export function createEdgePrismaClient(databaseUrl: string) {
+  return new PrismaClient({
+    datasourceUrl: databaseUrl,
+  }).$extends(withAccelerate());
 }

@@ -1,23 +1,29 @@
 /**
- * Prisma Client Singleton
+ * Prisma Client Singleton with Accelerate Extension
  * 
  * Ensures only one instance of PrismaClient exists throughout the application lifecycle.
  * This prevents connection pool exhaustion and improves performance.
  * 
+ * Uses Prisma Accelerate extension for Edge runtime compatibility and caching.
+ * 
  * @see https://www.prisma.io/docs/guides/database/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
+ * @see https://www.prisma.io/docs/accelerate
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client/edge';
+import { withAccelerate } from '@prisma/extension-accelerate';
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+  prisma: ReturnType<typeof createPrismaClient> | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+function createPrismaClient() {
+  return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  });
+  }).$extends(withAccelerate());
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
