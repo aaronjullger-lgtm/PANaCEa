@@ -66,6 +66,7 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   { system: "CV", subcategory: "Valvular Disease", condition: "Aortic Regurgitation", aliases: ["AR", "Aortic Insufficiency"] },
   { system: "CV", subcategory: "Valvular Disease", condition: "Mitral Stenosis", aliases: ["MS", "Mitral Valve Stenosis"] },
   { system: "CV", subcategory: "Valvular Disease", condition: "Mitral Regurgitation", aliases: ["MR", "Mitral Insufficiency"] },
+  { system: "CV", subcategory: "Valvular Disease", condition: "Mitral Valve Prolapse" },
   { system: "CV", subcategory: "Valvular Disease", condition: "Tricuspid Regurgitation" },
   { system: "CV", subcategory: "Valvular Disease", condition: "Pulmonic Stenosis" },
 
@@ -93,6 +94,10 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   { system: "CV", subcategory: "Conduction Disorders", condition: "Second-Degree AV Block (Mobitz I)" },
   { system: "CV", subcategory: "Conduction Disorders", condition: "Second-Degree AV Block (Mobitz II)" },
   { system: "CV", subcategory: "Conduction Disorders", condition: "Third-Degree AV Block" },
+  { system: "CV", subcategory: "Conduction Disorders", condition: "Wolff-Parkinson-White Syndrome", aliases: ["WPW"] },
+  { system: "CV", subcategory: "Arrhythmia", condition: "Premature Ventricular Contraction (PVC)" },
+  { system: "CV", subcategory: "Congenital", condition: "Transposition of the Great Arteries" },
+  { system: "CV", subcategory: "Vascular", condition: "Acute Arterial Occlusion", aliases: ["Limb Ischemia"] },
 
   // -------------------------
   // Peripheral Vascular Disease
@@ -109,6 +114,7 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   { system: "CV", subcategory: "Vascular Disease", condition: "Venous Ulceration" },
   { system: "CV", subcategory: "Vascular Disease", condition: "Giant Cell Arteritis (Temporal Arteritis)" },
   { system: "CV", subcategory: "Vascular Disease", condition: "Aortic Aneurysm", aliases: ["AAA", "Abdominal Aortic Aneurysm"] },
+  { system: "CV", subcategory: "Vascular Disease", condition: "Aortic Dissection" },
 
   // -------------------------
   // Pediatric & Congenital Cardiology
@@ -119,6 +125,10 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   { system: "CV", subcategory: "Congenital Heart Disease", condition: "Tetralogy of Fallot" },
   { system: "CV", subcategory: "Congenital Heart Disease", condition: "Coarctation of the Aorta" },
   { system: "CV", subcategory: "Congenital Heart Disease", condition: "Transposition of the Great Arteries" },
+  // -------------------------
+  // Environmental / Other
+  // -------------------------
+  { system: "CV", subcategory: "Environmental", condition: "Hypothermia" },
 ];
 
 // ---------------------------------------------------------------
@@ -152,6 +162,11 @@ export const CONDITION_REGISTRY_PULM: ConditionMeta[] = [
     system: "PULM",
     subcategory: "Obstructive",
     condition: "Bronchiectasis",
+  },
+  {
+    system: "PULM",
+    subcategory: "Obstructive",
+    condition: "Aspirin Exacerbated Respiratory Disease (AERD)",
   },
   {
     system: "PULM",
@@ -196,6 +211,26 @@ export const CONDITION_REGISTRY_PULM: ConditionMeta[] = [
     system: "PULM",
     subcategory: "Infectious",
     condition: "Viral Pneumonia",
+  },
+  {
+    system: "PULM",
+    subcategory: "Infectious",
+    condition: "Aspiration Pneumonia",
+  },
+  {
+    system: "PULM",
+    subcategory: "Infectious",
+    condition: "Klebsiella Pneumonia",
+  },
+  {
+    system: "PULM",
+    subcategory: "Infectious",
+    condition: "Streptococcal Pneumonia",
+  },
+  {
+    system: "PULM",
+    subcategory: "Infectious",
+    condition: "Pseudomonas Pneumonia",
   },
   {
     system: "PULM",
@@ -258,6 +293,16 @@ export const CONDITION_REGISTRY_PULM: ConditionMeta[] = [
   {
     system: "PULM",
     subcategory: "Toxic/Environmental",
+    condition: "Silicosis",
+  },
+  {
+    system: "PULM",
+    subcategory: "Toxic/Environmental",
+    condition: "Asbestosis",
+  },
+  {
+    system: "PULM",
+    subcategory: "Toxic/Environmental",
     condition: "Smoke Inhalation Injury",
   },
   {
@@ -287,6 +332,11 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
     system: "GI",
     subcategory: "Esophagus",
     condition: "Achalasia",
+  },
+  {
+    system: "GI",
+    subcategory: "Esophagus",
+    condition: "Diffuse Esophageal Spasm",
   },
   {
     system: "GI",
@@ -323,6 +373,16 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
   {
     system: "GI",
     subcategory: "Stomach",
+    condition: "Pyloric Stenosis",
+  },
+  {
+    system: "GI",
+    subcategory: "Stomach",
+    condition: "H. Pylori Infection",
+  },
+  {
+    system: "GI",
+    subcategory: "Stomach",
     condition: "Gastric Cancer",
   },
 
@@ -341,6 +401,11 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
     system: "GI",
     subcategory: "Small Bowel",
     condition: "Ileus",
+  },
+  {
+    system: "GI",
+    subcategory: "Small Bowel",
+    condition: "Intussusception",
   },
   {
     system: "GI",
@@ -382,6 +447,11 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
   {
     system: "GI",
     subcategory: "Colon",
+    condition: "Volvulus",
+  },
+  {
+    system: "GI",
+    subcategory: "Colon",
     condition: "Pseudomembranous Colitis (C. diff)",
   },
 
@@ -410,6 +480,16 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
     system: "GI",
     subcategory: "Liver",
     condition: "Hepatic Encephalopathy",
+  },
+  {
+    system: "GI",
+    subcategory: "Liver",
+    condition: "Wilson Disease",
+  },
+  {
+    system: "GI",
+    subcategory: "Liver",
+    condition: "Autoimmune Hepatitis",
   },
   {
     system: "GI",
@@ -453,6 +533,11 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
   {
     system: "GI",
     subcategory: "Pancreas",
+    condition: "Insulinoma",
+  },
+  {
+    system: "GI",
+    subcategory: "Pancreas",
     condition: "Pancreatic Cancer",
   },
 
@@ -460,12 +545,32 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
   {
     system: "GI",
     subcategory: "Nutrition",
-    condition: "Obesity",
+    condition: "Malnutrition",
   },
   {
     system: "GI",
     subcategory: "Nutrition",
-    condition: "Malnutrition",
+    condition: "Vitamin B1 (Thiamine) Deficiency",
+  },
+  {
+    system: "GI",
+    subcategory: "Nutrition",
+    condition: "Vitamin B3 (Niacin) Deficiency (Pellagra)",
+  },
+  {
+    system: "GI",
+    subcategory: "Nutrition",
+    condition: "Vitamin C Deficiency (Scurvy)",
+  },
+  {
+    system: "GI",
+    subcategory: "Nutrition",
+    condition: "Vitamin D Deficiency (Rickets)",
+  },
+  {
+    system: "GI",
+    subcategory: "Nutrition",
+    condition: "Vitamin A Deficiency",
   },
   {
     system: "GI",
@@ -476,6 +581,11 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
     system: "GI",
     subcategory: "Nutrition",
     condition: "Electrolyte Abnormalities",
+  },
+  {
+    system: "GI",
+    subcategory: "Nutrition",
+    condition: "Obesity",
   },
 ];
 
@@ -505,6 +615,7 @@ export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Lateral Epicondylitis (Tennis Elbow)" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Medial Epicondylitis (Golfer Elbow)" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "De Quervain Tenosynovitis" },
+  { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Achilles Tendon Rupture" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Plantar Fasciitis", aliases: ["Heel Spur Syndrome"] },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Trochanteric Bursitis" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Patellar Tendinopathy (Jumper Knee)" },
@@ -514,11 +625,16 @@ export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Trigger Finger (Stenosing Tenosynovitis)" },
   { system: "MSK", subcategory: "Soft Tissue/Overuse", condition: "Ganglion Cyst" },
 
+  // Soft Tissue / Tendon
+  { system: "MSK", subcategory: "Soft Tissue", condition: "De Quervain Tenosynovitis" },
+  { system: "MSK", subcategory: "Soft Tissue", condition: "Infectious Tenosynovitis" },
+  { system: "MSK", subcategory: "Soft Tissue", condition: "Achilles Tendon Rupture" },
+
   // Back & Spine
   { system: "MSK", subcategory: "Back & Spine", condition: "Mechanical Low Back Pain" },
   { system: "MSK", subcategory: "Back & Spine", condition: "Lumbar Radiculopathy (Herniated Disc)" },
-  { system: "MSK", subcategory: "Back & Spine", condition: "Spinal Stenosis", aliases: ["Lumbar Stenosis"] },
   { system: "MSK", subcategory: "Back & Spine", condition: "Cauda Equina Syndrome" },
+  { system: "MSK", subcategory: "Back & Spine", condition: "Spinal Stenosis", aliases: ["Lumbar Stenosis"] },
   { system: "MSK", subcategory: "Back & Spine", condition: "Compression Vertebral Fracture" },
   { system: "MSK", subcategory: "Back & Spine", condition: "Spondylolisthesis" },
   { system: "MSK", subcategory: "Back & Spine", condition: "Spondylolysis" },
@@ -569,6 +685,8 @@ export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
   { system: "MSK", subcategory: "Metabolic/Bone", condition: "Osteomalacia" },
   { system: "MSK", subcategory: "Metabolic/Bone", condition: "Paget Disease of Bone" },
   { system: "MSK", subcategory: "Metabolic/Bone", condition: "Osteomyelitis", aliases: ["Bone Infection"] },
+  { system: "MSK", subcategory: "Metabolic/Bone", condition: "Osteosarcoma" },
+  { system: "MSK", subcategory: "Metabolic/Bone", condition: "Ewing Sarcoma" },
   { system: "MSK", subcategory: "Metabolic/Bone", condition: "Avascular Necrosis of the Femoral Head" },
 
   // Rheumatologic / Systemic MSK
@@ -576,6 +694,14 @@ export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
   { system: "MSK", subcategory: "Rheumatologic", condition: "Polymyositis" },
   { system: "MSK", subcategory: "Rheumatologic", condition: "Dermatomyositis" },
   { system: "MSK", subcategory: "Rheumatologic", condition: "Systemic Lupus Erythematosus – MSK Manifestations" },
+  { system: "MSK", subcategory: "Rheumatologic", condition: "Systemic Sclerosis (Scleroderma)" },
+  { system: "MSK", subcategory: "Rheumatologic", condition: "Sjogren Syndrome" },
+  { system: "MSK", subcategory: "Rheumatologic", condition: "Drug-Induced Lupus" },
+  { system: "MSK", subcategory: "Rheumatologic", condition: "Granulomatosis with Polyangiitis (Wegener)" },
+  { system: "MSK", subcategory: "Rheumatologic", condition: "Microscopic Polyangiitis" },
+  { system: "MSK", subcategory: "Rheumatologic", condition: "Polyarteritis Nodosa" },
+  { system: "MSK", subcategory: "Rheumatologic", condition: "Henoch-Schönlein Purpura" },
+  { system: "MSK", subcategory: "Rheumatologic", condition: "Kawasaki Disease" },
   { system: "MSK", subcategory: "Rheumatologic", condition: "Fibromyalgia" },
 
   // Pediatric MSK
@@ -780,7 +906,6 @@ export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
   // Emergency ID
   { system: "ID", subcategory: "Emergency", condition: "Meningococcemia" },
   { system: "ID", subcategory: "Emergency", condition: "Epiglottitis" },
-  { system: "ID", subcategory: "Emergency", condition: "Toxic Shock Syndrome" },
   { system: "ID", subcategory: "Emergency", condition: "Septic Shock" }
 ];
 
@@ -795,6 +920,7 @@ export const CONDITION_REGISTRY_HEME: ConditionMeta[] = [
   { system: "HEME", subcategory: "Anemia", condition: "Vitamin B12 Deficiency Anemia", aliases: ["B12 Deficiency", "Cobalamin Deficiency"] },
   { system: "HEME", subcategory: "Anemia", condition: "Folate Deficiency Anemia", aliases: ["Folic Acid Deficiency"] },
   { system: "HEME", subcategory: "Anemia", condition: "Aplastic Anemia", aliases: ["Bone Marrow Failure"] },
+  { system: "HEME", subcategory: "Anemia", condition: "Lead Poisoning" },
   { system: "HEME", subcategory: "Anemia", condition: "Acute Blood Loss Anemia" },
 
   // Hemolytic Anemias / Hemoglobinopathies
@@ -910,7 +1036,7 @@ export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
   // Neuromuscular & Peripheral Nerve
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Peripheral Polyneuropathy" },
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Diabetic Peripheral Neuropathy – Neurologic Manifestations" },
-  { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Carpal Tunnel Syndrome", aliases: ["CTS"] },
+  { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Carpal Tunnel Syndrome" },
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Ulnar Neuropathy" },
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Meralgia Paresthetica" },
   { system: "NEURO", subcategory: "Peripheral Neuropathy", condition: "Bell Palsy (Idiopathic Facial Nerve Palsy)" },
@@ -934,10 +1060,10 @@ export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
   { system: "NEURO", subcategory: "Spine", condition: "Cervical Spondylotic Myelopathy" },
   { system: "NEURO", subcategory: "Spine", condition: "Spinal Stenosis – Neurologic Manifestations" },
 
-  // Neurologic Infections (cross-listed conceptually with ID, but neurologic here)
-  { system: "NEURO", subcategory: "Infectious", condition: "Bacterial Meningitis", aliases: ["Meningitis"] },
-  { system: "NEURO", subcategory: "Infectious", condition: "Viral Meningitis", aliases: ["Aseptic Meningitis"] },
-  { system: "NEURO", subcategory: "Infectious", condition: "Encephalitis", aliases: ["Brain Inflammation"] },
+  // Neurologic Infections
+  { system: "NEURO", subcategory: "Infectious", condition: "Bacterial Meningitis" },
+  { system: "NEURO", subcategory: "Infectious", condition: "Viral Meningitis" },
+  { system: "NEURO", subcategory: "Infectious", condition: "Encephalitis" },
   { system: "NEURO", subcategory: "Infectious", condition: "Brain Abscess" },
 
   // Trauma & ICP
@@ -959,8 +1085,7 @@ export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
   { system: "NEURO", subcategory: "Pediatrics", condition: "Hydrocephalus (Pediatric)" },
 
   // Other Neurologic
-  { system: "NEURO", subcategory: "Other", condition: "Syncope – Neurologic Evaluation" },
-  { system: "NEURO", subcategory: "Other", condition: "Vertigo – Central vs Peripheral Causes" }
+  { system: "NEURO", subcategory: "Other", condition: "Syncope" },
 ];
 
 // -------------------------------------------
@@ -1039,76 +1164,30 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Toxic Epidermal Necrolysis (TEN)", aliases: ["TEN", "Lyell Syndrome"] },
   { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Drug Reaction with Eosinophilia and Systemic Symptoms (DRESS/DIHS)" },
 
-  // Infectious – Bacterial
-  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Impetigo", aliases: ["School Sores"] },
-  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Erysipelas" },
-  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Cellulitis", aliases: ["Skin Infection"] },
-  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Folliculitis" },
-  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Furuncle / Carbuncle" },
-  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Abscess" },
-  { system: "DERM", subcategory: "Infectious – Bacterial", condition: "Necrotizing Fasciitis – Cutaneous Manifestations" },
+  // Infectious Skin Conditions
+  { system: "DERM", subcategory: "Infectious", condition: "Abscess" },
+  { system: "DERM", subcategory: "Infectious", condition: "Cellulitis" },
+  { system: "DERM", subcategory: "Infectious", condition: "Erysipelas" },
+  { system: "DERM", subcategory: "Infectious", condition: "Folliculitis" },
+  { system: "DERM", subcategory: "Infectious", condition: "Impetigo" },
+  { system: "DERM", subcategory: "Infectious", condition: "Herpes Zoster (Shingles)" },
+  { system: "DERM", subcategory: "Infectious", condition: "Varicella (Chickenpox)" },
+  { system: "DERM", subcategory: "Infectious", condition: "Tinea Corporis (Ringworm)" },
+  { system: "DERM", subcategory: "Infectious", condition: "Tinea Pedis (Athlete's Foot)" },
+  { system: "DERM", subcategory: "Infectious", condition: "Tinea Versicolor" },
+  { system: "DERM", subcategory: "Infectious", condition: "Scabies" },
+  { system: "DERM", subcategory: "Infectious", condition: "Lice (Pediculosis)" },
+  { system: "DERM", subcategory: "Infectious", condition: "Molluscum Contagiosum" },
+  { system: "DERM", subcategory: "Infectious", condition: "Verruca Vulgaris (Warts)" },
+  { system: "DERM", subcategory: "Infectious", condition: "Condyloma Acuminatum (Genital Warts)" },
 
-  // Infectious – Fungal
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Corporis", aliases: ["Ringworm", "Body Ringworm"] },
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Capitis", aliases: ["Scalp Ringworm"] },
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Cruris" },
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Pedis", aliases: ["Athlete's Foot"] },
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Manuum" },
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Tinea Versicolor" },
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Onychomycosis" },
-  { system: "DERM", subcategory: "Infectious – Fungal", condition: "Cutaneous Candidiasis" },
-
-  // Infectious – Viral
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Herpes Simplex Virus (HSV) – Cutaneous" },
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Varicella (Chickenpox)" },
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Herpes Zoster (Shingles)", aliases: ["Shingles", "Zoster"] },
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Molluscum Contagiosum" },
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Verruca Vulgaris (Common Warts)" },
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Plantar Warts" },
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Condyloma Acuminata (Genital Warts)" },
-
-  // Infectious – Parasitic / Arthropod
-  { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Scabies", aliases: ["Sarcoptes scabiei", "Itch Mite"] },
-  { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Pediculosis Capitis (Head Lice)" },
-  { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Pediculosis Corporis (Body Lice)" },
-  { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Pediculosis Pubis (Pubic Lice)" },
-  { system: "DERM", subcategory: "Infectious – Parasitic", condition: "Bedbug Bites" },
-
-  // Hair Disorders
+  // Hair & Nail Disorders
   { system: "DERM", subcategory: "Hair Disorders", condition: "Alopecia Areata" },
   { system: "DERM", subcategory: "Hair Disorders", condition: "Androgenetic Alopecia" },
-  { system: "DERM", subcategory: "Hair Disorders", condition: "Telogen Effluvium" },
-  { system: "DERM", subcategory: "Hair Disorders", condition: "Anagen Effluvium" },
   { system: "DERM", subcategory: "Hair Disorders", condition: "Hirsutism" },
+  { system: "DERM", subcategory: "Nail Disorders", condition: "Onychomycosis" },
 
-  // Nail Disorders
-  { system: "DERM", subcategory: "Nail Disorders", condition: "Onychomycosis – Nail Involvement" },
-  { system: "DERM", subcategory: "Nail Disorders", condition: "Paronychia (Acute/Chronic)" },
-  { system: "DERM", subcategory: "Nail Disorders", condition: "Felon" },
-  { system: "DERM", subcategory: "Nail Disorders", condition: "Psoriatic Nail Changes" },
-
-  // Ulcers & Wounds
-  { system: "DERM", subcategory: "Ulcers & Wounds", condition: "Pressure (Decubitus) Ulcer" },
-  { system: "DERM", subcategory: "Ulcers & Wounds", condition: "Venous Stasis Ulcer" },
-  { system: "DERM", subcategory: "Ulcers & Wounds", condition: "Arterial Insufficiency Ulcer" },
-  { system: "DERM", subcategory: "Ulcers & Wounds", condition: "Diabetic Foot Ulcer" },
-  { system: "DERM", subcategory: "Ulcers & Wounds", condition: "Mixed-Etiology Ulcer" },
-  { system: "DERM", subcategory: "Ulcers & Wounds", condition: "Stasis Dermatitis" },
-  { system: "DERM", subcategory: "Ulcers & Wounds", condition: "Pyoderma Gangrenosum" },
-
-  // Burns
-  { system: "DERM", subcategory: "Burns", condition: "Superficial (First-Degree) Burn" },
-  { system: "DERM", subcategory: "Burns", condition: "Partial-Thickness (Second-Degree) Burn" },
-  { system: "DERM", subcategory: "Burns", condition: "Full-Thickness (Third-/Fourth-Degree) Burn" },
-  { system: "DERM", subcategory: "Burns", condition: "Burn Shock / Fluid Resuscitation Principles" },
-
-  // Malignant Dermatology
-  { system: "DERM", subcategory: "Malignancy", condition: "Actinic Keratosis" },
-  { system: "DERM", subcategory: "Malignancy", condition: "Basal Cell Carcinoma", aliases: ["BCC"] },
-  { system: "DERM", subcategory: "Malignancy", condition: "Squamous Cell Carcinoma", aliases: ["SCC"] },
-  { system: "DERM", subcategory: "Malignancy", condition: "Melanoma", aliases: ["Malignant Melanoma"] },
-  { system: "DERM", subcategory: "Malignancy", condition: "Merkel Cell Carcinoma" },
-  { system: "DERM", subcategory: "Malignancy", condition: "Cutaneous T-Cell Lymphoma (Mycosis Fungoides)" }
+  { system: "DERM", subcategory: "Nail Disorders", condition: "Paronychia" },
 ];
 
 // -------------------------------------------
@@ -1129,8 +1208,8 @@ export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
   // Chronic Kidney Disease
   { system: "RENAL", subcategory: "CKD", condition: "Chronic Kidney Disease", aliases: ["CKD", "Chronic Renal Failure"] },
   { system: "RENAL", subcategory: "CKD", condition: "End-Stage Renal Disease" },
-  { system: "RENAL", subcategory: "CKD", condition: "Diabetic Nephropathy" },
   { system: "RENAL", subcategory: "CKD", condition: "Hypertensive Nephrosclerosis" },
+  { system: "RENAL", subcategory: "CKD", condition: "Diabetic Nephropathy" },
 
   // Glomerular Disorders
   { system: "RENAL", subcategory: "Glomerular", condition: "Nephritic Syndrome" },
@@ -1149,6 +1228,7 @@ export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
   { system: "RENAL", subcategory: "Tubulointerstitial", condition: "Analgesic Nephropathy" },
 
   // Renal Vascular
+  { system: "RENAL", subcategory: "Infectious", condition: "Pyelonephritis" },
   { system: "RENAL", subcategory: "Vascular", condition: "Renal Artery Stenosis" },
   { system: "RENAL", subcategory: "Vascular", condition: "Renal Vein Thrombosis" },
   { system: "RENAL", subcategory: "Vascular", condition: "Hypertensive Emergency with Renal Injury" },
@@ -1218,6 +1298,7 @@ export const CONDITION_REGISTRY_GU: ConditionMeta[] = [
 
   // TESTICULAR / SCROTAL
   { system: "GU", subcategory: "Testicular", condition: "Testicular Torsion", aliases: ["Torsion of Testis"] },
+  { system: "GU", subcategory: "Testicular", condition: "Torsion of Appendix Testis" },
   { system: "GU", subcategory: "Testicular", condition: "Epididymitis", aliases: ["Epididymal Infection"] },
   { system: "GU", subcategory: "Testicular", condition: "Orchitis" },
   { system: "GU", subcategory: "Testicular", condition: "Hydrocele", aliases: ["Scrotal Swelling"] },
@@ -1290,18 +1371,18 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
   { system: "REPRO", subcategory: "Menstrual Disorders", condition: "Dysmenorrhea" },
   { system: "REPRO", subcategory: "Abnormal Uterine Bleeding", condition: "Abnormal Uterine Bleeding (AUB)" },
   { system: "REPRO", subcategory: "Menstrual Disorders", condition: "Premenstrual Syndrome (PMS)" },
-  { system: "REPRO", subcategory: "Menstrual Disorders", condition: "Premenstrual Dysphoric Disorder (PMDD)", aliases: ["PMDD"] },
+  { system: "REPRO", subcategory: "Menstrual Disorders", condition: "Premenstrual Dysphoric Disorder (PMDD)" },
 
   // GYNECOLOGY – UTERUS / OVARIES / PELVIS
   { system: "REPRO", subcategory: "Gynecology", condition: "Endometriosis", aliases: ["Endo"] },
   { system: "REPRO", subcategory: "Gynecology", condition: "Adenomyosis" },
   { system: "REPRO", subcategory: "Gynecology", condition: "Uterine Leiomyomas (Fibroids)" },
   { system: "REPRO", subcategory: "Gynecology", condition: "Chronic Pelvic Pain" },
-  { system: "REPRO", subcategory: "Gynecology", condition: "Pelvic Inflammatory Disease (PID)" },
   { system: "REPRO", subcategory: "Gynecology", condition: "Tubo-Ovarian Abscess" },
   { system: "REPRO", subcategory: "Gynecology", condition: "Acute Pelvic Pain – Ovarian Torsion" },
   { system: "REPRO", subcategory: "Gynecology", condition: "Functional Ovarian Cysts" },
   { system: "REPRO", subcategory: "Gynecology", condition: "Polycystic Ovary Syndrome (PCOS)" },
+  { system: "REPRO", subcategory: "Gynecology", condition: "Pelvic Inflammatory Disease (PID)" },
 
   // VULVAR / VAGINAL DISORDERS
   { system: "REPRO", subcategory: "Vulvar Disorders", condition: "Lichen Sclerosus" },
@@ -1328,7 +1409,6 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
   { system: "REPRO", subcategory: "Male Reproductive", condition: "Male Infertility (Sperm Abnormalities)" },
 
   // EARLY PREGNANCY
-  { system: "REPRO", subcategory: "Early Pregnancy", condition: "Normal First-Trimester Pregnancy" },
   { system: "REPRO", subcategory: "Early Pregnancy", condition: "Ectopic Pregnancy", aliases: ["Tubal Pregnancy"] },
   { system: "REPRO", subcategory: "Early Pregnancy", condition: "Threatened Abortion" },
   { system: "REPRO", subcategory: "Early Pregnancy", condition: "Inevitable / Incomplete / Complete Abortion" },
@@ -1355,7 +1435,6 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
   { system: "REPRO", subcategory: "Antepartum", condition: "Post-term Pregnancy" },
 
   // INTRAPARTUM / LABOR & DELIVERY
-  { system: "REPRO", subcategory: "Intrapartum", condition: "Normal Labor and Delivery" },
   { system: "REPRO", subcategory: "Intrapartum", condition: "Preterm Labor" },
   { system: "REPRO", subcategory: "Intrapartum", condition: "Premature Rupture of Membranes (PROM)" },
   { system: "REPRO", subcategory: "Intrapartum", condition: "Preterm Premature Rupture of Membranes (PPROM)" },
@@ -1412,6 +1491,7 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
   { system: "HEENT", subcategory: "Eye – Conjunctiva", condition: "Pterygium", aliases: ["Surfer's Eye"] },
   { system: "HEENT", subcategory: "Eye – Conjunctiva", condition: "Pinguecula" },
 
+  { system: "HEENT", subcategory: "Eye – Cornea & Anterior Segment", condition: "Corneal Foreign Body" },
   { system: "HEENT", subcategory: "Eye – Cornea & Anterior Segment", condition: "Keratitis" },
   { system: "HEENT", subcategory: "Eye – Cornea & Anterior Segment", condition: "Corneal Ulcer" },
   { system: "HEENT", subcategory: "Eye – Cornea & Anterior Segment", condition: "Herpes Simplex Keratitis", aliases: ["HSV Keratitis", "Dendritic Ulcer"] },
@@ -1657,9 +1737,7 @@ export const CONDITION_REGISTRY_PSYCH: ConditionMeta[] = [
   { system: "PSYCH", subcategory: "Substance Use – Tobacco", condition: "Nicotine Withdrawal" },
 
   // EMERGENCY PSYCHIATRY & SUICIDALITY
-  { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Suicidal Ideation & Suicide Risk Assessment" },
   { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Non-Suicidal Self-Injury" },
-  { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Violent or Agitated Patient Management" },
   { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Serotonin Syndrome (Psychiatric Perspective)" },
   { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Neuroleptic Malignant Syndrome" }
 ];
@@ -1673,7 +1751,8 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
   {
     system: "OTHER",
     subcategory: "General Pediatrics",
-    condition: "Trisomy 21"
+    condition: "Trisomy 21",
+    aliases: ["Down Syndrome"]
   },
   {
     system: "OTHER",
@@ -1700,12 +1779,37 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
   {
     system: "OTHER",
     subcategory: "Developmental",
-    condition: "Autism Spectrum Disorder",
-    aliases: ["ASD", "Autism"] },
+    condition: "ADHD"
+  },
   {
     system: "OTHER",
     subcategory: "Developmental",
-    condition: "ADHD"
+    condition: "Autism Spectrum Disorder"
+  },
+  {
+    system: "OTHER",
+    subcategory: "Genetic",
+    condition: "Edwards Syndrome (Trisomy 18)"
+  },
+  {
+    system: "OTHER",
+    subcategory: "Genetic",
+    condition: "Osteogenesis Imperfecta"
+  },
+  {
+    system: "OTHER",
+    subcategory: "Genetic",
+    condition: "Neurofibromatosis Type 1"
+  },
+  {
+    system: "OTHER",
+    subcategory: "Genetic",
+    condition: "Tuberous Sclerosis"
+  },
+  {
+    system: "OTHER",
+    subcategory: "Genetic",
+    condition: "Sturge-Weber Syndrome"
   },
   // Genetic, multi-system conditions that the blueprint does not assign
   {
@@ -1781,11 +1885,6 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
   // --------------------------------------------
   {
     system: "PSYCH",
-    subcategory: "Sexuality & Gender",
-    condition: "Human Sexuality and Gender Dysphoria",
-  },
-  {
-    system: "PSYCH",
     subcategory: "Trauma- and Stressor-Related Disorders",
     condition: "Adjustment Disorders",
   },
@@ -1816,58 +1915,20 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
 ];
 
 export const CONDITION_REGISTRY_ADDITIONAL: ConditionMeta[] = [
-  // Added from Buzzword Bank
-  { system: "CV", subcategory: "Ischemic Heart Disease", condition: "STEMI" },
-  { system: "CV", subcategory: "Carditis", condition: "Cardiac Tamponade" },
-  { system: "CV", subcategory: "Carditis", condition: "Constrictive Pericarditis" },
-  { system: "CV", subcategory: "Vascular Disease", condition: "Peripheral Arterial Disease" },
-  { system: "CV", subcategory: "Congenital Heart Disease", condition: "Patent Ductus Arteriosus" },
-  { system: "CV", subcategory: "Congenital Heart Disease", condition: "Atrial Septal Defect" },
-  { system: "PULM", subcategory: "Obstructive", condition: "COPD/Emphysema" },
-  { system: "PULM", subcategory: "Infectious", condition: "Primary Tuberculosis" },
-  { system: "PULM", subcategory: "Infectious", condition: "Pneumonia" },
-  { system: "GI", subcategory: "Small Bowel", condition: "Intussusception" },
-  { system: "GI", subcategory: "Gallbladder", condition: "Suppurative Cholangitis" },
+  // Added from Buzzword Bank (Unique items only)
+  { system: "ID", subcategory: "Pediatrics", condition: "Kawasaki Disease" },
   { system: "NEURO", subcategory: "Movement Disorders", condition: "Wilson Disease" },
   { system: "NEURO", subcategory: "Sensory", condition: "Posterior Column Disease" },
-  { system: "DERM", subcategory: "Papulosquamous", condition: "Psoriasis" },
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Varicella" },
-  { system: "DERM", subcategory: "Infectious – Viral", condition: "Herpes Zoster" },
   { system: "MSK", subcategory: "Oncology", condition: "Osteosarcoma" },
-  { system: "HEME", subcategory: "Leukemia", condition: "Acute Myeloid Leukemia" },
-  { system: "HEME", subcategory: "Leukemia", condition: "Chronic Lymphocytic Leukemia" },
-  { system: "HEME", subcategory: "Leukemia", condition: "Chronic Myelogenous Leukemia" },
-  { system: "HEME", subcategory: "Hemoglobinopathy", condition: "Thalassemia" },
-  { system: "HEME", subcategory: "Myeloproliferative", condition: "Myelofibrosis" },
-  { system: "ENDO", subcategory: "Thyroid", condition: "Graves Disease" },
-  { system: "ENDO", subcategory: "Adrenal", condition: "Addison Disease" },
-  { system: "ENDO", subcategory: "Diabetes", condition: "Diabetic Ketoacidosis" },
-  { system: "MSK", subcategory: "Crystal Disease", condition: "Pseudogout" },
   { system: "MSK", subcategory: "Oncology", condition: "Ewing Sarcoma" },
-  { system: "ID", subcategory: "Pediatrics", condition: "Kawasaki Disease" },
   { system: "ID", subcategory: "STI", condition: "Secondary Syphilis" },
   { system: "ID", subcategory: "STI", condition: "Neurosyphilis" },
-  { system: "ID", subcategory: "Viral", condition: "Cytomegalovirus" },
-  { system: "ID", subcategory: "Viral", condition: "Infectious Mononucleosis" },
-  { system: "RENAL", subcategory: "Glomerular", condition: "Glomerulonephritis" },
-  { system: "RENAL", subcategory: "Infectious", condition: "Pyelonephritis" },
-  { system: "RENAL", subcategory: "Stones", condition: "Nephrolithiasis" },
-  { system: "RENAL", subcategory: "Glomerular", condition: "Anti-GBM Disease" },
-  { system: "HEENT", subcategory: "Eye – Retina", condition: "Central Retinal Artery Occlusion" },
-  { system: "HEENT", subcategory: "Eye – Glaucoma", condition: "Glaucoma" },
-  { system: "REPRO", subcategory: "Gynecology", condition: "Pelvic Inflammatory Disease" },
-  
-  // CV
   { system: "CV", subcategory: "ECG", condition: "Long QT Syndrome" },
   { system: "CV", subcategory: "ECG", condition: "Wolff-Parkinson-White Syndrome", aliases: ["WPW"] },
   { system: "CV", subcategory: "Carditis", condition: "Pericardial Effusion" },
-  { system: "CV", subcategory: "Vascular Disease", condition: "Hypertensive Retinopathy" },
-
-  // PULM
   { system: "PULM", subcategory: "Obstructive", condition: "COPD Exacerbation" },
   { system: "PULM", subcategory: "Infectious", condition: "Healed Primary TB", aliases: ["Ranke Complex"] },
-
-  // GI
+  { system: "GI", subcategory: "Small Bowel", condition: "Intussusception" },
   { system: "GI", subcategory: "Obstruction", condition: "Sigmoid Volvulus" },
   { system: "GI", subcategory: "Vascular", condition: "Ischemic Colitis" },
   { system: "GI", subcategory: "Pediatric", condition: "Duodenal Atresia" },
@@ -1876,51 +1937,22 @@ export const CONDITION_REGISTRY_ADDITIONAL: ConditionMeta[] = [
   { system: "GI", subcategory: "Obstruction", condition: "Gastric Outlet Obstruction" },
   { system: "GI", subcategory: "Esophagus", condition: "Esophageal Ring", aliases: ["Schatzki Ring"] },
   { system: "GI", subcategory: "Esophagus", condition: "Diffuse Esophageal Spasm" },
-
-  // NEURO
-  { system: "NEURO", subcategory: "Trauma", condition: "Increased Intracranial Pressure", aliases: ["Increased ICP"] },
   { system: "NEURO", subcategory: "Trauma", condition: "Basilar Skull Fracture" },
   { system: "NEURO", subcategory: "General", condition: "Upper Motor Neuron Lesion" },
   { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Peroneal Nerve Palsy" },
   { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Radial Nerve Palsy" },
   { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Ulnar Nerve Palsy" },
   { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Median Nerve Palsy" },
-  { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Guillain-Barré Syndrome" },
   { system: "NEURO", subcategory: "Genetic", condition: "Neurofibromatosis" },
   { system: "NEURO", subcategory: "Genetic", condition: "Tuberous Sclerosis" },
-
-  // DERM
-  { system: "DERM", subcategory: "Inflammatory", condition: "Erythema Multiforme" },
-  { system: "DERM", subcategory: "Viral", condition: "Molluscum Contagiosum" },
-  { system: "DERM", subcategory: "Fungal", condition: "Tinea Versicolor" },
-
-  // HEME
   { system: "HEME", subcategory: "General", condition: "Asplenia" },
   { system: "HEME", subcategory: "Anemia", condition: "Microangiopathic Hemolytic Anemia" },
-
-  // ENDO
   { system: "ENDO", subcategory: "Pituitary", condition: "Pituitary Adenoma" },
-
-  // ID
   { system: "ID", subcategory: "Bacterial", condition: "Typhoid Fever" },
-
-  // GU / RENAL
   { system: "GU", subcategory: "Infectious", condition: "UTI (Urease Producers)" },
   { system: "GU", subcategory: "Stones", condition: "Ureteral Stone" },
-  { system: "RENAL", subcategory: "Glomerular", condition: "Post-Streptococcal Glomerulonephritis" },
-
-  // PSYCH
   { system: "PSYCH", subcategory: "Mood Disorders", condition: "Mania" },
   { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Catatonia" },
-
-  // HEENT
-  { system: "HEENT", subcategory: "Eye", condition: "Herpes Simplex Keratitis" },
-  { system: "HEENT", subcategory: "Eye", condition: "Anterior Uveitis" },
-  { system: "HEENT", subcategory: "Eye", condition: "Allergic Conjunctivitis" },
-  { system: "HEENT", subcategory: "Ear", condition: "Acute Otitis Media" },
-  { system: "HEENT", subcategory: "Ear", condition: "Cholesteatoma" },
-
-  // REPRO
   { system: "REPRO", subcategory: "Pregnancy Complications", condition: "Hydatidiform Mole" },
   { system: "REPRO", subcategory: "Pregnancy Complications", condition: "Anembryonic Pregnancy" },
 ];
@@ -1972,6 +2004,7 @@ export function findConditionMeta(
 
   // 3) Contains-style match as a fallback (e.g. "severe atrial fibrillation")
   for (const meta of all) {
+   
     if (candidate.includes(meta.condition.toLowerCase())) {
       return meta;
     }

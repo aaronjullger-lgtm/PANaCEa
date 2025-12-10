@@ -111,7 +111,16 @@ async function migrateConditionContent() {
 
   console.log(`✓ Loaded data from: ${usedPath}`);
   
-  const conditions = Object.entries(conditionData);
+  let conditions: [string, any][] = [];
+
+  if (Array.isArray(conditionData)) {
+    // Handle array format: [{ conditionId: '...', ... }, ...]
+    conditions = conditionData.map((item: any) => [item.conditionId, item]);
+  } else {
+    // Handle object format: { 'conditionId': { ... }, ... }
+    conditions = Object.entries(conditionData);
+  }
+
   report.totalRecords += conditions.length;
 
   for (const [conditionId, content] of conditions) {

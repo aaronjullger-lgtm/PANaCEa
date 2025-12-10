@@ -9,6 +9,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { BUZZWORD_BANK } from '../data/buzzwordBank';
+import { findConditionMeta } from '../conditionRegistry';
 
 const prisma = new PrismaClient();
 
@@ -40,18 +41,20 @@ async function migrateBuzzwords() {
   const buzzwordsByCondition = new Map<string, typeof BUZZWORD_BANK>();
 
   for (const entry of BUZZWORD_BANK) {
-    const slug = toSlug(entry.condition);
+    // 1. Try direct slug match first (fastest)
+    let slug = toSlug(entry.condition);
     let matchedSlug = conditionIdMap.has(slug) ? slug : undefined;
 
-    if (entry.condition.includes("Wolff")) {
-      console.log(`DEBUG: Buzzword condition: "${entry.condition}" -> Slug: "${slug}"`);
-      console.log(`DEBUG: Map has slug? ${conditionIdMap.has(slug)}`);
-    }
-
-    // Try exact match
+    // 2. If no match, try fuzzy/alias matching via registry
     if (!matchedSlug) {
-       const partial = conditions.find(c => c.condition.includes(slug) || slug.includes(c.condition));
-       if (partial) matchedSlug = partial.condition;
+      const meta = findConditionMeta(entry.condition);
+      if (meta) {
+        const canonicalSlug = toSlug(meta.condition);
+        if (conditionIdMap.has(canonicalSlug)) {
+          matchedSlug = canonicalSlug;
+          // console.log(`✨ Fuzzy matched: "${entry.condition}" -> "${meta.condition}"`);
+        }
+      }
     }
 
     if (matchedSlug) {
