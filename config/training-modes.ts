@@ -293,7 +293,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'Wind',
     theme: 'blue',
     route: '/drill/ventilator-hero',
-    isComingSoon: false,
+    isComingSoon: true,
   },
   {
     id: 'triage_tent',
@@ -303,7 +303,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'AlertTriangle',
     theme: 'red',
     route: '/drill/triage-tent',
-    isComingSoon: false,
+    isComingSoon: true,
   },
   {
     id: 'polypharmacy_puzzle',
@@ -313,7 +313,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'PillBottle',
     theme: 'amber',
     route: '/drill/polypharmacy',
-    isComingSoon: false,
+    isComingSoon: true,
   },
   {
     id: 'radiology_scroll',
@@ -323,7 +323,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     iconName: 'Layers',
     theme: 'slate',
     route: '/drill/radiology-scroll',
-    isComingSoon: false,
+    isComingSoon: true,
   },
 ];
 

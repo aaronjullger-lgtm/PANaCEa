@@ -41,6 +41,7 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Stable Angina", aliases: ["Angina Pectoris", "Exertional Angina"] },
   { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Prinzmetal (Variant) Angina", aliases: ["Variant Angina", "Vasospastic Angina"] },
   { system: "CV", subcategory: "Ischemic Heart Disease", condition: "Silent Ischemia" },
+  { system: "CV", subcategory: "Ischemic Heart Disease", condition: "STEMI" },
 
   // -------------------------
   // Blood Pressure Disorders
@@ -81,6 +82,8 @@ export const CONDITION_REGISTRY_CV: ConditionMeta[] = [
   { system: "CV", subcategory: "Carditis", condition: "Endocarditis" },
   { system: "CV", subcategory: "Carditis", condition: "Myocarditis" },
   { system: "CV", subcategory: "Carditis", condition: "Pericarditis", aliases: ["Pericardial Inflammation"] },
+  { system: "CV", subcategory: "Carditis", condition: "Cardiac Tamponade" },
+  { system: "CV", subcategory: "Carditis", condition: "Constrictive Pericarditis" },
 
   // -------------------------
   // Arrhythmias / Conduction Disorders
@@ -1419,7 +1422,6 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
 
   // EYE – LENS / GLAUCOMA
   { system: "HEENT", subcategory: "Eye – Lens", condition: "Cataract" },
-
   { system: "HEENT", subcategory: "Eye – Glaucoma", condition: "Primary Open-Angle Glaucoma" },
   { system: "HEENT", subcategory: "Eye – Glaucoma", condition: "Acute Angle-Closure Glaucoma", aliases: ["Angle Closure Glaucoma", "Closed Angle Glaucoma"] },
   { system: "HEENT", subcategory: "Eye – Glaucoma", condition: "Ocular Hypertension" },
@@ -1812,6 +1814,117 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
     condition: "Perinatal Group B Streptococcus Infection",
   }
 ];
+
+export const CONDITION_REGISTRY_ADDITIONAL: ConditionMeta[] = [
+  // Added from Buzzword Bank
+  { system: "CV", subcategory: "Ischemic Heart Disease", condition: "STEMI" },
+  { system: "CV", subcategory: "Carditis", condition: "Cardiac Tamponade" },
+  { system: "CV", subcategory: "Carditis", condition: "Constrictive Pericarditis" },
+  { system: "CV", subcategory: "Vascular Disease", condition: "Peripheral Arterial Disease" },
+  { system: "CV", subcategory: "Congenital Heart Disease", condition: "Patent Ductus Arteriosus" },
+  { system: "CV", subcategory: "Congenital Heart Disease", condition: "Atrial Septal Defect" },
+  { system: "PULM", subcategory: "Obstructive", condition: "COPD/Emphysema" },
+  { system: "PULM", subcategory: "Infectious", condition: "Primary Tuberculosis" },
+  { system: "PULM", subcategory: "Infectious", condition: "Pneumonia" },
+  { system: "GI", subcategory: "Small Bowel", condition: "Intussusception" },
+  { system: "GI", subcategory: "Gallbladder", condition: "Suppurative Cholangitis" },
+  { system: "NEURO", subcategory: "Movement Disorders", condition: "Wilson Disease" },
+  { system: "NEURO", subcategory: "Sensory", condition: "Posterior Column Disease" },
+  { system: "DERM", subcategory: "Papulosquamous", condition: "Psoriasis" },
+  { system: "DERM", subcategory: "Infectious – Viral", condition: "Varicella" },
+  { system: "DERM", subcategory: "Infectious – Viral", condition: "Herpes Zoster" },
+  { system: "MSK", subcategory: "Oncology", condition: "Osteosarcoma" },
+  { system: "HEME", subcategory: "Leukemia", condition: "Acute Myeloid Leukemia" },
+  { system: "HEME", subcategory: "Leukemia", condition: "Chronic Lymphocytic Leukemia" },
+  { system: "HEME", subcategory: "Leukemia", condition: "Chronic Myelogenous Leukemia" },
+  { system: "HEME", subcategory: "Hemoglobinopathy", condition: "Thalassemia" },
+  { system: "HEME", subcategory: "Myeloproliferative", condition: "Myelofibrosis" },
+  { system: "ENDO", subcategory: "Thyroid", condition: "Graves Disease" },
+  { system: "ENDO", subcategory: "Adrenal", condition: "Addison Disease" },
+  { system: "ENDO", subcategory: "Diabetes", condition: "Diabetic Ketoacidosis" },
+  { system: "MSK", subcategory: "Crystal Disease", condition: "Pseudogout" },
+  { system: "MSK", subcategory: "Oncology", condition: "Ewing Sarcoma" },
+  { system: "ID", subcategory: "Pediatrics", condition: "Kawasaki Disease" },
+  { system: "ID", subcategory: "STI", condition: "Secondary Syphilis" },
+  { system: "ID", subcategory: "STI", condition: "Neurosyphilis" },
+  { system: "ID", subcategory: "Viral", condition: "Cytomegalovirus" },
+  { system: "ID", subcategory: "Viral", condition: "Infectious Mononucleosis" },
+  { system: "RENAL", subcategory: "Glomerular", condition: "Glomerulonephritis" },
+  { system: "RENAL", subcategory: "Infectious", condition: "Pyelonephritis" },
+  { system: "RENAL", subcategory: "Stones", condition: "Nephrolithiasis" },
+  { system: "RENAL", subcategory: "Glomerular", condition: "Anti-GBM Disease" },
+  { system: "HEENT", subcategory: "Eye – Retina", condition: "Central Retinal Artery Occlusion" },
+  { system: "HEENT", subcategory: "Eye – Glaucoma", condition: "Glaucoma" },
+  { system: "REPRO", subcategory: "Gynecology", condition: "Pelvic Inflammatory Disease" },
+  
+  // CV
+  { system: "CV", subcategory: "ECG", condition: "Long QT Syndrome" },
+  { system: "CV", subcategory: "ECG", condition: "Wolff-Parkinson-White Syndrome", aliases: ["WPW"] },
+  { system: "CV", subcategory: "Carditis", condition: "Pericardial Effusion" },
+  { system: "CV", subcategory: "Vascular Disease", condition: "Hypertensive Retinopathy" },
+
+  // PULM
+  { system: "PULM", subcategory: "Obstructive", condition: "COPD Exacerbation" },
+  { system: "PULM", subcategory: "Infectious", condition: "Healed Primary TB", aliases: ["Ranke Complex"] },
+
+  // GI
+  { system: "GI", subcategory: "Obstruction", condition: "Sigmoid Volvulus" },
+  { system: "GI", subcategory: "Vascular", condition: "Ischemic Colitis" },
+  { system: "GI", subcategory: "Pediatric", condition: "Duodenal Atresia" },
+  { system: "GI", subcategory: "Hepatic", condition: "Portal Hypertension" },
+  { system: "GI", subcategory: "Oncology", condition: "GI Malignancy" },
+  { system: "GI", subcategory: "Obstruction", condition: "Gastric Outlet Obstruction" },
+  { system: "GI", subcategory: "Esophagus", condition: "Esophageal Ring", aliases: ["Schatzki Ring"] },
+  { system: "GI", subcategory: "Esophagus", condition: "Diffuse Esophageal Spasm" },
+
+  // NEURO
+  { system: "NEURO", subcategory: "Trauma", condition: "Increased Intracranial Pressure", aliases: ["Increased ICP"] },
+  { system: "NEURO", subcategory: "Trauma", condition: "Basilar Skull Fracture" },
+  { system: "NEURO", subcategory: "General", condition: "Upper Motor Neuron Lesion" },
+  { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Peroneal Nerve Palsy" },
+  { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Radial Nerve Palsy" },
+  { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Ulnar Nerve Palsy" },
+  { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Median Nerve Palsy" },
+  { system: "NEURO", subcategory: "Peripheral Nerve", condition: "Guillain-Barré Syndrome" },
+  { system: "NEURO", subcategory: "Genetic", condition: "Neurofibromatosis" },
+  { system: "NEURO", subcategory: "Genetic", condition: "Tuberous Sclerosis" },
+
+  // DERM
+  { system: "DERM", subcategory: "Inflammatory", condition: "Erythema Multiforme" },
+  { system: "DERM", subcategory: "Viral", condition: "Molluscum Contagiosum" },
+  { system: "DERM", subcategory: "Fungal", condition: "Tinea Versicolor" },
+
+  // HEME
+  { system: "HEME", subcategory: "General", condition: "Asplenia" },
+  { system: "HEME", subcategory: "Anemia", condition: "Microangiopathic Hemolytic Anemia" },
+
+  // ENDO
+  { system: "ENDO", subcategory: "Pituitary", condition: "Pituitary Adenoma" },
+
+  // ID
+  { system: "ID", subcategory: "Bacterial", condition: "Typhoid Fever" },
+
+  // GU / RENAL
+  { system: "GU", subcategory: "Infectious", condition: "UTI (Urease Producers)" },
+  { system: "GU", subcategory: "Stones", condition: "Ureteral Stone" },
+  { system: "RENAL", subcategory: "Glomerular", condition: "Post-Streptococcal Glomerulonephritis" },
+
+  // PSYCH
+  { system: "PSYCH", subcategory: "Mood Disorders", condition: "Mania" },
+  { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Catatonia" },
+
+  // HEENT
+  { system: "HEENT", subcategory: "Eye", condition: "Herpes Simplex Keratitis" },
+  { system: "HEENT", subcategory: "Eye", condition: "Anterior Uveitis" },
+  { system: "HEENT", subcategory: "Eye", condition: "Allergic Conjunctivitis" },
+  { system: "HEENT", subcategory: "Ear", condition: "Acute Otitis Media" },
+  { system: "HEENT", subcategory: "Ear", condition: "Cholesteatoma" },
+
+  // REPRO
+  { system: "REPRO", subcategory: "Pregnancy Complications", condition: "Hydatidiform Mole" },
+  { system: "REPRO", subcategory: "Pregnancy Complications", condition: "Anembryonic Pregnancy" },
+];
+
 export const CONDITION_REGISTRY: ConditionMeta[] = [
   ...CONDITION_REGISTRY_CV,
   ...CONDITION_REGISTRY_PULM,
@@ -1828,8 +1941,8 @@ export const CONDITION_REGISTRY: ConditionMeta[] = [
   ...CONDITION_REGISTRY_HEENT,
   ...CONDITION_REGISTRY_PSYCH,
   ...CONDITION_REGISTRY_OTHER,
+  ...CONDITION_REGISTRY_ADDITIONAL,
 ];
-
 /**
  * Try to find a condition meta by name or alias coming back from the model.
  * `rawName` can be messy text from the LLM – we normalize and do loose matching.

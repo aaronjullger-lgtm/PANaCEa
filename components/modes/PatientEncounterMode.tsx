@@ -1,23 +1,64 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle } from 'lucide-react';
+import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight } from 'lucide-react';
 import type { PatientEncounterCase, PatientQuestion, EncounterSession } from '@/types/drill-modes';
-import { getRandomEncounterCase, evaluateQuestion, calculateEncounterScore } from '@/data/modes/patientEncounterData';
+import { getRandomEncounterCase, calculateEncounterScore } from '@/data/modes/patientEncounterData';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
+import { translateToSpanish, type SpanishMode } from '@/services/medicalSpanishService';
+import { chatWithPatientSimulator, evaluateDiagnosis, performPhysicalExam, orderDiagnosticTest, evaluateTreatmentPlan, generateAfterActionReport } from '@/services/geminiService';
+import { Activity, Stethoscope, Microscope, FileText, Pill, ChevronRight, PauseCircle, PlayCircle } from 'lucide-react';
 
 interface PatientEncounterModeProps {
   onExit?: () => void;
 }
 
 type ViewState = 'landing' | 'active' | 'results';
+type EncounterPhase = 'history' | 'physical' | 'diagnostic' | 'diagnosis' | 'treatment';
 
 const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) => {
   const [viewState, setViewState] = useState<ViewState>('landing');
+  const [phase, setPhase] = useState<EncounterPhase>('history');
+  const [isPaused, setIsPaused] = useState(false);
+  
   const [currentCase, setCurrentCase] = useState<PatientEncounterCase | null>(null);
   const [session, setSession] = useState<EncounterSession | null>(null);
+  
+  // Phase Inputs
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
+  const [examAction, setExamAction] = useState<string>('');
+  const [diagnosticOrder, setDiagnosticOrder] = useState<string>('');
   const [userDiagnosis, setUserDiagnosis] = useState<string>('');
+  const [treatmentPlan, setTreatmentPlan] = useState<string>('');
+  
+  // Phase Data
+  const [physicalFindings, setPhysicalFindings] = useState<{maneuver: string, finding: string}[]>([]);
+  const [diagnosticResults, setDiagnosticResults] = useState<{testName: string, result: string, interpretation: string}[]>([]);
+  const [differentialDiagnoses, setDifferentialDiagnoses] = useState<string[]>([]);
+  const [newDifferential, setNewDifferential] = useState('');
+  
   const [isLoading, setIsLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [languageMode, setLanguageMode] = useState<SpanishMode>('english');
+  
+  // Feedback
+  const [diagnosisFeedback, setDiagnosisFeedback] = useState<{ isCorrect: boolean; feedback: string; score: number } | null>(null);
+  const [treatmentFeedback, setTreatmentFeedback] = useState<{ isCorrect: boolean; feedback: string; score: number } | null>(null);
+  const [aar, setAar] = useState<string>('');
+
+  const toggleLanguageMode = () => {
+    setLanguageMode(prev => {
+      if (prev === 'english') return 'spanish';
+      if (prev === 'spanish') return 'side-by-side';
+      return 'english';
+    });
+  };
+
+  const getTranslatedText = (text: string) => {
+    if (languageMode === 'english') return text;
+    const translated = translateToSpanish(text);
+    if (languageMode === 'spanish') return translated;
+    return `${text}\n\n[ES] ${translated}`;
+  };
 
   const handleStartEncounter = () => {
     setIsLoading(true);
@@ -36,49 +77,63 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }, 1500);
   };
 
-  const handleAskQuestion = () => {
+  const handleAskQuestion = async () => {
     if (!currentQuestion.trim() || !currentCase || !session) return;
 
-    const { relevance, response } = evaluateQuestion(currentQuestion, currentCase);
+    setIsTyping(true);
+    
+    // Prepare history for AI
+    const chatHistory = session.questions.map(q => [
+      { role: 'user' as const, content: q.questionText },
+      { role: 'model' as const, content: q.response }
+    ]).flat();
 
-    const newQuestion: PatientQuestion = {
-      questionText: currentQuestion,
-      category: determineCategory(currentQuestion),
-      relevance,
-      response,
-      timestamp: Date.now(),
-    };
+    try {
+      // Call Gemini Simulator
+      const response = await chatWithPatientSimulator(currentCase, chatHistory, currentQuestion);
+      
+      const newQuestion: PatientQuestion = {
+        questionText: currentQuestion,
+        category: determineCategory(currentQuestion),
+        relevance: 'helpful', // Default for AI interaction
+        response: response,
+        timestamp: Date.now(),
+      };
 
-    setSession({
-      ...session,
-      questions: [...session.questions, newQuestion],
-    });
+      setSession(prev => prev ? ({
+        ...prev,
+        questions: [...prev.questions, newQuestion],
+      }) : null);
 
-    setCurrentQuestion('');
-
-    // Haptic feedback and visual notification based on relevance
-    if (relevance === 'essential') {
+      setCurrentQuestion('');
       hapticSuccess();
-      // Show success indicator (handled by UI)
-    } else if (relevance === 'unnecessary') {
-      hapticError();
-      // Show warning indicator (handled by UI)
+    } catch (error) {
+      console.error("Error getting patient response:", error);
+      // Fallback or error toast could go here
+    } finally {
+      setIsTyping(false);
     }
   };
 
-  const handleSubmitDiagnosis = () => {
+  const handleSubmitDiagnosis = async () => {
     if (!session || !currentCase) return;
 
-    const score = calculateEncounterScore(session.questions, currentCase);
-    
-    setSession({
-      ...session,
-      endTime: Date.now(),
-      diagnosis: userDiagnosis,
-      score,
-    });
+    setIsLoading(true);
 
-    setViewState('results');
+    try {
+      // Evaluate diagnosis with AI
+      const caseContext = `Patient: ${currentCase.patientName}, ${currentCase.age}yo ${currentCase.sex}. CC: ${currentCase.chiefComplaint}. Correct Dx: ${currentCase.correctDiagnosis}`;
+      const feedback = await evaluateDiagnosis(currentCase.correctDiagnosis, userDiagnosis, caseContext);
+      
+      setDiagnosisFeedback(feedback);
+      
+      // Move to Treatment Phase
+      setPhase('treatment');
+    } catch (error) {
+      console.error("Error submitting diagnosis:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleNewCase = () => {
@@ -87,6 +142,93 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setUserDiagnosis('');
     setCurrentQuestion('');
     setViewState('landing');
+    setPhase('history');
+    setLanguageMode('english');
+    setDiagnosisFeedback(null);
+    setTreatmentFeedback(null);
+    setPhysicalFindings([]);
+    setDiagnosticResults([]);
+    setDifferentialDiagnoses([]);
+    setTreatmentPlan('');
+    setAar('');
+  };
+
+  const handlePhysicalExam = async () => {
+    if (!examAction.trim() || !currentCase) return;
+    setIsLoading(true);
+    try {
+      const result = await performPhysicalExam(examAction, currentCase);
+      setPhysicalFindings(prev => [...prev, { maneuver: examAction, finding: result }]);
+      setExamAction('');
+    } catch (error) {
+      console.error("Exam error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOrderTest = async () => {
+    if (!diagnosticOrder.trim() || !currentCase) return;
+    setIsLoading(true);
+    try {
+      const data = await orderDiagnosticTest(diagnosticOrder, currentCase);
+      setDiagnosticResults(prev => [...prev, { 
+        testName: diagnosticOrder, 
+        result: data.result, 
+        interpretation: data.interpretation 
+      }]);
+      setDiagnosticOrder('');
+    } catch (error) {
+      console.error("Diagnostic error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddDifferential = () => {
+    if (newDifferential.trim()) {
+      setDifferentialDiagnoses(prev => [...prev, newDifferential.trim()]);
+      setNewDifferential('');
+    }
+  };
+
+  const handleTreatmentSubmit = async () => {
+    if (!treatmentPlan.trim() || !currentCase) return;
+    setIsLoading(true);
+    try {
+      const feedback = await evaluateTreatmentPlan(treatmentPlan, currentCase);
+      setTreatmentFeedback(feedback);
+      
+      // Generate AAR
+      const report = await generateAfterActionReport({
+        questions: session?.questions,
+        physical: physicalFindings,
+        labs: diagnosticResults,
+        diagnosis: userDiagnosis,
+        treatment: treatmentPlan,
+        diagnosisFeedback,
+        treatmentFeedback: feedback
+      }, currentCase);
+      setAar(report);
+      
+      setViewState('results');
+    } catch (error) {
+      console.error("Treatment error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const advancePhase = (target?: EncounterPhase) => {
+    if (target) {
+      setPhase(target);
+      return;
+    }
+    
+    if (phase === 'history') setPhase('physical');
+    else if (phase === 'physical') setPhase('diagnostic');
+    else if (phase === 'diagnostic') setPhase('diagnosis');
+    else if (phase === 'diagnosis') handleSubmitDiagnosis();
   };
 
   const determineCategory = (question: string): PatientQuestion['category'] => {
@@ -287,17 +429,50 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               </div>
               <div>
                 <h1 className="text-xl font-bold">Virtual OSCE</h1>
-                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Interview in Progress</p>
+                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">
+                  Phase: <span className="font-semibold text-[var(--color-accent)] uppercase">{phase}</span>
+                </p>
               </div>
             </div>
+            
+            {/* Phase Progress Indicator */}
+            <div className="hidden md:flex items-center gap-2">
+              {['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'].map((p, idx) => {
+                const phases = ['history', 'physical', 'diagnostic', 'diagnosis', 'treatment'];
+                const currentIdx = phases.indexOf(phase);
+                const isCompleted = idx < currentIdx;
+                const isCurrent = idx === currentIdx;
+                
+                return (
+                  <div key={p} className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 
+                      ${isCompleted ? 'bg-green-500 border-green-500 text-white' : 
+                        isCurrent ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white' : 
+                        'bg-transparent border-slate-300 text-slate-400'}`}>
+                      {idx + 1}
+                    </div>
+                    {idx < phases.length - 1 && (
+                      <div className={`w-8 h-0.5 ${isCompleted ? 'bg-green-500' : 'bg-slate-300'}`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
             <div className="flex items-center gap-4">
+              <button
+                onClick={toggleLanguageMode}
+                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1F283A] dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                title="Toggle Language (English / Spanish / Side-by-Side)"
+              >
+                <Globe className="w-4 h-4 text-[#364154] dark:text-[#cbd5e1]" />
+                <span className="text-xs font-medium text-[#364154] dark:text-[#cbd5e1] uppercase w-8 text-center">
+                  {languageMode === 'side-by-side' ? 'Dual' : languageMode === 'spanish' ? 'ES' : 'EN'}
+                </span>
+              </button>
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="w-4 h-4 text-[#364154] dark:text-[#cbd5e1]" />
                 <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-[#364154] dark:text-[#cbd5e1]">Questions Asked</p>
-                <p className="text-lg font-bold text-[#1F283A] dark:text-[#E9ECF1]">{session.questions.length}</p>
               </div>
               {onExit && (
                 <button
@@ -314,9 +489,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Left: Patient Info & Question Input */}
+            {/* Left Column: Patient Info & Inputs */}
             <div className="space-y-4">
-              {/* Patient Card */}
+              {/* Patient Card (Always Visible) */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -335,7 +510,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <div className="space-y-3">
                   <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
                     <p className="text-xs font-semibold text-[var(--color-accent)] mb-1">CHIEF COMPLAINT</p>
-                    <p className="text-lg font-semibold text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.chiefComplaint}</p>
+                    <p className="text-lg font-semibold text-[#1F283A] dark:text-[#E9ECF1] whitespace-pre-wrap">
+                      {getTranslatedText(currentCase.chiefComplaint)}
+                    </p>
                   </div>
 
                   <div className="bg-slate-50 dark:bg-[#1F283A] rounded-lg p-4 border border-slate-200 dark:border-slate-700">
@@ -366,99 +543,272 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 </div>
               </motion.div>
 
-              {/* Question Input */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
-              >
-                <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Ask a Question</h3>
-                <div className="flex gap-2">
+              {/* Phase Specific Inputs */}
+              
+              {/* HISTORY PHASE */}
+              {phase === 'history' && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Ask a Question</h3>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={currentQuestion}
+                      onChange={(e) => setCurrentQuestion(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleAskQuestion()}
+                      placeholder="e.g., When did the chest pain start?"
+                      className="flex-1 px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg 
+                               text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                               focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm"
+                      autoComplete="off"
+                    />
+                    <button
+                      onClick={handleAskQuestion}
+                      disabled={!currentQuestion.trim()}
+                      className="px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
+                               disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm"
+                    >
+                      <Send className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => advancePhase('physical')}
+                      className="text-sm text-[var(--color-accent)] hover:underline flex items-center gap-1"
+                    >
+                      Move to Physical Exam <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* PHYSICAL EXAM PHASE */}
+              {phase === 'physical' && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Perform Physical Exam</h3>
+                  <p className="text-sm text-slate-500 mb-3">Describe the maneuver you want to perform (e.g., "Auscultate heart", "Palpate abdomen").</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={currentQuestion}
+                      onChange={(e) => setCurrentQuestion(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handlePhysicalExam()}
+                      placeholder="e.g., Auscultate lungs"
+                      className="flex-1 px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg 
+                               text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                               focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm"
+                      autoComplete="off"
+                    />
+                    <button
+                      onClick={handlePhysicalExam}
+                      disabled={!currentQuestion.trim()}
+                      className="px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
+                               disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm"
+                    >
+                      <Stethoscope className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => advancePhase('diagnostic')}
+                      className="text-sm text-[var(--color-accent)] hover:underline flex items-center gap-1"
+                    >
+                      Move to Diagnostics <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* DIAGNOSTIC PHASE */}
+              {phase === 'diagnostic' && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Order Diagnostics</h3>
+                  <p className="text-sm text-slate-500 mb-3">Order labs or imaging (e.g., "CBC", "Chest X-Ray").</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={currentQuestion}
+                      onChange={(e) => setCurrentQuestion(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleOrderTest()}
+                      placeholder="e.g., CBC, BMP, CXR"
+                      className="flex-1 px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg 
+                               text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                               focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm"
+                      autoComplete="off"
+                    />
+                    <button
+                      onClick={handleOrderTest}
+                      disabled={!currentQuestion.trim()}
+                      className="px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
+                               disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm"
+                    >
+                      <Activity className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={() => advancePhase('diagnosis')}
+                      className="text-sm text-[var(--color-accent)] hover:underline flex items-center gap-1"
+                    >
+                      Move to Diagnosis <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* DIAGNOSIS PHASE */}
+              {phase === 'diagnosis' && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Final Diagnosis</h3>
                   <input
-                    id="patient-question"
-                    name="patient-question"
                     type="text"
-                    value={currentQuestion}
-                    onChange={(e) => setCurrentQuestion(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAskQuestion()}
-                    placeholder="e.g., When did the chest pain start?"
-                    className="flex-1 px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg 
+                    value={userDiagnosis}
+                    onChange={(e) => setUserDiagnosis(e.target.value)}
+                    placeholder="Enter your primary diagnosis..."
+                    className="w-full px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg mb-4
                              text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
                              focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm"
                     autoComplete="off"
                   />
                   <button
-                    onClick={handleAskQuestion}
-                    disabled={!currentQuestion.trim()}
-                    className="px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
-                             disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm"
+                    onClick={handleSubmitDiagnosis}
+                    disabled={!userDiagnosis.trim()}
+                    className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
+                             disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
+                             transition-colors shadow-sm"
                   >
-                    <Send className="w-5 h-5" />
+                    Submit Diagnosis
                   </button>
-                </div>
-              </motion.div>
+                </motion.div>
+              )}
 
-              {/* Diagnosis Submission */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
-              >
-                <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Your Diagnosis</h3>
-                <input
-                  id="patient-diagnosis"
-                  name="patient-diagnosis"
-                  type="text"
-                  value={userDiagnosis}
-                  onChange={(e) => setUserDiagnosis(e.target.value)}
-                  placeholder="Enter your diagnosis..."
-                  className="w-full px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg mb-4
-                           text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
-                           focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm"
-                  autoComplete="off"
-                />
-                <button
-                  onClick={handleSubmitDiagnosis}
-                  disabled={!userDiagnosis.trim() || session.questions.length === 0}
-                  className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
-                           disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
-                           transition-colors shadow-sm"
+              {/* TREATMENT PHASE */}
+              {phase === 'treatment' && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
                 >
-                  Submit Diagnosis & View Results
-                </button>
-              </motion.div>
+                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Treatment Plan</h3>
+                  <p className="text-sm text-slate-500 mb-3">Outline your management plan (medications, disposition, follow-up).</p>
+                  <textarea
+                    value={treatmentPlan}
+                    onChange={(e) => setTreatmentPlan(e.target.value)}
+                    placeholder="e.g., Admit to telemetry, start Aspirin 325mg, Heparin drip..."
+                    className="w-full px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg mb-4
+                             text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                             focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm min-h-[120px]"
+                  />
+                  <button
+                    onClick={handleTreatmentSubmit}
+                    disabled={!treatmentPlan.trim()}
+                    className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
+                             disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
+                             transition-colors shadow-sm"
+                  >
+                    Finalize Encounter
+                  </button>
+                </motion.div>
+              )}
+
             </div>
 
-            {/* Right: Q&A History */}
+            {/* Right Column: Output Stream */}
             <div className="space-y-4">
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
+                className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md h-[600px] flex flex-col"
               >
-                <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Interview History</h3>
+                <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Encounter Log</h3>
                 
-                <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
-                  {session.questions.length === 0 ? (
-                    <p className="text-[#364154] dark:text-[#cbd5e1] text-center py-8 italic">
-                      No questions asked yet. Start by asking about the patient's history!
-                    </p>
-                  ) : (
-                    session.questions.map((q, idx) => (
-                      <div key={idx} className="bg-slate-50 dark:bg-[#1F283A] rounded-lg p-4 space-y-2 border border-slate-200 dark:border-slate-700">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold flex-1">Q: {q.questionText}</p>
-                          <span className={`px-2 py-1 rounded text-xs font-semibold border ${getRelevanceColor(q.relevance)}`}>
-                            {getRelevanceLabel(q.relevance)}
-                          </span>
-                        </div>
-                        <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-[var(--color-border)]">
-                          A: {q.response}
-                        </p>
+                <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                  {/* History Log */}
+                  {session.questions.map((q, idx) => (
+                    <div key={`hist-${idx}`} className="bg-slate-50 dark:bg-[#1F283A] rounded-lg p-4 space-y-2 border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                        <MessageSquare className="w-3 h-3" /> History
                       </div>
-                    ))
+                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Q: {q.questionText}</p>
+                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-[var(--color-border)] whitespace-pre-wrap">
+                        A: {getTranslatedText(q.response)}
+                      </p>
+                    </div>
+                  ))}
+
+                  {/* Physical Exam Log */}
+                  {physicalFindings.map((f, idx) => (
+                    <div key={`phys-${idx}`} className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-2 border border-blue-100 dark:border-blue-800">
+                      <div className="flex items-center gap-2 text-xs font-bold text-blue-500 uppercase">
+                        <Stethoscope className="w-3 h-3" /> Physical Exam
+                      </div>
+                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Exam: {f.maneuver}</p>
+                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-blue-300 whitespace-pre-wrap">
+                        Finding: {f.finding}
+                      </p>
+                    </div>
+                  ))}
+
+                  {/* Diagnostic Log */}
+                  {diagnosticResults.map((r, idx) => (
+                    <div key={`diag-${idx}`} className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 space-y-2 border border-purple-100 dark:border-purple-800">
+                      <div className="flex items-center gap-2 text-xs font-bold text-purple-500 uppercase">
+                        <Activity className="w-3 h-3" /> Diagnostics
+                      </div>
+                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Order: {r.testName}</p>
+                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-purple-300 whitespace-pre-wrap font-mono">
+                        Result: {r.result}
+                      </p>
+                    </div>
+                  ))}
+
+                  {/* Diagnosis Log */}
+                  {diagnosisFeedback && (
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 space-y-2 border border-green-100 dark:border-green-800">
+                      <div className="flex items-center gap-2 text-xs font-bold text-green-500 uppercase">
+                        <CheckCircle className="w-3 h-3" /> Diagnosis
+                      </div>
+                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Dx: {userDiagnosis}</p>
+                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-green-300 whitespace-pre-wrap">
+                        {diagnosisFeedback.feedback}
+                      </p>
+                    </div>
+                  )}
+
+                  {isTyping && (
+                    <div className="flex items-center gap-2 text-slate-400 italic p-4">
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <span className="text-sm ml-2">Processing...</span>
+                    </div>
+                  )}
+                  
+                  {/* Empty State */}
+                  {session.questions.length === 0 && physicalFindings.length === 0 && diagnosticResults.length === 0 && (
+                    <p className="text-[#364154] dark:text-[#cbd5e1] text-center py-8 italic">
+                      Start the encounter by asking about the patient's history.
+                    </p>
                   )}
                 </div>
               </motion.div>
@@ -472,35 +822,24 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   // Results View
   if (viewState === 'results' && currentCase && session && session.score) {
     const { score } = session;
-    // Simple diagnosis matching - normalize and check for key terms
-    const normalizeText = (text: string) => text.toLowerCase().trim().replace(/[^\w\s]/g, '');
-    const userDx = normalizeText(userDiagnosis);
-    const correctDx = normalizeText(currentCase.correctDiagnosis);
-    
-    // Check if the main diagnosis terms are present (allowing for some flexibility)
-    const userTerms = userDx.split(/\s+/);
-    const correctTerms = correctDx.split(/\s+/);
-    const matchCount = correctTerms.filter(term => 
-      term.length > 3 && userTerms.some(userTerm => userTerm.includes(term) || term.includes(userTerm))
-    ).length;
-    const isCorrectDiagnosis = matchCount >= Math.ceil(correctTerms.length * 0.6); // 60% of key terms match
+    const isCorrectDiagnosis = diagnosisFeedback?.isCorrect ?? false;
 
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+      <div className="min-h-screen bg-white dark:bg-[#1F283A] text-[#1F283A] dark:text-[#E9ECF1]">
         {/* Header */}
-        <div className="border-b border-[var(--color-border)] bg-black/20 backdrop-blur-sm">
+        <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#364154] sticky top-0 z-10 shadow-sm">
           <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <MessageSquare className="w-8 h-8 text-teal-400" />
+              <MessageSquare className="w-8 h-8 text-[var(--color-accent)]" />
               <div>
                 <h1 className="text-2xl font-bold">Virtual OSCE - Results</h1>
-                <p className="text-sm text-teal-300">Performance Summary</p>
+                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Performance Summary</p>
               </div>
             </div>
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
+                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1F283A] dark:hover:bg-slate-700 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -515,26 +854,36 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             animate={{ opacity: 1, y: 0 }}
             className={`rounded-xl p-6 border ${
               isCorrectDiagnosis
-                ? 'bg-green-900/40 border-green-600/30'
-                : 'bg-orange-900/40 border-orange-600/30'
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
             }`}
           >
             <div className="flex items-center gap-3 mb-4">
               {isCorrectDiagnosis ? (
-                <CheckCircle className="w-8 h-8 text-green-400" />
+                <CheckCircle className="w-8 h-8 text-green-500 dark:text-green-400" />
               ) : (
-                <XCircle className="w-8 h-8 text-orange-400" />
+                <XCircle className="w-8 h-8 text-orange-500 dark:text-orange-400" />
               )}
               <div>
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className={`text-2xl font-bold ${
+                  isCorrectDiagnosis ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300'
+                }`}>
                   {isCorrectDiagnosis ? 'Correct Diagnosis!' : 'Diagnosis Review'}
                 </h2>
-                <p className="text-slate-300">Your diagnosis: {userDiagnosis}</p>
+                <p className="text-[#364154] dark:text-[#cbd5e1]">Your diagnosis: {userDiagnosis}</p>
               </div>
             </div>
-            <div className="bg-slate-900/50 rounded-lg p-4">
-              <p className="text-sm text-slate-400 mb-1">Correct Diagnosis:</p>
-              <p className="text-lg font-semibold text-white">{currentCase.correctDiagnosis}</p>
+            
+            {diagnosisFeedback?.feedback && (
+              <div className="mb-4 p-4 bg-white/50 dark:bg-black/20 rounded-lg border border-black/5 dark:border-white/5">
+                <p className="text-sm font-semibold mb-1 opacity-75">AI Feedback:</p>
+                <p className="text-[#364154] dark:text-[#cbd5e1] italic">"{diagnosisFeedback.feedback}"</p>
+              </div>
+            )}
+
+            <div className="bg-white dark:bg-[#364154] rounded-lg p-4 border border-slate-200 dark:border-slate-700">
+              <p className="text-sm text-[#364154] dark:text-[#cbd5e1] mb-1">Correct Diagnosis:</p>
+              <p className="text-lg font-semibold text-[var(--color-accent)]">{currentCase.correctDiagnosis}</p>
             </div>
           </motion.div>
 
@@ -544,10 +893,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-[var(--color-border)] text-center"
+              className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 text-center shadow-sm"
             >
-              <Award className="w-8 h-8 text-teal-400 mx-auto mb-2" />
-              <p className="text-sm text-slate-400 mb-1">Overall Score</p>
+              <Award className="w-8 h-8 text-[var(--color-accent)] mx-auto mb-2" />
+              <p className="text-sm text-[#364154] dark:text-[#cbd5e1] mb-1">Overall Score</p>
               <p className={`text-4xl font-bold ${getScoreColor(score.overall)}`}>
                 {Math.round(score.overall)}%
               </p>
@@ -557,10 +906,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-[var(--color-border)] text-center"
+              className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 text-center shadow-sm"
             >
-              <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-              <p className="text-sm text-slate-400 mb-1">Thoroughness</p>
+              <CheckCircle className="w-8 h-8 text-green-500 dark:text-green-400 mx-auto mb-2" />
+              <p className="text-sm text-[#364154] dark:text-[#cbd5e1] mb-1">Thoroughness</p>
               <p className={`text-4xl font-bold ${getScoreColor(score.thoroughness)}`}>
                 {Math.round(score.thoroughness)}%
               </p>
@@ -570,90 +919,50 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-[var(--color-border)] text-center"
+              className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 text-center shadow-sm"
             >
-              <Clock className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-              <p className="text-sm text-slate-400 mb-1">Efficiency</p>
+              <Clock className="w-8 h-8 text-blue-500 dark:text-blue-400 mx-auto mb-2" />
+              <p className="text-sm text-[#364154] dark:text-[#cbd5e1] mb-1">Efficiency</p>
               <p className={`text-4xl font-bold ${getScoreColor(score.efficiency)}`}>
                 {Math.round(score.efficiency)}%
               </p>
             </motion.div>
           </div>
 
+          {/* After Action Report (AAR) */}
+          {aar && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm"
+            >
+              <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)] flex items-center gap-2">
+                <FileText className="w-5 h-5" /> After-Action Report
+              </h3>
+              <div className="prose dark:prose-invert max-w-none text-[#364154] dark:text-[#cbd5e1] whitespace-pre-wrap">
+                {aar}
+              </div>
+            </motion.div>
+          )}
+
           {/* Ideal Workup */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-[var(--color-border)]"
+            transition={{ delay: 0.5 }}
+            className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm"
           >
-            <h3 className="text-xl font-semibold mb-4 text-teal-400">Ideal Workup</h3>
+            <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)]">Ideal Workup</h3>
             <ul className="space-y-2">
               {currentCase.idealWorkup.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-slate-300">
-                  <CheckCircle className="w-5 h-5 text-teal-400 flex-shrink-0 mt-0.5" />
+                <li key={idx} className="flex items-start gap-2 text-[#364154] dark:text-[#cbd5e1]">
+                  <CheckCircle className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
           </motion.div>
-
-          {/* Teaching Points */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-[var(--color-border)]"
-          >
-            <h3 className="text-xl font-semibold mb-4 text-teal-400">Teaching Points</h3>
-            <ul className="space-y-3">
-              {currentCase.teachingPoints.map((point, idx) => (
-                <li key={idx} className="text-slate-300 pl-4 border-l-2 border-[var(--color-border)]">
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Differential Diagnoses */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-[var(--color-border)]"
-          >
-            <h3 className="text-xl font-semibold mb-4 text-teal-400">Differential Diagnoses to Consider</h3>
-            <div className="flex flex-wrap gap-2">
-              {currentCase.differentialDiagnoses.map((dx, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-2 bg-teal-900/30 rounded-lg text-teal-300 text-sm border border-teal-700/30"
-                >
-                  {dx}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Actions */}
-          <div className="flex gap-4">
-            <button
-              onClick={handleNewCase}
-              className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] py-4 rounded-lg font-semibold text-lg
-                       transition-colors"
-            >
-              New Case
-            </button>
-            {onExit && (
-              <button
-                onClick={onExit}
-                className="px-8 py-4 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold text-lg
-                         transition-colors"
-              >
-                Exit
-              </button>
-            )}
-          </div>
         </div>
       </div>
     );

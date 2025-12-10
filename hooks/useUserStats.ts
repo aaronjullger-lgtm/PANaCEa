@@ -128,6 +128,8 @@ export function useUserStats(): UseUserStatsResult {
           savedQuestions: [...missedQuestions, ...flaggedQuestions].map(q => ({
             ...q,
             type: missedQuestions.includes(q) ? 'missed' : 'flagged',
+            // Ensure updatedAt is present for conflict resolution
+            updatedAt: q.lastReviewedAt ? new Date(q.lastReviewedAt) : new Date(),
           })),
         }),
       });

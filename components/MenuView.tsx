@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2 } from "lucide-react";
+import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2, Users } from "lucide-react";
 import type {
   PerformanceRecord,
   SessionSettings,
@@ -78,6 +78,8 @@ interface MenuViewProps {
   onNavigateToDrillMode?: (modeId: string) => void;
   /** Callback for navigating to integrations hub */
   onNavigateToIntegrations?: () => void;
+  /** Callback for navigating to social dashboard */
+  onNavigateToSocial?: () => void;
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;
@@ -105,6 +107,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   growthAreas,
   onNavigateToDrillMode,
   onNavigateToIntegrations,
+  onNavigateToSocial,
   isSyncing,
   lastSyncTime,
   syncError,
@@ -552,7 +555,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                         )}
                       </span>
                       <div className="flex-1 flex flex-col gap-0.5">
-                        <span className="font-semibold text-[var(--color-text-primary)]">
+                        <span className="font-semibold text-[var(--color-text-primary]">
                           {result.name}
                         </span>
                         <span className="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -698,6 +701,19 @@ const MenuView: React.FC<MenuViewProps> = ({
                   <Link2 className="w-8 h-8 mb-2 text-indigo-500" />
                   <div className="font-semibold text-sm text-slate-900 dark:text-white">Integrations</div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">Anki, Calendar</div>
+                </motion.button>
+              )}
+
+              {onNavigateToSocial && (
+                <motion.button
+                  onClick={onNavigateToSocial}
+                  className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Users className="w-8 h-8 mb-2 text-pink-500" />
+                  <div className="font-semibold text-sm text-slate-900 dark:text-white">Social</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">Groups & Friends</div>
                 </motion.button>
               )}
             </div>

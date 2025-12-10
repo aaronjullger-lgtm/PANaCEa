@@ -14,8 +14,8 @@ This report provides a thorough analysis of the PANaCEa codebase, identifying is
 ## Critical Issues (High Priority)
 
 ### 1. **Medical Spanish Service Not Integrated**
-**Status:** ❌ NOT IMPLEMENTED  
-**Location:** `components/modes/PatientEncounterMode.tsx`  
+**Status:** ✅ IMPLEMENTED
+**Location:** `components/modes/PatientEncounterMode.tsx`
 **Issue:** The `medicalSpanishService.ts` exists but is NOT used in PatientEncounterMode.
 
 **Details:**
@@ -26,25 +26,18 @@ This report provides a thorough analysis of the PANaCEa codebase, identifying is
   - `getSpanishQuestion(question: Question, mode: SpanishMode)`
   - `getMedicalVocabulary(category?: string)`
   - `extractMedicalTerms(vignette: string)`
-- **NOT imported or used anywhere in PatientEncounterMode**
+- **Integrated into PatientEncounterMode**
 
-**Expected Behavior:**
-- Add a "Switch Language" or "Clinica" toggle button in the active interview view
-- Toggle should switch between English/Spanish/Side-by-side modes
-- Patient vignette should translate based on selected mode
-- Responses should reflect the language mode
-
-**Required Changes:**
-1. Import `getSpanishQuestion` and `SpanishMode` from medicalSpanishService
-2. Add state: `const [languageMode, setLanguageMode] = useState<SpanishMode>('english')`
-3. Add toggle button in active view header (near the exit button)
-4. Wrap vignette display with translation: `getSpanishQuestion(currentCase, languageMode)`
-5. Add visual indicator (e.g., flag icon, "ES" badge) when Spanish mode active
+**Changes Made:**
+1. Imported `translateToSpanish` and `SpanishMode` from medicalSpanishService
+2. Added state: `const [languageMode, setLanguageMode] = useState<SpanishMode>('english')`
+3. Added toggle button in active view header
+4. Wrapped vignette and responses with translation logic
 
 ---
 
 ### 2. **Theme Inconsistency in PatientEncounterMode**
-**Status:** ⚠️ INCONSISTENT  
+**Status:** ✅ FIXED
 **Location:** `components/modes/PatientEncounterMode.tsx` (lines 133-660)
 
 **Issues:**
@@ -70,35 +63,12 @@ This report provides a thorough analysis of the PANaCEa codebase, identifying is
    - "Start Interview" button (line 248-263): Text color doesn't explicitly change
    - "Submit Diagnosis" button (line 422-429): No explicit dark mode text color
 
-**Required Changes:**
-1. **Unify theme system across all views:**
-   ```tsx
-   // Replace hard-coded colors with CSS variables
-   - className="text-teal-400"
-   + className="text-[var(--color-accent)]"
-   
-   - className="bg-slate-800/50"
-   + className="bg-[var(--color-bg-secondary)]"
-   ```
-
-2. **Fix Results View header:**
-   ```tsx
-   - className="border-b border-[var(--color-border)] bg-black/20 backdrop-blur-sm"
-   + className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#364154] sticky top-0 z-10 shadow-sm"
-   ```
-
-3. **Fix button text colors:**
-   ```tsx
-   // For all buttons, ensure explicit dark mode text
-   className="... text-[#1F283A] dark:text-[#E9ECF1] ..."
-   ```
-
-4. **Create consistent color palette:**
-   - Use `#1F283A` (navy) for primary dark backgrounds
-   - Use `#364154` (lighter navy) for secondary dark backgrounds
-   - Use `#E9ECF1` (off-white) for primary dark text
-   - Use `#cbd5e1` (light gray) for secondary dark text
-   - Use CSS variables for accent colors
+**Changes Made:**
+1. **Unified theme system across all views:**
+   - Replaced hard-coded colors with CSS variables and theme-aware classes.
+   - Updated Results View header to match other views.
+   - Fixed button text colors for dark mode.
+   - Created consistent color palette using `#1F283A`, `#364154`, `#E9ECF1`, `#cbd5e1`.   - Use CSS variables for accent colors
 
 ---
 

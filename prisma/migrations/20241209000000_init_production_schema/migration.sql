@@ -1011,7 +1011,7 @@ CREATE INDEX "QuestionFlag_createdAt_idx" ON "QuestionFlag"("createdAt");
 CREATE INDEX "QuestionFlag_status_priority_idx" ON "QuestionFlag"("status", "priority");
 
 -- CreateIndex
-CREATE INDEX "SemanticCache_queryText_idx" ON "SemanticCache"("queryText" gin_trgm_ops);
+CREATE INDEX "SemanticCache_queryText_idx" ON "SemanticCache" USING GIN ("queryText" gin_trgm_ops);
 
 -- CreateIndex
 CREATE INDEX "SemanticCache_questionType_idx" ON "SemanticCache"("questionType");

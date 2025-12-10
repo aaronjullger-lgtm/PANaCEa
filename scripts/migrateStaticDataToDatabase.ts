@@ -16,7 +16,26 @@
 
 import fs from 'fs';
 import path from 'path';
-import { prisma } from '../lib/prisma';
+import { PrismaClient } from '@prisma/client';
+import { CONDITION_REGISTRY, buildConditionDefinition } from '../conditionRegistry';
+
+const prisma = new PrismaClient();
+
+// Create a lookup map for faster access
+const registryMap = new Map(
+  CONDITION_REGISTRY.map((item) => [buildConditionDefinition(item).id, item])
+);
+
+function toTitleCase(str: string): string {
+  return str
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function formatSubcategory(sub: string): string {
+  return sub.split('__').map(toTitleCase).join(' - ');
+}
 
 interface MigrationReport {
   startTime: Date;
@@ -69,8 +88,8 @@ async function migrateConditionContent() {
   
   // Try multiple possible locations
   const possiblePaths = [
-    'conditionContent.correct.json',
     'conditionContent.generated.json',
+    'conditionContent.correct.json',
     'src/conditionContent.generated.json',
   ];
 
@@ -97,7 +116,8 @@ async function migrateConditionContent() {
 
   for (const [conditionId, content] of conditions) {
     try {
-      // Check if already exists
+      // Check if already exists - REMOVED to allow updates
+      /*
       const existing = await prisma.medicalContent.findUnique({
         where: { conditionId },
       });
@@ -107,17 +127,43 @@ async function migrateConditionContent() {
         report.skipped++;
         continue;
       }
+      */
 
-      // Extract metadata from condition ID
-      // Format: SYSTEM__SUBCATEGORY__CONDITION
-      const parts = conditionId.split('__');
-      const system = parts[0] || 'MISC';
-      const subcategory = parts[1] || 'general';
-      const condition = parts[2] || conditionId;
+      // Extract metadata from condition ID or Registry
+      let system = 'MISC';
+      let subcategory = 'general';
+      let condition = conditionId;
 
-      // Create new record
-      await prisma.medicalContent.create({
-        data: {
+      const registryEntry = registryMap.get(conditionId);
+      if (registryEntry) {
+        system = registryEntry.system;
+        subcategory = registryEntry.subcategory;
+        condition = registryEntry.condition;
+      } else {
+        // Fallback: Extract from ID
+        // Format: SYSTEM__SUBCATEGORY__CONDITION
+        const parts = conditionId.split('__');
+        system = parts[0] || 'MISC';
+        
+        const rawCondition = parts.length > 2 ? parts[parts.length - 1] : (parts[2] || conditionId);
+        condition = toTitleCase(rawCondition);
+        
+        // Subcategory is everything in between
+        const rawSubcategory = parts.length > 2 ? parts.slice(1, parts.length - 1).join('__') : (parts[1] || 'general');
+        subcategory = formatSubcategory(rawSubcategory);
+      }
+
+      // Create or update record
+      await prisma.medicalContent.upsert({
+        where: { conditionId },
+        update: {
+          system,
+          subcategory,
+          condition,
+          content: content as any,
+          updatedAt: new Date(),
+        },
+        create: {
           conditionId,
           system,
           subcategory,
@@ -134,7 +180,7 @@ async function migrateConditionContent() {
         },
       });
 
-      console.log(`  ✅ Migrated: ${conditionId}`);
+      console.log(`  ✅ Migrated/Updated: ${conditionId} -> ${condition}`);
       report.successful++;
 
     } catch (error: any) {
@@ -169,6 +215,11 @@ async function migrateConditions() {
   console.log('ℹ️  Deriving conditions from MedicalContent table...');
   
   const medicalContent = await prisma.medicalContent.findMany({
+    where: {
+      system: {
+        not: 'PHARM'
+      }
+    },
     select: {
       conditionId: true,
       condition: true,
@@ -181,12 +232,38 @@ async function migrateConditions() {
   for (const item of medicalContent) {
     try {
       // Check if condition already exists
-      const existing = await prisma.condition.findFirst({
+      // 1. Try exact name match
+      let existing = await prisma.condition.findFirst({
         where: { name: item.condition },
       });
 
+      // 2. If not found, try to find by "raw" name from ID (to fix snake_case)
+      if (!existing) {
+        const parts = item.conditionId.split('__');
+        const rawName = parts.length > 2 ? parts[parts.length - 1] : (parts[2] || item.conditionId);
+        
+        if (rawName !== item.condition) {
+           existing = await prisma.condition.findFirst({
+             where: { name: rawName }
+           });
+        }
+      }
+
       if (existing) {
-        report.skipped++;
+        // Update existing condition (fix name/system if needed)
+        if (existing.name !== item.condition || existing.system !== item.system) {
+          await prisma.condition.update({
+            where: { id: existing.id },
+            data: {
+              name: item.condition,
+              system: item.system,
+            },
+          });
+          console.log(`  🔄 Updated condition: ${existing.name} -> ${item.condition}`);
+          report.successful++;
+        } else {
+          report.skipped++;
+        }
         continue;
       }
 
@@ -230,7 +307,7 @@ async function validateMigration() {
     // Check for orphaned records
     const orphanedContent = await prisma.medicalContent.findMany({
       where: {
-        conditionId: {
+        condition: {
           not: {
             in: await prisma.condition.findMany().then(cs => cs.map(c => c.name))
           }

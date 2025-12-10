@@ -48,9 +48,11 @@ const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcuts
 const ARAnatomyMode = lazy(() => import("./components/ar/ARAnatomyMode"));
 const PANRELASimulator = lazy(() => import("./components/lifelong-learning/PANRELASimulator"));
 const CramMode = lazy(() => import("./components/modes/CramMode"));
+const MedicalWordleMode = lazy(() => import("./components/modes/MedicalWordleMode"));
 const CommandPalette = lazy(() => import("./components/CommandPalette"));
 const UserProfileModal = lazy(() => import("./components/onboarding/UserProfileModal"));
 const MediaApproval = lazy(() => import("./pages/admin/MediaApproval"));
+const StudyGroupDashboard = lazy(() => import("./components/social/StudyGroupDashboard"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -75,7 +77,7 @@ const DRILL_MODE_CODE_BLUE: TrainingModeId = 'code_blue_speed';
 const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
 const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
 
-type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "ar_anatomy" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "admin_media";
+type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "ar_anatomy" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "admin_media" | "social_dashboard";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -560,7 +562,7 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <Suspense fallback={<Loader />}>
+              <Suspense fallback={< Loader />}>
                 <MenuView
                   performanceData={heatmapPerformance}
                   missedQuestions={missedQuestions}
@@ -576,6 +578,7 @@ const App: React.FC = () => {
                   growthAreas={growthAreas}
                   onNavigateToDrillMode={handleNavigateToDrillMode}
                   onNavigateToIntegrations={() => setView("integrations")}
+                  onNavigateToSocial={() => setView("social_dashboard")}
                   isSyncing={isSyncing}
                   lastSyncTime={lastSyncTime}
                   syncError={syncError}
@@ -741,6 +744,26 @@ const App: React.FC = () => {
           {view === "grand_rounds" && (
             <Suspense fallback={<Loader />}>
               <GrandRoundsMode onExit={() => setView("menu")} />
+            </Suspense>
+          )}
+
+          {view === "medical_wordle" && (
+            <Suspense fallback={<Loader />}>
+              <MedicalWordleMode onExit={() => setView("menu")} />
+            </Suspense>
+          )}
+
+          {view === "social_dashboard" && (
+            <Suspense fallback={<Loader />}>
+              <div className="relative">
+                <button
+                  onClick={() => setView("menu")}
+                  className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-slate-600 dark:text-slate-400"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <StudyGroupDashboard />
+              </div>
             </Suspense>
           )}
 

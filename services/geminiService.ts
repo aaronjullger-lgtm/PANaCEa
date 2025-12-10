@@ -197,7 +197,9 @@ export async function fetchNewQuestion(
 
   // Optional condition chosen client-side (for hybrid targeting and stats)
   let chosenConditionDef: ConditionDefinition | undefined;
+  let chosenConditionMeta: ConditionMeta | undefined;
   let conditionRegistryNotes: string | undefined;
+  
   // If the client requested a specific condition (e.g. drill from heatmap),
   // resolve it into a ConditionDefinition from the registry.
   let chosenSubcategory: string | undefined;
@@ -207,6 +209,7 @@ export async function fetchNewQuestion(
   if (settings.conditionName) {
     const meta = findConditionMeta(settings.conditionName);
     if (meta) {
+      chosenConditionMeta = meta;
       chosenConditionDef = buildConditionDefinition(meta);
     }
   }
@@ -226,6 +229,7 @@ export async function fetchNewQuestion(
     if (systemCode !== "PRO" && systemCode !== "OTHER") {
       selectedConditionMeta = getRandomConditionForSystem(systemCode);
       if (selectedConditionMeta) {
+        chosenConditionMeta = selectedConditionMeta;
         chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
         conditionRegistryNotes = getConditionRegistryContext(selectedConditionMeta);
       }
@@ -341,7 +345,16 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
         ABBREVIATION_TO_TOPIC_MAP[chosenConditionDef.system] ||
         chosenConditionDef.system;
 
-       conditionInstruction = `- Condition targeting: The question's PRIMARY condition MUST be "${chosenConditionDef.condition}" within the "${chosenConditionDef.subcategory}" subcategory of the "${fullTopicName}" system. The "condition" field in the JSON MUST be exactly "${chosenConditionDef.condition}".`;
+      // If we have the meta, get the context to ensure accuracy
+      if (chosenConditionMeta && !conditionRegistryNotes) {
+        conditionRegistryNotes = getConditionRegistryContext(chosenConditionMeta);
+      }
+
+      const registryInstruction = conditionRegistryNotes
+        ? `\n\nCondition registry summary (use this to stay accurate without re-deriving facts):\n${conditionRegistryNotes}`
+        : "";
+
+       conditionInstruction = `- Condition targeting: The question's PRIMARY condition MUST be "${chosenConditionDef.condition}" within the "${chosenConditionDef.subcategory}" subcategory of the "${fullTopicName}" system. The "condition" field in the JSON MUST be exactly "${chosenConditionDef.condition}".${registryInstruction}`;
   }
     
     prompt = `You are generating a structured JSON object for a PANCE practice question.
@@ -570,4 +583,237 @@ Your Task:
       "Failed to generate an explanation. The API may be busy or an error occurred."
     );
   }
+}
+
+// --- Patient Encounter / OSCE Simulation ---
+
+/**
+ * Simulates a patient encounter using Gemini Flash for speed.
+ * Acts as both the patient (dialogue) and the system (exam/lab results).
+ */
+export async function chatWithPatientSimulator(
+  caseData: any,
+  chatHistory: { role: 'user' | 'model'; content: string }[],
+  userMessage: string
+): Promise<string> {
+  const systemPrompt = `
+You are a Virtual OSCE Patient Simulator. You are playing the role of the patient and the clinical environment.
+
+PATIENT DATA:
+Name: ${caseData.patientName}
+Age: ${caseData.age}
+Sex: ${caseData.sex}
+Chief Complaint: ${caseData.chiefComplaint}
+Vitals: BP ${caseData.vitalSigns.bp}, HR ${caseData.vitalSigns.hr}, RR ${caseData.vitalSigns.rr}, Temp ${caseData.vitalSigns.temp}, O2 ${caseData.vitalSigns.o2sat}%
+
+HISTORY DATA (Reveal only if asked):
+${JSON.stringify(caseData.historyData, null, 2)}
+
+PHYSICAL EXAM FINDINGS (Reveal only if user performs exam):
+${JSON.stringify(caseData.physicalExamData, null, 2)}
+
+LABS/IMAGING RESULTS (Reveal only if user orders tests):
+${JSON.stringify(caseData.labData, null, 2)}
+
+INSTRUCTIONS:
+1. ROLEPLAY: Act as the patient. Speak in first person ("I feel..."). Be realistic. Do not volunteer information unless specifically asked.
+2. PHYSICAL EXAMS: If the user says "I listen to the heart" or "Examine abdomen", provide the specific finding from the PHYSICAL EXAM FINDINGS section. Format these findings in brackets, e.g., "[Exam Finding] The abdomen is soft, non-tender."
+3. LABS/IMAGING: If the user orders a test (e.g., "Order CBC", "Get a CXR"), provide the result from the LABS/IMAGING RESULTS section. If the test is not listed, assume it is normal/unremarkable. Format as "[Lab Result] CBC: WBC 12k...".
+4. TONE: Match the patient's likely demeanor based on their condition (e.g., anxious if chest pain).
+5. LANGUAGE: If the user speaks Spanish, respond in Spanish.
+6. DO NOT reveal the diagnosis or the "correct" answer. You are the simulation, not the grader.
+
+Current conversation history is provided below. Respond to the last user message.
+`;
+
+  // Format history for Gemini
+  // Note: In a real production app, we'd use the proper 'contents' array structure with 'parts'.
+  // For this proxy helper, we'll concatenate the prompt since callGeminiText takes a string prompt.
+  // However, to maintain context, we should append the history to the prompt.
+  
+  let fullPrompt = systemPrompt + "\n\nCONVERSATION HISTORY:\n";
+  chatHistory.forEach(msg => {
+    fullPrompt += `${msg.role === 'user' ? 'Doctor' : 'Patient'}: ${msg.content}\n`;
+  });
+  fullPrompt += `Doctor: ${userMessage}\nPatient:`;
+
+  return callGeminiText(GEMINI_FLASH_MODEL, fullPrompt, 0.7);
+}
+
+/**
+ * Evaluates a user's diagnosis against the correct diagnosis using Gemini.
+ * Returns a JSON object with correctness and feedback.
+ */
+export async function evaluateDiagnosis(
+  correctDiagnosis: string,
+  userDiagnosis: string,
+  caseContext: string
+): Promise<{ isCorrect: boolean; feedback: string; score: number }> {
+  const prompt = `
+You are a medical examiner grading a PA student's diagnosis.
+
+Case Context: ${caseContext}
+Correct Diagnosis: "${correctDiagnosis}"
+Student's Diagnosis: "${userDiagnosis}"
+
+Task:
+1. Determine if the student's diagnosis is correct. Allow for synonyms, abbreviations (e.g., "MI" for "Myocardial Infarction"), and close variations.
+2. Provide a score from 0 to 100 based on accuracy and specificity.
+3. Provide brief feedback explaining why it is correct or incorrect.
+
+Return ONLY raw JSON (no markdown formatting) with this structure:
+{
+  "isCorrect": boolean,
+  "score": number,
+  "feedback": "string"
+}
+`;
+
+  try {
+    const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.0);
+    const cleanJson = stripHtmlTags(response).replace(/```json|```/g, '').trim();
+    return JSON.parse(cleanJson);
+  } catch (error) {
+    console.error("Error evaluating diagnosis:", error);
+    // Fallback to simple string match if AI fails
+    const normalizedUser = userDiagnosis.toLowerCase();
+    const normalizedCorrect = correctDiagnosis.toLowerCase();
+    const isCorrect = normalizedUser.includes(normalizedCorrect) || normalizedCorrect.includes(normalizedUser);
+    return {
+      isCorrect,
+      score: isCorrect ? 100 : 0,
+      feedback: isCorrect ? "Correct diagnosis." : `Incorrect. The correct diagnosis was ${correctDiagnosis}.`
+    };
+  }
+}
+
+/**
+ * Simulates a physical exam finding based on user request.
+ * Filters for specific requests vs general exams.
+ */
+export async function performPhysicalExam(
+  action: string,
+  caseData: any
+): Promise<string> {
+  const prompt = `
+You are the physical exam simulator for a Virtual OSCE.
+Patient: ${caseData.patientName}, ${caseData.age}yo ${caseData.sex}.
+CC: ${caseData.chiefComplaint}.
+Diagnosis: ${caseData.correctDiagnosis}.
+
+Physical Exam Data (Ground Truth):
+${JSON.stringify(caseData.physicalExamData, null, 2)}
+
+User Action: "${action}"
+
+Instructions:
+1. Interpret the user's action.
+2. If the user asks for a general exam (e.g., "listen to heart", "examine abdomen"), return the corresponding finding from the Ground Truth.
+3. If the user asks for a SPECIAL TEST (e.g., "Lachman test", "Fundoscopic exam", "Murphy's sign") that is NOT explicitly in the Ground Truth, generate a medically accurate result consistent with the patient's diagnosis.
+   - If the diagnosis implies a positive finding (e.g., Cholecystitis -> Positive Murphy's), generate it.
+   - If the diagnosis implies a negative finding, generate a normal result.
+4. If the user's action is vague or invalid, ask for clarification.
+5. Return ONLY the finding description. Do not add conversational filler.
+
+Example:
+User: "Check Murphy's sign"
+Output: "Inspiratory arrest on deep palpation of the RUQ (Positive Murphy's sign)."
+`;
+
+  return callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.3);
+}
+
+/**
+ * Simulates a diagnostic test result.
+ * Generates realistic reports for Labs, Imaging, etc.
+ */
+export async function orderDiagnosticTest(
+  testName: string,
+  caseData: any
+): Promise<{ result: string; interpretation: string }> {
+  const prompt = `
+You are the diagnostic result generator for a Virtual OSCE.
+Patient: ${caseData.patientName}, ${caseData.age}yo ${caseData.sex}.
+Diagnosis: ${caseData.correctDiagnosis}.
+
+Lab Data (Ground Truth):
+${JSON.stringify(caseData.labData, null, 2)}
+
+User Order: "${testName}"
+
+Instructions:
+1. If the test is in the Ground Truth, return that exact data.
+2. If the test is NOT in the Ground Truth, generate a realistic result consistent with the diagnosis.
+   - If the test should be abnormal for this diagnosis, generate the abnormal values.
+   - If the test should be normal, generate normal reference ranges.
+3. For Imaging (X-ray, CT, MRI), provide a "Radiologist Interpretation".
+4. Return JSON format: { "result": "raw values or description", "interpretation": "clinical significance" }
+`;
+
+  try {
+    const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.4);
+    const cleanJson = stripHtmlTags(response).replace(/```json|```/g, '').trim();
+    return JSON.parse(cleanJson);
+  } catch (error) {
+    console.error("Error generating diagnostic result:", error);
+    return {
+      result: "Result unavailable.",
+      interpretation: "Test could not be processed."
+    };
+  }
+}
+
+/**
+ * Evaluates a treatment plan.
+ */
+export async function evaluateTreatmentPlan(
+  plan: string,
+  caseData: any
+): Promise<{ isCorrect: boolean; feedback: string; score: number }> {
+  const prompt = `
+You are grading a treatment plan for a PA student.
+Case: ${caseData.patientName}, ${caseData.age}yo ${caseData.sex}.
+Diagnosis: ${caseData.correctDiagnosis}.
+
+Student Plan: "${plan}"
+
+Instructions:
+1. Evaluate if the plan is appropriate for the diagnosis.
+2. Check for CRITICAL dosing if applicable (e.g., Adenosine 6mg, Epinephrine 1mg). For general meds, standard dosing is assumed if not specified, but critical ACLS/acute meds need specific doses.
+3. Score from 0-100.
+4. Provide brief feedback.
+
+Return JSON: { "isCorrect": boolean, "score": number, "feedback": "string" }
+`;
+
+  try {
+    const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.2);
+    const cleanJson = stripHtmlTags(response).replace(/```json|```/g, '').trim();
+    return JSON.parse(cleanJson);
+  } catch (error) {
+    return { isCorrect: false, score: 0, feedback: "Error evaluating plan." };
+  }
+}
+
+/**
+ * Generates a brief After Action Report (AAR).
+ */
+export async function generateAfterActionReport(
+  sessionData: any,
+  caseData: any
+): Promise<string> {
+  const prompt = `
+Generate a brief, bulleted After Action Report (AAR) for a medical student's OSCE performance.
+Case: ${caseData.correctDiagnosis}
+
+Session Data:
+${JSON.stringify(sessionData, null, 2)}
+
+Format:
+- **Strengths**: 2-3 bullets
+- **Areas for Improvement**: 2-3 bullets
+- **Clinical Pearl**: 1 high-yield fact about this case.
+`;
+
+  return callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.6);
 }

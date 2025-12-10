@@ -63,12 +63,12 @@ export const BUZZWORD_BANK: BuzzwordEntry[] = [
   { buzzword: 'Ranke complex', condition: 'Healed Primary TB', system: 'PULM', subcategory: 'Infectious', explanation: 'Calcified Ghon complex' },
   { buzzword: 'Cavitation', condition: 'Tuberculosis', system: 'PULM', subcategory: 'Infectious', explanation: 'Air-filled cavity in upper lobes' },
   { buzzword: 'Honeycombing', condition: 'Idiopathic Pulmonary Fibrosis', system: 'PULM', subcategory: 'Interstitial', explanation: 'Clustered cystic spaces with thick walls on CT' },
-  { buzzword: 'Ground glass opacities', condition: 'Pneumocystis Pneumonia', system: 'PULM', subcategory: 'Infectious', explanation: 'Hazy lung opacification without obscuring vessels' },
-  { buzzword: 'Steeple sign', condition: 'Croup', system: 'PULM', subcategory: 'Infectious', explanation: 'Subglottic narrowing on AP neck X-ray' },
+  { buzzword: 'Ground glass opacities', condition: 'Pneumocystis jirovecii Pneumonia (PCP)', system: 'PULM', subcategory: 'Infectious', explanation: 'Hazy lung opacification without obscuring vessels' },
+  { buzzword: 'Steeple sign', condition: 'Croup (Laryngotracheobronchitis)', system: 'PULM', subcategory: 'Infectious', explanation: 'Subglottic narrowing on AP neck X-ray' },
   { buzzword: 'Thumb sign', condition: 'Epiglottitis', system: 'PULM', subcategory: 'Infectious', explanation: 'Swollen epiglottis on lateral neck X-ray' },
   { buzzword: 'Bilateral hilar lymphadenopathy', condition: 'Sarcoidosis', system: 'PULM', subcategory: 'Interstitial', explanation: 'Potato nodes on CXR' },
   { buzzword: 'Non-caseating granulomas', condition: 'Sarcoidosis', system: 'PULM', subcategory: 'Interstitial', explanation: 'Granulomas without central necrosis' },
-  { buzzword: 'Silhouette sign', condition: 'Right Middle Lobe Pneumonia', system: 'PULM', subcategory: 'Infectious', explanation: 'Loss of right heart border silhouette' },
+  { buzzword: 'Silhouette sign', condition: 'Community-Acquired Pneumonia', system: 'PULM', subcategory: 'Infectious', explanation: 'Loss of right heart border silhouette (RML pneumonia)' },
   { buzzword: 'Air bronchograms', condition: 'Pneumonia', system: 'PULM', subcategory: 'Infectious', explanation: 'Air-filled bronchi visible within consolidated lung' },
   { buzzword: 'Meniscus sign', condition: 'Pleural Effusion', system: 'PULM', subcategory: 'Pleural Disease', explanation: 'Concave upper border of pleural fluid on upright CXR' },
 
@@ -121,8 +121,8 @@ export const BUZZWORD_BANK: BuzzwordEntry[] = [
   { buzzword: 'Brudzinski sign', condition: 'Meningitis', system: 'NEURO', subcategory: 'Infectious', explanation: 'Hip flexion with neck flexion' },
   { buzzword: 'Thunderclap headache', condition: 'Subarachnoid Hemorrhage', system: 'NEURO', subcategory: 'Vascular', explanation: 'Worst headache of life, sudden onset' },
   { buzzword: 'Xanthochromia', condition: 'Subarachnoid Hemorrhage', system: 'NEURO', subcategory: 'Vascular', explanation: 'Yellow CSF from hemoglobin breakdown' },
-  { buzzword: 'Uncal herniation', condition: 'Increased ICP', system: 'NEURO', subcategory: 'Trauma', explanation: 'CN III palsy with contralateral hemiparesis' },
-  { buzzword: 'Cushing triad', condition: 'Increased ICP', system: 'NEURO', subcategory: 'Trauma', explanation: 'Hypertension, bradycardia, irregular respirations' },
+  { buzzword: 'Uncal herniation', condition: 'Increased Intracranial Pressure', system: 'NEURO', subcategory: 'Trauma', explanation: 'CN III palsy with contralateral hemiparesis' },
+  { buzzword: 'Cushing triad', condition: 'Increased Intracranial Pressure', system: 'NEURO', subcategory: 'Trauma', explanation: 'Hypertension, bradycardia, irregular respirations' },
   { buzzword: 'Battle sign', condition: 'Basilar Skull Fracture', system: 'NEURO', subcategory: 'Trauma', explanation: 'Mastoid ecchymosis' },
   { buzzword: 'Raccoon eyes', condition: 'Basilar Skull Fracture', system: 'NEURO', subcategory: 'Trauma', explanation: 'Periorbital ecchymosis' },
   { buzzword: 'CSF rhinorrhea', condition: 'Basilar Skull Fracture', system: 'NEURO', subcategory: 'Trauma', explanation: 'Clear fluid from nose (halo test positive)' },
@@ -144,7 +144,7 @@ export const BUZZWORD_BANK: BuzzwordEntry[] = [
   { buzzword: 'Ash leaf spots', condition: 'Tuberous Sclerosis', system: 'DERM', subcategory: 'Neurocutaneous', explanation: 'Hypopigmented macules' },
   { buzzword: 'Shagreen patch', condition: 'Tuberous Sclerosis', system: 'DERM', subcategory: 'Neurocutaneous', explanation: 'Leathery skin plaque on lower back' },
   { buzzword: 'Adenoma sebaceum', condition: 'Tuberous Sclerosis', system: 'DERM', subcategory: 'Neurocutaneous', explanation: 'Facial angiofibromas' },
-  { buzzword: 'Butterfly rash', condition: 'Systemic Lupus Erythematosus', system: 'DERM', subcategory: 'Autoimmune', explanation: 'Malar rash sparing nasolabial folds' },
+  { buzzword: 'Butterfly rash', condition: 'Acute Cutaneous Lupus Erythematosus', system: 'DERM', subcategory: 'Autoimmune', explanation: 'Malar rash sparing nasolabial folds' },
   { buzzword: 'Discoid rash', condition: 'Discoid Lupus Erythematosus', system: 'DERM', subcategory: 'Autoimmune', explanation: 'Scarring circular plaques' },
   { buzzword: 'Heliotrope rash', condition: 'Dermatomyositis', system: 'DERM', subcategory: 'Autoimmune', explanation: 'Purple-red eyelid discoloration' },
   { buzzword: 'Gottron papules', condition: 'Dermatomyositis', system: 'DERM', subcategory: 'Autoimmune', explanation: 'Erythematous papules over knuckles' },
@@ -185,7 +185,7 @@ export const BUZZWORD_BANK: BuzzwordEntry[] = [
   { buzzword: 'Spherocytes', condition: 'Hereditary Spherocytosis', system: 'HEME', subcategory: 'Hemolytic', explanation: 'Small round RBCs lacking central pallor' },
   { buzzword: 'Bite cells', condition: 'G6PD Deficiency', system: 'HEME', subcategory: 'Hemolytic', explanation: 'RBCs with peripheral indentation' },
   { buzzword: 'Heinz bodies', condition: 'G6PD Deficiency', system: 'HEME', subcategory: 'Hemolytic', explanation: 'Denatured hemoglobin inclusions' },
-  { buzzword: 'Hypersegmented neutrophils', condition: 'Megaloblastic Anemia', system: 'HEME', subcategory: 'Anemia', explanation: '>5 lobes, B12/folate deficiency' },
+  { buzzword: 'Hypersegmented neutrophils', condition: 'Vitamin B12 Deficiency Anemia', system: 'HEME', subcategory: 'Anemia', explanation: '>5 lobes, B12/folate deficiency' },
   { buzzword: 'Tear drop cells', condition: 'Myelofibrosis', system: 'HEME', subcategory: 'Myeloproliferative', explanation: 'Dacrocytes from marrow fibrosis' },
   { buzzword: 'Dry tap', condition: 'Myelofibrosis', system: 'HEME', subcategory: 'Myeloproliferative', explanation: 'Unable to aspirate bone marrow' },
 
@@ -262,9 +262,9 @@ export const BUZZWORD_BANK: BuzzwordEntry[] = [
   { buzzword: 'Colicky pain', condition: 'Ureteral Stone', system: 'RENAL', subcategory: 'Stones', explanation: 'Intermittent severe pain from ureteral peristalsis' },
   { buzzword: 'Kimmelstiel-Wilson nodules', condition: 'Diabetic Nephropathy', system: 'RENAL', subcategory: 'CKD', explanation: 'Nodular glomerulosclerosis' },
   { buzzword: 'Linear IgG deposits', condition: 'Anti-GBM Disease', system: 'RENAL', subcategory: 'Glomerular', explanation: 'Smooth linear pattern on immunofluorescence' },
-  { buzzword: 'Lumpy bumpy deposits', condition: 'Post-Streptococcal GN', system: 'RENAL', subcategory: 'Glomerular', explanation: 'Granular subepithelial deposits' },
+  { buzzword: 'Lumpy bumpy deposits', condition: 'Post-Streptococcal Glomerulonephritis', system: 'RENAL', subcategory: 'Glomerular', explanation: 'Granular subepithelial deposits' },
   { buzzword: 'Spike and dome pattern', condition: 'Membranous Nephropathy', system: 'RENAL', subcategory: 'Glomerular', explanation: 'Subepithelial deposits with basement membrane spikes' },
-  { buzzword: 'Wire loop lesions', condition: 'Lupus Nephritis', system: 'RENAL', subcategory: 'Glomerular', explanation: 'Thickened capillary loops with subendothelial deposits' },
+  { buzzword: 'Wire loop lesions', condition: 'Acute Glomerulonephritis', system: 'RENAL', subcategory: 'Glomerular', explanation: 'Thickened capillary loops with subendothelial deposits (Lupus Nephritis)' },
 
   // ========================
   // PSYCHIATRY (PSYCH)
@@ -313,7 +313,7 @@ export const BUZZWORD_BANK: BuzzwordEntry[] = [
   // GENITOURINARY (GU)
   // ========================
   { buzzword: 'Bag of worms', condition: 'Varicocele', system: 'GU', subcategory: 'Testicular', explanation: 'Feeling of dilated veins in scrotum' },
-  { buzzword: 'Blue dot sign', condition: 'Testicular Appendage Torsion', system: 'GU', subcategory: 'Testicular', explanation: 'Visible blue nodule through scrotal skin' },
+  { buzzword: 'Blue dot sign', condition: 'Testicular Torsion', system: 'GU', subcategory: 'Testicular', explanation: 'Visible blue nodule through scrotal skin (specifically appendage torsion)' },
   { buzzword: 'Bell clapper deformity', condition: 'Testicular Torsion', system: 'GU', subcategory: 'Testicular', explanation: 'Horizontal lie of testis predisposing to torsion' },
   { buzzword: 'High-riding testis', condition: 'Testicular Torsion', system: 'GU', subcategory: 'Testicular', explanation: 'Retracted testis with absent cremasteric reflex' },
   { buzzword: 'Prehn sign negative', condition: 'Testicular Torsion', system: 'GU', subcategory: 'Testicular', explanation: 'No relief with testicular elevation (vs. epididymitis)' },

@@ -21,6 +21,12 @@ import {
   Droplets,
   MessageSquare,
   LucideIcon,
+  GraduationCap,
+  Siren,
+  Headphones,
+  Hash,
+  Wind,
+  AlertTriangle,
 } from 'lucide-react';
 import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
 
@@ -44,6 +50,15 @@ const getIconMap = (): Record<string, LucideIcon> => ({
   Beaker,
   Droplets,
   MessageSquare,
+  GraduationCap,
+  Siren,
+  Trophy,
+  Clock,
+  Headphones,
+  Hash,
+  Wind,
+  AlertTriangle,
+  PillBottle: Pill, // Alias for Polypharmacy
 });
 
 /** Storage key for streak high score */

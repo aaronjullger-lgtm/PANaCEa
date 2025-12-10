@@ -16,11 +16,13 @@ import cors from 'cors';
 import { config } from 'dotenv';
 import { sanitizeBody, validateRequired, validateEnum } from './lib/middleware/validation';
 import { requireAuth, AuthenticatedRequest } from './lib/middleware/clerkAuth';
+import { PrismaClient } from '@prisma/client';
 
 // Load environment variables
 config();
 
 const app = express();
+const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
@@ -98,22 +100,111 @@ app.post('/geminiProxy', async (req: Request, res: Response) => {
     if (text.startsWith('```')) {
       const firstNewline = text.indexOf('\n');
       if (firstNewline !== -1) {
-        text = text.slice(firstNewline + 1);
+        text = text.substring(firstNewline + 1);
+        if (text.endsWith('```')) {
+          text = text.substring(0, text.length - 3);
+        }
       }
-      if (text.endsWith('```')) {
-        text = text.slice(0, -3);
-      }
-      text = text.trim();
     }
 
-    res.json({ text });
+    res.json({ text: text.trim() });
+  } catch (error) {
+    console.error('Gemini Proxy Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
-  } catch (error: any) {
-    console.error('Critical Error in geminiProxy:', error);
-    res.status(500).json({ 
-      error: 'Internal Server Error', 
-      details: error.message 
+// Get extended condition details (Anatomy, Special Tests)
+app.get('/api/conditions/:identifier/extended', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { identifier } = req.params;
+    
+    // 1. Try direct ID match (UUID)
+    let condition = await prisma.condition.findUnique({
+      where: { id: identifier },
+      include: {
+        anatomyStructures: true,
+        specialTests: true,
+        media: true
+      }
     });
+
+    // 2. If not found, try name match (exact)
+    if (!condition) {
+      // Try to convert slug back to name? "atrial-fibrillation" -> "Atrial Fibrillation"
+      // Hard to do perfectly.
+      // Let's try case-insensitive search on name
+      const conditions = await prisma.condition.findMany({
+        where: {
+          name: {
+            equals: identifier.replace(/-/g, ' '), // simple de-slugify attempt
+            mode: 'insensitive'
+          }
+        },
+        include: {
+          anatomyStructures: true,
+          specialTests: true,
+          media: true
+        }
+      });
+      
+      if (conditions.length > 0) {
+        condition = conditions[0];
+      }
+    }
+
+    // 3. If still not found, try searching with the raw identifier
+    if (!condition) {
+       const conditions = await prisma.condition.findMany({
+        where: {
+          name: {
+            equals: identifier,
+            mode: 'insensitive'
+          }
+        },
+        include: {
+          anatomyStructures: true,
+          specialTests: true,
+          media: true
+        }
+      });
+       if (conditions.length > 0) {
+        condition = conditions[0];
+      }
+    }
+
+    if (!condition) {
+      return res.status(404).json({ error: 'Condition not found' });
+    }
+
+    res.json(condition);
+  } catch (error) {
+    console.error('Error fetching extended condition details:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get all medical content (Replacement for static JSON file)
+// Public endpoint to allow loading content before auth (mimics static file behavior)
+app.get('/api/content/all', async (req: Request, res: Response) => {
+  try {
+    const allContent = await prisma.medicalContent.findMany({
+      select: {
+        conditionId: true,
+        content: true
+      }
+    });
+
+    // Transform to map format expected by frontend
+    const contentMap: Record<string, any> = {};
+    allContent.forEach(item => {
+      contentMap[item.conditionId] = item.content;
+    });
+
+    res.json(contentMap);
+  } catch (error) {
+    console.error('Error fetching all content:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -1321,6 +1412,60 @@ app.get('/api/questions/stats', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error getting stats:', error);
     res.status(500).json({ error: 'Failed to get statistics' });
+  }
+});
+
+// Social Routes
+app.post('/api/social/groups', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { name, description } = req.body;
+    const userId = req.auth.userId;
+    const { createStudyGroup } = await import('./lib/services/socialService');
+    const group = await createStudyGroup(userId, name, description);
+    res.json(group);
+  } catch (error) {
+    console.error('Error creating group:', error);
+    res.status(500).json({ error: 'Failed to create group' });
+  }
+});
+
+app.post('/api/social/groups/join', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { code } = req.body;
+    const userId = req.auth.userId;
+    const { joinStudyGroup } = await import('./lib/services/socialService');
+    const group = await joinStudyGroup(userId, code);
+    res.json(group);
+  } catch (error) {
+    console.error('Error joining group:', error);
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to join group' });
+  }
+});
+
+app.get('/api/social/groups', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.auth.userId;
+    const { getUserGroups } = await import('./lib/services/socialService');
+    const groups = await getUserGroups(userId);
+    res.json(groups);
+  } catch (error) {
+    console.error('Error fetching groups:', error);
+    res.status(500).json({ error: 'Failed to fetch groups' });
+  }
+});
+
+app.get('/api/social/leaderboard', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { period, groupId } = req.query;
+    const { getLeaderboard } = await import('./lib/services/socialService');
+    const leaderboard = await getLeaderboard(
+      (period as 'weekly' | 'monthly' | 'all_time') || 'weekly',
+      groupId as string
+    );
+    res.json(leaderboard);
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    res.status(500).json({ error: 'Failed to fetch leaderboard' });
   }
 });
 

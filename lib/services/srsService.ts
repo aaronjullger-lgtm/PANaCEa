@@ -11,6 +11,10 @@
  * - Time-to-answer analysis
  */
 
+import { FSRS, FSRSCard, FSRSState, Rating, defaultParameters } from '../fsrs';
+
+const fsrs = new FSRS();
+
 // ============================================================================
 // Types & Interfaces
 // ============================================================================
@@ -29,6 +33,12 @@ export interface SRSItem {
   stabilityScore: number;  // Research variable for forgetting curve
   createdAt: Date;
   updatedAt: Date;
+  
+  // FSRS v5 Fields
+  fsrsStability?: number;
+  fsrsDifficulty?: number;
+  fsrsState?: FSRSState;
+  fsrsLastReview?: Date;
 }
 
 export interface SRSUpdateInput {
@@ -79,6 +89,9 @@ const CONFUSION_PAIR_MODIFIER = 0.3;
 const STREAK_BONUS_THRESHOLD = 8;
 const STREAK_BONUS_MODIFIER = 1.15;
 const GOLD_MASTERY_MODIFIER = 1.4;
+
+// Feature Flags
+const USE_FSRS = true;
 
 // ============================================================================
 // Local Storage Keys
@@ -143,10 +156,10 @@ function saveSRSItems(items: Map<string, SRSItem>): void {
 function createNewSRSItem(userId: string, questionId: string): SRSItem {
   const now = new Date();
   return {
-    id: `${userId}_${questionId}_${now.getTime()}`,
+    id: crypto.randomUUID(),
     userId,
     questionId,
-    interval: 1,
+    interval: 0,
     repetition: 0,
     easiness: DEFAULT_EASINESS_FACTOR,
     dueDate: now,
@@ -156,7 +169,22 @@ function createNewSRSItem(userId: string, questionId: string): SRSItem {
     stabilityScore: DEFAULT_STABILITY,
     createdAt: now,
     updatedAt: now,
+    // FSRS Init
+    fsrsStability: 0,
+    fsrsDifficulty: 0,
+    fsrsState: FSRSState.New,
+    fsrsLastReview: now,
   };
+}
+
+/**
+ * Map quality rating (0-5) to FSRS Rating enum
+ */
+function mapQualityToRating(quality: number): Rating {
+  if (quality <= 1) return Rating.Again;
+  if (quality === 2) return Rating.Hard;
+  if (quality === 3 || quality === 4) return Rating.Good;
+  return Rating.Easy;
 }
 
 // ============================================================================
@@ -333,6 +361,46 @@ export function updateReviewOutcome(
     item = createNewSRSItem(userId, questionId);
   }
   
+  // FSRS Logic Integration
+  if (USE_FSRS) {
+    const rating = mapQualityToRating(input.quality);
+    const newState = fsrs.revise(item.fsrsState, rating);
+    
+    const interval = Math.max(1, Math.round(newState.interval));
+    // Keep legacy easiness updated for backward compatibility/fallback
+    const easiness = Math.max(MINIMUM_EASINESS_FACTOR, item.easiness + (0.1 - (5 - input.quality) * (0.08 + (5 - input.quality) * 0.02)));
+    
+    const now = new Date();
+    const dueDate = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
+    
+    const updatedItem: SRSItem = {
+      ...item,
+      interval,
+      repetition: newState.repetition,
+      easiness,
+      dueDate,
+      lastReviewed: now,
+      quality: input.quality,
+      fsrsState: newState.state,
+      fsrsLastReview: now,
+      updatedAt: now,
+    };
+    
+    items.set(questionId, updatedItem);
+    saveSRSItems(items);
+    
+    return {
+      interval,
+      repetition: newState.repetition,
+      easiness,
+      dueDate,
+      difficulty: updatedItem.difficulty,
+      stabilityScore: updatedItem.stabilityScore,
+      qualityAdjusted: input.quality,
+      modifiersApplied: ['fsrs_v5'],
+    };
+  }
+
   // Apply time-based quality adjustments
   let adjustedQuality = input.quality;
   const modifiersApplied: string[] = [];
@@ -391,10 +459,6 @@ export function updateReviewOutcome(
   // Ensure minimum interval of 1 day
   interval = Math.max(1, interval);
   
-  // Calculate new due date
-  const now = new Date();
-  const dueDate = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
-  
   // Update difficulty based on response pattern
   let newDifficulty = item.difficulty;
   if (adjustedQuality <= 2) {
@@ -407,6 +471,39 @@ export function updateReviewOutcome(
   const alpha = 0.3;
   const responseStability = adjustedQuality / 5;
   const newStability = alpha * responseStability + (1 - alpha) * item.stabilityScore;
+
+  // ---------------------------------------------------------
+  // FSRS Calculation
+  // ---------------------------------------------------------
+  const now = new Date();
+  const rating = mapQualityToRating(adjustedQuality);
+  
+  const fsrsCard: FSRSCard = {
+    stability: item.fsrsStability ?? 0,
+    difficulty: item.fsrsDifficulty ?? 0,
+    state: item.fsrsState ?? FSRSState.New,
+    elapsed_days: (now.getTime() - (item.fsrsLastReview || item.lastReviewed).getTime()) / (1000 * 60 * 60 * 24),
+    scheduled_days: item.interval,
+    reps: item.repetition,
+    lapses: 0,
+    last_review: item.fsrsLastReview || item.lastReviewed,
+  };
+
+  const scheduled = fsrs.next(fsrsCard, now, rating);
+  
+  const newFsrsStability = scheduled.card.stability;
+  const newFsrsDifficulty = scheduled.card.difficulty;
+  const newFsrsState = scheduled.card.state;
+  const newFsrsLastReview = now;
+  
+  // Override interval if FSRS is enabled
+  if (USE_FSRS) {
+    interval = Math.max(1, Math.round(scheduled.card.scheduled_days));
+    modifiersApplied.push('fsrs_v5');
+  }
+  
+  // Calculate new due date
+  const dueDate = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
   
   // Update item
   const updatedItem: SRSItem = {
@@ -420,6 +517,11 @@ export function updateReviewOutcome(
     difficulty: newDifficulty,
     stabilityScore: newStability,
     updatedAt: now,
+    // FSRS
+    fsrsStability: newFsrsStability,
+    fsrsDifficulty: newFsrsDifficulty,
+    fsrsState: newFsrsState,
+    fsrsLastReview: newFsrsLastReview,
   };
   
   items.set(questionId, updatedItem);
@@ -970,26 +1072,29 @@ export function getCramSessionQuestions(
     );
     
     let priority = overdueDays;
-    if (item.easiness < 2.0) priority *= 2.0;
-    if (item.stabilityScore < 0.5) priority *= 1.5;
+    if (overdueDays > 0) {
+      // Overdue items get higher priority
+      priority += item.difficulty * 10;
+    }
     
-    return { item, priority };
+    return {
+      item,
+      priority,
+      overdueDays,
+    };
   });
   
-  // Sort by priority and take top items
+  // Sort by priority (highest first)
   scoredItems.sort((a, b) => b.priority - a.priority);
   
-  for (const { item } of scoredItems.slice(0, count)) {
-    if (!selectedIds.has(item.questionId)) {
-      selectedIds.add(item.questionId);
-      questionIds.push(item.questionId);
-    }
+  // Select top N items based on maxItems limit
+  const maxItems = priorityMode?.maxItems || scoredItems.length;
+  for (let i = 0; i < Math.min(maxItems, scoredItems.length); i++) {
+    const questionId = scoredItems[i].item.questionId;
+    selectedIds.add(questionId);
+    questionIds.push(questionId);
   }
   
   return questionIds;
 }
 
-// Research notes for future enhancements:
-// - SM-15 algorithm improvements for professional education contexts
-// - Bayesian reinforcement using global learner data for difficulty calibration
-// - Machine learning for personalized retention curve fitting

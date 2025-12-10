@@ -61,20 +61,38 @@ export async function loadConditionContent(): Promise<Record<string, ConditionCo
   }
 
   try {
-    const [baseModule, updatedModule] = await Promise.all([
-      import("./conditionContent.generated.json"),
-      import("../conditionContent.generated.json")
-    ]);
-
-    conditionContentCache = mergeConditionContent(
-      baseModule.default as Record<string, ConditionContent>,
-      updatedModule.default as Record<string, ConditionContentPatch>
-    );
-
-    return conditionContentCache;
+    // 1. Try fetching from Database (via API)
+    // This ensures we use the most up-to-date content from the DB
+    const response = await fetch('/api/content/all');
+    if (response.ok) {
+      const data = await response.json();
+      if (Object.keys(data).length > 0) {
+        console.log('Loaded content from Database');
+        conditionContentCache = data;
+        return data;
+      }
+    }
+    throw new Error('API returned empty or error');
   } catch (error) {
-    console.error('Failed to load condition content:', error);
-    return {};
+    console.warn('Failed to load content from DB, falling back to local files:', error);
+    
+    // 2. Fallback to local static files
+    try {
+      const [baseModule, updatedModule] = await Promise.all([
+        import("./conditionContent.generated.json"),
+        import("../conditionContent.generated.json")
+      ]);
+
+      conditionContentCache = mergeConditionContent(
+        baseModule.default as Record<string, ConditionContent>,
+        updatedModule.default as Record<string, ConditionContentPatch>
+      );
+
+      return conditionContentCache;
+    } catch (fileError) {
+      console.error('Failed to load condition content from files:', fileError);
+      return {};
+    }
   }
 }
 

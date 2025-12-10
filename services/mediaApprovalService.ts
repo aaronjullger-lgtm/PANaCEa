@@ -83,7 +83,10 @@ export async function getPendingMedia(options?: {
   limit?: number;
   offset?: number;
 }) {
-  const where: any = { approvalStatus: 'pending' };
+  const where: any = { 
+    approvalStatus: 'pending',
+    folder: 'inbox'
+  };
   
   if (options?.category) {
     where.type = options.category;

@@ -210,74 +210,98 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         }
       }
 
-      // 2. Upsert SRSItems
+      // 2. Upsert SRSItems with Conflict Resolution
       if (payload.srsItems?.length) {
         console.log('[SYNC POST] Upserting SRS items:', payload.srsItems.length);
         for (const item of payload.srsItems) {
-          await tx.sRSItem.upsert({
+          const existing = await tx.sRSItem.findUnique({
             where: {
               userId_questionId: {
                 userId: internalUserId,
                 questionId: item.questionId,
               },
             },
-            create: {
-              userId: internalUserId,
-              questionId: item.questionId,
-              interval: item.interval,
-              repetition: item.repetition,
-              easiness: item.easiness,
-              dueDate: new Date(item.dueDate),
-              lastReviewed: new Date(item.lastReviewed),
-              quality: item.quality,
-              difficulty: item.difficulty,
-              stabilityScore: item.stabilityScore,
-            },
-            update: {
-              interval: item.interval,
-              repetition: item.repetition,
-              easiness: item.easiness,
-              dueDate: new Date(item.dueDate),
-              lastReviewed: new Date(item.lastReviewed),
-              quality: item.quality,
-              difficulty: item.difficulty,
-              stabilityScore: item.stabilityScore,
-            },
           });
+
+          // Conflict Resolution: Last Write Wins based on updatedAt
+          if (existing && item.updatedAt && new Date(existing.updatedAt) > new Date(item.updatedAt)) {
+            console.log(`[SYNC POST] Skipping SRS item ${item.questionId} (server is newer)`);
+            continue;
+          }
+
+          const data = {
+            userId: internalUserId,
+            questionId: item.questionId,
+            interval: item.interval,
+            repetition: item.repetition,
+            easiness: item.easiness,
+            dueDate: new Date(item.dueDate),
+            lastReviewed: new Date(item.lastReviewed),
+            quality: item.quality,
+            difficulty: item.difficulty,
+            stabilityScore: item.stabilityScore,
+            // Only update updatedAt if provided, otherwise let Prisma handle it or use current time
+            ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
+          };
+
+          if (existing) {
+            await tx.sRSItem.update({
+              where: { id: existing.id },
+              data,
+            });
+          } else {
+            await tx.sRSItem.create({
+              data,
+            });
+          }
         }
       }
 
-      // 3. Upsert SavedQuestions
+      // 3. Upsert SavedQuestions with Conflict Resolution
       if (payload.savedQuestions?.length) {
-        console.log('[SYNC POST] Upserting saved questions:', payload.savedQuestions.length);
-        for (const question of payload.savedQuestions) {
-          await tx.savedQuestion.upsert({
+        console.log('[SYNC POST] Upserting SavedQuestions:', payload.savedQuestions.length);
+        for (const item of payload.savedQuestions) {
+          const existing = await tx.savedQuestion.findUnique({
             where: {
               userId_questionId_type: {
                 userId: internalUserId,
-                questionId: question.questionId,
-                type: question.type,
+                questionId: item.questionId,
+                type: item.type,
               },
             },
-            create: {
-              userId: internalUserId,
-              questionId: question.questionId,
-              questionText: question.questionText,
-              correctAnswer: question.correctAnswer,
-              explanation: question.explanation,
-              topic: question.topic,
-              system: question.system || null,
-              type: question.type,
-              userNote: question.userNote || null,
-              repetitionLevel: question.repetitionLevel || 1,
-              nextReviewDate: question.nextReviewDate || null,
-            },
-            update: {
-              userNote: question.userNote || null,
-              repetitionLevel: question.repetitionLevel || 1,
-              nextReviewDate: question.nextReviewDate || null,
-            },
           });
+
+          // Conflict Resolution: Last Write Wins based on updatedAt
+          if (existing && item.updatedAt && new Date(existing.updatedAt) > new Date(item.updatedAt)) {
+             console.log(`[SYNC POST] Skipping SavedQuestion ${item.questionId} (server is newer)`);
+             continue;
+          }
+
+          const data = {
+            userId: internalUserId,
+            questionId: item.questionId,
+            questionText: item.questionText,
+            correctAnswer: item.correctAnswer,
+            explanation: item.explanation,
+            topic: item.topic,
+            system: item.system,
+            type: item.type,
+            userNote: item.userNote,
+            repetitionLevel: item.repetitionLevel,
+            nextReviewDate: item.nextReviewDate,
+            ...(item.updatedAt ? { updatedAt: new Date(item.updatedAt) } : {}),
+          };
+
+          if (existing) {
+            await tx.savedQuestion.update({
+              where: { id: existing.id },
+              data,
+            });
+          } else {
+            await tx.savedQuestion.create({
+              data,
+            });
+          }
         }
       }
     });

@@ -15,6 +15,7 @@ import {
 } from "../lib/loadConditions";
 import ConditionSidebar from "./ConditionSidebar";
 import FormattedSection from "./conditions/FormattedSection";
+import { useAuth } from "@clerk/clerk-react";
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -33,6 +34,7 @@ const SCROLL_OFFSET = 96;
 
 const SECTION_ORDER: { key: string; title: string; accent?: "danger" | "default" }[] = [
   { key: "overview", title: "Overview" },
+  { key: "anatomy", title: "Anatomy" },
   { key: "keyPoints", title: "Key Points" },
   { key: "etiology", title: "Etiology" },
   { key: "etiologyPathophysiology", title: "Etiology & Pathophysiology" },
@@ -41,6 +43,7 @@ const SECTION_ORDER: { key: string; title: string; accent?: "danger" | "default"
   { key: "clinicalPresentation", title: "Clinical Presentation" },
   { key: "symptoms", title: "Symptoms" },
   { key: "physicalExam", title: "Physical Exam" },
+  { key: "specialTests", title: "Special Tests" },
   { key: "examFindings", title: "Exam Findings" },
   { key: "diagnostics", title: "Diagnostics" },
   { key: "differentialDiagnosis", title: "Differential Diagnosis" },
@@ -58,6 +61,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   onClose,
   onDrillCondition,
 }) => {
+  const { getToken } = useAuth();
+  const [extendedData, setExtendedData] = useState<any>(null);
   const [mediaIndex, setMediaIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<string>("");
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -96,14 +101,66 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     };
   }, [condition.condition, conditionId]);
 
-  const sections: ContentSection[] = useMemo(() => {
-    if (!content?.sections) return [];
+  // Load extended content (Anatomy, Special Tests)
+  useEffect(() => {
+    let mounted = true;
+    
+    async function loadExtendedData() {
+      try {
+        const token = await getToken();
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/conditions/${condition.condition}/extended`, {
+           headers: {
+             Authorization: `Bearer ${token}`
+           }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (mounted) {
+            setExtendedData(data);
+          }
+        }
+      } catch (e) { 
+        console.error("Failed to load extended data", e); 
+      }
+    }
+    
+    if (condition.condition) {
+      loadExtendedData();
+    }
+    
+    return () => {
+      mounted = false;
+    };
+  }, [condition.condition, getToken]);
 
-    return SECTION_ORDER.map((config) => ({
-      ...config,
-      content: content.sections?.[config.key],
-    })).filter((section) => isMeaningfulContent(section.content));
-  }, [content?.sections]);
+  const sections: ContentSection[] = useMemo(() => {
+    const availableSections: ContentSection[] = [];
+    
+    SECTION_ORDER.forEach(config => {
+      // Check standard content
+      if (content?.sections?.[config.key] && isMeaningfulContent(content.sections[config.key])) {
+        availableSections.push({
+          ...config,
+          content: content.sections[config.key]
+        });
+        return;
+      }
+      
+      // Check extended content
+      if (config.key === 'anatomy' && extendedData?.anatomyStructures?.length > 0) {
+        availableSections.push({ ...config });
+        return;
+      }
+      
+      if (config.key === 'specialTests' && extendedData?.specialTests?.length > 0) {
+        availableSections.push({ ...config });
+        return;
+      }
+    });
+    
+    return availableSections;
+  }, [content?.sections, extendedData]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -309,7 +366,38 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                         section.accent === "danger" ? "condition-content-danger" : ""
                       }`}
                     >
-                      <FormattedSection content={section.content} />
+                      {section.key === 'anatomy' && extendedData?.anatomyStructures ? (
+                        <div className="space-y-4">
+                          {extendedData.anatomyStructures.map((item: any) => (
+                            <div key={item.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                              <h4 className="font-bold text-lg text-gray-900">{item.name}</h4>
+                              <p className="text-sm text-gray-500 mb-2">{item.region} • {item.system}</p>
+                              <p className="text-gray-700">{item.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : section.key === 'specialTests' && extendedData?.specialTests ? (
+                        <div className="space-y-4">
+                          {extendedData.specialTests.map((test: any) => (
+                            <div key={test.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                              <h4 className="font-bold text-lg text-gray-900">{test.name}</h4>
+                              <div className="flex gap-4 text-sm text-gray-600 mt-1 mb-2">
+                                {test.sensitivity && <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">Sensitivity: {test.sensitivity}%</span>}
+                                {test.specificity && <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">Specificity: {test.specificity}%</span>}
+                              </div>
+                              <p className="text-gray-700 mb-3">{test.description}</p>
+                              {test.technique && (
+                                <div className="mt-2 p-3 bg-white rounded border border-gray-200">
+                                  <span className="font-semibold text-xs uppercase text-gray-500 block mb-1">Technique</span>
+                                  <p className="text-sm text-gray-800">{test.technique}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <FormattedSection content={section.content} />
+                      )}
                     </div>
                   </section>
                 ))}

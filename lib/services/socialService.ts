@@ -1,0 +1,130 @@
+import { getPrismaClient } from '../db';
+
+const getPrisma = () => getPrismaClient();
+
+export async function createStudyGroup(userId: string, name: string, description?: string) {
+  const prisma = getPrisma();
+  
+  // Generate a unique 6-character code
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  
+  const group = await prisma.studyGroup.create({
+    data: {
+      name,
+      description,
+      code,
+      ownerId: userId,
+      members: {
+        create: {
+          userId,
+          role: 'admin'
+        }
+      }
+    },
+    include: {
+      members: true
+    }
+  });
+  
+  return group;
+}
+
+export async function joinStudyGroup(userId: string, code: string) {
+  const prisma = getPrisma();
+  
+  const group = await prisma.studyGroup.findUnique({
+    where: { code }
+  });
+  
+  if (!group) {
+    throw new Error('Group not found');
+  }
+  
+  // Check if already a member
+  const existingMember = await prisma.studyGroupMember.findUnique({
+    where: {
+      userId_groupId: {
+        userId,
+        groupId: group.id
+      }
+    }
+  });
+  
+  if (existingMember) {
+    return group;
+  }
+  
+  await prisma.studyGroupMember.create({
+    data: {
+      userId,
+      groupId: group.id,
+      role: 'member'
+    }
+  });
+  
+  return group;
+}
+
+export async function getUserGroups(userId: string) {
+  const prisma = getPrisma();
+  
+  const members = await prisma.studyGroupMember.findMany({
+    where: { userId },
+    include: {
+      group: {
+        include: {
+          _count: {
+            select: { members: true }
+          }
+        }
+      }
+    }
+  });
+  
+  return members.map(m => ({
+    ...m.group,
+    role: m.role,
+    memberCount: m.group._count.members
+  }));
+}
+
+export async function getLeaderboard(period: 'weekly' | 'monthly' | 'all_time' = 'weekly', groupId?: string) {
+  const prisma = getPrisma();
+  
+  // For now, we'll just return the top users based on accuracy or questions answered
+  // In a real implementation, we'd query the Leaderboard/LeaderboardEntry tables
+  // But since we don't have a background job populating those yet, let's query User stats directly
+  
+  // This is a simplified "live" leaderboard based on DailyStreak or similar
+  // Or we can use the LeaderboardEntry if we populate it.
+  
+  // Let's try to use the LeaderboardEntry if it exists, otherwise fallback?
+  // Actually, let's just query the Leaderboard table. If it's empty, it returns empty.
+  // We need a job to populate it.
+  
+  const leaderboard = await prisma.leaderboard.findFirst({
+    where: {
+      period,
+      groupId: groupId || null
+    },
+    include: {
+      entries: {
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              school: true
+            }
+          }
+        },
+        orderBy: {
+          score: 'desc'
+        },
+        take: 50
+      }
+    }
+  });
+  
+  return leaderboard;
+}

@@ -38,7 +38,7 @@ export const ECG_MANIFEST: PhotoManifestEntry[] = [
   {
     condition: 'Atrial Fibrillation',
     category: 'ecg',
-    images: [], // Add: ['atrial-fibrillation.jpg']
+    images: ['atrial-fibrillation.jpg'],
     educationalCaption: 'Irregularly irregular rhythm with absent P waves. Note the fibrillatory baseline and variable R-R intervals.',
     keyFindings: [
       'Irregularly irregular rhythm',
@@ -50,8 +50,8 @@ export const ECG_MANIFEST: PhotoManifestEntry[] = [
   {
     condition: 'Atrial Flutter',
     category: 'ecg',
-    images: [], // Add: ['atrial-flutter.jpg']
-    educationalCaption: 'Classic sawtooth pattern of flutter waves, typically at 300 bpm with 2:1 block giving ventricular rate of ~150 bpm.',
+    images: ['atrial-flutter.jpg'],
+    educationalCaption: 'Sawtooth flutter waves (F waves) best seen in leads II, III, and aVF. Often has a fixed conduction ratio (e.g., 2:1, 3:1).',
     keyFindings: [
       'Sawtooth flutter waves',
       'Regular atrial rate ~300 bpm',
