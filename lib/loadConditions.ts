@@ -7,13 +7,29 @@ async function getConditions(): Promise<Record<string, unknown>> {
   }
   
   try {
-    const module = await import("../conditionContent.generated.json");
+    const apiUrl =
+      (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
+      process.env.VITE_API_URL ||
+      "http://localhost:3001";
+
+    const response = await fetch(`${apiUrl.replace(/\/$/, "")}/api/content/all`);
+    if (response.ok) {
+      conditionsCache = await response.json();
+      return conditionsCache;
+    }
+  } catch (error) {
+    console.warn("Failed to load conditions from database API, falling back to static file:", error);
+  }
+
+  try {
+    const module = await import("../conditionContent.final.json");
     conditionsCache = module.default;
     return conditionsCache;
   } catch (error) {
-    console.error('Failed to load conditions:', error);
-    return {};
+    console.error('Failed to load condition content fallback file:', error);
   }
+
+  return {};
 }
 
 export type ConditionContent = string | string[] | Record<string, unknown> | null;

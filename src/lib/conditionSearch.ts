@@ -98,7 +98,13 @@ export function searchConditions(
   const results: ConditionSearchResult[] = [];
 
   for (const meta of CONDITION_REGISTRY) {
-    if (filters.system && meta.system !== filters.system) continue;
+    if (
+      filters.system &&
+      meta.system !== filters.system &&
+      !meta.relatedSystems?.includes(filters.system)
+    ) {
+      continue;
+    }
     if (filters.subcategory && meta.subcategory !== filters.subcategory) continue;
 
     const aliases = meta.aliases ?? [];

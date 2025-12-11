@@ -4,6 +4,8 @@ import type { ConditionDefinition, SystemCode } from "./types.ts";
 
 export interface ConditionMeta {
   system: SystemCode;
+  /** Secondary systems this condition is relevant for (cross-listed) */
+  relatedSystems?: SystemCode[];
   subcategory: string;
   condition: string;
   aliases?: string[];
@@ -270,6 +272,7 @@ export const CONDITION_REGISTRY_PULM: ConditionMeta[] = [
     system: "PULM",
     subcategory: "Interstitial",
     condition: "Sarcoidosis",
+    relatedSystems: ["DERM", "HEENT", "CV"],
   },
 
   // Neoplastic
@@ -488,6 +491,7 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
     system: "GI",
     subcategory: "Liver",
     condition: "Wilson Disease",
+    relatedSystems: ["NEURO", "PSYCH"],
   },
   {
     system: "GI",
@@ -856,7 +860,7 @@ export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
   { system: "ID", subcategory: "STI", condition: "Chlamydia" },
   { system: "ID", subcategory: "STI", condition: "Gonorrhea" },
   { system: "ID", subcategory: "STI", condition: "Trichomoniasis" },
-  { system: "ID", subcategory: "STI", condition: "Syphilis" },
+  { system: "ID", subcategory: "STI", condition: "Syphilis", relatedSystems: ["NEURO", "DERM"] },
   { system: "ID", subcategory: "STI", condition: "HIV Infection / AIDS" },
   { system: "ID", subcategory: "STI", condition: "Pelvic Inflammatory Disease (PID)" },
   { system: "ID", subcategory: "STI", condition: "Chancroid" },
@@ -1971,14 +1975,10 @@ export const CONDITION_REGISTRY_OTHER: ConditionMeta[] = [
 export const CONDITION_REGISTRY_ADDITIONAL: ConditionMeta[] = [
   // Added from Buzzword Bank (Unique items only)
   { system: "ID", subcategory: "Pediatrics", condition: "Kawasaki Disease" },
-  { system: "NEURO", subcategory: "Movement Disorders", condition: "Wilson Disease" },
   { system: "NEURO", subcategory: "Sensory", condition: "Posterior Column Disease" },
   { system: "MSK", subcategory: "Oncology", condition: "Osteosarcoma" },
   { system: "MSK", subcategory: "Oncology", condition: "Ewing Sarcoma" },
-  { system: "ID", subcategory: "STI", condition: "Secondary Syphilis" },
-  { system: "ID", subcategory: "STI", condition: "Neurosyphilis" },
   { system: "CV", subcategory: "ECG", condition: "Long QT Syndrome" },
-  { system: "CV", subcategory: "ECG", condition: "Wolff-Parkinson-White Syndrome", aliases: ["WPW"] },
   { system: "CV", subcategory: "Carditis", condition: "Pericardial Effusion" },
   { system: "PULM", subcategory: "Obstructive", condition: "COPD Exacerbation" },
   { system: "PULM", subcategory: "Infectious", condition: "Healed Primary TB", aliases: ["Ranke Complex"] },
@@ -2127,17 +2127,14 @@ export function findConditionMeta(
 
   // 3) Contains-style match as a fallback (e.g. "severe atrial fibrillation")
   for (const meta of all) {
-   
-    if (candidate.includes(meta.condition.toLowerCase())) {
-      return meta;
-    }
-    if (
-      meta.aliases?.some((a) =>
-        candidate.includes(a.toLowerCase())
-      )
-    ) {
-      return meta;
-    }
+    const matchWord = (needle: string) => {
+      const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`\\b${escaped}\\b`, "i");
+      return regex.test(candidate);
+    };
+
+    if (matchWord(meta.condition)) return meta;
+    if (meta.aliases?.some((a) => matchWord(a))) return meta;
   }
 
   return undefined;
@@ -2175,10 +2172,9 @@ export function getRandomConditionForSystem(
 ): ConditionMeta | undefined {
   if (system === "OTHER") return undefined;
   const pool = CONDITION_REGISTRY.filter(
-    (c) => c.system === system
+    (c) => c.system === system || c.relatedSystems?.includes(system)
   );
   if (!pool.length) return undefined;
   const idx = Math.floor(Math.random() * pool.length);
   return pool[idx];
 }
-

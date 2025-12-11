@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { CONDITION_REGISTRY } from '../conditionRegistry';
 import type { ConditionMeta } from '../conditionRegistry';
+import type { SystemCode } from '../types';
 
 interface ConditionContentData {
   overview?: string;
@@ -52,23 +53,56 @@ function loadConditionContentFile(): Record<string, ConditionContentData> {
   }
 
   try {
-    const contentPath = path.join(process.cwd(), 'conditionContent.correct.json');
+    const contentPath = path.join(process.cwd(), 'conditionContent.final.json');
     const contentRaw = fs.readFileSync(contentPath, 'utf-8');
     conditionContentCache = JSON.parse(contentRaw);
     return conditionContentCache!;
   } catch (error) {
     console.error('Error loading condition content file:', error);
-    
-    // Try backup file
-    try {
-      const backupPath = path.join(process.cwd(), 'conditionContent.backup.json');
-      const backupRaw = fs.readFileSync(backupPath, 'utf-8');
-      conditionContentCache = JSON.parse(backupRaw);
-      return conditionContentCache!;
-    } catch (backupError) {
-      console.error('Error loading backup condition content file:', backupError);
-      throw new Error('Failed to load condition content data');
-    }
+    throw new Error('Failed to load condition content data');
+  }
+}
+
+async function loadFromDatabase(conditionId: string): Promise<{
+  conditionId: string;
+  name: string;
+  system: SystemCode;
+  subcategory: string;
+  content: ConditionContentData;
+} | null> {
+  if (!process.env.DATABASE_URL) return null;
+
+  try {
+    const { prisma } = await import('../lib/prisma');
+
+    // Try direct conditionId match first, then condition name (case-insensitive)
+    const record = await prisma.medicalContent.findFirst({
+      where: {
+        OR: [
+          { conditionId },
+          { condition: { equals: conditionId, mode: 'insensitive' } },
+        ],
+      },
+    });
+
+    if (!record) return null;
+
+    const meta = findConditionMeta(record.condition) || {
+      system: (record.system as SystemCode) ?? ('PRO' as SystemCode),
+      subcategory: record.subcategory,
+      condition: record.condition,
+    };
+
+    return {
+      conditionId: record.conditionId,
+      name: meta.condition,
+      system: meta.system,
+      subcategory: meta.subcategory,
+      content: record.content as unknown as ConditionContentData,
+    };
+  } catch (error) {
+    console.error('Error loading condition from database:', error);
+    return null;
   }
 }
 
@@ -104,6 +138,27 @@ function findConditionMeta(conditionId: string): ConditionMeta | null {
  */
 export async function loadConditionData(conditionId: string): Promise<LoadedConditionData | null> {
   try {
+    // 1) Prefer database content
+    const dbResult = await loadFromDatabase(conditionId);
+    if (dbResult) {
+      const meta =
+        findConditionMeta(dbResult.name) || findConditionMeta(conditionId) || {
+          system: dbResult.system,
+          subcategory: dbResult.subcategory,
+          condition: dbResult.name,
+        };
+
+      return {
+        conditionId: dbResult.conditionId,
+        name: meta.condition,
+        system: meta.system,
+        subcategory: meta.subcategory,
+        meta,
+        content: dbResult.content,
+      };
+    }
+
+    // 2) Fallback to static file
     const contentFile = loadConditionContentFile();
     
     // Try to find content by exact key match first
