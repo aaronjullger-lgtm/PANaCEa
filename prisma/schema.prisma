@@ -74,7 +74,7 @@ model User {
 
   /// Social
   studyGroups        StudyGroupMember[]
-  leaderboardEntries LeaderboardEntry[]
+  // leaderboardEntries LeaderboardEntry[] // DEPRECATED: Removed with Leaderboard model
 
   @@index([clerkId])
   @@index([email])
@@ -752,23 +752,28 @@ model BranchChange {
   @@index([createdAt])
 }
 
-/// Represents an entry in a leaderboard
-model LeaderboardEntry {
-  id            String   @id @default(uuid())
-  leaderboardId String
-  userId        String
-  score         Int      @default(0)
-  rank          Int?     // Cached rank
-  updatedAt     DateTime @updatedAt
+// ============================================================================
+// DEPRECATED: Leaderboard models replaced by GrandRoundsHistory
+// Kept commented for reference - can be deleted after migration
+// ============================================================================
 
-  leaderboard   Leaderboard @relation(fields: [leaderboardId], references: [id], onDelete: Cascade)
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([leaderboardId, userId])
-  @@index([leaderboardId])
-  @@index([userId])
-  @@index([score])
-}
+// /// Represents an entry in a leaderboard
+// model LeaderboardEntry {
+//   id            String   @id @default(uuid())
+//   leaderboardId String
+//   userId        String
+//   score         Int      @default(0)
+//   rank          Int?     // Cached rank
+//   updatedAt     DateTime @updatedAt
+// 
+//   leaderboard   Leaderboard @relation(fields: [leaderboardId], references: [id], onDelete: Cascade)
+//   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+// 
+//   @@unique([leaderboardId, userId])
+//   @@index([leaderboardId])
+//   @@index([userId])
+//   @@index([score])
+// }
 
 /// Represents a vetted, high-quality question in the "Golden Repository"
 /// Task 110: The "Golden Repository"
@@ -915,7 +920,7 @@ model StudyGroup {
   updatedAt   DateTime @updatedAt
 
   members     StudyGroupMember[]
-  leaderboards Leaderboard[]
+  // leaderboards Leaderboard[] // DEPRECATED: Removed with Leaderboard model
 
   @@index([code])
   @@index([ownerId])
@@ -936,21 +941,22 @@ model StudyGroupMember {
   @@index([groupId])
 }
 
-/// Represents a leaderboard for gamification
-model Leaderboard {
-  id          String   @id @default(uuid())
-  groupId     String?  // Null for global leaderboard
-  period      String   // "weekly", "monthly", "all_time"
-  startDate   DateTime
-  endDate     DateTime?
-  
-  entries     LeaderboardEntry[]
-  
-  group       StudyGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@index([groupId])
-  @@index([period])
-}
+// /// Represents a leaderboard for gamification
+// /// DEPRECATED: Replaced by GrandRoundsHistory for daily competitive challenges
+// model Leaderboard {
+//   id          String   @id @default(uuid())
+//   groupId     String?  // Null for global leaderboard
+//   period      String   // "weekly", "monthly", "all_time"
+//   startDate   DateTime
+//   endDate     DateTime?
+//   
+//   entries     LeaderboardEntry[]
+//   
+//   group       StudyGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+// 
+//   @@index([groupId])
+//   @@index([period])
+// }
 
 // ============================================================================
 // NEW REGISTRY TABLES - Medical Knowledge Entities
@@ -1421,5 +1427,64 @@ model AnswerChoiceAnalytics {
   
   @@unique([questionId, choiceLabel])
   @@index([questionId])
+}
+
+// ============================================================================
+// GRAND ROUNDS COMPETITIVE MODE - Daily Challenge System
+// ============================================================================
+
+/// Grand Rounds Daily Challenge - Stores daily 5-question challenges
+model GrandRoundsChallenge {
+  id          String   @id @default(uuid())
+  date        DateTime @db.Date @unique
+  questionIds String[] // Array of 5 question IDs for the day
+  seed        Int      // Random seed for daily rotation
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([date])
+}
+
+/// Grand Rounds History - User completion records for daily challenges
+model GrandRoundsHistory {
+  id              String   @id @default(uuid())
+  userId          String
+  date            DateTime @db.Date
+  score           Int      // Total points earned
+  completionTimeMs Int     // Time taken in milliseconds
+  rank            Int?     // Global rank for that day (cached)
+  
+  // Performance details
+  correctAnswers  Int      @default(0) // How many out of 5
+  timeBonus       Int      @default(0) // Bonus points for speed
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([userId, date])
+  @@index([date, score]) // For leaderboard queries
+  @@index([userId])
+  @@index([date])
+}
+
+// ============================================================================
+// OSCE PATIENT ENCOUNTER - Chat History Storage
+// ============================================================================
+
+/// OSCE/Patient Encounter Chat History - Stores conversation during encounters
+model EncounterChatHistory {
+  id        String   @id @default(uuid())
+  sessionId String   // Unique session identifier
+  userId    String
+  role      String   // "user" (provider) or "patient" (AI)
+  message   String   @db.Text
+  timestamp DateTime @default(now())
+  
+  // Optional metadata
+  phase     String?  // "history", "physical", "diagnostic", "diagnosis", "treatment"
+  isRelevant Boolean @default(true) // Was this question/response relevant?
+  
+  @@index([sessionId])
+  @@index([userId, sessionId])
+  @@index([timestamp])
 }
 
