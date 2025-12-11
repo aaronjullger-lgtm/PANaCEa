@@ -12,7 +12,7 @@ import type { MedicalContent } from '../../types/admin-cms';
 export async function loadAllContent(): Promise<MedicalContent[]> {
   try {
     // Import condition data
-    const { default: conditionContent } = await import('../../src/conditionContent.generated');
+    const { default: conditionContent } = await import('../../conditionContent.final.json');
     
     const content: MedicalContent[] = [];
     

@@ -1,19 +1,39 @@
 // Lazy load conditions to improve initial bundle size
 let conditionsCache: Record<string, unknown> | null = null;
+const CONTENT_API_PATH = "/api/content/all";
 
 async function getConditions(): Promise<Record<string, unknown>> {
   if (conditionsCache) {
     return conditionsCache;
   }
   
+  const apiUrl =
+    (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
+    process.env.VITE_API_URL ||
+    "http://localhost:3001";
+
   try {
-    const module = await import("../conditionContent.generated.json");
+    const response = await fetch(`${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}`);
+    if (response.ok) {
+      conditionsCache = await response.json();
+      return conditionsCache;
+    }
+  } catch (error) {
+    console.warn(
+      `Failed to load conditions from database API at ${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}, falling back to static file:`,
+      error
+    );
+  }
+
+  try {
+    const module = await import("../conditionContent.final.json");
     conditionsCache = module.default;
     return conditionsCache;
   } catch (error) {
-    console.error('Failed to load conditions:', error);
-    return {};
+    console.error('Failed to load condition content fallback file:', error);
   }
+
+  return {};
 }
 
 export type ConditionContent = string | string[] | Record<string, unknown> | null;
