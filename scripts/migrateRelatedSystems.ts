@@ -161,8 +161,8 @@ async function main() {
               contains: conditionName,
               mode: 'insensitive'
             },
-            // Only update if relatedSystems is empty - use array equality check
-            relatedSystems: { equals: [] }
+            // Only update if relatedSystems is empty
+            relatedSystems: { isEmpty: true }
           }
         });
 
@@ -192,8 +192,7 @@ async function main() {
     // Show statistics
     const withRelatedSystems = await prisma.medicalContent.count({
       where: {
-        // Use array not equals empty to check for non-empty arrays
-        NOT: { relatedSystems: { equals: [] } }
+        relatedSystems: { isEmpty: false }
       }
     });
 

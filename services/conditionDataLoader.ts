@@ -261,6 +261,11 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
 /**
  * Get a list of all available condition IDs
  * Prioritizes database, falls back to JSON file
+ * 
+ * NOTE: This function is now async to support database queries.
+ * This is a breaking change from the previous synchronous version.
+ * Callers must use await or .then() to handle the Promise.
+ * The change is justified to enable database-first RAG architecture.
  */
 export async function getAllConditionIds(): Promise<string[]> {
   // Try database first if available
@@ -291,6 +296,11 @@ export async function getAllConditionIds(): Promise<string[]> {
 /**
  * Get conditions by system (supports both primary and related systems)
  * When database is available, searches both system and relatedSystems fields
+ * 
+ * NOTE: This function is now async to support database queries.
+ * This is a breaking change from the previous synchronous version.
+ * Callers must use await or .then() to handle the Promise.
+ * The change is justified to enable multi-system condition queries.
  */
 export async function getConditionsBySystem(system: string): Promise<string[]> {
   // Try database first if available
