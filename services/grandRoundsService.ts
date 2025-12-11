@@ -97,9 +97,20 @@ export async function hasCompletedToday(userId: string): Promise<boolean> {
 }
 
 /**
+ * Calculate time bonus for speed-weighted scoring
+ * @param completionTimeMs Time taken in milliseconds
+ * @returns Time bonus points (0-200)
+ */
+function calculateTimeBonus(completionTimeMs: number): number {
+  const maxTimeSeconds = 300; // 5 minutes
+  const timeSeconds = completionTimeMs / 1000;
+  return Math.max(0, Math.floor((1 - (timeSeconds / maxTimeSeconds)) * 200));
+}
+
+/**
  * Submit Grand Rounds completion
  * @param userId User ID
- * @param score Total points earned
+ * @param score Total points earned (before time bonus)
  * @param completionTimeMs Time taken in milliseconds
  * @param correctAnswers Number of correct answers (out of 5)
  * @returns The user's rank for the day
@@ -113,11 +124,8 @@ export async function submitCompletion(
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  // Calculate time bonus (faster = more points)
-  // Max 5 minutes = 300 seconds, bonus decreases linearly
-  const maxTimeSeconds = 300;
-  const timeSeconds = completionTimeMs / 1000;
-  const timeBonus = Math.max(0, Math.floor((1 - (timeSeconds / maxTimeSeconds)) * 200));
+  // Calculate time bonus using shared helper
+  const timeBonus = calculateTimeBonus(completionTimeMs);
   
   try {
     const response = await fetch('/geminiProxy', {
@@ -212,12 +220,12 @@ export async function getUserRank(userId: string): Promise<number | null> {
 
 /**
  * Calculate speed-weighted score
- * @param correctAnswers Number of correct answers
+ * @param correctAnswers Array of booleans (true if answer was correct)
  * @param totalTime Time taken in milliseconds
  * @param questionPoints Array of point values for each question
  */
 export function calculateScore(
-  correctAnswers: number[],
+  correctAnswers: boolean[],
   totalTime: number,
   questionPoints: number[]
 ): { score: number; timeBonus: number } {
@@ -226,11 +234,8 @@ export function calculateScore(
     return sum + (isCorrect ? questionPoints[index] : 0);
   }, 0);
   
-  // Time bonus (max 5 minutes = 300 seconds)
-  // Bonus decreases linearly: 0s = +200pts, 300s = 0pts
-  const maxTimeSeconds = 300;
-  const timeSeconds = totalTime / 1000;
-  const timeBonus = Math.max(0, Math.floor((1 - (timeSeconds / maxTimeSeconds)) * 200));
+  // Time bonus using shared helper
+  const timeBonus = calculateTimeBonus(totalTime);
   
   return {
     score: baseScore + timeBonus,

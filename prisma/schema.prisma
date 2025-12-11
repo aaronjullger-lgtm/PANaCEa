@@ -74,7 +74,6 @@ model User {
 
   /// Social
   studyGroups        StudyGroupMember[]
-  // leaderboardEntries LeaderboardEntry[] // DEPRECATED: Removed with Leaderboard model
 
   @@index([clerkId])
   @@index([email])
@@ -920,7 +919,6 @@ model StudyGroup {
   updatedAt   DateTime @updatedAt
 
   members     StudyGroupMember[]
-  // leaderboards Leaderboard[] // DEPRECATED: Removed with Leaderboard model
 
   @@index([code])
   @@index([ownerId])
