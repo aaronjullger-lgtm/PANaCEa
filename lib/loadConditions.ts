@@ -1,5 +1,6 @@
 // Lazy load conditions to improve initial bundle size
 let conditionsCache: Record<string, unknown> | null = null;
+const CONTENT_API_PATH = "/api/content/all";
 
 async function getConditions(): Promise<Record<string, unknown>> {
   if (conditionsCache) {
@@ -12,14 +13,14 @@ async function getConditions(): Promise<Record<string, unknown>> {
     "http://localhost:3001";
 
   try {
-    const response = await fetch(`${apiUrl.replace(/\/$/, "")}/api/content/all`);
+    const response = await fetch(`${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}`);
     if (response.ok) {
       conditionsCache = await response.json();
       return conditionsCache;
     }
   } catch (error) {
     console.warn(
-      `Failed to load conditions from database API at ${apiUrl.replace(/\/$/, "")}/api/content/all, falling back to static file:`,
+      `Failed to load conditions from database API at ${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}, falling back to static file:`,
       error
     );
   }

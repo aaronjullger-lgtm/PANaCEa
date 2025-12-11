@@ -12,6 +12,7 @@ import type { ConditionMeta } from '../conditionRegistry';
 import type { SystemCode } from '../types';
 
 const VALID_SYSTEMS: SystemCode[] = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'ENDO', 'HEME', 'ID', 'RENAL', 'REPRO', 'DERM', 'GU', 'HEENT', 'PSYCH', 'PRO'];
+const CONTENT_FILE = 'conditionContent.final.json';
 
 interface ConditionContentData {
   overview?: string;
@@ -55,7 +56,7 @@ function loadConditionContentFile(): Record<string, ConditionContentData> {
   }
 
   try {
-    const contentPath = path.join(process.cwd(), 'conditionContent.final.json');
+    const contentPath = path.join(process.cwd(), CONTENT_FILE);
     const contentRaw = fs.readFileSync(contentPath, 'utf-8');
     conditionContentCache = JSON.parse(contentRaw);
     return conditionContentCache!;
@@ -77,15 +78,14 @@ async function loadFromDatabase(conditionId: string): Promise<{
   try {
     const { prisma } = await import('../lib/prisma');
 
-    // Try direct conditionId match first, then condition name (case-insensitive)
-    const record = await prisma.medicalContent.findFirst({
-      where: {
-        OR: [
-          { conditionId },
-          { condition: { equals: conditionId, mode: 'insensitive' } },
-        ],
-      },
-    });
+    // Try direct conditionId match first (unique), then condition name (case-insensitive)
+    let record =
+      await prisma.medicalContent.findUnique({
+        where: { conditionId },
+      }) ??
+      (await prisma.medicalContent.findFirst({
+        where: { condition: { equals: conditionId, mode: 'insensitive' } },
+      }));
 
     if (!record) return null;
 

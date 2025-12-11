@@ -2110,9 +2110,14 @@ export function findConditionMeta(
   if (!candidate) return undefined;
 
   const all = CONDITION_REGISTRY;
+  const regexCache = new Map<string, RegExp>();
   const matchWord = (needle: string) => {
-    const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`\\b${escaped}\\b`, "i");
+    let regex = regexCache.get(needle);
+    if (!regex) {
+      const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      regex = new RegExp(`\\b${escaped}\\b`, "i");
+      regexCache.set(needle, regex);
+    }
     return regex.test(candidate);
   };
 
