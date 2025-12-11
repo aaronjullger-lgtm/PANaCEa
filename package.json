@@ -41,6 +41,7 @@
     "sync:special-tests": "tsx ./scripts/syncSpecialTestTable.ts",
     "sync:anatomy": "tsx ./scripts/syncAnatomyTable.ts",
     "sync:all": "npm run sync:conditions && npm run sync:drugs && npm run sync:special-tests && npm run sync:anatomy",
+    "sync:all-registries": "tsx ./scripts/syncAllRegistries.ts",
     "automation:hourly": "tsx ./scripts/automation/hourlyTasks.ts",
     "automation:daily": "tsx ./scripts/automation/dailyTasks.ts",
     "automation:weekly": "tsx ./scripts/automation/weeklyTasks.ts",
