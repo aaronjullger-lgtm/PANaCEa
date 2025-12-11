@@ -1,42 +1,34 @@
 /**
- * Prisma Client for Cloudflare Edge Runtime with Accelerate
+ * Prisma Client for Cloudflare Edge Runtime with Neon Adapter
  * 
  * This module provides a Prisma Client configured for Cloudflare Pages Functions
- * which run on Edge Runtime. Uses Prisma Accelerate extension for optimal 
- * Edge runtime compatibility and caching support.
+ * which run on Edge Runtime. Uses Neon serverless driver for edge compatibility.
  * 
- * For Neon database connections, use the Prisma Accelerate connection string
- * which handles Edge runtime compatibility automatically.
- * 
- * @see https://www.prisma.io/docs/accelerate
+ * @see https://www.prisma.io/docs/orm/overview/databases/neon
  */
 
 import { PrismaClient } from '@prisma/client/edge';
+import { PrismaNeon } from '@prisma/adapter-neon';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import { withAccelerate } from '@prisma/extension-accelerate';
+import ws from 'ws';
 
 /**
- * Type for the extended Edge Prisma Client with Accelerate
+ * Type for the extended Edge Prisma Client with Neon adapter
  */
 export type EdgePrismaClient = ReturnType<typeof createEdgePrismaClient>;
 
 /**
- * Creates a Prisma Client instance compatible with Cloudflare Edge Runtime.
+ * Creates a Prisma Client instance compatible with Cloudflare Edge Runtime using Neon adapter.
  * 
- * IMPORTANT: This function works with two types of database connections:
+ * IMPORTANT: This function works with PostgreSQL connections via Neon serverless driver:
  * 
- * 1. **Prisma Accelerate** (Recommended for production):
- *    - URL format: `prisma://accelerate.prisma-data.net/?api_key=YOUR_KEY`
- *    - Provides connection pooling, caching, and edge optimization
- *    - Get API key from: https://www.prisma.io/data-platform/accelerate
- *    - Uses Accelerate extension for enhanced features
+ * - URL format: `postgresql://user:pass@host:port/db`
+ * - Works with Neon, Supabase (in proxy mode), or any PostgreSQL provider
+ * - The Neon adapter provides edge-compatible connection pooling
  * 
- * 2. **Direct PostgreSQL** (Development/testing):
- *    - URL format: `postgresql://user:pass@host:port/db`
- *    - Works with Supabase, Neon, or any PostgreSQL provider
- *    - Accelerate extension is included but won't use Accelerate-specific features
- * 
- * @param databaseUrl - Database connection string from environment
- * @returns Configured PrismaClient instance with Accelerate extension
+ * @param databaseUrl - PostgreSQL connection string from environment
+ * @returns Configured PrismaClient instance with Neon adapter
  * @throws Error if databaseUrl is missing or invalid
  */
 export function createEdgePrismaClient(databaseUrl: string) {
@@ -47,45 +39,25 @@ export function createEdgePrismaClient(databaseUrl: string) {
     );
   }
 
-  // Validate and log connection info (development only, no sensitive data)
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const urlPrefix = databaseUrl.split('://')[0];
-  
-  if (isDevelopment) {
-    console.log(`[Prisma Edge] Creating client with connection protocol: ${urlPrefix}://`);
+  // Configure WebSocket for Node.js environments (not needed in actual edge runtime)
+  if (typeof process !== 'undefined' && process.versions?.node) {
+    neonConfig.webSocketConstructor = ws;
   }
 
   try {
-    // Check if URL is in Accelerate format
-    if (databaseUrl.startsWith('prisma://')) {
-      if (isDevelopment) {
-        console.log('[Prisma Edge] Using Prisma Accelerate with connection pooling and caching');
-      }
-    } else if (databaseUrl.startsWith('postgres://') || databaseUrl.startsWith('postgresql://')) {
-      if (isDevelopment) {
-        console.log('[Prisma Edge] Using direct PostgreSQL connection');
-        console.log('[Prisma Edge] Tip: For production, consider Prisma Accelerate (prisma:// URL) for better edge performance');
-      }
-    } else {
-      // Always warn about unexpected protocols
-      console.warn(
-        `[Prisma Edge] Warning: Unexpected DATABASE_URL protocol: ${urlPrefix}://. ` +
-        'Expected "prisma://" or "postgresql://". Attempting to connect anyway...'
-      );
-    }
-
-    // Create the Prisma client with Accelerate extension
-    // The extension gracefully handles both prisma:// and postgresql:// URLs
+    // Create Neon connection pool
+    const pool = new Pool({ connectionString: databaseUrl });
+    
+    // Create Neon adapter
+    const adapter = new PrismaNeon(pool);
+    
+    // Create the Prisma client with Neon adapter and Accelerate extension
     return new PrismaClient({
-      datasourceUrl: databaseUrl,
-    }).$extends(withAccelerate());
+      adapter,
+    }).$extends(withAccelerate()) as any;
+    
   } catch (error) {
     console.error('[Prisma Edge] Failed to create Prisma client:', error);
-    if (error instanceof Error && error.message.includes('prisma://')) {
-      console.error('[Prisma Edge] Fix: Set DATABASE_URL to either:');
-      console.error('[Prisma Edge]   1. Prisma Accelerate URL: prisma://accelerate.prisma-data.net/?api_key=YOUR_KEY');
-      console.error('[Prisma Edge]   2. PostgreSQL URL: postgresql://user:pass@host:port/db');
-    }
     throw error;
   }
 }

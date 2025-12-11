@@ -24,6 +24,8 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  engineType = "library"
 }
 
 datasource db {
@@ -1323,6 +1325,8 @@ model ImageAnnotation {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  mediaAsset  MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
   
   @@index([mediaAssetId])
   @@index([createdBy])
