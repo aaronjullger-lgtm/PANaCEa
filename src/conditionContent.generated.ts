@@ -2,6 +2,8 @@
 // This file MUST NOT import @google/genai or any server SDK.
 // It only loads the pre-generated JSON created by the generator script.
 
+import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
+
 export interface ConditionContent {
   overview?: string;
   keyPoints?: string[];
@@ -63,9 +65,8 @@ export async function loadConditionContent(): Promise<Record<string, ConditionCo
   try {
     // 1. Try fetching from Database (via API)
     // This ensures we use the most up-to-date content from the DB
-    const apiUrl = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 
-                    'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/content/all`);
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+    const response = await fetch(apiUrl);
     
     if (response.ok) {
       const data = await response.json();

@@ -43,19 +43,24 @@ This allows conditions like Sarcoidosis (primary: PULM) to appear in DERM and HE
 - `lib/api/contentService.ts`
 - `src/conditionContent.generated.ts`
 - `services/patientEncounterGenerator.ts`
+- `lib/utils/apiConfig.ts` (shared API URL utility)
 
 **Changes**:
 - ✅ All services try database API endpoint first
 - ✅ Graceful fallback to empty datasets if API unavailable
 - ✅ No static JSON file imports (prevents build failures)
 - ✅ Lazy loading - content fetched on-demand
+- ✅ Shared API URL configuration utility
 
 **Pattern**:
 ```typescript
+import { getApiEndpoint, API_ENDPOINTS } from './utils/apiConfig';
+
 async function loadData() {
   try {
-    // 1. Try database API
-    const response = await fetch(`${apiUrl}/api/content/all`);
+    // 1. Try database API using shared utility
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+    const response = await fetch(apiUrl);
     if (response.ok) {
       return await response.json();
     }
@@ -218,6 +223,23 @@ DATABASE_URL="postgresql://user:pass@host:5432/db?pgbouncer=true"
 ### Optional
 ```bash
 DIRECT_DATABASE_URL="postgresql://..." # For migrations (bypass pooler)
+VITE_API_URL="http://localhost:3001"   # API base URL (defaults to localhost:3001)
+```
+
+### API Configuration
+
+The `lib/utils/apiConfig.ts` utility provides centralized API URL management:
+- Automatically detects browser vs server environment
+- Uses `VITE_API_URL` environment variable
+- Falls back to `http://localhost:3001`
+- Provides type-safe endpoint definitions
+
+```typescript
+import { getApiEndpoint, API_ENDPOINTS } from './utils/apiConfig';
+
+// Get full URL for content endpoint
+const url = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+// Returns: "http://localhost:3001/api/content/all" (or production URL)
 ```
 
 ## Production Deployment

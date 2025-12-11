@@ -1,9 +1,4 @@
-/**
- * Data Loader Utility
- * 
- * Provides lazy loading and caching for large data files to improve
- * initial bundle size and application performance.
- */
+import { getApiEndpoint, API_ENDPOINTS } from './apiConfig';
 
 // Cache to store loaded data
 const dataCache = new Map<string, any>();
@@ -49,11 +44,9 @@ export async function loadConditionContent(): Promise<any> {
   
   try {
     // Use the database API endpoint (same approach as lib/loadConditions.ts)
-    const apiUrl = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 
-                    (typeof process !== 'undefined' && process.env?.VITE_API_URL) || 
-                    'http://localhost:3001';
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
     
-    const response = await fetch(`${apiUrl.replace(/\/$/, '')}/api/content/all`);
+    const response = await fetch(apiUrl);
     
     if (response.ok) {
       const data = await response.json();

@@ -118,7 +118,7 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
       system: safeSystem,
       subcategory: record.subcategory,
       condition: record.condition,
-      relatedSystems, // Ensure meta has the new field for backward compatibility
+      relatedSystems, // Include for multi-system condition support
     };
 
     const content: ConditionContentData =

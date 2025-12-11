@@ -1,4 +1,5 @@
 import type { PatientEncounterCase } from '@/types/drill-modes';
+import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
 
 // Lazy load condition content to improve initial bundle size
 let conditionContentCache: Record<string, unknown> | null = null;
@@ -10,9 +11,8 @@ async function getConditionContent(): Promise<Record<string, unknown>> {
   
   try {
     // Try to fetch from database API first
-    const apiUrl = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 
-                    'http://localhost:3001';
-    const response = await fetch(`${apiUrl}/api/content/all`);
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+    const response = await fetch(apiUrl);
     
     if (response.ok) {
       conditionContentCache = await response.json();

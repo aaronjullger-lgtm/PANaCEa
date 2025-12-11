@@ -7,20 +7,19 @@ async function getConditions(): Promise<Record<string, unknown>> {
     return conditionsCache;
   }
   
-  const apiUrl =
-    (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
-    process.env.VITE_API_URL ||
-    "http://localhost:3001";
+  // Import shared API config utility
+  const { getApiEndpoint, API_ENDPOINTS } = await import('./utils/apiConfig');
+  const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
 
   try {
-    const response = await fetch(`${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}`);
+    const response = await fetch(apiUrl);
     if (response.ok) {
       conditionsCache = await response.json();
       return conditionsCache;
     }
   } catch (error) {
     console.warn(
-      `Failed to load conditions from database API at ${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}:`,
+      `Failed to load conditions from database API:`,
       error
     );
   }

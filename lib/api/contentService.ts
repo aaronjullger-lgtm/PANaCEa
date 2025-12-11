@@ -4,6 +4,7 @@
  */
 
 import type { MedicalContent } from '../../types/admin-cms';
+import { getApiEndpoint, API_ENDPOINTS } from '../utils/apiConfig';
 
 /**
  * Load all medical content from the database
@@ -14,8 +15,8 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
     // Check if we're in a browser environment
     if (typeof window !== 'undefined') {
       // Browser: fetch from API endpoint
-      const apiUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiUrl}/api/content/all`);
+      const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+      const response = await fetch(apiUrl);
       
       if (response.ok) {
         const data = await response.json();
