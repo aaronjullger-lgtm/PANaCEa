@@ -1,0 +1,211 @@
+#!/usr/bin/env tsx
+/**
+ * Sync Condition Table from Registry
+ * 
+ * This script syncs the Condition table with the conditionRegistry.
+ * The Condition table serves as the source of truth for what conditions exist.
+ * MedicalContent generation is handled separately by automation scripts.
+ * 
+ * Workflow:
+ * 1. Add condition to conditionRegistry.ts
+ * 2. Run this script to sync Condition table
+ * 3. Automation detects new conditions and generates MedicalContent
+ * 
+ * Usage: tsx scripts/syncConditionTable.ts
+ */
+
+import { PrismaClient } from '@prisma/client';
+import { config } from 'dotenv';
+import { CONDITION_REGISTRY, buildConditionDefinition } from '../conditionRegistry';
+
+// Load environment variables
+config();
+
+const prisma = new PrismaClient();
+
+interface SyncReport {
+  startTime: Date;
+  endTime?: Date;
+  totalInRegistry: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  failed: number;
+  errors: Array<{ condition: string; error: string }>;
+}
+
+const report: SyncReport = {
+  startTime: new Date(),
+  totalInRegistry: 0,
+  created: 0,
+  updated: 0,
+  unchanged: 0,
+  failed: 0,
+  errors: [],
+};
+
+/**
+ * Sync a single condition from registry to database
+ */
+async function syncCondition(meta: any): Promise<void> {
+  const definition = buildConditionDefinition(meta);
+  const conditionId = definition.id;
+
+  try {
+    // Check if condition exists
+    const existing = await prisma.condition.findFirst({
+      where: {
+        OR: [
+          { id: conditionId },
+          { name: meta.condition, system: meta.system },
+        ],
+      },
+    });
+
+    if (existing) {
+      // Check if update is needed
+      if (existing.name !== meta.condition || existing.system !== meta.system) {
+        await prisma.condition.update({
+          where: { id: existing.id },
+          data: {
+            name: meta.condition,
+            system: meta.system,
+          },
+        });
+        report.updated++;
+        console.log(`  🔄 Updated: ${meta.condition} (${meta.system})`);
+      } else {
+        report.unchanged++;
+        console.log(`  ✓ Unchanged: ${meta.condition}`);
+      }
+    } else {
+      // Create new condition
+      await prisma.condition.create({
+        data: {
+          id: conditionId,
+          name: meta.condition,
+          system: meta.system,
+        },
+      });
+      report.created++;
+      console.log(`  ✨ Created: ${meta.condition} (${meta.system})`);
+    }
+  } catch (error: any) {
+    report.failed++;
+    report.errors.push({
+      condition: meta.condition,
+      error: error.message,
+    });
+    console.error(`  ❌ Failed: ${meta.condition} - ${error.message}`);
+  }
+}
+
+/**
+ * Sync all conditions from registry
+ */
+async function syncAllConditions(): Promise<void> {
+  console.log('╔════════════════════════════════════════════════════════════╗');
+  console.log('║    Syncing Condition Table from Registry                  ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
+
+  report.totalInRegistry = CONDITION_REGISTRY.length;
+  console.log(`📊 Total conditions in registry: ${report.totalInRegistry}\n`);
+
+  for (const meta of CONDITION_REGISTRY) {
+    await syncCondition(meta);
+  }
+}
+
+/**
+ * Identify conditions in database not in registry (orphaned)
+ */
+async function identifyOrphanedConditions(): Promise<void> {
+  console.log('\n🔍 Checking for orphaned conditions in database...\n');
+
+  try {
+    const registryIds = CONDITION_REGISTRY.map(meta => buildConditionDefinition(meta).id);
+    const dbConditions = await prisma.condition.findMany({
+      select: { id: true, name: true, system: true },
+    });
+
+    const orphaned = dbConditions.filter(c => !registryIds.includes(c.id));
+
+    if (orphaned.length > 0) {
+      console.log(`⚠️  Found ${orphaned.length} orphaned conditions (in database but not in registry):`);
+      orphaned.forEach(c => {
+        console.log(`   - ${c.name} (${c.system}) [ID: ${c.id}]`);
+      });
+      console.log('\n   These conditions will not receive automated content updates.');
+      console.log('   Consider adding them to the registry or archiving them.\n');
+    } else {
+      console.log('✅ No orphaned conditions found.\n');
+    }
+  } catch (error: any) {
+    console.error('❌ Failed to check orphaned conditions:', error.message);
+  }
+}
+
+/**
+ * Print summary report
+ */
+function printReport(): void {
+  report.endTime = new Date();
+  const duration = (report.endTime.getTime() - report.startTime.getTime()) / 1000;
+
+  console.log('\n╔════════════════════════════════════════════════════════════╗');
+  console.log('║    Sync Report Summary                                     ║');
+  console.log('╚════════════════════════════════════════════════════════════╝\n');
+
+  console.log(`⏱️  Duration: ${duration.toFixed(2)}s`);
+  console.log(`📊 Total in Registry: ${report.totalInRegistry}`);
+  console.log(`✨ Created: ${report.created}`);
+  console.log(`🔄 Updated: ${report.updated}`);
+  console.log(`✓ Unchanged: ${report.unchanged}`);
+  console.log(`❌ Failed: ${report.failed}`);
+
+  if (report.errors.length > 0) {
+    console.log('\n⚠️  Errors:');
+    report.errors.forEach((err, i) => {
+      console.log(`  ${i + 1}. ${err.condition}: ${err.error}`);
+    });
+  }
+
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+}
+
+/**
+ * Main execution
+ */
+async function main() {
+  try {
+    await syncAllConditions();
+    await identifyOrphanedConditions();
+    printReport();
+
+    if (report.failed > 0) {
+      console.log('\n⚠️  Some conditions failed to sync. Check errors above.');
+      process.exit(1);
+    } else {
+      console.log('\n✅ Condition table sync completed successfully!');
+      
+      if (report.created > 0) {
+        console.log(`\n💡 Next step: Run automation to generate content for ${report.created} new conditions:`);
+        console.log('   npm run automation:daily');
+      }
+      
+      process.exit(0);
+    }
+  } catch (error: any) {
+    console.error('\n❌ Fatal error during sync:', error);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+// Run if executed directly
+if (require.main === module) {
+  main().catch(console.error);
+}
+
+export { syncAllConditions };
