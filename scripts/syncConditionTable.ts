@@ -44,14 +44,15 @@ const report: SyncReport = {
 
 /**
  * Sync a single condition from registry to database (ADD ONLY)
+ * Also checks MedicalContent table to see if content already exists
  */
 async function syncCondition(meta: any): Promise<void> {
   const definition = buildConditionDefinition(meta);
   const conditionId = definition.id;
 
   try {
-    // Check if condition exists
-    const existing = await prisma.condition.findFirst({
+    // Check if condition exists in Condition table
+    const existingCondition = await prisma.condition.findFirst({
       where: {
         OR: [
           { id: conditionId },
@@ -60,10 +61,21 @@ async function syncCondition(meta: any): Promise<void> {
       },
     });
 
-    if (existing) {
+    // Also check if content already exists in MedicalContent table
+    const existingContent = await prisma.medicalContent.findFirst({
+      where: {
+        OR: [
+          { conditionId: conditionId },
+          { condition: meta.condition, system: meta.system },
+        ],
+      },
+    });
+
+    if (existingCondition || existingContent) {
       // Condition already exists - skip to preserve database edits (ADD ONLY)
       report.unchanged++;
-      console.log(`  ⏭️  Skipped (already exists): ${meta.condition}`);
+      const source = existingContent ? 'MedicalContent' : 'Condition';
+      console.log(`  ⏭️  Skipped (already exists in ${source}): ${meta.condition}`);
     } else {
       // Create new condition (ADD ONLY)
       await prisma.condition.create({

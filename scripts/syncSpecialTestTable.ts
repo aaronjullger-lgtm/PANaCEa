@@ -141,7 +141,31 @@ Keep the content concise but comprehensive. Use clear, professional medical lang
 }
 
 /**
+ * Evaluate if existing content is sufficient and accurate
+ */
+function evaluateContentQuality(existing: any): { needsUpdate: boolean; reason?: string } {
+  // Check if technique field is missing or too short
+  if (!existing.technique || existing.technique.length < 50) {
+    return { needsUpdate: true, reason: 'Insufficient technique description' };
+  }
+
+  // Check for placeholder content
+  if (existing.technique.includes('[NO CONTENT') || existing.technique.includes('TODO')) {
+    return { needsUpdate: true, reason: 'Contains placeholder text' };
+  }
+
+  // If description is too basic or missing
+  if (!existing.description || existing.description.length < 30) {
+    return { needsUpdate: true, reason: 'Insufficient description' };
+  }
+
+  // Content seems adequate
+  return { needsUpdate: false };
+}
+
+/**
  * Sync a single special test from registry to database (ADD ONLY)
+ * Checks existing content and evaluates if it needs improvement
  */
 async function syncSpecialTest(meta: any): Promise<void> {
   const testId = buildSpecialTestId(meta);
@@ -155,9 +179,20 @@ async function syncSpecialTest(meta: any): Promise<void> {
     });
 
     if (existing) {
-      report.skipped++;
-      console.log(`  ⏭️  Skipped (already exists): ${meta.name}`);
-      return;
+      // Evaluate if existing content is sufficient
+      const quality = evaluateContentQuality(existing);
+      
+      if (!quality.needsUpdate) {
+        report.skipped++;
+        console.log(`  ⏭️  Skipped (already exists with sufficient content): ${meta.name}`);
+        return;
+      } else {
+        // Content exists but needs improvement - for now, still skip to preserve manual edits
+        // Future enhancement: could offer to update with approval
+        report.skipped++;
+        console.log(`  ⏭️  Skipped (exists but ${quality.reason} - preserving existing): ${meta.name}`);
+        return;
+      }
     }
 
     // Generate comprehensive content using Gemini API
