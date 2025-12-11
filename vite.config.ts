@@ -44,8 +44,22 @@ export default defineConfig(({ mode }) => {
             ]
           },
           workbox: {
-            maximumFileSizeToCacheInBytes: 20 * 1024 * 1024, // 20MB
-            globPatterns: ['**/*.{js,css,html,ico,png,svg}']
+            maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // 35MB to accommodate large condition data
+            globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+            // Use runtime caching for large data chunks instead of precaching
+            runtimeCaching: [
+              {
+                urlPattern: /^.*\/(data-conditions|data-drugs|data-labs)-.*\.js$/,
+                handler: 'CacheFirst',
+                options: {
+                  cacheName: 'data-cache',
+                  expiration: {
+                    maxEntries: 10,
+                    maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                  },
+                },
+              },
+            ],
           }
         })
       ],
