@@ -15,3 +15,5 @@ logs/
 coverage/
 .nyc_output/
 .env.local
+weekly-report-latest.txt
+content-health-report.json
