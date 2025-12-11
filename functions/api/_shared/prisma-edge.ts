@@ -1,63 +1,88 @@
 /**
- * Prisma Client for Cloudflare Edge Runtime with Neon Adapter
+ * Prisma Client for Cloudflare Edge Runtime
  * 
- * This module provides a Prisma Client configured for Cloudflare Pages Functions
- * which run on Edge Runtime. Uses Neon serverless driver for edge compatibility.
+ * IMPORTANT: Cloudflare Workers/Pages Functions require Prisma Accelerate for database access.
  * 
- * @see https://www.prisma.io/docs/orm/overview/databases/neon
+ * Prisma Accelerate is a connection pooler and query accelerator that works with edge runtimes.
+ * It provides an HTTP API that's compatible with Cloudflare Workers.
+ * 
+ * Setup Steps:
+ * 1. Sign up for Prisma Accelerate: https://www.prisma.io/data-platform/accelerate
+ * 2. Get your Accelerate connection string: prisma://accelerate.prisma-data.net/?api_key=YOUR_KEY
+ * 3. Set DATABASE_URL environment variable in Cloudflare Pages to your Accelerate URL
+ * 
+ * Alternative for Development:
+ * - Use the Express server (server.ts) which can use regular Prisma Client with PostgreSQL
+ * - Deploy server.ts to a Node.js environment (Railway, Render, etc.)
+ * - Use Cloudflare Pages only for static frontend
+ * 
+ * @see https://www.prisma.io/docs/accelerate
+ * @see https://www.prisma.io/docs/orm/prisma-client/deployment/edge/deploy-to-cloudflare
  */
 
 import { PrismaClient } from '@prisma/client/edge';
-import { PrismaNeon } from '@prisma/adapter-neon';
-import { Pool, neonConfig } from '@neondatabase/serverless';
 import { withAccelerate } from '@prisma/extension-accelerate';
-import ws from 'ws';
 
 /**
- * Type for the extended Edge Prisma Client with Neon adapter
+ * Type for the Edge Prisma Client with Accelerate
  */
 export type EdgePrismaClient = ReturnType<typeof createEdgePrismaClient>;
 
 /**
- * Creates a Prisma Client instance compatible with Cloudflare Edge Runtime using Neon adapter.
+ * Creates a Prisma Client instance for Cloudflare Edge Runtime.
  * 
- * IMPORTANT: This function works with PostgreSQL connections via Neon serverless driver:
+ * REQUIREMENTS:
+ * - DATABASE_URL must be a Prisma Accelerate connection string
+ * - Format: prisma://accelerate.prisma-data.net/?api_key=YOUR_ACCELERATE_KEY
+ * - Get your key from: https://www.prisma.io/data-platform/accelerate
  * 
- * - URL format: `postgresql://user:pass@host:port/db`
- * - Works with Neon, Supabase (in proxy mode), or any PostgreSQL provider
- * - The Neon adapter provides edge-compatible connection pooling
+ * The Accelerate extension provides:
+ * - Edge-compatible HTTP-based database access
+ * - Connection pooling optimized for serverless
+ * - Query caching and performance optimization
+ * - No need to bundle database drivers
  * 
- * @param databaseUrl - PostgreSQL connection string from environment
- * @returns Configured PrismaClient instance with Neon adapter
- * @throws Error if databaseUrl is missing or invalid
+ * @param databaseUrl - Prisma Accelerate connection string
+ * @returns Configured PrismaClient with Accelerate extension
+ * @throws Error if databaseUrl is not an Accelerate URL
  */
 export function createEdgePrismaClient(databaseUrl: string) {
   if (!databaseUrl) {
     throw new Error(
-      'DATABASE_URL is required but not provided. ' +
-      'Please set DATABASE_URL in your Cloudflare Pages environment variables.'
+      'DATABASE_URL is required. Set it in Cloudflare Pages environment variables.\n' +
+      'For Cloudflare deployment, you must use Prisma Accelerate:\n' +
+      '  Format: prisma://accelerate.prisma-data.net/?api_key=YOUR_KEY\n' +
+      '  Sign up: https://www.prisma.io/data-platform/accelerate'
     );
   }
 
-  // Configure WebSocket for Node.js environments (not needed in actual edge runtime)
-  if (typeof process !== 'undefined' && process.versions?.node) {
-    neonConfig.webSocketConstructor = ws;
+  // Validate that this is an Accelerate URL
+  if (!databaseUrl.startsWith('prisma://')) {
+    throw new Error(
+      'DATABASE_URL must be a Prisma Accelerate connection string for Cloudflare deployment.\n' +
+      '  Current URL starts with: ' + databaseUrl.split('://')[0] + '://\n' +
+      '  Required format: prisma://accelerate.prisma-data.net/?api_key=YOUR_KEY\n\n' +
+      'Alternatives:\n' +
+      '  1. Use Prisma Accelerate (recommended): https://www.prisma.io/data-platform/accelerate\n' +
+      '  2. Deploy the Express server (server.ts) to a Node.js host instead of using Cloudflare Functions'
+    );
   }
 
   try {
-    // Create Neon connection pool
-    const pool = new Pool({ connectionString: databaseUrl });
-    
-    // Create Neon adapter
-    const adapter = new PrismaNeon(pool);
-    
-    // Create the Prisma client with Neon adapter and Accelerate extension
+    // Create Prisma client with Accelerate
+    // The Accelerate extension handles HTTP-based communication with the database
     return new PrismaClient({
-      adapter,
+      datasources: {
+        db: {
+          url: databaseUrl,
+        },
+      },
     }).$extends(withAccelerate()) as any;
-    
   } catch (error) {
     console.error('[Prisma Edge] Failed to create Prisma client:', error);
-    throw error;
+    throw new Error(
+      'Failed to initialize Prisma Client with Accelerate. ' +
+      'Verify your DATABASE_URL is a valid Prisma Accelerate connection string.'
+    );
   }
 }
