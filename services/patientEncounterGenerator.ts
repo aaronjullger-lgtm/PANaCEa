@@ -9,13 +9,29 @@ async function getConditionContent(): Promise<Record<string, unknown>> {
   }
   
   try {
-    const module = await import('../conditionContent.generated.json');
-    conditionContentCache = module.default;
+    // Try to fetch from database API first
+    const apiUrl = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 
+                    'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/api/content/all`);
+    
+    if (response.ok) {
+      conditionContentCache = await response.json();
+      return conditionContentCache;
+    }
+  } catch (error) {
+    console.warn('Failed to load condition content from API:', error);
+  }
+  
+  // Try static file as fallback
+  try {
+    const module = await import('../src/conditionContent.generated.json');
+    conditionContentCache = module.default || {};
     return conditionContentCache;
   } catch (error) {
-    console.error('Failed to load condition content:', error);
-    return {};
+    console.warn('Failed to load condition content from file:', error);
   }
+  
+  return {};
 }
 
 interface ConditionData {

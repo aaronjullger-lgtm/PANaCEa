@@ -20,19 +20,13 @@ async function getConditions(): Promise<Record<string, unknown>> {
     }
   } catch (error) {
     console.warn(
-      `Failed to load conditions from database API at ${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}, falling back to static file:`,
+      `Failed to load conditions from database API at ${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}:`,
       error
     );
   }
 
-  try {
-    const module = await import("../conditionContent.final.json");
-    conditionsCache = module.default;
-    return conditionsCache;
-  } catch (error) {
-    console.error('Failed to load condition content fallback file:', error);
-  }
-
+  // Return empty object if database not available - content will be loaded on-demand
+  console.warn('Condition content not available from database, returning empty dataset');
   return {};
 }
 

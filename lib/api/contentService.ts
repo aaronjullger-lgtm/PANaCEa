@@ -6,43 +6,79 @@
 import type { MedicalContent } from '../../types/admin-cms';
 
 /**
- * Load all medical content from the condition registry
- * In production, this would fetch from the database
+ * Load all medical content from the database
+ * Returns empty array if database is not available
  */
 export async function loadAllContent(): Promise<MedicalContent[]> {
   try {
-    // Import condition data
-    const { default: conditionContent } = await import('../../conditionContent.final.json');
-    
-    const content: MedicalContent[] = [];
-    
-    // Convert condition data to MedicalContent format
-    for (const [conditionId, condition] of Object.entries(conditionContent)) {
-      if (typeof condition === 'object' && condition !== null) {
-        const item: MedicalContent = {
-          id: conditionId,
-          conditionId: conditionId,
-          condition: (condition as any).name || conditionId,
-          system: (condition as any).system || 'GENERAL',
-          category: 'condition',
-          subcategory: (condition as any).subcategory || 'General',
-          status: 'published',
-          version: 1,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          createdBy: 'system',
-          lastModifiedBy: 'system',
-          content: condition as any
-        };
-        content.push(item);
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      // Browser: fetch from API endpoint
+      const apiUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${apiUrl}/api/content/all`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        return transformToMedicalContent(data);
       }
+    } else {
+      // Server: use Prisma directly
+      const { prisma } = await import('../../lib/prisma');
+      const records = await prisma.medicalContent.findMany({
+        where: { status: 'published' },
+      });
+      
+      return records.map(record => ({
+        id: record.id,
+        conditionId: record.conditionId,
+        condition: record.condition,
+        system: record.system,
+        category: 'condition',
+        subcategory: record.subcategory,
+        status: record.status as any,
+        version: record.version,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+        createdBy: record.createdBy,
+        lastModifiedBy: record.updatedBy,
+        content: record.content as any
+      }));
     }
-    
-    return content;
   } catch (error) {
-    console.error('Error loading content:', error);
-    return [];
+    console.error('Error loading content from database:', error);
   }
+  
+  return [];
+}
+
+/**
+ * Transform raw data object to MedicalContent array
+ */
+function transformToMedicalContent(data: Record<string, any>): MedicalContent[] {
+  const content: MedicalContent[] = [];
+  
+  for (const [conditionId, condition] of Object.entries(data)) {
+    if (typeof condition === 'object' && condition !== null) {
+      const item: MedicalContent = {
+        id: conditionId,
+        conditionId: conditionId,
+        condition: (condition as any).name || conditionId,
+        system: (condition as any).system || 'GENERAL',
+        category: 'condition',
+        subcategory: (condition as any).subcategory || 'General',
+        status: 'published',
+        version: 1,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdBy: 'system',
+        lastModifiedBy: 'system',
+        content: condition as any
+      };
+      content.push(item);
+    }
+  }
+  
+  return content;
 }
 
 /**
