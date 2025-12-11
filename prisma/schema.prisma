@@ -400,9 +400,13 @@ model WeaknessPattern {
 model MedicalContent {
   id          String @id @default(uuid())
   conditionId String @unique // e.g., "CV__ecg__atrial_fibrillation"
-  system      String // System code (CV, PULM, GI, etc.)
+  system      String // Primary system code (CV, PULM, GI, etc.)
   subcategory String
   condition   String
+
+  /// NEW: Array for cross-system tagging (e.g., ["DERM", "HEENT"])
+  /// Enables conditions like Sarcoidosis to appear in multiple system quizzes
+  relatedSystems String[] @default([])
 
   /// Content sections stored as JSONB for flexibility
   content Json // Full content structure including overview, symptoms, treatment, etc.
@@ -427,6 +431,7 @@ model MedicalContent {
 
   @@index([conditionId])
   @@index([system])
+  @@index([relatedSystems]) // NEW: Index for efficient multi-system queries
   @@index([status])
   @@index([createdBy])
   @@index([updatedAt])
