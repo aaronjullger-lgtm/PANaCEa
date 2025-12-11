@@ -11,6 +11,8 @@ import { CONDITION_REGISTRY } from '../conditionRegistry';
 import type { ConditionMeta } from '../conditionRegistry';
 import type { SystemCode } from '../types';
 
+const VALID_SYSTEMS: SystemCode[] = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'ENDO', 'HEME', 'ID', 'RENAL', 'REPRO', 'DERM', 'GU', 'HEENT', 'PSYCH', 'PRO'];
+
 interface ConditionContentData {
   overview?: string;
   etiologyPathophysiology?: string;
@@ -87,18 +89,27 @@ async function loadFromDatabase(conditionId: string): Promise<{
 
     if (!record) return null;
 
+    const safeSystem = VALID_SYSTEMS.includes(record.system as SystemCode)
+      ? (record.system as SystemCode)
+      : ('PRO' as SystemCode);
+
     const meta = findConditionMeta(record.condition) || {
-      system: (record.system as SystemCode) ?? ('PRO' as SystemCode),
+      system: safeSystem,
       subcategory: record.subcategory,
       condition: record.condition,
     };
+
+    const content: ConditionContentData =
+      record.content && typeof record.content === 'object'
+        ? (record.content as ConditionContentData)
+        : {};
 
     return {
       conditionId: record.conditionId,
       name: meta.condition,
       system: meta.system,
       subcategory: meta.subcategory,
-      content: record.content as unknown as ConditionContentData,
+      content,
     };
   } catch (error) {
     console.error('Error loading condition from database:', error);
@@ -210,8 +221,7 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
     const namePart = parts.slice(2).join('__').replace(/_/g, ' ');
     
     // Get metadata from registry
-    const validSystems = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'ENDO', 'HEME', 'ID', 'RENAL', 'REPRO', 'DERM', 'GU', 'HEENT', 'PSYCH', 'PRO'];
-    const systemCode = validSystems.includes(system) ? system as SystemCode : 'PRO' as SystemCode;
+    const systemCode = VALID_SYSTEMS.includes(system as SystemCode) ? system as SystemCode : 'PRO' as SystemCode;
     
     const meta = findConditionMeta(namePart) || {
       system: systemCode,

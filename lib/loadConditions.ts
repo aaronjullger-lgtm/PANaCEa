@@ -6,19 +6,22 @@ async function getConditions(): Promise<Record<string, unknown>> {
     return conditionsCache;
   }
   
-  try {
-    const apiUrl =
-      (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
-      process.env.VITE_API_URL ||
-      "http://localhost:3001";
+  const apiUrl =
+    (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
+    process.env.VITE_API_URL ||
+    "http://localhost:3001";
 
+  try {
     const response = await fetch(`${apiUrl.replace(/\/$/, "")}/api/content/all`);
     if (response.ok) {
       conditionsCache = await response.json();
       return conditionsCache;
     }
   } catch (error) {
-    console.warn("Failed to load conditions from database API, falling back to static file:", error);
+    console.warn(
+      `Failed to load conditions from database API at ${apiUrl.replace(/\/$/, "")}/api/content/all, falling back to static file:`,
+      error
+    );
   }
 
   try {

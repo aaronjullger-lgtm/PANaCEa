@@ -2110,6 +2110,11 @@ export function findConditionMeta(
   if (!candidate) return undefined;
 
   const all = CONDITION_REGISTRY;
+  const matchWord = (needle: string) => {
+    const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`\\b${escaped}\\b`, "i");
+    return regex.test(candidate);
+  };
 
   // 1) Direct name match
   const byName = all.find(
@@ -2127,12 +2132,6 @@ export function findConditionMeta(
 
   // 3) Contains-style match as a fallback (e.g. "severe atrial fibrillation")
   for (const meta of all) {
-    const matchWord = (needle: string) => {
-      const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const regex = new RegExp(`\\b${escaped}\\b`, "i");
-      return regex.test(candidate);
-    };
-
     if (matchWord(meta.condition)) return meta;
     if (meta.aliases?.some((a) => matchWord(a))) return meta;
   }
