@@ -1191,7 +1191,7 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Toxic Epidermal Necrolysis (TEN)", aliases: ["TEN", "Lyell Syndrome"] },
   { system: "DERM", subcategory: "Drug Eruptions & SCARs", condition: "Drug Reaction with Eosinophilia and Systemic Symptoms (DRESS/DIHS)" },
 
-  // Infectious Skin Conditions
+
   { system: "DERM", subcategory: "Infectious", condition: "Abscess" },
   { system: "DERM", subcategory: "Infectious", condition: "Cellulitis" },
   { system: "DERM", subcategory: "Infectious", condition: "Erysipelas" },
@@ -2009,6 +2009,75 @@ export const CONDITION_REGISTRY_ADDITIONAL: ConditionMeta[] = [
   { system: "PSYCH", subcategory: "Psychotic Disorders", condition: "Catatonia" },
   { system: "REPRO", subcategory: "Pregnancy Complications", condition: "Hydatidiform Mole" },
   { system: "REPRO", subcategory: "Pregnancy Complications", condition: "Anembryonic Pregnancy" },
+  { system: "DERM", subcategory: "Oncology", condition: "Basal Cell Carcinoma", aliases: ["BCC"] },
+  { system: "DERM", subcategory: "Oncology", condition: "Squamous Cell Carcinoma", aliases: ["SCC"] },
+  { system: "DERM", subcategory: "Oncology", condition: "Melanoma", aliases: ["Malignant Melanoma"] },
+  { system: "DERM", subcategory: "Oncology", condition: "Kaposi Sarcoma" },
+  { system: "DERM", subcategory: "Oncology", condition: "Actinic Keratosis", aliases: ["AK", "Solar Keratosis"] },
+  { system: "DERM", subcategory: "Infectious", condition: "Felon", aliases: ["Finger Pulp Infection"] },
+  { system: "DERM", subcategory: "Nail Disorders", condition: "Onychocryptosis", aliases: ["Ingrown Toenail"] },
+  { system: "DERM", subcategory: "Hair Disorders", condition: "Telogen Effluvium" },
+  { system: "HEENT", subcategory: "Emergency", condition: "Ludwig’s Angina" },
+  { system: "GU", subcategory: "Emergency", condition: "Fournier Gangrene" },
+  { system: "OTHER", subcategory: "Oncology", condition: "Tumor Lysis Syndrome" },
+  { system: "CV", subcategory: "ECG", condition: "Torsades de Pointes" },
+  { system: "OTHER", subcategory: "Toxicology", condition: "Carbon Monoxide Poisoning" },
+  { system: "OTHER", subcategory: "Toxicology", condition: "Acetaminophen Toxicity" },
+  { system: "OTHER", subcategory: "Toxicology", condition: "Salicylate Toxicity" },
+  { system: "OTHER", subcategory: "Emergency", condition: "Anaphylaxis" },
+  { system: "CV", subcategory: "Vascular", condition: "Superior Vena Cava Syndrome" },
+  { system: "NEURO", subcategory: "Spine", condition: "Spinal Epidural Abscess" },
+  { system: "NEURO", subcategory: "Neuromuscular", condition: "Myasthenic Crisis" },
+
+  // -------------------------
+  // INFECTIOUS DISEASE (Specifics)
+  // -------------------------
+  { system: "ID", subcategory: "Bacterial", condition: "Rheumatic Fever" },
+  { system: "ID", subcategory: "Zoonotic", condition: "Bartonella henselae", aliases: ["Cat Scratch Disease"] },
+  { system: "ID", subcategory: "Parasitic", condition: "Ascariasis", aliases: ["Roundworm"] },
+  { system: "ID", subcategory: "Parasitic", condition: "Cestode Infection", aliases: ["Tapeworm"] },
+  { system: "ID", subcategory: "Viral", condition: "Cytomegalovirus (Systemic)", aliases: ["CMV"] },
+
+  // -------------------------
+  // MUSCULOSKELETAL (Specifics)
+  // -------------------------
+  { system: "MSK", subcategory: "Spine", condition: "Torticollis", aliases: ["Wry Neck"] },
+  { system: "MSK", subcategory: "Spine", condition: "Kyphosis", aliases: ["Scheuermann Disease"] },
+  { system: "MSK", subcategory: "Hand", condition: "Dupuytren Contracture" },
+  { system: "MSK", subcategory: "Soft Tissue", condition: "Baker’s Cyst", aliases: ["Popliteal Cyst"] },
+  { system: "MSK", subcategory: "Foot", condition: "Morton’s Neuroma" },
+  { system: "MSK", subcategory: "Pediatrics", condition: "Sever’s Disease", aliases: ["Calcaneal Apophysitis"] },
+  { system: "MSK", subcategory: "Knee", condition: "Chondromalacia Patellae", aliases: ["Patellofemoral Syndrome"] },
+
+  // -------------------------
+  // GENITOURINARY / REPRODUCTIVE
+  // -------------------------
+  { system: "GU", subcategory: "Infectious", condition: "Balanitis" },
+  { system: "GU", subcategory: "Congenital", condition: "Hypospadias" },
+  { system: "GU", subcategory: "Congenital", condition: "Epispadias" },
+  { system: "GU", subcategory: "Congenital", condition: "Vesicoureteral Reflux" },
+  { system: "REPRO", subcategory: "Menstrual", condition: "Mittelschmerz" },
+  { system: "REPRO", subcategory: "Pregnancy Complications", condition: "Incompetent Cervix", aliases: ["Cervical Insufficiency"] },
+  { system: "NEURO", subcategory: "Cognitive", condition: "Delirium" },
+  { system: "NEURO", subcategory: "Cognitive", condition: "Normal Pressure Hydrocephalus (NPH)" },
+  { system: "OTHER", subcategory: "Genetic", condition: "Noonan Syndrome" },
+  { system: "OTHER", subcategory: "Genetic", condition: "Prader-Willi Syndrome" },
+  { system: "OTHER", subcategory: "Genetic", condition: "Angelman Syndrome" },
+  { system: "OTHER", subcategory: "Genetic", condition: "DiGeorge Syndrome" },
+  { system: "OTHER", subcategory: "Neonatal", condition: "Hyaline Membrane Disease", aliases: ["Respiratory Distress Syndrome"] },
+  { system: "OTHER", subcategory: "Neonatal", condition: "Meconium Aspiration" },
+  { system: "OTHER", subcategory: "Neonatal", condition: "Necrotizing Enterocolitis" },
+  { system: "OTHER", subcategory: "Neonatal", condition: "Sudden Infant Death Syndrome (SIDS)" },
+  { system: "OTHER", subcategory: "Pediatrics", condition: "Colic" },
+  { system: "OTHER", subcategory: "Pediatrics", condition: "Encopresis" },
+  { system: "OTHER", subcategory: "Pediatrics", condition: "Hirschsprung’s Disease" },
+  { system: "HEENT", subcategory: "Ear", condition: "Barotrauma" },
+  { system: "HEENT", subcategory: "Nose", condition: "Rhinitis Medicamentosa" },
+  { system: "OTHER", subcategory: "Environmental", condition: "Snake Bites" },
+  { system: "OTHER", subcategory: "Environmental", condition: "High Altitude Illness" },
+  { system: "OTHER", subcategory: "Environmental", condition: "Electrical Injuries" },
+  { system: "OTHER", subcategory: "Environmental", condition: "Heat Stroke / Heat Exhaustion" },
+  { system: "OTHER", subcategory: "Environmental", condition: "Drowning / Near Drowning" }
 ];
 
 export const CONDITION_REGISTRY: ConditionMeta[] = [

@@ -16,7 +16,7 @@ const LEGACY_FILES = [
   path.resolve("conditionContent.generated.json"), 
   path.resolve("conditionContent.scrubbed.json"),  
   path.resolve("conditionContent.backup.json"),
-  path.resolve("src/conditionContent.generated.json")
+  path.resolve("conditionContent.ready.json")
 ];
 
 const MODEL_NAME = "gemini-2.5-pro"; 
@@ -82,22 +82,28 @@ function needsUpgrade(entry: any): string[] {
     const missing: string[] = [];
     const c = entry.content || {};
 
-    if (!isValid(c.overview) || c.overview.length < 300) missing.push("overview");
+    // Check overview - only if missing or extremely short
+    if (!c.overview || c.overview.length < 10) missing.push("overview");
 
-    const arrays = ["symptoms", "treatment", "riskFactors", "complications", "management", "examFindings"];
-    for (const field of arrays) {
-        const arr = c[field];
-        if (!Array.isArray(arr) || arr.length < 5) {
+    // Check arrays/objects - only if missing or empty
+    const complexFields = ["symptoms", "treatment", "riskFactors", "complications", "management", "examFindings"];
+    for (const field of complexFields) {
+        const val = c[field];
+        if (!val) {
             missing.push(field);
-        } else {
-            const totalLen = arr.reduce((sum: number, s: any) => sum + (typeof s === 'string' ? s.length : 0), 0);
-            if ((totalLen / arr.length) < 35) missing.push(field);
+        } else if (Array.isArray(val) && val.length === 0) {
+            missing.push(field);
+        } else if (typeof val === 'object' && !Array.isArray(val) && Object.keys(val).length === 0) {
+            missing.push(field);
+        } else if (typeof val === 'string' && val.length < 5) {
+            missing.push(field);
         }
     }
     
+    // Check strings - only if missing or extremely short
     const strings = ["clinicalPresentation", "etiologyPathophysiology", "diagnostics"];
     for (const field of strings) {
-        if (!isValid(c[field])) missing.push(field);
+        if (!c[field] || c[field].length < 5) missing.push(field);
     }
     return missing;
 }

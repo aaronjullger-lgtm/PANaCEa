@@ -85902,5 +85902,918 @@
       "clinicalPresentation": "Signs of pregnancy then bleeding.",
       "etiologyPathophysiology": "Chromosomal abnormalities."
     }
+  },
+  {
+    "conditionId": "DERM__oncology__basal_cell_carcinoma",
+    "condition": "Basal Cell Carcinoma",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "DERM__oncology__squamous_cell_carcinoma",
+    "condition": "Squamous Cell Carcinoma",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "DERM__oncology__melanoma",
+    "condition": "Melanoma",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "DERM__oncology__kaposi_sarcoma",
+    "condition": "Kaposi Sarcoma",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "DERM__oncology__actinic_keratosis",
+    "condition": "Actinic Keratosis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "DERM__infectious__felon",
+    "condition": "Felon",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "DERM__nail_disorders__onychocryptosis",
+    "condition": "Onychocryptosis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "DERM__hair_disorders__telogen_effluvium",
+    "condition": "Telogen Effluvium",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "HEENT__emergency__ludwigs_angina",
+    "condition": "Ludwig’s Angina",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "GU__emergency__fournier_gangrene",
+    "condition": "Fournier Gangrene",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__oncology__tumor_lysis_syndrome",
+    "condition": "Tumor Lysis Syndrome",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "CV__ecg__torsades_de_pointes",
+    "condition": "Torsades de Pointes",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__toxicology__carbon_monoxide_poisoning",
+    "condition": "Carbon Monoxide Poisoning",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__toxicology__acetaminophen_toxicity",
+    "condition": "Acetaminophen Toxicity",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__toxicology__salicylate_toxicity",
+    "condition": "Salicylate Toxicity",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__emergency__anaphylaxis",
+    "condition": "Anaphylaxis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "CV__vascular__superior_vena_cava_syndrome",
+    "condition": "Superior Vena Cava Syndrome",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "NEURO__spine__spinal_epidural_abscess",
+    "condition": "Spinal Epidural Abscess",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "NEURO__neuromuscular__myasthenic_crisis",
+    "condition": "Myasthenic Crisis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "ID__bacterial__rheumatic_fever",
+    "condition": "Rheumatic Fever",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "ID__zoonotic__bartonella_henselae",
+    "condition": "Bartonella henselae",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "ID__parasitic__ascariasis",
+    "condition": "Ascariasis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "ID__parasitic__cestode_infection",
+    "condition": "Cestode Infection",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "ID__viral__cytomegalovirus_systemic",
+    "condition": "Cytomegalovirus (Systemic)",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "MSK__spine__torticollis",
+    "condition": "Torticollis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "MSK__spine__kyphosis",
+    "condition": "Kyphosis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "MSK__hand__dupuytren_contracture",
+    "condition": "Dupuytren Contracture",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "MSK__soft_tissue__bakers_cyst",
+    "condition": "Baker’s Cyst",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "MSK__foot__mortons_neuroma",
+    "condition": "Morton’s Neuroma",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "MSK__pediatrics__severs_disease",
+    "condition": "Sever’s Disease",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "MSK__knee__chondromalacia_patellae",
+    "condition": "Chondromalacia Patellae",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "GU__infectious__balanitis",
+    "condition": "Balanitis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "GU__congenital__hypospadias",
+    "condition": "Hypospadias",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "GU__congenital__epispadias",
+    "condition": "Epispadias",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "GU__congenital__vesicoureteral_reflux",
+    "condition": "Vesicoureteral Reflux",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "REPRO__menstrual__mittelschmerz",
+    "condition": "Mittelschmerz",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "REPRO__pregnancy_complications__incompetent_cervix",
+    "condition": "Incompetent Cervix",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "NEURO__cognitive__delirium",
+    "condition": "Delirium",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": [],
+      "clinicalPresentation": "**Classic Case**: An 82-year-old woman is evaluated on postoperative day 3 following a hip fracture repair. The nursing staff reports that she has been agitated and confused, particularly at night, pulling at her IV lines. She is disoriented to time and place, and her attention fluctuates throughout the interview, at times being drowsy and then suddenly restless.\n\n**Key Clues**:\n* Acute onset and fluctuating course (buzzword)\n* Inattention (difficulty focusing or shifting attention) (buzzword)\n* Disorganized thinking or altered level of consciousness (history)\n* Common in elderly, hospitalized patients, especially post-op (history)\n* Often precipitated by an underlying medical condition, infection, or medication (history)\n\n**Classic Case**: An 85-year-old man with dementia is admitted to the hospital for a urinary tract infection. On day 2 of his stay, the nursing staff reports that he has become acutely agitated, is pulling at his IV lines, and seems to be hallucinating. His level of attention fluctuates throughout the day, alternating between drowsiness and hyper-arousal.\n\n**Key Clues**:\n* Acute onset and fluctuating course (history)\n* Inattention (hallmark feature) (buzzword)\n* Caused by an underlying medical condition (e.g., infection, medication) (history)\n* Disorganized thinking or altered level of consciousness (history)\n* Advanced age and pre-existing cognitive impairment are major risk factors (history)\n\n"
+    }
+  },
+  {
+    "conditionId": "NEURO__cognitive__normal_pressure_hydrocephalus_nph",
+    "condition": "Normal Pressure Hydrocephalus (NPH)",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__genetic__noonan_syndrome",
+    "condition": "Noonan Syndrome",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__genetic__praderwilli_syndrome",
+    "condition": "Prader-Willi Syndrome",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__genetic__angelman_syndrome",
+    "condition": "Angelman Syndrome",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__genetic__digeorge_syndrome",
+    "condition": "DiGeorge Syndrome",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__neonatal__hyaline_membrane_disease",
+    "condition": "Hyaline Membrane Disease",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__neonatal__meconium_aspiration",
+    "condition": "Meconium Aspiration",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__neonatal__necrotizing_enterocolitis",
+    "condition": "Necrotizing Enterocolitis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__neonatal__sudden_infant_death_syndrome_sids",
+    "condition": "Sudden Infant Death Syndrome (SIDS)",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__pediatrics__colic",
+    "condition": "Colic",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__pediatrics__encopresis",
+    "condition": "Encopresis",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__pediatrics__hirschsprungs_disease",
+    "condition": "Hirschsprung’s Disease",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "HEENT__ear__barotrauma",
+    "condition": "Barotrauma",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "HEENT__nose__rhinitis_medicamentosa",
+    "condition": "Rhinitis Medicamentosa",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__environmental__snake_bites",
+    "condition": "Snake Bites",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__environmental__high_altitude_illness",
+    "condition": "High Altitude Illness",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__environmental__electrical_injuries",
+    "condition": "Electrical Injuries",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__environmental__heat_stroke__heat_exhaustion",
+    "condition": "Heat Stroke / Heat Exhaustion",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
+  },
+  {
+    "conditionId": "OTHER__environmental__drowning__near_drowning",
+    "condition": "Drowning / Near Drowning",
+    "content": {
+      "overview": "",
+      "diagnostics": "",
+      "etiologyPathophysiology": "",
+      "symptoms": [],
+      "treatment": [],
+      "examFindings": [],
+      "riskFactors": [],
+      "management": [],
+      "complications": [],
+      "basicScienceLinks": []
+    }
   }
 ]

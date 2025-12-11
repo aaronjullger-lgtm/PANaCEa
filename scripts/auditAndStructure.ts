@@ -6,8 +6,8 @@ import { FIRST_LINE_TREATMENTS } from '../data/firstLineTreatmentData';
 import { GUIDELINES_DATABASE } from '../data/guidelinesData';
 
 // Configuration
-const INPUT_FILE = path.resolve("conditionContent.arrays.json");
-const OUTPUT_FILE = path.resolve("conditionContent.ready.json");
+const INPUT_FILE = path.resolve("conditionContent.final.json");
+const OUTPUT_FILE = path.resolve("conditionContent.final.json");
 const MISSING_LOG = path.resolve("missing_registry_items.json");
 
 // Load Local Data
