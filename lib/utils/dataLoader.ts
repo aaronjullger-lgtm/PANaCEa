@@ -1,9 +1,4 @@
-/**
- * Data Loader Utility
- * 
- * Provides lazy loading and caching for large data files to improve
- * initial bundle size and application performance.
- */
+import { getApiEndpoint, API_ENDPOINTS } from './apiConfig';
 
 // Cache to store loaded data
 const dataCache = new Map<string, any>();
@@ -35,7 +30,7 @@ export async function loadDrugData(): Promise<any> {
 
 /**
  * Lazily load condition content when needed.
- * Uses dynamic import to keep it out of the main bundle.
+ * Now uses database API endpoint instead of static JSON file.
  * 
  * @returns Promise resolving to the condition content
  */
@@ -48,13 +43,24 @@ export async function loadConditionContent(): Promise<any> {
   }
   
   try {
-    const module = await import('../../conditionContent.correct.json');
-    const data = module.default;
-    dataCache.set(cacheKey, data);
-    return data;
+    // Use the database API endpoint (same approach as lib/loadConditions.ts)
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+    
+    const response = await fetch(apiUrl);
+    
+    if (response.ok) {
+      const data = await response.json();
+      dataCache.set(cacheKey, data);
+      return data;
+    }
+    
+    console.warn('Database API not available, condition content will be loaded on-demand');
+    // Return empty object - content will be loaded on-demand via database queries
+    return {};
   } catch (error) {
-    console.error('Failed to load condition content:', error);
-    throw new Error('Unable to load condition content. Please try again.');
+    console.warn('Failed to load condition content from API, will use on-demand loading:', error);
+    // Return empty object - content will be loaded on-demand via database queries
+    return {};
   }
 }
 

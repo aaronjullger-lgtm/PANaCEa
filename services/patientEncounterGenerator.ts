@@ -1,4 +1,5 @@
 import type { PatientEncounterCase } from '@/types/drill-modes';
+import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
 
 // Lazy load condition content to improve initial bundle size
 let conditionContentCache: Record<string, unknown> | null = null;
@@ -9,13 +10,28 @@ async function getConditionContent(): Promise<Record<string, unknown>> {
   }
   
   try {
-    const module = await import('../conditionContent.generated.json');
-    conditionContentCache = module.default;
+    // Try to fetch from database API first
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+    const response = await fetch(apiUrl);
+    
+    if (response.ok) {
+      conditionContentCache = await response.json();
+      return conditionContentCache;
+    }
+  } catch (error) {
+    console.warn('Failed to load condition content from API:', error);
+  }
+  
+  // Try static file as fallback
+  try {
+    const module = await import('../src/conditionContent.generated.json');
+    conditionContentCache = module.default || {};
     return conditionContentCache;
   } catch (error) {
-    console.error('Failed to load condition content:', error);
-    return {};
+    console.warn('Failed to load condition content from file:', error);
   }
+  
+  return {};
 }
 
 interface ConditionData {

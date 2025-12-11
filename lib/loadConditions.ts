@@ -7,32 +7,25 @@ async function getConditions(): Promise<Record<string, unknown>> {
     return conditionsCache;
   }
   
-  const apiUrl =
-    (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_URL) ||
-    process.env.VITE_API_URL ||
-    "http://localhost:3001";
+  // Import shared API config utility
+  const { getApiEndpoint, API_ENDPOINTS } = await import('./utils/apiConfig');
+  const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
 
   try {
-    const response = await fetch(`${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}`);
+    const response = await fetch(apiUrl);
     if (response.ok) {
       conditionsCache = await response.json();
       return conditionsCache;
     }
   } catch (error) {
     console.warn(
-      `Failed to load conditions from database API at ${apiUrl.replace(/\/$/, "")}${CONTENT_API_PATH}, falling back to static file:`,
+      `Failed to load conditions from database API:`,
       error
     );
   }
 
-  try {
-    const module = await import("../conditionContent.final.json");
-    conditionsCache = module.default;
-    return conditionsCache;
-  } catch (error) {
-    console.error('Failed to load condition content fallback file:', error);
-  }
-
+  // Return empty object if database not available - content will be loaded on-demand
+  console.warn('Condition content not available from database, returning empty dataset');
   return {};
 }
 

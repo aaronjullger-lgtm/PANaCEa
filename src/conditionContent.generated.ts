@@ -2,6 +2,8 @@
 // This file MUST NOT import @google/genai or any server SDK.
 // It only loads the pre-generated JSON created by the generator script.
 
+import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
+
 export interface ConditionContent {
   overview?: string;
   keyPoints?: string[];
@@ -63,7 +65,9 @@ export async function loadConditionContent(): Promise<Record<string, ConditionCo
   try {
     // 1. Try fetching from Database (via API)
     // This ensures we use the most up-to-date content from the DB
-    const response = await fetch('/api/content/all');
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+    const response = await fetch(apiUrl);
+    
     if (response.ok) {
       const data = await response.json();
       if (Object.keys(data).length > 0) {
@@ -72,27 +76,18 @@ export async function loadConditionContent(): Promise<Record<string, ConditionCo
         return data;
       }
     }
-    throw new Error('API returned empty or error');
   } catch (error) {
-    console.warn('Failed to load content from DB, falling back to local files:', error);
-    
-    // 2. Fallback to local static files
-    try {
-      const [baseModule, updatedModule] = await Promise.all([
-        import("./conditionContent.generated.json"),
-        import("../conditionContent.generated.json")
-      ]);
+    console.warn('Failed to load content from DB API:', error);
+  }
 
-      conditionContentCache = mergeConditionContent(
-        baseModule.default as Record<string, ConditionContent>,
-        updatedModule.default as Record<string, ConditionContentPatch>
-      );
-
-      return conditionContentCache;
-    } catch (fileError) {
-      console.error('Failed to load condition content from files:', fileError);
-      return {};
-    }
+  // 2. Fallback to local static file
+  try {
+    const baseModule = await import("./conditionContent.generated.json");
+    conditionContentCache = (baseModule.default as Record<string, ConditionContent>) || {};
+    return conditionContentCache;
+  } catch (fileError) {
+    console.warn('Failed to load condition content from file:', fileError);
+    return {};
   }
 }
 
