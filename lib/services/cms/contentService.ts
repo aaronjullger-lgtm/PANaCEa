@@ -24,6 +24,7 @@ export interface ContentData {
   system: string;
   subcategory: string;
   condition: string;
+  relatedSystems?: string[]; // NEW: Array for cross-system tagging
   content: Record<string, any>; // JSONB field with all content sections
 }
 
@@ -49,6 +50,7 @@ export async function createDraft(
       system: data.system,
       subcategory: data.subcategory,
       condition: data.condition,
+      relatedSystems: data.relatedSystems || [], // NEW: Persist relatedSystems array
       content: data.content,
       status: 'draft',
       version: 1,
@@ -68,7 +70,7 @@ export async function createDraft(
     changedByRole: options.userRole,
     ipAddress: options.ipAddress,
     userAgent: options.userAgent,
-    newValues: { status: 'draft', ...data.content },
+    newValues: { status: 'draft', relatedSystems: data.relatedSystems, ...data.content },
   });
 
   return content;

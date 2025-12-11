@@ -42,6 +42,7 @@ export interface LoadedConditionData {
   subcategory: string;
   meta: ConditionMeta;
   content: ConditionContentData;
+  relatedSystems?: SystemCode[]; // NEW: Support for multi-system conditions
 }
 
 // Cache for loaded condition content
@@ -72,6 +73,7 @@ async function loadFromDatabase(conditionId: string): Promise<{
   system: SystemCode;
   subcategory: string;
   content: ConditionContentData;
+  relatedSystems?: SystemCode[]; // NEW: Include relatedSystems from database
 } | null> {
   if (!process.env.DATABASE_URL) return null;
 
@@ -81,10 +83,13 @@ async function loadFromDatabase(conditionId: string): Promise<{
     // Try direct conditionId match first (unique), then condition name (case-insensitive)
     let record =
       await prisma.medicalContent.findUnique({
-        where: { conditionId },
+        where: { conditionId, status: 'published' }, // Only fetch published content
       }) ??
       (await prisma.medicalContent.findFirst({
-        where: { condition: { equals: conditionId, mode: 'insensitive' } },
+        where: { 
+          condition: { equals: conditionId, mode: 'insensitive' },
+          status: 'published' // Only fetch published content
+        },
       }));
 
     if (!record) return null;
@@ -93,10 +98,17 @@ async function loadFromDatabase(conditionId: string): Promise<{
       ? (record.system as SystemCode)
       : ('PRO' as SystemCode);
 
+    // Extract relatedSystems from database record
+    const relatedSystems = Array.isArray(record.relatedSystems)
+      ? (record.relatedSystems as string[])
+          .filter((sys): sys is SystemCode => VALID_SYSTEMS.includes(sys as SystemCode))
+      : [];
+
     const meta = findConditionMeta(record.condition) || {
       system: safeSystem,
       subcategory: record.subcategory,
       condition: record.condition,
+      relatedSystems, // Include in meta
     };
 
     const content: ConditionContentData =
@@ -110,6 +122,7 @@ async function loadFromDatabase(conditionId: string): Promise<{
       system: meta.system,
       subcategory: meta.subcategory,
       content,
+      relatedSystems, // NEW: Return relatedSystems
     };
   } catch (error) {
     console.error('Error loading condition from database:', error);
@@ -149,7 +162,7 @@ function findConditionMeta(conditionId: string): ConditionMeta | null {
  */
 export async function loadConditionData(conditionId: string): Promise<LoadedConditionData | null> {
   try {
-    // 1) Prefer database content
+    // 1) Prefer database content (RAG-first approach)
     const dbResult = await loadFromDatabase(conditionId);
     if (dbResult) {
       const meta =
@@ -157,6 +170,7 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
           system: dbResult.system,
           subcategory: dbResult.subcategory,
           condition: dbResult.name,
+          relatedSystems: dbResult.relatedSystems, // Include relatedSystems in meta
         };
 
       return {
@@ -166,10 +180,11 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
         subcategory: meta.subcategory,
         meta,
         content: dbResult.content,
+        relatedSystems: dbResult.relatedSystems, // NEW: Include relatedSystems
       };
     }
 
-    // 2) Fallback to static file
+    // 2) Fallback to static file (backward compatibility)
     const contentFile = loadConditionContentFile();
     
     // Try to find content by exact key match first
@@ -245,8 +260,30 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
 
 /**
  * Get a list of all available condition IDs
+ * Prioritizes database, falls back to JSON file
+ * 
+ * NOTE: This function is now async to support database queries.
+ * This is a breaking change from the previous synchronous version.
+ * Callers must use await or .then() to handle the Promise.
+ * The change is justified to enable database-first RAG architecture.
  */
-export function getAllConditionIds(): string[] {
+export async function getAllConditionIds(): Promise<string[]> {
+  // Try database first if available
+  if (process.env.DATABASE_URL) {
+    try {
+      const { prisma } = await import('../lib/prisma');
+      const publishedIds = await prisma.medicalContent.findMany({
+        where: { status: 'published' },
+        select: { conditionId: true },
+      });
+      return publishedIds.map(c => c.conditionId);
+    } catch (error) {
+      console.error('Error getting condition IDs from database:', error);
+      // Fall through to file-based approach
+    }
+  }
+  
+  // Fallback to file-based retrieval
   try {
     const contentFile = loadConditionContentFile();
     return Object.keys(contentFile);
@@ -257,9 +294,40 @@ export function getAllConditionIds(): string[] {
 }
 
 /**
- * Get conditions by system
+ * Get conditions by system (supports both primary and related systems)
+ * When database is available, searches both system and relatedSystems fields
+ * 
+ * NOTE: This function is now async to support database queries.
+ * This is a breaking change from the previous synchronous version.
+ * Callers must use await or .then() to handle the Promise.
+ * The change is justified to enable multi-system condition queries.
  */
-export function getConditionsBySystem(system: string): string[] {
+export async function getConditionsBySystem(system: string): Promise<string[]> {
+  // Try database first if available
+  if (process.env.DATABASE_URL) {
+    try {
+      const { prisma } = await import('../lib/prisma');
+      
+      // Query conditions where system matches OR relatedSystems includes the system
+      const conditionRecords = await prisma.medicalContent.findMany({
+        where: {
+          status: 'published',
+          OR: [
+            { system: system }, // Primary system match
+            { relatedSystems: { has: system } } // Related system match (multi-system conditions)
+          ]
+        },
+        select: { conditionId: true }
+      });
+      
+      return conditionRecords.map(c => c.conditionId);
+    } catch (error) {
+      console.error(`Error getting conditions for system ${system} from database:`, error);
+      // Fall through to file-based approach
+    }
+  }
+  
+  // Fallback to file-based filtering
   try {
     const contentFile = loadConditionContentFile();
     return Object.keys(contentFile).filter(key => key.startsWith(system + '__'));
