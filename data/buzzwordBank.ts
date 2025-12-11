@@ -314,4 +314,97 @@ export const BUZZWORD_BANK: BuzzwordEntry[] = [
   { buzzword: 'Flight of ideas', condition: 'Mania', system: 'PSYCH', subcategory: 'Mood Disorders', explanation: 'Rapid shifting between loosely connected topics' },
   { buzzword: 'Pressured speech', condition: 'Mania', system: 'PSYCH', subcategory: 'Mood Disorders', explanation: 'Rapid, difficult to interrupt speech' },
   { buzzword: 'Grandiosity', condition: 'Mania', system: 'PSYCH', subcategory: 'Mood Disorders', explanation: 'Inflated self-esteem or sense of importance' },
-  { buzzword: 'Splitting', condition: 'Borderline Personality Disorder', system: 'PSYCH', subcateg
+  { buzzword: 'Splitting', condition: 'Borderline Personality Disorder', system: 'PSYCH', subcategory: 'Personality Disorders', explanation: 'All-or-nothing thinking about people' },
+  { buzzword: 'Echolalia', condition: 'Catatonia', system: 'PSYCH', subcategory: 'Psychotic Disorders', explanation: 'Repetition of words spoken by others' },
+  { buzzword: 'Waxy flexibility', condition: 'Catatonia', system: 'PSYCH', subcategory: 'Psychotic Disorders', explanation: 'Maintaining positions placed by examiner' },
+  { buzzword: 'Delirium tremens', condition: 'Alcohol Withdrawal', system: 'PSYCH', subcategory: 'Substance Use – Alcohol', explanation: 'Severe withdrawal with tremors, AMS, autonomic instability' },
+
+  // ========================
+  // HEENT
+  // ========================
+  { buzzword: 'Cherry red spot', condition: 'Central Retinal Artery Occlusion (CRAO)', system: 'HEENT', subcategory: 'Eye – Retina', explanation: 'Fovea appears red against pale retina' },
+  { buzzword: 'Cotton wool spots', condition: 'Diabetic Retinopathy', system: 'HEENT', subcategory: 'Eye – Retina', explanation: 'White fluffy lesions from nerve fiber infarcts' },
+  { buzzword: 'Flame hemorrhages', condition: 'Hypertensive Retinopathy', system: 'HEENT', subcategory: 'Eye – Retina', explanation: 'Hemorrhages in nerve fiber layer' },
+  { buzzword: 'Cupping of optic disc', condition: 'Primary Open-Angle Glaucoma', system: 'HEENT', subcategory: 'Eye – Glaucoma', explanation: 'Enlarged cup-to-disc ratio' },
+  { buzzword: 'Fixed dilated pupil', condition: 'Acute Angle-Closure Glaucoma', system: 'HEENT', subcategory: 'Eye – Glaucoma', explanation: 'Mid-dilated non-reactive pupil' },
+  { buzzword: 'Dendritic ulcer', condition: 'Herpes Simplex Keratitis', system: 'HEENT', subcategory: 'Eye – Cornea & Anterior Segment', explanation: 'Branching pattern on fluorescein staining' },
+  { buzzword: 'Ciliary flush', condition: 'Anterior Uveitis / Iritis', system: 'HEENT', subcategory: 'Eye – Uvea', explanation: 'Circumlimbal injection around iris' },
+  { buzzword: 'Cobblestoning', condition: 'Allergic Conjunctivitis', system: 'HEENT', subcategory: 'Eye – Conjunctiva', explanation: 'Giant papillae on tarsal conjunctiva' },
+  { buzzword: 'Bulging eardrum', condition: 'Acute Otitis Media', system: 'HEENT', subcategory: 'Ear – Middle', explanation: 'Erythematous, opaque tympanic membrane' },
+  { buzzword: 'Pearly white mass', condition: 'Cholesteatoma', system: 'HEENT', subcategory: 'Ear – Middle', explanation: 'Keratinized epithelium in middle ear' },
+
+  // ========================
+  // REPRODUCTIVE (REPRO)
+  // ========================
+  { buzzword: 'Chandelier sign', condition: 'Pelvic Inflammatory Disease (PID)', system: 'REPRO', subcategory: 'Gynecology', explanation: 'Severe pain on cervical motion' },
+  { buzzword: 'Strawberry cervix', condition: 'Trichomoniasis', system: 'REPRO', subcategory: 'Vaginal Disorders', explanation: 'Punctate hemorrhages on cervix' },
+  { buzzword: 'Clue cells', condition: 'Bacterial Vaginosis', system: 'REPRO', subcategory: 'Vaginal Disorders', explanation: 'Epithelial cells coated with bacteria' },
+  { buzzword: 'Fishy odor with KOH', condition: 'Bacterial Vaginosis', system: 'REPRO', subcategory: 'Vaginal Disorders', explanation: 'Positive whiff test' },
+  { buzzword: 'Cottage cheese discharge', condition: 'Vulvovaginal Candidiasis', system: 'REPRO', subcategory: 'Vaginal Disorders', explanation: 'Thick white curdled discharge' },
+  { buzzword: 'Snowstorm on ultrasound', condition: 'Hydatidiform Mole', system: 'REPRO', subcategory: 'Early Pregnancy', explanation: 'Multiple echogenic foci from grape-like vesicles' },
+  { buzzword: 'Empty gestational sac', condition: 'Anembryonic Pregnancy', system: 'REPRO', subcategory: 'Early Pregnancy', explanation: 'Blighted ovum without fetal pole' },
+  { buzzword: 'Ring of fire', condition: 'Ectopic Pregnancy', system: 'REPRO', subcategory: 'Early Pregnancy', explanation: 'Increased doppler flow around tubal mass' },
+
+  // ========================
+  // GENITOURINARY (GU)
+  // ========================
+  { buzzword: 'Bag of worms', condition: 'Varicocele', system: 'GU', subcategory: 'Testicular', explanation: 'Feeling of dilated veins in scrotum' },
+  { buzzword: 'Blue dot sign', condition: 'Testicular Torsion', system: 'GU', subcategory: 'Testicular', explanation: 'Visible blue nodule through scrotal skin (specifically appendage torsion)' },
+  { buzzword: 'Bell clapper deformity', condition: 'Testicular Torsion', system: 'GU', subcategory: 'Testicular', explanation: 'Horizontal lie of testis predisposing to torsion' },
+  { buzzword: 'High-riding testis', condition: 'Testicular Torsion', system: 'GU', subcategory: 'Testicular', explanation: 'Retracted testis with absent cremasteric reflex' },
+  { buzzword: 'Prehn sign negative', condition: 'Testicular Torsion', system: 'GU', subcategory: 'Testicular', explanation: 'No relief with testicular elevation (vs. epididymitis)' },
+];
+
+/**
+ * Get all buzzwords as a flat dictionary for rapid recall mode
+ */
+export function getBuzzwordDictionary(): Record<string, string> {
+  const dict: Record<string, string> = {};
+  for (const entry of BUZZWORD_BANK) {
+    dict[entry.buzzword] = entry.condition;
+  }
+  return dict;
+}
+
+/**
+ * Get buzzwords filtered by system
+ */
+export function getBuzzwordsBySystem(system: SystemCode): BuzzwordEntry[] {
+  return BUZZWORD_BANK.filter(entry => entry.system === system);
+}
+
+/**
+ * Get all unique conditions from buzzword bank
+ */
+export function getAllBuzzwordConditions(): string[] {
+  return [...new Set(BUZZWORD_BANK.map(entry => entry.condition))];
+}
+
+/**
+ * Get random buzzwords for quiz mode
+ */
+export function getRandomBuzzwords(count: number, excludeSystem?: SystemCode): BuzzwordEntry[] {
+  let pool = BUZZWORD_BANK;
+  if (excludeSystem) {
+    pool = pool.filter(entry => entry.system !== excludeSystem);
+  }
+  
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+/**
+ * Search buzzwords by keyword
+ */
+export function searchBuzzwords(query: string): BuzzwordEntry[] {
+  const lowerQuery = query.toLowerCase().trim();
+  if (!lowerQuery) return [];
+  
+  return BUZZWORD_BANK.filter(entry => 
+    entry.buzzword.toLowerCase().includes(lowerQuery) ||
+    entry.condition.toLowerCase().includes(lowerQuery) ||
+    (entry.explanation && entry.explanation.toLowerCase().includes(lowerQuery))
+  );
+}
+
+export default BUZZWORD_BANK;

@@ -88,9 +88,17 @@ async function migrateConditionContent() {
   
   // Try multiple possible locations
   const possiblePaths = [
+    'conditionContent.final.json',
+    'data/conditionContent.final.json',
     'conditionContent.generated.json',
-    'conditionContent.correct.json',
-    'src/conditionContent.generated.json',
+    'data/conditionContent.generated.json',
+    'buzzwordBank.ts',
+    'firstLineTreatment.ts',
+    'guidelinesData.ts',
+    'pharmQuizData.ts',
+    'photoManifest.ts',
+    'conditionRegistry.ts',
+    'labcasesData.ts',
   ];
 
   let conditionData: any = null;
@@ -143,6 +151,16 @@ async function migrateConditionContent() {
       let subcategory = 'general';
       let condition = conditionId;
 
+      // Handle nested content structure (e.g. from conditionContent.final.json)
+      // If content has a 'content' property, use that as the actual content
+      // and use the outer properties for metadata if available
+      let actualContent = content;
+      if (content && typeof content === 'object' && 'content' in content && !('overview' in content)) {
+         // It's likely a wrapper object: { conditionId, condition, content: { ... } }
+         actualContent = content.content;
+         if (content.condition) condition = content.condition;
+      }
+
       const registryEntry = registryMap.get(conditionId);
       if (registryEntry) {
         system = registryEntry.system;
@@ -155,7 +173,10 @@ async function migrateConditionContent() {
         system = parts[0] || 'MISC';
         
         const rawCondition = parts.length > 2 ? parts[parts.length - 1] : (parts[2] || conditionId);
-        condition = toTitleCase(rawCondition);
+        // Only overwrite condition if we didn't get it from the wrapper object
+        if (condition === conditionId) {
+            condition = toTitleCase(rawCondition);
+        }
         
         // Subcategory is everything in between
         const rawSubcategory = parts.length > 2 ? parts.slice(1, parts.length - 1).join('__') : (parts[1] || 'general');
@@ -169,7 +190,7 @@ async function migrateConditionContent() {
           system,
           subcategory,
           condition,
-          content: content as any,
+          content: actualContent as any,
           updatedAt: new Date(),
         },
         create: {
@@ -177,7 +198,7 @@ async function migrateConditionContent() {
           system,
           subcategory,
           condition,
-          content: content as any, // Store full JSON structure
+          content: actualContent as any, // Store full JSON structure
           status: 'published', // Assume static data is already approved
           version: 1,
           createdBy: 'migration-script',
