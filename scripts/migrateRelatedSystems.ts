@@ -126,7 +126,8 @@ async function main() {
     const tableInfo = await prisma.$queryRaw<any[]>`
       SELECT column_name 
       FROM information_schema.columns 
-      WHERE table_name = 'MedicalContent' 
+      WHERE table_schema = 'public'
+        AND table_name = 'MedicalContent' 
         AND column_name = 'relatedSystems'
     `;
 
@@ -160,8 +161,8 @@ async function main() {
               contains: conditionName,
               mode: 'insensitive'
             },
-            // Only update if relatedSystems is empty
-            relatedSystems: { isEmpty: true }
+            // Only update if relatedSystems is empty - use array equality check
+            relatedSystems: { equals: [] }
           }
         });
 
@@ -191,7 +192,8 @@ async function main() {
     // Show statistics
     const withRelatedSystems = await prisma.medicalContent.count({
       where: {
-        relatedSystems: { isEmpty: false }
+        // Use array not equals empty to check for non-empty arrays
+        NOT: { relatedSystems: { equals: [] } }
       }
     });
 
