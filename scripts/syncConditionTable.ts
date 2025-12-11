@@ -28,7 +28,6 @@ interface SyncReport {
   endTime?: Date;
   totalInRegistry: number;
   created: number;
-  updated: number;
   unchanged: number;
   failed: number;
   errors: Array<{ condition: string; error: string }>;
@@ -38,14 +37,13 @@ const report: SyncReport = {
   startTime: new Date(),
   totalInRegistry: 0,
   created: 0,
-  updated: 0,
   unchanged: 0,
   failed: 0,
   errors: [],
 };
 
 /**
- * Sync a single condition from registry to database
+ * Sync a single condition from registry to database (ADD ONLY)
  */
 async function syncCondition(meta: any): Promise<void> {
   const definition = buildConditionDefinition(meta);
@@ -63,23 +61,11 @@ async function syncCondition(meta: any): Promise<void> {
     });
 
     if (existing) {
-      // Check if update is needed
-      if (existing.name !== meta.condition || existing.system !== meta.system) {
-        await prisma.condition.update({
-          where: { id: existing.id },
-          data: {
-            name: meta.condition,
-            system: meta.system,
-          },
-        });
-        report.updated++;
-        console.log(`  🔄 Updated: ${meta.condition} (${meta.system})`);
-      } else {
-        report.unchanged++;
-        console.log(`  ✓ Unchanged: ${meta.condition}`);
-      }
+      // Condition already exists - skip to preserve database edits (ADD ONLY)
+      report.unchanged++;
+      console.log(`  ⏭️  Skipped (already exists): ${meta.condition}`);
     } else {
-      // Create new condition
+      // Create new condition (ADD ONLY)
       await prisma.condition.create({
         data: {
           id: conditionId,
@@ -105,7 +91,7 @@ async function syncCondition(meta: any): Promise<void> {
  */
 async function syncAllConditions(): Promise<void> {
   console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log('║    Syncing Condition Table from Registry                  ║');
+  console.log('║    Syncing Condition Table from Registry (ADD ONLY)       ║');
   console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   report.totalInRegistry = CONDITION_REGISTRY.length;
@@ -158,9 +144,8 @@ function printReport(): void {
 
   console.log(`⏱️  Duration: ${duration.toFixed(2)}s`);
   console.log(`📊 Total in Registry: ${report.totalInRegistry}`);
-  console.log(`✨ Created: ${report.created}`);
-  console.log(`🔄 Updated: ${report.updated}`);
-  console.log(`✓ Unchanged: ${report.unchanged}`);
+  console.log(`✨ Created (New): ${report.created}`);
+  console.log(`⏭️  Skipped (Existing): ${report.unchanged}`);
   console.log(`❌ Failed: ${report.failed}`);
 
   if (report.errors.length > 0) {
@@ -189,8 +174,13 @@ async function main() {
       console.log('\n✅ Condition table sync completed successfully!');
       
       if (report.created > 0) {
-        console.log(`\n💡 Next step: Run automation to generate content for ${report.created} new conditions:`);
+        console.log(`\n💡 ${report.created} new conditions added to database.`);
+        console.log('   Next step: Run automation to generate content for new conditions:');
         console.log('   npm run automation:daily');
+      }
+      
+      if (report.unchanged > 0) {
+        console.log(`\n📝 ${report.unchanged} conditions already exist in database (preserved, not overwritten).`);
       }
       
       process.exit(0);
