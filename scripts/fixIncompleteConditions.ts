@@ -3,20 +3,31 @@
 
 import fs from "fs";
 import path from "path";
-import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 // ======================================================
 // CONFIG
 // ======================================================
 const MODEL_NAME = "gemini-2.5-pro";
-const INPUT_FILE = path.resolve("/workspaces/PANaCEa/conditionContent.generated.json");
-const OUTPUT_FILE = path.resolve("/workspaces/PANaCEa/conditionContent.generated.json");
+const INPUT_FILE = path.resolve("conditionContent.generated.json");
+const OUTPUT_FILE = path.resolve("conditionContent.generated.json");
 const MAX_RETRIES = 3;
-const DELAY_BETWEEN_REQUESTS = 1000; // 1 second delay
+const DELAY_BETWEEN_REQUESTS = 2000; // 2 second delay
 const PLACEHOLDER_VALUE = "--";
 
 // ======================================================
 // REQUIRED SECTIONS
+// ======================================================
+const envPath = path.resolve(process.cwd(), '.env');
+let envConfig: any = {};
+if (fs.existsSync(envPath)) {
+  envConfig = fs.readFileSync(envPath, 'utf8').split('\n').reduce((acc, line) => {
+    const [key, val] = line.split('=');
+    if (key && val) acc[key.trim()] = val.trim().replace(/^"|"$/g, '');
+    return acc;
+  }, {} as any);
+}
+
 // ======================================================
 const REQUIRED_SECTIONS = [
   "overview",
@@ -38,14 +49,35 @@ type SectionName = (typeof REQUIRED_SECTIONS)[number];
 // ======================================================
 // API KEY (optional - if not provided, will use placeholder content)
 // ======================================================
-const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
+const apiKey = envConfig.API_KEY || envConfig.GOOGLE_API_KEY || envConfig.GEMINI_API_KEY || process.env.API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
 
-let client: GoogleGenerativeAI | null = null;
-let model: GenerativeModel | null = null;
+let client: GoogleGenAI | null = null;
+// let model: any = null;
 
 if (apiKey) {
-  client = new GoogleGenerativeAI(apiKey);
-  model = client.getGenerativeModel({ model: MODEL_NAME });
+  // Use default apiVersion
+  client = new GoogleGenAI({ apiKey, httpOptions: { timeout: 600000 } });
+  
+  // Polyfill for client.generativeModel if it doesn't exist (it doesn't in v1.32.0)
+  // This allows us to use the syntax requested by the user while mapping to the actual SDK methods
+  if (typeof (client as any).generativeModel !== 'function') {
+    (client as any).generativeModel = (modelName: string) => ({
+      generateContent: async (prompt: any) => {
+        const contents = typeof prompt === 'string' 
+          ? [{ role: 'user', parts: [{ text: prompt }] }] 
+          : (Array.isArray(prompt) ? prompt : [prompt]);
+          
+        return client!.models.generateContent({
+          model: modelName,
+          contents: contents,
+          config: {
+            httpOptions: { timeout: 600000 }
+          }
+        });
+      }
+    });
+  }
+
   console.log("✅ Gemini API key found - will generate content with AI");
 } else {
   console.log("[WARNING] No Gemini API key found - will use placeholder content");
@@ -84,6 +116,12 @@ interface ConditionContent {
   [key: string]: unknown;
 }
 
+interface ConditionItem {
+  conditionId: string;
+  condition: string;
+  content: ConditionContent;
+}
+
 // ======================================================
 // CHECK IF SECTION IS VALID
 // ======================================================
@@ -96,6 +134,9 @@ function isValidSection(value: unknown): boolean {
     if (trimmed.length === 0 || trimmed === PLACEHOLDER_VALUE) return false;
     // Check if it contains "Content to be generated" placeholder text
     if (trimmed.includes("Content to be generated")) return false;
+    if (trimmed.includes("To be populated")) return false;
+    if (trimmed.includes("PLACEHOLDER")) return false;
+    if (trimmed === "--") return false;
     return true;
   }
   
@@ -110,12 +151,19 @@ function isValidSection(value: unknown): boolean {
   }
   
   if (typeof value === "object") {
+    const str = JSON.stringify(value);
+    if (str.includes("To be populated") || str.includes("Content to be generated") || str.includes("PLACEHOLDER") || str.includes('"--"')) {
+      return false;
+    }
+    
     const obj = value as Record<string, unknown>;
     if ("notes" in obj && typeof obj.notes === "string") {
       const trimmed = obj.notes.trim();
       // Check if notes is empty, placeholder, or contains "Content to be generated"
       if (trimmed.length === 0 || trimmed === PLACEHOLDER_VALUE) return false;
       if (trimmed.includes("Content to be generated")) return false;
+      if (trimmed.includes("To be populated")) return false;
+      if (trimmed.includes("PLACEHOLDER")) return false;
       return true;
     }
     return Object.keys(obj).length > 0;
@@ -128,23 +176,24 @@ function isValidSection(value: unknown): boolean {
 // FIND INCOMPLETE CONDITIONS
 // ======================================================
 function findIncompleteConditions(
-  conditions: Record<string, ConditionContent>
-): Array<{ id: string; missingSections: SectionName[] }> {
-  const incomplete: Array<{ id: string; missingSections: SectionName[] }> = [];
+  conditions: ConditionItem[]
+): Array<{ index: number; item: ConditionItem; missingSections: SectionName[] }> {
+  const incomplete: Array<{ index: number; item: ConditionItem; missingSections: SectionName[] }> = [];
 
-  for (const [conditionId, conditionData] of Object.entries(conditions)) {
+  conditions.forEach((item, index) => {
     const missingSections: SectionName[] = [];
+    const content = item.content || {};
 
     for (const section of REQUIRED_SECTIONS) {
-      if (!isValidSection(conditionData[section])) {
+      if (!isValidSection(content[section])) {
         missingSections.push(section);
       }
     }
 
     if (missingSections.length > 0) {
-      incomplete.push({ id: conditionId, missingSections });
+      incomplete.push({ index, item, missingSections });
     }
-  }
+  });
 
   return incomplete;
 }
@@ -168,10 +217,10 @@ function extractConditionName(conditionId: string): string {
 // GENERATE PLACEHOLDER CONTENT FOR MISSING SECTIONS
 // ======================================================
 function generatePlaceholderSections(
-  conditionId: string,
+  conditionName: string,
   missingSections: SectionName[]
 ): Partial<ConditionContent> {
-  const conditionName = extractConditionName(conditionId);
+  // const conditionName = extractConditionName(conditionId);
   const result: Partial<ConditionContent> = {};
 
   for (const section of missingSections) {
@@ -224,16 +273,16 @@ function generatePlaceholderSections(
 // GENERATE MISSING SECTIONS WITH GEMINI
 // ======================================================
 async function generateMissingSections(
-  conditionId: string,
+  conditionName: string,
   existingContent: ConditionContent,
   missingSections: SectionName[]
 ): Promise<Partial<ConditionContent> | null> {
   // If no API key, return placeholder content
-  if (!model) {
-    return generatePlaceholderSections(conditionId, missingSections);
+  if (!client) {
+    return generatePlaceholderSections(conditionName, missingSections);
   }
 
-  const conditionName = extractConditionName(conditionId);
+  // const conditionName = extractConditionName(conditionId);
 
   // Build context from existing content
   let existingContext = "";
@@ -287,29 +336,66 @@ Generate ONLY these MISSING sections as a valid JSON object:
 }
 
 Provide medically accurate, board-exam-level content suitable for PA/medical students. Use proper medical terminology.
-IMPORTANT: Return ONLY the JSON object with the missing sections, no markdown formatting or code blocks.`;
+IMPORTANT: Return ONLY the JSON object with the missing sections.
+DO NOT change the keys. Use EXACTLY the keys provided above (e.g. "diagnostics", "overview").
+Do not include markdown formatting or code blocks (like \`\`\`json).
+FORMATTING RULES:
+- For string fields (like overview, etiologyPathophysiology), use Markdown formatting.
+- Use '*' for ALL bullet points. Do NOT use '-'.
+- Do NOT use Markdown tables. Use lists instead.
+- Use '**Bold**' for headers/emphasis. Do NOT use '###'.
+- Ensure nested bullets are indented with 2 spaces.`;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const result = await model.generateContent(prompt);
-      const response = result.response;
-      let text = response.text();
+      const response = await client!.models.generateContent({
+        model: MODEL_NAME,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+      
+      let text = response.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
       // Clean the response
       text = asciiClean(text);
       text = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
       const content = JSON.parse(text) as Partial<ConditionContent>;
+      console.log(`   [DEBUG] Returned keys: ${Object.keys(content).join(", ")}`);
+
+      // Map alternative keys to expected keys
+      const KEY_MAP: Record<string, string> = {
+        "workup": "diagnostics",
+        "evaluation": "diagnostics",
+        "diagnosis": "diagnostics",
+        "clinicalFeatures": "clinicalPresentation",
+        "clinical_presentation": "clinicalPresentation",
+        "signs_and_symptoms": "symptoms",
+        "historyAndPhysical": "clinicalPresentation", // Best effort
+        "treatmentAndManagement": "treatment",
+        "management_treatment": "management"
+      };
+
+      Object.entries(KEY_MAP).forEach(([alt, expected]) => {
+        if (content[alt] && !content[expected]) {
+          console.log(`   [DEBUG] Mapping ${alt} -> ${expected}`);
+          content[expected] = content[alt];
+          delete content[alt];
+        }
+      });
+
+      if (content.overview) {
+        console.log(`   [DEBUG] Generated overview start: ${content.overview.substring(0, 50)}...`);
+      }
       return content;
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error(
-        `  [ERROR] Attempt ${attempt} failed for ${conditionId}: ${errorMessage}`
+        `  [ERROR] Attempt ${attempt} failed for ${conditionName}: ${errorMessage}`
       );
       if (attempt === MAX_RETRIES) {
         return null;
       }
-      await new Promise((res) => setTimeout(res, 1000 * attempt));
+      await new Promise((res) => setTimeout(res, 2000 * attempt));
     }
   }
   return null;
@@ -328,8 +414,8 @@ async function main() {
   }
 
   const raw = fs.readFileSync(INPUT_FILE, "utf8");
-  const allConditions: Record<string, ConditionContent> = JSON.parse(raw);
-  console.log(`📂 Loaded ${Object.keys(allConditions).length} total conditions`);
+  const allConditions: ConditionItem[] = JSON.parse(raw);
+  console.log(`📂 Loaded ${allConditions.length} total conditions`);
 
   // Find incomplete conditions
   const incompleteConditions = findIncompleteConditions(allConditions);
@@ -359,30 +445,35 @@ async function main() {
   let failed = 0;
 
   for (let i = 0; i < incompleteConditions.length; i++) {
-    const { id, missingSections } = incompleteConditions[i];
+    // if (fixed >= 3) {
+    //   console.log("🛑 Stopping after 3 fixes for verification purposes.");
+    //   break;
+    // }
+    const { index, item, missingSections } = incompleteConditions[i];
+    const conditionName = item.condition || extractConditionName(item.conditionId);
 
     console.log(
-      `\n[${i + 1}/${incompleteConditions.length}] 🔵 Fixing: ${id}`
+      `\n[${i + 1}/${incompleteConditions.length}] 🔵 Fixing: ${conditionName} (${item.conditionId})`
     );
     console.log(`   Missing: ${missingSections.join(", ")}`);
 
     const newSections = await generateMissingSections(
-      id,
-      allConditions[id],
+      conditionName,
+      item.content || {},
       missingSections
     );
 
     if (newSections) {
-      // Merge new sections into existing condition
-      allConditions[id] = { ...allConditions[id], ...newSections };
+      // Merge new sections into existing condition content
+      allConditions[index].content = { ...(allConditions[index].content || {}), ...newSections };
       fixed++;
-      console.log(`   ✅ Fixed: ${id}`);
+      console.log(`   ✅ Fixed: ${item.conditionId}`);
 
       // Save after each successful fix
       fs.writeFileSync(OUTPUT_FILE, JSON.stringify(allConditions, null, 2), "utf8");
     } else {
       failed++;
-      console.log(`   [ERROR] Failed: ${id}`);
+      console.log(`   [ERROR] Failed: ${item.conditionId}`);
     }
 
     // Delay between requests

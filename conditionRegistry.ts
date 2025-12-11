@@ -310,6 +310,9 @@ export const CONDITION_REGISTRY_PULM: ConditionMeta[] = [
     subcategory: "Toxic/Environmental",
     condition: "Occupational Lung Disease",
   },
+  // Critical Care / Other
+  { system: "PULM", subcategory: "Critical Care", condition: "Acute Respiratory Distress Syndrome (ARDS)" },
+  { system: "PULM", subcategory: "Other", condition: "Foreign Body Aspiration" },
 ];
 // ---------------------------------------------------------------
 // GASTROINTESTINAL / NUTRITION REGISTRY
@@ -587,6 +590,18 @@ export const CONDITION_REGISTRY_GI: ConditionMeta[] = [
     subcategory: "Nutrition",
     condition: "Obesity",
   },
+  // Hernias
+  { system: "GI", subcategory: "Hernia", condition: "Hiatal Hernia" },
+  { system: "GI", subcategory: "Hernia", condition: "Inguinal Hernia" },
+  { system: "GI", subcategory: "Hernia", condition: "Umbilical Hernia" },
+  { system: "GI", subcategory: "Hernia", condition: "Ventral / Incisional Hernia" },
+
+  // Anorectal
+  { system: "GI", subcategory: "Anorectal", condition: "Hemorrhoids" },
+  { system: "GI", subcategory: "Anorectal", condition: "Anal Fissure" },
+  { system: "GI", subcategory: "Anorectal", condition: "Anorectal Abscess / Fistula" },
+  { system: "GI", subcategory: "Anorectal", condition: "Pilonidal Disease" },
+  { system: "GI", subcategory: "Anorectal", condition: "Fecal Impaction" },
 ];
 
 // -------------------------------------------
@@ -715,7 +730,10 @@ export const CONDITION_REGISTRY_MSK: ConditionMeta[] = [
   // MSK Infections / Misc
   { system: "MSK", subcategory: "Infection", condition: "Septic Bursitis" },
   { system: "MSK", subcategory: "Infection", condition: "Septic Tenosynovitis" },
-  { system: "MSK", subcategory: "Infection", condition: "Prosthetic Joint Infection" }
+  { system: "MSK", subcategory: "Infection", condition: "Prosthetic Joint Infection" },
+  // Emergency / Other
+  { system: "MSK", subcategory: "Emergency", condition: "Compartment Syndrome" },
+  { system: "MSK", subcategory: "Chest Wall", condition: "Costochondritis" },
 ];
 
 // -------------------------------------------
@@ -855,9 +873,8 @@ export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
   { system: "ID", subcategory: "Viral", condition: "Varicella (Chickenpox)" },
   { system: "ID", subcategory: "Viral", condition: "Herpes Zoster (Shingles)", aliases: ["Shingles", "Zoster"] },
   { system: "ID", subcategory: "Viral", condition: "Rabies" },
-  { system: "ID", subcategory: "Viral", condition: "Mononucleosis (EBV)" },
-  { system: "ID", subcategory: "Viral", condition: "Cytomegalovirus (CMV)" },
-  { system: "ID", subcategory: "Viral", condition: "Parvovirus B19" },
+  { system: "ID", subcategory: "Viral", condition: "Zika Virus" },
+  { system: "ID", subcategory: "Viral", condition: "Ebola Virus" },
 
   // Parasitic
   { system: "ID", subcategory: "Parasitic", condition: "Malaria" },
@@ -906,7 +923,11 @@ export const CONDITION_REGISTRY_ID: ConditionMeta[] = [
   // Emergency ID
   { system: "ID", subcategory: "Emergency", condition: "Meningococcemia" },
   { system: "ID", subcategory: "Emergency", condition: "Epiglottitis" },
-  { system: "ID", subcategory: "Emergency", condition: "Septic Shock" }
+  { system: "ID", subcategory: "Emergency", condition: "Septic Shock" },
+  // Zoonotic / Viral
+  { system: "ID", subcategory: "Viral", condition: "Rabies" },
+  { system: "ID", subcategory: "Viral", condition: "Zika Virus" },
+  { system: "ID", subcategory: "Viral", condition: "Ebola Virus" },
 ];
 
 // -------------------------------------------
@@ -994,7 +1015,10 @@ export const CONDITION_REGISTRY_HEME: ConditionMeta[] = [
   // Pediatric Hematology (kept under HEME, not a separate PEDS system)
   { system: "HEME", subcategory: "Pediatrics", condition: "Sickle Cell Pain Crisis (Pediatric)" },
   { system: "HEME", subcategory: "Pediatrics", condition: "Beta Thalassemia Major (Pediatric)" },
-  { system: "HEME", subcategory: "Pediatrics", condition: "Physiologic Anemia of Infancy" }
+  { system: "HEME", subcategory: "Pediatrics", condition: "Physiologic Anemia of Infancy" },
+  // Other
+  { system: "HEME", subcategory: "Overload", condition: "Hemochromatosis" },
+  { system: "HEME", subcategory: "Transfusion", condition: "Transfusion Reactions" },
 ];
 
 // -------------------------------------------
@@ -1086,6 +1110,9 @@ export const CONDITION_REGISTRY_NEURO: ConditionMeta[] = [
 
   // Other Neurologic
   { system: "NEURO", subcategory: "Other", condition: "Syncope" },
+  // Pain / Other
+  { system: "NEURO", subcategory: "Pain", condition: "Complex Regional Pain Syndrome (CRPS)" },
+  { system: "NEURO", subcategory: "Pediatrics", condition: "Cerebral Palsy" },
 ];
 
 // -------------------------------------------
@@ -1110,7 +1137,7 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   { system: "DERM", subcategory: "Benign Lesions", condition: "Acrochordon (Skin Tag)" },
   { system: "DERM", subcategory: "Benign Lesions", condition: "Dermatofibroma" },
   { system: "DERM", subcategory: "Benign Lesions", condition: "Solar Purpura" },
-  { system: "DERM", subcategory: "Benign Lesions", condition: "Common Melanocytic Nevus" },
+   { system: "DERM", subcategory: "Benign Lesions", condition: "Common Melanocytic Nevus" },
   { system: "DERM", subcategory: "Benign Lesions", condition: "Atypical (Dysplastic) Nevus" },
   { system: "DERM", subcategory: "Benign Lesions", condition: "Congenital Nevus" },
   { system: "DERM", subcategory: "Benign Lesions", condition: "Port-Wine Stain (Capillary Malformation)" },
@@ -1188,6 +1215,17 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
   { system: "DERM", subcategory: "Nail Disorders", condition: "Onychomycosis" },
 
   { system: "DERM", subcategory: "Nail Disorders", condition: "Paronychia" },
+  // Trauma / Environmental
+  { system: "DERM", subcategory: "Trauma", condition: "Burns" },
+  { system: "DERM", subcategory: "Trauma", condition: "Pressure Ulcers" },
+  { system: "DERM", subcategory: "Environmental", condition: "Spider Bites (Brown Recluse / Black Widow)" },
+  
+  // Other
+  { system: "DERM", subcategory: "Vascular", condition: "Stasis Dermatitis" },
+  { system: "DERM", subcategory: "Benign Lesions", condition: "Seborrheic Keratosis" },
+  { system: "DERM", subcategory: "Pigmentary", condition: "Acanthosis Nigricans" },
+  { system: "DERM", subcategory: "Inflammatory", condition: "Hidradenitis Suppurativa" },
+  { system: "DERM", subcategory: "Benign Lesions", condition: "Epithelial Inclusion Cyst" },
 ];
 
 // -------------------------------------------
@@ -1281,7 +1319,10 @@ export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
 
   // Pediatrics in Renal
   { system: "RENAL", subcategory: "Pediatrics", condition: "Hemolytic Uremic Syndrome (Pediatric Primary)" },
-  { system: "RENAL", subcategory: "Pediatrics", condition: "Minimal Change Disease (Pediatric Predominant)" }
+  { system: "RENAL", subcategory: "Pediatrics", condition: "Minimal Change Disease (Pediatric Predominant)" },
+  // Oncology
+  { system: "RENAL", subcategory: "Oncology", condition: "Renal Cell Carcinoma" },
+  { system: "RENAL", subcategory: "Oncology", condition: "Wilms Tumor" },
 ];
 
 // -------------------------------------------
@@ -1354,7 +1395,12 @@ export const CONDITION_REGISTRY_GU: ConditionMeta[] = [
   // TRAUMA
   { system: "GU", subcategory: "Trauma", condition: "Urethral Injury" },
   { system: "GU", subcategory: "Trauma", condition: "Bladder Rupture" },
-  { system: "GU", subcategory: "Trauma", condition: "Testicular Trauma" }
+  { system: "GU", subcategory: "Trauma", condition: "Testicular Trauma" },
+  // Male GU
+  { system: "GU", subcategory: "Pediatrics", condition: "Cryptorchidism" },
+  { system: "GU", subcategory: "Male Reproductive", condition: "Erectile Dysfunction" },
+  { system: "GU", subcategory: "Testicular", condition: "Hydrocele" },
+  { system: "GU", subcategory: "Testicular", condition: "Varicocele" },
 ];
 
 // -------------------------------------------
@@ -1468,7 +1514,11 @@ export const CONDITION_REGISTRY_REPRO: ConditionMeta[] = [
   { system: "REPRO", subcategory: "Oncology", condition: "Vulvar Cancer" },
   { system: "REPRO", subcategory: "Oncology", condition: "Vaginal Cancer" },
   { system: "REPRO", subcategory: "Oncology", condition: "Gestational Trophoblastic Neoplasia" },
-  { system: "REPRO", subcategory: "Oncology", condition: "Breast Cancer" }
+  { system: "REPRO", subcategory: "Oncology", condition: "Breast Cancer" },
+  // General Gynecology
+  { system: "REPRO", subcategory: "Gynecology", condition: "Menopause" },
+  { system: "REPRO", subcategory: "Gynecology", condition: "Contraception Methods" },
+  { system: "REPRO", subcategory: "Trauma", condition: "Sexual Assault / Trauma" },
 ];
 
 // -------------------------------------------
@@ -1551,6 +1601,7 @@ export const CONDITION_REGISTRY_HEENT: ConditionMeta[] = [
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Labyrinthitis", aliases: ["Vestibular Labyrinthitis"] },
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Vestibular Neuritis", aliases: ["Vestibular Neuronitis"] },
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Ménière Disease" },
+  { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Otosclerosis" },
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Tinnitus" },
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Noise-Induced Hearing Loss" },
   { system: "HEENT", subcategory: "Ear – Inner / Vestibular", condition: "Presbycusis" },
@@ -1739,7 +1790,10 @@ export const CONDITION_REGISTRY_PSYCH: ConditionMeta[] = [
   // EMERGENCY PSYCHIATRY & SUICIDALITY
   { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Non-Suicidal Self-Injury" },
   { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Serotonin Syndrome (Psychiatric Perspective)" },
-  { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Neuroleptic Malignant Syndrome" }
+  { system: "PSYCH", subcategory: "Emergency Psychiatry & Suicidality", condition: "Neuroleptic Malignant Syndrome" },
+  // Other
+  { system: "PSYCH", subcategory: "Trauma", condition: "Abuse and Neglect" },
+  { system: "PSYCH", subcategory: "Trauma", condition: "Grief Reaction" },
 ];
 
 // ============================================
