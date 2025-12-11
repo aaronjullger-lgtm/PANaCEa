@@ -27,7 +27,9 @@ const ToggleButton = ({ children, onClick, isActive, disabled = false, title = "
     disabled={disabled}
     title={title}
     className={`px-4 py-2 rounded-md font-semibold text-sm transition-colors ${
-      isActive ? 'bg-[#3D1B0E] text-white' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+      isActive 
+        ? 'bg-[var(--color-accent)] text-white dark:text-slate-900' 
+        : 'bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
   >
     {children}
@@ -48,13 +50,13 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({ onClose, onStart,
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md" onClick={e => e.stopPropagation()}>
-        <h2 className="text-2xl font-bold text-[#333333] mb-2">New Study Session</h2>
-        <p className="text-slate-500 mb-6">Customize your practice quiz.</p>
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8 w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">New Study Session</h2>
+        <p className="text-slate-500 dark:text-slate-400 mb-6">Customize your practice quiz.</p>
 
         <div className="space-y-6">
           <div>
-            <h3 className="font-semibold text-slate-700 mb-2">Focus</h3>
+            <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-2">Focus</h3>
             <div className="flex flex-wrap gap-2">
               <ToggleButton isActive={focus === 'all'} onClick={() => setFocus('all')}>
                 All Topics
@@ -87,13 +89,13 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({ onClose, onStart,
           </div>
           <div>
             <div className="flex items-center space-x-2 mb-2">
-              <h3 className="font-semibold text-slate-700">Difficulty</h3>
+              <h3 className="font-semibold text-slate-700 dark:text-slate-300">Difficulty</h3>
               <div className="relative group">
-                <InfoIcon className="w-5 h-5 text-slate-400"/>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-slate-800 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+                <InfoIcon className="w-5 h-5 text-slate-400 dark:text-slate-500"/>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-slate-800 dark:bg-slate-700 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
                   <strong className="font-semibold block text-sm">Difficulty Guide</strong>
-                  <span className="block mt-1"><strong className="font-semibold text-[#E6A495]">Easier:</strong> Focuses on more common, foundational concepts.</span>
-                  <span className="block mt-1"><strong className="font-semibold text-[#E6A495]">Harder:</strong> Generates more complex, multi-step questions requiring deeper knowledge.</span>
+                  <span className="block mt-1"><strong className="font-semibold text-blue-400">Easier:</strong> Focuses on more common, foundational concepts.</span>
+                  <span className="block mt-1"><strong className="font-semibold text-blue-400">Harder:</strong> Generates more complex, multi-step questions requiring deeper knowledge.</span>
                 </div>
               </div>
             </div>
@@ -114,13 +116,13 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({ onClose, onStart,
         <div className="mt-8 flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-lg font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
+            className="px-5 py-2 rounded-lg font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleStart}
-            className="px-5 py-2 rounded-lg font-semibold text-white bg-[#3D1B0E] hover:bg-[#2b130a] transition-colors"
+            className="px-5 py-2 rounded-lg font-semibold text-white dark:text-slate-900 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] transition-colors shadow-md hover:shadow-lg"
           >
             Start Session
           </button>

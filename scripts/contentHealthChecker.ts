@@ -3,11 +3,20 @@
  * Runs nightly to audit content quality and flag issues
  * 
  * Usage: tsx scripts/contentHealthChecker.ts
+ * 
+ * NOTE: This now uses the database as the source of truth for content.
  */
 
 import type { ContentHealthReport, ContentHealthIssue } from '../types/admin-cms';
+import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import { config } from 'dotenv';
+
+// Load environment variables
+config();
+
+const prisma = new PrismaClient();
 
 interface ConditionContent {
   [key: string]: {
@@ -21,12 +30,26 @@ interface ConditionContent {
 }
 
 /**
- * Load condition content from JSON file
+ * Load condition content from database
  */
-function loadConditionContent(): ConditionContent {
-  const contentPath = path.join(__dirname, '../conditionContent.generated.json');
-  const rawContent = fs.readFileSync(contentPath, 'utf-8');
-  return JSON.parse(rawContent);
+async function loadConditionContent(): Promise<ConditionContent> {
+  try {
+    const content = await prisma.medicalContent.findMany({
+      where: { status: 'published' },
+      select: { conditionId: true, content: true },
+    });
+
+    const contentMap: ConditionContent = {};
+    content.forEach(item => {
+      contentMap[item.conditionId] = item.content as any;
+    });
+
+    return contentMap;
+  } catch (error) {
+    console.error('Error loading content from database:', error);
+    console.warn('Database may not be available. Returning empty content.');
+    return {};
+  }
 }
 
 /**
@@ -157,10 +180,10 @@ function auditCondition(conditionId: string, content: any): ContentHealthIssue[]
 /**
  * Run content health check
  */
-export function runContentHealthCheck(): ContentHealthReport {
+export async function runContentHealthCheck(): Promise<ContentHealthReport> {
   console.log('🏥 Starting Content Health Check...\n');
 
-  const content = loadConditionContent();
+  const content = await loadConditionContent();
   const conditionIds = Object.keys(content);
   const allIssues: ContentHealthIssue[] = [];
 
@@ -246,23 +269,27 @@ function printReport(report: ContentHealthReport): void {
  * Main execution
  */
 if (require.main === module) {
-  try {
-    const report = runContentHealthCheck();
-    printReport(report);
+  (async () => {
+    try {
+      const report = await runContentHealthCheck();
+      printReport(report);
 
-    // Exit with error code if critical issues found
-    const criticalIssues = report.issues.filter(i => i.severity === 'high').length;
-    if (criticalIssues > 0) {
-      console.log(`[WARNING]  ${criticalIssues} critical issues require attention!`);
+      // Exit with error code if critical issues found
+      const criticalIssues = report.issues.filter(i => i.severity === 'high').length;
+      if (criticalIssues > 0) {
+        console.log(`[WARNING]  ${criticalIssues} critical issues require attention!`);
+        process.exit(1);
+      } else {
+        console.log('✅ No critical issues found. Content health is good!');
+        process.exit(0);
+      }
+    } catch (error) {
+      console.error('[ERROR] Error running content health check:', error);
       process.exit(1);
-    } else {
-      console.log('✅ No critical issues found. Content health is good!');
-      process.exit(0);
+    } finally {
+      await prisma.$disconnect();
     }
-  } catch (error) {
-    console.error('[ERROR] Error running content health check:', error);
-    process.exit(1);
-  }
+  })();
 }
 
 export default runContentHealthCheck;
