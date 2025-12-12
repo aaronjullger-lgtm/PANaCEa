@@ -20,11 +20,10 @@ interface MiniModeLayoutProps {
 /**
  * MiniModeLayout - Standardized layout wrapper for all Mini Modes
  * 
- * Implements the inverted theme logic:
- * - Dark mode → Near-White containers (#E9ECF1), Slate text
- * - Light mode → Deep Slate containers (#101729), Near-White text
- * 
- * Exception: Radiology mode uses Deep Slate exclusively (PACS theme)
+ * Uses theme-aware CSS variables for consistent theming:
+ * - var(--color-bg-primary) for backgrounds
+ * - var(--color-text-primary) for text
+ * - Respects global theme without hardcoded colors
  */
 export const MiniModeLayout: React.FC<MiniModeLayoutProps> = ({
   children,
@@ -36,15 +35,15 @@ export const MiniModeLayout: React.FC<MiniModeLayoutProps> = ({
 }) => {
   const [theme] = useTheme();
   
-  // Inverted theme: Dark mode → Near-White containers, Light mode → Deep Slate containers
-  const containerBg = theme === 'dark' ? 'bg-[#E9ECF1]' : 'bg-[#101729]';
-  const containerText = theme === 'dark' ? 'text-[#101729]' : 'text-[#E9ECF1]';
-  const cardBg = theme === 'dark' ? 'bg-white' : 'bg-[#1F283A]';
-  const cardBorder = theme === 'dark' ? 'border-[#cbd5e1]' : 'border-[#364154]';
-  const subtleText = theme === 'dark' ? 'text-[#364154]' : 'text-[#cbd5e1]';
+  // Use CSS variables for theme-aware styling (consistent with CodeBlueSpeedMode)
+  const containerBg = 'bg-[var(--color-bg-primary)]';
+  const containerText = 'text-[var(--color-text-primary)]';
+  const cardBg = 'bg-[var(--color-bg-secondary)]';
+  const cardBorder = 'border-[var(--color-border)]';
+  const subtleText = 'text-[var(--color-text-muted)]';
   
-  // Get the accent color from CSS variables (analytics palette) or fallback
-  const iconColor = accentColor || 'var(--analytics-primary, #3b82f6)';
+  // Get the accent color from CSS variables or use provided color
+  const iconColor = accentColor || 'var(--color-accent)';
   
   return (
     <div className={`min-h-screen ${containerBg} ${containerText} transition-colors duration-300`}>
@@ -77,11 +76,12 @@ export const MiniModeHeader: React.FC<MiniModeHeaderProps> = ({
 }) => {
   const [theme] = useTheme();
   
-  const cardBg = theme === 'dark' ? 'bg-white' : 'bg-[#1F283A]';
-  const cardBorder = theme === 'dark' ? 'border-[#cbd5e1]' : 'border-[#364154]';
-  const containerText = theme === 'dark' ? 'text-[#101729]' : 'text-[#E9ECF1]';
-  const subtleText = theme === 'dark' ? 'text-[#364154]' : 'text-[#cbd5e1]';
-  const iconColor = accentColor || 'var(--analytics-primary, #3b82f6)';
+  // Use CSS variables for theme-aware styling
+  const cardBg = 'bg-[var(--color-bg-secondary)]';
+  const cardBorder = 'border-[var(--color-border)]';
+  const containerText = 'text-[var(--color-text-primary)]';
+  const subtleText = 'text-[var(--color-text-muted)]';
+  const iconColor = accentColor || 'var(--color-accent)';
   
   return (
     <div className={`border-b ${cardBorder} ${cardBg} backdrop-blur-sm sticky top-0 z-10`}>
@@ -100,7 +100,7 @@ export const MiniModeHeader: React.FC<MiniModeHeaderProps> = ({
               <p className={`text-xl font-bold ${containerText}`}>
                 {score.correct}/{score.total}
                 {score.total > 0 && (
-                  <span className="text-sm ml-2" style={{ color: 'var(--analytics-success, #10b981)' }}>
+                  <span className="text-sm ml-2 text-[var(--color-accent)]">
                     ({Math.round((score.correct / score.total) * 100)}%)
                   </span>
                 )}
@@ -145,8 +145,9 @@ interface MiniModeCardProps {
 export const MiniModeCard: React.FC<MiniModeCardProps> = ({ children, className = '' }) => {
   const [theme] = useTheme();
   
-  const cardBg = theme === 'dark' ? 'bg-white' : 'bg-[#1F283A]';
-  const cardBorder = theme === 'dark' ? 'border-[#cbd5e1]' : 'border-[#364154]';
+  // Use CSS variables for theme-aware styling
+  const cardBg = 'bg-[var(--color-bg-secondary)]';
+  const cardBorder = 'border-[var(--color-border)]';
   
   return (
     <div className={`${cardBg} backdrop-blur rounded-xl p-6 border ${cardBorder} ${className}`}>
