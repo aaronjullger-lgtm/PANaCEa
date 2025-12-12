@@ -116,18 +116,18 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
   // =========================================================================
   if (status === 'landing') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-950 via-slate-900 to-indigo-950 text-white">
-        <div className="border-b border-purple-800/30 bg-black/20 backdrop-blur-sm">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/80 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Beaker className="w-8 h-8 text-purple-400" />
               <div>
                 <h1 className="text-2xl font-bold">Pharmacology Quiz</h1>
-                <p className="text-sm text-purple-300">Drug Knowledge & Mechanisms</p>
+                <p className="text-sm text-[var(--color-text-secondary)]">Drug Knowledge & Mechanisms</p>
               </div>
             </div>
             {onExit && (
-              <button onClick={onExit} className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors">
+              <button onClick={onExit} className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors">
                 <X className="w-5 h-5" />
               </button>
             )}
@@ -138,34 +138,34 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-8">
             <div className="space-y-4">
               <h2 className="text-4xl font-bold text-purple-400">Master Pharmacology</h2>
-              <p className="text-xl text-slate-300">High-yield drug mechanisms, side effects, and interactions</p>
+              <p className="text-xl text-[var(--color-text-secondary)]">High-yield drug mechanisms, side effects, and interactions</p>
             </div>
 
-            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-8 border border-purple-800/30 text-left space-y-6">
+            <div className="bg-[var(--color-bg-secondary)] backdrop-blur rounded-xl p-8 border border-[var(--color-border)] text-left space-y-6">
               <h3 className="text-2xl font-semibold text-purple-400">What You'll Practice</h3>
               
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
-                  <h4 className="font-semibold text-white mb-2">Mechanisms of Action</h4>
-                  <p className="text-slate-400 text-sm">How drugs work at the molecular level</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Mechanisms of Action</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">How drugs work at the molecular level</p>
                 </div>
                 <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
-                  <h4 className="font-semibold text-white mb-2">Side Effects</h4>
-                  <p className="text-slate-400 text-sm">Adverse reactions and contraindications</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Side Effects</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">Adverse reactions and contraindications</p>
                 </div>
                 <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
-                  <h4 className="font-semibold text-white mb-2">Drug Interactions</h4>
-                  <p className="text-slate-400 text-sm">Critical combinations and warnings</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Drug Interactions</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">Critical combinations and warnings</p>
                 </div>
                 <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
-                  <h4 className="font-semibold text-white mb-2">Clinical Uses</h4>
-                  <p className="text-slate-400 text-sm">Indications and therapeutic applications</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Clinical Uses</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">Indications and therapeutic applications</p>
                 </div>
               </div>
 
               <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-800/30">
                 <p className="text-sm text-purple-300 font-semibold mb-2">Features:</p>
-                <ul className="text-sm text-slate-300 space-y-1">
+                <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
                   <li>• PANCE high-yield medications</li>
                   <li>• Multiple question types (MOA, side effects, antidotes)</li>
                   <li>• Detailed explanations with pearls</li>
@@ -174,7 +174,7 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
               </div>
             </div>
 
-            <button onClick={handleStart} disabled={isLoading} className="px-8 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-3 mx-auto">
+            <button onClick={handleStart} disabled={isLoading} className="px-8 py-4 bg-purple-600 hover:bg-purple-700 disabled:bg-[var(--color-bg-tertiary)] disabled:cursor-not-allowed rounded-lg font-semibold text-lg transition-colors flex items-center justify-center gap-3 mx-auto">
               {isLoading ? (<><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Loading...</>) : (<>Choose Category<ActivityIcon className="w-5 h-5" /></>)}
             </button>
           </motion.div>
@@ -188,18 +188,18 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
   // =========================================================================
   if (status === 'menu') {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
-            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
             aria-label="Exit"
           >
             <X className="w-5 h-5" />
             <span className="text-sm font-medium hidden sm:inline">Exit</span>
           </button>
-          <h1 className="text-base sm:text-lg font-semibold text-slate-200">Pharmacology Quiz</h1>
+          <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">Pharmacology Quiz</h1>
           <div className="w-12 sm:w-16" />
         </header>
 
@@ -211,10 +211,10 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
             transition={{ duration: 0.4 }}
             className="text-center mb-6 sm:mb-8"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-100 mb-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">
               Select Quiz Category
             </h2>
-            <p className="text-sm sm:text-base text-slate-400">
+            <p className="text-sm sm:text-base text-[var(--color-text-secondary)]">
               High-yield PANCE pharmacology review
             </p>
           </motion.div>

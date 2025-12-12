@@ -105,12 +105,12 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
   // =========================================================================
   if (status === 'menu') {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
-            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
             aria-label="Exit"
           >
             <X className="w-5 h-5" />
@@ -118,7 +118,7 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
           </button>
           <div className="flex items-center gap-2">
             <Pill className="w-5 h-5 text-cyan-400" />
-            <h1 className="text-base sm:text-lg font-semibold text-slate-200">First Line Treatment</h1>
+            <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)]">First Line Treatment</h1>
           </div>
           <div className="w-12 sm:w-16" />
         </header>
@@ -131,10 +131,10 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
             transition={{ duration: 0.4 }}
             className="text-center mb-6 sm:mb-8"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-100 mb-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-2">
               Select Category
             </h2>
-            <p className="text-sm sm:text-base text-slate-400">
+            <p className="text-sm sm:text-base text-[var(--color-text-secondary)]">
               What's the go-to treatment for each condition?
             </p>
           </motion.div>

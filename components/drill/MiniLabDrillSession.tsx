@@ -201,20 +201,20 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   // =========================================================================
   if (status === 'landing') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white">
-        <div className="border-b border-emerald-800/30 bg-black/20 backdrop-blur-sm">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/80 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <FlaskConical className="w-8 h-8 text-emerald-400" />
               <div>
                 <h1 className="text-2xl font-bold">Mini Lab Mode</h1>
-                <p className="text-sm text-emerald-300">Clinical Lab Interpretation</p>
+                <p className="text-sm text-[var(--color-text-secondary)]">Clinical Lab Interpretation</p>
               </div>
             </div>
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
+                className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -230,44 +230,44 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
           >
             <div className="space-y-4">
               <h2 className="text-4xl font-bold text-emerald-400">Master Lab Interpretation</h2>
-              <p className="text-xl text-slate-300">
+              <p className="text-xl text-[var(--color-text-secondary)]">
                 Diagnose conditions from real lab values and clinical context
               </p>
             </div>
 
-            <div className="bg-slate-800/50 backdrop-blur rounded-xl p-8 border border-emerald-800/30 text-left space-y-6">
+            <div className="bg-[var(--color-bg-secondary)] backdrop-blur rounded-xl p-8 border border-[var(--color-border)] text-left space-y-6">
               <h3 className="text-2xl font-semibold text-emerald-400">What You'll Practice</h3>
               
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-white mb-2">Hematology</h4>
-                  <p className="text-slate-400 text-sm">CBC, iron studies, coagulation disorders</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Hematology</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">CBC, iron studies, coagulation disorders</p>
                 </div>
                 <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-white mb-2">Metabolic</h4>
-                  <p className="text-slate-400 text-sm">Electrolytes, ABG, acid-base analysis</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Metabolic</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">Electrolytes, ABG, acid-base analysis</p>
                 </div>
                 <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-white mb-2">Endocrine</h4>
-                  <p className="text-slate-400 text-sm">Thyroid, adrenal, glucose disorders</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Endocrine</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">Thyroid, adrenal, glucose disorders</p>
                 </div>
                 <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-white mb-2">Renal</h4>
-                  <p className="text-slate-400 text-sm">Kidney function, electrolyte imbalances</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Renal</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">Kidney function, electrolyte imbalances</p>
                 </div>
                 <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-white mb-2">Hepatic</h4>
-                  <p className="text-slate-400 text-sm">LFTs, bilirubin, liver disease</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Hepatic</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">LFTs, bilirubin, liver disease</p>
                 </div>
                 <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-white mb-2">Cardiac</h4>
-                  <p className="text-slate-400 text-sm">Troponin, BNP, cardiac markers</p>
+                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Cardiac</h4>
+                  <p className="text-[var(--color-text-secondary)] text-sm">Troponin, BNP, cardiac markers</p>
                 </div>
               </div>
 
               <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
                 <p className="text-sm text-emerald-300 font-semibold mb-2">Features:</p>
-                <ul className="text-sm text-slate-300 space-y-1">
+                <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
                   <li>• Realistic clinical vignettes with patient demographics</li>
                   <li>• Multiple lab panels (CBC, CMP, specific panels)</li>
                   <li>• Order additional tests as needed</li>
@@ -280,7 +280,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             <button
               onClick={handleStart}
               disabled={isLoading}
-              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 
+              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-[var(--color-bg-tertiary)] 
                        disabled:cursor-not-allowed rounded-lg font-semibold text-lg
                        transition-colors flex items-center justify-center gap-3 mx-auto"
             >
@@ -307,18 +307,18 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   // =========================================================================
   if (status === 'menu') {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
-            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
             aria-label="Exit"
           >
             <X className="w-5 h-5" />
             <span className="text-sm font-medium">Exit</span>
           </button>
-          <h1 className="text-lg font-semibold text-slate-200">Mini Lab Mode</h1>
+          <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">Mini Lab Mode</h1>
           <div className="w-16" />
         </header>
 
@@ -330,10 +330,10 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             transition={{ duration: 0.4 }}
             className="text-center mb-8"
           >
-            <h2 className="text-3xl font-bold text-slate-100 mb-2">
+            <h2 className="text-3xl font-bold text-[var(--color-text-primary)] mb-2">
               Select Lab Category
             </h2>
-            <p className="text-slate-400">
+            <p className="text-[var(--color-text-secondary)]">
               Diagnose conditions from structured lab results
             </p>
           </motion.div>
@@ -380,12 +380,12 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   // =========================================================================
   if (status === 'playing' || status === 'feedback') {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Floating Header */}
-        <header className="flex items-center justify-between px-4 py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
+        <header className="flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
-            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
             aria-label="Exit session"
           >
             <X className="w-5 h-5" />
@@ -393,18 +393,18 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
           </button>
 
           <div className="flex items-center gap-4">
-            <div className="text-sm text-slate-400">
-              Score: <span className="text-slate-200 font-semibold">{score}</span>
+            <div className="text-sm text-[var(--color-text-secondary)]">
+              Score: <span className="text-[var(--color-text-primary)] font-semibold">{score}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Flame
                 className={`w-5 h-5 ${
-                  streak > 0 ? 'text-orange-500' : 'text-slate-600'
+                  streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
                 }`}
               />
               <span
                 className={`text-sm font-bold ${
-                  streak > 0 ? 'text-orange-500' : 'text-slate-600'
+                  streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
                 }`}
               >
                 {streak}
@@ -422,13 +422,13 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
               className="max-w-4xl mx-auto space-y-4"
             >
               {/* Clinical Context */}
-              <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
+              <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
                 <div className="flex items-center gap-4 mb-3">
-                  <span className="px-2.5 py-1 bg-slate-800 rounded-lg text-xs font-semibold text-slate-300">
+                  <span className="px-2.5 py-1 bg-[var(--color-bg-tertiary)] rounded-lg text-xs font-semibold text-[var(--color-text-secondary)]">
                     {currentCase.patientAge}yo {currentCase.patientSex === 'M' ? 'Male' : 'Female'}
                   </span>
                 </div>
-                <p className="text-slate-200 leading-relaxed">
+                <p className="text-[var(--color-text-primary)] leading-relaxed">
                   {currentCase.clinicalContext}
                 </p>
               </div>
@@ -457,7 +457,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                 >
                   <button
                     onClick={() => setShowOrderTestMenu(!showOrderTestMenu)}
-                    className="w-full px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl text-slate-200 font-medium transition-colors flex items-center justify-center gap-2"
+                    className="w-full px-4 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] font-medium transition-colors flex items-center justify-center gap-2"
                   >
                     <Plus className="w-5 h-5" />
                     Order Additional Tests ({availableTests.length} available)
@@ -468,7 +468,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-2 p-4 bg-slate-800 rounded-xl border border-slate-700 max-h-64 overflow-y-auto"
+                      className="mt-2 p-4 bg-[var(--color-bg-tertiary)] rounded-xl border border-[var(--color-border)] max-h-64 overflow-y-auto"
                       role="menu"
                       aria-label="Available laboratory tests"
                     >
@@ -483,7 +483,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                                 handleOrderTest(testName);
                               }
                             }}
-                            className="px-4 py-2 text-left bg-slate-700 hover:bg-slate-600 focus:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg text-slate-200 transition-colors"
+                            className="px-4 py-2 text-left bg-[var(--color-bg-secondary)] hover:bg-[var(--color-border)] focus:bg-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg text-[var(--color-text-primary)] transition-colors"
                             role="menuitem"
                             tabIndex={0}
                             aria-label={`Order ${testName}`}
@@ -501,7 +501,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
         </main>
 
         {/* Fixed Bottom Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800">
+        <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)]">
           <AnimatePresence mode="wait">
             {status === 'playing' && (
               <motion.div
@@ -514,7 +514,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                 className="p-4"
               >
                 <div className="max-w-2xl mx-auto">
-                  <p className="text-sm text-slate-400 mb-2 text-center">
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-2 text-center">
                     What is your diagnosis?
                   </p>
                   <DiagnosisInput
@@ -551,15 +551,15 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                         {isCorrect ? 'Correct!' : 'Incorrect'}
                       </div>
                       {!isCorrect && (
-                        <div className="text-sm text-slate-300 mt-1">
+                        <div className="text-sm text-[var(--color-text-secondary)] mt-1">
                           Correct answer:{' '}
-                          <span className="font-semibold text-slate-100">
+                          <span className="font-semibold text-[var(--color-text-primary)]">
                             {currentCase.correctDiagnosis}
                           </span>
                         </div>
                       )}
                       {userAnswer && !isCorrect && (
-                        <div className="text-sm text-slate-500 mt-0.5">
+                        <div className="text-sm text-[var(--color-text-muted)] mt-0.5">
                           Your answer: {userAnswer}
                         </div>
                       )}
@@ -569,7 +569,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                       className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
                         isCorrect
                           ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                          : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
+                          : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
                       }`}
                     >
                       Next Case
@@ -578,11 +578,11 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                   </div>
 
                   {/* Key Findings */}
-                  <div className="text-sm bg-slate-900/50 rounded-lg p-4 mb-3">
-                    <h4 className="font-semibold text-slate-200 mb-2">Key Findings:</h4>
+                  <div className="text-sm bg-[var(--color-bg-secondary)] rounded-lg p-4 mb-3">
+                    <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Key Findings:</h4>
                     <ul className="space-y-1">
                       {currentCase.keyFindings.map((finding, idx) => (
-                        <li key={idx} className="text-slate-400 flex items-start gap-2">
+                        <li key={idx} className="text-[var(--color-text-secondary)] flex items-start gap-2">
                           <span className="text-emerald-500 mt-1">•</span>
                           <span>{finding}</span>
                         </li>
@@ -591,8 +591,8 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
                   </div>
 
                   {/* Explanation */}
-                  <div className="text-sm text-slate-400 bg-slate-900/50 rounded-lg p-3">
-                    <span className="font-medium text-slate-300">
+                  <div className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] rounded-lg p-3">
+                    <span className="font-medium text-[var(--color-text-primary)]">
                       Explanation:{' '}
                     </span>
                     {currentCase.explanation}
@@ -611,17 +611,17 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   // =========================================================================
   if (status === 'summary') {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-md p-8 bg-slate-900 rounded-2xl shadow-2xl text-center"
+          className="w-full max-w-md p-8 bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl text-center"
         >
-          <h2 className="text-2xl font-bold text-slate-100 mb-2">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">
             Session Complete
           </h2>
-          <p className="text-slate-400 mb-6">
+          <p className="text-[var(--color-text-secondary)] mb-6">
             Great work on your lab interpretation training!
           </p>
 
@@ -630,7 +630,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
               <div className="text-4xl font-bold text-emerald-400">
                 {score}
               </div>
-              <div className="text-sm text-slate-500">Correct</div>
+              <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
             </div>
           </div>
 
@@ -644,7 +644,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
             </button>
             <button
               onClick={handleExit}
-              className="px-6 py-3 text-slate-400 hover:text-slate-200 font-medium transition-colors"
+              className="px-6 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
             >
               Exit to Menu
             </button>
@@ -656,9 +656,9 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
 
   // Fallback
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
       <div className="text-center">
-        <p className="text-slate-400 mb-4">Loading...</p>
+        <p className="text-[var(--color-text-secondary)] mb-4">Loading...</p>
         <button
           onClick={handleExit}
           className="text-sky-400 hover:text-sky-300"

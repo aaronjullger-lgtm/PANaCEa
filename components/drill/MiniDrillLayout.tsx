@@ -51,7 +51,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
       {/* Flash overlay for correct/incorrect feedback */}
       <AnimatePresence>
         {isFeedback && isCorrect !== null && (
@@ -69,25 +69,25 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
       </AnimatePresence>
 
       {/* Header - Responsive */}
-      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800/50">
+      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
         <button
           onClick={onExit}
-          className="flex items-center gap-1.5 sm:gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors p-1"
+          className="flex items-center gap-1.5 sm:gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors p-1"
           aria-label="Exit"
         >
           <X className="w-5 h-5" />
           <span className="text-sm font-medium hidden sm:inline">Exit</span>
         </button>
 
-        <h1 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-200 truncate max-w-[50%]">
+        <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)] truncate max-w-[50%]">
           {title}
         </h1>
 
         <div className="flex items-center gap-3 sm:gap-4">
           {/* Score */}
-          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-            <span className="text-slate-900 dark:text-slate-200 font-semibold">{score}</span>
-            <span className="text-slate-500 dark:text-slate-500">/{totalAttempts}</span>
+          <div className="text-xs sm:text-sm text-[var(--color-text-secondary)]">
+            <span className="text-[var(--color-text-primary)] font-semibold">{score}</span>
+            <span className="text-[var(--color-text-muted)]">/{totalAttempts}</span>
           </div>
 
           {/* Streak Counter */}
@@ -115,7 +115,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
 
       {/* Fixed Footer Bar */}
       {footer && (
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-10">
+        <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)] z-10">
           {footer}
         </div>
       )}
@@ -123,7 +123,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
       {/* Reset button (floating) - Responsive positioning */}
       <button
         onClick={onReset}
-        className="fixed bottom-20 sm:bottom-24 right-3 sm:right-4 p-2.5 sm:p-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors shadow-lg z-20"
+        className="fixed bottom-20 sm:bottom-24 right-3 sm:right-4 p-2.5 sm:p-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors shadow-lg z-20"
         aria-label="Reset session"
         title="Reset session"
       >
@@ -150,23 +150,23 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    className="bg-slate-50 dark:bg-slate-900 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-700 p-4 sm:p-6 mb-4 sm:mb-6"
+    className="bg-[var(--color-bg-secondary)] rounded-xl sm:rounded-2xl border border-[var(--color-border)] p-4 sm:p-6 mb-4 sm:mb-6"
   >
     {(category || subcategory) && (
       <div className="flex flex-wrap items-center gap-2 mb-3">
         {category && (
-          <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-800 rounded text-xs font-medium text-slate-600 dark:text-slate-400">
+          <span className="px-2 py-0.5 bg-[var(--color-bg-tertiary)] rounded text-xs font-medium text-[var(--color-text-secondary)]">
             {category}
           </span>
         )}
         {subcategory && (
-          <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800/50 rounded text-xs text-slate-500 dark:text-slate-500">
+          <span className="px-2 py-0.5 bg-[var(--color-bg-tertiary)]/50 rounded text-xs text-[var(--color-text-muted)]">
             {subcategory}
           </span>
         )}
       </div>
     )}
-    <p className="text-base sm:text-lg text-slate-900 dark:text-slate-200 leading-relaxed">
+    <p className="text-base sm:text-lg text-[var(--color-text-primary)] leading-relaxed">
       {question}
     </p>
   </motion.div>
@@ -201,10 +201,10 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
     } else if (isSelected) {
       buttonClasses += ' bg-red-100 dark:bg-red-900/50 border-red-500 text-red-900 dark:text-red-100';
     } else {
-      buttonClasses += ' bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 opacity-60';
+      buttonClasses += ' bg-[var(--color-bg-tertiary)] border-[var(--color-border)] text-[var(--color-text-muted)] opacity-60';
     }
   } else {
-    buttonClasses += ' bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 hover:border-slate-400 dark:hover:border-slate-600 cursor-pointer';
+    buttonClasses += ' bg-[var(--color-bg-secondary)] border-[var(--color-border)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-text-muted)] cursor-pointer';
   }
 
   return (
@@ -217,7 +217,7 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
       className={buttonClasses}
     >
       <div className="flex items-start gap-2 sm:gap-3">
-        <span className="font-bold text-slate-600 dark:text-slate-400 flex-shrink-0">
+        <span className="font-bold text-[var(--color-text-muted)] flex-shrink-0">
           {String.fromCharCode(65 + index)}.
         </span>
         <span className="flex-1">{text}</span>
@@ -280,8 +280,8 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
               {isCorrect ? 'Correct!' : 'Incorrect'}
             </div>
             {!isCorrect && correctAnswer && (
-              <div className="text-sm text-slate-700 dark:text-slate-300 mt-1">
-                Correct answer: <span className="font-semibold text-slate-900 dark:text-slate-100">{correctAnswer}</span>
+              <div className="text-sm text-[var(--color-text-secondary)] mt-1">
+                Correct answer: <span className="font-semibold text-[var(--color-text-primary)]">{correctAnswer}</span>
               </div>
             )}
           </div>
@@ -290,7 +290,7 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
             className={`inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-sm sm:text-base w-full sm:w-auto ${
               isCorrect
                 ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                : 'bg-slate-700 dark:bg-slate-700 hover:bg-slate-600 dark:hover:bg-slate-600 text-white dark:text-slate-100'
+                : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
           >
             {nextLabel}
@@ -299,8 +299,8 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
         </div>
 
         {/* Explanation */}
-        <div className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3">
-          <span className="font-medium text-slate-900 dark:text-slate-200">Explanation: </span>
+        <div className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] rounded-lg p-3">
+          <span className="font-medium text-[var(--color-text-primary)]">Explanation: </span>
           {explanation}
         </div>
 
