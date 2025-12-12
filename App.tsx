@@ -48,7 +48,6 @@ const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcuts
 const ARAnatomyMode = lazy(() => import("./components/ar/ARAnatomyMode"));
 const PANRELASimulator = lazy(() => import("./components/lifelong-learning/PANRELASimulator"));
 const CramMode = lazy(() => import("./components/modes/CramMode"));
-const MedicalWordleMode = lazy(() => import("./components/modes/MedicalWordleMode"));
 const CommandPalette = lazy(() => import("./components/CommandPalette"));
 const UserProfileModal = lazy(() => import("./components/onboarding/UserProfileModal"));
 const MediaApproval = lazy(() => import("./pages/admin/MediaApproval"));
@@ -744,12 +743,6 @@ const App: React.FC = () => {
           {view === "grand_rounds" && (
             <Suspense fallback={<Loader />}>
               <GrandRoundsMode onExit={() => setView("menu")} />
-            </Suspense>
-          )}
-
-          {view === "medical_wordle" && (
-            <Suspense fallback={<Loader />}>
-              <MedicalWordleMode onExit={() => setView("menu")} />
             </Suspense>
           )}
 
