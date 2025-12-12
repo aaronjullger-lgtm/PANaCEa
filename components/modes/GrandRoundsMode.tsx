@@ -1,8 +1,8 @@
 /**
  * Grand Rounds Live Mode Component
  * 
- * Weekly live quiz competition mode inspired by HQ Trivia.
- * Features real-time leaderboards and scheduled quiz sessions.
+ * Daily competitive challenge mode with speed-weighted scoring.
+ * Features real-time leaderboards and daily challenges.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -17,124 +17,113 @@ import {
   XCircle,
   Crown,
   Medal,
-  Zap
+  Zap,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
+import { useUser } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
+import { 
+  getTodaysChallenge, 
+  getTodaysLeaderboard, 
+  submitCompletion,
+  hasCompletedToday,
+  type LeaderboardEntry 
+} from '@/services/grandRoundsService';
+import type { Question } from '@/types';
 
 interface GrandRoundsModeProps {
   onExit?: () => void;
 }
 
-interface QuizQuestion {
-  id: string;
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-  points: number;
-}
-
-interface Participant {
-  id: string;
-  name: string;
-  score: number;
-  correctAnswers: number;
-}
-
-type ViewState = 'landing' | 'waiting' | 'active' | 'leaderboard';
-
-// Sample questions for the demo
-const SAMPLE_QUESTIONS: QuizQuestion[] = [
-  {
-    id: 'gr1',
-    question: 'Which artery is most commonly affected in STEMI?',
-    options: ['Left Anterior Descending', 'Right Coronary', 'Left Circumflex', 'Diagonal'],
-    correctIndex: 0,
-    explanation: 'LAD occlusion causes anterior wall MI, the most common type.',
-    points: 100
-  },
-  {
-    id: 'gr2',
-    question: 'First-line treatment for acute migraine with aura?',
-    options: ['Propranolol', 'Sumatriptan', 'Topiramate', 'Ergotamine'],
-    correctIndex: 1,
-    explanation: 'Triptans are first-line for acute migraine treatment.',
-    points: 150
-  },
-  {
-    id: 'gr3',
-    question: 'Most sensitive marker for myocardial infarction?',
-    options: ['CK-MB', 'Troponin', 'Myoglobin', 'LDH'],
-    correctIndex: 1,
-    explanation: 'Troponin is the gold standard for MI diagnosis.',
-    points: 200
-  },
-  {
-    id: 'gr4',
-    question: 'Target INR for mechanical aortic valve?',
-    options: ['1.5-2.0', '2.0-3.0', '2.5-3.5', '3.0-4.0'],
-    correctIndex: 1,
-    explanation: 'Mechanical aortic valve requires INR 2.0-3.0.',
-    points: 250
-  },
-  {
-    id: 'gr5',
-    question: 'Classic ECG finding in Brugada syndrome?',
-    options: ['ST elevation V1-V3', 'Delta wave', 'U wave', 'Epsilon wave'],
-    correctIndex: 0,
-    explanation: 'Brugada shows coved ST elevation in V1-V3.',
-    points: 300
-  }
-];
-
-// Constants for mock participant generation
-const MOCK_PARTICIPANT_NAMES = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry', 'Iris', 'Jack'];
-const DEFAULT_PARTICIPANT_COUNT = 10;
-const MAX_INITIAL_SCORE = 500;
-const MAX_INITIAL_CORRECT = 5;
-
-// Generate mock participants
-const generateMockParticipants = (count: number = DEFAULT_PARTICIPANT_COUNT): Participant[] => {
-  return MOCK_PARTICIPANT_NAMES.slice(0, count).map((name, index) => ({
-    id: `participant-${index}`,
-    name,
-    score: Math.floor(Math.random() * MAX_INITIAL_SCORE),
-    correctAnswers: Math.floor(Math.random() * MAX_INITIAL_CORRECT)
-  }));
-};
+type ViewState = 'loading' | 'completed' | 'landing' | 'waiting' | 'active' | 'leaderboard' | 'error';
 
 const TIME_PER_QUESTION = 10; // seconds
 
 const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
-  const [viewState, setViewState] = useState<ViewState>('landing');
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const { user } = useUser();
+  const userId = user?.id || 'demo-user';
+  
+  const [viewState, setViewState] = useState<ViewState>('loading');
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [myScore, setMyScore] = useState(0);
   const [myCorrectAnswers, setMyCorrectAnswers] = useState(0);
   const [timeLeft, setTimeLeft] = useState(TIME_PER_QUESTION);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isTimeUp, setIsTimeUp] = useState(false);
+  const [startTime, setStartTime] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
+  const [myRank, setMyRank] = useState<number | null>(null);
 
-  // Initialize participants
+  // Check if user has already completed today's challenge
   useEffect(() => {
-    setParticipants(generateMockParticipants());
-  }, []);
-
-  // Start the quiz
-  const handleStart = useCallback(() => {
-    setQuestions(SAMPLE_QUESTIONS);
-    setCurrentQuestionIndex(0);
-    setMyScore(0);
-    setMyCorrectAnswers(0);
-    setTimeLeft(TIME_PER_QUESTION);
-    setViewState('waiting');
+    const checkCompletion = async () => {
+      try {
+        const completed = await hasCompletedToday(userId);
+        if (completed) {
+          setViewState('completed');
+          // Load leaderboard even if completed
+          const board = await getTodaysLeaderboard(100);
+          setLeaderboard(board);
+        } else {
+          setViewState('landing');
+        }
+      } catch (err) {
+        console.error('Error checking completion:', err);
+        setError('Failed to check completion status');
+        setViewState('error');
+      }
+    };
     
-    // Simulate countdown to start
-    setTimeout(() => {
-      setViewState('active');
-    }, 3000);
+    checkCompletion();
+  }, [userId]);
+
+  // Start the quiz - Load today's challenge from API
+  const handleStart = useCallback(async () => {
+    setViewState('waiting');
+    setError(null);
+    
+    try {
+      // Fetch today's challenge from API
+      const challenge = await getTodaysChallenge();
+      
+      // TODO: Load actual questions based on challenge.questionIds
+      // For now, using sample questions - this will be replaced when question loading is implemented
+      // const loadedQuestions = await loadQuestionsByIds(challenge.questionIds);
+      
+      // Temporary: Generate 5 mock questions with the challenge seed
+      const mockQuestions: Question[] = Array.from({ length: 5 }, (_, i) => ({
+        id: `gr-${challenge.id}-${i}`,
+        question: `Challenge Question ${i + 1} (from API challenge ${challenge.id})`,
+        options: ['Option A', 'Option B', 'Option C', 'Option D'],
+        correctAnswer: Math.floor(Math.random() * 4),
+        explanation: 'This is a temporary explanation. Real questions will come from the database.',
+        condition: 'Grand Rounds',
+        conditionId: 'grand-rounds',
+        system: 'CV' as const,
+        difficulty: 'medium' as const,
+        questionType: 'multiple_choice' as const
+      }));
+      
+      setQuestions(mockQuestions);
+      setCurrentQuestionIndex(0);
+      setMyScore(0);
+      setMyCorrectAnswers(0);
+      setTimeLeft(TIME_PER_QUESTION);
+      setStartTime(Date.now());
+      
+      // Simulate countdown to start
+      setTimeout(() => {
+        setViewState('active');
+      }, 3000);
+    } catch (err) {
+      console.error('Error loading challenge:', err);
+      setError('Failed to load today\'s challenge. Please try again.');
+      setViewState('error');
+    }
   }, []);
 
   // Timer countdown
@@ -166,27 +155,21 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const handleSubmit = useCallback(() => {
     if (selectedAnswer === null || isSubmitted || !currentQuestion) return;
 
-    const isCorrect = selectedAnswer === currentQuestion.correctIndex;
+    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
     setIsSubmitted(true);
 
     if (isCorrect) {
-      const points = currentQuestion.points;
+      // Points based on question difficulty
+      const points = 100 + (currentQuestionIndex * 50); // Increasing points per question
       setMyScore(prev => prev + points);
       setMyCorrectAnswers(prev => prev + 1);
       hapticSuccess();
     } else {
       hapticError();
     }
+  }, [selectedAnswer, isSubmitted, currentQuestion, currentQuestionIndex]);
 
-    // Update mock participants
-    setParticipants(prev => prev.map(p => ({
-      ...p,
-      score: p.score + Math.floor(Math.random() * currentQuestion.points),
-      correctAnswers: p.correctAnswers + (Math.random() > 0.5 ? 1 : 0)
-    })));
-  }, [selectedAnswer, isSubmitted, currentQuestion]);
-
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedAnswer(null);
@@ -194,9 +177,31 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       setIsTimeUp(false);
       setTimeLeft(TIME_PER_QUESTION);
     } else {
-      setViewState('leaderboard');
+      // Quiz complete - submit to API
+      const completionTime = Date.now() - startTime;
+      
+      try {
+        const rank = await submitCompletion(
+          userId,
+          myScore,
+          completionTime,
+          myCorrectAnswers
+        );
+        
+        setMyRank(rank);
+        
+        // Load leaderboard
+        const board = await getTodaysLeaderboard(100);
+        setLeaderboard(board);
+        
+        setViewState('leaderboard');
+      } catch (err) {
+        console.error('Error submitting completion:', err);
+        setError('Failed to submit score. Your progress was not saved.');
+        setViewState('error');
+      }
     }
-  }, [currentQuestionIndex, questions.length]);
+  }, [currentQuestionIndex, questions.length, userId, myScore, myCorrectAnswers, startTime]);
 
   // Auto-submit when time runs out
   useEffect(() => {
@@ -204,6 +209,91 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       setIsSubmitted(true);
     }
   }, [isTimeUp, isSubmitted]);
+
+  // Loading state
+  if (viewState === 'loading') {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 text-amber-500 animate-spin mx-auto" />
+          <p className="text-[var(--color-text-secondary)]">Loading today's challenge...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (viewState === 'error') {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center space-y-4">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
+          <h2 className="text-2xl font-bold">Error</h2>
+          <p className="text-[var(--color-text-secondary)]">{error || 'An unexpected error occurred'}</p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold transition-colors"
+            >
+              Try Again
+            </button>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors"
+              >
+                Exit
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Already completed today
+  if (viewState === 'completed') {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center space-y-4">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+          <h2 className="text-2xl font-bold">Challenge Complete!</h2>
+          <p className="text-[var(--color-text-secondary)]">
+            You've already completed today's Grand Rounds challenge. Come back tomorrow for a new challenge!
+          </p>
+          {leaderboard.length > 0 && (
+            <div className="mt-6 text-left">
+              <h3 className="text-lg font-semibold mb-3">Today's Top 10</h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {leaderboard.slice(0, 10).map((entry) => (
+                  <div 
+                    key={entry.userId}
+                    className={`flex items-center justify-between p-2 rounded-lg ${
+                      entry.userId === userId ? 'bg-amber-500/20' : 'bg-[var(--color-bg-tertiary)]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-[var(--color-text-muted)]">#{entry.rank}</span>
+                      <span className="text-sm">{entry.userName || `User ${entry.userId.slice(0, 8)}`}</span>
+                    </div>
+                    <span className="font-semibold text-amber-500">{entry.score}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {onExit && (
+            <button
+              onClick={onExit}
+              className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors mt-4"
+            >
+              Exit
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // Landing page
   if (viewState === 'landing') {
@@ -244,8 +334,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="space-y-2">
                   <Users className="w-8 h-8 text-amber-500 mx-auto" />
-                  <div className="text-2xl font-bold">{participants.length}</div>
-                  <div className="text-xs text-[var(--color-text-muted)]">Players Online</div>
+                  <div className="text-2xl font-bold">Live</div>
+                  <div className="text-xs text-[var(--color-text-muted)]">Daily Challenge</div>
                 </div>
                 <div className="space-y-2">
                   <Calendar className="w-8 h-8 text-amber-500 mx-auto" />
@@ -254,7 +344,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                 </div>
                 <div className="space-y-2">
                   <Trophy className="w-8 h-8 text-amber-500 mx-auto" />
-                  <div className="text-2xl font-bold">1000</div>
+                  <div className="text-2xl font-bold">Up to 1000</div>
                   <div className="text-xs text-[var(--color-text-muted)]">Total Points</div>
                 </div>
               </div>
@@ -342,13 +432,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
   // Leaderboard page
   if (viewState === 'leaderboard') {
-    // Add user to leaderboard
-    const fullLeaderboard = [
-      { id: 'me', name: 'You', score: myScore, correctAnswers: myCorrectAnswers },
-      ...participants
-    ].sort((a, b) => b.score - a.score);
-
-    const myRank = fullLeaderboard.findIndex(p => p.id === 'me') + 1;
+    // Merge current user with leaderboard
+    const displayBoard = leaderboard.map((entry, index) => ({
+      ...entry,
+      displayRank: index + 1
+    }));
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex flex-col">
@@ -370,7 +458,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl p-6 border-2 border-amber-500/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="text-4xl font-bold text-amber-500">#{myRank}</div>
+                  <div className="text-4xl font-bold text-amber-500">#{myRank || '?'}</div>
                   <div>
                     <div className="font-semibold text-lg">Your Score</div>
                     <div className="text-sm text-[var(--color-text-muted)]">
@@ -389,11 +477,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 space-y-4">
               <h2 className="text-xl font-bold mb-4">Top Players</h2>
               <div className="space-y-2">
-                {fullLeaderboard.slice(0, 10).map((participant, index) => {
-                  const isMe = participant.id === 'me';
+                {displayBoard.slice(0, 10).map((entry, index) => {
+                  const isMe = entry.userId === userId;
                   return (
                     <motion.div
-                      key={participant.id}
+                      key={entry.userId}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -414,20 +502,20 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                             index === 0 ? <Crown className="w-5 h-5 inline" /> :
                             <Medal className="w-5 h-5 inline" />
                           ) : (
-                            `#${index + 1}`
+                            `#${entry.displayRank}`
                           )}
                         </div>
                         <div>
                           <div className={`font-semibold ${isMe ? 'text-amber-500' : ''}`}>
-                            {participant.name}
+                            {entry.userName || `User ${entry.userId.slice(0, 8)}`}
                           </div>
                           <div className="text-xs text-[var(--color-text-muted)]">
-                            {participant.correctAnswers} correct
+                            {entry.correctAnswers} correct
                           </div>
                         </div>
                       </div>
                       <div className={`text-lg font-bold ${isMe ? 'text-amber-500' : ''}`}>
-                        {participant.score}
+                        {entry.score}
                       </div>
                     </motion.div>
                   );
@@ -436,15 +524,6 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             </div>
 
             <div className="flex gap-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleStart}
-                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-all"
-              >
-                Play Again
-              </motion.button>
-              
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -464,7 +543,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   if (!currentQuestion) return null;
 
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  const isCorrect = selectedAnswer === currentQuestion.correctIndex;
+  const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex flex-col">
@@ -525,9 +604,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
             exit={{ opacity: 0, x: -20 }}
             className="max-w-4xl mx-auto space-y-6"
           >
-            {/* Points badge */}
+            {/* Points badge - removed since we don't have points property in Question type */}
             <div className="inline-flex items-center px-3 py-1 bg-amber-500/10 text-amber-500 text-sm font-medium rounded-full">
-              {currentQuestion.points} points
+              Question {currentQuestionIndex + 1}
             </div>
 
             {/* Question */}
@@ -542,7 +621,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               {currentQuestion.options.map((option, index) => {
                 const isSelected = selectedAnswer === index;
                 const showResult = isSubmitted;
-                const isThisCorrect = index === currentQuestion.correctIndex;
+                const isThisCorrect = index === currentQuestion.correctAnswer;
 
                 return (
                   <motion.button
