@@ -239,18 +239,28 @@ async function databaseCleanup(): Promise<void> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const deleted = await prisma.backgroundJob.deleteMany({
+    const deletedJobs = await prisma.backgroundJob.deleteMany({
       where: {
         status: { in: ['completed', 'failed'] },
         completedAt: { lt: thirtyDaysAgo },
       },
     });
 
+    // Clean up old OSCE chat history (> 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const deletedChats = await prisma.encounterChatHistory.deleteMany({
+      where: {
+        timestamp: { lt: sevenDaysAgo },
+      },
+    });
+
     report.tasks.push({
       name: 'Database Cleanup',
       status: 'completed',
-      message: `Cleaned up ${deleted.count} old background jobs`,
-      details: { deletedJobs: deleted.count },
+      message: `Cleaned up ${deletedJobs.count} old background jobs and ${deletedChats.count} old chat messages`,
+      details: { deletedJobs: deletedJobs.count, deletedChats: deletedChats.count },
       duration: Date.now() - start,
     });
     report.summary.completed++;
@@ -263,6 +273,80 @@ async function databaseCleanup(): Promise<void> {
     });
     report.summary.failed++;
   }
+}
+
+/**
+ * Create today's Grand Rounds challenge
+ */
+async function createGrandRoundsChallenge(): Promise<void> {
+  const start = Date.now();
+  console.log('🏆 Creating today\'s Grand Rounds challenge...');
+  
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if challenge already exists
+    const existing = await prisma.grandRoundsChallenge.findUnique({
+      where: { date: today },
+    });
+
+    if (existing) {
+      report.tasks.push({
+        name: 'Grand Rounds Challenge Creation',
+        status: 'skipped',
+        message: 'Challenge for today already exists',
+        duration: Date.now() - start,
+      });
+      report.summary.skipped++;
+      return;
+    }
+
+    // Generate 5 random question IDs using the date as seed
+    const seed = today.getTime();
+    const questionIds = generateQuestionIds(seed, 5);
+
+    await prisma.grandRoundsChallenge.create({
+      data: {
+        date: today,
+        questionIds,
+        seed,
+      },
+    });
+
+    report.tasks.push({
+      name: 'Grand Rounds Challenge Creation',
+      status: 'completed',
+      message: 'Created today\'s Grand Rounds challenge with 5 questions',
+      details: { date: today.toISOString(), seed, questionIds },
+      duration: Date.now() - start,
+    });
+    report.summary.completed++;
+  } catch (error: any) {
+    report.tasks.push({
+      name: 'Grand Rounds Challenge Creation',
+      status: 'failed',
+      message: `Failed: ${error.message}`,
+      duration: Date.now() - start,
+    });
+    report.summary.failed++;
+  }
+}
+
+/**
+ * Generate deterministic question IDs based on seed
+ */
+function generateQuestionIds(seed: number, count: number): string[] {
+  const ids: string[] = [];
+  let current = seed;
+  
+  for (let i = 0; i < count; i++) {
+    // Simple LCG (Linear Congruential Generator) for deterministic randomness
+    current = (current * 1103515245 + 12345) % 2147483648;
+    ids.push(`gr-q-${current % 10000}`);
+  }
+  
+  return ids;
 }
 
 /**
@@ -309,9 +393,10 @@ function saveReport(): void {
 async function main() {
   console.log('🌅 Starting daily automation tasks...\n');
 
-  report.summary.total = 5;
+  report.summary.total = 6;
 
   try {
+    await createGrandRoundsChallenge(); // Create daily challenge first
     await validateContentAccuracy();
     await identifyContentGaps();
     await checkMediaAssetQuality();
