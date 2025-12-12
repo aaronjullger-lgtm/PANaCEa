@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2, Users, X, Trophy } from "lucide-react";
+import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2, Users, X, Trophy, GraduationCap } from "lucide-react";
 import type {
   PerformanceRecord,
   SessionSettings,
@@ -716,6 +716,19 @@ const MenuView: React.FC<MenuViewProps> = ({
                   <Users className="w-8 h-8 mb-2 text-pink-500" />
                   <div className="font-semibold text-sm text-slate-900 dark:text-white">Social</div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">Groups & Friends</div>
+                </motion.button>
+              )}
+
+              {onNavigateToToolkit && (
+                <motion.button
+                  onClick={onNavigateToToolkit}
+                  className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <GraduationCap className="w-8 h-8 mb-2 text-emerald-500" />
+                  <div className="font-semibold text-sm text-slate-900 dark:text-white">Toolkit Hub</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">Learning Resources</div>
                 </motion.button>
               )}
             </div>
