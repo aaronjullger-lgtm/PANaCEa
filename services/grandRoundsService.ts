@@ -40,18 +40,10 @@ export interface LeaderboardEntry {
  * Get or create today's Grand Rounds challenge
  */
 export async function getTodaysChallenge(): Promise<GrandRoundsChallenge> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
   try {
-    const response = await fetch('/geminiProxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        endpoint: 'grandRounds/challenge',
-        method: 'GET',
-        params: { date: today.toISOString() }
-      })
+    const response = await fetch('/api/grandrounds/challenge', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
     });
     
     if (!response.ok) {
@@ -70,18 +62,10 @@ export async function getTodaysChallenge(): Promise<GrandRoundsChallenge> {
  * Check if user has completed today's challenge
  */
 export async function hasCompletedToday(userId: string): Promise<boolean> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
   try {
-    const response = await fetch('/geminiProxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        endpoint: 'grandRounds/completed',
-        method: 'GET',
-        params: { userId, date: today.toISOString() }
-      })
+    const response = await fetch(`/api/grandrounds/completed?userId=${userId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
     });
     
     if (!response.ok) {
@@ -128,20 +112,16 @@ export async function submitCompletion(
   const timeBonus = calculateTimeBonus(completionTimeMs);
   
   try {
-    const response = await fetch('/geminiProxy', {
+    const response = await fetch('/api/grandrounds/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        endpoint: 'grandRounds/submit',
-        method: 'POST',
-        data: {
-          userId,
-          date: today.toISOString(),
-          score: score + timeBonus,
-          completionTimeMs,
-          correctAnswers,
-          timeBonus
-        }
+        userId,
+        date: today.toISOString(),
+        score: score + timeBonus,
+        completionTimeMs,
+        correctAnswers,
+        timeBonus
       })
     });
     
@@ -166,14 +146,9 @@ export async function getTodaysLeaderboard(limit: number = 100): Promise<Leaderb
   today.setHours(0, 0, 0, 0);
   
   try {
-    const response = await fetch('/geminiProxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        endpoint: 'grandRounds/leaderboard',
-        method: 'GET',
-        params: { date: today.toISOString(), limit }
-      })
+    const response = await fetch(`/api/grandrounds/leaderboard?date=${today.toISOString()}&limit=${limit}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
     });
     
     if (!response.ok) {
@@ -196,14 +171,9 @@ export async function getUserRank(userId: string): Promise<number | null> {
   today.setHours(0, 0, 0, 0);
   
   try {
-    const response = await fetch('/geminiProxy', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        endpoint: 'grandRounds/rank',
-        method: 'GET',
-        params: { userId, date: today.toISOString() }
-      })
+    const response = await fetch(`/api/grandrounds/rank?userId=${userId}&date=${today.toISOString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
     });
     
     if (!response.ok) {
