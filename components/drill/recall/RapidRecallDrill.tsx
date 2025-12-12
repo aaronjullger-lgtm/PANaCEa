@@ -162,7 +162,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
       {/* Flash overlay for correct/incorrect feedback */}
       <AnimatePresence>
         {status === 'feedback' && (
@@ -180,21 +180,21 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
+      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
         <button
           onClick={handleExit}
-          className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+          className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
           aria-label="Exit"
         >
           <X className="w-5 h-5" />
           <span className="text-sm font-medium hidden sm:inline">Exit</span>
         </button>
 
-        <h1 className="text-lg font-semibold text-slate-200">Rapid Recall</h1>
+        <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">Rapid Recall</h1>
 
         <div className="flex items-center gap-4">
           {/* Score */}
-          <div className="text-sm text-slate-400">
+          <div className="text-sm text-[var(--color-text-secondary)]">
             {totalCorrect}/{totalAttempts}
           </div>
 
@@ -202,12 +202,12 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
           <div className="flex items-center gap-1.5">
             <Flame
               className={`w-5 h-5 ${
-                streak > 0 ? 'text-orange-500' : 'text-slate-600'
+                streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
               }`}
             />
             <span
               className={`text-sm font-bold ${
-                streak > 0 ? 'text-orange-500' : 'text-slate-600'
+                streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
               }`}
             >
               {streak}
@@ -228,10 +228,10 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
             transition={{ duration: 0.3 }}
             className="text-center"
           >
-            <p className="text-sm uppercase tracking-widest text-slate-500 mb-4">
+            <p className="text-sm uppercase tracking-widest text-[var(--color-text-muted)] mb-4">
               What diagnosis is this buzzword associated with?
             </p>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-slate-100 leading-tight">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[var(--color-text-primary)] leading-tight">
               {currentBuzzword}
             </h2>
           </motion.div>
@@ -239,7 +239,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
       </main>
 
       {/* Fixed Bottom Bar with Input/Feedback */}
-      <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800">
+      <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)]">
         <AnimatePresence mode="wait">
           {status === 'playing' && (
             <motion.div
@@ -286,15 +286,15 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
                       {isCorrect ? 'Correct!' : 'Incorrect'}
                     </div>
                     {!isCorrect && (
-                      <div className="text-sm text-slate-300 mt-1">
+                      <div className="text-sm text-[var(--color-text-secondary)] mt-1">
                         Correct answer:{' '}
-                        <span className="font-semibold text-slate-100">
+                        <span className="font-semibold text-[var(--color-text-primary)]">
                           {BUZZWORD_DICTIONARY[currentBuzzword]}
                         </span>
                       </div>
                     )}
                     {userAnswer && !isCorrect && (
-                      <div className="text-sm text-slate-500 mt-0.5">
+                      <div className="text-sm text-[var(--color-text-muted)] mt-0.5">
                         Your answer: {userAnswer}
                       </div>
                     )}
@@ -304,7 +304,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
                     className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
                       isCorrect
                         ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                        : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
+                        : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
                     }`}
                   >
                     Next Card
@@ -320,7 +320,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
       {/* Reset button (floating) */}
       <button
         onClick={handleReset}
-        className="fixed bottom-20 right-4 p-3 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-400 hover:text-slate-200 transition-colors shadow-lg"
+        className="fixed bottom-20 right-4 p-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors shadow-lg"
         aria-label="Reset session"
         title="Reset session"
       >
