@@ -79,6 +79,8 @@ interface MenuViewProps {
   onNavigateToIntegrations?: () => void;
   /** Callback for navigating to social dashboard */
   onNavigateToSocial?: () => void;
+  /** Callback for navigating to toolkit hub */
+  onNavigateToToolkit?: () => void;
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;
@@ -107,6 +109,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   onNavigateToDrillMode,
   onNavigateToIntegrations,
   onNavigateToSocial,
+  onNavigateToToolkit,
   isSyncing,
   lastSyncTime,
   syncError,
