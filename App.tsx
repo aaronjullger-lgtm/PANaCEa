@@ -48,11 +48,11 @@ const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcuts
 const ARAnatomyMode = lazy(() => import("./components/ar/ARAnatomyMode"));
 const PANRELASimulator = lazy(() => import("./components/lifelong-learning/PANRELASimulator"));
 const CramMode = lazy(() => import("./components/modes/CramMode"));
-const MedicalWordleMode = lazy(() => import("./components/modes/MedicalWordleMode"));
 const CommandPalette = lazy(() => import("./components/CommandPalette"));
 const UserProfileModal = lazy(() => import("./components/onboarding/UserProfileModal"));
 const MediaApproval = lazy(() => import("./pages/admin/MediaApproval"));
 const StudyGroupDashboard = lazy(() => import("./components/social/StudyGroupDashboard"));
+const ToolkitHub = lazy(() => import("./components/ToolkitHub"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -77,7 +77,7 @@ const DRILL_MODE_CODE_BLUE: TrainingModeId = 'code_blue_speed';
 const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
 const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
 
-type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "ar_anatomy" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "admin_media" | "social_dashboard";
+type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "ar_anatomy" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "admin_media" | "social_dashboard" | "toolkit";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -426,6 +426,8 @@ const App: React.FC = () => {
       setView('cram_mode');
     } else if (modeId === 'admin_media') {
       setView('admin_media');
+    } else if (modeId === 'toolkit') {
+      setView('toolkit');
     }
   };
 
@@ -579,6 +581,7 @@ const App: React.FC = () => {
                   onNavigateToDrillMode={handleNavigateToDrillMode}
                   onNavigateToIntegrations={() => setView("integrations")}
                   onNavigateToSocial={() => setView("social_dashboard")}
+                  onNavigateToToolkit={() => setView("toolkit")}
                   isSyncing={isSyncing}
                   lastSyncTime={lastSyncTime}
                   syncError={syncError}
@@ -747,12 +750,6 @@ const App: React.FC = () => {
             </Suspense>
           )}
 
-          {view === "medical_wordle" && (
-            <Suspense fallback={<Loader />}>
-              <MedicalWordleMode onExit={() => setView("menu")} />
-            </Suspense>
-          )}
-
           {view === "social_dashboard" && (
             <Suspense fallback={<Loader />}>
               <div className="relative">
@@ -771,6 +768,24 @@ const App: React.FC = () => {
             <Suspense fallback={<Loader />}>
               <MediaApproval onClose={() => setView("menu")} />
             </Suspense>
+          )}
+
+          {view === "toolkit" && (
+            <motion.div
+              key="toolkit"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <Suspense fallback={<Loader />}>
+                <ToolkitHub 
+                  onClose={() => setView("menu")}
+                  onNavigateToItem={handleNavigateToDrillMode}
+                />
+              </Suspense>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>

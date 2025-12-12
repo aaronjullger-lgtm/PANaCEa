@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2, Users } from "lucide-react";
+import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2, Users, X, Trophy } from "lucide-react";
 import type {
   PerformanceRecord,
   SessionSettings,
@@ -27,7 +27,6 @@ import { StreakTracker } from "./StreakTracker";
 import { QuickReviewMode } from "./QuickReviewMode";
 import { BookmarksPanel } from "./BookmarksPanel";
 import { StudyGuideGenerator } from "./StudyGuideGenerator";
-import { LeaderboardPanel } from "./LeaderboardPanel";
 import { 
   WidgetGrid, 
   TimeScopeFilter, 
@@ -80,6 +79,8 @@ interface MenuViewProps {
   onNavigateToIntegrations?: () => void;
   /** Callback for navigating to social dashboard */
   onNavigateToSocial?: () => void;
+  /** Callback for navigating to toolkit hub */
+  onNavigateToToolkit?: () => void;
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;
@@ -108,6 +109,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   onNavigateToDrillMode,
   onNavigateToIntegrations,
   onNavigateToSocial,
+  onNavigateToToolkit,
   isSyncing,
   lastSyncTime,
   syncError,
@@ -861,14 +863,45 @@ const MenuView: React.FC<MenuViewProps> = ({
       )}
 
       {showLeaderboard && (
-        <LeaderboardPanel
-          currentUserStats={{
-            questionsAnswered: stats.widgetData.questionsAttempted,
-            accuracy: stats.widgetData.overallAccuracy / 100,
-            streak: stats.widgetData.currentStreak,
-          }}
-          onClose={() => setShowLeaderboard(false)}
-        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setShowLeaderboard(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            className="bg-white dark:bg-slate-800 rounded-xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <Trophy className="w-8 h-8 text-yellow-500" />
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Grand Rounds</h2>
+              </div>
+              <button
+                onClick={() => setShowLeaderboard(false)}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">
+              The daily competitive leaderboard has moved to Grand Rounds mode. 
+              Compete against other students with speed-weighted scoring!
+            </p>
+            <button
+              onClick={() => {
+                setShowLeaderboard(false);
+                onStartMode("grand_rounds");
+              }}
+              className="w-full px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors"
+            >
+              Go to Grand Rounds
+            </button>
+          </motion.div>
+        </motion.div>
       )}
     </>
   );
