@@ -9,6 +9,8 @@
 
 export interface SpecialTestMeta {
   name: string;
+  displayName?: string; // Clean display name (if different from name)
+  aliases?: string[]; // Alternative names for search
   system: string; // MSK, NEURO, CV, etc.
   region?: string; // Knee, Shoulder, Lumbar Spine, etc.
   description?: string;

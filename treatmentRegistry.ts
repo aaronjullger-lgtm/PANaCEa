@@ -13,6 +13,8 @@
 
 export interface TreatmentMeta {
   name: string;
+  displayName?: string; // Clean display name
+  aliases?: string[]; // Alternative names for search
   category: string; // Procedure, Therapy, Device, Lifestyle, etc.
 }
 

@@ -161,10 +161,26 @@ model SavedQuestion {
 
 /// Represents a medical condition in the learning platform.
 /// Conditions are the primary educational content unit.
+/// Enhanced with parent-child relationships and aliases for smart search
 model Condition {
   id        String   @id @default(uuid())
   name      String
   system    String // Organ system (e.g., "cardiovascular", "respiratory")
+  
+  /// Parent-child relationships for condition variants
+  parentId  String?  // Reference to parent condition (null if this is a parent)
+  parent    Condition?  @relation("ConditionHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Condition[] @relation("ConditionHierarchy")
+  
+  /// Clean display name (without parentheses or aliases)
+  displayName String?
+  
+  /// Alternative names and aliases for search
+  aliases   String[] @default([])
+  
+  /// Content sections (as JSONB)
+  content   Json?    // Pathophysiology, Clinical Presentation, Diagnosis, Management, Pearls
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -179,6 +195,8 @@ model Condition {
 
   @@index([system])
   @@index([name])
+  @@index([parentId])
+  @@index([displayName])
 }
 
 /// Represents an anatomical structure relevant to medical conditions
@@ -204,6 +222,11 @@ model AnatomyStructure {
 model SpecialTest {
   id          String   @id @default(uuid())
   name        String   @unique // e.g. "Lachman Test"
+  
+  // Search and display
+  displayName String?  // Clean display name
+  aliases     String[] @default([]) // Alternative names (e.g., "Anterior Drawer Test")
+  
   description String?  @db.Text
   sensitivity Float?   // 0-100
   specificity Float?   // 0-100
@@ -218,6 +241,7 @@ model SpecialTest {
   updatedAt   DateTime @updatedAt
 
   @@index([name])
+  @@index([displayName])
 }
 
 /// Represents a media asset (EKG, imaging, lab table, diagram, etc.)
@@ -894,6 +918,10 @@ model Drug {
   interactions      Json?    // Array of interaction objects
   dosing            String?  @db.Text
   
+  // Search and display
+  displayName       String?  // Clean display name (defaults to genericName)
+  aliases           String[] @default([]) // Alternative names for search
+  
   // Metadata
   tags              String[] // "Antibiotic", "Beta-Lactam", etc.
   isHighYield       Boolean  @default(false)
@@ -904,6 +932,7 @@ model Drug {
   @@index([genericName])
   @@index([brandName])
   @@index([drugClass])
+  @@index([displayName])
 }
 
 /// Represents a study group for social learning
@@ -1077,6 +1106,10 @@ model Treatment {
   name        String   @unique
   category    String   // Procedure, Therapy, Device, Lifestyle
   
+  // Search and display
+  displayName String?  // Clean display name
+  aliases     String[] @default([]) // Alternative names for search
+  
   // AI-generated content
   description String?  @db.Text
   indications String?  @db.Text
@@ -1090,6 +1123,7 @@ model Treatment {
   
   @@index([category])
   @@index([name])
+  @@index([displayName])
 }
 
 /// Clinical Guideline Registry
@@ -1178,6 +1212,35 @@ model Differential {
   @@index([category])
   @@index([isEmergency])
   @@index([presentingComplaint])
+}
+
+/// Physiology Concepts - Basic science and mechanisms
+model PhysiologyConcept {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  category    String   // Cardiovascular, Respiratory, Renal, Endocrine, etc.
+  
+  // Search and display
+  displayName String?  // Clean display name with proper capitalization
+  aliases     String[] @default([]) // Alternative names for search
+  
+  // Content
+  description String?  @db.Text
+  mechanism   String?  @db.Text
+  clinicalRelevance String? @db.Text
+  relatedConditions String[] // Condition IDs or names
+  relatedDrugs String[] // Drug names
+  
+  // Visual aids
+  diagramUrl  String?
+  videoUrl    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([category])
+  @@index([name])
+  @@index([displayName])
 }
 
 // ============================================================================
