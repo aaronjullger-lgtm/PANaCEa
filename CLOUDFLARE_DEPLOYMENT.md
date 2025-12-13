@@ -69,6 +69,19 @@ In your Cloudflare Pages project settings, configure:
 
 You **must** set the following environment variables in your Cloudflare Pages project:
 
+#### Required for Frontend (Build-time variables)
+
+These variables must be set for **both Production and Preview** environments as they are embedded into the client bundle during build:
+
+- **Variable name**: `VITE_CLERK_PUBLISHABLE_KEY`
+  - **Value**: Your Clerk publishable key (starts with `pk_test_` or `pk_live_`)
+  - **Get from**: https://dashboard.clerk.com → Your Application → API Keys
+  - **CRITICAL**: This MUST be set in Cloudflare Pages environment variables, not just GitHub secrets
+  - **Why**: Vite embeds `VITE_*` variables at build time into the client bundle
+  - **Note**: This is a public key and safe to expose in client code
+
+#### Required for Backend (Runtime variables)
+
 - **Variable name**: `GEMINI_API_KEY`
   - **Value**: Your Google Gemini API key
   
@@ -84,7 +97,10 @@ You **must** set the following environment variables in your Cloudflare Pages pr
   - **Note**: When using Prisma Accelerate extension with `prisma://` URL, you get automatic edge compatibility
   
 - **Variable name**: `CLERK_SECRET_KEY`
-  - **Value**: Your Clerk authentication secret key
+  - **Value**: Your Clerk authentication secret key (starts with `sk_test_` or `sk_live_`)
+  - **Get from**: https://dashboard.clerk.com → Your Application → API Keys
+  - **CRITICAL**: Both `VITE_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` must be from the SAME Clerk application
+  - **Security**: This is a secret key and should never be exposed in client code
 
 #### How to set environment variables in Cloudflare Pages:
 
@@ -92,10 +108,23 @@ You **must** set the following environment variables in your Cloudflare Pages pr
 2. Select your Pages project
 3. Go to **Settings** → **Environment variables**
 4. Click **Add variable**
-5. Name: `GEMINI_API_KEY`
-6. Value: Your Gemini API key
-7. Select environment (Production and/or Preview)
-8. Click **Save**
+5. Add each variable (example for Clerk):
+   - Name: `VITE_CLERK_PUBLISHABLE_KEY`
+   - Value: `pk_test_xxxxx` (your actual publishable key)
+   - Select environment: **Production** and **Preview** (check both)
+   - Click **Save**
+6. Repeat for all required variables:
+   - `VITE_CLERK_PUBLISHABLE_KEY` (Production + Preview)
+   - `CLERK_SECRET_KEY` (Production + Preview)
+   - `GEMINI_API_KEY` (Production + Preview)
+   - `DATABASE_URL` (Production + Preview)
+7. After adding all variables, trigger a new deployment for changes to take effect
+
+**Important Notes:**
+- Variables prefixed with `VITE_` (like `VITE_CLERK_PUBLISHABLE_KEY`) are embedded at **build time**
+- You must set them in Cloudflare Pages, not just in GitHub secrets
+- After adding or changing `VITE_*` variables, redeploy to rebuild the app with new values
+- Backend variables (without `VITE_` prefix) are available at runtime only
 
 ### 3. Node.js Version
 
@@ -193,6 +222,31 @@ This approach:
 
 ## Troubleshooting
 
+### Error: "Missing Publishable Key for Clerk!"
+
+**Symptom:** App fails to load with error about missing Clerk publishable key in preview/production
+
+**Cause:** `VITE_CLERK_PUBLISHABLE_KEY` is not set in Cloudflare Pages environment variables
+
+**Solution:**
+1. Go to Cloudflare Dashboard → Your Pages Project → Settings → Environment Variables
+2. Add variable:
+   - Name: `VITE_CLERK_PUBLISHABLE_KEY`
+   - Value: Your Clerk publishable key (get from https://dashboard.clerk.com)
+   - Environment: Check **both** Production and Preview
+3. Click **Save**
+4. Trigger a new deployment (Cloudflare will rebuild with the new environment variable)
+
+**Why this happens:**
+- Vite embeds `VITE_*` variables into the client bundle at **build time**
+- Having the key in GitHub secrets alone is not enough - it must be in Cloudflare Pages
+- After adding the variable, you **must redeploy** for it to take effect
+
+**Verification:**
+- After deployment, the app should load without the Clerk error
+- Check browser console - you should see Clerk initialized messages
+- You should be able to sign in/sign up
+
 ### Error: "GEMINI_API_KEY environment variable is not set"
 - Make sure you've set the `GEMINI_API_KEY` environment variable in Cloudflare Pages
 - Redeploy after setting the environment variable
@@ -214,6 +268,11 @@ This approach:
 - Check that `postcss.config.js` and `tailwind.config.js` exist
 - Verify `index.css` contains the Tailwind directives
 - Run `npm run build` and check for PostCSS errors
+
+### Authentication errors (401 Unauthorized)
+- Verify both `VITE_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are from the **same** Clerk application
+- Check that both keys are for the same environment (both test or both live)
+- Mismatched keys will cause token verification failures
 
 ## Cloudflare Pages Functions Key Features
 

@@ -111,12 +111,12 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
     }, {} as Record<string, typeof allGuidelines>);
 
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
-            className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
           >
             <X className="w-5 h-5" />
             <span className="text-sm font-medium hidden sm:inline">Exit</span>
@@ -139,7 +139,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
               <h2 className="text-2xl sm:text-3xl font-bold mb-2">
                 Clinical Scoring Guidelines
               </h2>
-              <p className="text-sm sm:text-base text-slate-400">
+              <p className="text-sm sm:text-base text-[var(--color-text-secondary)]">
                 Practice PANCE high-yield criteria and scoring systems
               </p>
             </motion.div>
@@ -148,7 +148,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             <div className="space-y-6">
               {Object.entries(guidelinesByCategory).map(([category, guidelines]) => (
                 <div key={category}>
-                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                  <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-3">
                     {category}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -159,20 +159,20 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
                         onClick={() => handleSelectGuideline(g.id)}
-                        className="p-4 bg-slate-900 border border-slate-700 rounded-xl text-left hover:bg-slate-800 hover:border-slate-600 transition-all group"
+                        className="p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl text-left hover:bg-[var(--color-bg-tertiary)] hover:border-[var(--color-text-muted)] transition-all group"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-slate-200 group-hover:text-white truncate">
+                            <h4 className="font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] truncate">
                               {g.name}
                             </h4>
-                            <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                            <p className="text-xs text-[var(--color-text-muted)] mt-1 line-clamp-2">
                               {g.description}
                             </p>
                           </div>
-                          <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-slate-400 flex-shrink-0 ml-2" />
+                          <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-accent)] flex-shrink-0 ml-2" />
                         </div>
-                        <div className="mt-2 text-xs text-slate-500">
+                        <div className="mt-2 text-xs text-[var(--color-text-muted)]">
                           {g.vignettes.length} case{g.vignettes.length !== 1 ? 's' : ''} • Max score: {g.maxScore}
                         </div>
                       </motion.button>
@@ -192,12 +192,12 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   // =========================================================================
   if (status === 'playing' && currentGuideline && currentVignette) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Header */}
-        <header className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
+        <header className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
-            className="flex items-center gap-1.5 text-slate-400 hover:text-slate-200 transition-colors"
+            className="flex items-center gap-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
           >
             <X className="w-5 h-5" />
             <span className="text-sm font-medium hidden sm:inline">Exit</span>
@@ -208,12 +208,12 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
           </h1>
 
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="text-xs sm:text-sm text-slate-400">
+            <div className="text-xs sm:text-sm text-[var(--color-text-secondary)]">
               {currentVignetteIndex + 1}/{totalVignettes}
             </div>
             <div className="flex items-center gap-1">
-              <Flame className={`w-4 h-4 sm:w-5 sm:h-5 ${streak > 0 ? 'text-orange-500' : 'text-slate-600'}`} />
-              <span className={`text-xs sm:text-sm font-bold ${streak > 0 ? 'text-orange-500' : 'text-slate-600'}`}>
+              <Flame className={`w-4 h-4 sm:w-5 sm:h-5 ${streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'}`} />
+              <span className={`text-xs sm:text-sm font-bold ${streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'}`}>
                 {streak}
               </span>
             </div>
@@ -227,22 +227,22 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-slate-900 rounded-xl border border-slate-700 p-4 sm:p-6 mb-4"
+              className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4 sm:p-6 mb-4"
             >
               <div className="flex items-center gap-2 mb-3">
-                <BookOpen className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                <BookOpen className="w-4 h-4 text-[var(--color-text-muted)]" />
+                <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
                   Clinical Vignette
                 </span>
               </div>
-              <p className="text-base sm:text-lg text-slate-200 leading-relaxed">
+              <p className="text-base sm:text-lg text-[var(--color-text-primary)] leading-relaxed">
                 {currentVignette.story}
               </p>
             </motion.div>
 
             {/* Criteria Checklist */}
-            <div className="bg-slate-900/50 rounded-xl border border-slate-700 p-4 sm:p-6">
-              <h3 className="text-sm font-semibold text-slate-300 mb-4">
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4 sm:p-6">
+              <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-4">
                 Select criteria that are met:
               </h3>
               <div className="space-y-2">
@@ -256,22 +256,22 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                     className={`w-full p-3 rounded-lg text-left transition-all flex items-center gap-3 ${
                       selectedCriteria.has(criterion.id)
                         ? 'bg-teal-900/50 border border-teal-600'
-                        : 'bg-slate-800 border border-slate-700 hover:bg-slate-750'
+                        : 'bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] hover:bg-[var(--color-border)]'
                     }`}
                   >
                     <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 ${
                       selectedCriteria.has(criterion.id)
                         ? 'bg-teal-500 border-teal-500'
-                        : 'border-slate-500'
+                        : 'border-[var(--color-text-muted)]'
                     }`}>
                       {selectedCriteria.has(criterion.id) && (
                         <CheckCircle className="w-4 h-4 text-white" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm text-slate-200">{criterion.label}</span>
+                      <span className="text-sm text-[var(--color-text-primary)]">{criterion.label}</span>
                       {criterion.description && (
-                        <span className="text-xs text-slate-500 ml-2">({criterion.description})</span>
+                        <span className="text-xs text-[var(--color-text-muted)] ml-2">({criterion.description})</span>
                       )}
                     </div>
                     <span className={`text-sm font-bold flex-shrink-0 ${
@@ -287,10 +287,10 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         </main>
 
         {/* Fixed Footer - Score Submission */}
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 p-3 sm:p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)] p-3 sm:p-4">
           <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-400">Your Score:</span>
+              <span className="text-sm text-[var(--color-text-secondary)]">Your Score:</span>
               <span className="text-2xl font-bold text-teal-400">{calculatedScore}</span>
             </div>
             <button
@@ -305,7 +305,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         {/* Reset button */}
         <button
           onClick={handleReset}
-          className="fixed bottom-20 right-4 p-3 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-400 hover:text-slate-200 transition-colors shadow-lg z-20"
+          className="fixed bottom-20 right-4 p-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors shadow-lg z-20"
         >
           <RotateCcw className="w-5 h-5" />
         </button>
@@ -318,7 +318,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   // =========================================================================
   if (status === 'feedback' && currentGuideline && currentVignette) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
         {/* Flash overlay */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -329,12 +329,12 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         />
 
         {/* Header */}
-        <header className="relative z-10 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
-          <button onClick={handleExit} className="text-slate-400 hover:text-slate-200">
+        <header className="relative z-10 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
+          <button onClick={handleExit} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
             <X className="w-5 h-5" />
           </button>
           <h1 className="text-base sm:text-lg font-semibold">{currentGuideline.name}</h1>
-          <div className="text-sm text-slate-400">{currentVignetteIndex + 1}/{totalVignettes}</div>
+          <div className="text-sm text-[var(--color-text-secondary)]">{currentVignetteIndex + 1}/{totalVignettes}</div>
         </header>
 
         {/* Main Content */}
@@ -360,26 +360,26 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                   <h2 className={`text-xl font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
                     {isCorrect ? 'Correct!' : 'Incorrect'}
                   </h2>
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-[var(--color-text-secondary)]">
                     Your score: {userScore} | Correct score: {currentVignette.correctScore}
                   </p>
                 </div>
               </div>
 
               {/* Explanation */}
-              <div className="bg-slate-900/50 rounded-lg p-4">
-                <h3 className="text-sm font-semibold text-slate-300 mb-2">Explanation</h3>
-                <p className="text-sm text-slate-400">{currentVignette.explanation}</p>
+              <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Explanation</h3>
+                <p className="text-sm text-[var(--color-text-secondary)]">{currentVignette.explanation}</p>
               </div>
 
               {/* Correct Criteria */}
               <div className="mt-4">
-                <h3 className="text-sm font-semibold text-slate-300 mb-2">Criteria Met in This Case:</h3>
+                <h3 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">Criteria Met in This Case:</h3>
                 <div className="flex flex-wrap gap-2">
                   {currentVignette.metCriteriaIds.map(id => {
                     const criterion = currentGuideline.components.find(c => c.id === id);
                     return criterion ? (
-                      <span key={id} className="px-2 py-1 bg-slate-800 rounded text-xs text-slate-300">
+                      <span key={id} className="px-2 py-1 bg-[var(--color-bg-tertiary)] rounded text-xs text-[var(--color-text-secondary)]">
                         {criterion.label} (+{criterion.pointValue})
                       </span>
                     ) : null;
@@ -391,7 +391,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
         </main>
 
         {/* Footer */}
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 p-3 sm:p-4 z-10">
+        <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)] p-3 sm:p-4 z-10">
           <div className="max-w-3xl mx-auto flex justify-end">
             <button
               onClick={handleNextVignette}
@@ -415,9 +415,9 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
       : 0;
 
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
-        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-800">
-          <button onClick={handleExit} className="text-slate-400 hover:text-slate-200">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--color-border)]">
+          <button onClick={handleExit} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]">
             <X className="w-5 h-5" />
           </button>
           <h1 className="text-base sm:text-lg font-semibold">Session Complete</h1>
@@ -435,12 +435,12 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
             <p className="text-4xl font-bold text-teal-400 mb-2">
               {sessionResult.totalCorrect}/{sessionResult.totalAttempts}
             </p>
-            <p className="text-slate-400 mb-6">{percentage}% Accuracy</p>
+            <p className="text-[var(--color-text-secondary)] mb-6">{percentage}% Accuracy</p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={handleReset}
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-medium transition-colors"
+                className="px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-medium transition-colors"
               >
                 Try Again
               </button>
@@ -459,8 +459,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
 
   // Fallback
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center">
-      <p className="text-slate-400">Loading...</p>
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
+      <p className="text-[var(--color-text-secondary)]">Loading...</p>
     </div>
   );
 };
