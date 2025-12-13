@@ -93,10 +93,24 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     try {
       const conditionResults = searchConditions(query, 5);
       conditionResults.forEach(result => {
+        // Clean display name (remove parentheses)
+        const displayName = result.condition.replace(/\s*\([^)]*\)/g, '').trim();
+        
+        // Check if query matched an alias
+        const aliases = result.aliases || [];
+        const matchedAlias = aliases.find(alias => 
+          alias.toLowerCase().includes(lowerQuery) || 
+          lowerQuery.includes(alias.toLowerCase())
+        );
+        
+        const subtitle = matchedAlias 
+          ? `${result.system} • matches "${matchedAlias}"`
+          : `${result.system} - View condition details`;
+        
         searchResults.push({
           id: `condition-${result.id}`,
-          title: result.name,
-          subtitle: `${result.system} - View condition details`,
+          title: displayName,
+          subtitle,
           category: 'condition',
           action: () => {
             // This would navigate to condition detail

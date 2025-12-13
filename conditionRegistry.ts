@@ -1144,7 +1144,7 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
    { system: "DERM", subcategory: "Benign Lesions", condition: "Common Melanocytic Nevus" },
   { system: "DERM", subcategory: "Benign Lesions", condition: "Atypical (Dysplastic) Nevus" },
   { system: "DERM", subcategory: "Benign Lesions", condition: "Congenital Nevus" },
-  { system: "DERM", subcategory: "Benign Lesions", condition: "Port-Wine Stain (Capillary Malformation)" },
+  { system: "DERM", subcategory: "Benign Lesions", condition: "Port-Wine Stain", aliases: ["Capillary Malformation", "Nevus Flammeus"] },
   { system: "DERM", subcategory: "Benign Lesions", condition: "Telangiectasia" },
 
   // Pigmentation & Rashes (Papulosquamous / Pigment)
@@ -1237,14 +1237,18 @@ export const CONDITION_REGISTRY_DERM: ConditionMeta[] = [
 // -------------------------------------------
 
 export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
-  // Acute Kidney Injury (AKI)
-  { system: "RENAL", subcategory: "AKI", condition: "Acute Kidney Injury (General)", aliases: ["AKI", "Acute Renal Failure"] },
-  { system: "RENAL", subcategory: "AKI", condition: "Prerenal AKI" },
-  { system: "RENAL", subcategory: "AKI", condition: "Intrinsic AKI" },
-  { system: "RENAL", subcategory: "AKI", condition: "Postrenal AKI" },
-  { system: "RENAL", subcategory: "AKI", condition: "Acute Tubular Necrosis" },
-  { system: "RENAL", subcategory: "AKI", condition: "Acute Interstitial Nephritis" },
-  { system: "RENAL", subcategory: "AKI", condition: "Acute Glomerulonephritis" }
+  // Acute Kidney Injury (AKI) - Consolidated with parent-child structure
+  { 
+    system: "RENAL", 
+    subcategory: "AKI", 
+    condition: "Acute Kidney Injury", 
+    aliases: ["AKI", "Acute Renal Failure", "ARF"],
+    overview: "Parent condition with multiple subtypes (Prerenal, Intrinsic, Postrenal)"
+  },
+  // Note: Prerenal, Intrinsic, Postrenal are variants that should be tabs/sections within the main AKI page
+  { system: "RENAL", subcategory: "AKI", condition: "Acute Tubular Necrosis", aliases: ["ATN"] },
+  { system: "RENAL", subcategory: "AKI", condition: "Acute Interstitial Nephritis", aliases: ["AIN"] },
+  { system: "RENAL", subcategory: "AKI", condition: "Acute Glomerulonephritis", aliases: ["AGN"] }
 
   ,
   // Chronic Kidney Disease
@@ -1290,8 +1294,14 @@ export const CONDITION_REGISTRY_RENAL: ConditionMeta[] = [
   { system: "RENAL", subcategory: "Stones", condition: "Nephrolithiasis (General Evaluation)" },
 
   // Cystic & Congenital Renal Diseases
-  { system: "RENAL", subcategory: "Congenital", condition: "Polycystic Kidney Disease (Autosomal Dominant)" },
-  { system: "RENAL", subcategory: "Congenital", condition: "Polycystic Kidney Disease (Autosomal Recessive)" },
+  // Polycystic Kidney Disease - Parent condition with variants
+  { 
+    system: "RENAL", 
+    subcategory: "Congenital", 
+    condition: "Polycystic Kidney Disease", 
+    aliases: ["PKD"],
+    overview: "Parent condition with Autosomal Dominant (ADPKD) and Autosomal Recessive (ARPKD) variants"
+  },
   { system: "RENAL", subcategory: "Congenital", condition: "Medullary Sponge Kidney" },
   { system: "RENAL", subcategory: "Congenital", condition: "Horseshoe Kidney" },
 
