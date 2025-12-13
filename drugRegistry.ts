@@ -10,6 +10,8 @@
 export interface DrugMeta {
   genericName: string;
   brandName?: string;
+  displayName?: string; // Clean display name (defaults to genericName)
+  aliases?: string[]; // Alternative names for search
   drugClass: string[]; // e.g., ["Antibiotic", "Beta-Lactam", "Penicillin"]
   isHighYield: boolean; // Should this be emphasized in study materials?
   

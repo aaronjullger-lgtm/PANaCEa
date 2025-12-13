@@ -6,6 +6,9 @@ import { searchConditions } from "./conditionSearch";
 import type { ConditionSearchResult } from "./conditionSearch";
 import { searchDrugs } from "./drugSearch";
 import type { DrugSearchResult } from "@/pharm/drugTypes";
+import { SPECIAL_TEST_REGISTRY, type SpecialTestMeta } from "../../specialTestRegistry";
+import { PHYSIOLOGY_CONCEPT_REGISTRY, type PhysiologyConceptMeta } from "../../physiologyRegistry";
+import { TREATMENT_REGISTRY, type TreatmentMeta } from "../../treatmentRegistry";
 
 export type UnifiedSearchResultType = "condition" | "drug" | "special_test" | "physiology" | "treatment";
 
@@ -77,8 +80,154 @@ function fixCapitalization(name: string): string {
 }
 
 /**
+ * Calculate similarity score between query and target
+ */
+function similarityScore(query: string, target: string): number {
+  const normalizedQuery = query.toLowerCase().trim();
+  const normalizedTarget = target.toLowerCase().trim();
+  
+  // Exact match
+  if (normalizedTarget === normalizedQuery) return 3;
+  
+  // Starts with
+  if (normalizedTarget.startsWith(normalizedQuery)) return 2.5;
+  
+  // Contains
+  if (normalizedTarget.includes(normalizedQuery)) {
+    const lengthBoost = normalizedQuery.length / Math.max(normalizedTarget.length, 1);
+    return 2 + lengthBoost;
+  }
+  
+  // Word boundary match (e.g., "ACL" matches in "ACL Tear")
+  const wordBoundary = new RegExp(`\\b${normalizedQuery}\\b`, 'i');
+  if (wordBoundary.test(normalizedTarget)) return 2.3;
+  
+  return 0;
+}
+
+/**
+ * Search special tests
+ */
+function searchSpecialTestsInternal(query: string): UnifiedSearchResult[] {
+  const results: UnifiedSearchResult[] = [];
+  
+  for (const test of SPECIAL_TEST_REGISTRY) {
+    const cleanName = cleanDisplayName(test.name);
+    const displayName = fixCapitalization(test.displayName || cleanName);
+    const aliases = test.aliases || [];
+    
+    // Check name and aliases
+    let bestScore = similarityScore(query, cleanName);
+    let matchedAlias: string | undefined;
+    
+    for (const alias of aliases) {
+      const aliasScore = similarityScore(query, alias);
+      if (aliasScore > bestScore) {
+        bestScore = aliasScore;
+        matchedAlias = alias;
+      }
+    }
+    
+    if (bestScore > 0.3) {
+      results.push({
+        type: 'special_test',
+        id: test.name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+        name: test.name,
+        displayName,
+        subtitle: `Physical Exam Test • ${test.system}`,
+        score: bestScore,
+        matchedAlias,
+        url: `/tests/${test.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      });
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * Search physiology concepts
+ */
+function searchPhysiologyInternal(query: string): UnifiedSearchResult[] {
+  const results: UnifiedSearchResult[] = [];
+  
+  for (const concept of PHYSIOLOGY_CONCEPT_REGISTRY) {
+    const cleanName = cleanDisplayName(concept.name);
+    const displayName = fixCapitalization(concept.displayName || cleanName);
+    const aliases = concept.aliases || [];
+    
+    // Check name and aliases
+    let bestScore = similarityScore(query, cleanName);
+    let matchedAlias: string | undefined;
+    
+    for (const alias of aliases) {
+      const aliasScore = similarityScore(query, alias);
+      if (aliasScore > bestScore) {
+        bestScore = aliasScore;
+        matchedAlias = alias;
+      }
+    }
+    
+    if (bestScore > 0.3) {
+      results.push({
+        type: 'physiology',
+        id: concept.name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+        name: concept.name,
+        displayName,
+        subtitle: `Physiology • ${concept.category}`,
+        score: bestScore,
+        matchedAlias,
+        url: `/physiology/${concept.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      });
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * Search treatments
+ */
+function searchTreatmentsInternal(query: string): UnifiedSearchResult[] {
+  const results: UnifiedSearchResult[] = [];
+  
+  for (const treatment of TREATMENT_REGISTRY) {
+    const cleanName = cleanDisplayName(treatment.name);
+    const displayName = fixCapitalization(treatment.displayName || cleanName);
+    const aliases = treatment.aliases || [];
+    
+    // Check name and aliases
+    let bestScore = similarityScore(query, cleanName);
+    let matchedAlias: string | undefined;
+    
+    for (const alias of aliases) {
+      const aliasScore = similarityScore(query, alias);
+      if (aliasScore > bestScore) {
+        bestScore = aliasScore;
+        matchedAlias = alias;
+      }
+    }
+    
+    if (bestScore > 0.3) {
+      results.push({
+        type: 'treatment',
+        id: treatment.name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+        name: treatment.name,
+        displayName,
+        subtitle: `Treatment • ${treatment.category}`,
+        score: bestScore,
+        matchedAlias,
+        url: `/treatments/${treatment.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      });
+    }
+  }
+  
+  return results;
+}
+
+/**
  * Unified search that combines conditions and drugs with intelligent ranking.
- * Enhanced with de-duplication and clean display names.
+ * Enhanced with de-duplication, clean display names, and all content types.
  */
 export function unifiedSearch(
   query: string, 
@@ -97,9 +246,12 @@ export function unifiedSearch(
     } : [];
   }
 
-  // Search both conditions and drugs
+  // Search all content types
   const conditionResults = searchConditions(trimmedQuery);
   const drugResults = searchDrugs(trimmedQuery);
+  const testResults = searchSpecialTestsInternal(trimmedQuery);
+  const physiologyResults = searchPhysiologyInternal(trimmedQuery);
+  const treatmentResults = searchTreatmentsInternal(trimmedQuery);
 
   // Convert to unified format
   const unifiedResults: UnifiedSearchResult[] = [];
@@ -159,6 +311,11 @@ export function unifiedSearch(
       drugData: drug,
     });
   }
+
+  // Add all other content types
+  unifiedResults.push(...testResults);
+  unifiedResults.push(...physiologyResults);
+  unifiedResults.push(...treatmentResults);
 
   // Sort by score (descending) and then by name
   unifiedResults.sort((a, b) => {
