@@ -72,6 +72,9 @@ model User {
   /// User's question history
   questionHistory    UserQuestionHistory[]
 
+  /// Admin audit logs (for admin users)
+  adminAuditLogs     AdminAuditLog[]
+
   /// Social
   studyGroups        StudyGroupMember[]
 
@@ -1527,6 +1530,39 @@ model GrandRoundsHistory {
   @@index([date, score]) // For leaderboard queries
   @@index([userId])
   @@index([date])
+}
+
+// ============================================================================
+// ADMIN AUDIT LOGGING - Security and Compliance
+// ============================================================================
+
+/// Admin Audit Log - Tracks all administrative actions for security and compliance
+model AdminAuditLog {
+  id        String   @id @default(uuid())
+  userId    String   // Admin user who performed the action
+  action    String   // Action performed (e.g., "media_approve", "content_edit")
+  resource  String   // Resource affected (e.g., "/api/media/approve", "condition_123")
+  outcome   String   // "success", "failure", "blocked"
+  
+  // Request context
+  method    String?  // HTTP method (GET, POST, etc.)
+  ipAddress String?  // IP address of the admin user
+  userAgent String?  @db.Text // User agent string
+  
+  // Additional context and metadata
+  metadata  Json?    // Additional context (request body, query params, etc.)
+  
+  // Timestamps
+  timestamp DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@index([userId, timestamp])
+  @@index([outcome])
 }
 
 // ============================================================================

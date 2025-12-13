@@ -173,7 +173,7 @@ export async function getQuestionsWithNoRepeat(
   }
 
   // Step 4: ONLY if the query returns 0 results, trigger AI generation
-  console.log(`No unseen questions found for user ${userId}. Triggering AI generation.`);
+  // No unseen questions found - AI generation would be triggered in production
 
   // Note: In a production system, this would be an async job to avoid blocking the request
   // For now, we return what we have and indicate that generation is needed

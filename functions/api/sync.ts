@@ -88,7 +88,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    console.log('[SYNC GET] Starting authentication');
+    // Authentication handled by middleware with structured logging
     const authContext = await authenticateRequest(request, env);
 
     if (!authContext) {
@@ -97,11 +97,11 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     }
 
     const { clerkId } = authContext;
-    console.log('[SYNC GET] Authentication successful, resolving user ID');
+    // User ID resolution
 
     // Resolve clerkId to internal userId
     const internalUserId = await resolveUserId(prisma, clerkId);
-    console.log('[SYNC GET] User ID resolved, fetching data');
+    // Fetch user data
 
     // Fetch all user data (execute in parallel)
     const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
@@ -116,9 +116,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       }),
     ]);
 
-    console.log('[SYNC GET] Data fetched successfully:', {
-      performanceRecords: performanceRecords.length,
-      srsItems: srsItems.length,
+    // Data fetched successfully - logged by middleware
       savedQuestions: savedQuestions.length,
     });
 
@@ -160,7 +158,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    console.log('[SYNC POST] Starting authentication');
+    // Authentication handled by middleware
     const authContext = await authenticateRequest(request, env);
 
     if (!authContext) {
@@ -169,7 +167,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     }
 
     const { clerkId } = authContext;
-    console.log('[SYNC POST] Parsing request payload');
+    // Parse request payload
     const payload: SyncPayload = await request.json();
 
     if (payload.userId !== clerkId) {
@@ -177,15 +175,15 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       return createErrorResponse('User ID mismatch', 403);
     }
 
-    console.log('[SYNC POST] Resolving user ID');
+    // Resolve user ID
     const internalUserId = await resolveUserId(prisma, clerkId);
 
-    console.log('[SYNC POST] Starting transaction');
+    // Start database transaction
     // Begin transaction with Prisma
     await prisma.$transaction(async (tx) => {
       // 1. Insert PerformanceRecords
       if (payload.performanceRecords?.length) {
-        console.log('[SYNC POST] Upserting performance records:', payload.performanceRecords.length);
+        // Upsert performance records
         for (const record of payload.performanceRecords) {
           // Ensure we use a consistent ID for both where and create
           const recordId = record.id || crypto.randomUUID();
@@ -212,7 +210,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
       // 2. Upsert SRSItems with Conflict Resolution
       if (payload.srsItems?.length) {
-        console.log('[SYNC POST] Upserting SRS items:', payload.srsItems.length);
+        // Upsert SRS items
         for (const item of payload.srsItems) {
           const existing = await tx.sRSItem.findUnique({
             where: {
@@ -225,7 +223,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
           // Conflict Resolution: Last Write Wins based on updatedAt
           if (existing && item.updatedAt && new Date(existing.updatedAt) > new Date(item.updatedAt)) {
-            console.log(`[SYNC POST] Skipping SRS item ${item.questionId} (server is newer)`);
+            // Skip SRS item - server version is newer
             continue;
           }
 
@@ -259,7 +257,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
       // 3. Upsert SavedQuestions with Conflict Resolution
       if (payload.savedQuestions?.length) {
-        console.log('[SYNC POST] Upserting SavedQuestions:', payload.savedQuestions.length);
+        // Upsert saved questions
         for (const item of payload.savedQuestions) {
           const existing = await tx.savedQuestion.findUnique({
             where: {
@@ -273,7 +271,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
 
           // Conflict Resolution: Last Write Wins based on updatedAt
           if (existing && item.updatedAt && new Date(existing.updatedAt) > new Date(item.updatedAt)) {
-             console.log(`[SYNC POST] Skipping SavedQuestion ${item.questionId} (server is newer)`);
+             // Skip saved question - server version is newer
              continue;
           }
 
@@ -306,7 +304,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       }
     });
 
-    console.log('[SYNC POST] Transaction completed, fetching updated data');
+    // Transaction completed, fetch updated data
 
     // Return updated data
     const [performanceRecords, srsItems, savedQuestions] = await Promise.all([
@@ -321,7 +319,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       }),
     ]);
 
-    console.log('[SYNC POST] Data synced successfully');
+    // Data synced successfully
 
     const response: SyncResponse = {
       success: true,

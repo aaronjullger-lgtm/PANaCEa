@@ -17,6 +17,47 @@ import { config } from 'dotenv';
 import { sanitizeBody, validateRequired, validateEnum } from './lib/middleware/validation';
 import { requireAuth, AuthenticatedRequest } from './lib/middleware/clerkAuth';
 import { PrismaClient } from '@prisma/client';
+import { createRequestLogger, logger } from './lib/logging/structuredLogger';
+
+// ============================================================================
+// TYPE DEFINITIONS FOR SERVER
+// ============================================================================
+
+/**
+ * Standard API error response
+ */
+interface ApiError extends Error {
+  statusCode?: number;
+  code?: string;
+}
+
+/**
+ * Gemini API response structure
+ */
+interface GeminiApiResponse {
+  text?: string;
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+    };
+  }>;
+  error?: {
+    message: string;
+    code?: number;
+  };
+}
+
+/**
+ * Branch operation result
+ */
+interface BranchOperationResult {
+  success: boolean;
+  branchId?: string;
+  error?: string;
+  message?: string;
+}
 
 // Load environment variables
 config();
@@ -34,10 +75,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(sanitizeBody); // Sanitize all request bodies
 
 // Request logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
+app.use(createRequestLogger());
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -88,7 +126,7 @@ app.post('/geminiProxy', async (req: Request, res: Response) => {
       });
     }
 
-    const geminiData: any = await geminiResponse.json();
+    const geminiData: GeminiApiResponse = await geminiResponse.json();
     
     let rawText = '';
     if (geminiData.candidates && geminiData.candidates[0]?.content?.parts?.[0]?.text) {
@@ -269,9 +307,7 @@ app.get('/api/sync', requireAuth, syncRateLimit, (req: AuthenticatedRequest, res
 // Authentication: Clerk JWT token required via requireAuth middleware
 app.post('/api/sync', requireAuth, syncRateLimit, (req: AuthenticatedRequest, res: Response) => {
   // User is authenticated, req.auth contains userId
-  console.log('Sync request received from user:', req.auth?.userId, {
-    performanceRecords: req.body.performanceRecords?.length || 0,
-    srsItems: req.body.srsItems?.length || 0,
+  // Sync request logging handled by structured logger middleware
     savedQuestions: req.body.savedQuestions?.length || 0
   });
   
@@ -674,9 +710,13 @@ app.post('/api/branches',
       });
       
       res.json({ success: true, branchId });
-    } catch (error: any) {
-      console.error('Failed to create branch:', error);
-      res.status(500).json({ success: false, error: error.message });
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('Failed to create branch:', apiError);
+      res.status(500).json({ 
+        success: false, 
+        error: apiError.message || 'Failed to create branch' 
+      });
     }
   }
 );
@@ -708,9 +748,13 @@ app.post('/api/branches/:branchName/merge',
       const result = await mergeBranch(branchName, mergedBy, targetBranch);
       
       res.json({ success: result.success, ...result });
-    } catch (error: any) {
-      console.error('Failed to merge branch:', error);
-      res.status(500).json({ success: false, error: error.message });
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('Failed to merge branch:', apiError);
+      res.status(500).json({ 
+        success: false, 
+        error: apiError.message || 'Failed to merge branch' 
+      });
     }
   }
 );
@@ -1325,11 +1369,41 @@ app.get('/api/media/list', async (req: Request, res: Response) => {
 });
 
 // Get pending media (admin-only)
-app.get('/api/media/pending', async (req: Request, res: Response) => {
+app.get('/api/media/pending', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // TODO: Add admin authentication middleware
-    // import { requireAdmin } from './lib/middleware/adminAuth';
-    // This endpoint should be protected with requireAdmin middleware
+    // Import middleware
+    const { requireAdminCF } = await import('./lib/middleware/adminAuth');
+    const { checkRateLimitCF, ADMIN_RATE_LIMITS } = await import('./lib/middleware/rateLimiter');
+    
+    // Create a Request object for the middleware
+    const request = new Request(`${req.protocol}://${req.get('host')}${req.originalUrl}`, {
+      method: req.method,
+      headers: new Headers(req.headers as Record<string, string>)
+    });
+    
+    // Apply admin authentication
+    const adminResult = await requireAdminCF(request, { 
+      CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY 
+    }, {
+      requiredPermissions: ['media:view_pending'],
+      auditLog: true
+    });
+    
+    // If adminResult is a Response, it means authentication failed
+    if (adminResult instanceof Response) {
+      const errorData = await adminResult.json();
+      return res.status(adminResult.status).json(errorData);
+    }
+    
+    // Apply rate limiting
+    const rateLimitResult = await checkRateLimitCF(request, ADMIN_RATE_LIMITS.MEDIA_OPERATIONS, adminResult);
+    if (!rateLimitResult.allowed && rateLimitResult.response) {
+      const errorData = await rateLimitResult.response.json();
+      return res.status(rateLimitResult.response.status).json(errorData);
+    }
+    
+    // Add admin context to request for the handler
+    (req as any).adminContext = adminResult;
     
     const pendingHandler = await import('./functions/api/media/pending');
     await pendingHandler.default(req, res);
@@ -1340,11 +1414,42 @@ app.get('/api/media/pending', async (req: Request, res: Response) => {
 });
 
 // Approve or reject media (admin-only)
-app.post('/api/media/approve', async (req: Request, res: Response) => {
+app.post('/api/media/approve', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // TODO: Add admin authentication middleware
-    // import { requireAdmin } from './lib/middleware/adminAuth';
-    // This endpoint should be protected with requireAdmin middleware
+    // Import middleware
+    const { requireAdminCF } = await import('./lib/middleware/adminAuth');
+    const { checkRateLimitCF, ADMIN_RATE_LIMITS } = await import('./lib/middleware/rateLimiter');
+    
+    // Create a Request object for the middleware
+    const request = new Request(`${req.protocol}://${req.get('host')}${req.originalUrl}`, {
+      method: req.method,
+      headers: new Headers(req.headers as Record<string, string>),
+      body: JSON.stringify(req.body)
+    });
+    
+    // Apply admin authentication
+    const adminResult = await requireAdminCF(request, { 
+      CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY 
+    }, {
+      requiredPermissions: ['media:approve'],
+      auditLog: true
+    });
+    
+    // If adminResult is a Response, it means authentication failed
+    if (adminResult instanceof Response) {
+      const errorData = await adminResult.json();
+      return res.status(adminResult.status).json(errorData);
+    }
+    
+    // Apply rate limiting (stricter for approval operations)
+    const rateLimitResult = await checkRateLimitCF(request, ADMIN_RATE_LIMITS.MEDIA_OPERATIONS, adminResult);
+    if (!rateLimitResult.allowed && rateLimitResult.response) {
+      const errorData = await rateLimitResult.response.json();
+      return res.status(rateLimitResult.response.status).json(errorData);
+    }
+    
+    // Add admin context to request for the handler
+    (req as any).adminContext = adminResult;
     
     const approveHandler = await import('./functions/api/media/approve');
     await approveHandler.default(req, res);
@@ -1355,11 +1460,41 @@ app.post('/api/media/approve', async (req: Request, res: Response) => {
 });
 
 // Get media approval stats (admin-only)
-app.get('/api/media/stats', async (req: Request, res: Response) => {
+app.get('/api/media/stats', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    // TODO: Add admin authentication middleware
-    // import { requireAdmin } from './lib/middleware/adminAuth';
-    // This endpoint should be protected with requireAdmin middleware
+    // Import middleware
+    const { requireAdminCF } = await import('./lib/middleware/adminAuth');
+    const { checkRateLimitCF, ADMIN_RATE_LIMITS } = await import('./lib/middleware/rateLimiter');
+    
+    // Create a Request object for the middleware
+    const request = new Request(`${req.protocol}://${req.get('host')}${req.originalUrl}`, {
+      method: req.method,
+      headers: new Headers(req.headers as Record<string, string>)
+    });
+    
+    // Apply admin authentication
+    const adminResult = await requireAdminCF(request, { 
+      CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY 
+    }, {
+      requiredPermissions: ['media:view_pending'],
+      auditLog: true
+    });
+    
+    // If adminResult is a Response, it means authentication failed
+    if (adminResult instanceof Response) {
+      const errorData = await adminResult.json();
+      return res.status(adminResult.status).json(errorData);
+    }
+    
+    // Apply rate limiting
+    const rateLimitResult = await checkRateLimitCF(request, ADMIN_RATE_LIMITS.GENERAL_ADMIN, adminResult);
+    if (!rateLimitResult.allowed && rateLimitResult.response) {
+      const errorData = await rateLimitResult.response.json();
+      return res.status(rateLimitResult.response.status).json(errorData);
+    }
+    
+    // Add admin context to request for the handler
+    (req as any).adminContext = adminResult;
     
     const statsHandler = await import('./functions/api/media/stats');
     await statsHandler.default(req, res);
@@ -1485,15 +1620,16 @@ app.use((req: Request, res: Response) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`\n🚀 PANaCEa Backend Server`);
-  console.log(`   Running on: http://localhost:${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`   Health check: http://localhost:${PORT}/health\n`);
+  logger.info(`PANaCEa Backend Server started on port ${PORT}`, 'SERVER', {
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development',
+    healthCheck: `http://localhost:${PORT}/health`
+  });
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  logger.info('SIGTERM received, shutting down gracefully', 'SERVER');
   // Disconnect Prisma client if database is configured
   if (process.env.DATABASE_URL) {
     const { disconnectPrisma } = await import('./lib/prisma');
@@ -1503,7 +1639,7 @@ process.on('SIGTERM', async () => {
 });
 
 process.on('SIGINT', async () => {
-  console.log('\nSIGINT received, shutting down gracefully...');
+  logger.info('SIGINT received, shutting down gracefully', 'SERVER');
   // Disconnect Prisma client if database is configured
   if (process.env.DATABASE_URL) {
     const { disconnectPrisma } = await import('./lib/prisma');

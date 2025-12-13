@@ -35,34 +35,34 @@ interface ProcessingResult {
  * Main orchestrator - runs the entire automated pipeline
  */
 export async function runAutomatedPipeline(): Promise<void> {
-  console.log('🚀 Starting Automated Content Pipeline...');
+  // Starting automated content pipeline
   
   try {
     // Step 1: Process existing photos in repository
-    console.log('\n📸 Step 1: Processing existing photos...');
+    // Step 1: Processing existing photos
     await processExistingPhotos();
     
     // Step 2: Identify content gaps
-    console.log('\n🔍 Step 2: Identifying content gaps...');
+    // Step 2: Identifying content gaps
     const needs = await identifyContentNeeds();
     
     // Step 3: Source new content automatically
-    console.log('\n🎯 Step 3: Sourcing new content...');
+    // Step 3: Sourcing new content
     await sourceNewContent(needs);
     
     // Step 4: Validate and quality check everything
-    console.log('\n✅ Step 4: Running quality validation...');
+    // Step 4: Running quality validation
     await validateExistingContent();
     
     // Step 5: Auto-generate missing content
-    console.log('\n🤖 Step 5: Auto-generating missing content...');
+    // Step 5: Auto-generating missing content
     await generateMissingContent(needs);
     
     // Step 6: Update and optimize
-    console.log('\n⚡ Step 6: Optimizing database...');
+    // Step 6: Optimizing database
     await optimizeDatabase();
     
-    console.log('\n✨ Automated Content Pipeline Complete!');
+    // Automated Content Pipeline Complete
     
   } catch (error) {
     console.error('❌ Pipeline error:', error);
@@ -102,7 +102,7 @@ export async function processExistingPhotos(): Promise<ProcessingResult> {
           result.approved++;
         } else {
           result.rejected++;
-          console.log(`❌ Rejected ${filename}: ${analysis.reason}`);
+          // Image rejected during analysis
         }
         
         result.processed++;
@@ -111,7 +111,7 @@ export async function processExistingPhotos(): Promise<ProcessingResult> {
       }
     }
     
-    console.log(`✅ Processed ${result.processed} images: ${result.approved} approved, ${result.rejected} rejected`);
+    // Image processing completed
     
   } catch (error) {
     console.error('Error reading public directory:', error);
@@ -248,7 +248,7 @@ async function processAndUploadExistingImage(
     },
   });
   
-  console.log(`✅ Uploaded: ${analysis.suggestedName || originalFilename} (${analysis.condition || 'uncategorized'})`);
+  // Image uploaded successfully
 }
 
 /**
@@ -299,7 +299,7 @@ async function identifyContentNeeds(): Promise<ContentNeed[]> {
     }
   }
   
-  console.log(`📊 Identified ${needs.length} content needs`);
+  // Content needs identified
   return needs;
 }
 
@@ -308,7 +308,7 @@ async function identifyContentNeeds(): Promise<ContentNeed[]> {
  * This would integrate with external APIs in production
  */
 async function sourceNewContent(needs: ContentNeed[]): Promise<void> {
-  console.log(`🔎 Would source content for ${needs.length} needs`);
+  // Would source content for identified needs
   
   // TODO: In production, integrate with:
   // - Open medical image databases
@@ -318,7 +318,7 @@ async function sourceNewContent(needs: ContentNeed[]): Promise<void> {
   
   // For now, log what would be sourced
   for (const need of needs.slice(0, 5)) {
-    console.log(`  📦 Need: ${need.type} for ${need.condition || need.system} (${need.priority} priority)`);
+    // Content need logged
   }
 }
 
@@ -341,13 +341,13 @@ async function validateExistingContent(): Promise<void> {
   for (const media of allMedia) {
     if (seen.has(media.filename)) {
       duplicates++;
-      console.log(`⚠️  Duplicate found: ${media.filename}`);
+      // Duplicate media file found
     } else {
       seen.set(media.filename, media.id);
     }
   }
   
-  console.log(`✅ Validation complete: ${duplicates} duplicates found`);
+  // Validation completed
   
   // Check for broken links
   const brokenLinks = await prisma.mediaAsset.count({
@@ -357,7 +357,7 @@ async function validateExistingContent(): Promise<void> {
   });
   
   if (brokenLinks > 0) {
-    console.log(`⚠️  ${brokenLinks} media assets with missing URLs`);
+    // Media assets with missing URLs found
   }
 }
 
@@ -367,7 +367,7 @@ async function validateExistingContent(): Promise<void> {
 async function generateMissingContent(needs: ContentNeed[]): Promise<void> {
   const highPriorityNeeds = needs.filter(n => n.priority === 'high');
   
-  console.log(`🤖 Generating content for ${highPriorityNeeds.length} high-priority needs`);
+  // Generating content for high-priority needs
   
   // This would use AI to generate educational content, summaries, etc.
   // Not images (those must be sourced), but text-based content

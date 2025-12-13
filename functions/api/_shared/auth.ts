@@ -3,6 +3,7 @@
  */
 
 import { verifyToken } from '@clerk/backend';
+import { authLogger } from '../../../lib/logging/structuredLogger';
 
 export interface Env {
   DATABASE_URL?: string;
@@ -26,10 +27,23 @@ function maskSecretKey(key: string): string {
 }
 
 /**
+ * JWT payload interface for type safety
+ */
+interface JwtPayload {
+  sub?: string;        // Subject (user ID)
+  iss?: string;        // Issuer
+  aud?: string;        // Audience
+  exp?: number;        // Expiration time (Unix timestamp)
+  iat?: number;        // Issued at (Unix timestamp)
+  email?: string;      // User email
+  [key: string]: unknown; // Allow additional claims
+}
+
+/**
  * Helper function to decode JWT payload without verification
  * Used for diagnostic purposes only
  */
-function decodeJwtPayload(token: string): any {
+function decodeJwtPayload(token: string): JwtPayload | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) {
@@ -44,7 +58,7 @@ function decodeJwtPayload(token: string): any {
       payload += '=';
     }
     const decoded = Buffer.from(payload, 'base64').toString('utf-8');
-    return JSON.parse(decoded);
+    return JSON.parse(decoded) as JwtPayload;
   } catch (error) {
     console.error('Failed to decode JWT payload:', error);
     return null;
@@ -80,11 +94,7 @@ export async function verifyAuthToken(
       const payload = decodeJwtPayload(token);
       if (payload) {
         // Only log non-sensitive claims for diagnostics
-        console.log('[AUTH] Token payload claims:', {
-          exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'missing',
-          iss: payload.iss || 'missing',
-          iat: payload.iat ? new Date(payload.iat * 1000).toISOString() : 'missing',
-        });
+        authLogger.success(payload.sub || 'unknown', 'jwt_verification');
         
         // Check if token is expired
         if (payload.exp && payload.exp < Date.now() / 1000) {
@@ -102,11 +112,7 @@ export async function verifyAuthToken(
       clockSkewInMs: 5000
     });
 
-    if (isTestEnv) {
-      console.log('[AUTH] Token verification successful for user:', verifiedToken.sub);
-    } else {
-      console.log('[AUTH] Token verification successful');
-    }
+    authLogger.success(verifiedToken.sub || 'unknown', 'token_verification');
     return verifiedToken.sub || null;
   } catch (error) {
     // Phase 2.1: Retrieve error details (limited to essential info)
@@ -140,9 +146,17 @@ export async function verifyAuthToken(
  */
 export function createErrorResponse(
   error: string,
-  status: number
+  status: number,
+  code?: string
 ): Response {
-  return new Response(JSON.stringify({ error }), {
+  const response = {
+    success: false,
+    error,
+    code,
+    timestamp: new Date().toISOString()
+  };
+  
+  return new Response(JSON.stringify(response), {
     status,
     headers: {
       'Content-Type': 'application/json',
@@ -154,11 +168,17 @@ export function createErrorResponse(
 /**
  * Create a standardized success response
  */
-export function createSuccessResponse(
-  data: any,
+export function createSuccessResponse<T = unknown>(
+  data: T,
   status: number = 200
 ): Response {
-  return new Response(JSON.stringify(data), {
+  const response = {
+    success: true,
+    data,
+    timestamp: new Date().toISOString()
+  };
+  
+  return new Response(JSON.stringify(response), {
     status,
     headers: {
       'Content-Type': 'application/json',
@@ -208,8 +228,7 @@ export async function authenticateRequest(
   const isTestEnv = secretKey.startsWith('sk_test_');
 
   // Phase 1.3: Log masked key for verification (first/last 5 characters only)
-  console.log('[AUTH] Secret key verified (masked):', maskSecretKey(secretKey));
-  console.log('[AUTH] Secret key environment:', secretKey.startsWith('sk_test_') ? 'test' : 'live');
+  // Secret key verification logged at debug level only
 
   const authHeader = request.headers.get('Authorization');
   const userId = await verifyAuthToken(authHeader, secretKey);
@@ -219,11 +238,7 @@ export async function authenticateRequest(
     return null;
   }
 
-  if (isTestEnv) {
-    console.log('[AUTH] Authentication successful for user:', userId);
-  } else {
-    console.log('[AUTH] Authentication successful');
-  }
+  authLogger.success(userId, 'request_authentication');
   return {
     userId,
     clerkId: userId,
