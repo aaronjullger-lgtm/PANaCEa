@@ -215,15 +215,18 @@ class StructuredLogger {
 
 // Create logger instances for different environments
 const createLogger = (): StructuredLogger => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  // Safe access to process.env for different runtimes (Node.js vs Cloudflare Workers)
+  const env = typeof process !== 'undefined' ? process.env : {} as Record<string, string | undefined>;
+  
+  const isProduction = env.NODE_ENV === 'production';
+  const isDevelopment = env.NODE_ENV === 'development';
 
   const config: LoggerConfig = {
     level: isDevelopment ? 'debug' : 'info',
-    enableConsole: isDevelopment || process.env.ENABLE_CONSOLE_LOGS === 'true',
-    enableRemote: isProduction && !!process.env.LOG_ENDPOINT,
-    remoteEndpoint: process.env.LOG_ENDPOINT,
-    apiKey: process.env.LOG_API_KEY,
+    enableConsole: isDevelopment || env.ENABLE_CONSOLE_LOGS === 'true',
+    enableRemote: isProduction && !!env.LOG_ENDPOINT,
+    remoteEndpoint: env.LOG_ENDPOINT,
+    apiKey: env.LOG_API_KEY,
   };
 
   return new StructuredLogger(config);
