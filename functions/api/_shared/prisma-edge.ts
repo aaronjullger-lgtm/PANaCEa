@@ -26,7 +26,7 @@ import { createRequire } from 'node:module';
 
 // Workaround for "module is not defined" error in Cloudflare Pages Functions
 // The Prisma Client Edge build is CommonJS, but the runtime expects ESM.
-const require = createRequire(import.meta.url);
+const require = createRequire(import.meta.url || 'file:///worker.js');
 const { PrismaClient } = require('@prisma/client/edge') as { PrismaClient: typeof PrismaClientType };
 
 /**
