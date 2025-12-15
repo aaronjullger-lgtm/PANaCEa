@@ -30,7 +30,8 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
-  const { userId, isSignedIn, getToken } = useAuth();
+  const { user, isSignedIn, getToken } = useAuth();
+  const userId = user?.id;
   const [userRole, setUserRole] = useState<UserRole>('user');
   const [hasAccess, setHasAccess] = useState(false);
   const [stats, setStats] = useState<AdminStats>({

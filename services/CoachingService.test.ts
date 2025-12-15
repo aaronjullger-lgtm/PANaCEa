@@ -233,15 +233,15 @@ describe('CoachingService', () => {
         // Short questions - high accuracy
         ...Array(5).fill(null).map(() => ({
           timestamp: Date.now(),
-          system: 'CV',
+          system: 'CV' as any,
           subcategory: null,
           conditionId: 'cv-1',
           condition: 'MI',
           topic: 'Cardiology',
           isCorrect: true,
-          focus: 'all',
-          difficulty: 'same',
-          questionWordCount: 50
+          focus: 'topic' as any,
+          difficulty: 'same' as any,
+          questionWordCount: 20
         })),
         // Long questions - low accuracy
         ...Array(5).fill(null).map(() => ({
@@ -294,14 +294,14 @@ describe('CoachingService', () => {
         // High performance at 8 AM
         ...Array(5).fill(null).map(() => ({
           timestamp: hour8AM.getTime(),
-          system: 'CV',
+          system: 'CV' as any,
           subcategory: null,
           conditionId: 'cv-1',
           condition: 'MI',
           topic: 'Cardiology',
           isCorrect: true,
-          focus: 'all',
-          difficulty: 'same'
+          focus: 'all' as any,
+          difficulty: 'same' as any
         })),
         // Low performance at other times
         ...Array(5).fill(null).map(() => ({

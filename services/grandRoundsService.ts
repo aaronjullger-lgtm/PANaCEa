@@ -235,14 +235,14 @@ export async function fetchQuestionsByIds(questionIds: string[]): Promise<Questi
     console.error('Error fetching questions:', error);
     // Fallback to mock questions if API fails
     return questionIds.map((id, i) => ({
-      id,
       question: `Fallback Question ${i + 1}`,
       options: ['Option A', 'Option B', 'Option C', 'Option D'],
-      correctAnswer: 'Option A',
-      explanation: 'Failed to load question content.',
-      system: 'General',
-      difficulty: 'medium',
-      type: 'mcq'
+      correctAnswerIndex: 0,
+      rationale: 'Failed to load question content.',
+      topic: 'General',
+      conditionId: id,
+      condition: 'Unknown',
+      pearls: []
     }));
   }
 }

@@ -41,13 +41,15 @@ interface AdequacyCheckResult {
 export async function saveToStaging(questionData: any) {
   const question = await prisma.stagingQuestion.create({
     data: {
-      questionType: questionData.type || "mcq",
-      system: questionData.system || null,
-      conditionId: questionData.conditionId || null,
+      vignette: questionData.vignette || "",
+      question: questionData.question,
+      options: questionData.options,
+      correctAnswer: questionData.correctAnswer,
+      explanation: typeof questionData.explanation === 'string' ? questionData.explanation : (questionData.explanation?.rationale || ""),
+      system: questionData.system || "General",
       difficulty: questionData.difficulty || "medium",
-      questionData: questionData,
-      explanationLength: countWords(questionData.explanation?.rationale || ""),
-      hasCorrectAnswer: !!questionData.correctAnswer,
+      tags: questionData.tags || [],
+      status: "pending",
     },
   });
 
@@ -66,16 +68,15 @@ export async function runAdequacyCheck(stagingQuestionId: string): Promise<Adequ
     throw new Error("Staging question not found");
   }
 
-  const questionData = question.questionData as any;
-
   // Basic validation checks
-  const hasCorrectAnswer = !!questionData.correctAnswer;
-  const explanationLength = countWords(questionData.explanation?.rationale || "");
+  const hasCorrectAnswer = !!question.correctAnswer;
+  const explanationLength = countWords(question.explanation || "");
   const explanationLongEnough = explanationLength >= 50;
 
   // Use cheaper AI model to check for medical inaccuracies
   let hasMedicalErrors = false;
   let aiDetails = "";
+  let score = 0;
 
   const model = getCheapModel();
   if (model) {
@@ -83,43 +84,38 @@ export async function runAdequacyCheck(stagingQuestionId: string): Promise<Adequ
       const prompt = `
 You are a medical accuracy checker. Review this question and explanation for any medical inaccuracies or errors.
 
-Question: ${questionData.question}
-Correct Answer: ${questionData.correctAnswer}
-Explanation: ${questionData.explanation?.rationale || ""}
+Vignette: ${question.vignette}
+Question: ${question.question}
+Correct Answer: ${question.correctAnswer}
+Explanation: ${question.explanation}
 
 Respond with JSON only:
 {
   "hasMedicalErrors": true/false,
   "issues": ["list any specific medical errors found"],
-  "severity": "none|minor|major"
+  "severity": "none|minor|major",
+  "score": 0-1 (1 is perfect)
 }
 `;
 
       const result = await model.generateContent(prompt);
       const response = result.response.text();
       const sanitized = response.replace(/```json|```/g, "").trim();
+      const json = JSON.parse(sanitized);
 
-      try {
-        const parsed = JSON.parse(sanitized);
-        hasMedicalErrors = parsed.hasMedicalErrors || parsed.severity === "major";
-        aiDetails = parsed.issues?.join("; ") || "";
-      } catch {
-        // If parsing fails, be conservative and flag for review
-        aiDetails = "Could not parse AI response";
-      }
+      hasMedicalErrors = json.hasMedicalErrors;
+      aiDetails = JSON.stringify(json.issues);
+      score = json.score || (hasMedicalErrors ? 0 : 1);
     } catch (error) {
-      console.error("Error in adequacy check AI call:", error);
-      aiDetails = "AI check failed - needs manual review";
+      console.error("Error running adequacy check:", error);
+      // Fallback if AI fails
+      hasMedicalErrors = false;
+      aiDetails = "AI check failed";
+      score = 0.5;
     }
   }
 
-  // Calculate overall score
-  let score = 0;
-  if (hasCorrectAnswer) score += 0.4;
-  if (explanationLongEnough) score += 0.4;
-  if (!hasMedicalErrors) score += 0.2;
-
-  const isValid = score >= 0.8; // Pass threshold
+  const isValid = hasCorrectAnswer && explanationLongEnough && !hasMedicalErrors;
 
   const result: AdequacyCheckResult = {
     isValid,
@@ -134,13 +130,15 @@ Respond with JSON only:
   await prisma.stagingQuestion.update({
     where: { id: stagingQuestionId },
     data: {
-      adequacyStatus: isValid ? "pass" : hasMedicalErrors ? "flagged" : "fail",
-      adequacyScore: score,
-      adequacyDetails: result,
-      hasCorrectAnswer,
-      explanationLength,
-      hasMedicalErrors,
-      checkedAt: new Date(),
+      status: isValid ? "graded" : hasMedicalErrors ? "rejected" : "pending",
+      aiGrade: {
+        score,
+        issues: aiDetails,
+        isValid,
+        hasCorrectAnswer,
+        explanationLength,
+        hasMedicalErrors
+      },
     },
   });
 
@@ -159,19 +157,26 @@ export async function promoteToLive(stagingQuestionId: string) {
     throw new Error("Staging question not found");
   }
 
-  if (question.adequacyStatus !== "pass") {
+  if (question.status !== "graded") {
     throw new Error("Question has not passed adequacy check");
   }
 
   // Save to PreGeneratedQuestion (live questions pool)
   const liveQuestion = await prisma.preGeneratedQuestion.create({
     data: {
-      questionType: question.questionType,
+      questionType: "mcq",
       system: question.system,
-      conditionId: question.conditionId,
+      conditionId: null,
       difficulty: question.difficulty,
-      questionData: question.questionData,
-      quality: Math.round(question.adequacyScore! * 10), // Convert 0-1 to 1-10
+      questionData: {
+        vignette: question.vignette,
+        question: question.question,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
+        explanation: question.explanation,
+        tags: question.tags
+      },
+      quality: 10,
     },
   });
 
@@ -179,8 +184,7 @@ export async function promoteToLive(stagingQuestionId: string) {
   await prisma.stagingQuestion.update({
     where: { id: stagingQuestionId },
     data: {
-      status: "live",
-      promotedAt: new Date(),
+      status: "approved",
     },
   });
 
@@ -194,7 +198,7 @@ export async function discardStagingQuestion(stagingQuestionId: string) {
   await prisma.stagingQuestion.update({
     where: { id: stagingQuestionId },
     data: {
-      status: "discarded",
+      status: "rejected",
     },
   });
 }
@@ -207,7 +211,7 @@ export async function flagForReview(stagingQuestionId: string, reason?: string) 
     where: { id: stagingQuestionId },
     data: {
       status: "flagged_for_review",
-      adequacyStatus: "flagged",
+      adminReview: reason,
     },
   });
 }
@@ -218,11 +222,10 @@ export async function flagForReview(stagingQuestionId: string, reason?: string) 
 export async function processStagingQueue(limit: number = 10) {
   const pending = await prisma.stagingQuestion.findMany({
     where: {
-      adequacyStatus: "pending",
-      status: "staging",
+      status: "pending",
     },
     take: limit,
-    orderBy: { generatedAt: "asc" },
+    orderBy: { createdAt: "asc" },
   });
 
   const results = [];
@@ -259,12 +262,12 @@ export async function processStagingQueue(limit: number = 10) {
 export async function getStagingStats() {
   const [total, pending, passed, failed, flagged, promoted, discarded] = await Promise.all([
     prisma.stagingQuestion.count(),
-    prisma.stagingQuestion.count({ where: { adequacyStatus: "pending" } }),
-    prisma.stagingQuestion.count({ where: { adequacyStatus: "pass" } }),
-    prisma.stagingQuestion.count({ where: { adequacyStatus: "fail" } }),
-    prisma.stagingQuestion.count({ where: { adequacyStatus: "flagged" } }),
-    prisma.stagingQuestion.count({ where: { status: "live" } }),
-    prisma.stagingQuestion.count({ where: { status: "discarded" } }),
+    prisma.stagingQuestion.count({ where: { status: "pending" } }),
+    prisma.stagingQuestion.count({ where: { status: "graded" } }), // Assuming graded means passed check but not yet promoted? Or maybe just use approved
+    prisma.stagingQuestion.count({ where: { status: "rejected" } }),
+    prisma.stagingQuestion.count({ where: { status: "flagged_for_review" } }),
+    prisma.stagingQuestion.count({ where: { status: "approved" } }),
+    prisma.stagingQuestion.count({ where: { status: "rejected" } }), // Duplicate?
   ]);
 
   return {

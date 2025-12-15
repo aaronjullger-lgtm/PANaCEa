@@ -33,16 +33,24 @@ export async function loadAllContent(): Promise<MedicalContent[]> {
         id: record.id,
         conditionId: record.conditionId,
         condition: record.condition,
-        system: record.system,
-        category: 'condition',
+        system: record.system as any,
         subcategory: record.subcategory,
         status: record.status as any,
         version: record.version,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt,
         createdBy: record.createdBy,
-        lastModifiedBy: record.updatedBy,
-        content: record.content as any
+        updatedBy: record.updatedBy,
+        overview: record.overview || undefined,
+        etiologyPathophysiology: [record.etiology, record.pathophysiology].filter(Boolean).join('\n\n') || undefined,
+        epidemiology: record.epidemiology || undefined,
+        riskFactors: record.riskFactors,
+        symptoms: record.symptoms,
+        examFindings: record.physicalExam,
+        diagnostics: record.diagnostics as any,
+        treatment: Array.isArray(record.treatment) ? record.treatment as string[] : undefined,
+        complications: record.complications,
+        prognosis: record.prognosis || undefined,
       }));
     }
   } catch (error) {
@@ -64,16 +72,24 @@ function transformToMedicalContent(data: Record<string, any>): MedicalContent[] 
         id: conditionId,
         conditionId: conditionId,
         condition: (condition as any).name || conditionId,
-        system: (condition as any).system || 'GENERAL',
-        category: 'condition',
+        system: ((condition as any).system || 'GENERAL') as any,
         subcategory: (condition as any).subcategory || 'General',
         status: 'published',
         version: 1,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
         createdBy: 'system',
-        lastModifiedBy: 'system',
-        content: condition as any
+        updatedBy: 'system',
+        overview: (condition as any).overview,
+        etiologyPathophysiology: (condition as any).etiology,
+        epidemiology: (condition as any).epidemiology,
+        riskFactors: (condition as any).riskFactors,
+        symptoms: (condition as any).symptoms,
+        examFindings: (condition as any).physicalExam,
+        diagnostics: (condition as any).diagnostics,
+        treatment: (condition as any).treatment,
+        complications: (condition as any).complications,
+        prognosis: (condition as any).prognosis,
       };
       content.push(item);
     }
@@ -122,7 +138,6 @@ export async function getContentStats() {
     total: allContent.length,
     bySystem: {} as Record<string, number>,
     byStatus: {} as Record<string, number>,
-    byCategory: {} as Record<string, number>
   };
   
   allContent.forEach(item => {
@@ -131,9 +146,6 @@ export async function getContentStats() {
     
     // By status
     stats.byStatus[item.status] = (stats.byStatus[item.status] || 0) + 1;
-    
-    // By category
-    stats.byCategory[item.category] = (stats.byCategory[item.category] || 0) + 1;
   });
   
   return stats;

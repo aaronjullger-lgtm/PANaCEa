@@ -15,6 +15,7 @@ import type {
   SystemCode,
   ConditionDefinition,
 } from "../types";
+import type { PatientEncounterCase } from '../types/drill-modes';
 import {
   buildConditionDefinition,
   getRandomConditionForSystem,
@@ -30,65 +31,6 @@ import {
 // ============================================================================
 // TYPE DEFINITIONS FOR GEMINI SERVICE
 // ============================================================================
-
-/**
- * Patient data for OSCE/Patient Encounter simulations
- */
-export interface PatientData {
-  age: number;
-  gender: 'male' | 'female' | 'other';
-  chiefComplaint: string;
-  presentingSymptoms: string[];
-  medicalHistory: string[];
-  medications: string[];
-  allergies: string[];
-  socialHistory?: {
-    smoking?: boolean;
-    alcohol?: boolean;
-    drugs?: boolean;
-    occupation?: string;
-  };
-  vitalSigns?: {
-    temperature?: number;
-    heartRate?: number;
-    bloodPressure?: string;
-    respiratoryRate?: number;
-    oxygenSaturation?: number;
-  };
-}
-
-/**
- * Clinical scenario configuration
- */
-export interface ClinicalScenario {
-  scenarioId: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  system: SystemCode;
-  condition: string;
-  learningObjectives: string[];
-  timeLimit?: number; // minutes
-}
-
-/**
- * Expected medical findings for validation
- */
-export interface MedicalFindings {
-  physicalExam: Record<string, string>;
-  diagnosticTests: Record<string, unknown>;
-  differentialDiagnosis: string[];
-  workingDiagnosis: string;
-  treatmentPlan: string[];
-}
-
-/**
- * Patient simulator case data
- */
-export interface PatientSimulatorCase {
-  caseId: string;
-  patientData: PatientData;
-  scenario: ClinicalScenario;
-  expectedFindings: MedicalFindings;
-}
 
 /**
  * Chat message in patient simulator
@@ -558,6 +500,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       ...parsed,
       topic: topicAbbreviation,
       conditionId: parsed.conditionId || "",
+      condition: parsed.condition || "Unknown Condition",
     };
 
     // If we pre-selected a condition (hybrid mode), lock it in here
@@ -695,7 +638,7 @@ Your Task:
  * Acts as both the patient (dialogue) and the system (exam/lab results).
  */
 export async function chatWithPatientSimulator(
-  caseData: PatientSimulatorCase,
+  caseData: PatientEncounterCase,
   chatHistory: ChatMessage[],
   userMessage: string
 ): Promise<string> {
@@ -796,7 +739,7 @@ Return ONLY raw JSON (no markdown formatting) with this structure:
  */
 export async function performPhysicalExam(
   action: string,
-  caseData: PatientSimulatorCase
+  caseData: PatientEncounterCase
 ): Promise<string> {
   const prompt = `
 You are the physical exam simulator for a Virtual OSCE.
@@ -832,7 +775,7 @@ Output: "Inspiratory arrest on deep palpation of the RUQ (Positive Murphy's sign
  */
 export async function orderDiagnosticTest(
   testName: string,
-  caseData: PatientSimulatorCase
+  caseData: PatientEncounterCase
 ): Promise<{ result: string; interpretation: string }> {
   const prompt = `
 You are the diagnostic result generator for a Virtual OSCE.
@@ -871,7 +814,7 @@ Instructions:
  */
 export async function evaluateTreatmentPlan(
   plan: string,
-  caseData: PatientSimulatorCase
+  caseData: PatientEncounterCase
 ): Promise<{ isCorrect: boolean; feedback: string; score: number }> {
   const prompt = `
 You are grading a treatment plan for a PA student.
@@ -903,7 +846,7 @@ Return JSON: { "isCorrect": boolean, "score": number, "feedback": "string" }
  */
 export async function generateAfterActionReport(
   sessionData: SessionData,
-  caseData: PatientSimulatorCase
+  caseData: PatientEncounterCase
 ): Promise<string> {
   const prompt = `
 Generate a brief, bulleted After Action Report (AAR) for a medical student's OSCE performance.

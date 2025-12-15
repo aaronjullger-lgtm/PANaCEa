@@ -11,8 +11,7 @@ import prismaClientEdge from '.prisma/client/edge.js';
 // Re-export as named exports
 export const {
   Prisma,
-  PrismaClient,
-  $Enums
+  PrismaClient
 } = prismaClientEdge;
 
 // Re-export types

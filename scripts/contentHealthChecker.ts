@@ -36,12 +36,11 @@ async function loadConditionContent(): Promise<ConditionContent> {
   try {
     const content = await prisma.medicalContent.findMany({
       where: { status: 'published' },
-      select: { conditionId: true, content: true },
     });
 
     const contentMap: ConditionContent = {};
     content.forEach(item => {
-      contentMap[item.conditionId] = item.content as any;
+      contentMap[item.conditionId] = item as any;
     });
 
     return contentMap;

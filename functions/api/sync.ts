@@ -117,8 +117,6 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     ]);
 
     // Data fetched successfully - logged by middleware
-      savedQuestions: savedQuestions.length,
-    });
 
     const response: SyncResponse = {
       success: true,

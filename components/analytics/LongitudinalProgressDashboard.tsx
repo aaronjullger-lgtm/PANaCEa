@@ -232,7 +232,7 @@ export default function LongitudinalProgressDashboard({
   performanceData,
   userYearInProgram,
   theme = 'light',
-}: LongitudinalProgressDashboardProps): JSX.Element {
+}: LongitudinalProgressDashboardProps): React.ReactElement {
   const phases = useMemo(
     () => calculateTimelinePhases(performanceData),
     [performanceData]

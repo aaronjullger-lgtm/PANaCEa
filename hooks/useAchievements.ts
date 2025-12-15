@@ -32,7 +32,8 @@ interface AchievementState {
  * Hook for managing user achievements and streaks
  */
 export function useAchievements() {
-  const { userId, isSignedIn } = useAuth();
+  const { user, isSignedIn } = useAuth();
+  const userId = user?.id;
   const [state, setState] = useState<AchievementState>({
     achievements: [],
     streak: {

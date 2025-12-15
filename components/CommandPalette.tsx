@@ -50,100 +50,107 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     }
   }, [isOpen]);
 
+  const [results, setResults] = useState<SearchResult[]>([]);
+
   // Search results
-  const results = useMemo(() => {
-    if (!query.trim()) {
-      // Show popular modes when no query
-      return MODE_REGISTRY.slice(0, 8).map(mode => ({
-        id: mode.id,
-        title: mode.label,
-        subtitle: mode.description,
-        category: 'mode' as const,
-        action: () => {
-          onNavigate(mode.id);
-          onClose();
-        },
-      }));
-    }
-
-    const searchResults: SearchResult[] = [];
-    const lowerQuery = query.toLowerCase();
-
-    // Search training modes
-    MODE_REGISTRY.forEach(mode => {
-      if (
-        mode.label.toLowerCase().includes(lowerQuery) ||
-        mode.description.toLowerCase().includes(lowerQuery) ||
-        mode.id.toLowerCase().includes(lowerQuery)
-      ) {
-        searchResults.push({
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (!query.trim()) {
+        // Show popular modes when no query
+        setResults(MODE_REGISTRY.slice(0, 8).map(mode => ({
           id: mode.id,
           title: mode.label,
           subtitle: mode.description,
-          category: 'mode',
+          category: 'mode' as const,
           action: () => {
             onNavigate(mode.id);
             onClose();
           },
-        });
+        })));
+        return;
       }
-    });
 
-    // Search conditions (limit to top 5)
-    try {
-      const conditionResults = searchConditions(query, 5);
-      conditionResults.forEach(result => {
-        // Clean display name (remove parentheses)
-        const displayName = result.condition.replace(/\s*\([^)]*\)/g, '').trim();
-        
-        // Check if query matched an alias
-        const aliases = result.aliases || [];
-        const matchedAlias = aliases.find(alias => 
-          alias.toLowerCase().includes(lowerQuery) || 
-          lowerQuery.includes(alias.toLowerCase())
-        );
-        
-        const subtitle = matchedAlias 
-          ? `${result.system} • matches "${matchedAlias}"`
-          : `${result.system} - View condition details`;
-        
-        searchResults.push({
-          id: `condition-${result.id}`,
-          title: displayName,
-          subtitle,
-          category: 'condition',
-          action: () => {
-            // This would navigate to condition detail
-            console.log('Navigate to condition:', result.id);
-            onClose();
-          },
-        });
+      const searchResults: SearchResult[] = [];
+      const lowerQuery = query.toLowerCase();
+
+      // Search training modes
+      MODE_REGISTRY.forEach(mode => {
+        if (
+          mode.label.toLowerCase().includes(lowerQuery) ||
+          mode.description.toLowerCase().includes(lowerQuery) ||
+          mode.id.toLowerCase().includes(lowerQuery)
+        ) {
+          searchResults.push({
+            id: mode.id,
+            title: mode.label,
+            subtitle: mode.description,
+            category: 'mode',
+            action: () => {
+              onNavigate(mode.id);
+              onClose();
+            },
+          });
+        }
       });
-    } catch (error) {
-      console.error('Error searching conditions:', error);
-    }
 
-    // Search drugs (limit to top 5)
-    try {
-      const drugResults = searchDrugs(query, 5);
-      drugResults.forEach(result => {
-        searchResults.push({
-          id: `drug-${result.id}`,
-          title: result.brandName || result.genericName,
-          subtitle: `${result.genericName} - ${result.class}`,
-          category: 'drug',
-          action: () => {
-            // This would navigate to drug detail
-            console.log('Navigate to drug:', result.id);
-            onClose();
-          },
+      // Search conditions (limit to top 5)
+      try {
+        const conditionResults = searchConditions(query).slice(0, 5);
+        conditionResults.forEach(result => {
+          // Clean display name (remove parentheses)
+          const displayName = result.condition.replace(/\s*\([^)]*\)/g, '').trim();
+          
+          // Check if query matched an alias
+          const aliases = result.aliases || [];
+          const matchedAlias = aliases.find(alias => 
+            alias.toLowerCase().includes(lowerQuery) || 
+            lowerQuery.includes(alias.toLowerCase())
+          );
+          
+          const subtitle = matchedAlias 
+            ? `${result.system} • matches "${matchedAlias}"`
+            : `${result.system} - View condition details`;
+          
+          searchResults.push({
+            id: `condition-${result.id}`,
+            title: displayName,
+            subtitle,
+            category: 'condition',
+            action: () => {
+              // This would navigate to condition detail
+              console.log('Navigate to condition:', result.id);
+              onClose();
+            },
+          });
         });
-      });
-    } catch (error) {
-      console.error('Error searching drugs:', error);
-    }
+      } catch (error) {
+        console.error('Error searching conditions:', error);
+      }
 
-    return searchResults.slice(0, 10);
+      // Search drugs (limit to top 5)
+      try {
+        const drugResults = await searchDrugs(query);
+        drugResults.slice(0, 5).forEach(result => {
+          searchResults.push({
+            id: `drug-${result.id}`,
+            title: result.drugName,
+            subtitle: `${result.drugName} - ${result.drugClass}`,
+            category: 'drug',
+            action: () => {
+              // This would navigate to drug detail
+              console.log('Navigate to drug:', result.id);
+              onClose();
+            },
+          });
+        });
+      } catch (error) {
+        console.error('Error searching drugs:', error);
+      }
+
+      setResults(searchResults.slice(0, 10));
+    };
+
+    fetchResults();
   }, [query, onNavigate, onClose]);
 
   // Keyboard navigation

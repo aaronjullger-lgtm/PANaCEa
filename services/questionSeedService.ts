@@ -97,7 +97,7 @@ export async function assembleQuestionFromSeed(seedId: string) {
   };
 
   // Return assembled question
-  const questionData = seed.questionData || {};
+  // const questionData = seed.questionData || {};
   const assembledQuestion = {
     id: uuidv4(), // Each assembled question gets a unique ID
     seedId: seed.id,

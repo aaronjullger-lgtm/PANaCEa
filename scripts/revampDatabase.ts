@@ -129,9 +129,9 @@ async function main() {
     // Find and Normalize Content
     const jsonItem = contentMap.get(conditionId);
     
-    if (jsonItem && jsonItem.content) {
+    if (jsonItem && (jsonItem as any).content) {
       // Content is already normalized by normalizeContent.ts
-      const normalizedContent = jsonItem.content;
+      const normalizedContent = (jsonItem as any).content;
 
       // Create MedicalContent
       try {

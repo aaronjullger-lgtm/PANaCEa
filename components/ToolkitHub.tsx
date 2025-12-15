@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 interface ToolkitHubProps {
-  onNavigate: (mode: string) => void;
+  onNavigateToItem: (mode: string) => void;
   onClose: () => void;
 }
 
@@ -83,7 +83,7 @@ const TOOLKIT_ITEMS: ToolkitItem[] = [
   }
 ];
 
-export const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigate, onClose }) => {
+export default function ToolkitHub({ onNavigateToItem, onClose }: ToolkitHubProps) {
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
       {/* Header */}
@@ -119,7 +119,7 @@ export const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigate, onClose }) =
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
-            onClick={() => onNavigate(item.route)}
+            onClick={() => onNavigateToItem(item.id)}
             className={`
               group relative overflow-hidden rounded-2xl p-6
               bg-gradient-to-br ${item.bgGradient}
@@ -181,4 +181,4 @@ export const ToolkitHub: React.FC<ToolkitHubProps> = ({ onNavigate, onClose }) =
   );
 };
 
-export default ToolkitHub;
+

@@ -124,7 +124,9 @@ async function checkContentAccuracy(): Promise<void> {
       select: {
         conditionId: true,
         condition: true,
-        content: true,
+        overview: true,
+        treatment: true,
+        diagnostics: true,
         updatedAt: true,
       },
     });
@@ -140,19 +142,17 @@ async function checkContentAccuracy(): Promise<void> {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     for (const item of content) {
-      const contentObj = item.content as any;
-      
       // Check for missing critical sections
-      if (!contentObj?.treatment && !contentObj?.management) {
+      if (!item.treatment) {
         issues.missingTreatment++;
       }
       
-      if (!contentObj?.diagnostics) {
+      if (!item.diagnostics) {
         issues.missingDiagnostics++;
       }
       
       // Check for placeholder content
-      const overview = contentObj?.overview || '';
+      const overview = item.overview || '';
       if (/\[NO CONTENT PROVIDED\]/i.test(overview)) {
         issues.placeholderContent++;
       }

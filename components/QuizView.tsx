@@ -363,6 +363,67 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [isAnswered]);
 
   // Keyboard shortcuts
+  const handleSubmitAnswer = useCallback(() => {
+    // Guard against submitting without selection
+    if (selectedAnswerIndex === null || !currentQuestion || isAnswered) return;
+
+    setIsAnswered(true);
+    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
+
+    if (sessionSettings.focus === "review") {
+      updateReviewQuestion(currentQuestion, isCorrect);
+    } else {
+      if (!isCorrect) {
+        addMissedQuestion(currentQuestion);
+      }
+    }
+
+    // Calculate question word count for vignette stamina analysis
+    const questionWordCount = currentQuestion.question
+      .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+      .split(/\s+/)
+      .filter(word => word.length > 0).length;
+
+    // Record detailed performance, including system/subcategory/condition
+    const timestamp = Date.now();
+    addPerformanceRecord({
+      timestamp,
+      system: currentQuestion.system ?? null,
+      subcategory: currentQuestion.subcategory ?? null,
+      conditionId: currentQuestion.conditionId,
+      condition: currentQuestion.condition,
+      topic: currentQuestion.topic,
+      isCorrect,
+      focus: sessionSettings.focus,
+      difficulty: sessionSettings.difficulty,
+      questionWordCount,
+    });
+
+    // Record circadian performance data
+    recordCircadianPerformance({
+      timestamp,
+      isCorrect,
+      topic: currentQuestion.topic,
+    });
+
+    // Track questions answered and check for wellness triggers
+    questionsAnsweredInSession.current += 1;
+
+    // Trigger wellness check after threshold questions
+    if (questionsAnsweredInSession.current > 0 && questionsAnsweredInSession.current % WELLNESS_CHECK_QUESTION_THRESHOLD === 0) {
+      setWellnessReason('rapid_questions');
+      setShowWellnessModal(true);
+    }
+
+    // Check if studying late at night
+    const currentHour = new Date().getHours();
+    if ((currentHour >= LATE_NIGHT_START_HOUR || currentHour < LATE_NIGHT_END_HOUR) && 
+        questionsAnsweredInSession.current % LATE_NIGHT_CHECK_INTERVAL === 0) {
+      setWellnessReason('late_night');
+      setShowWellnessModal(true);
+    }
+  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -436,66 +497,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     setSelectedAnswerIndex(index);
   };
 
-  const handleSubmitAnswer = () => {
-    // Guard against submitting without selection
-    if (selectedAnswerIndex === null || !currentQuestion || isAnswered) return;
 
-    setIsAnswered(true);
-    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
-
-    if (sessionSettings.focus === "review") {
-      updateReviewQuestion(currentQuestion, isCorrect);
-    } else {
-      if (!isCorrect) {
-        addMissedQuestion(currentQuestion);
-      }
-    }
-
-    // Calculate question word count for vignette stamina analysis
-    const questionWordCount = currentQuestion.question
-      .replace(/<[^>]*>/g, ' ') // Remove HTML tags
-      .split(/\s+/)
-      .filter(word => word.length > 0).length;
-
-    // Record detailed performance, including system/subcategory/condition
-    const timestamp = Date.now();
-    addPerformanceRecord({
-      timestamp,
-      system: currentQuestion.system ?? null,
-      subcategory: currentQuestion.subcategory ?? null,
-      conditionId: currentQuestion.conditionId,
-      condition: currentQuestion.condition,
-      topic: currentQuestion.topic,
-      isCorrect,
-      focus: sessionSettings.focus,
-      difficulty: sessionSettings.difficulty,
-      questionWordCount,
-    });
-
-    // Record circadian performance data
-    recordCircadianPerformance({
-      timestamp,
-      isCorrect,
-      topic: currentQuestion.topic,
-    });
-
-    // Track questions answered and check for wellness triggers
-    questionsAnsweredInSession.current += 1;
-
-    // Trigger wellness check after threshold questions
-    if (questionsAnsweredInSession.current > 0 && questionsAnsweredInSession.current % WELLNESS_CHECK_QUESTION_THRESHOLD === 0) {
-      setWellnessReason('rapid_questions');
-      setShowWellnessModal(true);
-    }
-
-    // Check if studying late at night
-    const currentHour = new Date().getHours();
-    if ((currentHour >= LATE_NIGHT_START_HOUR || currentHour < LATE_NIGHT_END_HOUR) && 
-        questionsAnsweredInSession.current % LATE_NIGHT_CHECK_INTERVAL === 0) {
-      setWellnessReason('late_night');
-      setShowWellnessModal(true);
-    }
-  };
 
   const handleExplainDifferently = useCallback(async () => {
     if (!currentQuestion || selectedAnswerIndex === null) return;

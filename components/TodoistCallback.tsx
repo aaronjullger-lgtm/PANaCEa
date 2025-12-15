@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+// import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { exchangeCodeForToken, type TodoistOAuthConfig } from '../lib/services/todoistService';
 
@@ -10,13 +10,14 @@ const TODOIST_CONFIG: TodoistOAuthConfig = {
 };
 
 export default function TodoistCallback() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  // const [searchParams] = useSearchParams();
+  // const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const handleCallback = async () => {
+      const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       const error = searchParams.get('error');
@@ -39,8 +40,8 @@ export default function TodoistCallback() {
         
         // Redirect back to the main app after a short delay
         setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 2000);
+            window.location.href = '/';
+          }, 2000);
         
       } catch (error) {
         console.error('OAuth callback error:', error);
@@ -50,7 +51,7 @@ export default function TodoistCallback() {
     };
 
     handleCallback();
-  }, [searchParams, navigate]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -93,7 +94,7 @@ export default function TodoistCallback() {
                 {errorMessage}
               </p>
               <button
-                onClick={() => navigate('/', { replace: true })}
+                onClick={() => window.location.href = '/'}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
               >
                 Return to App

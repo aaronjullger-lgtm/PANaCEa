@@ -78,6 +78,9 @@ export interface SessionSettings {
 
   /** Optional: when present, Gemini should target this specific condition */
   subcategoryName?: string;
+  
+  /** Optional: when present, Gemini should target this specific condition ID or name */
+  conditionName?: string;
 }
 
 // High-level systems (matches your existing tiles + PRO + hidden OTHER)
@@ -138,6 +141,7 @@ export interface UserProfile {
   graduationDate?: string; // ISO date string
   currentRotation?: ClinicalRotation;
   yearInProgram?: YearInProgram;
+  isCertifiedPA?: boolean;
   hasCompletedOnboarding: boolean;
 }
 

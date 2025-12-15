@@ -29,9 +29,9 @@ async function verifyContent() {
     console.log('\n--- Anatomy ---');
     if (condition.anatomyStructures.length > 0) {
       condition.anatomyStructures.forEach(a => {
-        console.log(`- Structure: ${a.structureName}`);
+        console.log(`- Structure: ${a.name}`);
         console.log(`  Description: ${a.description ? a.description.substring(0, 100) : 'N/A'}...`);
-        console.log(`  Label: ${a.label}`);
+        // console.log(`  Label: ${a.label}`);
       });
     } else {
       console.log('No anatomy found.');
@@ -40,9 +40,9 @@ async function verifyContent() {
     console.log('\n--- Special Tests ---');
     if (condition.specialTests.length > 0) {
       condition.specialTests.forEach(t => {
-        console.log(`- Test: ${t.testName}`);
+        console.log(`- Test: ${t.name}`);
         console.log(`  Description: ${t.description ? t.description.substring(0, 100) : 'N/A'}...`);
-        console.log(`  Findings: ${t.positiveFindings}`);
+        console.log(`  Findings: ${t.interpretation}`);
       });
     } else {
       console.log('No special tests found.');

@@ -100,14 +100,14 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       } else {
         // Fallback if no IDs returned (e.g. dev mode without seed)
         loadedQuestions = Array.from({ length: 5 }, (_, i) => ({
-          id: `gr-${challenge.id}-${i}`,
-          question: `Challenge Question ${i + 1} (from API challenge ${challenge.id})`,
-          options: ['Option A', 'Option B', 'Option C', 'Option D'],
-          correctAnswer: 'Option A',
-          explanation: 'This is a daily challenge question.',
-          system: 'General',
-          difficulty: 'medium',
-          type: 'mcq'
+          question: 'Loading...',
+          options: ['Loading...', 'Loading...', 'Loading...', 'Loading...'],
+          correctAnswerIndex: 0,
+          rationale: 'Loading...',
+          topic: 'General',
+          conditionId: `q-${i}`,
+          condition: 'Loading...',
+          pearls: []
         }));
       }
       
@@ -158,7 +158,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const handleSubmit = useCallback(() => {
     if (selectedAnswer === null || isSubmitted || !currentQuestion) return;
 
-    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+    const isCorrect = selectedAnswer === currentQuestion.correctAnswerIndex;
     setIsSubmitted(true);
 
     if (isCorrect) {
@@ -174,7 +174,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     // Persist result to general stats
     submitDrillResult(
       'grand_rounds',
-      currentQuestion.id || `gr-${Date.now()}`,
+      currentQuestion.conditionId || `gr-${Date.now()}`,
       isCorrect,
       { 
         title: currentQuestion.system || 'Grand Rounds', 
@@ -557,9 +557,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   if (!currentQuestion) return null;
 
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
-
-  return (
+    const isCorrect = selectedAnswer === currentQuestion.correctAnswerIndex;  return (
     <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex flex-col">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-b border-[var(--color-border)] p-4">
@@ -635,7 +633,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
               {currentQuestion.options.map((option, index) => {
                 const isSelected = selectedAnswer === index;
                 const showResult = isSubmitted;
-                const isThisCorrect = index === currentQuestion.correctAnswer;
+                const isThisCorrect = index === currentQuestion.correctAnswerIndex;
 
                 return (
                   <motion.button
@@ -689,10 +687,10 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
                   )}
                   <div className="flex-1">
                     <div className={`font-semibold mb-1 ${isCorrect ? 'text-green-500' : 'text-red-500'}`}>
-                      {isTimeUp ? 'Time\'s Up!' : isCorrect ? `Correct! +${currentQuestion.points} points` : 'Incorrect'}
+                      {isTimeUp ? 'Time\'s Up!' : isCorrect ? `Correct! +${100 + (currentQuestionIndex * 50)} points` : 'Incorrect'}
                     </div>
                     <p className="text-sm text-[var(--color-text-muted)]">
-                      {currentQuestion.explanation}
+                      {currentQuestion.rationale}
                     </p>
                   </div>
                 </div>

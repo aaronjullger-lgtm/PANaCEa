@@ -51,7 +51,7 @@ export function loadOrganProgress(): UserOrganProgress {
     return {
       unlockedVariants: new Set(data.unlockedVariants || []),
       unlockedAccessories: new Set(data.unlockedAccessories || []),
-      systemProgress: new Map(Object.entries(data.systemProgress || {})),
+      systemProgress: new Map(Object.entries(data.systemProgress || {}) as [SystemCode, any][]),
       specialModeProgress: new Map(Object.entries(data.specialModeProgress || {})),
     };
   } catch (error) {
@@ -104,7 +104,7 @@ export function loadCharacterCustomization(): Map<SystemCode | 'SPECIAL', Charac
     }
 
     const data = JSON.parse(stored);
-    return new Map(Object.entries(data));
+    return new Map(Object.entries(data) as [SystemCode | "SPECIAL", CharacterCustomization][]);
   } catch (error) {
     console.error('Failed to load character customization:', error);
     return initializeCustomization();

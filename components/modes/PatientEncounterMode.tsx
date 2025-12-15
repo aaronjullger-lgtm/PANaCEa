@@ -274,13 +274,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       
       // Generate AAR
       const report = await generateAfterActionReport({
-        questions: session?.questions,
-        physical: physicalFindings,
-        labs: diagnosticResults,
-        diagnosis: userDiagnosis,
-        treatment: treatmentPlan,
-        diagnosisFeedback,
-        treatmentFeedback: feedback
+        sessionId: session?.id || 'unknown',
+        startTime: new Date(session?.startTime || Date.now()).toISOString(),
+        endTime: new Date().toISOString(),
+        testsOrdered: diagnosticResults.map(r => r.testName),
+        chatHistory: session?.questions.flatMap(q => [
+          { role: 'user', content: q.questionText },
+          { role: 'model', content: q.response }
+        ]) || [],
+        actionsPerformed: [
+          ...physicalFindings.map(f => `Exam: ${f.maneuver} -> ${f.finding}`),
+          ...diagnosticResults.map(r => `Lab: ${r.testName} -> ${r.result}`)
+        ],
+        diagnosisSubmitted: userDiagnosis,
+        treatmentPlan: [treatmentPlan],
+        score: (diagnosisFeedback?.score || 0) + (feedback?.score || 0)
       }, currentCase);
       setAar(report);
       

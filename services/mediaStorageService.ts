@@ -311,7 +311,7 @@ export async function getMediaStats() {
     total,
     byType,
     linkedToConditions: byCondition.length,
-    unlinked: total - byCondition.reduce((sum, item) => sum + item._count, 0),
+    unlinked: total - byCondition.reduce((sum, item) => sum + (item as any)._count, 0),
   };
 }
 

@@ -39,15 +39,12 @@ export async function recordQuestionSeen(
       },
     },
     update: {
-      wasCorrect: metadata.wasCorrect,
+      isCorrect: metadata.wasCorrect || false,
     },
     create: {
       userId,
       questionId,
-      questionType: metadata.questionType,
-      system: metadata.system,
-      conditionId: metadata.conditionId,
-      wasCorrect: metadata.wasCorrect,
+      isCorrect: metadata.wasCorrect || false,
     },
   });
 }

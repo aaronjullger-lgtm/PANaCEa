@@ -102,29 +102,24 @@ export async function getLeaderboard(period: 'weekly' | 'monthly' | 'all_time' =
   // Actually, let's just query the Leaderboard table. If it's empty, it returns empty.
   // We need a job to populate it.
   
-  const leaderboard = await prisma.leaderboard.findFirst({
-    where: {
-      period,
-      groupId: groupId || null
-    },
-    include: {
-      entries: {
-        include: {
-          user: {
-            select: {
-              firstName: true,
-              lastName: true,
-              school: true
-            }
-          }
-        },
-        orderBy: {
-          score: 'desc'
-        },
-        take: 50
-      }
-    }
-  });
+    // const leaderboard = await prisma.leaderboard.findFirst({
+  //   where: {
+  //     period,
+  //     groupId: groupId || null
+  //   },
+  //   include: {
+  //     entries: {
+  //       include: {
+  //         user: true
+  //       },
+  //       orderBy: {
+  //         score: 'desc'
+  //       },
+  //       take: limit
+  //     }
+  //   }
+  // });
+  const leaderboard = null;
   
   return leaderboard;
 }

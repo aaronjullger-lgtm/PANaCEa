@@ -8,12 +8,12 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import type { Session } from '@clerk/clerk-react';
+// import type { Session } from '@clerk/clerk-react';
 
 // Get Supabase configuration from environment
 // Note: These should be VITE_ prefixed for client-side access
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || '';
 
 /**
  * Create a Supabase client configured to use Clerk session tokens
@@ -21,7 +21,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
  * @param session - Clerk session object from useSession() hook
  * @returns Configured Supabase client
  */
-export function createSupabaseClient(session: Session | null | undefined) {
+export function createSupabaseClient(session: any) {
   return createClient(supabaseUrl, supabaseAnonKey, {
     global: {
       headers: {

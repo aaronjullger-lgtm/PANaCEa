@@ -257,7 +257,7 @@ const CONDITION_ALIASES: Record<string, string[]> = {
   "Stevens-Johnson Syndrome (SJS)": ["SJS"],
   "Toxic Epidermal Necrolysis (TEN)": ["TEN", "Lyell Syndrome"],
   "Impetigo": ["School Sores"],
-  "Cellulitis": ["Skin Infection"],
+  // "Cellulitis": ["Skin Infection"], // Duplicate
   "Herpes Zoster (Shingles)": ["Shingles", "Zoster"],
   "Scabies": ["Sarcoptes scabiei", "Itch Mite"],
   "Tinea Corporis": ["Ringworm", "Body Ringworm"],

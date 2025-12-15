@@ -222,7 +222,7 @@ REMEMBER: All tests in LAB_TEST_DATABASE are orderable, but only include pertine
           throw new Error(`Invalid case structure: missing required lab panels (BMP, CBC, or LFT)`);
         }
         // pertinentResults is optional, so we don't validate its presence
-        if (labCase.pertinentResults && typeof labCase.pertinentResults !== 'object') {
+        if ((labCase as any).pertinentResults && typeof (labCase as any).pertinentResults !== 'object') {
           throw new Error(`Invalid case structure: pertinentResults must be an object`);
         }
       }

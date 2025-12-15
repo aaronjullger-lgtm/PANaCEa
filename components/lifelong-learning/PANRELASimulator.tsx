@@ -19,7 +19,7 @@ interface Question {
 }
 
 interface PANRELASimulatorProps {
-  onComplete: (score: number) => void;
+  onExit: () => void;
 }
 
 type QuarterlyBlock = 1 | 2 | 3 | 4;
@@ -32,7 +32,11 @@ interface QuarterlyProgress {
   dueDate: string;
 }
 
-export const PANRELASimulator: React.FC<PANRELASimulatorProps> = ({ onComplete }) => {
+interface PANRELASimulatorProps {
+  onExit: () => void;
+}
+
+export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -143,7 +147,7 @@ export const PANRELASimulator: React.FC<PANRELASimulatorProps> = ({ onComplete }
       setIsResourcesOpen(false);
     } else {
       const finalScore = (quarterlyProgress.score / sampleQuestions.length) * 100;
-      onComplete(finalScore);
+      onExit();
     }
   };
 
@@ -490,4 +494,4 @@ function getQuarterEndDate(quarter: QuarterlyBlock): string {
   return endDates[quarter];
 }
 
-export default PANRELASimulator;
+

@@ -21,6 +21,7 @@ import { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { createRequestLogger } from './lib/logging/structuredLogger';
 
 // Load environment variables
 config();
@@ -40,6 +41,22 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: { error: 'Too many requests, please try again later.' }
 });
+
+interface GeminiApiResponse {
+  candidates?: {
+    content?: {
+      parts?: {
+        text?: string;
+      }[];
+    };
+  }[];
+}
+
+interface ApiError extends Error {
+  message: string;
+  code?: string;
+  status?: number;
+}
 
 // Apply rate limiting to all requests
 app.use(limiter);
@@ -213,17 +230,26 @@ app.get('/api/conditions/:identifier/extended', requireAuth, async (req: Authent
 // Public endpoint to allow loading content before auth (mimics static file behavior)
 app.get('/api/content/all', async (req: Request, res: Response) => {
   try {
-    const allContent = await prisma.medicalContent.findMany({
-      select: {
-        conditionId: true,
-        content: true
-      }
-    });
+    const allContent = await prisma.medicalContent.findMany();
 
     // Transform to map format expected by frontend
     const contentMap: Record<string, any> = {};
     allContent.forEach(item => {
-      contentMap[item.conditionId] = item.content;
+      contentMap[item.conditionId] = {
+        overview: item.overview,
+        etiology: item.etiology,
+        pathophysiology: item.pathophysiology,
+        epidemiology: item.epidemiology,
+        symptoms: item.symptoms,
+        physicalExam: item.physicalExam,
+        diagnostics: item.diagnostics,
+        treatment: item.treatment,
+        prognosis: item.prognosis,
+        differentialDiagnosis: item.differentialDiagnosis,
+        riskFactors: item.riskFactors,
+        complications: item.complications,
+        buzzwords: item.buzzwords
+      };
     });
 
     res.json(contentMap);
@@ -471,7 +497,7 @@ if (process.env.REDIS_URL) {
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 // Rate limiting middleware
-function rateLimit(maxRequests: number, windowMs: number) {
+function customRateLimit(maxRequests: number, windowMs: number) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const clientId = req.ip || req.socket.remoteAddress || 'unknown';
     
@@ -523,11 +549,11 @@ function rateLimit(maxRequests: number, windowMs: number) {
 }
 
 // Apply rate limiting to API endpoints (100 requests per 15 minutes)
-app.use('/api', rateLimit(100, 15 * 60 * 1000));
+app.use('/api', customRateLimit(100, 15 * 60 * 1000));
 
 // Stricter rate limit for sync endpoints (30 requests per 5 minutes)
 // This prevents abuse while allowing reasonable sync frequency
-const syncRateLimit = rateLimit(30, 5 * 60 * 1000);
+const syncRateLimit = customRateLimit(30, 5 * 60 * 1000);
 
 // API sync endpoint with authentication and rate limiting
 // Rate limiting: 30 requests per 5 minutes (in addition to global /api rate limit)
@@ -1554,7 +1580,21 @@ app.get('/widgets/streak/:userId', async (req: Request, res: Response) => {
       take: 1000, // Last 1000 records for streak calculation
     });
     
-    const streakData = calculateStreak(performanceRecords);
+    // Map Prisma records to the expected PerformanceRecord type
+    const mappedRecords = performanceRecords.map(r => ({
+      ...r,
+      timestamp: Number(r.timestamp),
+      system: r.system as any,
+      subcategory: r.subcategoryName,
+      condition: r.conditionName || 'Unknown',
+      conditionId: 'unknown',
+      topic: r.topic,
+      focus: r.focus as any,
+      difficulty: r.difficulty as any,
+      errorTag: r.errorTag as any
+    }));
+    
+    const streakData = calculateStreak(mappedRecords);
     const html = generateStreakWidgetHTML(streakData, theme as 'light' | 'dark');
     
     res.setHeader('Content-Type', 'text/html');
@@ -1613,8 +1653,14 @@ app.get('/widgets/question-of-day/:userId', async (req: Request, res: Response) 
         ], // Simplified - in production, fetch actual options
         correctAnswer: answerLetter,
         explanation: sq.explanation,
-        system: sq.system || undefined,
+        system: sq.system as any || undefined,
         subcategory: sq.topic,
+        correctAnswerIndex: 0,
+        rationale: sq.explanation,
+        topic: sq.topic,
+        conditionId: 'unknown',
+        condition: 'Unknown',
+        pearls: []
       };
     });
     
@@ -1830,14 +1876,7 @@ app.get('/api/admin/stats', requireAdmin, async (req: Request, res: Response) =>
       const { prisma } = await import('./lib/prisma');
       const userCount = await prisma.user.count();
       const sessionCount = await prisma.performanceRecord.count();
-      // Simple average accuracy calculation
-      const accuracyAgg = await prisma.performanceRecord.aggregate({
-        _avg: {
-          isCorrect: true // This might fail if isCorrect is boolean, need to check schema
-        }
-      });
       
-      // If isCorrect is boolean, we can't avg it directly in all DBs easily without casting
       // Let's just count correct vs total
       const correctCount = await prisma.performanceRecord.count({
         where: { isCorrect: true }

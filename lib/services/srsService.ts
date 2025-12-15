@@ -364,9 +364,21 @@ export function updateReviewOutcome(
   // FSRS Logic Integration
   if (USE_FSRS) {
     const rating = mapQualityToRating(input.quality);
-    const newState = fsrs.revise(item.fsrsState, rating);
     
-    const interval = Math.max(1, Math.round(newState.interval));
+    const card: FSRSCard = {
+      stability: item.fsrsStability || 0,
+      difficulty: item.fsrsDifficulty || 0,
+      state: item.fsrsState || FSRSState.New,
+      elapsed_days: item.fsrsLastReview ? (new Date().getTime() - new Date(item.fsrsLastReview).getTime()) / 86400000 : 0,
+      scheduled_days: item.interval,
+      reps: item.repetition,
+      lapses: 0,
+      last_review: item.fsrsLastReview || new Date(),
+    };
+
+    const { card: newCard } = fsrs.next(card, new Date(), rating);
+    
+    const interval = Math.max(1, Math.round(newCard.scheduled_days));
     // Keep legacy easiness updated for backward compatibility/fallback
     const easiness = Math.max(MINIMUM_EASINESS_FACTOR, item.easiness + (0.1 - (5 - input.quality) * (0.08 + (5 - input.quality) * 0.02)));
     
@@ -376,12 +388,14 @@ export function updateReviewOutcome(
     const updatedItem: SRSItem = {
       ...item,
       interval,
-      repetition: newState.repetition,
+      repetition: newCard.reps,
       easiness,
       dueDate,
       lastReviewed: now,
       quality: input.quality,
-      fsrsState: newState.state,
+      fsrsState: newCard.state,
+      fsrsStability: newCard.stability,
+      fsrsDifficulty: newCard.difficulty,
       fsrsLastReview: now,
       updatedAt: now,
     };
@@ -391,7 +405,7 @@ export function updateReviewOutcome(
     
     return {
       interval,
-      repetition: newState.repetition,
+      repetition: newCard.reps,
       easiness,
       dueDate,
       difficulty: updatedItem.difficulty,
@@ -1088,7 +1102,7 @@ export function getCramSessionQuestions(
   scoredItems.sort((a, b) => b.priority - a.priority);
   
   // Select top N items based on maxItems limit
-  const maxItems = priorityMode?.maxItems || scoredItems.length;
+  const maxItems = scoredItems.length;
   for (let i = 0; i < Math.min(maxItems, scoredItems.length); i++) {
     const questionId = scoredItems[i].item.questionId;
     selectedIds.add(questionId);

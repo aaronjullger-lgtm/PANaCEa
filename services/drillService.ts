@@ -26,7 +26,9 @@ export async function submitDrillResult(
     conditionId: caseId,
     condition: details.title || `${drillType} Case`,
     topic: drillType,
-    isCorrect
+    isCorrect,
+    focus: null,
+    difficulty: 'same'
   };
 
   // Update local storage for immediate UI reflection

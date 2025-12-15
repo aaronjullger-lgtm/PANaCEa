@@ -108,7 +108,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     async function loadExtendedData() {
       try {
         const token = await getToken();
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/conditions/${condition.condition}/extended`, {
+        const response = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/conditions/${condition.condition}/extended`, {
            headers: {
              Authorization: `Bearer ${token}`
            }

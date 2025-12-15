@@ -25,7 +25,7 @@ export default function WeaknessCheatsheetExporter({
   performanceData,
   theme = 'light',
   onExport,
-}: WeaknessCheatsheetExporterProps): JSX.Element {
+}: WeaknessCheatsheetExporterProps): React.ReactElement {
   const [days, setDays] = useState(30);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
@@ -195,17 +195,17 @@ export default function WeaknessCheatsheetExporter({
         onClick={handleExport}
         disabled={summary.totalWeaknesses === 0 || exportStatus !== 'idle'}
         className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-lg transition-all ${
-          summary.totalWeaknesses === 0 || exportStatus !== 'idle'
-            ? theme === 'light'
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-            : exportStatus === 'success'
+          exportStatus === 'success'
             ? 'bg-green-500 text-white'
             : exportStatus === 'error'
             ? 'bg-red-500 text-white'
-            : theme === 'light'
-            ? 'bg-[var(--color-accent)] text-white hover:opacity-90'
-            : 'bg-blue-600 text-white hover:bg-blue-700'
+            : summary.totalWeaknesses === 0
+              ? theme === 'light'
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+              : theme === 'light'
+              ? 'bg-[var(--color-accent)] text-white hover:opacity-90'
+              : 'bg-blue-600 text-white hover:bg-blue-700'
         }`}
       >
         {exportStatus === 'success' ? (

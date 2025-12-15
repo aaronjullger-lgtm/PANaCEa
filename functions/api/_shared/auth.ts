@@ -8,6 +8,8 @@ import { authLogger } from '../../../lib/logging/structuredLogger';
 export interface Env {
   DATABASE_URL?: string;
   CLERK_SECRET_KEY?: string;
+  GEMINI_API_KEY?: string;
+  GOOGLE_API_KEY?: string;
 }
 
 export interface AuthContext {

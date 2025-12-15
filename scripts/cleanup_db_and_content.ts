@@ -92,17 +92,18 @@ async function main() {
     if (batch.length === 0) break;
     
     for (const record of batch) {
-      const originalJson = JSON.stringify(record.content);
-      const cleanedContent = cleanContentObject(record.content);
-      const newJson = JSON.stringify(cleanedContent);
+      // Content field no longer exists on MedicalContent model
+      // const originalJson = JSON.stringify(record.content);
+      // const cleanedContent = cleanContentObject(record.content);
+      // const newJson = JSON.stringify(cleanedContent);
 
-      if (originalJson !== newJson) {
-        await prisma.medicalContent.update({
-          where: { id: record.id },
-          data: { content: cleanedContent }
-        });
-        updatedCount++;
-      }
+      // if (originalJson !== newJson) {
+      //   await prisma.medicalContent.update({
+      //     where: { id: record.id },
+      //     data: { content: cleanedContent }
+      //   });
+      //   updatedCount++;
+      // }
     }
     
     process.stdout.write('.');

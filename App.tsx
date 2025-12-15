@@ -442,7 +442,7 @@ const App: React.FC = () => {
   const pageTransition = useAccessibleTransition({
     duration: 0.35,
     ease: [0.4, 0, 0.2, 1] // Custom cubic-bezier for smooth feel
-  });
+  }) as any;
 
   // Show loading state while checking auth
   if (!authLoaded) {

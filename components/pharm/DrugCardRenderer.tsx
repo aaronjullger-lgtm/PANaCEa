@@ -53,7 +53,7 @@ export default function DrugCardRenderer({
   drug,
   onClose,
   theme = 'light',
-}: DrugCardRendererProps): JSX.Element {
+}: DrugCardRendererProps): React.ReactElement {
   const [expandedSection, setExpandedSection] = useState<string>('mechanism');
   const [highlightedEffect, setHighlightedEffect] = useState<SideEffect | null>(null);
 
@@ -300,7 +300,7 @@ function Section({
   children,
   theme,
   badge,
-}: SectionProps): JSX.Element {
+}: SectionProps): React.ReactElement {
   return (
     <div
       className={`border-b ${

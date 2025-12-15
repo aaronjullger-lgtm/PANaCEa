@@ -71,7 +71,7 @@ async function main() {
   
   const stagedQuestion = await saveToStaging(sampleQuestion);
   console.log(`✅ Question staged with ID: ${stagedQuestion.id}`);
-  console.log(`   Explanation length: ${stagedQuestion.explanationLength} words`);
+  console.log(`   Explanation length: ${stagedQuestion.explanation.split(' ').length} words`);
   
   // Step 2: Get staging statistics
   console.log('\n2. Checking staging queue statistics...');

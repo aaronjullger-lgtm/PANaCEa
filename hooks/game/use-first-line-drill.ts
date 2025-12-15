@@ -45,20 +45,20 @@ export interface UseFirstLineDrillReturn {
 
 function getRandomTreatments(treatments: FirstLineTreatment[], count: number, exclude: string): FirstLineTreatment[] {
   return treatments
-    .filter(t => t.firstLine !== exclude)
+    .filter(t => t.treatment !== exclude)
     .sort(() => Math.random() - 0.5)
     .slice(0, count);
 }
 
 function generateQuestion(treatment: FirstLineTreatment, allTreatments: FirstLineTreatment[]): FirstLineQuestion {
-  const distractors = getRandomTreatments(allTreatments, 3, treatment.firstLine);
+  const distractors = getRandomTreatments(allTreatments, 3, treatment.treatment);
   const options = [
-    treatment.firstLine,
-    ...distractors.map(d => d.firstLine)
+    treatment.treatment,
+    ...distractors.map(d => d.treatment)
   ];
   
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
-  const correctIndex = shuffledOptions.indexOf(treatment.firstLine);
+  const correctIndex = shuffledOptions.indexOf(treatment.treatment);
   
   return {
     id: `fl-${treatment.id}-${Date.now()}`,
@@ -66,8 +66,8 @@ function generateQuestion(treatment: FirstLineTreatment, allTreatments: FirstLin
     category: treatment.category,
     options: shuffledOptions,
     correctAnswerIndex: correctIndex,
-    explanation: treatment.explanation,
-    pearl: treatment.pearl,
+    explanation: `The first-line treatment for ${treatment.condition} is ${treatment.treatment}.`,
+    pearl: null,
   };
 }
 

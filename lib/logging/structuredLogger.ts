@@ -196,7 +196,11 @@ class StructuredLogger {
 
   apiResponse(method: string, path: string, statusCode: number, duration: number): void {
     const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
-    this[level](`${method} ${path} - ${statusCode}`, 'API', { statusCode, duration: `${duration}ms` });
+    if (level === 'error') {
+      this.error(`${method} ${path} - ${statusCode}`, undefined, 'API', { statusCode, duration: `${duration}ms` });
+    } else {
+      this[level](`${method} ${path} - ${statusCode}`, 'API', { statusCode, duration: `${duration}ms` });
+    }
   }
 
   // Database operation logging

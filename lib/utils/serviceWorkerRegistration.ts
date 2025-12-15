@@ -31,7 +31,7 @@ export async function register(config?: ServiceWorkerConfig): Promise<void> {
   }
   
   // Only register in production or when explicitly enabled
-  if (import.meta.env.MODE === 'development' && !import.meta.env.VITE_ENABLE_SW) {
+  if ((import.meta as any).env.MODE === 'development' && !(import.meta as any).env.VITE_ENABLE_SW) {
     console.log('Service worker disabled in development mode');
     return;
   }

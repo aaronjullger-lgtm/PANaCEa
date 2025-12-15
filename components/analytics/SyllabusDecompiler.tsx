@@ -35,7 +35,7 @@ type UploadState = 'idle' | 'uploading' | 'processing' | 'success' | 'error';
 export default function SyllabusDecompiler({
   theme = 'light',
   onTagsGenerated,
-}: SyllabusDecompilerProps): JSX.Element {
+}: SyllabusDecompilerProps): React.ReactElement {
   const [uploadState, setUploadState] = useState<UploadState>('idle');
   const [fileName, setFileName] = useState<string>('');
   const [extractedTags, setExtractedTags] = useState<SyllabusTag[]>([]);

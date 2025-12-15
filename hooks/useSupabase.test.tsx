@@ -42,17 +42,17 @@ describe('createSupabaseClientWithTokenGetter', () => {
 describe('validateSupabaseConfig', () => {
   it('should validate configuration', () => {
     // Set up environment
-    const originalEnv = import.meta.env;
+    const originalEnv = (import.meta as any).env;
     
     // Test with missing URL
-    import.meta.env = { ...originalEnv };
-    delete (import.meta.env as any).VITE_SUPABASE_URL;
+    (import.meta as any).env = { ...originalEnv };
+    delete ((import.meta as any).env).VITE_SUPABASE_URL;
     
     let result = validateSupabaseConfig();
     expect(result.valid).toBe(false);
     expect(result.message).toContain('VITE_SUPABASE_URL');
     
     // Restore
-    import.meta.env = originalEnv;
+    (import.meta as any).env = originalEnv;
   });
 });

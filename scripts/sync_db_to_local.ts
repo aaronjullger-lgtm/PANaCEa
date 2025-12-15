@@ -61,35 +61,35 @@ async function main() {
     
     for (const record of batch) {
       // Clean content
-      const originalJson = JSON.stringify(record.content);
-      const cleanedContent = cleanContentObject(record.content);
-      const newJson = JSON.stringify(cleanedContent);
+      // const originalJson = JSON.stringify(record.content);
+      // const cleanedContent = cleanContentObject(record.content);
+      // const newJson = JSON.stringify(cleanedContent);
       
       // Update DB if needed
-      if (originalJson !== newJson) {
-        await prisma.medicalContent.update({
-          where: { id: record.id },
-          data: { content: cleanedContent }
-        });
-        updatedDbCount++;
-        process.stdout.write('u'); // u for updated
-      } else {
+      // if (originalJson !== newJson) {
+      //   await prisma.medicalContent.update({
+      //     where: { id: record.id },
+      //     data: { content: cleanedContent }
+      //   });
+      //   updatedDbCount++;
+      //   process.stdout.write('u'); // u for updated
+      // } else {
         process.stdout.write('.');
-      }
+      // }
 
       // Store for JSON sync
-      // We need the structure that matches the JSON files.
+      // allContent[record.conditionId] = cleanedContent;
       // Usually the JSON files are arrays of objects or maps?
       // Let's check the file structure first.
       // Assuming the JSON files are arrays of objects with { conditionId, ... }
       
-      allDbContent.set(record.conditionId, {
-        conditionId: record.conditionId,
-        condition: record.condition,
-        content: cleanedContent,
-        // Add other fields if they exist in the DB and are needed in JSON
-        // The DB schema usually has: id, conditionId, condition, content, createdAt, updatedAt
-      });
+      // allDbContent.set(record.conditionId, {
+      //   conditionId: record.conditionId,
+      //   condition: record.condition,
+      //   content: cleanedContent,
+      //   // Add other fields if they exist in the DB and are needed in JSON
+      //   // The DB schema usually has: id, conditionId, condition, content, createdAt, updatedAt
+      // });
     }
     
     cursor = batch[batch.length - 1].id;

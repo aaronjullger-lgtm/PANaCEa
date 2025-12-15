@@ -133,7 +133,7 @@ function getTimeColor(
 export default function DecisionTimeAnalysis({
   performanceData,
   theme = 'light',
-}: DecisionTimeAnalysisProps): JSX.Element {
+}: DecisionTimeAnalysisProps): React.ReactElement {
   const stats = useMemo(
     () => calculateCategoryTimeStats(performanceData),
     [performanceData]

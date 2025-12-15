@@ -114,14 +114,14 @@ export async function createClinicalPearl(
   const pearl = await prisma.clinicalPearl.create({
     data: {
       questionId,
-      conditionId: metadata?.conditionId || null,
-      system: metadata?.system || null,
+      // conditionId: metadata?.conditionId || null,
+      system: metadata?.system || 'GENERAL',
       pearlText: extracted.pearlText,
       fullExplanation,
       category: extracted.category || null,
       tags: extracted.tags,
-      difficulty: metadata?.difficulty || null,
-      extractedBy: metadata?.extractedBy || "ai",
+      // difficulty: metadata?.difficulty || null,
+      // extractedBy: metadata?.extractedBy || "ai",
     },
   });
 

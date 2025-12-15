@@ -80,6 +80,36 @@ export type LabCategory =
  */
 export type MiniLabGameStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
+const SAMPLE_CASES: LabCase[] = [
+  {
+    id: 'sample-1',
+    clinicalContext: '45-year-old female with fatigue and pallor.',
+    patientAge: 45,
+    patientSex: 'F',
+    panels: [],
+    correctDiagnosis: 'Iron Deficiency Anemia',
+    keyFindings: ['Low Hb', 'Low MCV', 'Low Ferritin'],
+    explanation: 'Microcytic anemia with low ferritin is diagnostic of iron deficiency.',
+    category: 'hematology'
+  },
+  {
+    id: 'sample-2',
+    clinicalContext: '18-year-old male with polyuria and polydipsia.',
+    patientAge: 18,
+    patientSex: 'M',
+    panels: [],
+    correctDiagnosis: 'Diabetic Ketoacidosis',
+    keyFindings: ['Hyperglycemia', 'Anion Gap Metabolic Acidosis', 'Ketonemia'],
+    explanation: 'Classic presentation of DKA.',
+    category: 'metabolic'
+  }
+];
+
+function getCasesByCategory(category: LabCategory): LabCase[] {
+  if (category === 'random') return SAMPLE_CASES;
+  return SAMPLE_CASES.filter(c => c.category === category);
+}
+
 // ============================================================================
 // MASTER DIAGNOSIS LIST FOR MINI LAB MODE
 // ============================================================================

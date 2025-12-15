@@ -178,7 +178,7 @@ function generatePresentationQuestion(condition: ConditionMeta): ConditionQuesti
   const correctIndex = shuffledOptions.indexOf(correctPresentation);
   
   return {
-    id: `cond-pres-${condition.id}-${Date.now()}`,
+    id: `cond-pres-${condition.condition.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`,
     type: 'presentation',
     question: `Which presentation is most commonly associated with ${condition.condition}?`,
     options: shuffledOptions,
@@ -209,7 +209,7 @@ function generateDiagnosisQuestion(condition: ConditionMeta): ConditionQuestion 
   const presentation = presentations[Math.floor(Math.random() * presentations.length)];
   
   return {
-    id: `cond-dx-${condition.id}-${Date.now()}`,
+    id: `cond-dx-${condition.condition.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`,
     type: 'diagnosis',
     question: `A patient presents with ${presentation.toLowerCase()}. Based on this presentation and the ${condition.system} system involvement, which diagnosis should be considered?`,
     options: shuffledOptions,
@@ -236,7 +236,7 @@ function generateSystemQuestion(condition: ConditionMeta): ConditionQuestion {
   const correctIndex = shuffledOptions.indexOf(condition.system);
   
   return {
-    id: `cond-sys-${condition.id}-${Date.now()}`,
+    id: `cond-sys-${condition.condition.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`,
     type: 'etiology',
     question: `${condition.condition} primarily affects which organ system?`,
     options: shuffledOptions,
@@ -271,7 +271,7 @@ function generateSubcategoryQuestion(condition: ConditionMeta): ConditionQuestio
   const correctIndex = shuffledOptions.indexOf(condition.subcategory);
   
   return {
-    id: `cond-subcat-${condition.id}-${Date.now()}`,
+    id: `cond-subcat-${condition.condition.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`,
     type: 'complication',
     question: `${condition.condition} falls under which subcategory of ${condition.system} conditions?`,
     options: shuffledOptions,

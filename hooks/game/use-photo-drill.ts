@@ -640,7 +640,7 @@ export function usePhotoDrill(
    */
   const submitAnswer = useCallback(
     (answer: string) => {
-      if (!currentCase || (status !== 'playing' && status !== 'active')) {
+      if (!currentCase || status !== 'playing') {
         return;
       }
 
@@ -701,7 +701,7 @@ export function usePhotoDrill(
         setCurrentCaseIndex((prev) => prev + 1);
         setUserAnswer(null);
         setIsCorrect(null);
-        setStatus('active');
+        setStatus('playing');
       }
     }
   }, [currentCaseIndex, totalCases, selectedCategory, generateNewCase]);
@@ -710,7 +710,7 @@ export function usePhotoDrill(
    * Skip the current case (counts as incorrect).
    */
   const skipCase = useCallback(() => {
-    if (status !== 'playing' && status !== 'active') {
+    if (status !== 'playing') {
       return;
     }
 
@@ -731,7 +731,7 @@ export function usePhotoDrill(
         setStatus('summary');
       } else {
         setCurrentCaseIndex((prev) => prev + 1);
-        setStatus('active');
+        setStatus('playing');
       }
     }
   }, [currentCaseIndex, totalCases, status, selectedCategory, generateNewCase]);
@@ -757,7 +757,7 @@ export function usePhotoDrill(
       setQueue(newQueue);
       setStatus('playing');
     } else {
-      setStatus('active');
+      setStatus('playing');
     }
   }, [selectedCategory, generateNewCase]);
 

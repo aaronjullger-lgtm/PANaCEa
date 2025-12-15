@@ -186,6 +186,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
   }, [selectedCategory, generateNewQuestion]);
 
   return {
+    isLoading,
     currentQuestion,
     score,
     streak,

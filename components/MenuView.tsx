@@ -560,14 +560,14 @@ const MenuView: React.FC<MenuViewProps> = ({
                   <button
                     key={result.id}
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (result.type === "condition" && result.conditionData) {
                         const meta = findConditionMetaById(result.id);
                         if (meta) {
                           setSelectedCondition(meta);
                         }
                       } else if (result.type === "drug" && result.drugData) {
-                        const drug = findDrugByName(result.drugData.drugName);
+                        const drug = await findDrugByName(result.drugData.drugName);
                         if (drug) {
                           setSelectedDrug(drug);
                         }
@@ -936,7 +936,7 @@ const MenuView: React.FC<MenuViewProps> = ({
             <button
               onClick={() => {
                 setShowLeaderboard(false);
-                onStartMode("grand_rounds");
+                onNavigateToDrillMode("grand_rounds");
               }}
               className="w-full px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors"
             >

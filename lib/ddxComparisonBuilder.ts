@@ -6,7 +6,7 @@
  * to extract and compare key clinical features.
  */
 
-import type { DDxComparison } from './confusionService';
+import type { DDxComparison } from './services/confusionService';
 
 // ============================================================================
 // Types

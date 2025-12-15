@@ -95,7 +95,7 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
     isLoading: isDataLoading,
   } = usePharmDrill();
 
-  // const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleExit = () => {
     exitToMenu();
@@ -275,7 +275,7 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
           <div className="max-w-3xl mx-auto">
             <QuestionCard
               question={currentQuestion.question}
-              category={currentQuestion.drugClass}
+              category={Array.isArray(currentQuestion.drugClass) ? currentQuestion.drugClass[0] : currentQuestion.drugClass}
               subcategory={currentQuestion.type.replace('_', ' ')}
             />
 
