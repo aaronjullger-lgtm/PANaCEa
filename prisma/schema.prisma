@@ -24,6 +24,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -79,7 +80,7 @@ model User {
   patientEncounterSessions PatientEncounterSession[]
 
   /// Admin audit logs (for admin users)
-  adminAuditLogs     AdminAuditLog[]
+  // adminAuditLogs     AdminAuditLog[]
 
   /// Social
   studyGroups        StudyGroupMember[]

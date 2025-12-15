@@ -20,7 +20,7 @@
  * @see https://www.prisma.io/docs/orm/prisma-client/deployment/edge/deploy-to-cloudflare
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client/wasm';
 import { withAccelerate } from '@prisma/extension-accelerate';
 
 /**
