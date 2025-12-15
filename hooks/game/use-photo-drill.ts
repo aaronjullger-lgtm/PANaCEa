@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
+import { submitDrillResult } from '@/services/drillService';
 
 // ============================================================================
 // INTERFACES
@@ -656,6 +657,22 @@ export function usePhotoDrill(
       } else {
         setStreak(0);
       }
+
+      // Submit result
+      const drillTypeMap: Record<string, 'radiology' | 'ecg' | 'derm'> = {
+        'xray': 'radiology',
+        'ecg': 'ecg',
+        'derm': 'derm'
+      };
+      
+      const drillType = drillTypeMap[currentCase.modality] || 'radiology';
+
+      submitDrillResult(
+        drillType,
+        currentCase.id,
+        correct,
+        { title: currentCase.correctDiagnosis, category: currentCase.modality }
+      );
 
       setStatus('feedback');
     },

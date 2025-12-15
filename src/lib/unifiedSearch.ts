@@ -229,10 +229,10 @@ function searchTreatmentsInternal(query: string): UnifiedSearchResult[] {
  * Unified search that combines conditions and drugs with intelligent ranking.
  * Enhanced with de-duplication, clean display names, and all content types.
  */
-export function unifiedSearch(
+export async function unifiedSearch(
   query: string, 
   options: { groupByType?: boolean; limit?: number } = {}
-): UnifiedSearchResult[] | GroupedSearchResults {
+): Promise<UnifiedSearchResult[] | GroupedSearchResults> {
   const { groupByType = false, limit = 30 } = options;
   const trimmedQuery = query.trim();
   
@@ -248,7 +248,7 @@ export function unifiedSearch(
 
   // Search all content types
   const conditionResults = searchConditions(trimmedQuery);
-  const drugResults = searchDrugs(trimmedQuery);
+  const drugResults = await searchDrugs(trimmedQuery);
   const testResults = searchSpecialTestsInternal(trimmedQuery);
   const physiologyResults = searchPhysiologyInternal(trimmedQuery);
   const treatmentResults = searchTreatmentsInternal(trimmedQuery);

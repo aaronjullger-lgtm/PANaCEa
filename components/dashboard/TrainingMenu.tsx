@@ -228,17 +228,17 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             disabled={option.disabled}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-1.5 ${
               focus === option.value
-                ? 'bg-[#1F283A] text-[#E9ECF1] shadow-md dark:bg-[#E9ECF1] dark:text-[#1F283A]'
+                ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] shadow-md'
                 : option.disabled
-                ? 'bg-slate-100 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-500'
-                : 'bg-white text-[#364154] hover:bg-slate-50 border border-slate-200 shadow-sm dark:bg-[#1F283A] dark:text-[#E9ECF1] dark:border-slate-700 dark:hover:bg-[#364154]'
+                ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
+                : 'bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] border border-[var(--color-border)] shadow-sm'
             }`}
           >
             {option.value === 'due' && <Clock className="w-3.5 h-3.5" />}
             {option.label}
             {option.count !== undefined && option.count > 0 && (
               <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                focus === option.value ? 'bg-white/20 text-white dark:bg-[#1F283A]/20 dark:text-[#1F283A]' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                focus === option.value ? 'bg-[var(--color-bg-primary)]/20 text-[var(--color-bg-primary)]' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)]'
               }`}>
                 {option.count}
               </span>
@@ -261,9 +261,9 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   } => {
     // Clinical Theme: Clean whites/navy with subtle color accents
     const baseStyles = {
-      light: 'bg-white dark:bg-[#1F283A]',
-      border: 'border-slate-200 dark:border-slate-700',
-      iconBg: 'bg-[#E9ECF1] dark:bg-[#364154]',
+      light: 'bg-[var(--color-bg-primary)]',
+      border: 'border-[var(--color-border)]',
+      iconBg: 'bg-[var(--color-bg-tertiary)]',
     };
 
     switch (modeId) {

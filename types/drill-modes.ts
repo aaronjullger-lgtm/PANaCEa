@@ -147,14 +147,14 @@ export interface PatientQuestion {
 }
 
 export interface EncounterSession {
+  id?: string; // Database session ID
   caseId: string;
   questions: PatientQuestion[];
   startTime: number;
   endTime?: number;
-  diagnosis?: string;
   score?: {
-    efficiency: number; // 0-100, based on unnecessary questions
-    thoroughness: number; // 0-100, based on essential questions asked
+    efficiency: number;
+    thoroughness: number;
     overall: number;
   };
 }

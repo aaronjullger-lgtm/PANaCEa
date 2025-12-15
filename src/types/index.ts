@@ -323,3 +323,15 @@ export interface ClinicalCase {
   /** Optional: Links to foundational basic science concepts */
   basicScienceLinks?: BasicScienceLink[];
 }
+
+/**
+ * Buzzword entry for quick reference
+ */
+export interface BuzzwordEntry {
+  id?: string;
+  buzzword: string;
+  condition: string;
+  system: SystemCode;
+  subcategory?: string;
+  explanation?: string;
+}

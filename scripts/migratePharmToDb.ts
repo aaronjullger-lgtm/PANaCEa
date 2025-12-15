@@ -43,10 +43,23 @@ async function migratePharmData() {
       const indications = Array.isArray(drug.indications) ? drug.indications : (drug.indications ? [drug.indications] : []);
       const contraindications = Array.isArray(drug.contraindications) ? drug.contraindications : (drug.contraindications ? [drug.contraindications] : []);
       const sideEffects = Array.isArray(drug.ADEs) ? drug.ADEs : (drug.ADEs ? [drug.ADEs] : []);
-      const interactions = Array.isArray(drug.interactions) ? drug.interactions : (drug.interactions ? [drug.interactions] : []);
+      
+      const rawInteractions = Array.isArray(drug.interactions) ? drug.interactions : (drug.interactions ? [drug.interactions] : []);
+      const interactions = rawInteractions.map((i: any) => {
+        if (typeof i === 'object' && i !== null && i.drug && i.effect) {
+            return `${i.drug}: ${i.effect}`;
+        }
+        return String(i);
+      });
+
       const dosing = drug.dosing || null;
       const tags = drug.tags ? (Array.isArray(drug.tags) ? drug.tags.flat() : [drug.tags]) : [];
       
+      const metabolism = drug.pharmacokinetics?.metabolism || null;
+      const elimination = drug.pharmacokinetics?.elimination || null;
+      const clinicalNotes = drug.clinicalNotes || null;
+      const antidote = drug.antidote || null;
+
       // Upsert into Drug table
       await prisma.drug.upsert({
         where: { 
@@ -68,6 +81,10 @@ async function migratePharmData() {
           interactions: interactions, // Json
           dosing,
           tags: drug.type ? (Array.isArray(drug.type) ? drug.type.flat() : [drug.type]) : [],
+          clinicalNotes,
+          antidote,
+          metabolism,
+          elimination,
           updatedAt: new Date(),
         },
         create: {
@@ -80,6 +97,10 @@ async function migratePharmData() {
           interactions: interactions,
           dosing,
           tags: drug.type ? (Array.isArray(drug.type) ? drug.type.flat() : [drug.type]) : [],
+          clinicalNotes,
+          antidote,
+          metabolism,
+          elimination,
         },
       });
 

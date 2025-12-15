@@ -3,45 +3,67 @@
 
 import type { DrugEntry, DrugSearchResult, DrugSearchFilters } from "../../pharm/drugTypes";
 import { BRAND_NAME_MAP } from "../../lib/drugBrandNames";
+import { drugService } from "../../services/drugService";
 
-// Import the drug data from JSON
-// Note: This will be loaded at build time by Vite
-import drugDataJson from "../../pharm/drugData.json";
+// Cache for drugs loaded from API
+let drugRegistry: Map<string, DrugEntry> | null = null;
 
-// Cast the imported JSON to our expected type
-const drugData = drugDataJson as Record<string, DrugEntry>;
+// Helper to map Prisma Drug to DrugEntry
+function mapDrugToEntry(drug: any): DrugEntry {
+  return {
+    term: drug.genericName,
+    type: 'Small Molecule', // Default
+    class: drug.drugClass[0] || '',
+    subclass: drug.drugClass[1] || '',
+    MOA: drug.mechanismOfAction || '',
+    ADEs: drug.sideEffects,
+    contraindications: drug.contraindications,
+    interactions: drug.interactions,
+    pharmacokinetics: {
+      metabolism: drug.metabolism || '',
+      elimination: drug.elimination || ''
+    },
+    clinicalNotes: drug.clinicalNotes || '',
+    antidote: drug.antidote || '',
+    ingredients: []
+  };
+}
 
-// Build a lookup for efficient searching
-const drugRegistry: Map<string, DrugEntry> = new Map();
-
-// Map of normalized names to canonical names for deduplication
-const canonicalNameMap: Map<string, string> = new Map();
-
-// Initialize the registry with deduplication
-for (const [key, entry] of Object.entries(drugData)) {
-  // Normalize for deduplication by removing all non-alphanumeric characters
-  // This helps identify duplicates like "aspirin" and "Acetylsalicylic Acid"
-  const normalized = entry.term.toLowerCase().replace(/[^a-z0-9]/g, '');
+async function ensureRegistryLoaded() {
+  if (drugRegistry) return;
   
-  // Check if this is a duplicate
-  if (!canonicalNameMap.has(normalized)) {
-    canonicalNameMap.set(normalized, key);
-    drugRegistry.set(key.toLowerCase(), entry);
-  } else {
-    // If duplicate found, keep the shorter/simpler name
-    const existingKey = canonicalNameMap.get(normalized)!;
-    if (key.length < existingKey.length || key.toLowerCase() === key) {
-      // Replace with simpler name
-      drugRegistry.delete(existingKey.toLowerCase());
-      drugRegistry.set(key.toLowerCase(), entry);
-      canonicalNameMap.set(normalized, key);
+  try {
+    const drugs = await drugService.getAll();
+    drugRegistry = new Map();
+    
+    // Map of normalized names to canonical names for deduplication
+    const canonicalNameMap: Map<string, string> = new Map();
+
+    for (const drug of drugs) {
+      const entry = mapDrugToEntry(drug);
+      const key = entry.term.toLowerCase();
+      
+      // Normalize for deduplication
+      const normalized = entry.term.toLowerCase().replace(/[^a-z0-9]/g, '');
+      
+      if (!canonicalNameMap.has(normalized)) {
+        canonicalNameMap.set(normalized, key);
+        drugRegistry.set(key, entry);
+      } else {
+        const existingKey = canonicalNameMap.get(normalized)!;
+        if (key.length < existingKey.length || key === existingKey) {
+          drugRegistry.delete(existingKey);
+          drugRegistry.set(key, entry);
+          canonicalNameMap.set(normalized, key);
+        }
+      }
     }
+  } catch (error) {
+    console.error("Failed to load drugs for search:", error);
+    drugRegistry = new Map();
   }
 }
 
-/**
- * Levenshtein distance for fuzzy matching
- */
 function levenshtein(a: string, b: string): number {
   const dp = Array.from({ length: a.length + 1 }, () =>
     new Array(b.length + 1).fill(0)
@@ -62,47 +84,27 @@ function levenshtein(a: string, b: string): number {
   return dp[a.length][b.length];
 }
 
-/**
- * Calculate similarity score between query and target
- */
 function similarityScore(query: string, target: string): number {
   const normalizedQuery = query.toLowerCase();
   const normalizedTarget = target.toLowerCase();
   
-  // Exact match gets highest score
-  if (normalizedTarget === normalizedQuery) {
-    return 3;
-  }
-  
-  // Starts with match gets higher score (checked before includes)
-  if (normalizedTarget.startsWith(normalizedQuery)) {
-    return 2.5;
-  }
-  
-  // Contains match gets high score
+  if (normalizedTarget === normalizedQuery) return 3;
+  if (normalizedTarget.startsWith(normalizedQuery)) return 2.5;
   if (normalizedTarget.includes(normalizedQuery)) {
     const lengthBoost = normalizedQuery.length / Math.max(normalizedTarget.length, 1);
     return 2 + lengthBoost;
   }
   
-  // Fuzzy match based on Levenshtein distance
   const distance = levenshtein(normalizedQuery, normalizedTarget);
   return 1 / (1 + distance);
 }
 
-/**
- * Get the best score across multiple terms, including brand names
- */
 function bestTermScore(query: string, term: string | undefined | null): number {
   if (!term || typeof term !== 'string') return 0;
   
   const candidates = [term, ...term.split(/\s+|[-–—]/).filter(Boolean)];
-  
-  // Also check brand name if this is a generic drug
   const brandName = BRAND_NAME_MAP[term.toLowerCase()];
-  if (brandName) {
-    candidates.push(brandName);
-  }
+  if (brandName) candidates.push(brandName);
   
   return candidates.reduce(
     (score, candidate) => Math.max(score, similarityScore(query, candidate)),
@@ -110,120 +112,76 @@ function bestTermScore(query: string, term: string | undefined | null): number {
   );
 }
 
-/**
- * Properly capitalize a drug name for display
- * Handles common abbreviations (SSRI, ACE, etc.) specially
- */
 function capitalizeDrugName(name: string | undefined | null): string {
   if (!name || typeof name !== 'string') return "";
-  
-  // Handle special abbreviations that should be fully uppercase
   const specialCases: Record<string, string> = {
-    'nsaid': 'NSAID',
-    'ssri': 'SSRI',
-    'snri': 'SNRI',
-    'maoi': 'MAOI',
-    'ace': 'ACE',
-    'arb': 'ARB',
-    'hiv': 'HIV',
-    'dpp': 'DPP',
-    'sglt': 'SGLT',
-    'glp': 'GLP',
+    'nsaid': 'NSAID', 'ssri': 'SSRI', 'snri': 'SNRI', 'maoi': 'MAOI',
+    'ace': 'ACE', 'arb': 'ARB', 'hiv': 'HIV', 'dpp': 'DPP', 'sglt': 'SGLT', 'glp': 'GLP',
   };
-  
-  return name
-    .split(/\s+/)
-    .map(word => {
-      const lower = word.toLowerCase();
-      if (specialCases[lower]) {
-        return specialCases[lower];
-      }
-      // For regular words, capitalize first letter and lowercase the rest
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-    })
-    .join(' ');
+  return name.split(/\s+/).map(word => {
+    const lower = word.toLowerCase();
+    return specialCases[lower] || (word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+  }).join(' ');
 }
 
-/**
- * Generate a stable ID for a drug entry
- */
 function generateDrugId(drugName: string): string {
   return `DRUG__${drugName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "")}`;
 }
 
-/**
- * Get list of unique drug classes
- */
-export function getDrugClassOptions(): string[] {
+export async function getDrugClassOptions(): Promise<string[]> {
+  await ensureRegistryLoaded();
+  if (!drugRegistry) return [];
   const classes = new Set<string>();
   for (const entry of drugRegistry.values()) {
-    if (entry.class && entry.class !== "N/A") {
-      classes.add(entry.class);
-    }
+    if (entry.class && entry.class !== "N/A") classes.add(entry.class);
   }
   return Array.from(classes).sort();
 }
 
-/**
- * Get list of unique drug types
- */
-export function getDrugTypeOptions(): string[] {
+export async function getDrugTypeOptions(): Promise<string[]> {
+  await ensureRegistryLoaded();
+  if (!drugRegistry) return [];
   const types = new Set<string>();
   for (const entry of drugRegistry.values()) {
-    if (entry.type && entry.type !== "N/A") {
-      types.add(entry.type);
-    }
+    if (entry.type && entry.type !== "N/A") types.add(entry.type);
   }
   return Array.from(types).sort();
 }
 
-/**
- * Search for drugs by name, class, or ingredients (including brand names)
- */
-export function searchDrugs(
+export async function searchDrugs(
   rawQuery: string,
   filters: DrugSearchFilters = {}
-): DrugSearchResult[] {
+): Promise<DrugSearchResult[]> {
+  await ensureRegistryLoaded();
+  if (!drugRegistry) return [];
+
   const query = rawQuery.trim();
   if (!query) return [];
 
   const results: DrugSearchResult[] = [];
 
   for (const [key, entry] of drugRegistry.entries()) {
-    // Apply filters
     if (filters.drugClass && entry.class !== filters.drugClass) continue;
     if (filters.type && entry.type !== filters.type) continue;
-
-    // Skip invalid entries
     if (!entry.class || entry.class === "N/A" || !entry.term || entry.term === "N/A") continue;
 
-    // Build list of searchable terms - safely handle missing/invalid ingredients
     const ingredients = Array.isArray(entry.ingredients) 
       ? entry.ingredients.filter(i => typeof i === 'string')
       : [];
     const searchTerms = [entry.term, ...ingredients];
-    
-    // Add brand name as searchable term if available
     const brandName = BRAND_NAME_MAP[entry.term.toLowerCase()];
-    if (brandName) {
-      searchTerms.push(brandName);
-    }
+    if (brandName) searchTerms.push(brandName);
 
     let bestScore = 0;
-
-    // Score against drug name, ingredients, and brand name
     for (const term of searchTerms) {
       const score = bestTermScore(query, term);
       if (score > bestScore) bestScore = score;
     }
 
-    // Also check if query matches the class name (lower weight)
     if (entry.class) {
-      const classScore = bestTermScore(query, entry.class) * 0.6; // Lower weight for class matches
+      const classScore = bestTermScore(query, entry.class) * 0.6;
       if (classScore > bestScore) bestScore = classScore;
     }
-
-    // Also check subclass (even lower weight)
     if (entry.subclass) {
       const subclassScore = bestTermScore(query, entry.subclass) * 0.5;
       if (subclassScore > bestScore) bestScore = subclassScore;
@@ -250,15 +208,13 @@ export function searchDrugs(
     .slice(0, 30);
 }
 
-/**
- * Find a drug entry by its ID or name
- */
-export function findDrugById(id: string): DrugEntry | undefined {
-  // Extract drug name from ID format: DRUG__drug_name
+export async function findDrugById(id: string): Promise<DrugEntry | undefined> {
+  await ensureRegistryLoaded();
+  if (!drugRegistry) return undefined;
+
   const match = id.match(/^DRUG__(.+)$/);
   if (match) {
     const normalizedName = match[1].replace(/_/g, " ");
-    // Try to find by normalized name
     for (const [key, entry] of drugRegistry.entries()) {
       if (key === normalizedName || 
           entry.term.toLowerCase().replace(/\s+/g, " ").replace(/[^a-z0-9 ]/g, "") === normalizedName.replace(/_/g, " ")) {
@@ -266,34 +222,26 @@ export function findDrugById(id: string): DrugEntry | undefined {
       }
     }
   }
-  
-  // Direct lookup by name
   return drugRegistry.get(id.toLowerCase());
 }
 
-/**
- * Find a drug entry by its name
- */
-export function findDrugByName(name: string): DrugEntry | undefined {
+export async function findDrugByName(name: string): Promise<DrugEntry | undefined> {
+  await ensureRegistryLoaded();
+  if (!drugRegistry) return undefined;
   return drugRegistry.get(name.toLowerCase());
 }
 
-/**
- * Get all drugs in a specific class
- */
-export function getDrugsByClass(drugClass: string): DrugEntry[] {
+export async function getDrugsByClass(drugClass: string): Promise<DrugEntry[]> {
+  await ensureRegistryLoaded();
+  if (!drugRegistry) return [];
   const results: DrugEntry[] = [];
   for (const entry of drugRegistry.values()) {
-    if (entry.class === drugClass) {
-      results.push(entry);
-    }
+    if (entry.class === drugClass) results.push(entry);
   }
   return results.sort((a, b) => a.term.localeCompare(b.term));
 }
 
-/**
- * Get the total count of drugs in the registry
- */
-export function getDrugCount(): number {
-  return drugRegistry.size;
+export async function getDrugCount(): Promise<number> {
+  await ensureRegistryLoaded();
+  return drugRegistry ? drugRegistry.size : 0;
 }

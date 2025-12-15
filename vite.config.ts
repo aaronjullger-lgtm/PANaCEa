@@ -103,14 +103,8 @@ export default defineConfig(({ mode }) => {
               }
               
               // Split large data files into separate chunks for lazy loading
-              if (id.includes('drugData.json')) {
-                return 'data-drugs';
-              }
               if (id.includes('conditionContent')) {
                 return 'data-conditions';
-              }
-              if (id.includes('labCases.json')) {
-                return 'data-labs';
               }
               
               // Split drill mode components for better code splitting

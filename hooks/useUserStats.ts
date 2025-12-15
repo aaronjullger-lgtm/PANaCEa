@@ -258,6 +258,17 @@ export function useUserStats(): UseUserStatsResult {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn]); // Only trigger on sign-in state change, not on every clerkId change
 
+  // Listen for external updates (e.g. from performanceService)
+  useEffect(() => {
+    const handleUpdate = () => {
+      const newData = safeParse<PerformanceRecord[]>(localStorage.getItem(PERFORMANCE_KEY), []);
+      setPerformanceDataState(newData);
+    };
+
+    window.addEventListener('performance-updated', handleUpdate);
+    return () => window.removeEventListener('performance-updated', handleUpdate);
+  }, []);
+
   // Wrapper setters that also trigger cloud sync with proper debouncing
   const setPerformanceData = useCallback((data: PerformanceRecord[] | ((prev: PerformanceRecord[]) => PerformanceRecord[])) => {
     setPerformanceDataState(data);

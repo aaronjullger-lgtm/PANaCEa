@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
-import { FIRST_LINE_TREATMENTS, type FirstLineTreatment } from '@/data/firstLineTreatmentData';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { firstLineService } from '@/services/firstLineService';
+import type { FirstLineTreatment } from '@prisma/client';
 
 export type FirstLineDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
@@ -21,7 +22,7 @@ export interface FirstLineQuestion {
   options: string[];
   correctAnswerIndex: number;
   explanation: string;
-  pearl?: string;
+  pearl?: string | null;
 }
 
 export interface UseFirstLineDrillReturn {
@@ -33,6 +34,7 @@ export interface UseFirstLineDrillReturn {
   isCorrect: boolean | null;
   status: FirstLineDrillStatus;
   selectedCategory: FirstLineCategory;
+  isLoading: boolean;
   submitAnswer: (answerIndex: number) => void;
   nextQuestion: () => void;
   reset: () => void;
@@ -41,15 +43,15 @@ export interface UseFirstLineDrillReturn {
   showCategoryMenu: () => void;
 }
 
-function getRandomTreatments(count: number, exclude: string): FirstLineTreatment[] {
-  return FIRST_LINE_TREATMENTS
+function getRandomTreatments(treatments: FirstLineTreatment[], count: number, exclude: string): FirstLineTreatment[] {
+  return treatments
     .filter(t => t.firstLine !== exclude)
     .sort(() => Math.random() - 0.5)
     .slice(0, count);
 }
 
-function generateQuestion(treatment: FirstLineTreatment): FirstLineQuestion {
-  const distractors = getRandomTreatments(3, treatment.firstLine);
+function generateQuestion(treatment: FirstLineTreatment, allTreatments: FirstLineTreatment[]): FirstLineQuestion {
+  const distractors = getRandomTreatments(allTreatments, 3, treatment.firstLine);
   const options = [
     treatment.firstLine,
     ...distractors.map(d => d.firstLine)
@@ -70,15 +72,16 @@ function generateQuestion(treatment: FirstLineTreatment): FirstLineQuestion {
 }
 
 function getRandomTreatmentByCategory(
+  treatments: FirstLineTreatment[],
   category: FirstLineCategory, 
   exclude?: Set<string>
 ): FirstLineTreatment {
-  let pool = FIRST_LINE_TREATMENTS;
+  let pool = treatments;
   
   if (category !== 'random') {
-    pool = FIRST_LINE_TREATMENTS.filter(t => t.category === category);
+    pool = treatments.filter(t => t.category === category);
     if (pool.length === 0) {
-      pool = FIRST_LINE_TREATMENTS;
+      pool = treatments;
     }
   }
   
@@ -98,6 +101,9 @@ const MAX_RECENT_CONDITIONS = 15; // Track last 15 conditions to avoid repetitio
 
 export function useFirstLineDrill(): UseFirstLineDrillReturn {
   const [selectedCategory, setSelectedCategory] = useState<FirstLineCategory>('random');
+  const [allTreatments, setAllTreatments] = useState<FirstLineTreatment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [queue, setQueue] = useState<FirstLineQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -110,10 +116,26 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
   // Track recently used conditions to avoid repetition
   const recentConditionsRef = useRef<Set<string>>(new Set());
 
+  useEffect(() => {
+    const loadTreatments = async () => {
+      try {
+        const data = await firstLineService.getAll();
+        setAllTreatments(data);
+      } catch (error) {
+        console.error("Failed to load first line treatments", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadTreatments();
+  }, []);
+
   const currentQuestion = queue[currentIndex] ?? null;
 
   const generateNewQuestion = useCallback((category: FirstLineCategory): FirstLineQuestion => {
-    const treatment = getRandomTreatmentByCategory(category, recentConditionsRef.current);
+    if (allTreatments.length === 0) return {} as FirstLineQuestion; // Should be guarded by isLoading
+
+    const treatment = getRandomTreatmentByCategory(allTreatments, category, recentConditionsRef.current);
     
     // Add to recent conditions and maintain max size
     recentConditionsRef.current.add(treatment.condition);
@@ -122,10 +144,12 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
       if (firstItem) recentConditionsRef.current.delete(firstItem);
     }
     
-    return generateQuestion(treatment);
-  }, []);
+    return generateQuestion(treatment, allTreatments);
+  }, [allTreatments]);
 
   const startSession = useCallback((category: FirstLineCategory) => {
+    if (allTreatments.length === 0) return;
+
     setSelectedCategory(category);
     recentConditionsRef.current.clear(); // Clear history on new session
     
@@ -142,7 +166,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [generateNewQuestion]);
+  }, [generateNewQuestion, allTreatments]);
 
   const showCategoryMenu = useCallback(() => {
     setStatus('menu');
@@ -214,6 +238,7 @@ export function useFirstLineDrill(): UseFirstLineDrillReturn {
     isCorrect,
     status,
     selectedCategory,
+    isLoading,
     submitAnswer,
     nextQuestion,
     reset,

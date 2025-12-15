@@ -5,6 +5,7 @@ import type { AntibioticDrillQuestion, OrganismInfection, AntibioticDrug } from 
 import { ORGANISMS, ANTIBIOTICS, COVERAGE_MAP, generateAntibioticDrill } from '@/data/modes/antibioticData';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { toTitleCase } from '@/lib/textUtils';
+import { submitDrillResult } from '@/services/drillService';
 
 interface AntibioticModeProps {
   onExit?: () => void;
@@ -79,6 +80,14 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
     } else {
       hapticError();
     }
+
+    // Submit result to backend
+    submitDrillResult(
+      'antibiotic',
+      currentDrill.id,
+      correct,
+      { title: getDrillTypeLabel(), category: currentDrill.type }
+    );
   };
 
   const toggleDrugSelection = (drugId: string) => {

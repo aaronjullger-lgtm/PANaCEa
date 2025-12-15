@@ -30,7 +30,7 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ onClose }: AdminDashboardProps) {
-  const { userId, isSignedIn } = useAuth();
+  const { userId, isSignedIn, getToken } = useAuth();
   const [userRole, setUserRole] = useState<UserRole>('user');
   const [hasAccess, setHasAccess] = useState(false);
   const [stats, setStats] = useState<AdminStats>({
@@ -42,8 +42,6 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check user role from Clerk metadata or database
-    // In production, this would fetch from your API
     const checkAccess = async () => {
       if (!isSignedIn || !userId) {
         setHasAccess(false);
@@ -52,20 +50,27 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
       }
 
       try {
-        // Fetch user role from Clerk metadata or localStorage
-        // In production, this could be fetched from Clerk's user metadata or database
-        // For now, using localStorage as the role is set during authentication
-        const storedRole = localStorage.getItem(`panacea_user_role_${userId}`);
-        const role = (storedRole as UserRole) || 'user';
-        setUserRole(role);
+        const token = await getToken();
         
-        const access = isAdmin(role);
-        setHasAccess(access);
+        // Verify admin access via API
+        const accessResponse = await fetch('/api/admin/check-access', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-        if (access) {
+        if (accessResponse.ok) {
+          setHasAccess(true);
+          setUserRole('admin');
+
           // Load admin stats from API
           try {
-            const statsResponse = await fetch('/api/admin/stats');
+            const statsResponse = await fetch('/api/admin/stats', {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
             if (statsResponse.ok) {
               const { data } = await statsResponse.json();
               setStats({
@@ -84,7 +89,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
               });
             }
           } catch (statsError) {
-            // Fallback to placeholder stats if API fails
+            console.error('Failed to fetch stats:', statsError);
+            // Fallback to placeholder stats
             setStats({
               totalUsers: 150,
               activeUsers: 78,
@@ -92,6 +98,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
               avgAccuracy: 76.5,
             });
           }
+        } else {
+          setHasAccess(false);
         }
       } catch (error) {
         console.error('Failed to check admin access:', error);
@@ -102,7 +110,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
     };
 
     checkAccess();
-  }, [userId, isSignedIn]);
+  }, [isSignedIn, userId, getToken]);
 
   if (isLoading) {
     return (

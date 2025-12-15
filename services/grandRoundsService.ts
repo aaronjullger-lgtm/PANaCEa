@@ -212,3 +212,37 @@ export function calculateScore(
     timeBonus
   };
 }
+
+/**
+ * Fetch questions by IDs
+ * @param questionIds Array of question IDs
+ */
+export async function fetchQuestionsByIds(questionIds: string[]): Promise<Question[]> {
+  try {
+    const response = await fetch('/api/questions/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: questionIds })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch questions');
+    }
+    
+    const data = await response.json();
+    return data.questions;
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    // Fallback to mock questions if API fails
+    return questionIds.map((id, i) => ({
+      id,
+      question: `Fallback Question ${i + 1}`,
+      options: ['Option A', 'Option B', 'Option C', 'Option D'],
+      correctAnswer: 'Option A',
+      explanation: 'Failed to load question content.',
+      system: 'General',
+      difficulty: 'medium',
+      type: 'mcq'
+    }));
+  }
+}

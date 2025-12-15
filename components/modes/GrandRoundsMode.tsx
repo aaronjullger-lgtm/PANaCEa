@@ -28,8 +28,10 @@ import {
   getTodaysLeaderboard, 
   submitCompletion,
   hasCompletedToday,
+  fetchQuestionsByIds,
   type LeaderboardEntry 
 } from '@/services/grandRoundsService';
+import { submitDrillResult } from '@/services/drillService';
 import type { Question } from '@/types';
 
 interface GrandRoundsModeProps {
@@ -87,28 +89,29 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     setError(null);
     
     try {
-      // Fetch today's challenge from API
+            // Fetch today's challenge from API
       const challenge = await getTodaysChallenge();
       
-      // TODO: Load actual questions based on challenge.questionIds
-      // For now, using sample questions - this will be replaced when question loading is implemented
-      // const loadedQuestions = await loadQuestionsByIds(challenge.questionIds);
+      // Load actual questions based on challenge.questionIds
+      let loadedQuestions: Question[] = [];
       
-      // Temporary: Generate 5 mock questions with the challenge seed
-      const mockQuestions: Question[] = Array.from({ length: 5 }, (_, i) => ({
-        id: `gr-${challenge.id}-${i}`,
-        question: `Challenge Question ${i + 1} (from API challenge ${challenge.id})`,
-        options: ['Option A', 'Option B', 'Option C', 'Option D'],
-        correctAnswer: Math.floor(Math.random() * 4),
-        explanation: 'This is a temporary explanation. Real questions will come from the database.',
-        condition: 'Grand Rounds',
-        conditionId: 'grand-rounds',
-        system: 'CV' as const,
-        difficulty: 'medium' as const,
-        questionType: 'multiple_choice' as const
-      }));
+      if (challenge.questionIds && challenge.questionIds.length > 0) {
+        loadedQuestions = await fetchQuestionsByIds(challenge.questionIds);
+      } else {
+        // Fallback if no IDs returned (e.g. dev mode without seed)
+        loadedQuestions = Array.from({ length: 5 }, (_, i) => ({
+          id: `gr-${challenge.id}-${i}`,
+          question: `Challenge Question ${i + 1} (from API challenge ${challenge.id})`,
+          options: ['Option A', 'Option B', 'Option C', 'Option D'],
+          correctAnswer: 'Option A',
+          explanation: 'This is a daily challenge question.',
+          system: 'General',
+          difficulty: 'medium',
+          type: 'mcq'
+        }));
+      }
       
-      setQuestions(mockQuestions);
+      setQuestions(loadedQuestions);
       setCurrentQuestionIndex(0);
       setMyScore(0);
       setMyCorrectAnswers(0);
@@ -167,6 +170,17 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     } else {
       hapticError();
     }
+
+    // Persist result to general stats
+    submitDrillResult(
+      'grand_rounds',
+      currentQuestion.id || `gr-${Date.now()}`,
+      isCorrect,
+      { 
+        title: currentQuestion.system || 'Grand Rounds', 
+        category: currentQuestion.topic || 'General' 
+      }
+    );
   }, [selectedAnswer, isSubmitted, currentQuestion, currentQuestionIndex]);
 
   const handleNext = useCallback(async () => {

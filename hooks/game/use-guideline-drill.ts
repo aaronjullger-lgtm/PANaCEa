@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo } from 'react';
-import { GUIDELINES_DATABASE, getGuidelineById, type Guideline, type GuidelineCase } from '@/data/guidelinesData';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { guidelineService } from '@/services/guidelineService';
+import type { Guideline, GuidelineCase } from '@/types/guidelines';
 
 export type GuidelineDrillStatus = 'menu' | 'selecting' | 'playing' | 'feedback' | 'summary';
 
@@ -28,6 +29,7 @@ export interface UseGuidelineDrillReturn {
   status: GuidelineDrillStatus;
   allGuidelines: Guideline[];
   sessionResult: GuidelineSessionResult | null;
+  isLoading: boolean;
   selectGuideline: (guidelineId: string) => void;
   submitScore: (score: number) => void;
   nextVignette: () => void;
@@ -45,8 +47,22 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
   const [streak, setStreak] = useState(0);
   const [status, setStatus] = useState<GuidelineDrillStatus>('menu');
   const [sessionResults, setSessionResults] = useState<GuidelineSessionResult['cases']>([]);
+  const [allGuidelines, setAllGuidelines] = useState<Guideline[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const allGuidelines = useMemo(() => GUIDELINES_DATABASE, []);
+  useEffect(() => {
+    const loadGuidelines = async () => {
+      try {
+        const data = await guidelineService.getAllGuidelines();
+        setAllGuidelines(data);
+      } catch (error) {
+        console.error("Failed to load guidelines", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadGuidelines();
+  }, []);
 
   const currentVignette = useMemo(() => {
     if (!currentGuideline || currentVignetteIndex >= currentGuideline.vignettes.length) {
@@ -69,7 +85,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
   }, [status, currentGuideline, sessionResults]);
 
   const selectGuideline = useCallback((guidelineId: string) => {
-    const guideline = getGuidelineById(guidelineId);
+    const guideline = allGuidelines.find(g => g.id === guidelineId);
     if (!guideline) return;
 
     setCurrentGuideline(guideline);
@@ -80,7 +96,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
     setStreak(0);
     setSessionResults([]);
     setStatus('playing');
-  }, []);
+  }, [allGuidelines]);
 
   const submitScore = useCallback((submittedScore: number) => {
     if (!currentVignette || status !== 'playing') return;
@@ -170,6 +186,7 @@ export function useGuidelineDrill(): UseGuidelineDrillReturn {
     status,
     allGuidelines,
     sessionResult,
+    isLoading,
     selectGuideline,
     submitScore,
     nextVignette,

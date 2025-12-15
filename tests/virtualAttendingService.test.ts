@@ -66,8 +66,8 @@ describe('Virtual Attending Service', () => {
   });
 
   describe('Feedback Generation', () => {
-    it('should generate correct answer feedback', () => {
-      const feedback = generatePersonalizedFeedback('nurturer', {
+    it('should generate correct answer feedback', async () => {
+      const feedback = await generatePersonalizedFeedback('nurturer', {
         isCorrect: true,
         topic: 'Cardiology',
         condition: 'STEMI'
@@ -78,8 +78,8 @@ describe('Virtual Attending Service', () => {
       expect(feedback.length).toBeGreaterThan(0);
     });
 
-    it('should generate incorrect answer feedback', () => {
-      const feedback = generatePersonalizedFeedback('surgeon', {
+    it('should generate incorrect answer feedback', async () => {
+      const feedback = await generatePersonalizedFeedback('surgeon', {
         isCorrect: false,
         topic: 'Cardiology',
         condition: 'STEMI',
@@ -91,13 +91,13 @@ describe('Virtual Attending Service', () => {
       expect(feedback.length).toBeGreaterThan(0);
     });
 
-    it('should generate different feedback for different personas', () => {
-      const nurturerFeedback = generatePersonalizedFeedback('nurturer', {
+    it('should generate different feedback for different personas', async () => {
+      const nurturerFeedback = await generatePersonalizedFeedback('nurturer', {
         isCorrect: true,
         topic: 'Cardiology'
       });
 
-      const surgeonFeedback = generatePersonalizedFeedback('surgeon', {
+      const surgeonFeedback = await generatePersonalizedFeedback('surgeon', {
         isCorrect: true,
         topic: 'Cardiology'
       });
@@ -106,18 +106,18 @@ describe('Virtual Attending Service', () => {
       expect(nurturerFeedback).not.toBe(surgeonFeedback);
     });
 
-    it('should handle all persona types', () => {
+    it('should handle all persona types', async () => {
       const personaIds = ['nurturer', 'surgeon', 'professor', 'comedian', 'drill-sergeant'] as const;
       
-      personaIds.forEach(personaId => {
-        const feedback = generatePersonalizedFeedback(personaId, {
+      for (const personaId of personaIds) {
+        const feedback = await generatePersonalizedFeedback(personaId, {
           isCorrect: true,
           topic: 'Test Topic'
         });
         
         expect(feedback).toBeTruthy();
         expect(typeof feedback).toBe('string');
-      });
+      }
     });
   });
 
@@ -191,8 +191,8 @@ describe('Virtual Attending Service', () => {
   });
 
   describe('Feedback Content', () => {
-    it('should include topic in feedback when provided', () => {
-      const feedback = generatePersonalizedFeedback('professor', {
+    it('should include topic in feedback when provided', async () => {
+      const feedback = await generatePersonalizedFeedback('professor', {
         isCorrect: true,
         topic: 'Neurology'
       });
@@ -202,9 +202,9 @@ describe('Virtual Attending Service', () => {
       expect(feedback.length).toBeGreaterThan(15);
     });
 
-    it('should include key learning in incorrect feedback', () => {
+    it('should include key learning in incorrect feedback', async () => {
       const keyLearning = 'Remember to check volume status';
-      const feedback = generatePersonalizedFeedback('nurturer', {
+      const feedback = await generatePersonalizedFeedback('nurturer', {
         isCorrect: false,
         topic: 'Cardiology',
         keyLearning
@@ -214,8 +214,8 @@ describe('Virtual Attending Service', () => {
       expect(feedback.length).toBeGreaterThan(20);
     });
 
-    it('should provide supportive incorrect feedback for nurturer', () => {
-      const feedback = generatePersonalizedFeedback('nurturer', {
+    it('should provide supportive incorrect feedback for nurturer', async () => {
+      const feedback = await generatePersonalizedFeedback('nurturer', {
         isCorrect: false,
         topic: 'Test'
       });
@@ -225,8 +225,8 @@ describe('Virtual Attending Service', () => {
       expect(feedback.length).toBeGreaterThan(10);
     });
 
-    it('should provide direct incorrect feedback for surgeon', () => {
-      const feedback = generatePersonalizedFeedback('surgeon', {
+    it('should provide direct incorrect feedback for surgeon', async () => {
+      const feedback = await generatePersonalizedFeedback('surgeon', {
         isCorrect: false,
         topic: 'Emergency'
       });

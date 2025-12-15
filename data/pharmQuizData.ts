@@ -1,19 +1,28 @@
 /**
  * Pharmacology Quiz Data and Questions Generator
  * 
- * Generates high-yield PANCE pharmacology questions from the drugData.json database.
+ * Generates high-yield PANCE pharmacology questions from Drug objects.
  * Focuses on mechanisms, side effects, contraindications, and clinical pearls.
  */
 
-import drugData from '@/pharm/drugData.json';
-import type { DrugEntry } from '@/pharm/drugTypes';
+export interface Drug {
+  id: string;
+  genericName: string;
+  brandName?: string | null;
+  drugClass: string[];
+  mechanismOfAction?: string | null;
+  indications: string[];
+  contraindications: string[];
+  sideEffects: string[];
+  interactions: string[];
+  dosing?: string | null;
+  tags: string[];
+  clinicalNotes?: string | null;
+  antidote?: string | null;
+  metabolism?: string | null;
+  elimination?: string | null;
+}
 
-// Type assertion for the drug database
-const DRUG_DATABASE = drugData as Record<string, DrugEntry>;
-
-/**
- * Question types for pharmacology drills
- */
 export type PharmQuestionType = 
   | 'mechanism'
   | 'side_effect'
@@ -23,9 +32,6 @@ export type PharmQuestionType =
   | 'interaction'
   | 'clinical_use';
 
-/**
- * A generated pharmacology question
- */
 export interface PharmQuestion {
   id: string;
   type: PharmQuestionType;
@@ -34,138 +40,71 @@ export interface PharmQuestion {
   correctAnswerIndex: number;
   explanation: string;
   drugName: string;
-  drugClass: string;
+  drugClass: string | string[];
   difficulty: 'easy' | 'medium' | 'hard';
 }
 
-/**
- * High-yield drug classes for PANCE
- */
-const HIGH_YIELD_CLASSES = [
-  'Beta-blocker',
-  'ACE Inhibitor',
-  'Angiotensin II Receptor Blocker',
-  'Calcium Channel Blocker',
-  'Thiazide Diuretic',
-  'Loop Diuretic',
-  'Potassium-sparing Diuretic',
-  'Statin',
-  'Anticoagulant',
-  'Antiplatelet',
-  'SSRI',
-  'SNRI',
-  'Benzodiazepine',
-  'Opioid Analgesic',
-  'NSAID',
-  'Aminoglycoside',
-  'Fluoroquinolone',
-  'Macrolide',
-  'Penicillin',
-  'Cephalosporin',
-  'Sulfonylurea',
-  'Biguanide',
-  'DPP-4 Inhibitor',
-  'GLP-1 Receptor Agonist',
-  'SGLT2 Inhibitor',
-  'Proton Pump Inhibitor',
-  'H2 Receptor Antagonist',
-  'Corticosteroid',
-  'Bronchodilator',
-  'Anticholinergic',
-  'Antihistamine',
-  'Antipsychotic',
-];
-
-/**
- * Get all drugs in the database
- */
-export function getAllDrugs(): string[] {
-  return Object.keys(DRUG_DATABASE);
-}
-
-/**
- * Get drugs by class
- */
-export function getDrugsByClass(drugClass: string): DrugEntry[] {
-  return Object.values(DRUG_DATABASE).filter(
-    drug => drug.class?.toLowerCase().includes(drugClass.toLowerCase()) ||
-            drug.subclass?.toLowerCase().includes(drugClass.toLowerCase())
-  );
-}
-
-/**
- * Get a random subset of drugs
- */
-function getRandomDrugs(count: number, exclude?: string[]): DrugEntry[] {
-  const allDrugs = Object.values(DRUG_DATABASE).filter(
-    drug => !exclude?.includes(drug.term)
-  );
-  const shuffled = [...allDrugs].sort(() => Math.random() - 0.5);
+// Helper to get random distractors
+function getRandomDrugs(count: number, excludeNames: string[], allDrugs: Drug[]): Drug[] {
+  const pool = allDrugs.filter(d => !excludeNames.includes(d.genericName));
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, count);
 }
 
-/**
- * Get drugs with similar class for distractor generation
- */
-function getSimilarDrugs(drug: DrugEntry, count: number): DrugEntry[] {
-  const sameClas = Object.values(DRUG_DATABASE).filter(
-    d => d.term !== drug.term && 
-        (d.class === drug.class || d.subclass === drug.subclass)
+// Helper to get similar drugs (same class)
+function getSimilarDrugs(drug: Drug, count: number, allDrugs: Drug[]): Drug[] {
+  const sameClass = allDrugs.filter(
+    d => d.genericName !== drug.genericName && 
+        d.drugClass.some(c => drug.drugClass.includes(c))
   );
   
-  if (sameClas.length >= count) {
-    return sameClas.sort(() => Math.random() - 0.5).slice(0, count);
+  if (sameClass.length >= count) {
+    return sameClass.sort(() => Math.random() - 0.5).slice(0, count);
   }
   
   // If not enough similar drugs, add random ones
-  const remaining = getRandomDrugs(count - sameClas.length, [drug.term, ...sameClas.map(d => d.term)]);
-  return [...sameClas, ...remaining].slice(0, count);
+  const remaining = getRandomDrugs(count - sameClass.length, [drug.genericName, ...sameClass.map(d => d.genericName)], allDrugs);
+  return [...sameClass, ...remaining].slice(0, count);
 }
 
-/**
- * Generate a mechanism of action question
- */
-function generateMechanismQuestion(drug: DrugEntry): PharmQuestion {
-  const distractors = getSimilarDrugs(drug, 3);
+function generateMechanismQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion {
+  const distractors = getSimilarDrugs(drug, 3, allDrugs);
   
+  const moa = drug.mechanismOfAction || 'Mechanism unknown';
   const options = [
-    drug.MOA.split('.')[0] + '.',
-    ...distractors.map(d => d.MOA.split('.')[0] + '.')
+    moa.split('.')[0] + '.',
+    ...distractors.map(d => (d.mechanismOfAction || 'Mechanism unknown').split('.')[0] + '.')
   ];
   
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
-  const correctIndex = shuffledOptions.indexOf(options[0]);
+  const correctIndex = shuffledOptions.indexOf(moa.split('.')[0] + '.');
   
   return {
-    id: `pharm-moa-${drug.term}-${Date.now()}`,
+    id: `pharm-moa-${drug.genericName}-${Date.now()}`,
     type: 'mechanism',
-    question: `What is the primary mechanism of action of ${drug.term}?`,
+    question: `What is the primary mechanism of action of ${drug.genericName}?`,
     options: shuffledOptions,
-    correctAnswerIndex: correctIndex,
-    explanation: `${drug.term} works by: ${drug.MOA}`,
-    drugName: drug.term,
-    drugClass: drug.class,
+    correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
+    explanation: `${drug.genericName} works by: ${moa}`,
+    drugName: drug.genericName,
+    drugClass: drug.drugClass,
     difficulty: 'medium',
   };
 }
 
-/**
- * Generate a side effect question
- */
-function generateSideEffectQuestion(drug: DrugEntry): PharmQuestion {
-  if (!drug.ADEs || drug.ADEs.length === 0) {
-    return generateMechanismQuestion(drug); // Fallback
+function generateSideEffectQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion {
+  if (!drug.sideEffects || drug.sideEffects.length === 0) {
+    return generateMechanismQuestion(drug, allDrugs);
   }
   
-  const correctADE = drug.ADEs[Math.floor(Math.random() * drug.ADEs.length)];
-  const distractors = getSimilarDrugs(drug, 3);
+  const correctADE = drug.sideEffects[Math.floor(Math.random() * drug.sideEffects.length)];
+  const distractors = getSimilarDrugs(drug, 3, allDrugs);
   
   const options = [
     correctADE,
-    ...distractors.flatMap(d => d.ADEs || []).slice(0, 3)
+    ...distractors.flatMap(d => d.sideEffects || []).slice(0, 3)
   ].slice(0, 4);
   
-  // Ensure we have 4 options
   while (options.length < 4) {
     options.push('Minimal side effects');
   }
@@ -174,28 +113,25 @@ function generateSideEffectQuestion(drug: DrugEntry): PharmQuestion {
   const correctIndex = shuffledOptions.indexOf(correctADE);
   
   return {
-    id: `pharm-ade-${drug.term}-${Date.now()}`,
+    id: `pharm-ade-${drug.genericName}-${Date.now()}`,
     type: 'side_effect',
-    question: `Which of the following is a known adverse effect of ${drug.term}?`,
+    question: `Which of the following is a known adverse effect of ${drug.genericName}?`,
     options: shuffledOptions,
     correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
-    explanation: `${drug.term} can cause: ${drug.ADEs.join(', ')}`,
-    drugName: drug.term,
-    drugClass: drug.class,
+    explanation: `${drug.genericName} can cause: ${drug.sideEffects.join(', ')}`,
+    drugName: drug.genericName,
+    drugClass: drug.drugClass,
     difficulty: 'easy',
   };
 }
 
-/**
- * Generate a contraindication question
- */
-function generateContraindicationQuestion(drug: DrugEntry): PharmQuestion {
+function generateContraindicationQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion {
   if (!drug.contraindications || drug.contraindications.length === 0) {
-    return generateSideEffectQuestion(drug); // Fallback
+    return generateSideEffectQuestion(drug, allDrugs);
   }
   
   const correctContra = drug.contraindications[Math.floor(Math.random() * drug.contraindications.length)];
-  const distractors = getRandomDrugs(3, [drug.term]);
+  const distractors = getRandomDrugs(3, [drug.genericName], allDrugs);
   
   const options = [
     correctContra,
@@ -210,63 +146,52 @@ function generateContraindicationQuestion(drug: DrugEntry): PharmQuestion {
   const correctIndex = shuffledOptions.indexOf(correctContra);
   
   return {
-    id: `pharm-contra-${drug.term}-${Date.now()}`,
+    id: `pharm-contra-${drug.genericName}-${Date.now()}`,
     type: 'contraindication',
-    question: `Which of the following is a contraindication for ${drug.term}?`,
+    question: `Which of the following is a contraindication for ${drug.genericName}?`,
     options: shuffledOptions,
     correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
-    explanation: `${drug.term} is contraindicated in: ${drug.contraindications.join(', ')}`,
-    drugName: drug.term,
-    drugClass: drug.class,
+    explanation: `${drug.genericName} is contraindicated in: ${drug.contraindications.join(', ')}`,
+    drugName: drug.genericName,
+    drugClass: drug.drugClass,
     difficulty: 'medium',
   };
 }
 
-/**
- * Generate a drug class identification question
- */
-function generateDrugClassQuestion(drug: DrugEntry): PharmQuestion {
-  const allClasses = [...new Set(Object.values(DRUG_DATABASE).map(d => d.class).filter(Boolean))];
-  const distractorClasses = allClasses.filter(c => c !== drug.class).sort(() => Math.random() - 0.5).slice(0, 3);
+function generateDrugClassQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion {
+  const allClasses = [...new Set(allDrugs.flatMap(d => d.drugClass))];
+  const primaryClass = drug.drugClass[0] || 'Unknown';
   
-  const options = [drug.class, ...distractorClasses];
+  const distractorClasses = allClasses
+    .filter(c => !drug.drugClass.includes(c))
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
+  
+  const options = [primaryClass, ...distractorClasses];
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
-  const correctIndex = shuffledOptions.indexOf(drug.class);
+  const correctIndex = shuffledOptions.indexOf(primaryClass);
   
   return {
-    id: `pharm-class-${drug.term}-${Date.now()}`,
+    id: `pharm-class-${drug.genericName}-${Date.now()}`,
     type: 'drug_class',
-    question: `${drug.term} belongs to which drug class?`,
+    question: `${drug.genericName} belongs to which drug class?`,
     options: shuffledOptions,
     correctAnswerIndex: correctIndex,
-    explanation: `${drug.term} is classified as a ${drug.class} (${drug.subclass}).`,
-    drugName: drug.term,
-    drugClass: drug.class,
+    explanation: `${drug.genericName} is classified as a ${drug.drugClass.join(', ')}.`,
+    drugName: drug.genericName,
+    drugClass: drug.drugClass,
     difficulty: 'easy',
   };
 }
 
-/**
- * Generate an antidote question
- */
-function generateAntidoteQuestion(drug: DrugEntry): PharmQuestion {
+function generateAntidoteQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion {
   if (!drug.antidote || drug.antidote === 'None' || drug.antidote.toLowerCase().includes('no specific')) {
-    return generateSideEffectQuestion(drug); // Fallback
+    return generateSideEffectQuestion(drug, allDrugs);
   }
   
-  // Common antidotes for distractors
   const commonAntidotes = [
-    'Naloxone',
-    'Flumazenil',
-    'N-acetylcysteine',
-    'Vitamin K',
-    'Protamine sulfate',
-    'Atropine',
-    'Physostigmine',
-    'Calcium gluconate',
-    'Deferoxamine',
-    'Glucagon',
-    'Fomepizole',
+    'Naloxone', 'Flumazenil', 'N-acetylcysteine', 'Vitamin K', 'Protamine sulfate',
+    'Atropine', 'Physostigmine', 'Calcium gluconate', 'Deferoxamine', 'Glucagon', 'Fomepizole'
   ].filter(a => a !== drug.antidote);
   
   const distractors = commonAntidotes.sort(() => Math.random() - 0.5).slice(0, 3);
@@ -276,165 +201,96 @@ function generateAntidoteQuestion(drug: DrugEntry): PharmQuestion {
   const correctIndex = shuffledOptions.indexOf(drug.antidote.split('.')[0]);
   
   return {
-    id: `pharm-antidote-${drug.term}-${Date.now()}`,
+    id: `pharm-antidote-${drug.genericName}-${Date.now()}`,
     type: 'antidote',
-    question: `What is the antidote for ${drug.term} toxicity?`,
+    question: `What is the antidote for ${drug.genericName} toxicity?`,
     options: shuffledOptions,
     correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
-    explanation: `The antidote for ${drug.term} is: ${drug.antidote}`,
-    drugName: drug.term,
-    drugClass: drug.class,
+    explanation: `The antidote for ${drug.genericName} is: ${drug.antidote}`,
+    drugName: drug.genericName,
+    drugClass: drug.drugClass,
     difficulty: 'hard',
   };
 }
 
-/**
- * Generate a drug interaction question
- */
-function generateInteractionQuestion(drug: DrugEntry): PharmQuestion {
+function generateInteractionQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion {
   if (!drug.interactions || drug.interactions.length === 0) {
-    return generateMechanismQuestion(drug); // Fallback
+    return generateMechanismQuestion(drug, allDrugs);
   }
   
   const interaction = drug.interactions[Math.floor(Math.random() * drug.interactions.length)];
-  const interactionText = typeof interaction === 'string' ? interaction : interaction.drug || '';
+  // Interaction is now a string "Drug: Effect"
+  const parts = interaction.split(':');
+  const interactingDrug = parts[0].split('(')[0].trim();
   
-  // Extract the interacting drug name
-  const interactingDrug = interactionText.split(':')[0].split('(')[0].trim();
-  
-  const distractorDrugs = getRandomDrugs(3, [drug.term]).map(d => d.term);
+  const distractorDrugs = getRandomDrugs(3, [drug.genericName], allDrugs).map(d => d.genericName);
   const options = [interactingDrug, ...distractorDrugs].slice(0, 4);
   
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
   const correctIndex = shuffledOptions.indexOf(interactingDrug);
   
   return {
-    id: `pharm-interact-${drug.term}-${Date.now()}`,
+    id: `pharm-interact-${drug.genericName}-${Date.now()}`,
     type: 'interaction',
-    question: `Which drug has a significant interaction with ${drug.term}?`,
+    question: `Which drug has a significant interaction with ${drug.genericName}?`,
     options: shuffledOptions,
     correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
-    explanation: `${drug.term} interaction: ${interactionText}`,
-    drugName: drug.term,
-    drugClass: drug.class,
+    explanation: `${drug.genericName} interaction: ${interaction}`,
+    drugName: drug.genericName,
+    drugClass: drug.drugClass,
     difficulty: 'hard',
   };
 }
 
-/**
- * Generate a clinical use question
- */
-function generateClinicalUseQuestion(drug: DrugEntry): PharmQuestion {
+function generateClinicalUseQuestion(drug: Drug, allDrugs: Drug[]): PharmQuestion {
   if (!drug.clinicalNotes) {
-    return generateMechanismQuestion(drug); // Fallback
+    return generateMechanismQuestion(drug, allDrugs);
   }
   
-  // Extract key clinical uses from notes
   const clinicalUse = drug.clinicalNotes.split('.')[0] + '.';
-  const distractors = getRandomDrugs(3, [drug.term]);
+  const distractors = getRandomDrugs(3, [drug.genericName], allDrugs);
   
   const options = [
     clinicalUse,
-    ...distractors.map(d => d.clinicalNotes?.split('.')[0] + '.' || 'Used for various conditions')
+    ...distractors.map(d => (d.clinicalNotes || 'Used for various conditions').split('.')[0] + '.')
   ].slice(0, 4);
   
   const shuffledOptions = options.sort(() => Math.random() - 0.5);
   const correctIndex = shuffledOptions.indexOf(clinicalUse);
   
   return {
-    id: `pharm-clinical-${drug.term}-${Date.now()}`,
+    id: `pharm-clinical-${drug.genericName}-${Date.now()}`,
     type: 'clinical_use',
-    question: `What is a primary clinical use of ${drug.term}?`,
+    question: `What is a primary clinical use of ${drug.genericName}?`,
     options: shuffledOptions,
     correctAnswerIndex: correctIndex >= 0 ? correctIndex : 0,
-    explanation: `${drug.term} clinical notes: ${drug.clinicalNotes}`,
-    drugName: drug.term,
-    drugClass: drug.class,
+    explanation: `${drug.genericName} clinical notes: ${drug.clinicalNotes}`,
+    drugName: drug.genericName,
+    drugClass: drug.drugClass,
     difficulty: 'medium',
   };
 }
 
-/**
- * Generate a random pharmacology question
- */
-export function generatePharmQuestion(preferredType?: PharmQuestionType): PharmQuestion {
-  const drugs = Object.values(DRUG_DATABASE);
-  const randomDrug = drugs[Math.floor(Math.random() * drugs.length)];
-  
+export function generatePharmQuestion(drug: Drug, allDrugs: Drug[], preferredType?: PharmQuestionType): PharmQuestion {
   const questionTypes: PharmQuestionType[] = [
-    'mechanism',
-    'side_effect',
-    'contraindication',
-    'drug_class',
-    'antidote',
-    'interaction',
-    'clinical_use',
+    'mechanism', 'side_effect', 'contraindication', 'drug_class', 
+    'antidote', 'interaction', 'clinical_use'
   ];
   
   const type = preferredType || questionTypes[Math.floor(Math.random() * questionTypes.length)];
   
   switch (type) {
-    case 'mechanism':
-      return generateMechanismQuestion(randomDrug);
-    case 'side_effect':
-      return generateSideEffectQuestion(randomDrug);
-    case 'contraindication':
-      return generateContraindicationQuestion(randomDrug);
-    case 'drug_class':
-      return generateDrugClassQuestion(randomDrug);
-    case 'antidote':
-      return generateAntidoteQuestion(randomDrug);
-    case 'interaction':
-      return generateInteractionQuestion(randomDrug);
-    case 'clinical_use':
-      return generateClinicalUseQuestion(randomDrug);
-    default:
-      return generateMechanismQuestion(randomDrug);
+    case 'mechanism': return generateMechanismQuestion(drug, allDrugs);
+    case 'side_effect': return generateSideEffectQuestion(drug, allDrugs);
+    case 'contraindication': return generateContraindicationQuestion(drug, allDrugs);
+    case 'drug_class': return generateDrugClassQuestion(drug, allDrugs);
+    case 'antidote': return generateAntidoteQuestion(drug, allDrugs);
+    case 'interaction': return generateInteractionQuestion(drug, allDrugs);
+    case 'clinical_use': return generateClinicalUseQuestion(drug, allDrugs);
+    default: return generateMechanismQuestion(drug, allDrugs);
   }
-}
-
-/**
- * Generate multiple pharmacology questions
- */
-export function generatePharmQuestions(count: number): PharmQuestion[] {
-  const questions: PharmQuestion[] = [];
-  const usedDrugs = new Set<string>();
-  
-  for (let i = 0; i < count; i++) {
-    let attempts = 0;
-    let question: PharmQuestion;
-    
-    do {
-      question = generatePharmQuestion();
-      attempts++;
-    } while (usedDrugs.has(question.drugName) && attempts < 10);
-    
-    usedDrugs.add(question.drugName);
-    questions.push(question);
-  }
-  
-  return questions;
-}
-
-/**
- * Get high-yield drugs for PANCE study
- */
-export function getHighYieldDrugs(): DrugEntry[] {
-  return Object.values(DRUG_DATABASE).filter(drug => {
-    const drugClass = (drug.class || '').toLowerCase();
-    const drugSubclass = (drug.subclass || '').toLowerCase();
-    
-    return HIGH_YIELD_CLASSES.some(hyc => 
-      drugClass.includes(hyc.toLowerCase()) || 
-      drugSubclass.includes(hyc.toLowerCase())
-    );
-  });
 }
 
 export default {
   generatePharmQuestion,
-  generatePharmQuestions,
-  getAllDrugs,
-  getDrugsByClass,
-  getHighYieldDrugs,
 };

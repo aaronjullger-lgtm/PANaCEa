@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
-import { generatePharmQuestion, type PharmQuestion, type PharmQuestionType } from '@/data/pharmQuizData';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { generatePharmQuestion, type PharmQuestion, type PharmQuestionType, type Drug } from '@/data/pharmQuizData';
+import { drugService } from '@/services/drugService';
 
 export type PharmDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
@@ -22,6 +23,7 @@ export interface UsePharmDrillReturn {
   isCorrect: boolean | null;
   status: PharmDrillStatus;
   selectedCategory: PharmCategory;
+  isLoading: boolean;
   submitAnswer: (answerIndex: number) => void;
   nextQuestion: () => void;
   reset: () => void;
@@ -43,9 +45,27 @@ export function usePharmDrill(): UsePharmDrillReturn {
   const [userAnswerIndex, setUserAnswerIndex] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<PharmDrillStatus>('landing');
+  const [drugs, setDrugs] = useState<Drug[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Track recently used drugs to avoid repetition
   const recentDrugsRef = useRef<Set<string>>(new Set());
+
+  // Fetch drugs on mount
+  useEffect(() => {
+    const loadDrugs = async () => {
+      try {
+        // Fetch all drugs to have a good pool for distractors
+        const fetchedDrugs = await drugService.getAll();
+        setDrugs(fetchedDrugs);
+      } catch (error) {
+        console.error('Failed to load drugs:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadDrugs();
+  }, []);
 
   const currentQuestion = queue[currentIndex] ?? null;
 
@@ -54,17 +74,21 @@ export function usePharmDrill(): UsePharmDrillReturn {
     return category as PharmQuestionType;
   }, []);
 
-  const generateNewQuestion = useCallback((category: PharmCategory): PharmQuestion => {
+  const generateNewQuestion = useCallback((category: PharmCategory): PharmQuestion | null => {
+    if (drugs.length === 0) return null;
+
     const type = getQuestionType(category);
     let attempts = 0;
-    let question: PharmQuestion;
+    let drug: Drug;
     
     // Try to generate a question with a drug we haven't seen recently
     do {
-      question = generatePharmQuestion(type);
+      drug = drugs[Math.floor(Math.random() * drugs.length)];
       attempts++;
-    } while (recentDrugsRef.current.has(question.drugName) && attempts < 10);
+    } while (recentDrugsRef.current.has(drug.genericName) && attempts < 10);
     
+    const question = generatePharmQuestion(drug, drugs, type);
+
     // Add to recent drugs and maintain max size
     recentDrugsRef.current.add(question.drugName);
     if (recentDrugsRef.current.size > MAX_RECENT_DRUGS) {
@@ -73,15 +97,18 @@ export function usePharmDrill(): UsePharmDrillReturn {
     }
     
     return question;
-  }, [getQuestionType]);
+  }, [drugs, getQuestionType]);
 
   const startSession = useCallback((category: PharmCategory) => {
+    if (drugs.length === 0) return;
+
     setSelectedCategory(category);
     recentDrugsRef.current.clear(); // Clear history on new session
     
     const initialQueue: PharmQuestion[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      initialQueue.push(generateNewQuestion(category));
+      const q = generateNewQuestion(category);
+      if (q) initialQueue.push(q);
     }
     
     setQueue(initialQueue);
@@ -92,7 +119,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [generateNewQuestion]);
+  }, [generateNewQuestion, drugs]);
 
   const showCategoryMenu = useCallback(() => {
     setStatus('menu');
@@ -130,7 +157,9 @@ export function usePharmDrill(): UsePharmDrillReturn {
 
   const nextQuestion = useCallback(() => {
     const newQuestion = generateNewQuestion(selectedCategory);
-    setQueue(prev => [...prev, newQuestion]);
+    if (newQuestion) {
+      setQueue(prev => [...prev, newQuestion]);
+    }
     setCurrentIndex(prev => prev + 1);
     setUserAnswerIndex(null);
     setIsCorrect(null);
@@ -138,10 +167,12 @@ export function usePharmDrill(): UsePharmDrillReturn {
   }, [selectedCategory, generateNewQuestion]);
 
   const reset = useCallback(() => {
+    if (drugs.length === 0) return;
     recentDrugsRef.current.clear(); // Clear history on reset
     const newQueue: PharmQuestion[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      newQueue.push(generateNewQuestion(selectedCategory));
+      const q = generateNewQuestion(selectedCategory);
+      if (q) newQueue.push(q);
     }
     
     setQueue(newQueue);

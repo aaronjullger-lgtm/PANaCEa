@@ -1,19 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flame, RotateCcw, ArrowRight } from 'lucide-react';
+import { X, Flame, RotateCcw, ArrowRight, Loader2 } from 'lucide-react';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { BUZZWORD_BANK, getBuzzwordDictionary, getAllBuzzwordConditions } from '@/data/buzzwordBank';
-
-/**
- * Get buzzword dictionary from the comprehensive bank
- */
-const BUZZWORD_DICTIONARY = getBuzzwordDictionary();
-
-/** Get all buzzwords as an array */
-const BUZZWORDS = Object.keys(BUZZWORD_DICTIONARY);
-
-/** Get all diagnoses as options for autocomplete */
-const ALL_DIAGNOSES = getAllBuzzwordConditions();
+import { buzzwordService } from '@/services/buzzwordService';
+import { validateSemanticMatch } from '@/services/geminiService';
 
 interface RapidRecallDrillProps {
   onExit?: () => void;
@@ -38,6 +28,32 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
   const [isCorrect, setIsCorrect] = useState<boolean>(false);
   const [userAnswer, setUserAnswer] = useState<string>('');
   const [usedBuzzwords, setUsedBuzzwords] = useState<Set<string>>(new Set());
+  const [isValidating, setIsValidating] = useState<boolean>(false);
+  
+  // Data state
+  const [buzzwordDictionary, setBuzzwordDictionary] = useState<Record<string, string>>({});
+  const [buzzwordsList, setBuzzwordsList] = useState<string[]>([]);
+  const [allDiagnoses, setAllDiagnoses] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const dict = await buzzwordService.getBuzzwordDictionary();
+        const diagnoses = await buzzwordService.getAllBuzzwordConditions();
+        
+        setBuzzwordDictionary(dict);
+        setBuzzwordsList(Object.keys(dict));
+        setAllDiagnoses(diagnoses);
+      } catch (error) {
+        console.error("Failed to load buzzwords", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   // Load high score from localStorage
   useEffect(() => {
@@ -65,21 +81,23 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
 
   // Get a random buzzword that hasn't been used yet in this session
   const getNextBuzzword = useCallback(() => {
-    const available = BUZZWORDS.filter((b) => !usedBuzzwords.has(b));
+    if (buzzwordsList.length === 0) return '';
+    
+    const available = buzzwordsList.filter((b) => !usedBuzzwords.has(b));
     if (available.length === 0) {
       // Reset if all buzzwords have been used
       setUsedBuzzwords(new Set());
-      return BUZZWORDS[Math.floor(Math.random() * BUZZWORDS.length)];
+      return buzzwordsList[Math.floor(Math.random() * buzzwordsList.length)];
     }
     return available[Math.floor(Math.random() * available.length)];
-  }, [usedBuzzwords]);
+  }, [usedBuzzwords, buzzwordsList]);
 
   // Initialize with first buzzword
   useEffect(() => {
-    if (!currentBuzzword) {
+    if (!isLoading && !currentBuzzword && buzzwordsList.length > 0) {
       setCurrentBuzzword(getNextBuzzword());
     }
-  }, [currentBuzzword, getNextBuzzword]);
+  }, [isLoading, currentBuzzword, getNextBuzzword, buzzwordsList]);
 
   /**
    * Normalize a diagnosis string for comparison.
@@ -98,11 +116,28 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
       .trim();
   };
 
-  const handleSubmit = useCallback((answer: string) => {
-    const correctAnswer = BUZZWORD_DICTIONARY[currentBuzzword];
+  const handleSubmit = useCallback(async (answer: string) => {
+    if (isValidating) return;
+
+    const correctAnswer = buzzwordDictionary[currentBuzzword];
     const normalizedAnswer = normalizeDiagnosis(answer);
     const normalizedCorrect = normalizeDiagnosis(correctAnswer);
-    const isAnswerCorrect = normalizedAnswer === normalizedCorrect;
+    
+    // Optimistic check: strict match
+    let isAnswerCorrect = normalizedAnswer === normalizedCorrect;
+
+    if (!isAnswerCorrect) {
+      // If strict match fails, try semantic validation
+      setIsValidating(true);
+      try {
+        isAnswerCorrect = await validateSemanticMatch(answer, correctAnswer, currentBuzzword);
+      } catch (error) {
+        console.error("Validation failed", error);
+        // Fallback to false if AI fails
+      } finally {
+        setIsValidating(false);
+      }
+    }
     
     setUserAnswer(answer);
     setIsCorrect(isAnswerCorrect);
@@ -118,7 +153,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
 
     // Mark this buzzword as used
     setUsedBuzzwords((prev) => new Set([...prev, currentBuzzword]));
-  }, [currentBuzzword]);
+  }, [currentBuzzword, isValidating, buzzwordDictionary]);
 
   const handleNext = useCallback(() => {
     setCurrentBuzzword(getNextBuzzword());
@@ -251,12 +286,21 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
               transition={{ duration: 0.2 }}
               className="p-4"
             >
-              <div className="max-w-2xl mx-auto">
+              <div className="max-w-2xl mx-auto relative">
                 <DiagnosisInput
                   onSubmit={handleSubmit}
                   autoFocus
-                  options={ALL_DIAGNOSES}
+                  options={allDiagnoses}
+                  disabled={isValidating}
                 />
+                {isValidating && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-secondary)]/50 backdrop-blur-sm rounded-lg z-10">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-tertiary)] rounded-full shadow-lg border border-[var(--color-border)]">
+                      <Loader2 className="w-4 h-4 animate-spin text-[var(--color-primary)]" />
+                      <span className="text-sm font-medium">Checking answer...</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -289,7 +333,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
                       <div className="text-sm text-[var(--color-text-secondary)] mt-1">
                         Correct answer:{' '}
                         <span className="font-semibold text-[var(--color-text-primary)]">
-                          {BUZZWORD_DICTIONARY[currentBuzzword]}
+                          {buzzwordDictionary[currentBuzzword]}
                         </span>
                       </div>
                     )}

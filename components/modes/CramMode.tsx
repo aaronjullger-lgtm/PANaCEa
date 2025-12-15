@@ -16,10 +16,11 @@ import {
   Trophy,
   Zap,
   BookOpen,
-  Target
+  Target,
+  Loader2
 } from 'lucide-react';
-import { BUZZWORD_BANK } from '../../data/buzzwordBank';
-import type { BuzzwordEntry } from '../../data/buzzwordBank';
+import { buzzwordService } from '../../services/buzzwordService';
+import type { BuzzwordEntry } from '../../src/types';
 import type { SystemCode } from '../../types';
 
 interface CramModeProps {
@@ -40,9 +41,9 @@ interface CramQuestion {
  * Select 50 highest-yield buzzwords across all systems
  * Prioritized based on PANCE frequency and clinical importance
  */
-const selectHighYieldBuzzwords = (): BuzzwordEntry[] => {
+const selectHighYieldBuzzwords = (allBuzzwords: BuzzwordEntry[]): BuzzwordEntry[] => {
   // Priority topics based on PANCE blueprint
-  const prioritySystems: Record<SystemCode, number> = {
+  const prioritySystems: Record<string, number> = {
     'CV': 11,      // 11% of exam
     'PULM': 9,     // 9% of exam
     'GI': 8,       // 8% of exam
@@ -61,11 +62,11 @@ const selectHighYieldBuzzwords = (): BuzzwordEntry[] => {
   };
 
   // Calculate number of questions per system
-  const questionsPerSystem: Record<SystemCode, number> = {} as any;
+  const questionsPerSystem: Record<string, number> = {} as any;
   let total = 0;
   Object.entries(prioritySystems).forEach(([system, percentage]) => {
     const count = Math.round((percentage / 100) * 50);
-    questionsPerSystem[system as SystemCode] = count;
+    questionsPerSystem[system] = count;
     total += count;
   });
 
@@ -77,7 +78,7 @@ const selectHighYieldBuzzwords = (): BuzzwordEntry[] => {
   // Select buzzwords proportionally by system
   const selected: BuzzwordEntry[] = [];
   Object.entries(questionsPerSystem).forEach(([system, count]) => {
-    const systemBuzzwords = BUZZWORD_BANK.filter(b => b.system === system);
+    const systemBuzzwords = allBuzzwords.filter(b => b.system === system);
     const shuffled = [...systemBuzzwords].sort(() => Math.random() - 0.5);
     selected.push(...shuffled.slice(0, count));
   });
@@ -103,9 +104,9 @@ const generateOptions = (correct: string, allBuzzwords: BuzzwordEntry[]): string
 /**
  * Convert buzzword entries to cram questions
  */
-const createCramQuestions = (buzzwords: BuzzwordEntry[]): CramQuestion[] => {
+const createCramQuestions = (buzzwords: BuzzwordEntry[], allBuzzwords: BuzzwordEntry[]): CramQuestion[] => {
   return buzzwords.map((entry, index) => {
-    const options = generateOptions(entry.condition, BUZZWORD_BANK);
+    const options = generateOptions(entry.condition, allBuzzwords);
     return {
       id: `cram-${index}`,
       buzzword: entry.buzzword,
@@ -119,10 +120,8 @@ const createCramQuestions = (buzzwords: BuzzwordEntry[]): CramQuestion[] => {
 };
 
 export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
-  const [questions] = useState<CramQuestion[]>(() => {
-    const highYieldBuzzwords = selectHighYieldBuzzwords();
-    return createCramQuestions(highYieldBuzzwords);
-  });
+  const [questions, setQuestions] = useState<CramQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -132,16 +131,34 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const allBuzzwords = await buzzwordService.getAllBuzzwords();
+        const highYieldBuzzwords = selectHighYieldBuzzwords(allBuzzwords);
+        const cramQuestions = createCramQuestions(highYieldBuzzwords, allBuzzwords);
+        setQuestions(cramQuestions);
+      } catch (error) {
+        console.error("Failed to load buzzwords", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
   const currentQuestion = questions[currentIndex];
-  const progress = ((currentIndex + 1) / questions.length) * 100;
+  const progress = questions.length > 0 ? ((currentIndex + 1) / questions.length) * 100 : 0;
 
   // Update elapsed time
   useEffect(() => {
+    if (isLoading || isComplete) return;
+    
     const interval = setInterval(() => {
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
     return () => clearInterval(interval);
-  }, [startTime]);
+  }, [startTime, isLoading, isComplete]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -171,11 +188,19 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   };
 
   const handleRestart = () => {
-    // Regenerate questions for a fresh attempt
-    const highYieldBuzzwords = selectHighYieldBuzzwords();
-    const newQuestions = createCramQuestions(highYieldBuzzwords);
     window.location.reload(); // Simple restart
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400">Loading high-yield buzzwords...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isComplete) {
     const accuracy = (correctCount / questions.length) * 100;

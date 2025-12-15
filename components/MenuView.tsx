@@ -21,7 +21,7 @@ import ConditionDetailModal from "./ConditionDetailModal";
 import DrugDetailModal from "./DrugDetailModal";
 import { findConditionMetaById } from "../src/lib/conditionSearch";
 import { findDrugByName } from "../src/lib/drugSearch";
-import { unifiedSearch } from "../src/lib/unifiedSearch";
+import { unifiedSearch, type UnifiedSearchResult } from "../src/lib/unifiedSearch";
 import type { DrugEntry } from "../pharm/drugTypes";
 import { StreakTracker } from "./StreakTracker";
 import { QuickReviewMode } from "./QuickReviewMode";
@@ -382,10 +382,39 @@ const MenuView: React.FC<MenuViewProps> = ({
   };
 
   // Unified search results with intelligent ranking
-  const searchResults = useMemo(
-    () => unifiedSearch(searchQuery),
-    [searchQuery]
-  );
+  const [searchResults, setSearchResults] = useState<UnifiedSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    const performSearch = async () => {
+      if (!searchQuery.trim()) {
+        setSearchResults([]);
+        return;
+      }
+      
+      setIsSearching(true);
+      try {
+        const results = await unifiedSearch(searchQuery);
+        if (isMounted) {
+          setSearchResults(results as UnifiedSearchResult[]);
+        }
+      } catch (error) {
+        console.error("Search failed:", error);
+      } finally {
+        if (isMounted) {
+          setIsSearching(false);
+        }
+      }
+    };
+
+    performSearch();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [searchQuery]);
 
   // Check if we have any search results
   const hasSearchResults = searchResults.length > 0;
@@ -406,7 +435,7 @@ const MenuView: React.FC<MenuViewProps> = ({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]" 
+              className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-4 md:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]" 
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">

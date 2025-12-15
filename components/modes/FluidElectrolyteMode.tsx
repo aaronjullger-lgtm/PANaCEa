@@ -11,6 +11,7 @@ import {
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { MiniModeLayout, MiniModeHeader, MiniModeCard } from './MiniModeLayout';
 import { useTheme } from '@/hooks/useTheme';
+import { submitDrillResult } from '@/services/drillService';
 
 interface FluidElectrolyteModeProps {
   onExit?: () => void;
@@ -79,6 +80,14 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
         `The correct answer is ${currentCase.correctAnswer} ${currentCase.unit} (±${currentCase.marginOfError}).`
       );
     }
+
+    // Submit result to backend
+    submitDrillResult(
+      'fluid',
+      currentCase.id,
+      validation.isCorrect,
+      { title: currentCase.title, category: currentCase.category }
+    );
   };
 
   const handleNext = () => {

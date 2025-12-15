@@ -1,3 +1,5 @@
+import { callGeminiText, GEMINI_FLASH_MODEL } from './geminiService';
+
 /**
  * Virtual Attending Personas Service
  * Provides different feedback styles from virtual attending personas
@@ -68,16 +70,47 @@ interface FeedbackParams {
 /**
  * Generate personalized feedback based on attending persona
  */
-export function generatePersonalizedFeedback(
+export async function generatePersonalizedFeedback(
   persona: AttendingPersona,
   params: FeedbackParams
-): string {
+): Promise<string> {
   const { isCorrect, topic, condition, keyLearning } = params;
+  const personaProfile = ATTENDING_PERSONAS[persona];
 
-  if (isCorrect) {
-    return generateCorrectFeedback(persona, topic, condition);
-  } else {
-    return generateIncorrectFeedback(persona, topic, condition, keyLearning);
+  // Fallback to static templates if API fails or for immediate response
+  const fallback = isCorrect 
+    ? generateCorrectFeedback(persona, topic, condition)
+    : generateIncorrectFeedback(persona, topic, condition, keyLearning);
+
+  try {
+    const prompt = `
+      You are acting as a virtual medical attending with a specific persona.
+      
+      Persona Name: ${personaProfile.name}
+      Persona Description: ${personaProfile.description}
+      Feedback Style: ${isCorrect ? personaProfile.correctFeedbackStyle : personaProfile.incorrectFeedbackStyle}
+      
+      Task: Generate a short (1-2 sentences) feedback message for a medical student.
+      
+      Context:
+      - The student answered ${isCorrect ? "CORRECTLY" : "INCORRECTLY"}.
+      - Topic: ${topic}
+      - Specific Condition: ${condition || "N/A"}
+      - Key Learning Point: ${keyLearning || "N/A"}
+      
+      Requirements:
+      - Stay strictly in character.
+      - Be concise.
+      - If incorrect, mention the key learning point in character.
+      - If correct, reinforce the knowledge.
+      - Use emojis appropriate for the persona if applicable.
+    `;
+
+    const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.7);
+    return response.trim();
+  } catch (error) {
+    console.error("Error generating persona feedback:", error);
+    return fallback;
   }
 }
 

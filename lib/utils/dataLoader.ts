@@ -5,7 +5,7 @@ const dataCache = new Map<string, any>();
 
 /**
  * Lazily load drug data when needed.
- * Uses dynamic import to keep it out of the main bundle.
+ * Uses database API endpoint instead of static JSON file.
  * 
  * @returns Promise resolving to the drug data
  */
@@ -18,8 +18,11 @@ export async function loadDrugData(): Promise<any> {
   }
   
   try {
-    const module = await import('../../pharm/drugData.json');
-    const data = module.default;
+    const response = await fetch('/api/drugs');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch drugs: ${response.statusText}`);
+    }
+    const data = await response.json();
     dataCache.set(cacheKey, data);
     return data;
   } catch (error) {
@@ -66,7 +69,7 @@ export async function loadConditionContent(): Promise<any> {
 
 /**
  * Lazily load lab cases data when needed.
- * Uses dynamic import to keep it out of the main bundle.
+ * Uses database API endpoint instead of static JSON file.
  * 
  * @returns Promise resolving to the lab cases data
  */
@@ -79,8 +82,11 @@ export async function loadLabCases(): Promise<any> {
   }
   
   try {
-    const module = await import('../../src/data/labCases.json');
-    const data = module.default;
+    const response = await fetch('/api/labs/cases');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch lab cases: ${response.statusText}`);
+    }
+    const data = await response.json();
     dataCache.set(cacheKey, data);
     return data;
   } catch (error) {

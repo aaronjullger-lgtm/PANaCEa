@@ -205,13 +205,18 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
 };
 
 interface FormattedSectionProps {
-  content?: string | null;
+  content?: string | string[] | null;
 }
 
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   if (!isMeaningfulContent(content)) return null;
 
-  const bullets = buildBulletTree(content ?? "");
+  // Handle array content by joining with newlines
+  const textContent = Array.isArray(content) 
+    ? content.map(item => item.startsWith('•') || item.startsWith('*') ? item : `• ${item}`).join('\n')
+    : content;
+
+  const bullets = buildBulletTree(textContent ?? "");
 
   if (bullets.length === 0) {
     return <p className="condition-empty">No details available for this section.</p>;

@@ -1,4 +1,6 @@
 import type { PerformanceRecord } from '@/types';
+import { callGeminiText } from './geminiService';
+import { GEMINI_FLASH_MODEL } from '../constants';
 
 /**
  * Parameters for AI tutor answer analysis
@@ -18,14 +20,36 @@ export interface AnalyzeAnswerParams {
  * this would call an AI API for dynamic responses.
  */
 export async function analyzeAnswer(params: AnalyzeAnswerParams): Promise<string> {
-  const { questionText, isCorrect, explanation, condition } = params;
+  const { questionText, isCorrect, explanation, condition, userAnswer, correctAnswer } = params;
   
-  // Simple fallback response - in production, this would call Gemini API
-  if (!isCorrect) {
-    return `Let's break this down together. When thinking about ${condition}, remember these key points:\n\n${explanation}\n\nWhat specific part would you like me to clarify?`;
+  try {
+    const prompt = `
+      You are a supportive and Socratic medical tutor helping a PA student.
+      
+      Question: "${questionText}"
+      Student's Answer: "${userAnswer}"
+      Correct Answer: "${correctAnswer}"
+      Explanation: "${explanation}"
+      Topic: ${condition}
+      Result: ${isCorrect ? "Correct" : "Incorrect"}
+
+      Task:
+      ${isCorrect 
+        ? "Congratulate the student briefly and ask a follow-up question to deepen their understanding of the pathophysiology or clinical nuance. Keep it short (2 sentences)." 
+        : "Gently explain why their answer might be wrong or what key concept they missed, based on the explanation. Then ask a guiding question to help them arrive at the correct logic. Do not just give the answer if possible, guide them. Keep it encouraging and short (2-3 sentences)."
+      }
+    `;
+
+    const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.7);
+    return response;
+  } catch (error) {
+    console.error("AI Coaching Error:", error);
+    // Fallback response
+    if (!isCorrect) {
+      return `Let's break this down together. When thinking about ${condition}, remember these key points:\n\n${explanation}\n\nWhat specific part would you like me to clarify?`;
+    }
+    return `Great job! You got it right. ${explanation}\n\nDo you have any questions about the underlying concept?`;
   }
-  
-  return `Great job! You got it right. ${explanation}\n\nDo you have any questions about the underlying concept?`;
 }
 
 /**

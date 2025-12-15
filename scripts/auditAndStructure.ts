@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { CONDITION_REGISTRY } from '../conditionRegistry';
-import { BUZZWORD_BANK } from '../data/buzzwordBank';
-import { FIRST_LINE_TREATMENTS } from '../data/firstLineTreatmentData';
-import { GUIDELINES_DATABASE } from '../data/guidelinesData';
+// import { BUZZWORD_BANK } from '../data/buzzwordBank';
+// import { FIRST_LINE_TREATMENTS } from '../data/firstLineTreatmentData';
+// import { GUIDELINES_DATABASE } from '../data/guidelinesData';
 
 // Configuration
 const INPUT_FILE = path.resolve("conditionContent.final.json");
@@ -83,19 +83,19 @@ async function main() {
   let txCount = 0, caseCount = 0, buzzCount = 0;
 
   // A. Treatments
-  for (const tx of FIRST_LINE_TREATMENTS) {
-    const id = findConditionId(tx.condition);
-    if (id && contentMap.has(id)) {
-      const entry = contentMap.get(id);
-      const text = `**First-Line**: ${tx.firstLine}. ${tx.explanation} ${tx.pearl ? `\n* **Pearl**: ${tx.pearl}` : ''}`;
+  // for (const tx of FIRST_LINE_TREATMENTS) {
+  //   const id = findConditionId(tx.condition);
+  //   if (id && contentMap.has(id)) {
+  //     const entry = contentMap.get(id);
+  //     const text = `**First-Line**: ${tx.firstLine}. ${tx.explanation} ${tx.pearl ? `\n* **Pearl**: ${tx.pearl}` : ''}`;
       
-      if (!entry.content.treatment) entry.content.treatment = [];
-      if (!JSON.stringify(entry.content.treatment).includes(tx.firstLine)) {
-        entry.content.treatment.unshift(text);
-        txCount++;
-      }
-    }
-  }
+  //     if (!entry.content.treatment) entry.content.treatment = [];
+  //     if (!JSON.stringify(entry.content.treatment).includes(tx.firstLine)) {
+  //       entry.content.treatment.unshift(text);
+  //       txCount++;
+  //     }
+  //   }
+  // }
 
   // B. Clinical Cases (Presentation)
   for (const cCase of clinicalCases) {
@@ -117,34 +117,34 @@ async function main() {
   }
 
   // C. Buzzwords
-  for (const buzz of BUZZWORD_BANK) {
-    const id = findConditionId(buzz.condition);
-    if (id && contentMap.has(id)) {
-      const entry = contentMap.get(id);
-      const text = `**${buzz.buzzword}**: ${buzz.explanation || 'Classic finding'}`;
+  // for (const buzz of BUZZWORD_BANK) {
+  //   const id = findConditionId(buzz.condition);
+  //   if (id && contentMap.has(id)) {
+  //     const entry = contentMap.get(id);
+  //     const text = `**${buzz.buzzword}**: ${buzz.explanation || 'Classic finding'}`;
       
-      if (!entry.content.examFindings) entry.content.examFindings = [];
-      if (!JSON.stringify(entry.content.examFindings).includes(buzz.buzzword)) {
-        entry.content.examFindings.push(text);
-        buzzCount++;
-      }
-    }
-  }
+  //     if (!entry.content.examFindings) entry.content.examFindings = [];
+  //     if (!JSON.stringify(entry.content.examFindings).includes(buzz.buzzword)) {
+  //       entry.content.examFindings.push(text);
+  //       buzzCount++;
+  //     }
+  //   }
+  // }
 
   // D. Guidelines
-  for (const guide of GUIDELINES_DATABASE) {
-    for (const [id, entry] of contentMap.entries()) {
-      const condName = entry.condition.toLowerCase();
-      // Fuzzy match guideline name to condition name
-      if (guide.name.toLowerCase().includes(condName) || (guide.clinicalContext && guide.clinicalContext.toLowerCase().includes(condName))) {
-         if (!entry.content.management) entry.content.management = [];
-         const text = `**Guideline (${guide.name})**: ${guide.description}`;
-         if (!JSON.stringify(entry.content.management).includes(guide.name)) {
-           entry.content.management.push(text);
-         }
-      }
-    }
-  }
+  // for (const guide of GUIDELINES_DATABASE) {
+  //   for (const [id, entry] of contentMap.entries()) {
+  //     const condName = entry.condition.toLowerCase();
+  //     // Fuzzy match guideline name to condition name
+  //     if (guide.name.toLowerCase().includes(condName) || (guide.clinicalContext && guide.clinicalContext.toLowerCase().includes(condName))) {
+  //        if (!entry.content.management) entry.content.management = [];
+  //        const text = `**Guideline (${guide.name})**: ${guide.description}`;
+  //        if (!JSON.stringify(entry.content.management).includes(guide.name)) {
+  //          entry.content.management.push(text);
+  //        }
+  //     }
+  //   }
+  // }
 
   console.log(`   - Harvested: ${txCount} treatments, ${caseCount} cases, ${buzzCount} buzzwords.`);
 

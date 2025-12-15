@@ -121,10 +121,22 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
       relatedSystems, // Include for multi-system condition support
     };
 
-    const content: ConditionContentData =
-      record.content && typeof record.content === 'object'
-        ? (record.content as ConditionContentData)
-        : {};
+    const content: ConditionContentData = {
+      overview: record.overview || undefined,
+      etiologyPathophysiology: [
+        record.etiology ? `**Etiology**\n\n${record.etiology}` : null,
+        record.pathophysiology ? `**Pathophysiology**\n\n${record.pathophysiology}` : null
+      ].filter(Boolean).join('\n\n') || undefined,
+      epidemiology: record.epidemiology || undefined,
+      symptoms: record.symptoms.length > 0 ? record.symptoms : undefined,
+      examFindings: record.physicalExam.length > 0 ? record.physicalExam : undefined,
+      riskFactors: record.riskFactors.length > 0 ? record.riskFactors : undefined,
+      diagnostics: record.diagnostics && typeof record.diagnostics === 'object' ? (record.diagnostics as any) : undefined,
+      treatment: record.treatment && Array.isArray(record.treatment) ? (record.treatment as string[]) : undefined,
+      prognosis: record.prognosis || undefined,
+      complications: record.complications.length > 0 ? record.complications : undefined,
+      // Map other fields if necessary
+    };
 
     return {
       conditionId: record.conditionId,

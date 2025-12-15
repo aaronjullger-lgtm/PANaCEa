@@ -7,7 +7,7 @@ import type {
   SystemCode,
 } from "../types";
 
-const STORAGE_KEY = "pance_performance_v1";
+const STORAGE_KEY = "panceai_performance_v2";
 
 // ---- In-memory cache to reduce localStorage reads ----
 let cachedRecords: PerformanceRecord[] | null = null;
@@ -66,6 +66,9 @@ function saveAllRecords(records: PerformanceRecord[]) {
     cachedRecords = records;
     cacheTimestamp = Date.now();
     cachedStorageValue = serialized;
+    
+    // Dispatch event for hooks
+    window.dispatchEvent(new Event('performance-updated'));
   } catch (err) {
     console.error("Failed to save performance records", err);
   }

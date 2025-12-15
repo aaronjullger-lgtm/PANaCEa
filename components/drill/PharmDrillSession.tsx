@@ -92,16 +92,23 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
     startSession,
     exitToMenu,
     showCategoryMenu,
+    isLoading: isDataLoading,
   } = usePharmDrill();
 
-  const [isLoading, setIsLoading] = React.useState(false);
+  // const [isLoading, setIsLoading] = React.useState(false);
 
   const handleExit = () => {
     exitToMenu();
-    if (onExit) {
-      onExit();
-    }
+    onExit?.();
   };
+
+  if (isDataLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   const handleStart = () => {
     setIsLoading(true);

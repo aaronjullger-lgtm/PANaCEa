@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { labService } from '../../services/labService';
 
 // ============================================================================
 // INTERFACES
@@ -469,11 +470,43 @@ const LAB_CASES: LabCase[] = [
 // CATEGORY-SPECIFIC CASE FILTERING
 // ============================================================================
 
-function getCasesByCategory(category: LabCategory): LabCase[] {
-  if (category === 'random') {
-    return LAB_CASES;
+// Helper to map DB case to UI case
+function mapDbCaseToUiCase(dbCase: any): LabCase {
+  const panels: LabPanel[] = [];
+  
+  // Iterate over keys in dbCase.labs (BMP, CBC, etc.)
+  if (dbCase.labs && typeof dbCase.labs === 'object') {
+    for (const [panelName, tests] of Object.entries(dbCase.labs)) {
+      if (Array.isArray(tests)) {
+        panels.push({
+          name: panelName,
+          values: tests.map((t: any) => ({
+            name: t.name,
+            value: t.value,
+            unit: t.unit,
+            referenceRange: "See Normal", // Missing in DB
+            isAbnormal: t.flag === 'H' || t.flag === 'L',
+            abnormalDirection: t.flag === 'H' ? 'high' : t.flag === 'L' ? 'low' : undefined,
+            isCritical: false
+          }))
+        });
+      }
+    }
   }
-  return LAB_CASES.filter(c => c.category === category);
+
+  return {
+    id: dbCase.id,
+    clinicalContext: dbCase.clinicalVignette,
+    patientAge: 30 + Math.floor(Math.random() * 40),
+    patientSex: Math.random() > 0.5 ? 'M' : 'F',
+    panels,
+    correctDiagnosis: dbCase.correctDiagnosis,
+    keyFindings: [],
+    explanation: `Diagnosis: ${dbCase.correctDiagnosis}`,
+    category: 'random', // Default, could infer from diagnosis or panels
+    orderableTests: [],
+    orderedTests: []
+  };
 }
 
 function getDiagnosesByCategory(category: LabCategory): string[] {
@@ -520,8 +553,22 @@ function randomizePatient(originalAge: number, originalSex: 'M' | 'F'): { age: n
   };
 }
 
-function generateRandomLabCase(category: LabCategory, recentDiagnoses?: Set<string>): LabCase {
-  const availableCases = getCasesByCategory(category);
+function generateRandomLabCase(sourceCases: LabCase[], category: LabCategory, recentDiagnoses?: Set<string>): LabCase {
+  let availableCases = category === 'random' 
+    ? sourceCases 
+    : sourceCases.filter(c => c.category === category);
+  
+  // Fallback to SAMPLE_CASES if no cases found (e.g. DB load failed or empty category)
+  if (availableCases.length === 0) {
+    availableCases = category === 'random' 
+      ? SAMPLE_CASES 
+      : SAMPLE_CASES.filter(c => c.category === category);
+  }
+  
+  // Ultimate fallback
+  if (availableCases.length === 0) {
+    availableCases = SAMPLE_CASES;
+  }
   
   // Try to find a case with a diagnosis we haven't seen recently
   let attempts = 0;
@@ -601,6 +648,8 @@ const MAX_RECENT_DIAGNOSES = 10; // Track last 10 diagnoses to avoid repetition
 export function useMiniLabDrill(): UseMiniLabDrillReturn {
   const [selectedCategory, setSelectedCategory] = useState<LabCategory>('random');
   const [queue, setQueue] = useState<LabCase[]>([]);
+  const [dbCases, setDbCases] = useState<LabCase[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -610,6 +659,28 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   
   // Track recently used diagnoses to avoid repetition
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
+
+  // Fetch cases on mount
+  useEffect(() => {
+    const fetchCases = async () => {
+      setIsLoading(true);
+      try {
+        const cases = await labService.getAllCases();
+        const mappedCases = cases.map(mapDbCaseToUiCase);
+        if (mappedCases.length > 0) {
+          setDbCases(mappedCases);
+        } else {
+          setDbCases(SAMPLE_CASES); // Fallback
+        }
+      } catch (error) {
+        console.error("Failed to fetch lab cases", error);
+        setDbCases(SAMPLE_CASES); // Fallback
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCases();
+  }, []);
 
   const currentCase = queue[currentIndex] ?? null;
   
@@ -630,7 +701,8 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   }, [selectedCategory]);
 
   const generateNewCase = useCallback((category: LabCategory): LabCase => {
-    const labCase = generateRandomLabCase(category, recentDiagnosesRef.current);
+    const source = dbCases.length > 0 ? dbCases : SAMPLE_CASES;
+    const labCase = generateRandomLabCase(source, category, recentDiagnosesRef.current);
     
     // Add to recent diagnoses and maintain max size
     recentDiagnosesRef.current.add(labCase.correctDiagnosis);
@@ -640,7 +712,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     }
     
     return labCase;
-  }, []);
+  }, [dbCases]);
 
   const startSession = useCallback((category: LabCategory) => {
     setSelectedCategory(category);

@@ -624,7 +624,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="overflow-y-auto max-h-[calc(90vh-140px)] p-4 sm:p-6 scrollable-area">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 scrollable-area">
             {activeTab === 'stats' ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Motivational Message - Low Stakes Approach */}

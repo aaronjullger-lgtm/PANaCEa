@@ -101,7 +101,7 @@ async function main() {
     
     console.log(`\n\n${'═'.repeat(60)}`);
     console.log('║    Master Sync Summary');
-    console.log('═'.repeat(60)\n');
+    console.log('═'.repeat(60) + '\n');
     
     const totalDuration = Date.now() - overallStart;
     const successful = results.filter(r => r.success).length;

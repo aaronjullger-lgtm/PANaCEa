@@ -38,6 +38,7 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
     status,
     allGuidelines,
     sessionResult,
+    isLoading,
     selectGuideline,
     submitScore,
     nextVignette,
@@ -87,6 +88,17 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
     setSelectedCriteria(new Set());
     reset();
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-950">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading guidelines...</p>
+        </div>
+      </div>
+    );
+  }
 
   // =========================================================================
   // MENU VIEW - Guideline Selection
@@ -456,6 +468,8 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
       </div>
     );
   }
+
+
 
   // Fallback
   return (

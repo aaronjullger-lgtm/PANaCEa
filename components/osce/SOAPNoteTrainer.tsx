@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, CheckCircle, AlertCircle, Lightbulb, Award } from 'lucide-react';
+import { gradeSOAPNote, type GradingResult, type SOAPNote } from '@/services/geminiService';
 
 interface SOAPNoteTrainerProps {
   patientCase: PatientCase;
@@ -21,30 +22,6 @@ interface PatientCase {
   physicalExam: string;
   vitals: string;
   labs?: string;
-}
-
-interface SOAPNote {
-  subjective: string;
-  objective: string;
-  assessment: string;
-  plan: string;
-}
-
-interface GradingResult {
-  overallScore: number;
-  sectionScores: {
-    subjective: number;
-    objective: number;
-    assessment: number;
-    plan: number;
-  };
-  feedback: {
-    strengths: string[];
-    improvements: string[];
-    criticalMissing: string[];
-    billingElements: string[];
-  };
-  grade: 'A' | 'B' | 'C' | 'D' | 'F';
 }
 
 export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
@@ -64,12 +41,17 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
   const handleSubmit = async () => {
     setIsGrading(true);
     
-    // Simulate AI grading (in production, this would call an LLM API)
-    const result = await gradeSOAPNote(soapNote, patientCase);
-    
-    setGradingResult(result);
-    setIsGrading(false);
-    onComplete(result.overallScore);
+    try {
+      // Use Gemini-powered grading
+      const result = await gradeSOAPNote(soapNote, patientCase);
+      setGradingResult(result);
+      onComplete(result.overallScore);
+    } catch (error) {
+      console.error("Grading failed:", error);
+      // Handle error appropriately in UI
+    } finally {
+      setIsGrading(false);
+    }
   };
 
   const getSectionGuidance = (section: keyof SOAPNote): string => {
@@ -402,79 +384,6 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
 };
 
 // Grading configuration
-const GRADING_DELAY_MS = 2000; // Time to simulate AI processing
 
-/**
- * Grade SOAP note (simplified AI grading simulation)
- * In production, this would call an LLM API
- */
-async function gradeSOAPNote(
-  soapNote: SOAPNote,
-  patientCase: PatientCase
-): Promise<GradingResult> {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, GRADING_DELAY_MS));
-
-  // Simple scoring logic (in production, use LLM)
-  const scores = {
-    subjective: calculateSectionScore(soapNote.subjective, 100),
-    objective: calculateSectionScore(soapNote.objective, 80),
-    assessment: calculateSectionScore(soapNote.assessment, 60),
-    plan: calculateSectionScore(soapNote.plan, 120)
-  };
-
-  const overallScore = Math.round(
-    (scores.subjective + scores.objective + scores.assessment + scores.plan) / 4
-  );
-
-  const grade = 
-    overallScore >= 90 ? 'A' :
-    overallScore >= 80 ? 'B' :
-    overallScore >= 70 ? 'C' :
-    overallScore >= 60 ? 'D' : 'F';
-
-  return {
-    overallScore,
-    sectionScores: scores,
-    feedback: {
-      strengths: [
-        'Clear documentation of chief complaint',
-        'Included relevant vitals and exam findings',
-        'Appropriate differential diagnosis listed'
-      ],
-      improvements: [
-        'Add more detail about duration and quality of symptoms',
-        'Include pertinent negative findings',
-        'Specify medication dosages and frequencies'
-      ],
-      criticalMissing: overallScore < 70 ? [
-        'Follow-up timeframe not specified',
-        'Patient education not documented'
-      ] : [],
-      billingElements: [
-        'Documented medical necessity',
-        'Time spent with patient noted',
-        'Level of complexity supports E&M coding'
-      ]
-    },
-    grade
-  };
-}
-
-// Scoring constants for section length evaluation
-const SCORE_EMPTY = 0;
-const SCORE_TOO_SHORT = 50;       // Less than half of minimum length
-const SCORE_MINIMAL = 75;          // Less than minimum length but has content
-const SCORE_BASE = 85;             // Meets minimum length
-const SCORE_BONUS_MAX = 15;        // Maximum bonus points for extra content
-const BONUS_CHARS_PER_POINT = 20;  // Characters needed per bonus point
-
-function calculateSectionScore(text: string, minLength: number): number {
-  const length = text.trim().length;
-  if (length === 0) return SCORE_EMPTY;
-  if (length < minLength * 0.5) return SCORE_TOO_SHORT;
-  if (length < minLength) return SCORE_MINIMAL;
-  return SCORE_BASE + Math.min(SCORE_BONUS_MAX, Math.floor((length - minLength) / BONUS_CHARS_PER_POINT));
-}
 
 export default SOAPNoteTrainer;

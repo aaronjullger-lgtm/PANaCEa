@@ -29,7 +29,7 @@ import {
 
 // --- Helper: call serverless function, which talks to Gemini ---
 
-async function callGeminiText(
+export async function callGeminiText(
   modelName: string,
   prompt: string,
   temperature: number = 0.8
@@ -816,4 +816,129 @@ Format:
 `;
 
   return callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.6);
+}
+
+// --- SOAP Note Grading ---
+
+export interface SOAPNote {
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+}
+
+export interface GradingResult {
+  overallScore: number;
+  sectionScores: {
+    subjective: number;
+    objective: number;
+    assessment: number;
+    plan: number;
+  };
+  feedback: {
+    strengths: string[];
+    improvements: string[];
+    criticalMissing: string[];
+    billingElements: string[];
+  };
+  grade: 'A' | 'B' | 'C' | 'D' | 'F';
+}
+
+export async function gradeSOAPNote(
+  soapNote: SOAPNote,
+  patientCase: { patientInfo: string; chiefComplaint: string; history: string; vitals?: string; physicalExam?: string; }
+): Promise<GradingResult> {
+  const prompt = `
+    You are an expert medical educator grading a PA student's SOAP note.
+    
+    Patient Case:
+    Info: ${patientCase.patientInfo}
+    CC: ${patientCase.chiefComplaint}
+    History: ${patientCase.history}
+    Vitals: ${patientCase.vitals || 'N/A'}
+    Physical Exam: ${patientCase.physicalExam || 'N/A'}
+
+    Student's SOAP Note:
+    Subjective: ${soapNote.subjective}
+    Objective: ${soapNote.objective}
+    Assessment: ${soapNote.assessment}
+    Plan: ${soapNote.plan}
+
+    Evaluate the note based on medical accuracy, completeness, and professional formatting.
+    Return a JSON object with the following structure (no markdown formatting):
+    {
+      "overallScore": number (0-100),
+      "sectionScores": {
+        "subjective": number (0-100),
+        "objective": number (0-100),
+        "assessment": number (0-100),
+        "plan": number (0-100)
+      },
+      "feedback": {
+        "strengths": ["string", "string"],
+        "improvements": ["string", "string"],
+        "criticalMissing": ["string"],
+        "billingElements": ["string"]
+      },
+      "grade": "A" | "B" | "C" | "D" | "F"
+    }
+  `;
+
+  try {
+    const responseText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.3);
+    // Clean up potential markdown code blocks
+    const jsonString = responseText.replace(/```json\n?|\n?```/g, '').trim();
+    return JSON.parse(jsonString) as GradingResult;
+  } catch (error) {
+    console.error("Error grading SOAP note:", error);
+    // Fallback to a basic error result
+    return {
+      overallScore: 0,
+      sectionScores: { subjective: 0, objective: 0, assessment: 0, plan: 0 },
+      feedback: {
+        strengths: [],
+        improvements: ["Failed to grade note due to AI service error."],
+        criticalMissing: [],
+        billingElements: []
+      },
+      grade: 'F'
+    };
+  }
+}
+
+// --- Semantic Validation ---
+
+export async function validateSemanticMatch(
+  userAnswer: string,
+  correctAnswer: string,
+  context?: string
+): Promise<boolean> {
+  // Fast path: exact match (normalized)
+  if (slugify(userAnswer) === slugify(correctAnswer)) return true;
+
+  const prompt = `
+    You are a medical terminology expert.
+    Determine if the user's answer is semantically equivalent to the correct answer, 
+    or if it is a correct diagnosis for the given context (buzzword).
+
+    Context/Buzzword: "${context || 'N/A'}"
+    Correct Answer: "${correctAnswer}"
+    User Answer: "${userAnswer}"
+
+    Rules:
+    1. Accept synonyms (e.g., "Kidney Stones" = "Nephrolithiasis").
+    2. Accept abbreviations if standard (e.g., "CHF" = "Congestive Heart Failure").
+    3. Accept minor spelling errors if phonetically clear.
+    4. Reject if the user's answer is a different condition or too vague.
+
+    Respond with ONLY "true" or "false".
+  `;
+
+  try {
+    const responseText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.1);
+    return responseText.toLowerCase().includes("true");
+  } catch (error) {
+    console.error("Semantic validation error:", error);
+    return false; // Fallback to strict
+  }
 }

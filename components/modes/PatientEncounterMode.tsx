@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight } from 'lucide-react';
+import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import type { PatientEncounterCase, PatientQuestion, EncounterSession } from '@/types/drill-modes';
-import { getRandomEncounterCase, calculateEncounterScore } from '@/data/modes/patientEncounterData';
+import { getRandomEncounterCase, calculateEncounterScore } from '@/services/osceService';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { translateToSpanish, type SpanishMode } from '@/services/medicalSpanishService';
 import { chatWithPatientSimulator, evaluateDiagnosis, performPhysicalExam, orderDiagnosticTest, evaluateTreatmentPlan, generateAfterActionReport } from '@/services/geminiService';
+import { startOSCESession, saveOSCEChat, completeOSCESession } from '@/services/osceService';
 import { Activity, Stethoscope, Microscope, FileText, Pill, ChevronRight, PauseCircle, PlayCircle } from 'lucide-react';
+import { Sparkline } from '@/components/Sparkline';
 
 interface PatientEncounterModeProps {
   onExit?: () => void;
@@ -44,6 +46,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [diagnosisFeedback, setDiagnosisFeedback] = useState<{ isCorrect: boolean; feedback: string; score: number } | null>(null);
   const [treatmentFeedback, setTreatmentFeedback] = useState<{ isCorrect: boolean; feedback: string; score: number } | null>(null);
   const [aar, setAar] = useState<string>('');
+  const [isPatientInfoExpanded, setIsPatientInfoExpanded] = useState(true);
 
   const toggleLanguageMode = () => {
     setLanguageMode(prev => {
@@ -60,14 +63,76 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     return `${text}\n\n[ES] ${translated}`;
   };
 
-  const handleStartEncounter = () => {
+  const generateTrendData = (currentValueStr: string): number[] | null => {
+    // Extract first number found in string
+    const match = currentValueStr.match(/(\d+(\.\d+)?)/);
+    if (!match) return null;
+    
+    const currentVal = parseFloat(match[0]);
+    if (isNaN(currentVal)) return null;
+  
+    // Generate 5-7 historical points
+    const points = 6;
+    const data: number[] = [];
+    
+    // Create a trend that leads to the current value
+    // Randomly decide if trend is stable, rising, or falling
+    const trendType = Math.random();
+    
+    let val = currentVal;
+    
+    // Work backwards
+    for (let i = 0; i < points; i++) {
+      data.unshift(val);
+      
+      // Add noise
+      const noise = (Math.random() - 0.5) * (currentVal * 0.1); // 10% variance
+      
+      if (trendType < 0.6) {
+        // Stable
+        val = val + noise;
+      } else if (trendType < 0.8) {
+        // Rising (so previous was lower)
+        val = val - (currentVal * 0.05) + noise;
+      } else {
+        // Falling (so previous was higher)
+        val = val + (currentVal * 0.05) + noise;
+      }
+    }
+    
+    return data;
+  };
+
+  const handleStartEncounter = async () => {
     setIsLoading(true);
+    
+    // Use dynamic generation to ensure fresh content each time
+    const newCase = await getRandomEncounterCase();
+    
+    if (!newCase) {
+      console.error("Failed to load case");
+      setIsLoading(false);
+      // Ideally show a toast or error message here
+      return;
+    }
+    
+    setCurrentCase(newCase);
+
+    // Start backend session
+    let sessionId: string | undefined;
+    try {
+      const osceSession = await startOSCESession(newCase.id);
+      if (osceSession) {
+        sessionId = osceSession.id;
+      }
+    } catch (e) {
+      console.error("Failed to start OSCE session", e);
+    }
+
     // Simulate loading for content generation buffer
     setTimeout(() => {
-      // Use dynamic generation to ensure fresh content each time
-      const newCase = getRandomEncounterCase(true);
-      setCurrentCase(newCase);
       setSession({
+        id: sessionId,
         caseId: newCase.id,
         questions: [],
         startTime: Date.now(),
@@ -102,11 +167,19 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
       setSession(prev => prev ? ({
         ...prev,
-        questions: [...prev.questions, newQuestion],
+        questions: [...prev.questions, newQuestion]
       }) : null);
-
+      
       setCurrentQuestion('');
-      hapticSuccess();
+
+      // Persist chat
+      if (session.id) {
+        saveOSCEChat(session.id, [
+          { role: 'user', content: currentQuestion, timestamp: newQuestion.timestamp },
+          { role: 'model', content: response, timestamp: Date.now() }
+        ]);
+      }
+
     } catch (error) {
       console.error("Error getting patient response:", error);
       // Fallback or error toast could go here
@@ -211,6 +284,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       }, currentCase);
       setAar(report);
       
+      // Complete session in backend
+      if (session?.id) {
+        await completeOSCESession(session.id, userDiagnosis, treatmentPlan);
+      }
+      
       setViewState('results');
     } catch (error) {
       console.error("Treatment error:", error);
@@ -274,23 +352,24 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   // Landing Page View - Clinical White/Navy Theme
   if (viewState === 'landing') {
     return (
-      <div className="min-h-screen bg-white dark:bg-[#1F283A] text-[#1F283A] dark:text-[#E9ECF1] transition-colors duration-300">
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
         {/* Header */}
-        <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1F283A] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-[#E9ECF1] dark:bg-[#364154] flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-tertiary)] flex items-center justify-center shadow-sm">
                 <MessageSquare className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Virtual OSCE</h1>
-                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Interactive Patient Interviews</p>
+                <p className="text-sm text-[var(--color-text-secondary)]">Interactive Patient Interviews</p>
               </div>
             </div>
             {onExit && (
               <button
                 onClick={onExit}
-                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#364154] dark:hover:bg-slate-700 transition-colors"
+                aria-label="Exit Encounter"
+                className="p-2 rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -306,15 +385,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           >
             {/* Hero Section */}
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-4xl font-bold text-[#1F283A] dark:text-[#E9ECF1]">Ready to Interview Your Patient?</h2>
-              <p className="text-xl text-[#364154] dark:text-[#cbd5e1]">
+              <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">Ready to Interview Your Patient?</h2>
+              <p className="text-xl text-[var(--color-text-secondary)]">
                 Test your clinical reasoning and history-taking skills
               </p>
             </div>
 
             {/* How It Works Card */}
-            <div className="bg-white dark:bg-[#364154] rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-lg space-y-6">
-              <h3 className="text-2xl font-semibold text-[#1F283A] dark:text-[#E9ECF1]">How It Works</h3>
+            <div className="bg-[var(--color-bg-primary)] rounded-2xl p-8 border border-[var(--color-border)] shadow-lg space-y-6">
+              <h3 className="text-2xl font-semibold text-[var(--color-text-primary)]">How It Works</h3>
               
               <div className="space-y-5">
                 {[
@@ -348,8 +427,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <span className="text-xl">{step.icon}</span>
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-1">{step.title}</h4>
-                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm">{step.desc}</p>
+                      <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">{step.title}</h4>
+                      <p className="text-[var(--color-text-secondary)] text-sm">{step.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -361,7 +440,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   <Award className="w-4 h-4" />
                   Pro Tips
                 </p>
-                <ul className="text-sm text-[#364154] dark:text-[#cbd5e1] space-y-2">
+                <ul className="text-sm text-[var(--color-text-secondary)] space-y-2">
                   <li className="flex items-start gap-2">
                     <span className="text-[var(--color-accent)] mt-0.5">•</span>
                     <span>Ask essential questions first (onset, character, severity)</span>
@@ -419,17 +498,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     const seconds = elapsedSeconds % 60;
 
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#1F283A] text-[#1F283A] dark:text-[#E9ECF1]">
+      <div className="min-h-screen bg-[var(--color-bg-secondary)] dark:bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
         {/* Header */}
-        <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#364154] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#E9ECF1] dark:bg-[#1F283A] flex items-center justify-center shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-[var(--color-bg-tertiary)] flex items-center justify-center shadow-sm">
                 <MessageSquare className="w-6 h-6 text-[var(--color-accent)]" />
               </div>
               <div>
                 <h1 className="text-xl font-bold">Virtual OSCE</h1>
-                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">
+                <p className="text-sm text-[var(--color-text-secondary)]">
                   Phase: <span className="font-semibold text-[var(--color-accent)] uppercase">{phase}</span>
                 </p>
               </div>
@@ -459,25 +538,35 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               })}
             </div>
 
+            {/* Mobile Phase Indicator */}
+            <div className="md:hidden flex items-center gap-2 bg-[var(--color-bg-tertiary)] px-3 py-1.5 rounded-full border border-[var(--color-border)]">
+              <div className="w-2 h-2 rounded-full bg-[var(--color-accent)] animate-pulse" />
+              <span className="text-xs font-bold text-[var(--color-text-primary)] uppercase tracking-wide">
+                {phase}
+              </span>
+            </div>
+
             <div className="flex items-center gap-4">
               <button
                 onClick={toggleLanguageMode}
-                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1F283A] dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
+                aria-label="Toggle Language Mode"
+                className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors flex items-center gap-2"
                 title="Toggle Language (English / Spanish / Side-by-Side)"
               >
-                <Globe className="w-4 h-4 text-[#364154] dark:text-[#cbd5e1]" />
-                <span className="text-xs font-medium text-[#364154] dark:text-[#cbd5e1] uppercase w-8 text-center">
+                <Globe className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                <span className="text-xs font-medium text-[var(--color-text-secondary)] uppercase w-8 text-center">
                   {languageMode === 'side-by-side' ? 'Dual' : languageMode === 'spanish' ? 'ES' : 'EN'}
                 </span>
               </button>
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-4 h-4 text-[#364154] dark:text-[#cbd5e1]" />
-                <span className="font-mono text-[#1F283A] dark:text-[#E9ECF1]">{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
+              <div className="flex items-center gap-2 text-sm" aria-label={`Time elapsed: ${minutes} minutes ${seconds} seconds`}>
+                <Clock className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                <span className="font-mono text-[var(--color-text-primary)]">{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
               </div>
               {onExit && (
                 <button
                   onClick={onExit}
-                  className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#1F283A] dark:hover:bg-slate-700 transition-colors"
+                  aria-label="Exit Encounter"
+                  className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -491,56 +580,76 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           <div className="grid md:grid-cols-2 gap-6">
             {/* Left Column: Patient Info & Inputs */}
             <div className="space-y-4">
-              {/* Patient Card (Always Visible) */}
+              {/* Patient Card (Collapsible) */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
+                className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] shadow-md overflow-hidden"
               >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-secondary)] flex items-center justify-center border border-[var(--color-border)]">
+                <div 
+                  className="p-4 md:p-6 flex items-start gap-4 cursor-pointer hover:bg-[var(--color-bg-secondary)]/50 transition-colors"
+                  onClick={() => setIsPatientInfoExpanded(!isPatientInfoExpanded)}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-secondary)] flex items-center justify-center border border-[var(--color-border)] flex-shrink-0">
                     <User className="w-6 h-6 text-[var(--color-accent)]" />
                   </div>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.patientName}</h2>
-                    <p className="text-[#364154] dark:text-[#cbd5e1]">{currentCase.age} year old {currentCase.sex === 'M' ? 'male' : currentCase.sex === 'F' ? 'female' : 'patient'}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
-                    <p className="text-xs font-semibold text-[var(--color-accent)] mb-1">CHIEF COMPLAINT</p>
-                    <p className="text-lg font-semibold text-[#1F283A] dark:text-[#E9ECF1] whitespace-pre-wrap">
-                      {getTranslatedText(currentCase.chiefComplaint)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-xl font-bold text-[var(--color-text-primary)] truncate">{currentCase.patientName}</h2>
+                      <button className="text-[var(--color-text-secondary)] p-1">
+                        {isPatientInfoExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    <p className="text-[var(--color-text-secondary)] truncate text-sm">
+                      {currentCase.age}yo {currentCase.sex} • {currentCase.chiefComplaint.substring(0, 40)}{currentCase.chiefComplaint.length > 40 ? '...' : ''}
                     </p>
                   </div>
-
-                  <div className="bg-slate-50 dark:bg-[#1F283A] rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-                    <p className="text-xs font-semibold text-[#364154] dark:text-[#cbd5e1] mb-3">VITAL SIGNS</p>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <span className="text-[#364154] dark:text-[#cbd5e1]">BP:</span>
-                        <span className="ml-2 font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.vitalSigns.bp}</span>
-                      </div>
-                      <div>
-                        <span className="text-[#364154] dark:text-[#cbd5e1]">HR:</span>
-                        <span className="ml-2 font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.vitalSigns.hr} bpm</span>
-                      </div>
-                      <div>
-                        <span className="text-[#364154] dark:text-[#cbd5e1]">RR:</span>
-                        <span className="ml-2 font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.vitalSigns.rr} /min</span>
-                      </div>
-                      <div>
-                        <span className="text-[#364154] dark:text-[#cbd5e1]">Temp:</span>
-                        <span className="ml-2 font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.vitalSigns.temp}°F</span>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-[#364154] dark:text-[#cbd5e1]">O₂ Sat:</span>
-                        <span className="ml-2 font-mono text-[#1F283A] dark:text-[#E9ECF1]">{currentCase.vitalSigns.o2sat}%</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
+
+                <AnimatePresence>
+                  {isPatientInfoExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="px-4 pb-4 md:px-6 md:pb-6 space-y-3"
+                    >
+                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+                        <p className="text-xs font-semibold text-[var(--color-accent)] mb-1">CHIEF COMPLAINT</p>
+                        <p className="text-lg font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap">
+                          {getTranslatedText(currentCase.chiefComplaint)}
+                        </p>
+                      </div>
+
+                      <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)]">
+                        <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-3">VITAL SIGNS</p>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="text-[var(--color-text-secondary)]">BP:</span>
+                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.bp}</span>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)]">HR:</span>
+                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.hr} bpm</span>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)]">RR:</span>
+                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.rr} /min</span>
+                          </div>
+                          <div>
+                            <span className="text-[var(--color-text-secondary)]">Temp:</span>
+                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.temp}°F</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-[var(--color-text-secondary)]">O₂ Sat:</span>
+                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.o2sat}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
 
               {/* Phase Specific Inputs */}
@@ -551,7 +660,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
+                  className="bg-[var(--color-bg-primary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Ask a Question</h3>
                   <div className="flex gap-2">
@@ -561,14 +670,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onChange={(e) => setCurrentQuestion(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleAskQuestion()}
                       placeholder="e.g., When did the chest pain start?"
-                      className="flex-1 px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg 
-                               text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                      className="flex-1 px-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
+                               text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] 
                                focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm"
                       autoComplete="off"
                     />
                     <button
                       onClick={handleAskQuestion}
                       disabled={!currentQuestion.trim()}
+                      aria-label="Send Question"
                       className="px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
                                disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm"
                     >
@@ -592,10 +702,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
+                  className="bg-[var(--color-bg-primary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Perform Physical Exam</h3>
-                  <p className="text-sm text-slate-500 mb-3">Describe the maneuver you want to perform (e.g., "Auscultate heart", "Palpate abdomen").</p>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-3">Describe the maneuver you want to perform (e.g., "Auscultate heart", "Palpate abdomen").</p>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -603,18 +713,23 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onChange={(e) => setCurrentQuestion(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handlePhysicalExam()}
                       placeholder="e.g., Auscultate lungs"
-                      className="flex-1 px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg 
-                               text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                      className="flex-1 px-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
+                               text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] 
                                focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm"
                       autoComplete="off"
                     />
                     <button
                       onClick={handlePhysicalExam}
-                      disabled={!currentQuestion.trim()}
+                      disabled={!currentQuestion.trim() || isLoading}
+                      aria-label="Perform Physical Exam"
                       className="px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
-                               disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm"
+                               disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm flex items-center justify-center min-w-[3.5rem]"
                     >
-                      <Stethoscope className="w-5 h-5" />
+                      {isLoading ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Stethoscope className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                   <div className="mt-4 flex justify-end">
@@ -634,10 +749,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md"
+                  className="bg-[var(--color-bg-primary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Order Diagnostics</h3>
-                  <p className="text-sm text-slate-500 mb-3">Order labs or imaging (e.g., "CBC", "Chest X-Ray").</p>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-3">Order labs or imaging (e.g., "CBC", "Chest X-Ray").</p>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -645,18 +760,23 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       onChange={(e) => setCurrentQuestion(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleOrderTest()}
                       placeholder="e.g., CBC, BMP, CXR"
-                      className="flex-1 px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg 
-                               text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                      className="flex-1 px-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
+                               text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] 
                                focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm"
                       autoComplete="off"
                     />
                     <button
                       onClick={handleOrderTest}
-                      disabled={!currentQuestion.trim()}
+                      disabled={!currentQuestion.trim() || isLoading}
+                      aria-label="Order Diagnostic Test"
                       className="px-4 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
-                               disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm"
+                               disabled:cursor-not-allowed rounded-lg transition-colors text-white shadow-sm flex items-center justify-center min-w-[3.5rem]"
                     >
-                      <Activity className="w-5 h-5" />
+                      {isLoading ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <Activity className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                   <div className="mt-4 flex justify-end">
@@ -676,7 +796,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
+                  className="bg-[var(--color-bg-secondary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Final Diagnosis</h3>
                   <input
@@ -684,19 +804,26 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     value={userDiagnosis}
                     onChange={(e) => setUserDiagnosis(e.target.value)}
                     placeholder="Enter your primary diagnosis..."
-                    className="w-full px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg mb-4
-                             text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                    className="w-full px-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg mb-4
+                             text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] 
                              focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm"
                     autoComplete="off"
                   />
                   <button
                     onClick={handleSubmitDiagnosis}
-                    disabled={!userDiagnosis.trim()}
+                    disabled={!userDiagnosis.trim() || isLoading}
                     className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
                              disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
-                             transition-colors shadow-sm"
+                             transition-colors shadow-sm flex items-center justify-center gap-2"
                   >
-                    Submit Diagnosis
+                    {isLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Evaluating...
+                      </>
+                    ) : (
+                      'Submit Diagnosis'
+                    )}
                   </button>
                 </motion.div>
               )}
@@ -707,26 +834,33 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
+                  className="bg-[var(--color-bg-secondary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
                 >
                   <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Treatment Plan</h3>
-                  <p className="text-sm text-slate-500 mb-3">Outline your management plan (medications, disposition, follow-up).</p>
+                  <p className="text-sm text-[var(--color-text-muted)] mb-3">Outline your management plan (medications, disposition, follow-up).</p>
                   <textarea
                     value={treatmentPlan}
                     onChange={(e) => setTreatmentPlan(e.target.value)}
                     placeholder="e.g., Admit to telemetry, start Aspirin 325mg, Heparin drip..."
-                    className="w-full px-4 py-3 bg-white dark:bg-[#1F283A] border border-slate-300 dark:border-slate-700 rounded-lg mb-4
-                             text-[#1F283A] dark:text-[#E9ECF1] placeholder-slate-400 dark:placeholder-slate-500 
+                    className="w-full px-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg mb-4
+                             text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] 
                              focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm min-h-[120px]"
                   />
                   <button
                     onClick={handleTreatmentSubmit}
-                    disabled={!treatmentPlan.trim()}
+                    disabled={!treatmentPlan.trim() || isLoading}
                     className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
                              disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
-                             transition-colors shadow-sm"
+                             transition-colors shadow-sm flex items-center justify-center gap-2"
                   >
-                    Finalize Encounter
+                    {isLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Finalizing...
+                      </>
+                    ) : (
+                      'Finalize Encounter'
+                    )}
                   </button>
                 </motion.div>
               )}
@@ -738,19 +872,19 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-md h-[600px] flex flex-col"
+                className="bg-[var(--color-bg-primary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md h-[600px] flex flex-col"
               >
                 <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Encounter Log</h3>
                 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                   {/* History Log */}
                   {session.questions.map((q, idx) => (
-                    <div key={`hist-${idx}`} className="bg-slate-50 dark:bg-[#1F283A] rounded-lg p-4 space-y-2 border border-slate-200 dark:border-slate-700">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
+                    <div key={`hist-${idx}`} className="bg-[var(--color-bg-secondary)] rounded-lg p-4 space-y-2 border border-[var(--color-border)]">
+                      <div className="flex items-center gap-2 text-xs font-bold text-[var(--color-text-muted)] uppercase">
                         <MessageSquare className="w-3 h-3" /> History
                       </div>
-                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Q: {q.questionText}</p>
-                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-[var(--color-border)] whitespace-pre-wrap">
+                      <p className="text-[var(--color-text-primary)] font-semibold">Q: {q.questionText}</p>
+                      <p className="text-[var(--color-text-secondary)] text-sm pl-4 border-l-2 border-[var(--color-border)] whitespace-pre-wrap">
                         A: {getTranslatedText(q.response)}
                       </p>
                     </div>
@@ -762,25 +896,44 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <div className="flex items-center gap-2 text-xs font-bold text-blue-500 uppercase">
                         <Stethoscope className="w-3 h-3" /> Physical Exam
                       </div>
-                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Exam: {f.maneuver}</p>
-                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-blue-300 whitespace-pre-wrap">
+                      <p className="text-[var(--color-text-primary)] font-semibold">Exam: {f.maneuver}</p>
+                      <p className="text-[var(--color-text-secondary)] text-sm pl-4 border-l-2 border-blue-300 whitespace-pre-wrap">
                         Finding: {f.finding}
                       </p>
                     </div>
                   ))}
 
                   {/* Diagnostic Log */}
-                  {diagnosticResults.map((r, idx) => (
-                    <div key={`diag-${idx}`} className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 space-y-2 border border-purple-100 dark:border-purple-800">
-                      <div className="flex items-center gap-2 text-xs font-bold text-purple-500 uppercase">
-                        <Activity className="w-3 h-3" /> Diagnostics
+                  {diagnosticResults.map((r, idx) => {
+                    const trendData = generateTrendData(r.result);
+                    
+                    return (
+                      <div key={`diag-${idx}`} className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 space-y-2 border border-purple-100 dark:border-purple-800">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-xs font-bold text-purple-500 uppercase">
+                            <Activity className="w-3 h-3" /> Diagnostics
+                          </div>
+                          {trendData && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-purple-400 uppercase font-semibold">Trend</span>
+                              <Sparkline 
+                                data={trendData} 
+                                width={60} 
+                                height={20} 
+                                color="#a855f7" 
+                                strokeWidth={2}
+                                showDots={false}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Order: {r.testName}</p>
+                        <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-purple-300 whitespace-pre-wrap font-mono">
+                          Result: {r.result}
+                        </p>
                       </div>
-                      <p className="text-[#1F283A] dark:text-[#E9ECF1] font-semibold">Order: {r.testName}</p>
-                      <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-purple-300 whitespace-pre-wrap font-mono">
-                        Result: {r.result}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {/* Diagnosis Log */}
                   {diagnosisFeedback && (
