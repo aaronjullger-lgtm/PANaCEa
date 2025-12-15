@@ -158,11 +158,51 @@ async function processResourceContent(
 const MAX_CONTENT_ANALYSIS_LENGTH = 10000; // Characters to analyze with AI
 
 /**
- * Extract text from PDF using AI vision
- * TODO: Replace with proper PDF parsing library (pdf-parse) for production
- * to reduce AI API costs and improve reliability
+ * Extract text from PDF using pdf-parse library
+ * Replaced AI vision to reduce costs and improve reliability
  */
 async function extractTextFromPDF(pdfBuffer: Buffer): Promise<string> {
+  try {
+    // Dynamic import to handle potential missing dependency gracefully
+    const pdfParse = await import('pdf-parse').catch(() => null);
+    
+    if (!pdfParse) {
+      console.warn('pdf-parse library not available, falling back to AI vision');
+      return extractTextFromPDFWithAI(pdfBuffer);
+    }
+
+    const data = await pdfParse.default(pdfBuffer);
+    
+    // Clean and format the extracted text
+    let text = data.text;
+    
+    // Remove excessive whitespace and normalize line breaks
+    text = text.replace(/\s+/g, ' ').trim();
+    text = text.replace(/(.{100})/g, '$1\n'); // Add line breaks for readability
+    
+    // Remove common PDF artifacts
+    text = text.replace(/\f/g, '\n'); // Form feed characters
+    text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Control characters
+    
+    if (text.length < 50) {
+      console.warn('PDF text extraction yielded minimal content, falling back to AI vision');
+      return extractTextFromPDFWithAI(pdfBuffer);
+    }
+    
+    return text;
+    
+  } catch (error) {
+    console.error('PDF parsing failed:', error);
+    console.warn('Falling back to AI vision for PDF text extraction');
+    return extractTextFromPDFWithAI(pdfBuffer);
+  }
+}
+
+/**
+ * Fallback: Extract text from PDF using AI vision
+ * Used when pdf-parse fails or is unavailable
+ */
+async function extractTextFromPDFWithAI(pdfBuffer: Buffer): Promise<string> {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
   const base64Pdf = pdfBuffer.toString('base64');
@@ -362,4 +402,139 @@ function getMimeType(filename: string): string {
   };
 
   return mimeTypes[ext || ''] || 'application/octet-stream';
+}
+
+/**
+ * Batch process existing PDFs that haven't been processed yet
+ */
+export async function batchProcessExistingPDFs(): Promise<{
+  processed: number;
+  failed: number;
+  skipped: number;
+}> {
+  const results = { processed: 0, failed: 0, skipped: 0 };
+
+  try {
+    // Find unprocessed PDF resources
+    const unprocessedResources = await prisma.educationalResource.findMany({
+      where: {
+        resourceType: 'pdf',
+        extractedText: null,
+        approvalStatus: 'pending',
+      },
+      take: 50, // Process in batches to avoid memory issues
+    });
+
+    console.log(`Found ${unprocessedResources.length} unprocessed PDFs`);
+
+    for (const resource of unprocessedResources) {
+      try {
+        // Download the PDF from storage
+        const { data, error } = await supabaseAdmin.storage
+          .from(RESOURCE_BUCKET)
+          .download(resource.fileUrl.split('/').pop() || '');
+
+        if (error || !data) {
+          console.error(`Failed to download PDF ${resource.id}:`, error);
+          results.failed++;
+          continue;
+        }
+
+        // Convert to buffer
+        const arrayBuffer = await data.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Process the content
+        const processingResult = await processResourceContent(
+          resource.id,
+          buffer,
+          resource.resourceType
+        );
+
+        results.processed++;
+        console.log(`Processed PDF ${resource.id}: ${resource.title}`);
+
+        // Add small delay to avoid overwhelming the system
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+      } catch (error) {
+        console.error(`Failed to process PDF ${resource.id}:`, error);
+        results.failed++;
+      }
+    }
+
+  } catch (error) {
+    console.error('Batch processing failed:', error);
+    throw error;
+  }
+
+  return results;
+}
+
+/**
+ * Create background job for processing existing PDFs
+ */
+export async function scheduleBackgroundProcessing(): Promise<void> {
+  // In a production environment, this would integrate with a job queue
+  // For now, we'll use a simple setTimeout approach
+  
+  const processInBackground = async () => {
+    try {
+      const results = await batchProcessExistingPDFs();
+      console.log('Background PDF processing completed:', results);
+      
+      // Schedule next batch if there were processed items
+      if (results.processed > 0) {
+        setTimeout(processInBackground, 60000); // Process next batch in 1 minute
+      }
+    } catch (error) {
+      console.error('Background processing error:', error);
+      // Retry after 5 minutes on error
+      setTimeout(processInBackground, 300000);
+    }
+  };
+
+  // Start background processing after a short delay
+  setTimeout(processInBackground, 5000);
+}
+
+/**
+ * Get processing status and statistics
+ */
+export async function getProcessingStatus(): Promise<{
+  total: number;
+  processed: number;
+  pending: number;
+  failed: number;
+  processingRate: number;
+}> {
+  const [total, processed, pending] = await Promise.all([
+    prisma.educationalResource.count({
+      where: { resourceType: 'pdf' }
+    }),
+    prisma.educationalResource.count({
+      where: {
+        resourceType: 'pdf',
+        extractedText: { not: null }
+      }
+    }),
+    prisma.educationalResource.count({
+      where: {
+        resourceType: 'pdf',
+        extractedText: null,
+        approvalStatus: 'pending'
+      }
+    })
+  ]);
+
+  const failed = total - processed - pending;
+  const processingRate = total > 0 ? (processed / total) * 100 : 0;
+
+  return {
+    total,
+    processed,
+    pending,
+    failed,
+    processingRate
+  };
 }

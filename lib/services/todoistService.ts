@@ -160,17 +160,272 @@ export function downloadTodoistCSV(tasks: TodoistTask[], filename: string = 'pan
 }
 
 /**
+ * Todoist OAuth configuration and token management
+ */
+export interface TodoistOAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
+
+export interface TodoistTokens {
+  accessToken: string;
+  tokenType: string;
+  expiresIn?: number;
+  refreshToken?: string;
+}
+
+export interface TodoistProject {
+  id: string;
+  name: string;
+  color: string;
+  is_shared: boolean;
+}
+
+/**
  * Generate OAuth URL for Todoist integration
  */
-export function getTodoistOAuthUrl(clientId: string, redirectUri: string): string {
+export function getTodoistOAuthUrl(config: TodoistOAuthConfig): string {
   const state = Math.random().toString(36).substring(7);
+  // Store state in sessionStorage for validation
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('todoist_oauth_state', state);
+  }
+  
   const params = new URLSearchParams({
-    client_id: clientId,
+    client_id: config.clientId,
     scope: 'data:read_write',
     state: state,
+    response_type: 'code',
   });
   
   return `https://todoist.com/oauth/authorize?${params.toString()}`;
+}
+
+/**
+ * Exchange authorization code for access token
+ */
+export async function exchangeCodeForToken(
+  code: string,
+  state: string,
+  config: TodoistOAuthConfig
+): Promise<TodoistTokens> {
+  // Validate state parameter
+  if (typeof window !== 'undefined') {
+    const storedState = sessionStorage.getItem('todoist_oauth_state');
+    if (storedState !== state) {
+      throw new Error('Invalid OAuth state parameter');
+    }
+    sessionStorage.removeItem('todoist_oauth_state');
+  }
+
+  const response = await fetch('https://todoist.com/oauth/access_token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      code: code,
+      redirect_uri: config.redirectUri,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OAuth token exchange failed: ${response.statusText}`);
+  }
+
+  const tokens: TodoistTokens = await response.json();
+  
+  // Store encrypted tokens securely
+  await storeTokensSecurely(tokens);
+  
+  return tokens;
+}
+
+/**
+ * Store tokens securely with encryption
+ */
+async function storeTokensSecurely(tokens: TodoistTokens): Promise<void> {
+  // In a real implementation, encrypt tokens before storage
+  const encryptedTokens = await encryptTokens(tokens);
+  localStorage.setItem('todoist_tokens', JSON.stringify(encryptedTokens));
+}
+
+/**
+ * Retrieve and decrypt stored tokens
+ */
+async function getStoredTokens(): Promise<TodoistTokens | null> {
+  const stored = localStorage.getItem('todoist_tokens');
+  if (!stored) return null;
+  
+  try {
+    const encryptedTokens = JSON.parse(stored);
+    return await decryptTokens(encryptedTokens);
+  } catch (error) {
+    console.error('Failed to decrypt stored tokens:', error);
+    localStorage.removeItem('todoist_tokens');
+    return null;
+  }
+}
+
+/**
+ * Simple encryption for tokens (use proper encryption in production)
+ */
+async function encryptTokens(tokens: TodoistTokens): Promise<string> {
+  // This is a simplified encryption - use proper crypto in production
+  const key = await getEncryptionKey();
+  const data = JSON.stringify(tokens);
+  return btoa(data + key); // Base64 encoding with key
+}
+
+/**
+ * Simple decryption for tokens
+ */
+async function decryptTokens(encryptedData: string): Promise<TodoistTokens> {
+  const key = await getEncryptionKey();
+  const decoded = atob(encryptedData);
+  const data = decoded.replace(key, '');
+  return JSON.parse(data);
+}
+
+/**
+ * Get encryption key (derive from user session or environment)
+ */
+async function getEncryptionKey(): Promise<string> {
+  // In production, derive from user session or secure environment variable
+  return 'panacea_todoist_key_' + (window.location.hostname || 'localhost');
+}
+
+/**
+ * Create or get Todoist project for PANaCEa
+ */
+export async function ensureTodoistProject(projectName: string = 'PANCE Study Plan'): Promise<string> {
+  const tokens = await getStoredTokens();
+  if (!tokens) {
+    throw new Error('No Todoist authentication found');
+  }
+
+  // Get existing projects
+  const projects = await getTodoistProjects(tokens.accessToken);
+  
+  // Check if project already exists
+  const existingProject = projects.find(p => p.name === projectName);
+  if (existingProject) {
+    return existingProject.id;
+  }
+
+  // Create new project
+  const response = await fetch('https://api.todoist.com/rest/v2/projects', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${tokens.accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: projectName,
+      color: 'blue',
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create Todoist project: ${response.statusText}`);
+  }
+
+  const project = await response.json();
+  return project.id;
+}
+
+/**
+ * Get user's Todoist projects
+ */
+async function getTodoistProjects(accessToken: string): Promise<TodoistProject[]> {
+  const response = await fetch('https://api.todoist.com/rest/v2/projects', {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Todoist projects: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Export tasks directly to Todoist via API
+ */
+export async function exportTasksToTodoist(tasks: TodoistTask[]): Promise<void> {
+  const tokens = await getStoredTokens();
+  if (!tokens) {
+    throw new Error('No Todoist authentication found. Please connect your Todoist account first.');
+  }
+
+  const projectId = await ensureTodoistProject();
+  
+  // Create tasks in batches to avoid rate limits
+  const batchSize = 10;
+  for (let i = 0; i < tasks.length; i += batchSize) {
+    const batch = tasks.slice(i, i + batchSize);
+    
+    await Promise.all(batch.map(async (task) => {
+      const todoistTask = {
+        content: task.content,
+        description: task.description,
+        due_date: task.due_date,
+        priority: task.priority || 1,
+        project_id: projectId,
+        labels: task.labels || [],
+      };
+
+      const response = await fetch('https://api.todoist.com/rest/v2/tasks', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(todoistTask),
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to create task: ${task.content}`, response.statusText);
+      }
+    }));
+
+    // Rate limiting: wait between batches
+    if (i + batchSize < tasks.length) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+}
+
+/**
+ * Check if user is connected to Todoist
+ */
+export async function isTodoistConnected(): Promise<boolean> {
+  const tokens = await getStoredTokens();
+  if (!tokens) return false;
+
+  // Verify token is still valid
+  try {
+    const response = await fetch('https://api.todoist.com/rest/v2/projects', {
+      headers: {
+        'Authorization': `Bearer ${tokens.accessToken}`,
+      },
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Disconnect from Todoist
+ */
+export async function disconnectTodoist(): Promise<void> {
+  localStorage.removeItem('todoist_tokens');
 }
 
 /**

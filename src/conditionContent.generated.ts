@@ -71,7 +71,7 @@ export async function loadConditionContent(): Promise<Record<string, ConditionCo
     if (response.ok) {
       const data = await response.json();
       if (Object.keys(data).length > 0) {
-        console.log('Loaded content from Database');
+        // Content loaded from database
         conditionContentCache = data;
         return data;
       }

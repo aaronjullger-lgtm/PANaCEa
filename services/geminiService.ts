@@ -27,6 +27,109 @@ import {
   normalizeConditionContent,
 } from "../lib/loadConditions";
 
+// ============================================================================
+// TYPE DEFINITIONS FOR GEMINI SERVICE
+// ============================================================================
+
+/**
+ * Patient data for OSCE/Patient Encounter simulations
+ */
+export interface PatientData {
+  age: number;
+  gender: 'male' | 'female' | 'other';
+  chiefComplaint: string;
+  presentingSymptoms: string[];
+  medicalHistory: string[];
+  medications: string[];
+  allergies: string[];
+  socialHistory?: {
+    smoking?: boolean;
+    alcohol?: boolean;
+    drugs?: boolean;
+    occupation?: string;
+  };
+  vitalSigns?: {
+    temperature?: number;
+    heartRate?: number;
+    bloodPressure?: string;
+    respiratoryRate?: number;
+    oxygenSaturation?: number;
+  };
+}
+
+/**
+ * Clinical scenario configuration
+ */
+export interface ClinicalScenario {
+  scenarioId: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  system: SystemCode;
+  condition: string;
+  learningObjectives: string[];
+  timeLimit?: number; // minutes
+}
+
+/**
+ * Expected medical findings for validation
+ */
+export interface MedicalFindings {
+  physicalExam: Record<string, string>;
+  diagnosticTests: Record<string, unknown>;
+  differentialDiagnosis: string[];
+  workingDiagnosis: string;
+  treatmentPlan: string[];
+}
+
+/**
+ * Patient simulator case data
+ */
+export interface PatientSimulatorCase {
+  caseId: string;
+  patientData: PatientData;
+  scenario: ClinicalScenario;
+  expectedFindings: MedicalFindings;
+}
+
+/**
+ * Chat message in patient simulator
+ */
+export interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
+  timestamp?: string;
+  phase?: 'history' | 'physical' | 'diagnostic' | 'diagnosis' | 'treatment';
+}
+
+/**
+ * Session data for after-action reports
+ */
+export interface SessionData {
+  sessionId: string;
+  startTime: string;
+  endTime: string;
+  chatHistory: ChatMessage[];
+  actionsPerformed: string[];
+  testsOrdered: string[];
+  diagnosisSubmitted?: string;
+  treatmentPlan?: string[];
+  score?: number;
+}
+
+/**
+ * Parsed question response from Gemini
+ */
+export interface ParsedQuestionResponse {
+  question: string;
+  options: string[];
+  correctAnswerIndex: number;
+  rationale: string;
+  pearls: string[];
+  topic?: string;
+  system?: SystemCode;
+  condition?: string;
+  conditionId?: string;
+}
+
 // --- Helper: call serverless function, which talks to Gemini ---
 
 export async function callGeminiText(
@@ -401,9 +504,9 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     // which is illegal inside a JSON string. This collapses any ">\n<" into "><".
     const jsonString = rawText.replace(/>\s*\n\s*</g, "><");
 
-    let parsed: any;
+    let parsed: ParsedQuestionResponse;
     try {
-      parsed = JSON.parse(jsonString);
+      parsed = JSON.parse(jsonString) as ParsedQuestionResponse;
     } catch (parseError) {
       console.error(
         "Failed to parse JSON from Gemini. String that failed:",
@@ -592,8 +695,8 @@ Your Task:
  * Acts as both the patient (dialogue) and the system (exam/lab results).
  */
 export async function chatWithPatientSimulator(
-  caseData: any,
-  chatHistory: { role: 'user' | 'model'; content: string }[],
+  caseData: PatientSimulatorCase,
+  chatHistory: ChatMessage[],
   userMessage: string
 ): Promise<string> {
   const systemPrompt = `
@@ -693,7 +796,7 @@ Return ONLY raw JSON (no markdown formatting) with this structure:
  */
 export async function performPhysicalExam(
   action: string,
-  caseData: any
+  caseData: PatientSimulatorCase
 ): Promise<string> {
   const prompt = `
 You are the physical exam simulator for a Virtual OSCE.
@@ -729,7 +832,7 @@ Output: "Inspiratory arrest on deep palpation of the RUQ (Positive Murphy's sign
  */
 export async function orderDiagnosticTest(
   testName: string,
-  caseData: any
+  caseData: PatientSimulatorCase
 ): Promise<{ result: string; interpretation: string }> {
   const prompt = `
 You are the diagnostic result generator for a Virtual OSCE.
@@ -768,7 +871,7 @@ Instructions:
  */
 export async function evaluateTreatmentPlan(
   plan: string,
-  caseData: any
+  caseData: PatientSimulatorCase
 ): Promise<{ isCorrect: boolean; feedback: string; score: number }> {
   const prompt = `
 You are grading a treatment plan for a PA student.
@@ -799,8 +902,8 @@ Return JSON: { "isCorrect": boolean, "score": number, "feedback": "string" }
  * Generates a brief After Action Report (AAR).
  */
 export async function generateAfterActionReport(
-  sessionData: any,
-  caseData: any
+  sessionData: SessionData,
+  caseData: PatientSimulatorCase
 ): Promise<string> {
   const prompt = `
 Generate a brief, bulleted After Action Report (AAR) for a medical student's OSCE performance.

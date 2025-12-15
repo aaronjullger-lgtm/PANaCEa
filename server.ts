@@ -53,10 +53,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(sanitizeBody); // Sanitize all request bodies
 
 // Request logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
+app.use(createRequestLogger());
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -116,7 +113,7 @@ app.post('/geminiProxy', async (req: Request, res: Response) => {
       });
     }
 
-    const geminiData: any = await geminiResponse.json();
+    const geminiData: GeminiApiResponse = await geminiResponse.json();
     
     let rawText = '';
     if (geminiData.candidates && geminiData.candidates[0]?.content?.parts?.[0]?.text) {
@@ -1121,9 +1118,13 @@ app.post('/api/branches',
       });
       
       res.json({ success: true, branchId });
-    } catch (error: any) {
-      console.error('Failed to create branch:', error);
-      res.status(500).json({ success: false, error: error.message });
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('Failed to create branch:', apiError);
+      res.status(500).json({ 
+        success: false, 
+        error: apiError.message || 'Failed to create branch' 
+      });
     }
   }
 );
@@ -1155,9 +1156,13 @@ app.post('/api/branches/:branchName/merge',
       const result = await mergeBranch(branchName, mergedBy, targetBranch);
       
       res.json({ success: result.success, ...result });
-    } catch (error: any) {
-      console.error('Failed to merge branch:', error);
-      res.status(500).json({ success: false, error: error.message });
+    } catch (error) {
+      const apiError = error as ApiError;
+      console.error('Failed to merge branch:', apiError);
+      res.status(500).json({ 
+        success: false, 
+        error: apiError.message || 'Failed to merge branch' 
+      });
     }
   }
 );

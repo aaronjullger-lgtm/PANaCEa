@@ -78,6 +78,9 @@ model User {
   /// Active Patient Encounter Sessions
   patientEncounterSessions PatientEncounterSession[]
 
+  /// Admin audit logs (for admin users)
+  adminAuditLogs     AdminAuditLog[]
+
   /// Social
   studyGroups        StudyGroupMember[]
 
