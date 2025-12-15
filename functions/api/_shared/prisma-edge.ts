@@ -22,7 +22,7 @@
 
 import type { PrismaClient as PrismaClientType } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
-import { createRequire } from 'module';
+import { createRequire } from 'node:module';
 
 // Workaround for "module is not defined" error in Cloudflare Pages Functions
 // The Prisma Client Edge build is CommonJS, but the runtime expects ESM.
