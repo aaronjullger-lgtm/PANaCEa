@@ -60,8 +60,8 @@ export async function loadDrugData(): Promise<any> {
  * Lazily load condition content when needed.
  * Uses database API endpoint exclusively - no static fallback.
  * 
- * @returns Promise resolving to the condition content
- * @throws Error if database API is not available
+ * @returns Promise resolving to the condition content, or empty object if database is unavailable
+ * @note Returns empty object on error to prevent app crashes. Logs errors to console.
  */
 export async function loadConditionContent(): Promise<any> {
   const cacheKey = 'conditionContent';
@@ -86,13 +86,15 @@ export async function loadConditionContent(): Promise<any> {
     
     // Database API returned non-OK response
     console.error(`Database API returned status ${response.status} for ${apiUrl}`);
-    throw new Error(`Failed to load condition content from database API: ${response.status} ${response.statusText}`);
+    console.error('Ensure DATABASE_URL is set and database is accessible');
   } catch (error) {
     console.error('Failed to load condition content from database API:', error);
-    // Return empty object to prevent app crashes, but log clear error
-    // Content will be loaded on-demand via individual database queries if needed
-    return {};
+    console.error('Ensure backend server is running and DATABASE_URL is configured');
   }
+  
+  // Return empty object to prevent app crashes - no static fallback
+  // Application requires database to be properly configured for full functionality
+  return {};
 }
 
 /**
