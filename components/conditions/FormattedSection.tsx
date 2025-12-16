@@ -64,6 +64,20 @@ function buildBulletTree(content: string): BulletNode[] {
   // 4. Handle Double Bullets: •• -> Indented Bullet
   normalized = normalized.replace(/^(\s*)••\s*/gm, "    • ");
 
+  // 5. Handle Numbered Lists: 1. Item -> • Item
+  // This prevents "double bullets" (one from UI, one from text "1.")
+  normalized = normalized.replace(/^(\s*)\d+\.\s+/gm, "$1• ");
+
+  // 6. Handle "Term: Definition" style lines that are missing bullets
+  // Convert "Term: Definition..." to "• **Term**: Definition..."
+  // Only applies if the line doesn't already start with a bullet or special char
+  // and the "Term" is reasonably short (< 50 chars)
+  normalized = normalized.replace(/^(\s*)([A-Za-z0-9][^:\n]{0,50}):\s+(.+)$/gm, (match, indent, term, rest) => {
+    // Don't touch if it looks like a header (already bold)
+    if (term.trim().startsWith('**')) return match;
+    return `${indent}• **${term}**: ${rest}`;
+  });
+
   // If content is on a single line, split by bullet markers
   const lines = normalized.split("\n");
   const hasNewlines = lines.filter(l => l.trim()).length > 1;
@@ -134,16 +148,13 @@ function buildBulletTree(content: string): BulletNode[] {
     // e.g. "Acute/Emergency Management"
     // Criteria:
     // 1. No bullet (checked later via !bulletSymbol)
-    // 2. Short length (< 60 chars) OR contains a colon early on (e.g. "Term: Definition")
+    // 2. Short length (< 60 chars)
     // 3. Starts with uppercase or number
     // 4. Not a sentence (doesn't end with period, unless it's short)
-    const colonIndex = text.indexOf(':');
-    const hasEarlyColon = colonIndex > 0 && colonIndex < 60;
-    
     const isImplicitHeader = !bulletSymbol && !isAsteriskBullet && 
-                             (text.length < 60 || hasEarlyColon) && 
+                             text.length < 60 && 
                              /^[A-Z0-9]/.test(text) && 
-                             (!/[.]$/.test(text) || text.endsWith(':') || hasEarlyColon);
+                             (!/[.]$/.test(text) || text.endsWith(':'));
 
     const isHeaderOnly = isBoldHeader || isImplicitHeader;
     
