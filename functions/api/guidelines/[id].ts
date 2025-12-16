@@ -10,7 +10,10 @@ export async function onRequestGet(context: any) {
   if (!env.DATABASE_URL) {
     return new Response(JSON.stringify({ error: 'Database not configured' }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 
@@ -23,18 +26,27 @@ export async function onRequestGet(context: any) {
     if (!guideline) {
       return new Response(JSON.stringify({ error: 'Guideline not found' }), { 
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
     
     return new Response(JSON.stringify(guideline), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   } catch (error: any) {
     console.error(`Error fetching guideline ${id}:`, error);
     return new Response(JSON.stringify({ error: 'Failed to fetch guideline', details: error.message }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 }
