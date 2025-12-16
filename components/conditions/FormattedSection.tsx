@@ -46,6 +46,19 @@ function formatText(text: string): React.ReactNode[] {
 function buildBulletTree(content: string): BulletNode[] {
   // Normalize content: convert various bullet patterns to standardized format
   let normalized = content.replace(/\r\n/g, "\n");
+
+  // Global Normalization (applies to all content)
+  // 1. Handle Headers: ### Header -> **Header** (and ensure it's on its own line)
+  normalized = normalized.replace(/^###\s+(.*)$/gm, "**$1**");
+
+  // 2. Handle Hyphen Bullets: - Item -> • Item
+  normalized = normalized.replace(/^(\s*)-\s+/gm, "$1• ");
+
+  // 3. Handle Asterisk Bullets: * Item -> • Item
+  // We match start of line, optional whitespace, asterisk, then space.
+  // This avoids matching *italics* which wouldn't have a space after the first * usually, 
+  // or would be inside text.
+  normalized = normalized.replace(/^(\s*)\*\s+/gm, "$1• ");
   
   // If content is on a single line, split by bullet markers
   const lines = normalized.split("\n");
