@@ -79,16 +79,23 @@ PANaCEa is a medical education platform built with:
    ```
    
    Edit `.env` with your keys:
-   - `VITE_CLERK_PUBLISHABLE_KEY`
-   - `CLERK_SECRET_KEY`
-   - `GEMINI_API_KEY`
-   - `VITE_GEMINI_API_KEY`
-   - `DATABASE_URL` (optional)
+   - `VITE_CLERK_PUBLISHABLE_KEY` - Frontend authentication
+   - `CLERK_SECRET_KEY` - Backend authentication
+   - `GEMINI_API_KEY` - AI question generation
+   - `DATABASE_URL` - **REQUIRED** for database-driven content
 
-4. Start the development servers:
+4. Generate Prisma Client:
+   ```bash
+   npm run db:generate
+   ```
+
+5. Start BOTH development servers (required):
    ```bash
    npm run dev:all
    ```
+   
+   **Important:** The app requires both frontend (port 3000) and backend (port 3001) servers to be running.
+   Running only `npm run dev` will cause API errors because the backend won't be available.
 
 ## Project Structure
 
@@ -149,20 +156,49 @@ PANaCEa/
 
 ### Running the App
 
-**Development (both servers):**
+**⚠️ IMPORTANT: Always use `dev:all` for full functionality**
+
+The application uses a **database-first architecture** that requires both frontend and backend servers:
+
+- **Frontend (Vite)**: Port 3000 - React UI
+- **Backend (Express)**: Port 3001 - API endpoints & database queries
+
+**Development (both servers) - RECOMMENDED:**
 ```bash
 npm run dev:all
 ```
 
-**Frontend only:**
+This command starts both servers concurrently. Use this for normal development.
+
+**Frontend only (limited functionality):**
 ```bash
 npm run dev
 ```
 
-**Backend only:**
+**WARNING**: Running frontend only will cause errors:
+- API requests to `/api/content/all` will fail
+- Database queries won't work  
+- You'll see "SyntaxError: Unexpected token '<'" when parsing JSON
+- This is because the backend server isn't running to handle API requests
+
+**Backend only (for API development):**
 ```bash
 npm run dev:server
 ```
+
+### Troubleshooting Common Issues
+
+**Error: "Unexpected token '<' in JSON"**
+- **Cause**: Frontend trying to parse HTML instead of JSON from API
+- **Solution**: Start backend server with `npm run dev:all`
+
+**Error: "Failed to fetch from /api/content/all"**
+- **Cause**: Backend server not running
+- **Solution**: Use `npm run dev:all` instead of `npm run dev`
+
+**Server starts but shows "Database unavailable"**
+- **Cause**: DATABASE_URL not configured or database not accessible
+- **Solution**: Check `.env` file has valid DATABASE_URL
 
 ### Code Organization Principles
 

@@ -17,7 +17,7 @@ import { config } from 'dotenv';
 import { sanitizeBody, validateRequired, validateEnum } from './lib/middleware/validation';
 import { requireAuth, AuthenticatedRequest } from './lib/middleware/clerkAuth';
 import { requireAdmin } from './lib/middleware/adminAuth';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './lib/prisma';
 import Redis from 'ioredis';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -27,7 +27,6 @@ import { createRequestLogger } from './lib/logging/structuredLogger';
 config();
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
 // Security Middleware
@@ -2504,4 +2503,38 @@ app.get('/api/drugs/search', async (req: Request, res: Response) => {
     console.error('Error searching drugs:', error);
     res.status(500).json({ error: 'Failed to search drugs' });
   }
+});
+
+// Start the server
+app.listen(PORT, async () => {
+  // Check database connectivity
+  let dbStatus = '✗ Not configured';
+  if (process.env.DATABASE_URL) {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      dbStatus = '✓ Connected';
+    } catch (error) {
+      dbStatus = '✗ Connection failed';
+      console.error('Database connection error:', error instanceof Error ? error.message : 'Unknown error');
+    }
+  }
+
+  const envDisplay = (process.env.NODE_ENV || 'development').padEnd(16);
+  
+  console.log(`
+╔════════════════════════════════════════════════════════════════╗
+║                  PANaCEa Backend Server                        ║
+╠════════════════════════════════════════════════════════════════╣
+║ Status: ✓ Server is running                                   ║
+║ Port: ${String(PORT).padEnd(56)}║
+║ Environment: ${envDisplay}                              ║
+║                                                                ║
+║ API Endpoints:                                                 ║
+║   - Health Check: http://localhost:${PORT}/health                 ║
+║   - Content API: http://localhost:${PORT}/api/content/all         ║
+║   - Gemini Proxy: http://localhost:${PORT}/geminiProxy            ║
+║                                                                ║
+║ Database: ${dbStatus.padEnd(50)}║
+╚════════════════════════════════════════════════════════════════╝
+  `);
 });
