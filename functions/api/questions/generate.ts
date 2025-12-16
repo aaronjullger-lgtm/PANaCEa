@@ -37,7 +37,10 @@ export const onRequestPost = async (context) => {
        // Let's enforce it to prevent abuse.
        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
@@ -49,7 +52,10 @@ export const onRequestPost = async (context) => {
         missing 
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
@@ -61,7 +67,10 @@ export const onRequestPost = async (context) => {
         error: 'Database not configured' 
       }), {
         status: 503,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
@@ -82,7 +91,10 @@ export const onRequestPost = async (context) => {
         cached: true,
         similarity: cached.similarity,
       }), {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 

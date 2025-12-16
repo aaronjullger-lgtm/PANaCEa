@@ -1,58 +1,135 @@
-/**
- * API Endpoint: Fetch Questions
- * POST /api/questions/fetch
- * 
- * Fetches questions for a user with no-repeat logic
- * Uses the smart storage system to minimize API calls
- */
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
 
-import type { Request, Response } from 'express';
-import { 
-  getQuestionsWithNoRepeat, 
-  recordQuestionSeen,
-  getRepositoryStats 
-} from '../../../services/noRepeatService';
+export const onRequestOptions = handleCorsOptions;
 
-export default async function handler(req: Request, res: Response) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+export const onRequestPost = async (context) => {
+  const corsResponse = await handleCorsOptions(context);
+  if (corsResponse) return corsResponse;
+
+  const { request, env } = context;
 
   try {
-    const { userId, system, conditionId, difficulty, questionType, limit = 10 } = req.body;
-
-    // Validate userId
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
+    // Verify auth
+    const authResult = await verifyAuthToken(request, env);
+    if (!authResult) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
     }
 
-    // Build filter
-    const filter: any = {};
-    if (system) filter.system = system;
-    if (conditionId) filter.conditionId = conditionId;
-    if (difficulty) filter.difficulty = difficulty;
-    if (questionType) filter.questionType = questionType;
+    const body = await request.json();
+    const { userId, system, conditionId, difficulty, questionType, limit = 10 } = body;
 
-    // Fetch questions with no-repeat logic
-    const result = await getQuestionsWithNoRepeat(userId, filter, limit);
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'userId is required' }), {
+        status: 400,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
 
-    // Get repository stats for context
-    const stats = await getRepositoryStats();
+    if (!env.DATABASE_URL) {
+      return new Response(JSON.stringify({ error: 'Database not configured' }), {
+        status: 500,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
 
-    return res.status(200).json({
-      success: true,
-      questions: result.questions,
-      source: result.source,
-      count: result.questions.length,
-      needsGeneration: result.needsGeneration || false,
-      generationNeeded: result.generationNeeded || 0,
-      stats,
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    // 1. Get seen question IDs
+    const historyWhere: any = { userId };
+    if (system) historyWhere.system = system;
+    if (conditionId) historyWhere.conditionId = conditionId;
+    if (questionType) historyWhere.questionType = questionType;
+
+    const history = await prisma.userQuestionHistory.findMany({
+      where: historyWhere,
+      select: { questionId: true },
     });
-  } catch (error) {
+    const seenQuestionIds = history.map((h) => h.questionId);
+
+    // 2. Build query for live questions
+    const where: any = {
+      usedAt: null, // Prefer unused questions first
+    };
+
+    if (system) where.system = system;
+    if (difficulty) where.difficulty = difficulty;
+    if (questionType) where.questionType = questionType;
+    if (conditionId) where.conditionId = conditionId;
+
+    // 3. Fetch questions excluding user's history
+    let questions = await prisma.preGeneratedQuestion.findMany({
+      where: {
+        ...where,
+        id: {
+          notIn: seenQuestionIds,
+        },
+      },
+      take: limit,
+      orderBy: [
+        { usedAt: "asc" }, // Prioritize never-used questions
+        { generatedAt: "desc" }, // Then newer questions
+      ],
+    });
+
+    // 4. Fallback: If not enough questions, try used questions that user hasn't seen
+    if (questions.length < limit) {
+        // Remove usedAt: null constraint
+        const fallbackWhere = { ...where };
+        delete fallbackWhere.usedAt;
+
+        const additionalQuestions = await prisma.preGeneratedQuestion.findMany({
+            where: {
+                ...fallbackWhere,
+                id: {
+                    notIn: [...seenQuestionIds, ...questions.map(q => q.id)],
+                },
+            },
+            take: limit - questions.length,
+            orderBy: { generatedAt: "desc" },
+        });
+        
+        questions = [...questions, ...additionalQuestions];
+    }
+
+    // 5. Return results
+    return new Response(JSON.stringify({
+      success: true,
+      questions: questions,
+      source: "database",
+      count: questions.length,
+      needsGeneration: questions.length < limit,
+      generationNeeded: limit - questions.length,
+    }), {
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+
+  } catch (error: any) {
     console.error('Error fetching questions:', error);
-    return res.status(500).json({ 
+    return new Response(JSON.stringify({ 
       error: 'Failed to fetch questions',
-      details: error instanceof Error ? error.message : 'Unknown error',
+      details: error.message 
+    }), {
+      status: 500,
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
-}
+};
