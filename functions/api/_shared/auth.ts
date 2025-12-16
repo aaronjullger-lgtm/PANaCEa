@@ -70,11 +70,29 @@ function decodeJwtPayload(token: string): JwtPayload | null {
 /**
  * Verify and extract user ID from Clerk session token
  * Uses @clerk/backend SDK for secure JWT verification
+ * Supports both (authHeader, secretKey) and (request, env) signatures
  */
 export async function verifyAuthToken(
-  authHeader: string | null,
-  secretKey: string
+  requestOrHeader: any,
+  envOrSecret: any
 ): Promise<string | null> {
+  let authHeader: string | null = null;
+  let secretKey: string = '';
+
+  // Handle first argument (Request object or header string)
+  if (typeof requestOrHeader === 'string' || requestOrHeader === null) {
+    authHeader = requestOrHeader;
+  } else if (requestOrHeader && typeof requestOrHeader.headers?.get === 'function') {
+    authHeader = requestOrHeader.headers.get('Authorization');
+  }
+
+  // Handle second argument (Env object or secret key string)
+  if (typeof envOrSecret === 'string') {
+    secretKey = envOrSecret;
+  } else if (envOrSecret && typeof envOrSecret === 'object') {
+    secretKey = envOrSecret.CLERK_SECRET_KEY || '';
+  }
+
   // Phase 3.1: Verify header format
   if (!authHeader) {
     console.error('[AUTH] Authorization header is missing');
