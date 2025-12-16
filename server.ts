@@ -312,7 +312,23 @@ app.get('/api/content/search', async (req: Request, res: Response) => {
     }
     
     const query = String(q);
-    const where: any = {
+    
+    // Build where clause with proper types
+    type WhereClause = {
+      status: string;
+      OR: Array<{
+        condition?: { contains: string; mode: 'insensitive' };
+        overview?: { contains: string; mode: 'insensitive' };
+      }>;
+      AND?: Array<{
+        OR: Array<{
+          system?: string;
+          relatedSystems?: { has: string };
+        }>;
+      }>;
+    };
+    
+    const where: WhereClause = {
       status: 'published',
       OR: [
         { condition: { contains: query, mode: 'insensitive' } },

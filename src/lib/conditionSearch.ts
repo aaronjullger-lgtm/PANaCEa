@@ -101,7 +101,23 @@ export async function searchConditions(
       const { prisma } = await import('../../lib/prisma');
       const { calculateRelevanceScore } = await import('../../lib/contentHelpers');
       
-      const whereClause: any = {
+      // Build where clause with proper types
+      type WhereClause = {
+        status: string;
+        OR: Array<{
+          condition?: { contains: string; mode: 'insensitive' };
+          overview?: { contains: string; mode: 'insensitive' };
+        }>;
+        AND?: Array<{
+          OR?: Array<{
+            system?: string;
+            relatedSystems?: { has: string };
+          }>;
+          subcategory?: string;
+        }>;
+      };
+      
+      const whereClause: WhereClause = {
         status: 'published',
         OR: [
           { condition: { contains: query, mode: 'insensitive' } },
