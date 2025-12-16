@@ -14,14 +14,20 @@ export async function onRequestGet(context: any) {
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
       status: 401,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 
   if (!env.DATABASE_URL) {
     return new Response(JSON.stringify({ error: 'Database not configured' }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 
@@ -84,18 +90,27 @@ export async function onRequestGet(context: any) {
     if (!condition) {
       return new Response(JSON.stringify({ error: 'Condition not found' }), { 
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
     return new Response(JSON.stringify(condition), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   } catch (error: any) {
     console.error('Error fetching extended condition details:', error);
     return new Response(JSON.stringify({ error: 'Internal server error', details: error.message }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 }

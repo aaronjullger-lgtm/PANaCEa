@@ -11,7 +11,10 @@ export async function onRequestGet(context: any) {
   if (!env.DATABASE_URL) {
     return new Response(JSON.stringify({ error: 'Database not configured' }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 
@@ -21,13 +24,19 @@ export async function onRequestGet(context: any) {
     const drugs = await prisma.$queryRaw`SELECT * FROM "Drug" ORDER BY RANDOM() LIMIT ${count}`;
     
     return new Response(JSON.stringify(drugs), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   } catch (error: any) {
     console.error('Error fetching random drugs:', error);
     return new Response(JSON.stringify({ error: 'Failed to fetch random drugs', details: error.message }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 }
