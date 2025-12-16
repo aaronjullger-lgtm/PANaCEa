@@ -145,7 +145,10 @@ function buildBulletTree(content: string): BulletNode[] {
       level = 1;
     } else {
       // For regular bullets, check context
-      if (inNestedContext && !isHeaderOnly) {
+      // If we are in a nested context, we generally want to nest subsequent items
+      // UNLESS it's a new top-level header (no bullet, no indent).
+      // If it has a bullet, it's definitely content/sub-header, so nest it.
+      if (inNestedContext && (!isHeaderOnly || bulletSymbol)) {
         // We're in a nested context (after a header-only line)
         // Items that start with bold terms are nested
         if (startsWithBoldTerm) {
@@ -153,8 +156,6 @@ function buildBulletTree(content: string): BulletNode[] {
         } else {
           // Non-bold items might break the nesting
           // FIX: If we are in a nested context, we should assume subsequent items are nested
-          // unless they are explicitly headers or have different indentation.
-          // For now, let's assume they are part of the list under the header.
           level = currentNestLevel + 1;
         }
       } else {
@@ -237,7 +238,7 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
 
         return (
           <li key={`${level}-${index}`} className="relative">
-            <div className={`flex items-start gap-3 ${isHeaderNode ? 'mt-2 mb-1' : ''}`}>
+            <div className={`flex items-start gap-3 ${isHeaderNode ? 'mt-4 mb-2' : ''}`}>
               {!isHeaderNode && (
                 <span className={`
                   shrink-0 mt-2 rounded-full 
@@ -246,7 +247,7 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
                     'w-1 h-1 bg-gray-300'}
                 `} />
               )}
-              <div className={`text-gray-800 dark:text-gray-200 leading-relaxed ${isHeaderNode ? 'font-medium text-lg text-blue-900 dark:text-blue-100' : ''}`}>
+              <div className={`text-gray-800 dark:text-gray-200 leading-relaxed ${isHeaderNode ? 'font-bold text-lg text-blue-900 dark:text-blue-100 border-b border-gray-100 dark:border-gray-800 pb-1 w-full' : ''}`}>
                 {node.parts}
               </div>
             </div>
