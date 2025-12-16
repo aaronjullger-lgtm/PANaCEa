@@ -17,12 +17,14 @@ export async function onRequestGet(context: any) {
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
     
     // Fetch in chunks to avoid 5MB limit (Prisma Accelerate limitation)
-    const BATCH_SIZE = 20; // Conservative batch size for large text content
+    // Increased batch size to reduce number of round trips (connection overhead)
+    const BATCH_SIZE = 50; 
     let allContent: any[] = [];
     let skip = 0;
     let hasMore = true;
 
     while (hasMore) {
+      console.log(`Fetching batch at skip: ${skip}`);
       const batch = await prisma.medicalContent.findMany({
         where: { status: 'published' },
         skip,
@@ -36,6 +38,11 @@ export async function onRequestGet(context: any) {
       
       allContent = [...allContent, ...batch];
       skip += BATCH_SIZE;
+
+      // Small delay to prevent overwhelming the connection
+      if (hasMore) {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      }
     }
 
     // Transform to map format expected by frontend
