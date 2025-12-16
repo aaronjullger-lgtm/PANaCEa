@@ -4,6 +4,7 @@ import { isMeaningfulContent } from "../../lib/loadConditions";
 interface BulletNode {
   parts: React.ReactNode[];
   children: BulletNode[];
+  type: 'bullet' | 'header' | 'text';
 }
 
 const BULLET_LEVEL_BY_SYMBOL: Record<string, number> = {
@@ -60,6 +61,9 @@ function buildBulletTree(content: string): BulletNode[] {
   // or would be inside text.
   normalized = normalized.replace(/^(\s*)\*\s+/gm, "$1• ");
   
+  // 4. Handle Double Bullets: •• -> Indented Bullet
+  normalized = normalized.replace(/^(\s*)••\s*/gm, "    • ");
+
   // If content is on a single line, split by bullet markers
   const lines = normalized.split("\n");
   const hasNewlines = lines.filter(l => l.trim()).length > 1;
@@ -124,13 +128,45 @@ function buildBulletTree(content: string): BulletNode[] {
 
     // Check if this line is ONLY a header (bold text ending with colon, with minimal other text)
     // Pattern: starts with optional text, then **Header:** and ends there
-    const isHeaderOnly = /\*\*[^*]+:\*\*\s*$/.test(text);
+    const isBoldHeader = /\*\*[^*]+:\*\*\s*$/.test(text);
+    
+    // Check for implicit headers (no bold, short, looks like a title)
+    // e.g. "Acute/Emergency Management"
+    // Criteria:
+    // 1. No bullet (checked later via !bulletSymbol)
+    // 2. Short length (< 60 chars) OR contains a colon early on (e.g. "Term: Definition")
+    // 3. Starts with uppercase or number
+    // 4. Not a sentence (doesn't end with period, unless it's short)
+    const colonIndex = text.indexOf(':');
+    const hasEarlyColon = colonIndex > 0 && colonIndex < 60;
+    
+    const isImplicitHeader = !bulletSymbol && !isAsteriskBullet && 
+                             (text.length < 60 || hasEarlyColon) && 
+                             /^[A-Z0-9]/.test(text) && 
+                             (!/[.]$/.test(text) || text.endsWith(':') || hasEarlyColon);
+
+    const isHeaderOnly = isBoldHeader || isImplicitHeader;
     
     // Check if this line ENDS with a header pattern (could have text before)
     const endsWithHeader = /\*\*[^*]+:\*\*\s*$/.test(text);
     
     // Check if this is an item that starts with a bold term (like **Paroxysmal:**)
     const startsWithBoldTerm = /^\*\*[^*]+:\*\*/.test(text);
+
+    // Determine node type
+    let nodeType: 'bullet' | 'header' | 'text' = 'bullet';
+    if (isHeaderOnly) {
+      nodeType = 'header';
+    } else if (!bulletSymbol && !isAsteriskBullet) {
+      // If no bullet, check context
+      if (inNestedContext && !isHeaderOnly) {
+        // Inside a list, no bullet -> likely text continuation
+        nodeType = 'text';
+      } else {
+        // At root level, no bullet -> likely a header
+        nodeType = 'header';
+      }
+    }
 
     // Determine level
     let level = 0;
@@ -179,7 +215,7 @@ function buildBulletTree(content: string): BulletNode[] {
     level = Math.min(2, level);
     
     // If this is a header-only line, the next items should be nested under it
-    if (endsWithHeader && !startsWithBoldTerm) {
+    if (nodeType === 'header' || (endsWithHeader && !startsWithBoldTerm)) {
       // This is a header line like "... **Types of Atrial Fibrillation:**"
       // The next items should be nested
       inNestedContext = true;
@@ -190,7 +226,7 @@ function buildBulletTree(content: string): BulletNode[] {
       stack.pop();
     }
 
-    const node: BulletNode = { parts: formatText(text), children: [] };
+    const node: BulletNode = { parts: formatText(text), children: [], type: nodeType };
 
     // ES2022-safe replacement for findLast
     let parent: { level: number; node: BulletNode } | null = null;
@@ -211,7 +247,7 @@ function buildBulletTree(content: string): BulletNode[] {
     
     // If this line is a header-only line (like **Valvular vs. Non-valvular:**)
     // start a new nested context
-    if (isHeaderOnly) {
+    if (nodeType === 'header') {
       inNestedContext = true;
       currentNestLevel = level;
     }
@@ -229,17 +265,14 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
   return (
     <ul className={`flex flex-col ${level === 0 ? 'gap-4' : 'gap-2 mt-2'}`}>
       {nodes.map((node, index) => {
-        // Check if this node is purely a header (bold text ending with colon)
-        // We can detect this by checking if it has exactly one part, which is a <strong> element
-        const isHeaderNode = node.parts.length === 1 && 
-                             React.isValidElement(node.parts[0]) && 
-                             node.parts[0].type === 'strong' &&
-                             (node.parts[0].props.children as string).trim().endsWith(':');
+        // Use the node type to determine if it's a header
+        const isHeaderNode = node.type === 'header';
+        const isBulletNode = node.type === 'bullet';
 
         return (
           <li key={`${level}-${index}`} className="relative">
             <div className={`flex items-start gap-3 ${isHeaderNode ? 'mt-4 mb-2' : ''}`}>
-              {!isHeaderNode && (
+              {isBulletNode && (
                 <span className={`
                   shrink-0 mt-2 rounded-full 
                   ${level === 0 ? 'w-1.5 h-1.5 bg-blue-500' : 
