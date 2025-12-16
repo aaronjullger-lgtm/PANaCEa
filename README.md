@@ -25,31 +25,41 @@ View your app in AI Studio: https://ai.studio/apps/drive/1XKKOL9unGhpt6WDahRfrws
    - `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key (from https://dashboard.clerk.com)
    - `CLERK_SECRET_KEY`: Your Clerk secret key
    - `GEMINI_API_KEY`: Your Gemini API key
-   - `VITE_GEMINI_API_KEY`: Your Gemini API key (for client-side)
-   - `DATABASE_URL`: Your PostgreSQL connection string (optional for development)
+   - `DATABASE_URL`: **REQUIRED** - Your PostgreSQL connection string
+   
+   **⚠️ DATABASE_URL is REQUIRED** - This app uses a database-first architecture. All content is stored in PostgreSQL.
    
    See [AUTHENTICATION_SETUP.md](AUTHENTICATION_SETUP.md) for detailed authentication setup instructions.
 
-3. **Start the application:**
+3. **Generate Prisma Client:**
+   ```bash
+   npm run db:generate
+   ```
+
+4. **Start the application:**
    
-   **Option A - Run both frontend and backend together (recommended):**
+   **⚠️ IMPORTANT: You must run BOTH frontend and backend servers**
+   
+   **Option A - Run both together (RECOMMENDED):**
    ```bash
    npm run dev:all
    ```
    This starts:
-   - Backend server on `http://localhost:3001`
-   - Frontend dev server on `http://localhost:3000`
+   - Backend server (Express) on `http://localhost:3001` - Handles API and database
+   - Frontend dev server (Vite) on `http://localhost:3000` - React UI
    
    **Option B - Run separately:**
    ```bash
-   # Terminal 1 - Backend
+   # Terminal 1 - Backend (MUST be started first)
    npm run dev:server
    
    # Terminal 2 - Frontend
    npm run dev
    ```
+   
+   **❌ DO NOT run `npm run dev` alone** - This only starts the frontend. API calls will fail with "Unexpected token '<'" errors because the backend isn't running.
 
-4. **Open your browser:**
+5. **Open your browser:**
    Navigate to `http://localhost:3000`
 
 ## Deploy to Production
@@ -97,7 +107,52 @@ View your app in AI Studio: https://ai.studio/apps/drive/1XKKOL9unGhpt6WDahRfrws
 - `npm run db:push` - Push schema to database (development only)
 - `npm run db:studio` - Open Prisma Studio database GUI
 
-**Note:** The Vite development server proxies requests to `/geminiProxy` to `http://localhost:3001`. The backend server must be running for AI features to work.
+## 🔍 Troubleshooting
+
+### "SyntaxError: Unexpected token '<' in JSON"
+
+**Problem:** Frontend trying to parse HTML instead of JSON from API calls.
+
+**Cause:** Backend server is not running. The Vite dev server returns the React app's `index.html` for unknown routes instead of JSON from the API.
+
+**Solution:** 
+```bash
+# Stop frontend-only dev server (Ctrl+C)
+# Start both servers together:
+npm run dev:all
+```
+
+### "Failed to fetch from /api/content/all"
+
+**Problem:** API requests failing with network errors.
+
+**Cause:** Backend Express server (port 3001) is not running.
+
+**Solution:**
+```bash
+npm run dev:all  # Always use this command for development
+```
+
+### "Database unavailable" or connection errors
+
+**Problem:** Backend server starts but can't connect to database.
+
+**Causes:**
+1. `DATABASE_URL` not set in `.env`
+2. Database not accessible (wrong credentials, network issues)
+3. Prisma client not generated
+
+**Solution:**
+```bash
+# 1. Check .env file has DATABASE_URL
+# 2. Generate Prisma client:
+npm run db:generate
+
+# 3. Verify database connection:
+npm run db:studio  # Opens Prisma Studio - if this works, DB is accessible
+```
+
+**Note:** The Vite dev server (port 3000) proxies `/api/*` and `/geminiProxy` requests to the Express backend (port 3001). Both servers must be running for the app to function properly.
 
 ### Database-First Architecture
 
