@@ -20,14 +20,14 @@ The Content Security Policy is the primary security mechanism that controls whic
 ```
 Content-Security-Policy: 
   default-src 'self'; 
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com; 
-  script-src-elem 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com; 
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://clerk.studypanacea.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com; 
+  script-src-elem 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://clerk.studypanacea.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com; 
   worker-src 'self' blob:; 
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; 
   font-src 'self' https://fonts.gstatic.com data:; 
   img-src 'self' data: blob: https:; 
   media-src 'self' blob: https:; 
-  connect-src 'self' https://*.clerk.accounts.dev https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co; 
+  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co; 
   frame-src 'self' https://*.clerk.accounts.dev; 
   object-src 'none'; 
   base-uri 'self'; 
@@ -62,12 +62,17 @@ The following external domains are explicitly allowed:
 
 #### Authentication (Clerk)
 - `https://*.clerk.accounts.dev` - Clerk authentication widgets and flows
+- `https://clerk.studypanacea.com` - Clerk custom subdomain for PANaCEa
 - `https://api.clerk.dev` - Clerk API endpoints
 
 #### Infrastructure (Cloudflare)
 - `https://challenges.cloudflare.com` - Cloudflare bot protection challenges
 - `https://static.cloudflareinsights.com` - Cloudflare Web Analytics
 - `https://cloudflareinsights.com` - Analytics data collection
+- **Cloudflare CDN Paths**: `/cdn-cgi/*` paths are automatically allowed via `'self'` since they're same-origin
+
+#### Development Environment
+- `http://localhost:3001` - Local development API server (only affects development builds)
 
 #### CDN
 - `https://aistudiocdn.com` - React 19 and other dependencies via import maps
@@ -91,6 +96,67 @@ The following external domains are explicitly allowed:
 - Third-party libraries that use `eval()` or `Function()`
 
 **Future Improvement**: Consider using nonces or hashes for inline scripts to remove `'unsafe-inline'`.
+
+## Path-Specific CSP Configuration
+
+The application uses path-specific CSP overrides for different resource types to ensure proper security while maintaining functionality.
+
+### Vite Assets (`/assets/*`)
+
+Vite generates content-hashed JavaScript chunks (e.g., `index-De0TFXQ2.js`, `vendor-common-B8V4NZUa.js`) that are served from the `/assets/` directory. These files have a specific CSP configuration:
+
+```
+Content-Security-Policy: 
+  default-src 'self'; 
+  script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
+  script-src-elem 'self' 'unsafe-inline'; 
+  worker-src 'self' blob:; 
+  style-src 'self' 'unsafe-inline'; 
+  font-src 'self' https://fonts.gstatic.com data:; 
+  img-src 'self' data: blob: https:; 
+  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+```
+
+**Purpose**: 
+- Ensures all Vite-generated chunks can load and execute
+- Maintains long-term caching with `Cache-Control: public, max-age=31536000, immutable`
+- Content hashes in filenames enable safe aggressive caching
+
+### Service Worker (`/sw.js`)
+
+The service worker file has a specialized CSP configuration optimized for worker execution:
+
+```
+Content-Security-Policy: 
+  default-src 'self'; 
+  script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
+  worker-src 'self' blob:; 
+  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+```
+
+**Purpose**:
+- Allows the service worker to execute in its own context
+- `worker-src 'self' blob:` enables worker registration and blob URLs
+- Prevents caching with `Cache-Control: no-cache, no-store, must-revalidate`
+- Ensures users always get the latest service worker updates
+
+### Service Worker Registration (`/registerSW.js`)
+
+The registration script has its own CSP to ensure proper initialization:
+
+```
+Content-Security-Policy: 
+  default-src 'self'; 
+  script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
+  script-src-elem 'self' 'unsafe-inline'; 
+  worker-src 'self' blob:; 
+  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+```
+
+**Purpose**:
+- Allows the registration script to load and execute
+- Enables communication with the service worker
+- No caching to ensure immediate updates
 
 ## Other Security Headers
 
@@ -182,15 +248,100 @@ The `_headers` file is automatically deployed to Cloudflare Pages:
 To test the CSP configuration:
 
 1. Deploy to Cloudflare Pages
-2. Open browser DevTools Console
-3. Check for CSP violation errors
-4. Verify all necessary resources load correctly
+2. Open browser DevTools Console (F12 or Cmd+Option+I)
+3. Perform a hard refresh (Ctrl+Shift+R / Cmd+Shift+R) to bypass cache
+4. Check for CSP violation errors
+5. Verify all necessary resources load correctly
 
 ### Expected Behavior
 
 ✅ **No CSP violations** - All scripts, styles, and resources should load without errors
 
-❌ **Before Fix**: `script-src 'none'` blocked all scripts and showed violations
+❌ **Before Fix**: Multiple CSP violations for:
+- Vite-generated asset files with content hashes
+- Service worker files (`sw.js`, `registerSW.js`)
+- Clerk subdomain scripts (`clerk.studypanacea.com`)
+- Cloudflare infrastructure scripts (`/cdn-cgi/*`)
+- Development API connections (`localhost:3001`)
+
+### Testing Checklist
+
+After deployment, verify the following in the browser console:
+
+- [ ] **Zero CSP violations** in console
+- [ ] **All Vite assets load**: Check Network tab for `/assets/*.js` files (status 200)
+- [ ] **Service worker registers**: Check Application > Service Workers tab
+- [ ] **Clerk authentication works**: Test sign-in/sign-up flows
+- [ ] **Analytics tracking works**: Verify Cloudflare analytics scripts load
+- [ ] **Import map loads**: Check for React 19 imports from `aistudiocdn.com`
+- [ ] **Fonts load correctly**: Verify Google Fonts appear properly
+- [ ] **API connections work**: Check Network tab for successful API calls
+
+### Browser-Specific Testing
+
+Test on multiple browsers to ensure compatibility:
+
+**Chrome/Edge (Chromium)**
+```
+1. Open DevTools (F12)
+2. Go to Console tab
+3. Filter for "Content Security Policy"
+4. Look for any violation reports
+```
+
+**Firefox**
+```
+1. Open Developer Tools (F12)
+2. Go to Console tab
+3. Filter for "Content-Security-Policy"
+4. Check for any blocked resources
+```
+
+**Safari**
+```
+1. Enable Developer Tools (Safari > Preferences > Advanced > Show Develop menu)
+2. Open Web Inspector (Cmd+Option+I)
+3. Go to Console
+4. Look for CSP warnings
+```
+
+### Development vs Production
+
+**Development Environment** (`localhost`):
+- `http://localhost:3001` is allowed in `connect-src` for API calls
+- Vite dev server proxies requests, so CSP is less restrictive
+- Service workers may not be active during development
+
+**Production Environment** (Cloudflare Pages):
+- All paths are HTTPS due to `upgrade-insecure-requests`
+- Service workers are fully active
+- CDN paths (`/cdn-cgi/*`) are same-origin and allowed via `'self'`
+- Cloudflare-injected scripts must be explicitly allowed
+
+### Troubleshooting CSP Violations
+
+If you encounter CSP violations:
+
+1. **Identify the blocked resource**:
+   - Check the console error message
+   - Note the directive (e.g., `script-src-elem`, `connect-src`)
+   - Note the source URL
+
+2. **Verify the resource is trustworthy**:
+   - Is it a necessary third-party service?
+   - Is it a first-party asset?
+   - Is it served over HTTPS?
+
+3. **Update the CSP**:
+   - For global resources: Update `/*` section in `public/_headers`
+   - For path-specific resources: Add a new path rule
+   - Always use the most restrictive directive possible
+
+4. **Test the fix**:
+   - Deploy the updated configuration
+   - Hard refresh the browser
+   - Verify the violation is resolved
+   - Ensure no new violations appear
 
 ## Monitoring
 
