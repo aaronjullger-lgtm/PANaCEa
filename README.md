@@ -99,6 +99,15 @@ View your app in AI Studio: https://ai.studio/apps/drive/1XKKOL9unGhpt6WDahRfrws
 
 **Note:** The Vite development server proxies requests to `/geminiProxy` to `http://localhost:3001`. The backend server must be running for AI features to work.
 
+### Offline/Development Mode
+
+The application includes automatic fallbacks for development without a running backend server:
+- **Condition content**: Falls back to static JSON files in `/data/`
+- **Drug data**: Uses the static drug registry
+- **Lab cases & buzzwords**: Returns empty arrays gracefully
+
+While this allows the frontend to run independently, full functionality (AI question generation, user authentication, database features) requires both frontend and backend servers.
+
 ## 🧠 Hybrid Content Engine
 
 PANaCEa features an advanced **Hybrid Content Engine** that solves the latency, cost, and quality control issues of pure AI generation. This system builds a valuable asset library over time while drastically reducing costs.
