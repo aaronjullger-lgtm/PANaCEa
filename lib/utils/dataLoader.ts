@@ -93,9 +93,20 @@ export async function loadConditionContent(): Promise<any> {
     const response = await fetch('/data/conditionContent.clean.json');
     
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const data = await response.json();
-      dataCache.set(cacheKey, data);
-      return data;
+      const dataArray = await response.json();
+      
+      // Convert array format to map format (conditionId -> content)
+      const contentMap: Record<string, any> = {};
+      if (Array.isArray(dataArray)) {
+        dataArray.forEach((item: any) => {
+          if (item.conditionId && item.content) {
+            contentMap[item.conditionId] = item.content;
+          }
+        });
+      }
+      
+      dataCache.set(cacheKey, contentMap);
+      return contentMap;
     }
   } catch (fallbackError) {
     console.warn('Failed to load static condition content:', fallbackError);

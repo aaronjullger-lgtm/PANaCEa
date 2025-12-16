@@ -31,7 +31,19 @@ async function getConditions(): Promise<Record<string, unknown>> {
     const response = await fetch('/data/conditionContent.clean.json');
     
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      conditionsCache = await response.json();
+      const dataArray = await response.json();
+      
+      // Convert array format to map format (conditionId -> content)
+      const contentMap: Record<string, unknown> = {};
+      if (Array.isArray(dataArray)) {
+        dataArray.forEach((item: any) => {
+          if (item.conditionId && item.content) {
+            contentMap[item.conditionId] = item.content;
+          }
+        });
+      }
+      
+      conditionsCache = contentMap;
       return conditionsCache;
     }
   } catch (fallbackError) {
