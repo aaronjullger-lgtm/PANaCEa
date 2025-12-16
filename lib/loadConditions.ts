@@ -17,19 +17,44 @@ async function getConditions(): Promise<Record<string, unknown>> {
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       conditionsCache = await response.json();
+      console.log(`✓ Loaded ${Object.keys(conditionsCache).length} conditions from database`);
       return conditionsCache;
     }
     
     // Database API returned non-OK response
-    console.error(`Database API returned status ${response.status} for ${apiUrl}`);
-    console.error('Ensure DATABASE_URL is set and database is accessible');
+    console.warn(`Database API returned status ${response.status} for ${apiUrl}`);
+    
+    // Try to get error details from response
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+      const errorData = await response.json();
+      console.error('API Error:', errorData);
+      
+      if (response.status === 503) {
+        console.error(`⚠ DATABASE UNAVAILABLE: ${errorData.message || 'Backend cannot connect to database'}
+  This is expected if:
+  - DATABASE_URL is not configured in .env
+  - Database is not running or accessible
+  - Running in development without database`);
+      }
+    } else {
+      console.error(`⚠ API returned non-JSON response (likely HTML 404 page)
+  Backend server is not running or endpoint does not exist`);
+    }
+    
+    console.error(`
+REQUIRED ACTIONS:
+  1. Start backend: npm run dev:server or npm run dev:all
+  2. Configure DATABASE_URL in .env
+  3. Populate database with content`);
   } catch (error) {
-    console.error(`Failed to load conditions from database API (${apiUrl}):`, error);
-    console.error('Ensure backend server is running and DATABASE_URL is configured');
+    console.error(`✗ Failed to load conditions from database API (${apiUrl}):`, error);
+    console.error('REQUIRED: Ensure backend server is running and DATABASE_URL is configured');
   }
 
   // Return empty object - application requires database to be properly configured
   // No static fallback to enforce database-first architecture
+  console.warn('⚠ Returning empty dataset - application will have limited functionality');
   return {};
 }
 
