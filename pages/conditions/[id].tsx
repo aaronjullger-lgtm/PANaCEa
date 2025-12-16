@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FormattedSection from "../../components/conditions/FormattedSection";
+import { BuzzwordBanner } from "../../components/conditions/BuzzwordBanner";
 import {
   getConditionById,
   getConditionByIdSync,
@@ -234,6 +235,8 @@ const ConditionPage: React.FC = () => {
               </p>
             )}
           </header>
+
+          <BuzzwordBanner conditionName={displayName} />
 
       {/* Tabbed interface for subtypes */}
       {subtypes.length > 0 && (

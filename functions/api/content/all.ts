@@ -1,6 +1,53 @@
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions } from '../_shared/auth';
 
+function normalizeTreatment(data: any): any {
+  if (!data) return undefined;
+  if (Array.isArray(data)) return data; // Simple list fallback
+  
+  // Detect "Stepped" Object (First Line, Second Line, etc.)
+  if (typeof data === 'object') {
+    const steps: { title: string; content: string }[] = [];
+    
+    // Map specific DB keys to titled steps
+    if (data.firstLine) steps.push({ title: "First Line", content: data.firstLine });
+    if (data.secondLine) steps.push({ title: "Second Line", content: data.secondLine });
+    if (data.acute) steps.push({ title: "Acute Management", content: data.acute });
+    if (data.chronic) steps.push({ title: "Chronic Management", content: data.chronic });
+    
+    // Catch-all: Map any other string keys if not empty (dynamic extension)
+    Object.keys(data).forEach(key => {
+      if (!['firstLine', 'secondLine', 'acute', 'chronic'].includes(key) && typeof data[key] === 'string') {
+        // Convert camelCase to Title Case (e.g. "surgicalOption" -> "Surgical Option")
+        const title = key.replace(/([A-Z])/g, ' $1').trim();
+        // Capitalize first letter
+        const formattedTitle = title.charAt(0).toUpperCase() + title.slice(1);
+        steps.push({ title: formattedTitle, content: data[key] });
+      }
+    });
+    
+    if (steps.length > 0) return { type: 'steps', items: steps };
+  }
+  return undefined;
+}
+
+function normalizeDiagnostics(data: any): any {
+  if (!data) return undefined;
+  
+  // Detect Key-Value Grid (e.g. { "CBC": "Leukocytosis", "Chem": "Normal" })
+  if (typeof data === 'object' && !Array.isArray(data)) {
+    // Ensure values are strings (not nested objects)
+    const isGrid = Object.values(data).every(val => typeof val === 'string');
+    if (isGrid) {
+      return { type: 'grid', items: data };
+    }
+  }
+  
+  // Fallback for arrays
+  if (Array.isArray(data)) return data;
+  return undefined;
+}
+
 export const onRequestOptions = handleCorsOptions;
 
 export async function onRequestGet(context: any) {
@@ -80,9 +127,9 @@ export async function onRequestGet(context: any) {
         complications: item.complications && item.complications.length > 0 ? item.complications : undefined,
         differentialDiagnosis: item.differentialDiagnosis && item.differentialDiagnosis.length > 0 ? item.differentialDiagnosis : undefined,
         
-        // JSON fields - pass through as-is
-        diagnostics: item.diagnostics,
-        treatment: item.treatment,
+        // JSON fields - normalize for smart rendering
+        diagnostics: normalizeDiagnostics(item.diagnostics),
+        treatment: normalizeTreatment(item.treatment),
         
         prognosis: item.prognosis,
         buzzwords: item.buzzwords && item.buzzwords.length > 0 ? item.buzzwords : undefined

@@ -1,5 +1,7 @@
 import React from "react";
-import { isMeaningfulContent } from "../../lib/loadConditions";
+import { isMeaningfulContent, SectionData } from "../../lib/loadConditions";
+import TreatmentRenderer from "./renderers/TreatmentRenderer";
+import DiagnosticsRenderer from "./renderers/DiagnosticsRenderer";
 
 interface BulletNode {
   parts: React.ReactNode[];
@@ -11,6 +13,51 @@ const BULLET_LEVEL_BY_SYMBOL: Record<string, number> = {
   "•": 0,
   "◦": 1,
   "▪": 2,
+};
+
+interface FormattedSectionProps {
+  content?: SectionData | string | string[] | null;
+}
+
+const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
+  if (!content) return null;
+
+  // 1. SMART RENDER: Steps (Flowchart)
+  if (typeof content === 'object' && !Array.isArray(content) && content !== null && 'type' in content && content.type === 'steps') {
+    return <TreatmentRenderer items={content.items} />;
+  }
+
+  // 2. SMART RENDER: Grid (Labs/Diagnostics)
+  if (typeof content === 'object' && !Array.isArray(content) && content !== null && 'type' in content && content.type === 'grid') {
+    return <DiagnosticsRenderer items={content.items} />;
+  }
+
+  // 3. DEFAULT RENDER: Bullet List
+  // Handle both string[] (DB array) and single string (Markdown block)
+  const listContent = Array.isArray(content) 
+    ? content 
+    : (typeof content === 'string' ? [content] : []);
+  
+  if (listContent.length === 0) return null;
+
+  // Join array into a single string for the bullet parser
+  const textBlob = listContent.map(item => {
+      const trimmed = item.trim();
+      // Don't add a bullet if it already has one
+      if (/^([•◦▪\-\*]|\d+\.)/.test(trimmed)) return trimmed;
+      return `• ${trimmed}`;
+  }).join('\n');
+
+  const tree = buildBulletTree(textBlob); 
+  
+  if (tree.length === 0) return <p className="condition-empty">No details available.</p>;
+
+  // Ensure <ul> has list-none to fix "Double Bullet" bug
+  return (
+    <div className="formatted-section">
+       <BulletList nodes={tree} level={0} />
+    </div>
+  );
 };
 
 function formatText(text: string): React.ReactNode[] {
@@ -201,24 +248,17 @@ function buildBulletTree(content: string): BulletNode[] {
       // UNLESS it's a new top-level header (no bullet, no indent).
       // If it has a bullet, it's definitely content/sub-header, so nest it.
       if (inNestedContext && (!isHeaderOnly || bulletSymbol)) {
-        // We're in a nested context (after a header-only line)
+        // Check if this "child" is actually indented?
+        // 2 spaces = 1 level. If leadingSpaces is 0, it's a root item, NOT a child.
+        const indicatedLevel = Math.floor(leadingSpaces / 2);
         
-        // FIX: Smart Nesting Logic
-        // If the current item starts with a bold term (e.g. "**V/Q Mismatch:**"),
-        // and we are in a nested context, we need to decide if it's a CHILD or a SIBLING.
-        
-        if (startsWithBoldTerm) {
-           // If the context was established by a previous Term (sibling), we stay at same level.
-           // If the context was established by a Header (parent), we indent.
-           if (contextSource === 'header') {
-             level = currentNestLevel + 1;
-           } else {
-             level = currentNestLevel;
-           }
-           level = Math.max(1, level);
+        if (indicatedLevel <= currentNestLevel) {
+           // It's a sibling (or parent), break the context
+           level = indicatedLevel;
+           inNestedContext = false; 
         } else {
-          // Non-bold items (descriptions) should be nested under the bold term
-          level = currentNestLevel + 1;
+           // It is indeed indented, keep it as a child
+           level = currentNestLevel + 1;
         }
       } else {
         // Standard indentation logic
@@ -296,7 +336,7 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
   if (!nodes.length) return null;
 
   return (
-    <ul className={`flex flex-col ${level === 0 ? 'gap-4' : 'gap-3 mt-3'}`}>
+    <ul className={`flex flex-col list-none ${level === 0 ? 'gap-4' : 'gap-3 mt-3'}`}>
       {nodes.map((node, index) => {
         // Use the node type to determine if it's a header
         const isHeaderNode = node.type === 'header';
@@ -330,43 +370,6 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
       })}
     </ul>
   );
-};
-
-interface FormattedSectionProps {
-  content?: string | string[] | Record<string, unknown> | null;
-}
-
-const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
-  if (typeof content === 'object' && !Array.isArray(content) && content !== null) {
-    return null;
-  }
-
-  if (Array.isArray(content)) {
-    if (content.length === 0) return null;
-  } else if (!isMeaningfulContent(content)) {
-    return null;
-  }
-
-  // Handle array content by joining with newlines
-  const textContent = Array.isArray(content) 
-    ? content.map(item => {
-        const trimmed = item.trim();
-        // Check if it already has a bullet-like start (bullet, hyphen, asterisk, number)
-        if (/^([•◦▪\-\*]|\d+\.)/.test(trimmed)) {
-          return trimmed;
-        }
-        // If it's a plain line, add a bullet
-        return `• ${trimmed}`;
-      }).join('\n')
-    : content as string;
-
-  const bullets = buildBulletTree(textContent ?? "");
-
-  if (bullets.length === 0) {
-    return <p className="condition-empty">No details available for this section.</p>;
-  }
-
-  return <BulletList nodes={bullets} level={0} />;
 };
 
 export default FormattedSection;

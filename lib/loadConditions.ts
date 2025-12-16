@@ -58,7 +58,13 @@ REQUIRED ACTIONS:
   return {};
 }
 
-export type ConditionContent = string | string[] | Record<string, unknown> | null;
+export type SectionData = 
+  | string[] 
+  | { type: 'steps'; items: { title: string; content: string }[] }
+  | { type: 'grid'; items: Record<string, string> }
+  | null;
+
+export type ConditionContent = string | string[] | Record<string, unknown> | SectionData | null;
 
 export interface ConditionSections {
   [sectionKey: string]: ConditionContent;
@@ -73,8 +79,13 @@ const PLACEHOLDER_TEXT = "[NO CONTENT PROVIDED]";
 
 export function normalizeConditionContent(
   value?: ConditionContent
-): string | null {
+): ConditionContent {
   if (value == null) return null;
+
+  // Pass through structured data (Steps/Grid)
+  if (typeof value === 'object' && !Array.isArray(value) && 'type' in value && (value.type === 'steps' || value.type === 'grid')) {
+    return value as SectionData;
+  }
 
   if (typeof value === "string") return value;
 

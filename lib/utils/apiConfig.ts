@@ -47,4 +47,5 @@ export const API_ENDPOINTS = {
   CONTENT_BY_ID: (id: string) => `/api/content/${id}`,
   CONTENT_SEARCH: '/api/content/search',
   CONTENT_BY_SYSTEM: (system: string) => `/api/content/system/${system}`,
+  BUZZWORDS_ALL: '/api/buzzwords/all',
 } as const;
