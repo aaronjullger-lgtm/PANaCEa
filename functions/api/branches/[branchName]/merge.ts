@@ -1,7 +1,7 @@
-import { createEdgePrismaClient } from '../../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../../_shared/auth';
-import { validateRequired } from '../../../_shared/validation';
-import { mergeBranch } from '../../../_shared/content-branching';
+import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
+import { validateRequired } from '../../_shared/validation';
+import { mergeBranch } from '../../_shared/content-branching';
 
 export const onRequestOptions = handleCorsOptions;
 
