@@ -99,7 +99,31 @@ export async function onRequestGet(context: any) {
       });
     }
 
-    return new Response(JSON.stringify(condition), {
+    // Fetch core content (MedicalContent) to speed up initial load
+    // This allows the frontend to display content immediately without waiting for the full content sync
+    const coreContent = await prisma.medicalContent.findFirst({
+      where: {
+        OR: [
+          { condition: { equals: condition.name, mode: 'insensitive' } },
+          { conditionId: condition.name } // Sometimes conditionId is the name
+        ],
+        status: 'published'
+      }
+    });
+
+    const responseData = {
+      ...condition,
+      coreContent: coreContent ? {
+        ...coreContent,
+        // Format etiologyPathophysiology for frontend compatibility
+        etiologyPathophysiology: [
+          coreContent.etiology ? `**Etiology**\n\n${coreContent.etiology}` : null,
+          coreContent.pathophysiology ? `**Pathophysiology**\n\n${coreContent.pathophysiology}` : null
+        ].filter(Boolean).join('\n\n') || undefined
+      } : null
+    };
+
+    return new Response(JSON.stringify(responseData), {
       headers: { 
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'

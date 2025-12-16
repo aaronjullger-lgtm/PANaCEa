@@ -147,12 +147,16 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   const sections: ContentSection[] = useMemo(() => {
     const availableSections: ContentSection[] = [];
     
+    // Use global content if available, otherwise fall back to core content from extended endpoint
+    // This allows the modal to populate quickly even if the global content cache hasn't loaded yet
+    const contentSource = content?.sections || extendedData?.coreContent;
+    
     SECTION_ORDER.forEach(config => {
       // Check standard content
-      if (content?.sections?.[config.key] && isMeaningfulContent(content.sections[config.key])) {
+      if (contentSource?.[config.key] && isMeaningfulContent(contentSource[config.key])) {
         availableSections.push({
           ...config,
-          content: content.sections[config.key]
+          content: contentSource[config.key]
         });
         return;
       }

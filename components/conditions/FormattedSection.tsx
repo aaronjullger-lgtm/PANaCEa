@@ -12,17 +12,27 @@ const BULLET_LEVEL_BY_SYMBOL: Record<string, number> = {
   "▪": 2,
 };
 
-function toBoldParts(text: string): React.ReactNode[] {
+function formatText(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
-  const boldPattern = /\*\*([^*]+)\*\*/g;
+  // Match **bold** OR *italic*
+  // Note: We use [^*] to avoid matching across multiple * markers incorrectly
+  // but we need to be careful about nested structures. For simple cases:
+  const pattern = /(\*\*([^*]+)\*\*)|(\*([^*]+)\*)/g;
+  
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = boldPattern.exec(text)) !== null) {
+  while ((match = pattern.exec(text)) !== null) {
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index));
     }
-    parts.push(<strong key={`${match[1]}-${match.index}`}>{match[1]}</strong>);
+    
+    if (match[1]) { // Bold match (**...**)
+      parts.push(<strong key={`b-${match.index}`}>{match[2]}</strong>);
+    } else if (match[3]) { // Italic match (*...*)
+      parts.push(<em key={`i-${match.index}`}>{match[4]}</em>);
+    }
+    
     lastIndex = match.index + match[0].length;
   }
 
@@ -151,7 +161,7 @@ function buildBulletTree(content: string): BulletNode[] {
       stack.pop();
     }
 
-    const node: BulletNode = { parts: toBoldParts(text), children: [] };
+    const node: BulletNode = { parts: formatText(text), children: [] };
 
     // ES2022-safe replacement for findLast
     let parent: { level: number; node: BulletNode } | null = null;
