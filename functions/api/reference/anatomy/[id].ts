@@ -14,14 +14,20 @@ export async function onRequestGet(context: any) {
   if (!userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
       status: 401,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 
   if (!env.DATABASE_URL) {
     return new Response(JSON.stringify({ error: 'Database not configured' }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 
@@ -36,18 +42,27 @@ export async function onRequestGet(context: any) {
     if (!result) {
       return new Response(JSON.stringify({ success: false, error: 'Not found' }), { 
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
     
     return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   } catch (error: any) {
     console.error('Error fetching anatomy detail:', error);
     return new Response(JSON.stringify({ success: false, error: 'Failed to fetch anatomy detail', details: error.message }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 }
