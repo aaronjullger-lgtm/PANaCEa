@@ -5,7 +5,7 @@
 Ensure the following environment variables are set in your Cloudflare Pages project settings (Settings > Environment variables):
 
 - `DATABASE_URL`: Your Prisma Accelerate connection string (starts with `prisma://`).
-- `DIRECT_URL`: Your direct database connection string (starts with `postgres://`).
+- `DIRECT_DATABASE_URL`: Your direct database connection string (starts with `postgres://`).
 - `CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key.
 - `CLERK_SECRET_KEY`: Your Clerk secret key.
 - `GEMINI_API_KEY`: Your Google Gemini API key.
