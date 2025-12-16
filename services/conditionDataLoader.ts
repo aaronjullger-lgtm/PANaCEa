@@ -5,7 +5,6 @@
  * No filesystem operations - all content retrieved via Prisma queries on published content.
  */
 
-import { prisma } from '../lib/prisma';
 import { CONDITION_REGISTRY } from '../conditionRegistry';
 import type { ConditionMeta } from '../conditionRegistry';
 import type { SystemCode } from '../types';
@@ -75,12 +74,22 @@ function findConditionMeta(conditionId: string): ConditionMeta | null {
  * @returns The loaded condition data or null if not found
  */
 export async function loadConditionData(conditionId: string): Promise<LoadedConditionData | null> {
+  // This function should only run in Node.js/Edge runtime, not in the browser
+  // Check if we're in a browser environment
+  if (typeof window !== 'undefined') {
+    console.error('loadConditionData should not be called in browser environment');
+    return null;
+  }
+  
   if (!process.env.DATABASE_URL) {
     console.error('DATABASE_URL not configured. Database connection is required.');
     return null;
   }
 
   try {
+    // Dynamically import prisma to avoid bundling it in the browser
+    const { prisma } = await import('../lib/prisma');
+    
     // Try direct conditionId match first (unique), then condition name (case-insensitive)
     let record = await prisma.medicalContent.findUnique({
       where: { 
