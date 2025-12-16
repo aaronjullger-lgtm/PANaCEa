@@ -1,5 +1,5 @@
-import { createEdgePrismaClient } from '../../../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../../../_shared/auth';
+import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
 
 export const onRequestOptions = handleCorsOptions;
 
