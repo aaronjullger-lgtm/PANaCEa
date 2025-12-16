@@ -14,7 +14,7 @@ import {
   type ConditionEntry,
 } from "../lib/loadConditions";
 import ConditionSidebar from "./ConditionSidebar";
-import FormattedSection from "./conditions/FormattedSection";
+import FormattedSection from "./FormattedSection";
 import { BuzzwordBanner } from "./conditions/BuzzwordBanner";
 import { useAuth } from "@clerk/clerk-react";
 
