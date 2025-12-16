@@ -10,6 +10,7 @@ import {
   createSuccessResponse,
   handleCorsOptions,
 } from '../_shared/auth';
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
 interface PagesContext {
   request: Request;
@@ -45,34 +46,37 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       return createErrorResponse('achievementId is required', 400);
     }
 
-    // Note: In Cloudflare Workers/Pages Functions, we can't use Prisma directly
-    // due to connection pooling issues. This is a placeholder.
-    // In production, you'd use Prisma Data Proxy or D1 to insert/update:
-    // const achievement = await prisma.userAchievement.upsert({
-    //   where: {
-    //     userId_achievementId: {
-    //       userId,
-    //       achievementId: payload.achievementId
-    //     }
-    //   },
-    //   update: {
-    //     progress: payload.progress ?? 100
-    //   },
-    //   create: {
-    //     userId,
-    //     achievementId: payload.achievementId,
-    //     progress: payload.progress ?? 100,
-    //     unlockedAt: new Date()
-    //   }
-    // });
+    if (!env.DATABASE_URL) {
+      return createErrorResponse('Database not configured', 500);
+    }
+
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    const achievement = await prisma.userAchievement.upsert({
+      where: {
+        userId_achievementId: {
+          userId,
+          achievementId: payload.achievementId
+        }
+      },
+      update: {
+        progress: payload.progress ?? 100
+      },
+      create: {
+        userId,
+        achievementId: payload.achievementId,
+        progress: payload.progress ?? 100,
+        unlockedAt: new Date()
+      }
+    });
 
     const response = {
       success: true,
       message: 'Achievement unlocked successfully',
       data: {
         achievementId: payload.achievementId,
-        unlockedAt: new Date().toISOString(),
-        progress: payload.progress ?? 100,
+        unlockedAt: achievement.unlockedAt,
+        progress: achievement.progress,
       },
     };
 

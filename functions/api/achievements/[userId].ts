@@ -10,6 +10,7 @@ import {
   createSuccessResponse,
   handleCorsOptions,
 } from '../_shared/auth';
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
 interface PagesContext {
   request: Request;
@@ -44,24 +45,27 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       return createErrorResponse('Forbidden', 403);
     }
 
-    // Note: In Cloudflare Workers/Pages Functions, we can't use Prisma directly
-    // due to connection pooling issues. This is a placeholder.
-    // In production, you'd use Prisma Data Proxy or D1 to query the database:
-    // const achievements = await prisma.userAchievement.findMany({
-    //   where: { userId: requestedUserId }
-    // });
+    if (!env.DATABASE_URL) {
+      return createErrorResponse('Database not configured', 500);
+    }
+
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    
+    const achievements = await prisma.userAchievement.findMany({
+      where: { userId: requestedUserId }
+    });
 
     const response = {
       success: true,
       data: {
-        achievements: [],
-        totalUnlocked: 0,
-        totalAvailable: 25,
+        achievements: achievements,
+        totalUnlocked: achievements.length,
+        // totalAvailable: 25, // This should ideally come from a config or DB
       },
     };
 
     return createSuccessResponse(response);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Achievements GET error:', error);
     return createErrorResponse('Internal server error', 500);
   }
