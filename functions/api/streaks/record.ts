@@ -10,6 +10,7 @@ import {
   createSuccessResponse,
   handleCorsOptions,
 } from '../_shared/auth';
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
 interface PagesContext {
   request: Request;
@@ -53,44 +54,47 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       );
     }
 
+    if (!env.DATABASE_URL) {
+      return createErrorResponse('Database not configured', 500);
+    }
+
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
     // Use provided date or today
     const activityDate = payload.date
       ? new Date(payload.date)
       : new Date();
     activityDate.setHours(0, 0, 0, 0); // Normalize to start of day
 
-    // Note: In Cloudflare Workers/Pages Functions, we can't use Prisma directly
-    // due to connection pooling issues. This is a placeholder.
-    // In production, you'd use Prisma Data Proxy or D1 to upsert:
-    // const streak = await prisma.dailyStreak.upsert({
-    //   where: {
-    //     userId_date: {
-    //       userId,
-    //       date: activityDate
-    //     }
-    //   },
-    //   update: {
-    //     questionsAnswered: { increment: payload.questionsAnswered },
-    //     accuracyPercent: payload.accuracyPercent,
-    //     studyMinutes: { increment: payload.studyMinutes ?? 0 }
-    //   },
-    //   create: {
-    //     userId,
-    //     date: activityDate,
-    //     questionsAnswered: payload.questionsAnswered,
-    //     accuracyPercent: payload.accuracyPercent,
-    //     studyMinutes: payload.studyMinutes ?? 0
-    //   }
-    // });
+    const streak = await prisma.dailyStreak.upsert({
+      where: {
+        userId_date: {
+          userId,
+          date: activityDate
+        }
+      },
+      update: {
+        questionsAnswered: { increment: payload.questionsAnswered },
+        accuracyPercent: payload.accuracyPercent, // Update with latest accuracy? Or average?
+        studyMinutes: { increment: payload.studyMinutes ?? 0 }
+      },
+      create: {
+        userId,
+        date: activityDate,
+        questionsAnswered: payload.questionsAnswered,
+        accuracyPercent: payload.accuracyPercent,
+        studyMinutes: payload.studyMinutes ?? 0
+      }
+    });
 
     const response = {
       success: true,
       message: 'Activity recorded successfully',
       data: {
         date: activityDate.toISOString().split('T')[0],
-        questionsAnswered: payload.questionsAnswered,
-        accuracyPercent: payload.accuracyPercent,
-        studyMinutes: payload.studyMinutes ?? 0,
+        questionsAnswered: streak.questionsAnswered,
+        accuracyPercent: streak.accuracyPercent,
+        studyMinutes: streak.studyMinutes,
       },
     };
 
