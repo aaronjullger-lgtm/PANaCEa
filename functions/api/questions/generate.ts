@@ -160,7 +160,10 @@ export const onRequestPost = async (context) => {
       question: newQuestion,
       cached: false,
     }), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
 
   } catch (error) {
@@ -170,7 +173,10 @@ export const onRequestPost = async (context) => {
       error: 'Failed to generate question' 
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 };

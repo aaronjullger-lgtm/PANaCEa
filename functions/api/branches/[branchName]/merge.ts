@@ -1,7 +1,7 @@
 import { createEdgePrismaClient } from '../../../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../../../_shared/auth';
 import { validateRequired } from '../../../_shared/validation';
-import { sendFlagResolvedNotification } from '../../../_shared/notifications';
+import { mergeBranch } from '../../../_shared/content-branching';
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -10,10 +10,9 @@ export const onRequestPost = async (context) => {
   if (corsResponse) return corsResponse;
 
   const { request, env, params } = context;
-  const { flagId } = params;
+  const { branchName } = params;
 
   try {
-    // Verify auth
     const authResult = await verifyAuthToken(request, env);
     if (!authResult) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -25,12 +24,8 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    // TODO: Add admin check here if needed (RBAC)
-
     const body = await request.json();
-    
-    const requiredFields = ['reviewedBy', 'resolutionNote'];
-    const missing = validateRequired(body, requiredFields);
+    const missing = validateRequired(body, ['mergedBy']);
     if (missing.length > 0) {
       return new Response(JSON.stringify({ 
         error: 'Validation failed', 
@@ -44,7 +39,7 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const { reviewedBy, resolutionNote } = body;
+    const { mergedBy, targetBranch } = body;
 
     if (!env.DATABASE_URL) {
       return new Response(JSON.stringify({ 
@@ -60,44 +55,9 @@ export const onRequestPost = async (context) => {
     }
 
     const prisma = createEdgePrismaClient(env);
+    const result = await mergeBranch(prisma, branchName as string, mergedBy, targetBranch);
 
-    // Update flag status
-    const flag = await prisma.questionFlag.update({
-      where: { id: flagId as string },
-      data: {
-        status: 'fixed',
-        reviewedBy,
-        reviewedAt: new Date(),
-        resolutionNote,
-      },
-    });
-
-    // Send notification to user
-    if (flag.userEmail) {
-      const notificationSent = await sendFlagResolvedNotification({
-        userEmail: flag.userEmail,
-        userFirstName: flag.userFirstName || undefined,
-        questionId: flag.questionId,
-        questionText: flag.questionText,
-        flagType: flag.flagType,
-        resolutionNote,
-      });
-      
-      if (notificationSent) {
-        await prisma.questionFlag.update({
-          where: { id: flagId as string },
-          data: {
-            notificationSent: true,
-            notifiedAt: new Date(),
-          },
-        });
-      }
-    }
-
-    return new Response(JSON.stringify({ 
-      success: true, 
-      message: 'Flag resolved and user notified' 
-    }), {
+    return new Response(JSON.stringify({ success: result.success, ...result }), {
       headers: { 
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
@@ -105,10 +65,10 @@ export const onRequestPost = async (context) => {
     });
 
   } catch (error) {
-    console.error('Failed to resolve flag:', error);
+    console.error('Failed to merge branch:', error);
     return new Response(JSON.stringify({ 
       success: false, 
-      error: 'Failed to resolve flag' 
+      error: error.message || 'Failed to merge branch' 
     }), {
       status: 500,
       headers: { 

@@ -66,7 +66,12 @@ export async function onRequestGet(context: any) {
     });
 
     return new Response(JSON.stringify(contentMap), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      }
     });
   } catch (error: any) {
     console.error('Error fetching all content:', error);
@@ -76,7 +81,10 @@ export async function onRequestGet(context: any) {
       details: error.message 
     }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 }

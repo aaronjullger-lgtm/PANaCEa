@@ -52,13 +52,21 @@ export async function onRequestGet(context: any) {
       riskFactors: content.riskFactors,
       complications: content.complications
     }), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      }
     });
   } catch (error: any) {
     console.error('Error fetching condition:', error);
     return new Response(JSON.stringify({ error: 'Internal server error', details: error.message }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 }

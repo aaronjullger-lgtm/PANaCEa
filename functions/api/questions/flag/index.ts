@@ -17,7 +17,10 @@ export const onRequestPost = async (context) => {
     if (!authResult) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
@@ -32,7 +35,10 @@ export const onRequestPost = async (context) => {
         missing 
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
@@ -43,7 +49,10 @@ export const onRequestPost = async (context) => {
         message: 'Invalid flagType' 
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
@@ -56,7 +65,10 @@ export const onRequestPost = async (context) => {
         error: 'Database not configured' 
       }), {
         status: 503,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
@@ -99,7 +111,10 @@ export const onRequestPost = async (context) => {
       flagId: flag.id,
       message: 'Question flagged successfully. We will review it soon!' 
     }), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
 
   } catch (error) {
@@ -109,7 +124,10 @@ export const onRequestPost = async (context) => {
       error: 'Failed to flag question' 
     }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 };
