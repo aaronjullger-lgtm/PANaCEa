@@ -20,7 +20,7 @@
  * @see https://www.prisma.io/docs/orm/prisma-client/deployment/edge/deploy-to-cloudflare
  */
 
-import { PrismaClient } from '@prisma/client/wasm';
+import { PrismaClient } from '@prisma/client/edge';
 import { withAccelerate } from '@prisma/extension-accelerate';
 
 /**
@@ -71,13 +71,11 @@ export function createEdgePrismaClient(databaseUrl: string) {
   try {
     // Create Prisma client with Accelerate
     // The Accelerate extension handles HTTP-based communication with the database
-    return new PrismaClient({
-      datasources: {
-        db: {
-          url: databaseUrl,
-        },
-      },
-    }).$extends(withAccelerate()) as any;
+    const client = new PrismaClient({
+      datasourceUrl: databaseUrl,
+    });
+    
+    return client.$extends(withAccelerate());
   } catch (error) {
     console.error('[Prisma Edge] Failed to create Prisma client:', error);
     throw new Error(
