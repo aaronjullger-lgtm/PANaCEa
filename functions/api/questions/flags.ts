@@ -1,0 +1,61 @@
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
+
+export const onRequestOptions = handleCorsOptions;
+
+export const onRequestGet = async (context) => {
+  const corsResponse = await handleCorsOptions(context);
+  if (corsResponse) return corsResponse;
+
+  const { request, env } = context;
+
+  try {
+    // Verify auth
+    const authResult = await verifyAuthToken(request, env);
+    if (!authResult) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // TODO: Add admin check here
+
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status');
+    const priority = url.searchParams.get('priority');
+
+    if (!env.DATABASE_URL) {
+      return new Response(JSON.stringify({ success: true, flags: [] }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const prisma = createEdgePrismaClient(env);
+
+    const flags = await prisma.questionFlag.findMany({
+      where: {
+        ...(status && { status: status }),
+        ...(priority && { priority: priority }),
+      },
+      orderBy: [
+        { priority: 'desc' },
+        { createdAt: 'desc' },
+      ],
+    });
+
+    return new Response(JSON.stringify({ success: true, flags }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Failed to get flags:', error);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: 'Failed to get flags' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
