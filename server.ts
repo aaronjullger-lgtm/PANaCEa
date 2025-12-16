@@ -230,32 +230,71 @@ app.get('/api/conditions/:identifier/extended', requireAuth, async (req: Authent
 // Public endpoint to allow loading content before auth (mimics static file behavior)
 app.get('/api/content/all', async (req: Request, res: Response) => {
   try {
-    const allContent = await prisma.medicalContent.findMany();
+    // Only query published content for production use
+    const allContent = await prisma.medicalContent.findMany({
+      where: { status: 'published' }
+    });
 
     // Transform to map format expected by frontend
     const contentMap: Record<string, any> = {};
     allContent.forEach(item => {
       contentMap[item.conditionId] = {
+        // Basic info
+        conditionId: item.conditionId,
+        condition: item.condition,
+        system: item.system,
+        subcategory: item.subcategory,
+        
+        // Content sections - properly format for frontend
         overview: item.overview,
+        
+        // Combine etiology and pathophysiology if both exist
+        etiologyPathophysiology: [
+          item.etiology ? `**Etiology**\n\n${item.etiology}` : null,
+          item.pathophysiology ? `**Pathophysiology**\n\n${item.pathophysiology}` : null
+        ].filter(Boolean).join('\n\n') || undefined,
+        
         etiology: item.etiology,
         pathophysiology: item.pathophysiology,
         epidemiology: item.epidemiology,
-        symptoms: item.symptoms,
-        physicalExam: item.physicalExam,
+        
+        // Arrays - ensure they're properly formatted
+        symptoms: item.symptoms && item.symptoms.length > 0 ? item.symptoms : undefined,
+        physicalExam: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined,
+        examFindings: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined, // Alias
+        riskFactors: item.riskFactors && item.riskFactors.length > 0 ? item.riskFactors : undefined,
+        complications: item.complications && item.complications.length > 0 ? item.complications : undefined,
+        differentialDiagnosis: item.differentialDiagnosis && item.differentialDiagnosis.length > 0 ? item.differentialDiagnosis : undefined,
+        
+        // JSON fields - pass through as-is
         diagnostics: item.diagnostics,
         treatment: item.treatment,
+        
         prognosis: item.prognosis,
-        differentialDiagnosis: item.differentialDiagnosis,
-        riskFactors: item.riskFactors,
-        complications: item.complications,
-        buzzwords: item.buzzwords
+        buzzwords: item.buzzwords && item.buzzwords.length > 0 ? item.buzzwords : undefined
       };
     });
 
     res.json(contentMap);
   } catch (error) {
     console.error('Error fetching all content:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    
+    // Provide more helpful error messages
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    if (errorMessage.includes('connect') || errorMessage.includes('ECONNREFUSED')) {
+      return res.status(503).json({ 
+        error: 'Database unavailable',
+        message: 'Unable to connect to database. Please ensure DATABASE_URL is configured and the database is accessible.',
+        details: errorMessage
+      });
+    }
+    
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'Failed to fetch medical content from database',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+    });
   }
 });
 

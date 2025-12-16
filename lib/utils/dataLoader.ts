@@ -81,19 +81,35 @@ export async function loadConditionContent(): Promise<any> {
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const data = await response.json();
       dataCache.set(cacheKey, data);
+      console.log(`✓ Loaded condition content from database (${Object.keys(data).length} conditions)`);
       return data;
     }
     
     // Database API returned non-OK response
-    console.error(`Database API returned status ${response.status} for ${apiUrl}`);
-    console.error('Ensure DATABASE_URL is set and database is accessible');
+    const contentType = response.headers.get('content-type');
+    
+    if (!contentType?.includes('application/json')) {
+      console.warn(`⚠ Database API returned ${contentType || 'unknown'} instead of JSON`);
+      console.warn('This usually means the backend server is not running.');
+      console.warn('Start with: npm run dev:all (or npm run dev:server + npm run dev)');
+    } else if (response.status === 503) {
+      const errorData = await response.json();
+      console.error(`⚠ Database unavailable: ${errorData.message || 'Cannot connect to database'}`);
+      console.error('Ensure DATABASE_URL is configured in .env');
+    } else {
+      console.error(`Database API returned status ${response.status} for ${apiUrl}`);
+    }
   } catch (error) {
-    console.error(`Failed to load condition content from database API (${apiUrl}):`, error);
-    console.error('Ensure backend server is running and DATABASE_URL is configured');
+    console.error(`✗ Failed to load condition content from database API (${apiUrl}):`, error);
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.error('Network error - backend server may not be running');
+      console.error('Start with: npm run dev:all (or npm run dev:server + npm run dev)');
+    }
   }
   
   // Return empty object to prevent app crashes - no static fallback
   // Application requires database to be properly configured for full functionality
+  console.warn('⚠ Returning empty dataset - condition content will not be available');
   return {};
 }
 
@@ -118,15 +134,22 @@ export async function loadLabCases(): Promise<any> {
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const data = await response.json();
       dataCache.set(cacheKey, data);
+      console.log(`✓ Loaded ${Array.isArray(data) ? data.length : 0} lab cases from database`);
       return data;
     }
+    
+    // Log warning for non-JSON responses
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      console.warn('Lab cases endpoint returned non-JSON response (backend not running)');
+    }
   } catch (error) {
-    console.warn('Failed to load lab cases from API:', error);
+    console.warn('Failed to load lab cases from API - this is optional content:', error);
   }
   
   // Return empty array as graceful fallback
   // Lab cases are optional and generated content, not critical for core functionality
-  console.warn('Lab cases not available, returning empty dataset');
+  console.info('ℹ Lab cases not available (backend may not be running)');
   const emptyData: any[] = [];
   dataCache.set(cacheKey, emptyData);
   return emptyData;

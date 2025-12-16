@@ -114,14 +114,24 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
            }
         });
         
-        if (response.ok) {
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        if (response.ok && contentType?.includes('application/json')) {
           const data = await response.json();
           if (mounted) {
             setExtendedData(data);
           }
+        } else {
+          // Non-JSON response (likely HTML 404 page)
+          if (!contentType?.includes('application/json')) {
+            console.warn(`Extended data endpoint returned ${contentType} instead of JSON`);
+            console.warn('This usually means the backend server is not running');
+          } else {
+            console.warn(`Extended data request failed with status ${response.status}`);
+          }
         }
       } catch (e) { 
-        console.error("Failed to load extended data", e); 
+        console.warn("Could not load extended data (anatomy, special tests) - this is optional", e); 
       }
     }
     

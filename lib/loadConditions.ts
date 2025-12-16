@@ -17,19 +17,41 @@ async function getConditions(): Promise<Record<string, unknown>> {
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       conditionsCache = await response.json();
+      console.log(`✓ Loaded ${Object.keys(conditionsCache).length} conditions from database`);
       return conditionsCache;
     }
     
     // Database API returned non-OK response
-    console.error(`Database API returned status ${response.status} for ${apiUrl}`);
-    console.error('Ensure DATABASE_URL is set and database is accessible');
+    console.warn(`Database API returned status ${response.status} for ${apiUrl}`);
+    
+    // Try to get error details from response
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('application/json')) {
+      const errorData = await response.json();
+      console.error('API Error:', errorData);
+      
+      if (response.status === 503) {
+        console.error('⚠ DATABASE UNAVAILABLE: The backend server cannot connect to the database.');
+        console.error('  This is expected if:');
+        console.error('  - DATABASE_URL is not configured in your .env file');
+        console.error('  - The database is not running or accessible');
+        console.error('  - You are running in a development environment without a database');
+      }
+    } else {
+      console.error('⚠ API returned non-JSON response (likely HTML 404 page)');
+      console.error('  This means the backend server is not running or the endpoint does not exist.');
+    }
+    
+    console.error('REQUIRED: Start the backend server with `npm run dev:server` or `npm run dev:all`');
+    console.error('REQUIRED: Configure DATABASE_URL in .env and populate the database');
   } catch (error) {
-    console.error(`Failed to load conditions from database API (${apiUrl}):`, error);
-    console.error('Ensure backend server is running and DATABASE_URL is configured');
+    console.error(`✗ Failed to load conditions from database API (${apiUrl}):`, error);
+    console.error('REQUIRED: Ensure backend server is running and DATABASE_URL is configured');
   }
 
   // Return empty object - application requires database to be properly configured
   // No static fallback to enforce database-first architecture
+  console.warn('⚠ Returning empty dataset - application will have limited functionality');
   return {};
 }
 
