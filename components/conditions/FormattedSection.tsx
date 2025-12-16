@@ -224,15 +224,27 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
   if (!nodes.length) return null;
 
   return (
-    <ul className={`condition-bullet-list level-${level}`}>
+    <ul className={`flex flex-col ${level === 0 ? 'gap-4' : 'gap-2 mt-2'}`}>
       {nodes.map((node, index) => (
-        <li key={`${level}-${index}`} className="condition-bullet-item">
-          <span className="condition-bullet-text">{node.parts}</span>
+        <li key={`${level}-${index}`} className="relative">
+          <div className="flex items-start gap-3">
+            <span className={`
+              shrink-0 mt-2 rounded-full 
+              ${level === 0 ? 'w-1.5 h-1.5 bg-blue-500' : 
+                level === 1 ? 'w-1 h-1 bg-gray-400 border border-gray-400' : 
+                'w-1 h-1 bg-gray-300'}
+            `} />
+            <div className="text-gray-800 dark:text-gray-200 leading-relaxed">
+              {node.parts}
+            </div>
+          </div>
           {node.children.length > 0 && (
-            <BulletList
-              nodes={node.children}
-              level={Math.min(level + 1, 2)}
-            />
+            <div className="ml-[0.4rem] pl-4 border-l-2 border-gray-100 dark:border-gray-800 mt-1">
+              <BulletList
+                nodes={node.children}
+                level={Math.min(level + 1, 2)}
+              />
+            </div>
           )}
         </li>
       ))}
