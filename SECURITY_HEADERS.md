@@ -117,13 +117,13 @@ X-Frame-Options: DENY
 - Protects against clickjacking attacks
 - Reinforces `frame-ancestors 'none'` from CSP
 
-### X-XSS-Protection
-```
-X-XSS-Protection: 1; mode=block
-```
-- Enables XSS filter in older browsers
-- Blocks page if XSS attack detected
-- Modern browsers rely on CSP instead
+### X-XSS-Protection (Removed)
+
+This header was previously included but has been removed because:
+- It's deprecated and can introduce security vulnerabilities
+- Modern browsers rely on CSP for XSS protection
+- Can cause false positives and break legitimate functionality
+- Our comprehensive CSP provides superior protection
 
 ### Referrer-Policy
 ```
