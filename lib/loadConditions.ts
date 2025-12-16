@@ -19,39 +19,17 @@ async function getConditions(): Promise<Record<string, unknown>> {
       conditionsCache = await response.json();
       return conditionsCache;
     }
-  } catch (error) {
-    console.warn(
-      `Failed to load conditions from database API:`,
-      error
-    );
-  }
-
-  // Try fallback to static JSON file
-  try {
-    const response = await fetch('/data/conditionContent.clean.json');
     
-    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const dataArray = await response.json();
-      
-      // Convert array format to map format (conditionId -> content)
-      const contentMap: Record<string, unknown> = {};
-      if (Array.isArray(dataArray)) {
-        dataArray.forEach((item: any) => {
-          if (item.conditionId && item.content) {
-            contentMap[item.conditionId] = item.content;
-          }
-        });
-      }
-      
-      conditionsCache = contentMap;
-      return conditionsCache;
-    }
-  } catch (fallbackError) {
-    console.warn('Failed to load static condition content:', fallbackError);
+    // Database API returned non-OK response
+    console.error(`Database API returned status ${response.status} for ${apiUrl}`);
+    console.error('Ensure DATABASE_URL is set and database is accessible');
+  } catch (error) {
+    console.error('Failed to load conditions from database API:', error);
+    console.error('Ensure backend server is running and DATABASE_URL is configured');
   }
 
-  // Return empty object if database not available - content will be loaded on-demand
-  console.warn('Condition content not available from any source, returning empty dataset');
+  // Return empty object - application requires database to be properly configured
+  // No static fallback to enforce database-first architecture
   return {};
 }
 

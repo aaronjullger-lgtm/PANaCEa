@@ -99,14 +99,21 @@ View your app in AI Studio: https://ai.studio/apps/drive/1XKKOL9unGhpt6WDahRfrws
 
 **Note:** The Vite development server proxies requests to `/geminiProxy` to `http://localhost:3001`. The backend server must be running for AI features to work.
 
-### Offline/Development Mode
+### Database-First Architecture
 
-The application includes automatic fallbacks for development without a running backend server:
-- **Condition content**: Falls back to static JSON files in `/data/`
-- **Drug data**: Uses the static drug registry
-- **Lab cases & buzzwords**: Returns empty arrays gracefully
+PANaCEa uses a **database-first architecture** where all medical content is stored in and retrieved from the database via API endpoints. The application **requires** a properly configured database to function.
 
-While this allows the frontend to run independently, full functionality (AI question generation, user authentication, database features) requires both frontend and backend servers.
+**Required Setup:**
+- Backend server must be running (`npm run dev:server` or deployed)
+- `DATABASE_URL` environment variable must be configured
+- Database schema must be applied (run `npm run migrate:production`)
+
+**What happens without database:**
+- Condition content will be empty
+- Drug data uses the static registry as fallback
+- Lab cases return empty arrays gracefully
+
+For full functionality (AI question generation, user authentication, condition content, database features), both frontend and backend servers with database access are required.
 
 ## 🧠 Hybrid Content Engine
 

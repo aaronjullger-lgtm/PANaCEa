@@ -58,9 +58,10 @@ export async function loadDrugData(): Promise<any> {
 
 /**
  * Lazily load condition content when needed.
- * Uses database API endpoint with fallback to static JSON file.
+ * Uses database API endpoint exclusively - no static fallback.
  * 
  * @returns Promise resolving to the condition content
+ * @throws Error if database API is not available
  */
 export async function loadConditionContent(): Promise<any> {
   const cacheKey = 'conditionContent';
@@ -83,38 +84,15 @@ export async function loadConditionContent(): Promise<any> {
       return data;
     }
     
-    console.warn('Database API not available, attempting to load static JSON');
+    // Database API returned non-OK response
+    console.error(`Database API returned status ${response.status} for ${apiUrl}`);
+    throw new Error(`Failed to load condition content from database API: ${response.status} ${response.statusText}`);
   } catch (error) {
-    console.warn('Failed to load condition content from API:', error);
+    console.error('Failed to load condition content from database API:', error);
+    // Return empty object to prevent app crashes, but log clear error
+    // Content will be loaded on-demand via individual database queries if needed
+    return {};
   }
-  
-  // Fallback to static JSON file
-  try {
-    const response = await fetch('/data/conditionContent.clean.json');
-    
-    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const dataArray = await response.json();
-      
-      // Convert array format to map format (conditionId -> content)
-      const contentMap: Record<string, any> = {};
-      if (Array.isArray(dataArray)) {
-        dataArray.forEach((item: any) => {
-          if (item.conditionId && item.content) {
-            contentMap[item.conditionId] = item.content;
-          }
-        });
-      }
-      
-      dataCache.set(cacheKey, contentMap);
-      return contentMap;
-    }
-  } catch (fallbackError) {
-    console.warn('Failed to load static condition content:', fallbackError);
-  }
-  
-  // Return empty object - content will be loaded on-demand via database queries
-  console.warn('Condition content not available from any source, returning empty dataset');
-  return {};
 }
 
 /**
