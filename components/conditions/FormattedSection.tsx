@@ -68,16 +68,6 @@ function buildBulletTree(content: string): BulletNode[] {
   // This prevents "double bullets" (one from UI, one from text "1.")
   normalized = normalized.replace(/^(\s*)\d+\.\s+/gm, "$1• ");
 
-  // 6. Handle "Term: Definition" style lines that are missing bullets
-  // Convert "Term: Definition..." to "• **Term**: Definition..."
-  // Only applies if the line doesn't already start with a bullet or special char
-  // and the "Term" is reasonably short (< 50 chars)
-  normalized = normalized.replace(/^(\s*)([A-Za-z0-9][^:\n]{0,50}):\s+(.+)$/gm, (match, indent, term, rest) => {
-    // Don't touch if it looks like a header (already bold)
-    if (term.trim().startsWith('**')) return match;
-    return `${indent}• **${term}**: ${rest}`;
-  });
-
   // If content is on a single line, split by bullet markers
   const lines = normalized.split("\n");
   const hasNewlines = lines.filter(l => l.trim()).length > 1;
@@ -115,6 +105,7 @@ function buildBulletTree(content: string): BulletNode[] {
   // until we see another similar pattern without a preceding header-only line
   let currentNestLevel = 0;
   let inNestedContext = false;
+  let contextSource: 'header' | 'term' = 'header';
 
   finalLines.forEach((line, lineIndex) => {
     if (!line.trim()) return;
@@ -136,6 +127,14 @@ function buildBulletTree(content: string): BulletNode[] {
       leadingSpaces = match?.[1]?.length ?? 0;
       bulletSymbol = match?.[2] ?? "";
       text = (match?.[3] ?? line).trim();
+      
+      // FIX: Double Bullet Cleanup
+      // If the text itself starts with a bullet or number pattern that wasn't caught, strip it.
+      // e.g. "• 5. Impaired" -> "5. Impaired" (if bulletSymbol is present)
+      // e.g. "5. Impaired" -> "Impaired" (if bulletSymbol is present)
+      if (bulletSymbol) {
+         text = text.replace(/^([•◦▪\-\*]|\d+\.|[a-zA-Z]\.)\s+/, "");
+      }
     }
     
     if (!text) return;
@@ -148,18 +147,22 @@ function buildBulletTree(content: string): BulletNode[] {
     // e.g. "Acute/Emergency Management"
     // Criteria:
     // 1. No bullet (checked later via !bulletSymbol)
-    // 2. Short length (< 60 chars)
+    // 2. Short length (< 50 chars)
     // 3. Starts with uppercase or number
     // 4. Not a sentence (doesn't end with period, unless it's short)
+    // 5. Must NOT contain a colon (unless at end) - prevents "Term: Definition" from being a header
     const isImplicitHeader = !bulletSymbol && !isAsteriskBullet && 
-                             text.length < 60 && 
+                             text.length < 50 && 
                              /^[A-Z0-9]/.test(text) && 
-                             (!/[.]$/.test(text) || text.endsWith(':'));
+                             !text.includes(':') &&
+                             !/[.]$/.test(text);
 
     const isHeaderOnly = isBoldHeader || isImplicitHeader;
     
     // Check if this line ENDS with a header pattern (could have text before)
-    const endsWithHeader = /\*\*[^*]+:\*\*\s*$/.test(text);
+    // Only allow lines ending with a colon to trigger nesting if they are reasonably short
+    // This prevents long sentences ending in a colon from trapping subsequent items
+    const endsWithHeader = /\*\*[^*]+:\*\*\s*$/.test(text) || (text.trim().endsWith(':') && text.length < 100);
     
     // Check if this is an item that starts with a bold term (like **Paroxysmal:**)
     const startsWithBoldTerm = /^\*\*[^*]+:\*\*/.test(text);
@@ -175,7 +178,9 @@ function buildBulletTree(content: string): BulletNode[] {
         nodeType = 'text';
       } else {
         // At root level, no bullet -> likely a header
-        nodeType = 'header';
+        // FIX: Default to bullet for root items to avoid over-bolding paragraphs.
+        // Only treat as header if it really looks like one (isHeaderOnly)
+        nodeType = 'bullet';
       }
     }
 
@@ -197,12 +202,22 @@ function buildBulletTree(content: string): BulletNode[] {
       // If it has a bullet, it's definitely content/sub-header, so nest it.
       if (inNestedContext && (!isHeaderOnly || bulletSymbol)) {
         // We're in a nested context (after a header-only line)
-        // Items that start with bold terms are nested
+        
+        // FIX: Smart Nesting Logic
+        // If the current item starts with a bold term (e.g. "**V/Q Mismatch:**"),
+        // and we are in a nested context, we need to decide if it's a CHILD or a SIBLING.
+        
         if (startsWithBoldTerm) {
-          level = currentNestLevel + 1;
+           // If the context was established by a previous Term (sibling), we stay at same level.
+           // If the context was established by a Header (parent), we indent.
+           if (contextSource === 'header') {
+             level = currentNestLevel + 1;
+           } else {
+             level = currentNestLevel;
+           }
+           level = Math.max(1, level);
         } else {
-          // Non-bold items might break the nesting
-          // FIX: If we are in a nested context, we should assume subsequent items are nested
+          // Non-bold items (descriptions) should be nested under the bold term
           level = currentNestLevel + 1;
         }
       } else {
@@ -231,6 +246,13 @@ function buildBulletTree(content: string): BulletNode[] {
       // The next items should be nested
       inNestedContext = true;
       currentNestLevel = level;
+      contextSource = 'header';
+    } else if (startsWithBoldTerm) {
+       // If it's a bold term line (e.g. "**Term**: Def"), it acts as a parent for subsequent text
+       // But it also acts as a sibling for subsequent terms
+       inNestedContext = true;
+       currentNestLevel = level;
+       contextSource = 'term';
     }
 
     while (stack.length && stack[stack.length - 1].level >= level) {
@@ -274,18 +296,18 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
   if (!nodes.length) return null;
 
   return (
-    <ul className={`flex flex-col ${level === 0 ? 'gap-4' : 'gap-2 mt-2'}`}>
+    <ul className={`flex flex-col ${level === 0 ? 'gap-4' : 'gap-3 mt-3'}`}>
       {nodes.map((node, index) => {
         // Use the node type to determine if it's a header
         const isHeaderNode = node.type === 'header';
         const isBulletNode = node.type === 'bullet';
 
         return (
-          <li key={`${level}-${index}`} className="relative">
+          <li key={`${level}-${index}`} className="relative mb-1">
             <div className={`flex items-start gap-3 ${isHeaderNode ? 'mt-4 mb-2' : ''}`}>
               {isBulletNode && (
                 <span className={`
-                  shrink-0 mt-2 rounded-full 
+                  shrink-0 mt-[0.55rem] rounded-full 
                   ${level === 0 ? 'w-1.5 h-1.5 bg-blue-500' : 
                     level === 1 ? 'w-1 h-1 bg-gray-400 border border-gray-400' : 
                     'w-1 h-1 bg-gray-300'}
@@ -296,7 +318,7 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
               </div>
             </div>
             {node.children.length > 0 && (
-              <div className={`${isHeaderNode ? 'ml-1' : 'ml-[0.4rem]'} pl-4 border-l-2 border-gray-100 dark:border-gray-800 mt-1`}>
+              <div className={`${isHeaderNode ? 'ml-1' : 'ml-[0.35rem]'} pl-3 md:pl-5 border-l-2 border-gray-100 dark:border-gray-800 mt-2`}>
                 <BulletList
                   nodes={node.children}
                   level={Math.min(level + 1, 2)}
@@ -327,7 +349,15 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
 
   // Handle array content by joining with newlines
   const textContent = Array.isArray(content) 
-    ? content.map(item => item.startsWith('•') || item.startsWith('*') ? item : `• ${item}`).join('\n')
+    ? content.map(item => {
+        const trimmed = item.trim();
+        // Check if it already has a bullet-like start (bullet, hyphen, asterisk, number)
+        if (/^([•◦▪\-\*]|\d+\.)/.test(trimmed)) {
+          return trimmed;
+        }
+        // If it's a plain line, add a bullet
+        return `• ${trimmed}`;
+      }).join('\n')
     : content as string;
 
   const bullets = buildBulletTree(textContent ?? "");
