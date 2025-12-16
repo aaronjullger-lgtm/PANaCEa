@@ -95,75 +95,9 @@ export async function searchConditions(
   const query = rawQuery.trim();
   if (!query) return [];
 
-  // Try database first
-  if (process.env.DATABASE_URL) {
-    try {
-      const { prisma } = await import('../../lib/prisma');
-      const { calculateRelevanceScore } = await import('../../lib/contentHelpers');
-      
-      // Build where clause with proper types
-      type WhereClause = {
-        status: string;
-        OR: Array<{
-          condition?: { contains: string; mode: 'insensitive' };
-          overview?: { contains: string; mode: 'insensitive' };
-        }>;
-        AND?: Array<{
-          OR?: Array<{
-            system?: string;
-            relatedSystems?: { has: string };
-          }>;
-          subcategory?: string;
-        }>;
-      };
-      
-      const whereClause: WhereClause = {
-        status: 'published',
-        OR: [
-          { condition: { contains: query, mode: 'insensitive' } },
-          { overview: { contains: query, mode: 'insensitive' } },
-        ]
-      };
-      
-      // Add system filter
-      if (filters.system) {
-        whereClause.AND = [
-          {
-            OR: [
-              { system: filters.system },
-              { relatedSystems: { has: filters.system } }
-            ]
-          }
-        ];
-      }
-      
-      // Add subcategory filter
-      if (filters.subcategory) {
-        if (whereClause.AND) {
-          whereClause.AND.push({ subcategory: filters.subcategory });
-        } else {
-          whereClause.AND = [{ subcategory: filters.subcategory }];
-        }
-      }
-      
-      const dbResults = await prisma.medicalContent.findMany({
-        where: whereClause,
-        take: 30,
-        orderBy: { condition: 'asc' }
-      });
-      
-      return dbResults.map(r => ({
-        id: r.conditionId,
-        condition: r.condition,
-        system: r.system as SystemCode,
-        subcategory: r.subcategory,
-        aliases: [],
-        score: calculateRelevanceScore(query, r.condition)
-      })).sort((a, b) => b.score - a.score || a.condition.localeCompare(b.condition));
-    } catch (error) {
-      console.error('Database search failed, falling back to registry:', error);
-    }
-  }
+  // Skip database search in browser environment - only use registry
+  // Database queries should only run in server context (Node.js/Edge runtime)
+  // The browser cannot and should not import Prisma client
   
   // Fallback to existing registry search
   const results: ConditionSearchResult[] = [];

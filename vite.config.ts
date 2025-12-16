@@ -74,6 +74,14 @@ export default defineConfig(({ mode }) => {
       },
       build: {
         rollupOptions: {
+          external: [
+            // Externalize Prisma packages - they should never be in browser bundles
+            '@prisma/client',
+            '@prisma/client/edge',
+            '.prisma/client',
+            '.prisma/client/edge',
+            '@prisma/extension-accelerate',
+          ],
           output: {
             manualChunks: (id) => {
               // Vendor chunks for better caching
