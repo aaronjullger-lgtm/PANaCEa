@@ -71,10 +71,10 @@ export async function loadConditionContent(): Promise<any> {
     return dataCache.get(cacheKey);
   }
   
+  // Use the database API endpoint (same approach as lib/loadConditions.ts)
+  const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+  
   try {
-    // Use the database API endpoint (same approach as lib/loadConditions.ts)
-    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
-    
     const response = await fetch(apiUrl);
     
     // Check if response is OK and is JSON before parsing
@@ -88,7 +88,7 @@ export async function loadConditionContent(): Promise<any> {
     console.error(`Database API returned status ${response.status} for ${apiUrl}`);
     console.error('Ensure DATABASE_URL is set and database is accessible');
   } catch (error) {
-    console.error('Failed to load condition content from database API:', error);
+    console.error(`Failed to load condition content from database API (${apiUrl}):`, error);
     console.error('Ensure backend server is running and DATABASE_URL is configured');
   }
   

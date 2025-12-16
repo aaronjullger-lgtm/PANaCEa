@@ -24,7 +24,7 @@ async function getConditions(): Promise<Record<string, unknown>> {
     console.error(`Database API returned status ${response.status} for ${apiUrl}`);
     console.error('Ensure DATABASE_URL is set and database is accessible');
   } catch (error) {
-    console.error('Failed to load conditions from database API:', error);
+    console.error(`Failed to load conditions from database API (${apiUrl}):`, error);
     console.error('Ensure backend server is running and DATABASE_URL is configured');
   }
 
