@@ -17,7 +17,7 @@ import { config } from 'dotenv';
 import { sanitizeBody, validateRequired, validateEnum } from './lib/middleware/validation';
 import { requireAuth, AuthenticatedRequest } from './lib/middleware/clerkAuth';
 import { requireAdmin } from './lib/middleware/adminAuth';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './lib/prisma';
 import Redis from 'ioredis';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -27,7 +27,6 @@ import { createRequestLogger } from './lib/logging/structuredLogger';
 config();
 
 const app = express();
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
 // Security Middleware
@@ -2504,4 +2503,24 @@ app.get('/api/drugs/search', async (req: Request, res: Response) => {
     console.error('Error searching drugs:', error);
     res.status(500).json({ error: 'Failed to search drugs' });
   }
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`
+╔════════════════════════════════════════════════════════════════╗
+║                  PANaCEa Backend Server                        ║
+╠════════════════════════════════════════════════════════════════╣
+║ Status: ✓ Server is running                                   ║
+║ Port: ${PORT}                                                     ║
+║ Environment: ${process.env.NODE_ENV || 'development'}                                    ║
+║                                                                ║
+║ API Endpoints:                                                 ║
+║   - Health Check: http://localhost:${PORT}/health                 ║
+║   - Content API: http://localhost:${PORT}/api/content/all         ║
+║   - Gemini Proxy: http://localhost:${PORT}/geminiProxy            ║
+║                                                                ║
+║ Database: ${process.env.DATABASE_URL ? '✓ Connected' : '✗ Not configured'}                                      ║
+╚════════════════════════════════════════════════════════════════╝
+  `);
 });
