@@ -115,7 +115,10 @@ export async function onRequestGet(context: any) {
       ...condition,
       coreContent: coreContent ? {
         ...coreContent,
-        // Format etiologyPathophysiology for frontend compatibility
+        // Ensure individual fields are available
+        etiology: coreContent.etiology,
+        pathophysiology: coreContent.pathophysiology,
+        // Format etiologyPathophysiology for backward compatibility
         etiologyPathophysiology: [
           coreContent.etiology ? `**Etiology**\n\n${coreContent.etiology}` : null,
           coreContent.pathophysiology ? `**Pathophysiology**\n\n${coreContent.pathophysiology}` : null

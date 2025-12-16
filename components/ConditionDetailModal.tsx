@@ -37,7 +37,7 @@ const SECTION_ORDER: { key: string; title: string; accent?: "danger" | "default"
   { key: "anatomy", title: "Anatomy" },
   { key: "keyPoints", title: "Key Points" },
   { key: "etiology", title: "Etiology" },
-  { key: "etiologyPathophysiology", title: "Etiology & Pathophysiology" },
+  { key: "pathophysiology", title: "Pathophysiology" },
   { key: "epidemiology", title: "Epidemiology" },
   { key: "riskFactors", title: "Risk Factors" },
   { key: "clinicalPresentation", title: "Clinical Presentation" },
@@ -65,6 +65,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   const [extendedData, setExtendedData] = useState<any>(null);
   const [mediaIndex, setMediaIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
   const contentRef = useRef<HTMLDivElement | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
@@ -91,6 +92,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
       
       if (mounted) {
         setContent(entry);
+        // If we have content, we can stop loading (even if extended data isn't ready)
+        if (entry) setIsLoading(false);
       }
     }
     
@@ -120,6 +123,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           const data = await response.json();
           if (mounted) {
             setExtendedData(data);
+            setIsLoading(false); // Extended data includes core content now, so we can stop loading
           }
         } else {
           // Non-JSON response (likely HTML 404 page)
@@ -129,9 +133,11 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           } else {
             console.warn(`Extended data request failed with status ${response.status}`);
           }
+          if (mounted) setIsLoading(false); // Stop loading even on error
         }
       } catch (e) { 
         console.warn("Could not load extended data (anatomy, special tests) - this is optional", e); 
+        if (mounted) setIsLoading(false); // Stop loading even on error
       }
     }
     
@@ -313,114 +319,123 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
               className="condition-scrollable condition-scrollable-padded"
               ref={contentRef}
             >
-              {mediaIds.length > 0 && (
-                <section className="condition-media">
-                  <div className="condition-media-frame">
-                    <img
-                      src={`/media/${
-                        mediaIds[mediaIndex].includes(".")
-                          ? mediaIds[mediaIndex]
-                          : `${mediaIds[mediaIndex]}.png`
-                      }`}
-                      alt={`${condition.condition} media ${mediaIndex + 1}`}
-                    />
-                    {mediaIds.length > 1 && (
-                      <div className="condition-media-controls">
-                        <button
-                          className="media-button"
-                          onClick={() =>
-                            setMediaIndex(
-                              (mediaIndex - 1 + mediaIds.length) % mediaIds.length
-                            )
-                          }
-                          aria-label="Previous media"
-                        >
-                          ‹
-                        </button>
-                        <button
-                          className="media-button"
-                          onClick={() =>
-                            setMediaIndex((mediaIndex + 1) % mediaIds.length)
-                          }
-                          aria-label="Next media"
-                        >
-                          ›
-                        </button>
+              {isLoading && sections.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                  <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                  <p className="text-gray-500 font-medium">Loading condition details...</p>
+                </div>
+              ) : (
+                <>
+                  {mediaIds.length > 0 && (
+                    <section className="condition-media">
+                      <div className="condition-media-frame">
+                        <img
+                          src={`/media/${
+                            mediaIds[mediaIndex].includes(".")
+                              ? mediaIds[mediaIndex]
+                              : `${mediaIds[mediaIndex]}.png`
+                          }`}
+                          alt={`${condition.condition} media ${mediaIndex + 1}`}
+                        />
+                        {mediaIds.length > 1 && (
+                          <div className="condition-media-controls">
+                            <button
+                              className="media-button"
+                              onClick={() =>
+                                setMediaIndex(
+                                  (mediaIndex - 1 + mediaIds.length) % mediaIds.length
+                                )
+                              }
+                              aria-label="Previous media"
+                            >
+                              ‹
+                            </button>
+                            <button
+                              className="media-button"
+                              onClick={() =>
+                                setMediaIndex((mediaIndex + 1) % mediaIds.length)
+                              }
+                              aria-label="Next media"
+                            >
+                              ›
+                            </button>
+                          </div>
+                        )}
                       </div>
+                      {mediaIds.length > 1 && (
+                        <div className="condition-media-dots">
+                          {mediaIds.map((_, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setMediaIndex(idx)}
+                              className={`dot ${idx === mediaIndex ? "active" : ""}`}
+                              aria-label={`View media ${idx + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  )}
+
+                  <div className="condition-sections">
+                    {sections.length === 0 && !isLoading ? (
+                      <div className="text-center py-12 text-gray-500">
+                        <p>No detailed content available for this condition yet.</p>
+                      </div>
+                    ) : (
+                      sections.map((section) => (
+                        <section
+                          key={section.key}
+                          id={section.key}
+                          ref={(el) => {
+                            sectionRefs.current[section.key] = el;
+                          }}
+                          className="condition-card scroll-mt-24"
+                        >
+                          <h3 className="condition-section-title">{section.title}</h3>
+                          <div
+                            className={`condition-content ${
+                              section.accent === "danger" ? "condition-content-danger" : ""
+                            }`}
+                          >
+                            {section.key === 'anatomy' && extendedData?.anatomyStructures ? (
+                              <div className="space-y-4">
+                                {extendedData.anatomyStructures.map((item: any) => (
+                                  <div key={item.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                    <h4 className="font-bold text-lg text-gray-900">{item.name}</h4>
+                                    <p className="text-sm text-gray-500 mb-2">{item.region} • {item.system}</p>
+                                    <p className="text-gray-700">{item.description}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : section.key === 'specialTests' && extendedData?.specialTests ? (
+                              <div className="space-y-4">
+                                {extendedData.specialTests.map((test: any) => (
+                                  <div key={test.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                                    <h4 className="font-bold text-lg text-gray-900">{test.name}</h4>
+                                    <div className="flex gap-4 text-sm text-gray-600 mt-1 mb-2">
+                                      {test.sensitivity && <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">Sensitivity: {test.sensitivity}%</span>}
+                                      {test.specificity && <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">Specificity: {test.specificity}%</span>}
+                                    </div>
+                                    <p className="text-gray-700 mb-3">{test.description}</p>
+                                    {test.technique && (
+                                      <div className="mt-2 p-3 bg-white rounded border border-gray-200">
+                                        <span className="font-semibold text-xs uppercase text-gray-500 block mb-1">Technique</span>
+                                        <p className="text-sm text-gray-800">{test.technique}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <FormattedSection content={section.content} />
+                            )}
+                          </div>
+                        </section>
+                      ))
                     )}
                   </div>
-                  {mediaIds.length > 1 && (
-                    <div className="condition-media-dots">
-                      {mediaIds.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setMediaIndex(idx)}
-                          className={`dot ${idx === mediaIndex ? "active" : ""}`}
-                          aria-label={`View media ${idx + 1}`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </section>
-              )}
-
-              <div className="condition-sections">
-                {sections.map((section) => (
-                  <section
-                    key={section.key}
-                    id={section.key}
-                    ref={(el) => {
-                      sectionRefs.current[section.key] = el;
-                    }}
-                    className="condition-card scroll-mt-24"
-                  >
-                    <h3 className="condition-section-title">{section.title}</h3>
-                    <div
-                      className={`condition-content ${
-                        section.accent === "danger" ? "condition-content-danger" : ""
-                      }`}
-                    >
-                      {section.key === 'anatomy' && extendedData?.anatomyStructures ? (
-                        <div className="space-y-4">
-                          {extendedData.anatomyStructures.map((item: any) => (
-                            <div key={item.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                              <h4 className="font-bold text-lg text-gray-900">{item.name}</h4>
-                              <p className="text-sm text-gray-500 mb-2">{item.region} • {item.system}</p>
-                              <p className="text-gray-700">{item.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : section.key === 'specialTests' && extendedData?.specialTests ? (
-                        <div className="space-y-4">
-                          {extendedData.specialTests.map((test: any) => (
-                            <div key={test.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                              <h4 className="font-bold text-lg text-gray-900">{test.name}</h4>
-                              <div className="flex gap-4 text-sm text-gray-600 mt-1 mb-2">
-                                {test.sensitivity && <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs">Sensitivity: {test.sensitivity}%</span>}
-                                {test.specificity && <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">Specificity: {test.specificity}%</span>}
-                              </div>
-                              <p className="text-gray-700 mb-3">{test.description}</p>
-                              {test.technique && (
-                                <div className="mt-2 p-3 bg-white rounded border border-gray-200">
-                                  <span className="font-semibold text-xs uppercase text-gray-500 block mb-1">Technique</span>
-                                  <p className="text-sm text-gray-800">{test.technique}</p>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <FormattedSection content={section.content} />
-                      )}
-                    </div>
-                  </section>
-                ))}
-              </div>
-
-              {!hasAnyContent && (
-                <p className="condition-empty">
-                  Detailed notes for this condition haven&apos;t been added yet.
-                </p>
+                </>
               )}
             </div>
           </div>
