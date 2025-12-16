@@ -27,8 +27,8 @@ Content-Security-Policy:
   font-src 'self' https://fonts.gstatic.com data:; 
   img-src 'self' data: blob: https:; 
   media-src 'self' blob: https:; 
-  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co; 
-  frame-src 'self' https://*.clerk.accounts.dev; 
+  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co; 
+  frame-src 'self' https://*.clerk.accounts.dev https://clerk.studypanacea.com; 
   object-src 'none'; 
   base-uri 'self'; 
   form-action 'self'; 
@@ -114,7 +114,7 @@ Content-Security-Policy:
   style-src 'self' 'unsafe-inline'; 
   font-src 'self' https://fonts.gstatic.com data:; 
   img-src 'self' data: blob: https:; 
-  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
 ```
 
 **Purpose**: 
@@ -131,7 +131,7 @@ Content-Security-Policy:
   default-src 'self'; 
   script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
   worker-src 'self' blob:; 
-  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
 ```
 
 **Purpose**:
@@ -150,7 +150,7 @@ Content-Security-Policy:
   script-src 'self' 'unsafe-inline' 'unsafe-eval'; 
   script-src-elem 'self' 'unsafe-inline'; 
   worker-src 'self' blob:; 
-  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+  connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
 ```
 
 **Purpose**:
