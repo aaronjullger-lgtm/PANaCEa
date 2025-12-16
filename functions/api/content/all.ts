@@ -16,10 +16,27 @@ export async function onRequestGet(context: any) {
   try {
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
     
-    // Only query published content for production use
-    const allContent = await prisma.medicalContent.findMany({
-      where: { status: 'published' }
-    });
+    // Fetch in chunks to avoid 5MB limit (Prisma Accelerate limitation)
+    const BATCH_SIZE = 20; // Conservative batch size for large text content
+    let allContent: any[] = [];
+    let skip = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const batch = await prisma.medicalContent.findMany({
+        where: { status: 'published' },
+        skip,
+        take: BATCH_SIZE,
+        orderBy: { conditionId: 'asc' } // Ensure consistent ordering for pagination
+      });
+      
+      if (batch.length < BATCH_SIZE) {
+        hasMore = false;
+      }
+      
+      allContent = [...allContent, ...batch];
+      skip += BATCH_SIZE;
+    }
 
     // Transform to map format expected by frontend
     const contentMap: Record<string, any> = {};
