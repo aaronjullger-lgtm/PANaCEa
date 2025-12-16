@@ -248,12 +248,14 @@ app.get('/api/content/all', async (req: Request, res: Response) => {
         // Content sections - properly format for frontend
         overview: item.overview,
         
-        // Combine etiology and pathophysiology if both exist
+        // Combine etiology and pathophysiology for backward compatibility
+        // Frontend components expect this combined field (see ConditionDetailModal.tsx line 40)
         etiologyPathophysiology: [
           item.etiology ? `**Etiology**\n\n${item.etiology}` : null,
           item.pathophysiology ? `**Pathophysiology**\n\n${item.pathophysiology}` : null
         ].filter(Boolean).join('\n\n') || undefined,
         
+        // Also provide separate fields for services that use them
         etiology: item.etiology,
         pathophysiology: item.pathophysiology,
         epidemiology: item.epidemiology,
@@ -261,7 +263,10 @@ app.get('/api/content/all', async (req: Request, res: Response) => {
         // Arrays - ensure they're properly formatted
         symptoms: item.symptoms && item.symptoms.length > 0 ? item.symptoms : undefined,
         physicalExam: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined,
-        examFindings: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined, // Alias
+        
+        // Alias for backward compatibility (ConditionDetailModal.tsx line 47)
+        examFindings: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined,
+        
         riskFactors: item.riskFactors && item.riskFactors.length > 0 ? item.riskFactors : undefined,
         complications: item.complications && item.complications.length > 0 ? item.complications : undefined,
         differentialDiagnosis: item.differentialDiagnosis && item.differentialDiagnosis.length > 0 ? item.differentialDiagnosis : undefined,

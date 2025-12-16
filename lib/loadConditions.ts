@@ -31,19 +31,22 @@ async function getConditions(): Promise<Record<string, unknown>> {
       console.error('API Error:', errorData);
       
       if (response.status === 503) {
-        console.error('⚠ DATABASE UNAVAILABLE: The backend server cannot connect to the database.');
-        console.error('  This is expected if:');
-        console.error('  - DATABASE_URL is not configured in your .env file');
-        console.error('  - The database is not running or accessible');
-        console.error('  - You are running in a development environment without a database');
+        console.error(`⚠ DATABASE UNAVAILABLE: ${errorData.message || 'Backend cannot connect to database'}
+  This is expected if:
+  - DATABASE_URL is not configured in .env
+  - Database is not running or accessible
+  - Running in development without database`);
       }
     } else {
-      console.error('⚠ API returned non-JSON response (likely HTML 404 page)');
-      console.error('  This means the backend server is not running or the endpoint does not exist.');
+      console.error(`⚠ API returned non-JSON response (likely HTML 404 page)
+  Backend server is not running or endpoint does not exist`);
     }
     
-    console.error('REQUIRED: Start the backend server with `npm run dev:server` or `npm run dev:all`');
-    console.error('REQUIRED: Configure DATABASE_URL in .env and populate the database');
+    console.error(`
+REQUIRED ACTIONS:
+  1. Start backend: npm run dev:server or npm run dev:all
+  2. Configure DATABASE_URL in .env
+  3. Populate database with content`);
   } catch (error) {
     console.error(`✗ Failed to load conditions from database API (${apiUrl}):`, error);
     console.error('REQUIRED: Ensure backend server is running and DATABASE_URL is configured');
