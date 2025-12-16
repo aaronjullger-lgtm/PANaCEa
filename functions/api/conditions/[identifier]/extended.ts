@@ -48,10 +48,11 @@ export async function onRequestGet(context: any) {
     if (!condition) {
       // Try to convert slug back to name? "atrial-fibrillation" -> "Atrial Fibrillation"
       // Let's try case-insensitive search on name
+      const decodedIdentifier = decodeURIComponent(identifier);
       const conditions = await prisma.condition.findMany({
         where: {
           name: {
-            equals: identifier.replace(/-/g, ' '), // simple de-slugify attempt
+            equals: decodedIdentifier.replace(/-/g, ' '), // simple de-slugify attempt
             mode: 'insensitive'
           }
         },
@@ -69,10 +70,11 @@ export async function onRequestGet(context: any) {
 
     // 3. If still not found, try searching with the raw identifier
     if (!condition) {
+       const decodedIdentifier = decodeURIComponent(identifier);
        const conditions = await prisma.condition.findMany({
         where: {
           name: {
-            equals: identifier,
+            equals: decodedIdentifier,
             mode: 'insensitive'
           }
         },
