@@ -152,8 +152,10 @@ function buildBulletTree(content: string): BulletNode[] {
           level = currentNestLevel + 1;
         } else {
           // Non-bold items might break the nesting
-          level = 0;
-          inNestedContext = false;
+          // FIX: If we are in a nested context, we should assume subsequent items are nested
+          // unless they are explicitly headers or have different indentation.
+          // For now, let's assume they are part of the list under the header.
+          level = currentNestLevel + 1;
         }
       } else {
         // Standard indentation logic
@@ -225,29 +227,40 @@ const BulletList: React.FC<{ nodes: BulletNode[]; level: number }> = ({
 
   return (
     <ul className={`flex flex-col ${level === 0 ? 'gap-4' : 'gap-2 mt-2'}`}>
-      {nodes.map((node, index) => (
-        <li key={`${level}-${index}`} className="relative">
-          <div className="flex items-start gap-3">
-            <span className={`
-              shrink-0 mt-2 rounded-full 
-              ${level === 0 ? 'w-1.5 h-1.5 bg-blue-500' : 
-                level === 1 ? 'w-1 h-1 bg-gray-400 border border-gray-400' : 
-                'w-1 h-1 bg-gray-300'}
-            `} />
-            <div className="text-gray-800 dark:text-gray-200 leading-relaxed">
-              {node.parts}
+      {nodes.map((node, index) => {
+        // Check if this node is purely a header (bold text ending with colon)
+        // We can detect this by checking if it has exactly one part, which is a <strong> element
+        const isHeaderNode = node.parts.length === 1 && 
+                             React.isValidElement(node.parts[0]) && 
+                             node.parts[0].type === 'strong' &&
+                             (node.parts[0].props.children as string).trim().endsWith(':');
+
+        return (
+          <li key={`${level}-${index}`} className="relative">
+            <div className={`flex items-start gap-3 ${isHeaderNode ? 'mt-2 mb-1' : ''}`}>
+              {!isHeaderNode && (
+                <span className={`
+                  shrink-0 mt-2 rounded-full 
+                  ${level === 0 ? 'w-1.5 h-1.5 bg-blue-500' : 
+                    level === 1 ? 'w-1 h-1 bg-gray-400 border border-gray-400' : 
+                    'w-1 h-1 bg-gray-300'}
+                `} />
+              )}
+              <div className={`text-gray-800 dark:text-gray-200 leading-relaxed ${isHeaderNode ? 'font-medium text-lg text-blue-900 dark:text-blue-100' : ''}`}>
+                {node.parts}
+              </div>
             </div>
-          </div>
-          {node.children.length > 0 && (
-            <div className="ml-[0.4rem] pl-4 border-l-2 border-gray-100 dark:border-gray-800 mt-1">
-              <BulletList
-                nodes={node.children}
-                level={Math.min(level + 1, 2)}
-              />
-            </div>
-          )}
-        </li>
-      ))}
+            {node.children.length > 0 && (
+              <div className={`${isHeaderNode ? 'ml-1' : 'ml-[0.4rem]'} pl-4 border-l-2 border-gray-100 dark:border-gray-800 mt-1`}>
+                <BulletList
+                  nodes={node.children}
+                  level={Math.min(level + 1, 2)}
+                />
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 };
