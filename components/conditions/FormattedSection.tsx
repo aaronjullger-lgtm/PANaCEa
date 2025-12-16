@@ -143,7 +143,20 @@ function buildBulletTree(content: string): BulletNode[] {
           inNestedContext = false;
         }
       } else {
-        level = Math.floor(leadingSpaces / 4);
+        // Standard indentation logic
+        level = Math.floor(leadingSpaces / 2); // Changed from 4 to 2 to be more forgiving
+      }
+    }
+    
+    // Auto-correction: Ensure we don't skip levels (e.g., 0 -> 2)
+    // If the stack is empty, level must be 0
+    if (stack.length === 0) {
+      level = 0;
+    } else {
+      // If we have a parent, we can at most be one level deeper than the last item
+      const lastItemLevel = stack[stack.length - 1].level;
+      if (level > lastItemLevel + 1) {
+        level = lastItemLevel + 1;
       }
     }
     
