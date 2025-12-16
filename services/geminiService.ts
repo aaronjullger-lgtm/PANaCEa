@@ -256,6 +256,22 @@ export async function fetchNewQuestion(
     if (meta) {
       chosenConditionMeta = meta;
       chosenConditionDef = buildConditionDefinition(meta);
+      
+      // NEW: Load database content for specifically requested condition
+      try {
+        const { loadConditionData } = await import('../services/conditionDataLoader');
+        const { hasCompleteContent, buildDatabaseContext } = await import('../lib/contentHelpers');
+        const dbContent = await loadConditionData(settings.conditionName);
+        
+        if (dbContent && hasCompleteContent(dbContent)) {
+          conditionRegistryNotes = buildDatabaseContext(dbContent);
+          console.log(`✓ Using database content for requested condition ${settings.conditionName}`);
+        } else {
+          console.warn(`⚠ Incomplete database content for ${settings.conditionName}, will use registry/API knowledge`);
+        }
+      } catch (error) {
+        console.error(`Error loading database content for ${settings.conditionName}:`, error);
+      }
     }
   }
 
@@ -276,7 +292,24 @@ export async function fetchNewQuestion(
       if (selectedConditionMeta) {
         chosenConditionMeta = selectedConditionMeta;
         chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
-        conditionRegistryNotes = getConditionRegistryContext(selectedConditionMeta);
+        
+        // NEW: Load database content first
+        try {
+          const { loadConditionData } = await import('../services/conditionDataLoader');
+          const { hasCompleteContent, buildDatabaseContext } = await import('../lib/contentHelpers');
+          const dbContent = await loadConditionData(selectedConditionMeta.condition);
+          
+          if (dbContent && hasCompleteContent(dbContent)) {
+            conditionRegistryNotes = buildDatabaseContext(dbContent);
+            console.log(`✓ Using database content for ${selectedConditionMeta.condition}`);
+          } else {
+            console.warn(`⚠ Incomplete database content for ${selectedConditionMeta.condition}, using registry/API knowledge`);
+            conditionRegistryNotes = getConditionRegistryContext(selectedConditionMeta);
+          }
+        } catch (error) {
+          console.error(`Error loading database content for ${selectedConditionMeta.condition}:`, error);
+          conditionRegistryNotes = getConditionRegistryContext(selectedConditionMeta);
+        }
       }
     }
 
@@ -392,7 +425,22 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 
       // If we have the meta, get the context to ensure accuracy
       if (chosenConditionMeta && !conditionRegistryNotes) {
-        conditionRegistryNotes = getConditionRegistryContext(chosenConditionMeta);
+        // Try database first, fallback to registry
+        try {
+          const { loadConditionData } = await import('../services/conditionDataLoader');
+          const { hasCompleteContent, buildDatabaseContext } = await import('../lib/contentHelpers');
+          const dbContent = await loadConditionData(chosenConditionMeta.condition);
+          
+          if (dbContent && hasCompleteContent(dbContent)) {
+            conditionRegistryNotes = buildDatabaseContext(dbContent);
+            console.log(`✓ Using database content for ${chosenConditionMeta.condition}`);
+          } else {
+            conditionRegistryNotes = getConditionRegistryContext(chosenConditionMeta);
+          }
+        } catch (error) {
+          console.error(`Error loading database content:`, error);
+          conditionRegistryNotes = getConditionRegistryContext(chosenConditionMeta);
+        }
       }
 
       const registryInstruction = conditionRegistryNotes

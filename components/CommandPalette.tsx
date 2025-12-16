@@ -95,8 +95,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
       // Search conditions (limit to top 5)
       try {
-        const conditionResults = searchConditions(query).slice(0, 5);
-        conditionResults.forEach(result => {
+        const conditionResults = await searchConditions(query);
+        conditionResults.slice(0, 5).forEach(result => {
           // Clean display name (remove parentheses)
           const displayName = result.condition.replace(/\s*\([^)]*\)/g, '').trim();
           

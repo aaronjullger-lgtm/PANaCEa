@@ -88,13 +88,84 @@ export function getSubcategoryOptions(system?: SystemCode): string[] {
   return Array.from(new Set(filtered.map((c) => c.subcategory)));
 }
 
-export function searchConditions(
+export async function searchConditions(
   rawQuery: string,
   filters: ConditionSearchFilters = {}
-): ConditionSearchResult[] {
+): Promise<ConditionSearchResult[]> {
   const query = rawQuery.trim();
   if (!query) return [];
 
+  // Try database first
+  if (process.env.DATABASE_URL) {
+    try {
+      const { prisma } = await import('../../lib/prisma');
+      const { calculateRelevanceScore } = await import('../../lib/contentHelpers');
+      
+      // Build where clause with proper types
+      type WhereClause = {
+        status: string;
+        OR: Array<{
+          condition?: { contains: string; mode: 'insensitive' };
+          overview?: { contains: string; mode: 'insensitive' };
+        }>;
+        AND?: Array<{
+          OR?: Array<{
+            system?: string;
+            relatedSystems?: { has: string };
+          }>;
+          subcategory?: string;
+        }>;
+      };
+      
+      const whereClause: WhereClause = {
+        status: 'published',
+        OR: [
+          { condition: { contains: query, mode: 'insensitive' } },
+          { overview: { contains: query, mode: 'insensitive' } },
+        ]
+      };
+      
+      // Add system filter
+      if (filters.system) {
+        whereClause.AND = [
+          {
+            OR: [
+              { system: filters.system },
+              { relatedSystems: { has: filters.system } }
+            ]
+          }
+        ];
+      }
+      
+      // Add subcategory filter
+      if (filters.subcategory) {
+        if (whereClause.AND) {
+          whereClause.AND.push({ subcategory: filters.subcategory });
+        } else {
+          whereClause.AND = [{ subcategory: filters.subcategory }];
+        }
+      }
+      
+      const dbResults = await prisma.medicalContent.findMany({
+        where: whereClause,
+        take: 30,
+        orderBy: { condition: 'asc' }
+      });
+      
+      return dbResults.map(r => ({
+        id: r.conditionId,
+        condition: r.condition,
+        system: r.system as SystemCode,
+        subcategory: r.subcategory,
+        aliases: [],
+        score: calculateRelevanceScore(query, r.condition)
+      })).sort((a, b) => b.score - a.score || a.condition.localeCompare(b.condition));
+    } catch (error) {
+      console.error('Database search failed, falling back to registry:', error);
+    }
+  }
+  
+  // Fallback to existing registry search
   const results: ConditionSearchResult[] = [];
 
   for (const meta of CONDITION_REGISTRY) {

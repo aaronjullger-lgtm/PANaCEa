@@ -259,6 +259,114 @@ app.get('/api/content/all', async (req: Request, res: Response) => {
   }
 });
 
+// Single Condition Content Endpoint
+app.get('/api/content/condition/:conditionId', async (req: Request, res: Response) => {
+  try {
+    const { conditionId } = req.params;
+    
+    const content = await prisma.medicalContent.findFirst({
+      where: { 
+        conditionId,
+        status: 'published'
+      }
+    });
+    
+    if (!content) {
+      return res.status(404).json({ 
+        error: 'Condition not found',
+        conditionId 
+      });
+    }
+    
+    res.json({
+      conditionId: content.conditionId,
+      condition: content.condition,
+      system: content.system,
+      subcategory: content.subcategory,
+      overview: content.overview,
+      etiology: content.etiology,
+      pathophysiology: content.pathophysiology,
+      epidemiology: content.epidemiology,
+      symptoms: content.symptoms,
+      physicalExam: content.physicalExam,
+      diagnostics: content.diagnostics,
+      treatment: content.treatment,
+      prognosis: content.prognosis,
+      differentialDiagnosis: content.differentialDiagnosis,
+      riskFactors: content.riskFactors,
+      complications: content.complications
+    });
+  } catch (error) {
+    console.error('Error fetching condition:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Content Search Endpoint
+app.get('/api/content/search', async (req: Request, res: Response) => {
+  try {
+    const { q, system, limit = 30 } = req.query;
+    
+    if (!q) {
+      return res.status(400).json({ error: 'Query parameter "q" is required' });
+    }
+    
+    const query = String(q);
+    
+    // Build where clause with proper types
+    type WhereClause = {
+      status: string;
+      OR: Array<{
+        condition?: { contains: string; mode: 'insensitive' };
+        overview?: { contains: string; mode: 'insensitive' };
+      }>;
+      AND?: Array<{
+        OR: Array<{
+          system?: string;
+          relatedSystems?: { has: string };
+        }>;
+      }>;
+    };
+    
+    const where: WhereClause = {
+      status: 'published',
+      OR: [
+        { condition: { contains: query, mode: 'insensitive' } },
+        { overview: { contains: query, mode: 'insensitive' } }
+      ]
+    };
+    
+    if (system) {
+      where.AND = [
+        {
+          OR: [
+            { system: String(system) },
+            { relatedSystems: { has: String(system) } }
+          ]
+        }
+      ];
+    }
+    
+    const results = await prisma.medicalContent.findMany({
+      where,
+      take: Number(limit),
+      select: {
+        conditionId: true,
+        condition: true,
+        system: true,
+        subcategory: true,
+        overview: true
+      },
+      orderBy: { condition: 'asc' }
+    });
+    
+    res.json({ results, count: results.length });
+  } catch (error) {
+    console.error('Error searching content:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Buzzwords Endpoints
 app.get('/api/buzzwords', async (req: Request, res: Response) => {
   try {
