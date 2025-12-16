@@ -247,7 +247,7 @@ export async function unifiedSearch(
   }
 
   // Search all content types
-  const conditionResults = searchConditions(trimmedQuery);
+  const conditionResults = await searchConditions(trimmedQuery);
   const drugResults = await searchDrugs(trimmedQuery);
   const testResults = searchSpecialTestsInternal(trimmedQuery);
   const physiologyResults = searchPhysiologyInternal(trimmedQuery);

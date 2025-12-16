@@ -63,6 +63,8 @@ const ConditionPage: React.FC = () => {
   const [conditionMeta, setConditionMeta] = useState<ConditionMeta | undefined>(undefined);
   const [activeSubtype, setActiveSubtype] = useState<string>("general");
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["overview"]));
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Load condition content asynchronously
   useEffect(() => {
@@ -71,31 +73,58 @@ const ConditionPage: React.FC = () => {
     async function loadContent() {
       if (!conditionId) return;
       
-      // Load metadata from registry
-      const meta = findConditionMetaById(conditionId);
-      if (meta && mounted) {
-        setConditionMeta(meta);
-      }
+      setLoading(true);
+      setError(null);
       
-      // Try to get content synchronously first (if already loaded)
-      let entry = getConditionByIdSync(conditionId);
-      
-      if (!entry) {
-        // If not loaded, load it asynchronously
-        await loadConditions();
-        entry = getConditionByIdSync(conditionId);
-      }
-      
-      if (mounted) {
-        setConditionContent(entry);
+      try {
+        // Load metadata from registry
+        const meta = findConditionMetaById(conditionId);
+        if (meta && mounted) {
+          setConditionMeta(meta);
+        }
+        
+        // REQUIRED: Load from database
+        const { loadConditionData } = await import('../../services/conditionDataLoader');
+        const data = await loadConditionData(conditionId);
+        
+        if (!data) {
+          setError(`Content for "${conditionId}" is not yet available. Please check back later.`);
+          setLoading(false);
+          return;
+        }
+        
+        if (mounted) {
+          // Transform to ConditionEntry format
+          const entry: ConditionEntry = {
+            condition: data.name,
+            sections: {
+              overview: data.content.overview,
+              etiologyPathophysiology: data.content.etiologyPathophysiology,
+              epidemiology: data.content.epidemiology,
+              clinicalPresentation: data.content.clinicalPresentation,
+              symptoms: data.content.symptoms,
+              examFindings: data.content.examFindings,
+              riskFactors: data.content.riskFactors,
+              diagnostics: data.content.diagnostics,
+              treatment: data.content.treatment,
+              management: data.content.management,
+              complications: data.content.complications,
+              prognosis: data.content.prognosis,
+            }
+          };
+          setConditionContent(entry);
+        }
+      } catch (error) {
+        console.error('Failed to load condition:', error);
+        setError('Failed to load condition content. Please try again later.');
+      } finally {
+        if (mounted) setLoading(false);
       }
     }
     
     loadContent();
     
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [conditionId]);
 
   const sections: ContentSection[] = useMemo(() => {
@@ -155,33 +184,56 @@ const ConditionPage: React.FC = () => {
 
   return (
     <main className="condition-page max-w-5xl mx-auto p-6">
-      {/* Header with category badge */}
-      <header className="condition-header mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          {conditionMeta && (
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                {conditionMeta.system}
-              </span>
-              {conditionMeta.subcategory && (
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                  • {conditionMeta.subcategory}
-                </span>
+      {/* Loading State */}
+      {loading && (
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading condition content...</p>
+        </div>
+      )}
+      
+      {/* Error State */}
+      {error && !loading && (
+        <div className="text-center py-12">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
+              Content Not Available
+            </h2>
+            <p className="text-red-600 dark:text-red-300">{error}</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Content - only show if not loading and no error */}
+      {!loading && !error && (
+        <>
+          {/* Header with category badge */}
+          <header className="condition-header mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              {conditionMeta && (
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    {conditionMeta.system}
+                  </span>
+                  {conditionMeta.subcategory && (
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      • {conditionMeta.subcategory}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
-        
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-          {displayName}
-        </h1>
-        
-        {conditionMeta?.aliases && conditionMeta.aliases.length > 0 && (
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Also known as: {conditionMeta.aliases.join(", ")}
-          </p>
-        )}
-      </header>
+            
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              {displayName}
+            </h1>
+            
+            {conditionMeta?.aliases && conditionMeta.aliases.length > 0 && (
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Also known as: {conditionMeta.aliases.join(", ")}
+              </p>
+            )}
+          </header>
 
       {/* Tabbed interface for subtypes */}
       {subtypes.length > 0 && (
@@ -269,6 +321,8 @@ const ConditionPage: React.FC = () => {
           </motion.section>
         ))}
       </div>
+        </>
+      )}
     </main>
   );
 };
