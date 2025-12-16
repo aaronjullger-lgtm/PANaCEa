@@ -5,7 +5,7 @@ const dataCache = new Map<string, any>();
 
 /**
  * Lazily load drug data when needed.
- * Uses database API endpoint instead of static JSON file.
+ * Uses database API endpoint with fallback to static registry.
  * 
  * @returns Promise resolving to the drug data
  */
@@ -19,21 +19,46 @@ export async function loadDrugData(): Promise<any> {
   
   try {
     const response = await fetch('/api/drugs');
-    if (!response.ok) {
-      throw new Error(`Failed to fetch drugs: ${response.statusText}`);
+    
+    // Check if response is OK and is JSON before parsing
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+      const data = await response.json();
+      dataCache.set(cacheKey, data);
+      return data;
     }
-    const data = await response.json();
-    dataCache.set(cacheKey, data);
-    return data;
   } catch (error) {
-    console.error('Failed to load drug data:', error);
-    throw new Error('Unable to load drug data. Please try again.');
+    console.warn('Failed to load drug data from API, using static registry:', error);
+  }
+  
+  // Fallback to static drug registry
+  try {
+    const { getAllDrugs } = await import('../../drugRegistry');
+    const drugMetas = getAllDrugs();
+    
+    // Convert to expected format
+    const drugs = drugMetas.map((meta) => ({
+      id: `drug_${meta.genericName.toLowerCase().replace(/\s+/g, '_')}`,
+      genericName: meta.genericName,
+      brandName: meta.brandName || null,
+      drugClass: meta.drugClass,
+      mechanismOfAction: meta.mechanismOfAction || null,
+      indications: meta.indications || [],
+      contraindications: meta.contraindications || [],
+      sideEffects: meta.commonSideEffects || [],
+      isHighYield: meta.isHighYield
+    }));
+    
+    dataCache.set(cacheKey, drugs);
+    return drugs;
+  } catch (fallbackError) {
+    console.error('Failed to load static drug registry:', fallbackError);
+    throw new Error('Unable to load drug data from any source.');
   }
 }
 
 /**
  * Lazily load condition content when needed.
- * Now uses database API endpoint instead of static JSON file.
+ * Uses database API endpoint with fallback to static JSON file.
  * 
  * @returns Promise resolving to the condition content
  */
@@ -51,25 +76,50 @@ export async function loadConditionContent(): Promise<any> {
     
     const response = await fetch(apiUrl);
     
-    if (response.ok) {
+    // Check if response is OK and is JSON before parsing
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       const data = await response.json();
       dataCache.set(cacheKey, data);
       return data;
     }
     
-    console.warn('Database API not available, condition content will be loaded on-demand');
-    // Return empty object - content will be loaded on-demand via database queries
-    return {};
+    console.warn('Database API not available, attempting to load static JSON');
   } catch (error) {
-    console.warn('Failed to load condition content from API, will use on-demand loading:', error);
-    // Return empty object - content will be loaded on-demand via database queries
-    return {};
+    console.warn('Failed to load condition content from API:', error);
   }
+  
+  // Fallback to static JSON file
+  try {
+    const response = await fetch('/data/conditionContent.clean.json');
+    
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+      const dataArray = await response.json();
+      
+      // Convert array format to map format (conditionId -> content)
+      const contentMap: Record<string, any> = {};
+      if (Array.isArray(dataArray)) {
+        dataArray.forEach((item: any) => {
+          if (item.conditionId && item.content) {
+            contentMap[item.conditionId] = item.content;
+          }
+        });
+      }
+      
+      dataCache.set(cacheKey, contentMap);
+      return contentMap;
+    }
+  } catch (fallbackError) {
+    console.warn('Failed to load static condition content:', fallbackError);
+  }
+  
+  // Return empty object - content will be loaded on-demand via database queries
+  console.warn('Condition content not available from any source, returning empty dataset');
+  return {};
 }
 
 /**
  * Lazily load lab cases data when needed.
- * Uses database API endpoint instead of static JSON file.
+ * Uses database API endpoint with graceful fallback.
  * 
  * @returns Promise resolving to the lab cases data
  */
@@ -83,16 +133,23 @@ export async function loadLabCases(): Promise<any> {
   
   try {
     const response = await fetch('/api/labs/cases');
-    if (!response.ok) {
-      throw new Error(`Failed to fetch lab cases: ${response.statusText}`);
+    
+    // Check if response is OK and is JSON before parsing
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+      const data = await response.json();
+      dataCache.set(cacheKey, data);
+      return data;
     }
-    const data = await response.json();
-    dataCache.set(cacheKey, data);
-    return data;
   } catch (error) {
-    console.error('Failed to load lab cases:', error);
-    throw new Error('Unable to load lab cases data. Please try again.');
+    console.warn('Failed to load lab cases from API:', error);
   }
+  
+  // Return empty array as graceful fallback
+  // Lab cases are optional and generated content, not critical for core functionality
+  console.warn('Lab cases not available, returning empty dataset');
+  const emptyData: any[] = [];
+  dataCache.set(cacheKey, emptyData);
+  return emptyData;
 }
 
 /**

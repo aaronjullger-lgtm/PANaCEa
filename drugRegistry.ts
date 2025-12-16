@@ -643,3 +643,11 @@ export const DRUG_REGISTRY: DrugMeta[] = [
 export function buildDrugId(drug: DrugMeta): string {
   return drug.genericName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
 }
+
+/**
+ * Get all drugs from the registry
+ * @returns Array of all drug metadata
+ */
+export function getAllDrugs(): DrugMeta[] {
+  return DRUG_REGISTRY;
+}

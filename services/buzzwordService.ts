@@ -11,15 +11,19 @@ export const buzzwordService = {
 
     try {
       const response = await fetch('/api/buzzwords');
-      if (!response.ok) throw new Error('Failed to fetch buzzwords');
       
-      const data = await response.json();
-      buzzwordCache = data;
-      return data;
+      // Check if response is OK and is JSON before parsing
+      if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        const data = await response.json();
+        buzzwordCache = data;
+        return data;
+      }
+      
+      console.warn('Buzzwords API unavailable');
     } catch (error) {
-      console.error('Error fetching buzzwords:', error);
-      return [];
+      console.warn('Error fetching buzzwords:', error);
     }
+    return [];
   },
 
   /**
@@ -28,12 +32,17 @@ export const buzzwordService = {
   getRandomBuzzwords: async (count: number = 10): Promise<BuzzwordEntry[]> => {
     try {
       const response = await fetch(`/api/buzzwords/random?count=${count}`);
-      if (!response.ok) throw new Error('Failed to fetch random buzzwords');
-      return await response.json();
+      
+      // Check if response is OK and is JSON before parsing
+      if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        return await response.json();
+      }
+      
+      console.warn('Random buzzwords API unavailable');
     } catch (error) {
-      console.error('Error fetching random buzzwords:', error);
-      return [];
+      console.warn('Error fetching random buzzwords:', error);
     }
+    return [];
   },
 
   /**
