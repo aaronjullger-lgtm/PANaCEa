@@ -13,7 +13,9 @@ async function getConditions(): Promise<Record<string, unknown>> {
 
   try {
     const response = await fetch(apiUrl);
-    if (response.ok) {
+    
+    // Check if response is OK and is JSON before parsing
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
       conditionsCache = await response.json();
       return conditionsCache;
     }
@@ -24,8 +26,20 @@ async function getConditions(): Promise<Record<string, unknown>> {
     );
   }
 
+  // Try fallback to static JSON file
+  try {
+    const response = await fetch('/data/conditionContent.clean.json');
+    
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+      conditionsCache = await response.json();
+      return conditionsCache;
+    }
+  } catch (fallbackError) {
+    console.warn('Failed to load static condition content:', fallbackError);
+  }
+
   // Return empty object if database not available - content will be loaded on-demand
-  console.warn('Condition content not available from database, returning empty dataset');
+  console.warn('Condition content not available from any source, returning empty dataset');
   return {};
 }
 

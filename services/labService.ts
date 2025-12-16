@@ -21,34 +21,49 @@ class LabService {
   async getAllTests(): Promise<LabTest[]> {
     try {
       const response = await fetch('/api/labs/tests');
-      if (!response.ok) throw new Error('Failed to fetch lab tests');
-      return await response.json();
+      
+      // Check if response is OK and is JSON before parsing
+      if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        return await response.json();
+      }
+      
+      console.warn('Lab tests API unavailable');
     } catch (error) {
-      console.error('Error fetching lab tests:', error);
-      return [];
+      console.warn('Error fetching lab tests:', error);
     }
+    return [];
   }
 
   async getAllCases(): Promise<LabCase[]> {
     try {
       const response = await fetch('/api/labs/cases');
-      if (!response.ok) throw new Error('Failed to fetch lab cases');
-      return await response.json();
+      
+      // Check if response is OK and is JSON before parsing
+      if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        return await response.json();
+      }
+      
+      console.warn('Lab cases API unavailable');
     } catch (error) {
-      console.error('Error fetching lab cases:', error);
-      return [];
+      console.warn('Error fetching lab cases:', error);
     }
+    return [];
   }
 
   async getRandomCases(count: number = 1): Promise<LabCase[]> {
     try {
       const response = await fetch(`/api/labs/cases/random?count=${count}`);
-      if (!response.ok) throw new Error('Failed to fetch random lab cases');
-      return await response.json();
+      
+      // Check if response is OK and is JSON before parsing
+      if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        return await response.json();
+      }
+      
+      console.warn('Random lab cases API unavailable');
     } catch (error) {
-      console.error('Error fetching random lab cases:', error);
-      return [];
+      console.warn('Error fetching random lab cases:', error);
     }
+    return [];
   }
 }
 
