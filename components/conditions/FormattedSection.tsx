@@ -16,28 +16,26 @@ const formatRunOnKeys = (text: string): string => {
   if (!text) return "";
   
   // Regex to find "Key: Value" patterns
-  // 1. Preceded by start-of-string, newline, or sentence-ending punctuation (.!?;)
+  // 1. Preceded by start-of-string, newline, sentence-ending punctuation, or double space
   // 2. Key starts with Uppercase, 2-100 chars, no colon/newline/dots
   // 3. Followed by colon and whitespace
-  const pattern = /(?:^|[\.\!\?\;\n])\s*([A-Z][^:\n\.\!\?]{2,100}):\s/g;
+  const pattern = /(?:^|[\.\!\?\;\n\r]|\s{2,})\s*([A-Z][^:\n\r\.\!\?]{2,100}):\s/g;
   
   return text.replace(pattern, (match, key) => {
-      // Check if the match starts with punctuation or newline
       const leadingChar = match[0];
-      const isPunctuation = ['.', '!', '?', ';'].includes(leadingChar);
-      const isNewline = leadingChar === '\n';
       
-      if (isNewline) {
+      // If it's a newline, preserve it and add bullet
+      if (leadingChar === '\n' || leadingChar === '\r') {
           return `\n- **${key}**: `;
       }
       
-      if (isPunctuation) {
-          // Use double newline to ensure Markdown treats it as a new list item
+      // If it's punctuation, keep it and force a new paragraph/bullet
+      if (['.', '!', '?', ';'].includes(leadingChar)) {
           return `${leadingChar}\n\n- **${key}**: `;
       }
       
-      // Start of string or just whitespace
-      return `- **${key}**: `;
+      // If it's just whitespace (start of string or double space), just start the bullet
+      return `\n- **${key}**: `;
   });
 };
 
