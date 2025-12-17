@@ -62,6 +62,8 @@ function separateSavedQuestions(savedQuestions: SavedQuestionWithType[]): {
 export function useUserStats(): UseUserStatsResult {
   const { isSignedIn, user, getToken } = useAuth();
 
+  const persistenceEnabledRef = useRef(false);
+
   const [performanceData, setPerformanceDataState] = useState<PerformanceRecord[]>(() =>
     safeParse<PerformanceRecord[]>(localStorage.getItem(PERFORMANCE_KEY), [])
   );
@@ -82,16 +84,24 @@ export function useUserStats(): UseUserStatsResult {
 
   // Save to localStorage whenever data changes (for offline support)
   useEffect(() => {
+    if (!persistenceEnabledRef.current) return;
     localStorage.setItem(PERFORMANCE_KEY, JSON.stringify(performanceData));
   }, [performanceData]);
 
   useEffect(() => {
+    if (!persistenceEnabledRef.current) return;
     localStorage.setItem(MISSED_KEY, JSON.stringify(missedQuestions));
   }, [missedQuestions]);
 
   useEffect(() => {
+    if (!persistenceEnabledRef.current) return;
     localStorage.setItem(FLAGGED_KEY, JSON.stringify(flaggedQuestions));
   }, [flaggedQuestions]);
+
+  // Enable persistence after initial mount to avoid overwriting pre-seeded localStorage
+  useEffect(() => {
+    persistenceEnabledRef.current = true;
+  }, []);
 
   /**
    * Upload local data to cloud
@@ -246,12 +256,28 @@ export function useUserStats(): UseUserStatsResult {
   // Auto-sync when user signs in (only once per session)
   useEffect(() => {
     if (isSignedIn && user) {
-      // Check if there is local data
-      if (performanceData.length > 0) {
-        // If local data exists, upload and merge with server
+      // Prefer the in-memory state (initialized from localStorage during render).
+      // This avoids edge cases where some other test/code clears localStorage between
+      // `renderHook()` and this effect running.
+      let hasLocalData =
+        performanceData.length > 0 || missedQuestions.length > 0 || flaggedQuestions.length > 0;
+
+      // Fallback: if state is empty, re-check localStorage directly.
+      if (!hasLocalData) {
+        const localPerformance = safeParse<PerformanceRecord[]>(
+          localStorage.getItem(PERFORMANCE_KEY),
+          []
+        );
+        const localMissed = safeParse<Question[]>(localStorage.getItem(MISSED_KEY), []);
+        const localFlagged = safeParse<Question[]>(localStorage.getItem(FLAGGED_KEY), []);
+
+        hasLocalData =
+          localPerformance.length > 0 || localMissed.length > 0 || localFlagged.length > 0;
+      }
+
+      if (hasLocalData) {
         syncToCloud();
       } else {
-        // If no local data, download from server
         syncFromCloud();
       }
     }

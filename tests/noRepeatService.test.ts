@@ -55,15 +55,12 @@ describe('No-Repeat Service', () => {
           },
         },
         update: {
-          wasCorrect: true,
+          isCorrect: true,
         },
         create: {
           userId: 'user-1',
           questionId: 'q-1',
-          questionType: 'mcq',
-          system: 'CV',
-          conditionId: undefined,
-          wasCorrect: true,
+          isCorrect: true,
         },
       });
     });

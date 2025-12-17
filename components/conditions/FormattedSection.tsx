@@ -5,6 +5,7 @@ import rehypeRaw from "rehype-raw";
 import { ConditionContent } from "../../lib/loadConditions";
 import TreatmentRenderer from "./renderers/TreatmentRenderer";
 import DiagnosticsRenderer from "./renderers/DiagnosticsRenderer";
+import { sanitizeMedicalMarkdown } from "./markdownSanitizer";
 
 interface FormattedSectionProps {
   content?: ConditionContent;
@@ -68,25 +69,24 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
         const trimmed = line.trim();
         
         // 1. Enhance readability by splitting run-on keys
-        let processed = formatRunOnKeys(trimmed).trimStart();
-        
-        // 2. Replace non-standard bullets (•, ◦, ▪) with standard Markdown dash on ALL lines
-        // This ensures react-markdown renders them as proper <ul>/<li> elements
-        processed = processed.replace(/^[\u2022\u25E6\u25AA]\s*/gm, '- ');
+        let processed = sanitizeMedicalMarkdown(formatRunOnKeys(trimmed));
 
-        // If formatRunOnKeys expanded this single line into a multi-bullet list, keep it as-is.
-        // Wrapping it again would break Markdown list parsing ("- \n- **Key**").
-        if (/^[-*+]\s+/m.test(processed)) {
+        if (!processed) return '';
+
+        // If the processed string already contains Markdown list items (possibly multi-line), keep it.
+        // Wrapping it again would break Markdown list parsing.
+        if (/^\s*[-*+]\s+/m.test(processed)) {
           return processed;
         }
-        
-        // 3. Otherwise, prepend a dash to make it a list item
+
+        // Otherwise, make this array item a list item.
         return `- ${processed}`;
       })
+      .filter(Boolean)
       .join("\n");
   } else if (typeof content === "string") {
     if (!content.trim()) return null; // Fix: Return null for empty strings
-    markdown = formatRunOnKeys(content).trimStart();
+    markdown = sanitizeMedicalMarkdown(formatRunOnKeys(content));
   } else {
     // Fallback for unknown object types
     return null;

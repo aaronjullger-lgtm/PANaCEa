@@ -1,4 +1,8 @@
 import React from 'react';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import { sanitizeMedicalMarkdown } from "../markdownSanitizer";
 
 interface Step {
   title: string;
@@ -31,7 +35,24 @@ const TreatmentRenderer: React.FC<TreatmentRendererProps> = ({ items }) => {
               {step.title}
             </h4>
             <div className="prose dark:prose-invert text-sm text-gray-600 dark:text-gray-300">
-              {step.content}
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
+                components={{
+                  ul: ({ node, ...props }) => (
+                    <ul className="list-disc pl-5 space-y-1 my-2" {...props} />
+                  ),
+                  ol: ({ node, ...props }) => (
+                    <ol className="list-decimal pl-5 space-y-1 my-2" {...props} />
+                  ),
+                  li: ({ node, ...props }) => (
+                    <li className="pl-1 leading-relaxed" {...props} />
+                  ),
+                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                }}
+              >
+                {sanitizeMedicalMarkdown(step.content)}
+              </ReactMarkdown>
             </div>
           </div>
         </div>

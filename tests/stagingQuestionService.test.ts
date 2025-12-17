@@ -99,7 +99,7 @@ describe('Staging Question Service', () => {
       await saveToStaging(questionData);
 
       const call = (prisma.stagingQuestion.create as any).mock.calls[0][0];
-      expect(call.data.explanationLength).toBe(10);
+      expect(call.data.aiGrade.explanationLength).toBe(10);
     });
   });
 

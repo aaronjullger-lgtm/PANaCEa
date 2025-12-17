@@ -4,7 +4,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 vi.mock('../lib/prisma', () => ({
   prisma: {
     medicalContent: {
-      findUnique: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
     },
@@ -42,7 +41,7 @@ describe('Condition Data Loader - Database First', () => {
         status: 'published',
       };
 
-      (prisma.medicalContent.findUnique as any).mockResolvedValue(mockCondition);
+      (prisma.medicalContent.findFirst as any).mockResolvedValue(mockCondition);
 
       const result = await loadConditionData('CV__ecg__atrial_fibrillation');
 
@@ -50,32 +49,27 @@ describe('Condition Data Loader - Database First', () => {
       expect(result?.conditionId).toBe('CV__ecg__atrial_fibrillation');
       expect(result?.system).toBe('CV');
       expect(result?.content.overview).toBe('Irregular heart rhythm');
-      expect(prisma.medicalContent.findUnique).toHaveBeenCalledWith({
-        where: {
-          conditionId: 'CV__ecg__atrial_fibrillation',
-          status: 'published',
-        },
+      expect(prisma.medicalContent.findFirst).toHaveBeenCalledWith({
+        where: { conditionId: 'CV__ecg__atrial_fibrillation', status: 'published' },
       });
     });
 
     it('should try case-insensitive search if exact match not found', async () => {
-      (prisma.medicalContent.findUnique as any).mockResolvedValue(null);
+      (prisma.medicalContent.findFirst as any)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: 'uuid-1',
+          conditionId: 'CV__ecg__atrial_fibrillation',
+          system: 'CV',
+          subcategory: 'ECG',
+          condition: 'Atrial Fibrillation',
+          relatedSystems: [],
+          content: {
+            overview: 'Irregular heart rhythm',
+          },
+          status: 'published',
+        });
       
-      const mockCondition = {
-        id: 'uuid-1',
-        conditionId: 'CV__ecg__atrial_fibrillation',
-        system: 'CV',
-        subcategory: 'ECG',
-        condition: 'Atrial Fibrillation',
-        relatedSystems: [],
-        content: {
-          overview: 'Irregular heart rhythm',
-        },
-        status: 'published',
-      };
-
-      (prisma.medicalContent.findFirst as any).mockResolvedValue(mockCondition);
-
       const result = await loadConditionData('Atrial Fibrillation');
 
       expect(result).not.toBeNull();
@@ -97,7 +91,7 @@ describe('Condition Data Loader - Database First', () => {
         status: 'published',
       };
 
-      (prisma.medicalContent.findUnique as any).mockResolvedValue(mockCondition);
+      (prisma.medicalContent.findFirst as any).mockResolvedValue(mockCondition);
 
       const result = await loadConditionData('PULM__infection__sarcoidosis');
 
@@ -108,7 +102,6 @@ describe('Condition Data Loader - Database First', () => {
     });
 
     it('should return null if condition not found', async () => {
-      (prisma.medicalContent.findUnique as any).mockResolvedValue(null);
       (prisma.medicalContent.findFirst as any).mockResolvedValue(null);
 
       const result = await loadConditionData('NonExistent');
@@ -122,7 +115,7 @@ describe('Condition Data Loader - Database First', () => {
       const result = await loadConditionData('CV__ecg__atrial_fibrillation');
 
       expect(result).toBeNull();
-      expect(prisma.medicalContent.findUnique).not.toHaveBeenCalled();
+      expect(prisma.medicalContent.findFirst).not.toHaveBeenCalled();
     });
   });
 

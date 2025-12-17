@@ -82,27 +82,125 @@ export type MiniLabGameStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 's
 
 const SAMPLE_CASES: LabCase[] = [
   {
-    id: 'sample-1',
-    clinicalContext: '45-year-old female with fatigue and pallor.',
-    patientAge: 45,
-    patientSex: 'F',
-    panels: [],
-    correctDiagnosis: 'Iron Deficiency Anemia',
-    keyFindings: ['Low Hb', 'Low MCV', 'Low Ferritin'],
-    explanation: 'Microcytic anemia with low ferritin is diagnostic of iron deficiency.',
-    category: 'hematology'
-  },
-  {
-    id: 'sample-2',
-    clinicalContext: '18-year-old male with polyuria and polydipsia.',
+    id: 'sample-dka-001',
+    clinicalContext: 'An 18-year-old male with polyuria, polydipsia, abdominal pain, and vomiting.',
     patientAge: 18,
     patientSex: 'M',
-    panels: [],
+    panels: [
+      {
+        name: 'Basic Metabolic Panel',
+        values: [
+          { name: 'Glucose', value: '420', unit: 'mg/dL', referenceRange: '70-100', isAbnormal: true, abnormalDirection: 'high' },
+          { name: 'Sodium', value: '130', unit: 'mEq/L', referenceRange: '136-145', isAbnormal: true, abnormalDirection: 'low' },
+          { name: 'Potassium', value: '5.6', unit: 'mEq/L', referenceRange: '3.5-5.0', isAbnormal: true, abnormalDirection: 'high' },
+          { name: 'Chloride', value: '96', unit: 'mEq/L', referenceRange: '98-106', isAbnormal: true, abnormalDirection: 'low' },
+          { name: 'Bicarbonate', value: '10', unit: 'mEq/L', referenceRange: '22-28', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
+          { name: 'BUN', value: '28', unit: 'mg/dL', referenceRange: '7-20', isAbnormal: true, abnormalDirection: 'high' },
+          { name: 'Creatinine', value: '1.6', unit: 'mg/dL', referenceRange: '0.7-1.3', isAbnormal: true, abnormalDirection: 'high' },
+        ],
+      },
+      {
+        name: 'Complete Blood Count',
+        values: [
+          { name: 'WBC', value: '14.2', unit: 'k/μL', referenceRange: '4.5-11.0', isAbnormal: true, abnormalDirection: 'high' },
+          { name: 'Hemoglobin', value: '15.1', unit: 'g/dL', referenceRange: '12.0-16.0', isAbnormal: false },
+          { name: 'Platelets', value: '285', unit: 'k/μL', referenceRange: '150-400', isAbnormal: false },
+        ],
+      },
+      {
+        name: 'Liver Function Tests',
+        values: [
+          { name: 'AST', value: '28', unit: 'U/L', referenceRange: '10-40', isAbnormal: false },
+          { name: 'ALT', value: '32', unit: 'U/L', referenceRange: '7-56', isAbnormal: false },
+          { name: 'Alkaline Phosphatase', value: '78', unit: 'U/L', referenceRange: '44-147', isAbnormal: false },
+          { name: 'Total Bilirubin', value: '0.8', unit: 'mg/dL', referenceRange: '0.1-1.2', isAbnormal: false },
+          { name: 'Albumin', value: '4.2', unit: 'g/dL', referenceRange: '3.5-5.0', isAbnormal: false },
+        ],
+      },
+    ],
+    orderableTests: [
+      {
+        name: 'Arterial Blood Gas',
+        values: [
+          { name: 'pH', value: '7.18', unit: '', referenceRange: '7.35-7.45', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
+          { name: 'pCO2', value: '22', unit: 'mmHg', referenceRange: '35-45', isAbnormal: true, abnormalDirection: 'low' },
+          { name: 'HCO3', value: '8', unit: 'mEq/L', referenceRange: '22-26', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
+        ],
+      },
+      {
+        name: 'Ketones',
+        values: [
+          { name: 'Beta-hydroxybutyrate', value: '5.2', unit: 'mmol/L', referenceRange: '<0.6', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
+          { name: 'Anion Gap', value: '24', unit: 'mEq/L', referenceRange: '8-12', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
+        ],
+      },
+      {
+        name: 'Urinalysis',
+        values: [
+          { name: 'Ketones in Urine', value: 'Large', unit: '', referenceRange: 'Negative', isAbnormal: true },
+          { name: 'Glucose in Urine', value: '1000', unit: 'mg/dL', referenceRange: 'Negative', isAbnormal: true, abnormalDirection: 'high' },
+        ],
+      },
+    ],
+    orderedTests: [],
     correctDiagnosis: 'Diabetic Ketoacidosis',
-    keyFindings: ['Hyperglycemia', 'Anion Gap Metabolic Acidosis', 'Ketonemia'],
-    explanation: 'Classic presentation of DKA.',
-    category: 'metabolic'
-  }
+    keyFindings: [
+      'Hyperglycemia',
+      'High anion gap metabolic acidosis',
+      'Ketonemia/ketonuria',
+      'Dehydration/AKI pattern',
+    ],
+    explanation: 'Classic DKA: hyperglycemia + ketosis + metabolic acidosis. Initial hyperkalemia can occur despite total body potassium depletion.',
+    category: 'metabolic',
+  },
+  {
+    id: 'sample-ida-001',
+    clinicalContext: 'A 35-year-old woman with fatigue, pallor, and exertional dyspnea. Heavy menses.',
+    patientAge: 35,
+    patientSex: 'F',
+    panels: [
+      {
+        name: 'Complete Blood Count',
+        values: [
+          { name: 'Hemoglobin', value: '8.2', unit: 'g/dL', referenceRange: '12.0-16.0', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
+          { name: 'MCV', value: '68', unit: 'fL', referenceRange: '80-100', isAbnormal: true, abnormalDirection: 'low' },
+          { name: 'RDW', value: '18.5', unit: '%', referenceRange: '11.5-14.5', isAbnormal: true, abnormalDirection: 'high' },
+          { name: 'Platelets', value: '420', unit: 'K/uL', referenceRange: '150-400', isAbnormal: true, abnormalDirection: 'high' },
+        ],
+      },
+      {
+        name: 'Basic Metabolic Panel',
+        values: [
+          { name: 'Sodium', value: '140', unit: 'mEq/L', referenceRange: '136-145', isAbnormal: false },
+          { name: 'Potassium', value: '4.2', unit: 'mEq/L', referenceRange: '3.5-5.0', isAbnormal: false },
+          { name: 'Creatinine', value: '0.9', unit: 'mg/dL', referenceRange: '0.7-1.3', isAbnormal: false },
+        ],
+      },
+      {
+        name: 'Liver Function Tests',
+        values: [
+          { name: 'AST', value: '22', unit: 'U/L', referenceRange: '10-40', isAbnormal: false },
+          { name: 'ALT', value: '18', unit: 'U/L', referenceRange: '7-56', isAbnormal: false },
+          { name: 'Albumin', value: '4.0', unit: 'g/dL', referenceRange: '3.5-5.0', isAbnormal: false },
+        ],
+      },
+    ],
+    orderableTests: [
+      {
+        name: 'Iron Studies',
+        values: [
+          { name: 'Serum Iron', value: '28', unit: 'µg/dL', referenceRange: '60-170', isAbnormal: true, abnormalDirection: 'low' },
+          { name: 'TIBC', value: '450', unit: 'µg/dL', referenceRange: '250-370', isAbnormal: true, abnormalDirection: 'high' },
+          { name: 'Ferritin', value: '6', unit: 'ng/mL', referenceRange: '12-150', isAbnormal: true, abnormalDirection: 'low' },
+        ],
+      },
+    ],
+    orderedTests: [],
+    correctDiagnosis: 'Iron Deficiency Anemia',
+    keyFindings: ['Microcytosis', 'High RDW', 'Low ferritin pattern'],
+    explanation: 'Microcytic anemia with low ferritin is diagnostic of iron deficiency anemia.',
+    category: 'hematology',
+  },
 ];
 
 function getCasesByCategory(category: LabCategory): LabCase[] {

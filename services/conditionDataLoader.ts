@@ -74,9 +74,9 @@ function findConditionMeta(conditionId: string): ConditionMeta | null {
  * @returns The loaded condition data or null if not found
  */
 export async function loadConditionData(conditionId: string): Promise<LoadedConditionData | null> {
-  // This function should only run in Node.js/Edge runtime, not in the browser
-  // Check if we're in a browser environment
-  if (typeof window !== 'undefined') {
+  // This function is intended for server/edge usage.
+  // In tests we run in jsdom, so allow calls when NODE_ENV === 'test'.
+  if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
     console.error('loadConditionData should not be called in browser environment');
     return null;
   }
@@ -86,24 +86,33 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
     return null;
   }
 
+  const asNonEmptyString = (value: unknown): string | undefined => {
+    return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+  };
+
+  const asStringArray = (value: unknown): string[] | undefined => {
+    if (!Array.isArray(value)) return undefined;
+    const items = value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+    return items.length > 0 ? items : undefined;
+  };
+
   try {
     // Dynamically import prisma to avoid bundling it in the browser
     const { prisma } = await import('../lib/prisma');
     
-    // Try direct conditionId match first (unique), then condition name (case-insensitive)
-    let record = await prisma.medicalContent.findUnique({
-      where: { 
+    // Try direct conditionId match first, then condition name (case-insensitive)
+    let record = await prisma.medicalContent.findFirst({
+      where: {
         conditionId,
-        status: 'published' // CRITICAL: Only retrieve approved, published content
+        status: 'published',
       },
     });
 
-    // If not found by conditionId, try by condition name (case-insensitive)
     if (!record) {
       record = await prisma.medicalContent.findFirst({
-        where: { 
+        where: {
           condition: { equals: conditionId, mode: 'insensitive' },
-          status: 'published'
+          status: 'published',
         },
       });
     }
@@ -130,21 +139,36 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
       relatedSystems, // Include for multi-system condition support
     };
 
+    const jsonContent = record.content && typeof record.content === 'object' ? (record.content as any) : undefined;
+
+    const etiology = asNonEmptyString(record.etiology) ?? asNonEmptyString(jsonContent?.etiology);
+    const pathophysiology = asNonEmptyString(record.pathophysiology) ?? asNonEmptyString(jsonContent?.pathophysiology);
+
     const content: ConditionContentData = {
-      overview: record.overview || undefined,
-      etiologyPathophysiology: [
-        record.etiology ? `**Etiology**\n\n${record.etiology}` : null,
-        record.pathophysiology ? `**Pathophysiology**\n\n${record.pathophysiology}` : null
-      ].filter(Boolean).join('\n\n') || undefined,
-      epidemiology: record.epidemiology || undefined,
-      symptoms: record.symptoms.length > 0 ? record.symptoms : undefined,
-      examFindings: record.physicalExam.length > 0 ? record.physicalExam : undefined,
-      riskFactors: record.riskFactors.length > 0 ? record.riskFactors : undefined,
-      diagnostics: record.diagnostics && typeof record.diagnostics === 'object' ? (record.diagnostics as any) : undefined,
-      treatment: record.treatment && Array.isArray(record.treatment) ? (record.treatment as string[]) : undefined,
-      prognosis: record.prognosis || undefined,
-      complications: record.complications.length > 0 ? record.complications : undefined,
-      // Map other fields if necessary
+      overview: asNonEmptyString(record.overview) ?? asNonEmptyString(jsonContent?.overview),
+      etiologyPathophysiology: asNonEmptyString(jsonContent?.etiologyPathophysiology) ??
+        ([
+          etiology ? `**Etiology**\n\n${etiology}` : null,
+          pathophysiology ? `**Pathophysiology**\n\n${pathophysiology}` : null,
+        ]
+          .filter(Boolean)
+          .join('\n\n') || undefined),
+      epidemiology: asNonEmptyString(record.epidemiology) ?? asNonEmptyString(jsonContent?.epidemiology),
+      clinicalPresentation: asNonEmptyString(jsonContent?.clinicalPresentation),
+      symptoms: asStringArray((record as any).symptoms) ?? asStringArray(jsonContent?.symptoms),
+      examFindings: asStringArray((record as any).physicalExam) ?? asStringArray(jsonContent?.examFindings) ?? asStringArray(jsonContent?.physicalExam),
+      riskFactors: asStringArray((record as any).riskFactors) ?? asStringArray(jsonContent?.riskFactors),
+      diagnostics:
+        (record.diagnostics && typeof record.diagnostics === 'object' ? (record.diagnostics as any) : undefined) ??
+        (jsonContent?.diagnostics && typeof jsonContent.diagnostics === 'object' ? (jsonContent.diagnostics as any) : undefined),
+      treatment:
+        (Array.isArray(record.treatment) ? (record.treatment as unknown as string[]) : undefined) ??
+        asStringArray(jsonContent?.treatment) ??
+        asStringArray(jsonContent?.management),
+      management: asStringArray(jsonContent?.management),
+      prognosis: asNonEmptyString(record.prognosis) ?? asNonEmptyString(jsonContent?.prognosis),
+      complications: asStringArray((record as any).complications) ?? asStringArray(jsonContent?.complications),
+      basicScienceLinks: Array.isArray(jsonContent?.basicScienceLinks) ? jsonContent.basicScienceLinks : undefined,
     };
 
     return {
@@ -175,6 +199,7 @@ export async function getAllConditionIds(): Promise<string[]> {
   }
 
   try {
+    const { prisma } = await import('../lib/prisma');
     const publishedIds = await prisma.medicalContent.findMany({
       where: { status: 'published' },
       select: { conditionId: true },
@@ -201,6 +226,7 @@ export async function getConditionsBySystem(system: string): Promise<string[]> {
 
   try {
     // This query finds conditions that are EITHER primarily in the system OR tagged as related
+    const { prisma } = await import('../lib/prisma');
     const conditionRecords = await prisma.medicalContent.findMany({
       where: {
         status: 'published',

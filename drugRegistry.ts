@@ -631,6 +631,42 @@ export const DRUG_REGISTRY_ENDOCRINE: DrugMeta[] = [
 ];
 
 // =============================================================================
+// ANALGESICS / ANTI-INFLAMMATORY
+// =============================================================================
+
+export const DRUG_REGISTRY_ANALGESICS: DrugMeta[] = [
+  {
+    genericName: "Acetaminophen",
+    brandName: "Tylenol",
+    aliases: ["Paracetamol"],
+    drugClass: ["Analgesic", "Antipyretic"],
+    isHighYield: true,
+    fdaApproved: true,
+  },
+];
+
+// =============================================================================
+// PSYCHIATRY
+// =============================================================================
+
+export const DRUG_REGISTRY_PSYCHIATRY: DrugMeta[] = [
+  {
+    genericName: "Sertraline",
+    brandName: "Zoloft",
+    drugClass: ["Antidepressant", "SSRI"],
+    isHighYield: true,
+    fdaApproved: true,
+  },
+  {
+    genericName: "Fluoxetine",
+    brandName: "Prozac",
+    drugClass: ["Antidepressant", "SSRI"],
+    isHighYield: true,
+    fdaApproved: true,
+  },
+];
+
+// =============================================================================
 // EXPORT ALL DRUGS
 // =============================================================================
 
@@ -638,6 +674,8 @@ export const DRUG_REGISTRY: DrugMeta[] = [
   ...DRUG_REGISTRY_ANTIBIOTICS,
   ...DRUG_REGISTRY_CARDIOVASCULAR,
   ...DRUG_REGISTRY_ENDOCRINE,
+  ...DRUG_REGISTRY_ANALGESICS,
+  ...DRUG_REGISTRY_PSYCHIATRY,
 ];
 
 export function buildDrugId(drug: DrugMeta): string {

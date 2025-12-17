@@ -11,16 +11,15 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { prisma } from "../lib/prisma";
 
-const API_KEY = process.env.GEMINI_API_KEY;
-
 // Lazy initialization of AI model to improve testability and error handling
 let cheapModel: any = null;
 function getCheapModel() {
-  if (!API_KEY) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
     return null;
   }
   if (!cheapModel) {
-    const genAI = new GoogleGenerativeAI(API_KEY);
+    const genAI = new GoogleGenerativeAI(apiKey);
     cheapModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   }
   return cheapModel;
@@ -39,17 +38,27 @@ interface AdequacyCheckResult {
  * Save a generated question to staging (not shown to users immediately)
  */
 export async function saveToStaging(questionData: any) {
+  const explanationText =
+    typeof questionData.explanation === 'string'
+      ? questionData.explanation
+      : (questionData.explanation?.rationale || "");
+
+  const explanationLength = countWords(explanationText);
+
   const question = await prisma.stagingQuestion.create({
     data: {
       vignette: questionData.vignette || "",
       question: questionData.question,
       options: questionData.options,
       correctAnswer: questionData.correctAnswer,
-      explanation: typeof questionData.explanation === 'string' ? questionData.explanation : (questionData.explanation?.rationale || ""),
+      explanation: explanationText,
       system: questionData.system || "General",
       difficulty: questionData.difficulty || "medium",
       tags: questionData.tags || [],
       status: "pending",
+      aiGrade: {
+        explanationLength,
+      },
     },
   });
 
@@ -68,9 +77,19 @@ export async function runAdequacyCheck(stagingQuestionId: string): Promise<Adequ
     throw new Error("Staging question not found");
   }
 
+  const nestedQuestionData = (question as any).questionData;
+  const correctAnswer = question.correctAnswer || nestedQuestionData?.correctAnswer;
+  const explanation =
+    question.explanation ||
+    (typeof nestedQuestionData?.explanation === 'string'
+      ? nestedQuestionData.explanation
+      : (nestedQuestionData?.explanation?.rationale || ""));
+  const vignette = question.vignette || nestedQuestionData?.vignette || "";
+  const questionText = question.question || nestedQuestionData?.question || "";
+
   // Basic validation checks
-  const hasCorrectAnswer = !!question.correctAnswer;
-  const explanationLength = countWords(question.explanation || "");
+  const hasCorrectAnswer = Boolean(correctAnswer);
+  const explanationLength = countWords(explanation || "");
   const explanationLongEnough = explanationLength >= 50;
 
   // Use cheaper AI model to check for medical inaccuracies
@@ -85,9 +104,9 @@ export async function runAdequacyCheck(stagingQuestionId: string): Promise<Adequ
 You are a medical accuracy checker. Review this question and explanation for any medical inaccuracies or errors.
 
 Vignette: ${question.vignette}
-Question: ${question.question}
-Correct Answer: ${question.correctAnswer}
-Explanation: ${question.explanation}
+Question: ${questionText}
+Correct Answer: ${correctAnswer}
+Explanation: ${explanation}
 
 Respond with JSON only:
 {

@@ -233,7 +233,7 @@ export async function unifiedSearch(
   query: string, 
   options: { groupByType?: boolean; limit?: number } = {}
 ): Promise<UnifiedSearchResult[] | GroupedSearchResults> {
-  const { groupByType = false, limit = 30 } = options;
+  const { groupByType = false, limit = 20 } = options;
   const trimmedQuery = query.trim();
   
   if (!trimmedQuery) {

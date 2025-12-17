@@ -10,10 +10,23 @@
 import { createClient } from '@supabase/supabase-js';
 // import type { Session } from '@clerk/clerk-react';
 
-// Get Supabase configuration from environment
-// Note: These should be VITE_ prefixed for client-side access
-const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || '';
+type ViteEnvLike = {
+  VITE_SUPABASE_URL?: string;
+  VITE_SUPABASE_ANON_KEY?: string;
+};
+
+function getRuntimeEnv(): ViteEnvLike {
+  const override = (globalThis as any).__TEST_VITE_ENV__ as ViteEnvLike | undefined;
+  return override || ((import.meta as any).env as ViteEnvLike) || {};
+}
+
+function getSupabaseUrl(): string {
+  return getRuntimeEnv().VITE_SUPABASE_URL || '';
+}
+
+function getSupabaseAnonKey(): string {
+  return getRuntimeEnv().VITE_SUPABASE_ANON_KEY || '';
+}
 
 /**
  * Create a Supabase client configured to use Clerk session tokens
@@ -22,6 +35,8 @@ const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || '';
  * @returns Configured Supabase client
  */
 export function createSupabaseClient(session: any) {
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseAnonKey = getSupabaseAnonKey();
   return createClient(supabaseUrl, supabaseAnonKey, {
     global: {
       headers: {
@@ -48,6 +63,8 @@ export function createSupabaseClient(session: any) {
 export function createSupabaseClientWithTokenGetter(
   getToken: () => Promise<string | null>
 ) {
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseAnonKey = getSupabaseAnonKey();
   return createClient(supabaseUrl, supabaseAnonKey, {
     global: {
       // Fetch will use this function to get the Authorization header
@@ -76,6 +93,8 @@ export function createSupabaseClientWithTokenGetter(
  * Validate client-side Supabase configuration
  */
 export function validateSupabaseConfig(): { valid: boolean; message: string } {
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseAnonKey = getSupabaseAnonKey();
   if (!supabaseUrl) {
     return { valid: false, message: 'VITE_SUPABASE_URL is not configured' };
   }
