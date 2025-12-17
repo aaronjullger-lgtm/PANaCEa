@@ -1883,50 +1883,7 @@ app.get('/widgets/stats/:userId', async (req: Request, res: Response) => {
       background: ${bgColor};
       padding: 16px;
     }
-      const contentMap: Record<string, any> = {};
-      allContent.forEach(item => {
-        contentMap[item.conditionId] = {
-          // Basic info
-          conditionId: item.conditionId,
-          condition: item.condition,
-          system: item.system,
-          subcategory: item.subcategory,
-        
-          // Content sections - properly format for frontend
-          overview: item.overview,
-        
-          // Combine etiology and pathophysiology for backward compatibility
-          // Frontend components expect this combined field (see ConditionDetailModal.tsx line 40)
-          etiologyPathophysiology: [
-            item.etiology ? `**Etiology**\n\n${item.etiology}` : null,
-            item.pathophysiology ? `**Pathophysiology**\n\n${item.pathophysiology}` : null
-          ].filter(Boolean).join('\n\n') || undefined,
-        
-          // Also provide separate fields for services that use them
-          etiology: item.etiology,
-          pathophysiology: item.pathophysiology,
-          epidemiology: item.epidemiology,
-        
-          // Arrays - ensure they're properly formatted
-          symptoms: item.symptoms && item.symptoms.length > 0 ? item.symptoms : undefined,
-          physicalExam: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined,
-        
-          // Alias for backward compatibility (ConditionDetailModal.tsx line 47)
-          examFindings: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined,
-        
-          riskFactors: item.riskFactors && item.riskFactors.length > 0 ? item.riskFactors : undefined,
-          complications: item.complications && item.complications.length > 0 ? item.complications : undefined,
-          differentialDiagnosis: item.differentialDiagnosis && item.differentialDiagnosis.length > 0 ? item.differentialDiagnosis : undefined,
-        
-          // JSON fields - pass through as-is
-          diagnostics: item.diagnostics,
-          treatment: item.treatment,
-        
-          prognosis: item.prognosis,
-          buzzwords: item.buzzwords && item.buzzwords.length > 0 ? item.buzzwords : undefined
-        };
-      });
-      res.json(contentMap);
+    .widget {
       background: ${bgColor};
       border: 2px solid ${borderColor};
       border-radius: 12px;
@@ -1986,41 +1943,12 @@ app.get('/widgets/stats/:userId', async (req: Request, res: Response) => {
     res.send(html);
   } catch (error) {
     console.error('Failed to serve stats widget:', error);
-    const item = await prisma.medicalContent.findFirst({
-      where: {
-        conditionId,
-        status: 'published',
-      },
-    });
+    res.status(500).send('<html><body><p>Error loading widget</p></body></html>');
+  }
+});
 
-    if (!item) {
-      return res.status(404).json({ error: 'Condition not found', conditionId });
-    }
-
-    return res.json({
-      conditionId: item.conditionId,
-      condition: item.condition,
-      system: item.system,
-      subcategory: item.subcategory,
-      overview: item.overview ?? undefined,
-      etiologyPathophysiology: [
-        item.etiology ? `**Etiology**\n\n${item.etiology}` : null,
-        item.pathophysiology ? `**Pathophysiology**\n\n${item.pathophysiology}` : null,
-      ].filter(Boolean).join('\n\n') || undefined,
-      etiology: item.etiology ?? undefined,
-      pathophysiology: item.pathophysiology ?? undefined,
-      epidemiology: item.epidemiology ?? undefined,
-      symptoms: item.symptoms && item.symptoms.length > 0 ? item.symptoms : undefined,
-      physicalExam: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined,
-      examFindings: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined,
-      riskFactors: item.riskFactors && item.riskFactors.length > 0 ? item.riskFactors : undefined,
-      complications: item.complications && item.complications.length > 0 ? item.complications : undefined,
-      differentialDiagnosis: item.differentialDiagnosis && item.differentialDiagnosis.length > 0 ? item.differentialDiagnosis : undefined,
-      diagnostics: item.diagnostics ?? undefined,
-      treatment: item.treatment ?? undefined,
-      prognosis: item.prognosis ?? undefined,
-      buzzwords: item.buzzwords && item.buzzwords.length > 0 ? item.buzzwords : undefined,
-    });
+// Get pending media (admin-only)
+app.get('/api/media/pending', requireAdmin, async (req: Request, res: Response) => {
   try {
     const pendingHandler = await import('./functions/api/media/pending');
     await pendingHandler.default(req, res);

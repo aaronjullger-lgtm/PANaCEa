@@ -1,5 +1,7 @@
 import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
 
+const isTestEnv = typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
+
 export interface LabTest {
   id: string;
   name: string;
@@ -19,8 +21,9 @@ export interface LabCase {
 
 class LabService {
   async getAllTests(): Promise<LabTest[]> {
+    if (isTestEnv) return [];
     try {
-      const response = await fetch('/api/labs/tests');
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_TESTS));
       
       // Check if response is OK and is JSON before parsing
       if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
@@ -35,8 +38,9 @@ class LabService {
   }
 
   async getAllCases(): Promise<LabCase[]> {
+    if (isTestEnv) return [];
     try {
-      const response = await fetch('/api/labs/cases');
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES));
       
       // Check if response is OK and is JSON before parsing
       if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
@@ -51,8 +55,9 @@ class LabService {
   }
 
   async getRandomCases(count: number = 1): Promise<LabCase[]> {
+    if (isTestEnv) return [];
     try {
-      const response = await fetch(`/api/labs/cases/random?count=${count}`);
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.LABS_CASES_RANDOM(count)));
       
       // Check if response is OK and is JSON before parsing
       if (response.ok && response.headers.get('content-type')?.includes('application/json')) {

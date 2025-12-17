@@ -12,7 +12,14 @@ interface AuthProviderProps {
 
 // Get publishable key from environment variable
 // @ts-ignore - import.meta.env is available in Vite but may not be typed
-const CLERK_PUBLISHABLE_KEY = import.meta.env?.VITE_CLERK_PUBLISHABLE_KEY || '';
+const BASE_CLERK_PUBLISHABLE_KEY = import.meta.env?.VITE_CLERK_PUBLISHABLE_KEY || '';
+
+// Optional dev override for localhost (avoids pk_live domain restrictions during local development)
+// @ts-ignore
+const DEV_CLERK_PUBLISHABLE_KEY =
+  import.meta.env?.VITE_CLERK_PUBLISHABLE_KEY_DEV ||
+  import.meta.env?.VITE_CLERK_PUBLISHABLE_KEY_LOCAL ||
+  '';
 
 // Error message when Clerk publishable key is missing
 const MISSING_KEY_ERROR = `Missing Publishable Key for Clerk!
@@ -29,26 +36,45 @@ See AUTHENTICATION_SETUP.md for detailed setup instructions.`;
  * Provides authentication context to the entire app
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  if (!CLERK_PUBLISHABLE_KEY) {
+  // @ts-ignore
+  const isDevelopment = import.meta.env?.DEV;
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
+
+  const publishableKey =
+    isDevelopment && isLocalhost && BASE_CLERK_PUBLISHABLE_KEY.startsWith('pk_live_') && DEV_CLERK_PUBLISHABLE_KEY
+      ? DEV_CLERK_PUBLISHABLE_KEY
+      : BASE_CLERK_PUBLISHABLE_KEY;
+
+  if (!publishableKey) {
     throw new Error(MISSING_KEY_ERROR);
   }
 
+  if (isDevelopment && isLocalhost && publishableKey.startsWith('pk_live_')) {
+    throw new Error(
+      `Clerk is configured with a production publishable key (pk_live_...) on localhost.\n\n` +
+      `Fix options:\n` +
+      `1) Use a test key locally: set VITE_CLERK_PUBLISHABLE_KEY=pk_test_... in .env\n` +
+      `2) Or set VITE_CLERK_PUBLISHABLE_KEY_DEV=pk_test_... (recommended)\n` +
+      `3) Or configure Clerk allowed origins for your local domain in the Clerk dashboard\n\n` +
+      `Then restart: npm run dev:all`
+    );
+  }
+
   // Enable debug mode in development or when explicitly enabled
-  // @ts-ignore - import.meta.env is available in Vite but may not be typed
-  const isDevelopment = import.meta.env?.DEV;
   // @ts-ignore - import.meta.env is available in Vite but may not be typed
   const debugEnabled = isDevelopment || import.meta.env?.VITE_CLERK_DEBUG === 'true';
 
   if (debugEnabled) {
     console.log('[Clerk] Debug mode enabled');
-    console.log('[Clerk] Publishable key:', CLERK_PUBLISHABLE_KEY.substring(0, 20) + '...');
+    console.log('[Clerk] Publishable key:', publishableKey.substring(0, 20) + '...');
     console.log('[Clerk] Client time:', new Date().toISOString());
     console.log('[Clerk] Client timezone offset:', new Date().getTimezoneOffset());
   }
 
   return (
     <ClerkProvider 
-      publishableKey={CLERK_PUBLISHABLE_KEY}
+      publishableKey={publishableKey}
       telemetry={debugEnabled ? { disabled: false, debug: true } : undefined}
       appearance={{
         elements: {

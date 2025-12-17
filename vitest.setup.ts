@@ -1,6 +1,8 @@
 // Global test setup for Vitest.
 // - Ensures browser-like APIs (localStorage) exist even in edge cases.
 
+import { afterEach, beforeEach } from 'vitest';
+
 class MemoryStorage implements Storage {
   private store = new Map<string, string>();
 
@@ -38,9 +40,35 @@ function ensureLocalStorage(): void {
     typeof candidate.removeItem === 'function' &&
     typeof candidate.clear === 'function';
 
-  if (!looksValid) {
+  // Some tests (or dependencies) may stub `localStorage` with an object that has the
+  // right shape but doesn't actually persist values. Verify round-trip behavior.
+  let roundTripOk = false;
+  if (looksValid) {
+    try {
+      const probeKey = '__vitest_localStorage_probe__';
+      candidate.setItem(probeKey, '1');
+      roundTripOk = candidate.getItem(probeKey) === '1';
+      candidate.removeItem(probeKey);
+    } catch {
+      roundTripOk = false;
+    }
+  }
+
+  if (!looksValid || !roundTripOk) {
     (globalThis as any).localStorage = new MemoryStorage();
   }
 }
 
 ensureLocalStorage();
+
+// Some test files (or their dependencies) replace `globalThis.localStorage` and don't restore it.
+// Re-assert a working storage boundary between tests to prevent order-dependent failures.
+beforeEach(() => {
+  ensureLocalStorage();
+  globalThis.localStorage.clear();
+});
+
+afterEach(() => {
+  ensureLocalStorage();
+  globalThis.localStorage.clear();
+});

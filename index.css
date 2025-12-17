@@ -513,6 +513,214 @@ body,
   letter-spacing: 0.01em;
 }
 
+/* ===============================================
+   CONDITION MARKDOWN TYPOGRAPHY
+   Shared styles for DB-driven markdown rendering.
+   =============================================== */
+
+/* The markdown renderer should inherit the surrounding typography. */
+.condition-markdown {
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Paragraph rhythm */
+.condition-content p,
+.condition-markdown p {
+  margin: 0 0 0.9rem;
+}
+
+.condition-content p:last-child,
+.condition-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+/* Headings inside sections (kept compact for cards/modals) */
+.condition-content h1,
+.condition-markdown h1 {
+  font-size: 1.25rem;
+  font-weight: 750;
+  margin: 1.4rem 0 0.7rem;
+  color: var(--color-text-primary);
+}
+
+.condition-content h2,
+.condition-markdown h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 1.25rem 0 0.6rem;
+  color: var(--color-text-primary);
+}
+
+.condition-content h3,
+.condition-markdown h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 1.1rem 0 0.5rem;
+  color: var(--color-text-primary);
+}
+
+.condition-content h4,
+.condition-markdown h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 1.1rem 0 0.5rem;
+  color: var(--color-text-primary);
+}
+
+.condition-content h5,
+.condition-markdown h5 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 1rem 0 0.45rem;
+  color: var(--color-text-primary);
+}
+
+.condition-content h6,
+.condition-markdown h6 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0.9rem 0 0.4rem;
+  color: var(--color-text-primary);
+}
+
+/* Emphasis */
+.condition-content strong,
+.condition-markdown strong {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.condition-content em,
+.condition-markdown em {
+  font-style: italic;
+}
+
+/* Links */
+.condition-content a,
+.condition-markdown a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.condition-content a:hover,
+.condition-markdown a:hover {
+  color: var(--color-accent-hover);
+}
+
+/* Lists */
+.condition-content ul:not(.condition-bullet-list),
+.condition-markdown ul {
+  list-style: disc;
+  margin: 0 0 0.95rem 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.condition-content ol,
+.condition-markdown ol {
+  list-style: decimal;
+  margin: 0 0 0.95rem 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.condition-content li,
+.condition-markdown li {
+  margin-bottom: 0.35rem;
+}
+
+.condition-content ul:not(.condition-bullet-list) ul,
+.condition-markdown ul ul {
+  margin-top: 0.45rem;
+  margin-bottom: 0.45rem;
+  list-style-type: circle;
+}
+
+.condition-content ul:not(.condition-bullet-list) ul ul,
+.condition-markdown ul ul ul {
+  list-style-type: square;
+}
+
+/* Tables */
+.condition-table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0;
+  border-radius: 12px;
+}
+
+.condition-content table,
+.condition-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+}
+
+.condition-content th,
+.condition-content td,
+.condition-markdown th,
+.condition-markdown td {
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.condition-content th,
+.condition-markdown th {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+/* Inline code + code blocks */
+.condition-content code,
+.condition-markdown code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95em;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.1rem 0.35rem;
+}
+
+.condition-content pre,
+.condition-markdown pre {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.condition-content pre code,
+.condition-markdown pre code {
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+/* Blockquotes */
+.condition-content blockquote,
+.condition-markdown blockquote {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border-radius: 12px;
+}
+
+/* Horizontal rules */
+.condition-content hr,
+.condition-markdown hr {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin: 1.25rem 0;
+}
+
 .condition-bullet-list {
   list-style: disc;
   margin: 0 0 1.15rem 1.75rem;

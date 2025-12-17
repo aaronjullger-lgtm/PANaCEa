@@ -2,9 +2,10 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { useUserStats } from './useUserStats';
 import * as srsService from '../lib/services/srsService';
+import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
 
 // Mock the useAuth hook
 vi.mock('./useAuth', () => ({
@@ -214,8 +215,6 @@ describe('useUserStats', () => {
           difficulty: 'same' as const,
         },
       ];
-      
-      localStorage.setItem('panceai_performance_v2', JSON.stringify(testPerformanceData));
 
       const mockFetch = vi.fn(() =>
         Promise.resolve({
@@ -233,6 +232,22 @@ describe('useUserStats', () => {
       global.fetch = mockFetch;
 
       const { useAuth } = await import('./useAuth');
+      // Start signed-out, seed local (in-memory) state, then sign in.
+      // This avoids cross-suite flakiness from global/localStorage mutations.
+      vi.mocked(useAuth).mockReturnValue({
+        isSignedIn: false,
+        user: null,
+        getToken: vi.fn().mockResolvedValue('test-token'),
+        isLoading: false,
+        signOut: vi.fn(),
+      });
+
+      const { result, rerender } = renderHook(() => useUserStats());
+
+      act(() => {
+        result.current.setPerformanceData(testPerformanceData);
+      });
+
       vi.mocked(useAuth).mockReturnValue({
         isSignedIn: true,
         user: { clerkId: 'test-user-123' } as any,
@@ -241,12 +256,12 @@ describe('useUserStats', () => {
         signOut: vi.fn(),
       });
 
-      renderHook(() => useUserStats());
+      rerender();
 
       // Wait for the auto-sync to trigger
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          '/api/sync',
+          getApiEndpoint(API_ENDPOINTS.SYNC),
           expect.objectContaining({
             method: 'POST',
           })
@@ -284,7 +299,7 @@ describe('useUserStats', () => {
       // Wait for the auto-sync to trigger
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledWith(
-          '/api/sync',
+          getApiEndpoint(API_ENDPOINTS.SYNC),
           expect.objectContaining({
             method: 'GET',
           })

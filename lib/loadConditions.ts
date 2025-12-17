@@ -151,16 +151,29 @@ function normalizeEntry(raw: unknown, id: string): ConditionEntry | undefined {
     rawSections = entry.sections as Record<string, unknown>;
   } else {
     // New format: sections are directly on the object
-    conditionId = id;
+    conditionId = hasConditionKey && (entry.condition as string).trim().length > 0
+      ? (entry.condition as string)
+      : id;
     rawSections = entry;
   }
 
   const sections: ConditionSections = {};
 
+  const METADATA_KEYS = new Set([
+    'condition',
+    'conditionId',
+    'system',
+    'subcategory',
+    'relatedSystems',
+    'status',
+    'createdAt',
+    'updatedAt',
+  ]);
+
   if (rawSections && typeof rawSections === "object") {
     for (const [key, val] of Object.entries(rawSections)) {
-      // Skip the "condition" key if it exists in the new format
-      if (key === "condition") continue;
+      // Skip metadata keys present in DB/API payloads
+      if (METADATA_KEYS.has(key)) continue;
       
       // Normalize all value types (strings, arrays, objects with notes/imaging/labs)
       const normalized = normalizeConditionContent(val as ConditionContent);

@@ -2,14 +2,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { v4 as uuidv4 } from 'uuid';
 import { ConditionData, GeneratedQuestion, QuestionType } from "../types/question";
 import { validateQuestion } from "./questionValidator";
+import { GEMINI_PRO_MODEL } from "../constants";
 
-// Initialize Gemini
+// Initialize Gemini (use pro model for heavy generation; allows env override via constants)
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) {
   console.warn("GEMINI_API_KEY environment variable is not set. Question generation will fail.");
 }
 const genAI = new GoogleGenerativeAI(API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+const model = genAI.getGenerativeModel({ model: GEMINI_PRO_MODEL });
 
 const SYSTEM_INSTRUCTION = `
 You are a strict medical education assistant for the PANaCEa platform. 
@@ -79,8 +80,12 @@ export async function generateSingleQuestion(
 
     return question;
 
-  } catch (error) {
-    console.error("Error generating question:", error);
+  } catch (error: any) {
+    const message =
+      error?.message?.includes('API key') || error?.status === 400
+        ? "Gemini call failed. Verify GEMINI_API_KEY is valid for the selected model (" + GEMINI_PRO_MODEL + ") and has access to 2.5 Pro."
+        : "Error generating question";
+    console.error(`${message}:`, error);
     return null;
   }
 }

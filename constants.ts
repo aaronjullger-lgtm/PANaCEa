@@ -128,5 +128,14 @@ export const TASK_DECK: string[] = [
 ];
 
 // Gemini model constants (compatible with Cloudflare proxy URL construction)
-export const GEMINI_FLASH_MODEL = "gemini-2.5-flash";
-export const GEMINI_PRO_MODEL   = "gemini-2.5-pro";
+// Prefer 2.5 family: flash for lightweight tasks, pro for heavy reasoning.
+const GEMINI_FLASH_MODEL_ENV =
+  (typeof process !== 'undefined' && process.env.GEMINI_FLASH_MODEL) ||
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GEMINI_FLASH_MODEL);
+
+const GEMINI_PRO_MODEL_ENV =
+  (typeof process !== 'undefined' && process.env.GEMINI_PRO_MODEL) ||
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GEMINI_PRO_MODEL);
+
+export const GEMINI_FLASH_MODEL = GEMINI_FLASH_MODEL_ENV || "gemini-2.5-flash";
+export const GEMINI_PRO_MODEL   = GEMINI_PRO_MODEL_ENV   || "gemini-2.5-pro";

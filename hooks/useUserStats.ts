@@ -8,6 +8,7 @@ import { useAuth } from './useAuth';
 import type { PerformanceRecord, Question } from '../types';
 import { getAllSRSItems, loadSRSItemsFromCloud } from '../lib/services/srsService';
 import { createDebouncedFunction } from '../lib/utils/debounce';
+import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
 
 const PERFORMANCE_KEY = 'panceai_performance_v2';
 const MISSED_KEY = 'panceai_missed_v2';
@@ -125,7 +126,7 @@ export function useUserStats(): UseUserStatsResult {
       // Get SRS items from srsService
       const srsItems = getAllSRSItems(user.clerkId);
 
-      const response = await fetch('/api/sync', {
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -201,7 +202,7 @@ export function useUserStats(): UseUserStatsResult {
         throw new Error('Failed to get authentication token');
       }
 
-      const response = await fetch('/api/sync', {
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

@@ -10,7 +10,7 @@
  * @see https://www.prisma.io/docs/accelerate
  */
 
-import { PrismaClient } from '@prisma/client/edge';
+import { PrismaClient } from '@prisma/client';
 import { withAccelerate } from '@prisma/extension-accelerate';
 
 const globalForPrisma = globalThis as unknown as {

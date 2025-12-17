@@ -49,4 +49,10 @@ export const API_ENDPOINTS = {
   CONTENT_SEARCH: '/api/content/search',
   CONTENT_BY_SYSTEM: (system: string) => `/api/content/system/${system}`,
   BUZZWORDS_ALL: '/api/buzzwords/all',
+  SYNC: '/api/sync',
+  DRUGS_ALL: '/api/drugs',
+  LABS_TESTS: '/api/labs/tests',
+  LABS_CASES: '/api/labs/cases',
+  LABS_CASES_RANDOM: (count: number) => `/api/labs/cases/random?count=${count}`,
+  GEMINI_PROXY: '/geminiProxy',
 } as const;

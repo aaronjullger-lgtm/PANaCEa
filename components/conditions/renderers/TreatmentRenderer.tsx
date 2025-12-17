@@ -34,22 +34,10 @@ const TreatmentRenderer: React.FC<TreatmentRendererProps> = ({ items }) => {
             <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-2 capitalize">
               {step.title}
             </h4>
-            <div className="prose dark:prose-invert text-sm text-gray-600 dark:text-gray-300">
+            <div className="condition-markdown text-sm">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
-                components={{
-                  ul: ({ node, ...props }) => (
-                    <ul className="list-disc pl-5 space-y-1 my-2" {...props} />
-                  ),
-                  ol: ({ node, ...props }) => (
-                    <ol className="list-decimal pl-5 space-y-1 my-2" {...props} />
-                  ),
-                  li: ({ node, ...props }) => (
-                    <li className="pl-1 leading-relaxed" {...props} />
-                  ),
-                  p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
-                }}
               >
                 {sanitizeMedicalMarkdown(step.content)}
               </ReactMarkdown>

@@ -18,7 +18,8 @@ export async function loadDrugData(): Promise<any> {
   }
   
   try {
-    const response = await fetch('/api/drugs');
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.DRUGS_ALL);
+    const response = await fetch(apiUrl);
     
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
@@ -128,7 +129,8 @@ export async function loadLabCases(): Promise<any> {
   }
   
   try {
-    const response = await fetch('/api/labs/cases');
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.LABS_CASES);
+    const response = await fetch(apiUrl);
     
     // Check if response is OK and is JSON before parsing
     if (response.ok && response.headers.get('content-type')?.includes('application/json')) {

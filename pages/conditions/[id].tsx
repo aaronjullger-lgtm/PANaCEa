@@ -4,8 +4,6 @@ import FormattedSection from "../../components/conditions/FormattedSection";
 import { BuzzwordBanner } from "../../components/conditions/BuzzwordBanner";
 import {
   getConditionById,
-  getConditionByIdSync,
-  loadConditions,
   isMeaningfulContent,
   type ConditionContent,
   type ConditionEntry,
@@ -83,38 +81,15 @@ const ConditionPage: React.FC = () => {
         if (meta && mounted) {
           setConditionMeta(meta);
         }
-        
-        // REQUIRED: Load from database
-        const { loadConditionData } = await import('../../services/conditionDataLoader');
-        const data = await loadConditionData(conditionId);
-        
-        if (!data) {
+
+        // Load from DB via backend API (MedicalContent is the source of truth)
+        const entry = await getConditionById(conditionId);
+        if (!entry) {
           setError(`Content for "${conditionId}" is not yet available. Please check back later.`);
-          setLoading(false);
           return;
         }
-        
-        if (mounted) {
-          // Transform to ConditionEntry format
-          const entry: ConditionEntry = {
-            condition: data.name,
-            sections: {
-              overview: data.content.overview,
-              etiologyPathophysiology: data.content.etiologyPathophysiology,
-              epidemiology: data.content.epidemiology,
-              clinicalPresentation: data.content.clinicalPresentation,
-              symptoms: data.content.symptoms,
-              examFindings: data.content.examFindings,
-              riskFactors: data.content.riskFactors,
-              diagnostics: data.content.diagnostics,
-              treatment: data.content.treatment,
-              management: data.content.management,
-              complications: data.content.complications,
-              prognosis: data.content.prognosis,
-            }
-          };
-          setConditionContent(entry);
-        }
+
+        if (mounted) setConditionContent(entry);
       } catch (error) {
         console.error('Failed to load condition:', error);
         setError('Failed to load condition content. Please try again later.');
@@ -315,7 +290,7 @@ const ConditionPage: React.FC = () => {
                   transition={{ duration: 0.2 }}
                   className="border-t border-gray-200 dark:border-gray-700"
                 >
-                  <div className="px-6 py-4 prose dark:prose-invert max-w-none">
+                  <div className="px-6 py-4 condition-content">
                     <FormattedSection content={section.content} />
                   </div>
                 </motion.div>

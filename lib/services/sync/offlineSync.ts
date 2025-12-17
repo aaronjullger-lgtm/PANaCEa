@@ -7,6 +7,8 @@
  * - Auto-retries when connection restored
  */
 
+import { getApiEndpoint, API_ENDPOINTS } from '../../utils/apiConfig';
+
 export interface SyncOperation {
   id: string;
   operation: 'save_progress' | 'submit_quiz' | 'update_settings' | 'flag_question';
@@ -197,13 +199,13 @@ async function syncOperation(op: SyncOperation, token?: string): Promise<void> {
 function getEndpointForOperation(operation: SyncOperation['operation']): string {
   switch (operation) {
     case 'save_progress':
-      return '/api/sync';
+      return getApiEndpoint(API_ENDPOINTS.SYNC);
     case 'submit_quiz':
-      return '/api/analytics/submit';
+      return getApiEndpoint('/api/analytics/submit');
     case 'update_settings':
-      return '/api/user/settings';
+      return getApiEndpoint('/api/user/settings');
     case 'flag_question':
-      return '/api/analytics/flag';
+      return getApiEndpoint('/api/analytics/flag');
     default:
       throw new Error(`Unknown operation: ${operation}`);
   }
