@@ -19,26 +19,26 @@ const formatRunOnKeys = (text: string): string => {
   
   // Regex for a "Key": 
   // - Starts with uppercase letter
-  // - Length 2-60 characters
+  // - Length 2-100 characters
   // - Does not contain colon, newline, or sentence ending punctuation
   // - Allows parens, dashes, etc.
-  const keyPattern = "([A-Z][^:\\n\\r\\.\\?\\!]{2,60})";
+  const keyPattern = "([A-Z][^:\\n\\r\\.\\?\\!]{2,100})";
   
-  // 1. Handle Start of String: "Key: Value" -> "- **Key**: Value"
-  const startRegex = new RegExp(`^${keyPattern}:\\s`);
-  if (startRegex.test(formatted)) {
-     formatted = formatted.replace(startRegex, '- **$1**: ');
-  }
+  // Unified regex to handle all cases:
+  // 1. Start of string (^)
+  // 2. Newline (\n) followed by optional whitespace
+  // 3. Punctuation (. ! ? ;) followed by whitespace
+  const pattern = new RegExp(`(^|[\\.\\!\\?\\;]\\s+|\\n\\s*)(${keyPattern}):\\s`, 'g');
   
-  // 2. Handle Middle of String: ". Key: Value" -> ".\n- **Key**: Value"
-  // Matches punctuation (.!?;) followed by whitespace, OR just a newline
-  const middleRegex = new RegExp(`([\\.\\!\\?\\;]\\s+|\\n\\s*)${keyPattern}:\\s`, 'g');
-  
-  formatted = formatted.replace(middleRegex, (match, separator, key) => {
-      // separator is like ". " or "\n" or "; "
-      // We want to keep the punctuation if it was there, but force a newline after it.
-      const punct = separator.trim();
-      return `${punct}\n- **${key}**: `;
+  formatted = formatted.replace(pattern, (match, separator, key) => {
+      // If separator is undefined or empty (start of string), just return the bullet
+      if (!separator) return `- **${key}**: `;
+      
+      // If separator contains newline, preserve it
+      if (separator.includes('\n')) return `\n- **${key}**: `;
+      
+      // If separator is punctuation, keep it and add newline
+      return `${separator.trim()}\n- **${key}**: `;
   });
   
   return formatted;
