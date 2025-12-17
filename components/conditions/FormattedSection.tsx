@@ -10,6 +10,27 @@ interface FormattedSectionProps {
   content?: ConditionContent;
 }
 
+// Helper to format run-on key-value pairs into lists and bold keys
+// Example: "Inspection: Swelling. Palpation: Tenderness." -> "- **Inspection**: Swelling.\n- **Palpation**: Tenderness."
+const formatRunOnKeys = (text: string): string => {
+  if (!text) return "";
+  
+  let formatted = text;
+  
+  // 1. Handle the start of the string if it looks like "Key: Value"
+  // We replace it with a bullet and bold key
+  if (/^[A-Z][\w\s\(\)\-]{2,50}:\s/.test(formatted)) {
+     formatted = formatted.replace(/^([A-Z][\w\s\(\)\-]{2,50}):\s/, '- **$1**: ');
+  }
+  
+  // 2. Handle subsequent occurrences "Sentence. Key: Value"
+  // We look for punctuation followed by space, then the Key pattern
+  // We insert a newline and make it a bullet item
+  formatted = formatted.replace(/([\.\!\?])\s+([A-Z][\w\s\(\)\-]{2,50}):\s/g, '$1\n- **$2**: ');
+  
+  return formatted;
+};
+
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   if (!content) return null;
 
@@ -37,23 +58,26 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
         if (typeof line !== 'string') return '';
         const trimmed = line.trim();
         
-        // 1. Replace non-standard bullets (•, ◦, ▪) with standard Markdown dash
+        // 1. Enhance readability by splitting run-on keys
+        let processed = formatRunOnKeys(trimmed);
+        
+        // 2. Replace non-standard bullets (•, ◦, ▪) with standard Markdown dash
         // This ensures react-markdown renders them as proper <ul>/<li> elements
-        if (/^[\u2022\u25E6\u25AA]/.test(trimmed)) {
-           return trimmed.replace(/^[\u2022\u25E6\u25AA]\s*/, '- ');
+        if (/^[\u2022\u25E6\u25AA]/.test(processed)) {
+           processed = processed.replace(/^[\u2022\u25E6\u25AA]\s*/, '- ');
         }
         
-        // 2. If it already starts with a standard Markdown bullet (-, *, +), keep it
-        if (/^[\-\*\+]\s+/.test(trimmed)) {
-          return trimmed;
+        // 3. If it already starts with a standard Markdown bullet (-, *, +), keep it
+        if (/^[\-\*\+]\s+/.test(processed)) {
+          return processed;
         }
         
-        // 3. Otherwise, prepend a dash to make it a list item
-        return `- ${trimmed}`;
+        // 4. Otherwise, prepend a dash to make it a list item
+        return `- ${processed}`;
       })
       .join("\n");
   } else if (typeof content === "string") {
-    markdown = content;
+    markdown = formatRunOnKeys(content);
   } else {
     // Fallback for unknown object types
     return null;
