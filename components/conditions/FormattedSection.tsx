@@ -32,73 +32,6 @@ const cleanArtifacts = (text: string): string => {
 };
 
 
-// Helper to format run-on key-value pairs into lists and nested bullets when appropriate.
-// Example: "Inspection: Swelling. Palpation: Tenderness." -> "- **Inspection**: Swelling.\n- **Palpation**: Tenderness."
-// For values with multiple clauses (e.g., semicolons or multiple sentences), create sub-bullets for better scanning.
-const formatRunOnKeys = (text: string): string => {
-  if (!text) return "";
-
-  // Capture pairs like "Key: value" where key is reasonably short and capitalized.
-  const pairPattern = /([A-Z][^:\n\r\.\!\?]{2,80}):\s*([^]+?)(?=(?:[A-Z][^:\n\r\.\!\?]{2,80}):|$)/g;
-  const pairs = Array.from(text.matchAll(pairPattern));
-
-  // Only treat as structured if we see 2+ pairs; otherwise leave untouched to avoid false positives.
-  if (pairs.length < 2) {
-    return text;
-  }
-
-  const formatValue = (value: string): string => {
-    const trimmed = value.trim();
-    if (!trimmed) return "";
-
-    // If it already contains markdown list markers, return as-is (with a space for readability).
-    if (/^\s*[-*+]\s+/m.test(trimmed)) {
-      return ` ${cleanArtifacts(trimmed)}`;
-    }
-
-    // Prefer semicolons or bullet dots as list separators.
-    let parts = trimmed.split(/;\s+|•\s+/).filter(Boolean);
-
-    // If no semicolons, attempt sentence-based split when multiple sentences are present.
-    if (parts.length < 2) {
-      const sentenceSplit = trimmed.split(/(?<=\.)\s+(?=[A-Z])/).filter(Boolean);
-      if (sentenceSplit.length >= 2) {
-        parts = sentenceSplit;
-      }
-    }
-
-    // If we have multiple meaningful parts, return as sub-bullets; otherwise keep inline.
-    if (parts.length >= 2 && parts.every(p => p.trim().length > 0 && p.trim().length < 300)) {
-      return `\n${parts.map(p => `  - ${cleanArtifacts(p.trim())}`).join('\n')}`;
-    }
-
-    return ` ${cleanArtifacts(trimmed)}`;
-  };
-
-  const cleanInline = (val: string) => {
-    // Remove stray leading/trailing ** if not balanced
-    if (/^\*\*[^*]+$/.test(val)) {
-      val = val.replace(/^\*\*\s*/, '');
-    }
-    if (/^[^*]+\*\*$/.test(val)) {
-      val = val.replace(/\s*\*\*$/, '');
-    }
-    return cleanArtifacts(val.trim());
-  };
-
-  const lines = pairs.map(([, rawKey, rawValue]) => {
-    const key = String(rawKey).trim();
-    const value = formatValue(String(rawValue));
-    const needsNewline = /\n/.test(value);
-    const cleanedValue = value.replace(/^\s+/, '');
-    return needsNewline
-      ? `- **${key}**:${cleanArtifacts(cleanedValue)}`
-      : `- **${key}**: ${cleanInline(cleanedValue)}`;
-  });
-
-  return cleanArtifacts(lines.join("\n"));
-};
-
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   if (!content) return null;
 
@@ -129,7 +62,7 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
         const trimmed = line.trim();
         
         // 1. Enhance readability by splitting run-on keys
-        let processed = cleanArtifacts(sanitizeMedicalMarkdown(formatRunOnKeys(trimmed)));
+        let processed = cleanArtifacts(sanitizeMedicalMarkdown(trimmed));
 
         if (!processed) return '';
 
@@ -151,7 +84,7 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
       .join("\n");
   } else if (typeof content === "string") {
     if (!content.trim()) return null; // Fix: Return null for empty strings
-    markdown = cleanArtifacts(sanitizeMedicalMarkdown(formatRunOnKeys(content)));
+    markdown = cleanArtifacts(sanitizeMedicalMarkdown(content));
   } else {
     // Fallback for unknown object types
     return null;
