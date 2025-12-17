@@ -54,12 +54,25 @@ const formatRunOnKeys = (text: string): string => {
     return ` ${trimmed}`;
   };
 
+  const cleanInline = (val: string) => {
+    // Remove stray leading/trailing ** if not balanced
+    if (/^\*\*[^*]+$/.test(val)) {
+      val = val.replace(/^\*\*\s*/, '');
+    }
+    if (/^[^*]+\*\*$/.test(val)) {
+      val = val.replace(/\s*\*\*$/, '');
+    }
+    return val.trim();
+  };
+
   const lines = pairs.map(([, rawKey, rawValue]) => {
     const key = String(rawKey).trim();
     const value = formatValue(String(rawValue));
     const needsNewline = /\n/.test(value);
     const cleanedValue = value.replace(/^\s+/, '');
-    return needsNewline ? `- **${key}**:${cleanedValue}` : `- **${key}**: ${cleanedValue.trim()}`;
+    return needsNewline
+      ? `- **${key}**:${cleanedValue}`
+      : `- **${key}**: ${cleanInline(cleanedValue)}`;
   });
 
   return lines.join("\n");
