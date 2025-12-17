@@ -212,24 +212,19 @@ async function syncSpecialTest(meta: any): Promise<void> {
       fullDescription += `\n\nRelated Tests:\n${generatedContent.relatedTests}`;
     }
 
-    // Build comprehensive technique description
-    let fullTechnique = generatedContent.technique || '';
-    if (generatedContent.positiveTest) {
-      fullTechnique += `\n\nPositive Test:\n${generatedContent.positiveTest}`;
-    }
-    if (generatedContent.interpretation) {
-      fullTechnique += `\n\nInterpretation:\n${generatedContent.interpretation}`;
-    }
-
     // Create new special test (ADD ONLY) with AI-generated content
     await prisma.specialTest.create({
       data: {
         id: testId,
         name: meta.name,
+        system: meta.system || null,
+        region: meta.region || null,
         description: fullDescription.trim() || null,
         sensitivity: meta.sensitivity || null,
         specificity: meta.specificity || null,
-        technique: fullTechnique.trim() || null,
+        technique: generatedContent.technique || null,
+        positiveTest: generatedContent.positiveTest || null,
+        interpretation: generatedContent.interpretation || null,
         imageUrl: null, // Will be filled by media automation
         videoUrl: null, // Will be filled by media automation
       },

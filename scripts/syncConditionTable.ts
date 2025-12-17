@@ -62,21 +62,10 @@ async function syncCondition(meta: any): Promise<void> {
       },
     });
 
-    // Also check if content already exists in MedicalContent table
-    const existingContent = await prisma.medicalContent.findFirst({
-      where: {
-        OR: [
-          { conditionId: conditionId },
-          { condition: meta.condition, system: meta.system },
-        ],
-      },
-    });
-
-    if (existingCondition || existingContent) {
+    if (existingCondition) {
       // Condition already exists - skip to preserve database edits (ADD ONLY)
       report.unchanged++;
-      const source = existingContent ? 'MedicalContent' : 'Condition';
-      console.log(`  ⏭️  Skipped (already exists in ${source}): ${meta.condition}`);
+      console.log(`  ⏭️  Skipped (already exists): ${meta.condition}`);
     } else {
       // Create new condition (ADD ONLY)
       await prisma.condition.create({

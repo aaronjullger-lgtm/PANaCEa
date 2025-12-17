@@ -76,7 +76,7 @@ async function syncDrug(meta: any): Promise<void> {
         indications: meta.indications || [],
         contraindications: meta.contraindications || [],
         sideEffects: meta.commonSideEffects || [],
-        interactions: null, // Will be filled by automation
+        interactions: [], // Will be filled by automation
         dosing: null, // Will be filled by automation
         tags: meta.drugClass,
         isHighYield: meta.isHighYield,

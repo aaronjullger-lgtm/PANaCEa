@@ -71,7 +71,12 @@ async function syncAnatomy(meta: any): Promise<void> {
         name: meta.name,
         system: meta.system,
         region: meta.region || null,
+        type: meta.type || null,
         description: meta.description || null,
+        function: meta.function || null,
+        innervation: meta.innervation || null,
+        bloodSupply: meta.bloodSupply || null,
+        clinicalSignificance: meta.clinicalSignificance || null,
         imageUrl: null, // Will be filled by automation
       },
     });

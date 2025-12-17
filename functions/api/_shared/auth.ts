@@ -210,7 +210,7 @@ export function createSuccessResponse<T = unknown>(
 /**
  * Handle CORS preflight requests
  */
-export function handleCorsOptions(): Response {
+export function handleCorsOptions(context?: any): Response {
   return new Response(null, {
     status: 204,
     headers: {

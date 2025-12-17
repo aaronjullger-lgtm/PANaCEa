@@ -24,7 +24,7 @@ export const onRequestPost = async (context) => {
 
     const body = await request.json().catch(() => ({}));
     const { filter, limit } = body;
-    const userId = authResult.userId;
+    const userId = authResult;
 
     if (!env.DATABASE_URL) {
       return new Response(JSON.stringify({ 

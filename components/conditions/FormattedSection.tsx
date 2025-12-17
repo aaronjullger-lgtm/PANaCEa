@@ -1,5 +1,5 @@
 import React from "react";
-import { isMeaningfulContent, SectionData } from "../../lib/loadConditions";
+import { isMeaningfulContent, SectionData, ConditionContent } from "../../lib/loadConditions";
 import TreatmentRenderer from "./renderers/TreatmentRenderer";
 import DiagnosticsRenderer from "./renderers/DiagnosticsRenderer";
 
@@ -16,20 +16,20 @@ const BULLET_LEVEL_BY_SYMBOL: Record<string, number> = {
 };
 
 interface FormattedSectionProps {
-  content?: SectionData | string | string[] | null;
+  content?: ConditionContent;
 }
 
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   if (!content) return null;
 
   // 1. SMART RENDER: Steps (Flowchart)
-  if (typeof content === 'object' && !Array.isArray(content) && content !== null && 'type' in content && content.type === 'steps') {
-    return <TreatmentRenderer items={content.items} />;
+  if (typeof content === 'object' && !Array.isArray(content) && content !== null && 'type' in content && (content as any).type === 'steps') {
+    return <TreatmentRenderer items={(content as any).items} />;
   }
 
   // 2. SMART RENDER: Grid (Labs/Diagnostics)
-  if (typeof content === 'object' && !Array.isArray(content) && content !== null && 'type' in content && content.type === 'grid') {
-    return <DiagnosticsRenderer items={content.items} />;
+  if (typeof content === 'object' && !Array.isArray(content) && content !== null && 'type' in content && (content as any).type === 'grid') {
+    return <DiagnosticsRenderer items={(content as any).items} />;
   }
 
   // 3. DEFAULT RENDER: Bullet List
@@ -44,7 +44,10 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   const textBlob = listContent.map(item => {
       const trimmed = item.trim();
       // Don't add a bullet if it already has one
-      if (/^([•◦▪\-\*]|\d+\.)/.test(trimmed)) return trimmed;
+      if (/^([•◦▪\-\*]|\d+\.)/.test(trimmed)) {
+        // Return original item to preserve indentation (for nesting), but trim trailing
+        return item.trimEnd();
+      }
       return `• ${trimmed}`;
   }).join('\n');
 
@@ -110,6 +113,8 @@ function buildBulletTree(content: string): BulletNode[] {
   
   // 4. Handle Double Bullets: •• -> Indented Bullet
   normalized = normalized.replace(/^(\s*)••\s*/gm, "    • ");
+  // 4b. Handle Bullet-Space-Bullet: • • -> Indented Bullet
+  normalized = normalized.replace(/^(\s*)•\s+•\s*/gm, "    • ");
 
   // 5. Handle Numbered Lists: 1. Item -> • Item
   // This prevents "double bullets" (one from UI, one from text "1.")
