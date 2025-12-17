@@ -57,7 +57,9 @@ const formatRunOnKeys = (text: string): string => {
   const lines = pairs.map(([, rawKey, rawValue]) => {
     const key = String(rawKey).trim();
     const value = formatValue(String(rawValue));
-    return `- **${key}**:${value}`;
+    const needsNewline = /\n/.test(value);
+    const cleanedValue = value.replace(/^\s+/, '');
+    return needsNewline ? `- **${key}**:${cleanedValue}` : `- **${key}**: ${cleanedValue.trim()}`;
   });
 
   return lines.join("\n");
@@ -88,7 +90,7 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
     // Convert array of strings to bulleted list
     // Check if items already have bullets to avoid double-bulleting
     markdown = content
-      .map((line, idx) => {
+      .map((line) => {
         if (typeof line !== 'string') return '';
         const trimmed = line.trim();
         
@@ -102,11 +104,9 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
           return processed;
         }
 
-        const looksLikeIntro = /:\s*$/.test(processed) && !processed.includes('\n');
-        const isLongParagraph = processed.length > 140 && ((processed.match(/\./g)?.length || 0) >= 2);
-
-        // Keep intros/long paragraphs unbulleted so following bullets nest correctly.
-        if (looksLikeIntro || isLongParagraph) {
+        // If it clearly ends with a colon and is short, treat as heading and keep as-is.
+        const looksLikeIntro = /:\s*$/.test(processed) && processed.length < 160;
+        if (looksLikeIntro) {
           return processed;
         }
 
