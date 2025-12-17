@@ -23,6 +23,12 @@ const formatRunOnKeys = (text: string): string => {
   // "This is a sentence. NextKey:" as one giant key.
   const keyPattern = /([A-Z][^:\n\r\.\!\?]{2,80}):\s/g;
 
+  // Only transform when this looks like a run-on list (2+ key/value pairs).
+  const matches = text.match(keyPattern);
+  if (!matches || matches.length < 2) {
+    return text;
+  }
+
   let bulletIndex = 0;
   return text.replace(keyPattern, (_match, key: string) => {
     const cleanedKey = String(key).trim();

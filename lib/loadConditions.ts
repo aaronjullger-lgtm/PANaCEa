@@ -100,7 +100,8 @@ export function normalizeConditionContent(
       )
       .filter(Boolean);
 
-    return parts.length ? parts.join("\n") : null;
+    // Preserve arrays so the renderer can display true bullet lists.
+    return parts.length ? parts : null;
   }
 
   if (typeof value === "object") {
@@ -204,12 +205,35 @@ export async function loadConditions(): Promise<Record<string, ConditionEntry | 
 export const CONDITIONS: Record<string, ConditionEntry | undefined> = {};
 
 export function isMeaningfulContent(value?: unknown): boolean {
-  if (typeof value !== "string") return false;
+  if (value == null) return false;
 
-  const normalized = value.replace(/\s+/g, " ").trim();
-  if (!normalized) return false;
+  if (typeof value === "string") {
+    const normalized = value.replace(/\s+/g, " ").trim();
+    if (!normalized) return false;
+    return normalized.toUpperCase() !== PLACEHOLDER_TEXT;
+  }
 
-  return normalized.toUpperCase() !== PLACEHOLDER_TEXT;
+  if (Array.isArray(value)) {
+    return value.some((item) => {
+      if (typeof item !== "string") return item != null;
+      const normalized = item.replace(/\s+/g, " ").trim();
+      return normalized.length > 0 && normalized.toUpperCase() !== PLACEHOLDER_TEXT;
+    });
+  }
+
+  // Structured sections (steps/grid)
+  if (typeof value === "object" && value !== null && "type" in value) {
+    const typed = value as any;
+    if (typed.type === "steps") return Array.isArray(typed.items) && typed.items.length > 0;
+    if (typed.type === "grid") return typed.items && typeof typed.items === "object" && Object.keys(typed.items).length > 0;
+  }
+
+  // Any other object: treat as meaningful if it has keys.
+  if (typeof value === "object") {
+    return Object.keys(value as Record<string, unknown>).length > 0;
+  }
+
+  return false;
 }
 
 export async function getConditionById(id: string): Promise<ConditionEntry | undefined> {
