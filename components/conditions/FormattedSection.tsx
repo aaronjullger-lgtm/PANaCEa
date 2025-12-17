@@ -32,7 +32,8 @@ const formatRunOnKeys = (text: string): string => {
       }
       
       if (isPunctuation) {
-          return `${leadingChar}\n- **${key}**: `;
+          // Use double newline to ensure Markdown treats it as a new list item
+          return `${leadingChar}\n\n- **${key}**: `;
       }
       
       // Start of string or just whitespace
@@ -60,6 +61,8 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   let markdown = "";
 
   if (Array.isArray(content)) {
+    if (content.length === 0) return null; // Fix: Return null for empty arrays to avoid "No details available" flash
+
     // Convert array of strings to bulleted list
     // Check if items already have bullets to avoid double-bulleting
     markdown = content
@@ -86,13 +89,14 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
       })
       .join("\n");
   } else if (typeof content === "string") {
+    if (!content.trim()) return null; // Fix: Return null for empty strings
     markdown = formatRunOnKeys(content);
   } else {
     // Fallback for unknown object types
     return null;
   }
 
-  if (!markdown.trim()) return <p className="condition-empty">No details available.</p>;
+  if (!markdown.trim()) return null; // Fix: Return null instead of "No details available" message
 
   // 3. Render Markdown
   return (
