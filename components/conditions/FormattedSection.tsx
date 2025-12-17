@@ -11,6 +11,22 @@ interface FormattedSectionProps {
   content?: ConditionContent;
 }
 
+// Normalize stray bold/asterisk artifacts from imperfect source text
+const cleanArtifacts = (text: string): string => {
+  if (!text) return text;
+  let out = text;
+  out = out.replace(/:\s*\*\*\s*/g, ': ');
+  out = out.replace(/\s*\*\*\s*$/gm, '');
+  out = out.replace(/^\s*\*\*\s*/gm, '');
+  out = out.replace(/"\s*\*\*/g, '" ');
+  out = out.replace(/\*\*\s*"/g, ' "');
+  out = out.replace(/\s*\*\*\s*([,.;])/g, '$1');
+  out = out.replace(/\*\*\s*\*\*/g, '');
+  out = out.replace(/\*\s*\*\s*\*\*/g, '');
+  out = out.replace(/:\s*([A-Za-z])/g, ': $1');
+  return out.trim();
+};
+
 // Helper to format run-on key-value pairs into lists and nested bullets when appropriate.
 // Example: "Inspection: Swelling. Palpation: Tenderness." -> "- **Inspection**: Swelling.\n- **Palpation**: Tenderness."
 // For values with multiple clauses (e.g., semicolons or multiple sentences), create sub-bullets for better scanning.
@@ -32,7 +48,7 @@ const formatRunOnKeys = (text: string): string => {
 
     // If it already contains markdown list markers, return as-is (with a space for readability).
     if (/^\s*[-*+]\s+/m.test(trimmed)) {
-      return ` ${trimmed}`;
+      return ` ${cleanArtifacts(trimmed)}`;
     }
 
     // Prefer semicolons or bullet dots as list separators.
@@ -51,7 +67,7 @@ const formatRunOnKeys = (text: string): string => {
       return `\n${parts.map(p => `  - ${p.trim()}`).join('\n')}`;
     }
 
-    return ` ${trimmed}`;
+    return ` ${cleanArtifacts(trimmed)}`;
   };
 
   const cleanInline = (val: string) => {
@@ -62,7 +78,7 @@ const formatRunOnKeys = (text: string): string => {
     if (/^[^*]+\*\*$/.test(val)) {
       val = val.replace(/\s*\*\*$/, '');
     }
-    return val.trim();
+    return cleanArtifacts(val.trim());
   };
 
   const lines = pairs.map(([, rawKey, rawValue]) => {
@@ -71,11 +87,11 @@ const formatRunOnKeys = (text: string): string => {
     const needsNewline = /\n/.test(value);
     const cleanedValue = value.replace(/^\s+/, '');
     return needsNewline
-      ? `- **${key}**:${cleanedValue}`
+      ? `- **${key}**:${cleanArtifacts(cleanedValue)}`
       : `- **${key}**: ${cleanInline(cleanedValue)}`;
   });
 
-  return lines.join("\n");
+  return cleanArtifacts(lines.join("\n"));
 };
 
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
@@ -108,7 +124,7 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
         const trimmed = line.trim();
         
         // 1. Enhance readability by splitting run-on keys
-        let processed = sanitizeMedicalMarkdown(formatRunOnKeys(trimmed));
+        let processed = cleanArtifacts(sanitizeMedicalMarkdown(formatRunOnKeys(trimmed)));
 
         if (!processed) return '';
 
@@ -130,7 +146,7 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
       .join("\n");
   } else if (typeof content === "string") {
     if (!content.trim()) return null; // Fix: Return null for empty strings
-    markdown = sanitizeMedicalMarkdown(formatRunOnKeys(content));
+    markdown = cleanArtifacts(sanitizeMedicalMarkdown(formatRunOnKeys(content)));
   } else {
     // Fallback for unknown object types
     return null;
