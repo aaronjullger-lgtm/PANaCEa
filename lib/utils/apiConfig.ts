@@ -44,7 +44,8 @@ export function getApiEndpoint(path: string): string {
  */
 export const API_ENDPOINTS = {
   CONTENT_ALL: '/api/content/all',
-  CONTENT_BY_ID: (id: string) => `/api/content/${id}`,
+  // Note: Deployed via Cloudflare Functions at /api/content/condition/:conditionId
+  CONTENT_BY_ID: (id: string) => `/api/content/condition/${id}`,
   CONTENT_SEARCH: '/api/content/search',
   CONTENT_BY_SYSTEM: (system: string) => `/api/content/system/${system}`,
   BUZZWORDS_ALL: '/api/buzzwords/all',

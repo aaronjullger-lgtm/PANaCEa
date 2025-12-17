@@ -214,6 +214,33 @@ export function isMeaningfulContent(value?: unknown): boolean {
 
 export async function getConditionById(id: string): Promise<ConditionEntry | undefined> {
   if (!id || typeof id !== "string") return undefined;
+
+  // Fast path: if we've already loaded the full cache (or a prior single fetch), use it.
+  if (conditionsCache && conditionsCache[id]) {
+    return normalizeEntry(conditionsCache[id], id);
+  }
+
+  // Fast path: fetch only this condition so the UI can render without waiting for /api/content/all.
+  try {
+    const { getApiEndpoint, API_ENDPOINTS } = await import('./utils/apiConfig');
+    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_BY_ID(encodeURIComponent(id)));
+    const response = await fetch(apiUrl);
+
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+      const raw = await response.json();
+      conditionsCache = conditionsCache ?? {};
+      conditionsCache[id] = raw;
+      return normalizeEntry(raw, id);
+    }
+
+    if (response.status === 404) {
+      return undefined;
+    }
+  } catch {
+    // Ignore and fall back to full fetch.
+  }
+
+  // Fallback: load everything (legacy behavior)
   const conditions = await getConditions();
   return normalizeEntry(conditions[id], id);
 }

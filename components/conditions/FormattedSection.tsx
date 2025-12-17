@@ -14,28 +14,21 @@ interface FormattedSectionProps {
 // Example: "Inspection: Swelling. Palpation: Tenderness." -> "- **Inspection**: Swelling.\n- **Palpation**: Tenderness."
 const formatRunOnKeys = (text: string): string => {
   if (!text) return "";
-  
+
   // Regex to find "Key: Value" patterns
-  // 1. Preceded by start-of-string, newline, sentence-ending punctuation, or double space
-  // 2. Key starts with Uppercase, 2-100 chars, no colon/newline/dots
-  // 3. Followed by colon and whitespace
-  const pattern = /(?:^|[\.\!\?\;\n\r]|\s{2,})\s*([A-Z][^:\n\r\.\!\?]{2,100}):\s/g;
-  
-  return text.replace(pattern, (match, key) => {
-      const leadingChar = match[0];
-      
-      // If it's a newline, preserve it and add bullet
-      if (leadingChar === '\n' || leadingChar === '\r') {
-          return `\n- **${key}**: `;
-      }
-      
-      // If it's punctuation, keep it and force a new paragraph/bullet
-      if (['.', '!', '?', ';'].includes(leadingChar)) {
-          return `${leadingChar}\n\n- **${key}**: `;
-      }
-      
-      // If it's just whitespace (start of string or double space), just start the bullet
-      return `\n- **${key}**: `;
+  // - Key starts with an uppercase letter
+  // - Key excludes ':' and line breaks, and avoids obvious sentence endings in the key itself
+  // - We replace every "Key: " occurrence with a new bullet (except the first, which starts the list)
+  // Disallow sentence punctuation in the key so we don't accidentally capture
+  // "This is a sentence. NextKey:" as one giant key.
+  const keyPattern = /([A-Z][^:\n\r\.\!\?]{2,80}):\s/g;
+
+  let bulletIndex = 0;
+  return text.replace(keyPattern, (_match, key: string) => {
+    const cleanedKey = String(key).trim();
+    const prefix = bulletIndex === 0 ? "" : "\n";
+    bulletIndex += 1;
+    return `${prefix}- **${cleanedKey}**: `;
   });
 };
 
@@ -69,26 +62,25 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
         const trimmed = line.trim();
         
         // 1. Enhance readability by splitting run-on keys
-        let processed = formatRunOnKeys(trimmed);
+        let processed = formatRunOnKeys(trimmed).trimStart();
         
-        // 2. Replace non-standard bullets (•, ◦, ▪) with standard Markdown dash
+        // 2. Replace non-standard bullets (•, ◦, ▪) with standard Markdown dash on ALL lines
         // This ensures react-markdown renders them as proper <ul>/<li> elements
-        if (/^[\u2022\u25E6\u25AA]/.test(processed)) {
-           processed = processed.replace(/^[\u2022\u25E6\u25AA]\s*/, '- ');
-        }
-        
-        // 3. If it already starts with a standard Markdown bullet (-, *, +), keep it
-        if (/^[\-\*\+]\s+/.test(processed)) {
+        processed = processed.replace(/^[\u2022\u25E6\u25AA]\s*/gm, '- ');
+
+        // If formatRunOnKeys expanded this single line into a multi-bullet list, keep it as-is.
+        // Wrapping it again would break Markdown list parsing ("- \n- **Key**").
+        if (/^[-*+]\s+/m.test(processed)) {
           return processed;
         }
         
-        // 4. Otherwise, prepend a dash to make it a list item
+        // 3. Otherwise, prepend a dash to make it a list item
         return `- ${processed}`;
       })
       .join("\n");
   } else if (typeof content === "string") {
     if (!content.trim()) return null; // Fix: Return null for empty strings
-    markdown = formatRunOnKeys(content);
+    markdown = formatRunOnKeys(content).trimStart();
   } else {
     // Fallback for unknown object types
     return null;

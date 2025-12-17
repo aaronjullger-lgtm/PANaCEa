@@ -8,7 +8,6 @@ import {
 import {
   getConditionById,
   getConditionByIdSync,
-  loadConditions,
   isMeaningfulContent,
   type ConditionContent,
   type ConditionEntry,
@@ -84,17 +83,16 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
     async function loadContent() {
       // Try to get it synchronously first (if already loaded)
       let entry = getConditionByIdSync(conditionId) ?? getConditionByIdSync(condition.condition);
-      
+
+      // If not loaded, fetch just this condition (fast path)
       if (!entry) {
-        // If not loaded, load it asynchronously
-        await loadConditions();
-        entry = getConditionByIdSync(conditionId) ?? getConditionByIdSync(condition.condition);
+        entry = (await getConditionById(conditionId)) ?? (await getConditionById(condition.condition));
       }
       
       if (mounted) {
         setContent(entry);
         // If we have content, we can stop loading (even if extended data isn't ready)
-        if (entry) setIsLoading(false);
+        setIsLoading(false);
       }
     }
     
