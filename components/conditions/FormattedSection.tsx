@@ -17,16 +17,29 @@ const formatRunOnKeys = (text: string): string => {
   
   let formatted = text;
   
-  // 1. Handle the start of the string if it looks like "Key: Value"
-  // We replace it with a bullet and bold key
-  if (/^[A-Z][\w\s\(\)\-]{2,50}:\s/.test(formatted)) {
-     formatted = formatted.replace(/^([A-Z][\w\s\(\)\-]{2,50}):\s/, '- **$1**: ');
+  // Regex for a "Key": 
+  // - Starts with uppercase letter
+  // - Length 2-60 characters
+  // - Does not contain colon, newline, or sentence ending punctuation
+  // - Allows parens, dashes, etc.
+  const keyPattern = "([A-Z][^:\\n\\r\\.\\?\\!]{2,60})";
+  
+  // 1. Handle Start of String: "Key: Value" -> "- **Key**: Value"
+  const startRegex = new RegExp(`^${keyPattern}:\\s`);
+  if (startRegex.test(formatted)) {
+     formatted = formatted.replace(startRegex, '- **$1**: ');
   }
   
-  // 2. Handle subsequent occurrences "Sentence. Key: Value"
-  // We look for punctuation followed by space, then the Key pattern
-  // We insert a newline and make it a bullet item
-  formatted = formatted.replace(/([\.\!\?])\s+([A-Z][\w\s\(\)\-]{2,50}):\s/g, '$1\n- **$2**: ');
+  // 2. Handle Middle of String: ". Key: Value" -> ".\n- **Key**: Value"
+  // Matches punctuation (.!?;) followed by whitespace, OR just a newline
+  const middleRegex = new RegExp(`([\\.\\!\\?\\;]\\s+|\\n\\s*)${keyPattern}:\\s`, 'g');
+  
+  formatted = formatted.replace(middleRegex, (match, separator, key) => {
+      // separator is like ". " or "\n" or "; "
+      // We want to keep the punctuation if it was there, but force a newline after it.
+      const punct = separator.trim();
+      return `${punct}\n- **${key}**: `;
+  });
   
   return formatted;
 };
