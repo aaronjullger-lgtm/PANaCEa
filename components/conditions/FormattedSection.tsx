@@ -11,32 +11,56 @@ interface FormattedSectionProps {
   content?: ConditionContent;
 }
 
-// Helper to format run-on key-value pairs into lists and bold keys
+// Helper to format run-on key-value pairs into lists and nested bullets when appropriate.
 // Example: "Inspection: Swelling. Palpation: Tenderness." -> "- **Inspection**: Swelling.\n- **Palpation**: Tenderness."
+// For values with multiple clauses (e.g., semicolons or multiple sentences), create sub-bullets for better scanning.
 const formatRunOnKeys = (text: string): string => {
   if (!text) return "";
 
-  // Regex to find "Key: Value" patterns
-  // - Key starts with an uppercase letter
-  // - Key excludes ':' and line breaks, and avoids obvious sentence endings in the key itself
-  // - We replace every "Key: " occurrence with a new bullet (except the first, which starts the list)
-  // Disallow sentence punctuation in the key so we don't accidentally capture
-  // "This is a sentence. NextKey:" as one giant key.
-  const keyPattern = /([A-Z][^:\n\r\.\!\?]{2,80}):\s/g;
+  // Capture pairs like "Key: value" where key is reasonably short and capitalized.
+  const pairPattern = /([A-Z][^:\n\r\.\!\?]{2,80}):\s*([^]+?)(?=(?:[A-Z][^:\n\r\.\!\?]{2,80}):|$)/g;
+  const pairs = Array.from(text.matchAll(pairPattern));
 
-  // Only transform when this looks like a run-on list (2+ key/value pairs).
-  const matches = text.match(keyPattern);
-  if (!matches || matches.length < 2) {
+  // Only treat as structured if we see 2+ pairs; otherwise leave untouched to avoid false positives.
+  if (pairs.length < 2) {
     return text;
   }
 
-  let bulletIndex = 0;
-  return text.replace(keyPattern, (_match, key: string) => {
-    const cleanedKey = String(key).trim();
-    const prefix = bulletIndex === 0 ? "" : "\n";
-    bulletIndex += 1;
-    return `${prefix}- **${cleanedKey}**: `;
+  const formatValue = (value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+
+    // If it already contains markdown list markers, return as-is (with a space for readability).
+    if (/^\s*[-*+]\s+/m.test(trimmed)) {
+      return ` ${trimmed}`;
+    }
+
+    // Prefer semicolons or bullet dots as list separators.
+    let parts = trimmed.split(/;\s+|•\s+/).filter(Boolean);
+
+    // If no semicolons, attempt sentence-based split when multiple sentences are present.
+    if (parts.length < 2) {
+      const sentenceSplit = trimmed.split(/(?<=\.)\s+(?=[A-Z])/).filter(Boolean);
+      if (sentenceSplit.length >= 2) {
+        parts = sentenceSplit;
+      }
+    }
+
+    // If we have multiple meaningful parts, return as sub-bullets; otherwise keep inline.
+    if (parts.length >= 2 && parts.every(p => p.trim().length > 0 && p.trim().length < 300)) {
+      return `\n${parts.map(p => `  - ${p.trim()}`).join('\n')}`;
+    }
+
+    return ` ${trimmed}`;
+  };
+
+  const lines = pairs.map(([, rawKey, rawValue]) => {
+    const key = String(rawKey).trim();
+    const value = formatValue(String(rawValue));
+    return `- **${key}**:${value}`;
   });
+
+  return lines.join("\n");
 };
 
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
