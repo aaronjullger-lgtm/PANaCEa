@@ -11,21 +11,26 @@ interface FormattedSectionProps {
   content?: ConditionContent;
 }
 
-// Normalize stray bold/asterisk artifacts from imperfect source text
+// Normalize stray artifacts without altering intentional DB bolding.
 const cleanArtifacts = (text: string): string => {
   if (!text) return text;
   let out = text;
-  out = out.replace(/:\s*\*\*\s*/g, ': ');
-  out = out.replace(/\s*\*\*\s*$/gm, '');
-  out = out.replace(/^\s*\*\*\s*/gm, '');
+  // Fix spacing after colons
+  out = out.replace(/:\s*([A-Za-z])/g, ': $1');
+  // Remove lone asterisks near colons or at line boundaries (keep paired **)
+  out = out.replace(/:\s*\*\s*/g, ': ');
+  out = out.replace(/\s+\*\s*$/gm, '');
+  out = out.replace(/^\s*\*\s+/gm, '');
+  // Hyphen spacing like "Hyperplasia:- *"
+  out = out.replace(/:-\s*\*+/g, ': ');
+  // Quote spacing
   out = out.replace(/"\s*\*\*/g, '" ');
   out = out.replace(/\*\*\s*"/g, ' "');
-  out = out.replace(/\s*\*\*\s*([,.;])/g, '$1');
-  out = out.replace(/\*\*\s*\*\*/g, '');
-  out = out.replace(/\*\s*\*\s*\*\*/g, '');
-  out = out.replace(/:\s*([A-Za-z])/g, ': $1');
+  // Collapse multiple spaces
+  out = out.replace(/\s{2,}/g, ' ');
   return out.trim();
 };
+
 
 // Helper to format run-on key-value pairs into lists and nested bullets when appropriate.
 // Example: "Inspection: Swelling. Palpation: Tenderness." -> "- **Inspection**: Swelling.\n- **Palpation**: Tenderness."
@@ -64,7 +69,7 @@ const formatRunOnKeys = (text: string): string => {
 
     // If we have multiple meaningful parts, return as sub-bullets; otherwise keep inline.
     if (parts.length >= 2 && parts.every(p => p.trim().length > 0 && p.trim().length < 300)) {
-      return `\n${parts.map(p => `  - ${p.trim()}`).join('\n')}`;
+      return `\n${parts.map(p => `  - ${cleanArtifacts(p.trim())}`).join('\n')}`;
     }
 
     return ` ${cleanArtifacts(trimmed)}`;
