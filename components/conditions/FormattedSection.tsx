@@ -15,33 +15,29 @@ interface FormattedSectionProps {
 const formatRunOnKeys = (text: string): string => {
   if (!text) return "";
   
-  let formatted = text;
+  // Regex to find "Key: Value" patterns
+  // 1. Preceded by start-of-string, newline, or sentence-ending punctuation (.!?;)
+  // 2. Key starts with Uppercase, 2-100 chars, no colon/newline/dots
+  // 3. Followed by colon and whitespace
+  const pattern = /(?:^|[\.\!\?\;\n])\s*([A-Z][^:\n\.\!\?]{2,100}):\s/g;
   
-  // Regex for a "Key": 
-  // - Starts with uppercase letter
-  // - Length 2-100 characters
-  // - Does not contain colon, newline, or sentence ending punctuation
-  // - Allows parens, dashes, etc.
-  const keyPattern = "([A-Z][^:\\n\\r\\.\\?\\!]{2,100})";
-  
-  // Unified regex to handle all cases:
-  // 1. Start of string (^)
-  // 2. Newline (\n) followed by optional whitespace
-  // 3. Punctuation (. ! ? ;) followed by whitespace
-  const pattern = new RegExp(`(^|[\\.\\!\\?\\;]\\s+|\\n\\s*)(${keyPattern}):\\s`, 'g');
-  
-  formatted = formatted.replace(pattern, (match, separator, key) => {
-      // If separator is undefined or empty (start of string), just return the bullet
-      if (!separator) return `- **${key}**: `;
+  return text.replace(pattern, (match, key) => {
+      // Check if the match starts with punctuation or newline
+      const leadingChar = match[0];
+      const isPunctuation = ['.', '!', '?', ';'].includes(leadingChar);
+      const isNewline = leadingChar === '\n';
       
-      // If separator contains newline, preserve it
-      if (separator.includes('\n')) return `\n- **${key}**: `;
+      if (isNewline) {
+          return `\n- **${key}**: `;
+      }
       
-      // If separator is punctuation, keep it and add newline
-      return `${separator.trim()}\n- **${key}**: `;
+      if (isPunctuation) {
+          return `${leadingChar}\n- **${key}**: `;
+      }
+      
+      // Start of string or just whitespace
+      return `- **${key}**: `;
   });
-  
-  return formatted;
 };
 
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
