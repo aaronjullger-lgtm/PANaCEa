@@ -41,15 +41,8 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   if (listContent.length === 0) return null;
 
   // Join array into a single string for the bullet parser
-  const textBlob = listContent.map(item => {
-      const trimmed = item.trim();
-      // Don't add a bullet if it already has one
-      if (/^([•◦▪\-\*]|\d+\.)/.test(trimmed)) {
-        // Return original item to preserve indentation (for nesting), but trim trailing
-        return item.trimEnd();
-      }
-      return `• ${trimmed}`;
-  }).join('\n');
+  // Pass raw content directly to parser - do NOT force bullets
+  const textBlob = listContent.join('\n');
 
   const tree = buildBulletTree(textBlob); 
   
@@ -157,7 +150,6 @@ function buildBulletTree(content: string): BulletNode[] {
   // until we see another similar pattern without a preceding header-only line
   let currentNestLevel = 0;
   let inNestedContext = false;
-  let contextSource: 'header' | 'term' = 'header';
 
   finalLines.forEach((line, lineIndex) => {
     if (!line.trim()) return;
@@ -181,12 +173,9 @@ function buildBulletTree(content: string): BulletNode[] {
       text = (match?.[3] ?? line).trim();
       
       // FIX: Double Bullet Cleanup
-      // If the text itself starts with a bullet or number pattern that wasn't caught, strip it.
-      // e.g. "• 5. Impaired" -> "5. Impaired" (if bulletSymbol is present)
-      // e.g. "5. Impaired" -> "Impaired" (if bulletSymbol is present)
-      if (bulletSymbol) {
-         text = text.replace(/^([•◦▪\-\*]|\d+\.|[a-zA-Z]\.)\s+/, "");
-      }
+      // Aggressively strip ALL leading bullet markers and numbers from the text content
+      // This ensures we rely solely on the CSS bullet
+      text = text.replace(/^([•◦▪\-\*]|\d+\.|[a-zA-Z]\.)\s+/, "");
     }
     
     if (!text) return;
@@ -229,10 +218,13 @@ function buildBulletTree(content: string): BulletNode[] {
         // Inside a list, no bullet -> likely text continuation
         nodeType = 'text';
       } else {
-        // At root level, no bullet -> likely a header
-        // FIX: Default to bullet for root items to avoid over-bolding paragraphs.
-        // Only treat as header if it really looks like one (isHeaderOnly)
-        nodeType = 'bullet';
+        // At root level, no bullet -> likely a header if it looks like one, otherwise bullet
+        // If it's short and title-cased, treat as header even if not bold
+        if (isImplicitHeader) {
+          nodeType = 'header';
+        } else {
+          nodeType = 'bullet';
+        }
       }
     }
 
@@ -291,13 +283,11 @@ function buildBulletTree(content: string): BulletNode[] {
       // The next items should be nested
       inNestedContext = true;
       currentNestLevel = level;
-      contextSource = 'header';
     } else if (startsWithBoldTerm) {
        // If it's a bold term line (e.g. "**Term**: Def"), it acts as a parent for subsequent text
        // But it also acts as a sibling for subsequent terms
        inNestedContext = true;
        currentNestLevel = level;
-       contextSource = 'term';
     }
 
     while (stack.length && stack[stack.length - 1].level >= level) {
