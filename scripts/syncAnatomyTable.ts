@@ -18,6 +18,7 @@
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import { ANATOMY_REGISTRY, buildAnatomyId } from '../anatomyRegistry';
+import { fileURLToPath } from 'url';
 
 // Load environment variables
 config();
@@ -164,7 +165,7 @@ async function main() {
 }
 
 // Run if executed directly
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch(console.error);
 }
 

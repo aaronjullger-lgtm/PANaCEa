@@ -19,6 +19,7 @@
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import { DRUG_REGISTRY, buildDrugId } from '../drugRegistry';
+import { fileURLToPath } from 'url';
 
 // Load environment variables
 config();
@@ -74,7 +75,7 @@ async function syncDrug(meta: any): Promise<void> {
         mechanismOfAction: meta.mechanismOfAction || null,
         indications: meta.indications || [],
         contraindications: meta.contraindications || [],
-        sideEffects: meta.commonSideEffects || null,
+        sideEffects: meta.commonSideEffects || [],
         interactions: null, // Will be filled by automation
         dosing: null, // Will be filled by automation
         tags: meta.drugClass,
@@ -170,7 +171,7 @@ async function main() {
 }
 
 // Run if executed directly
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch(console.error);
 }
 

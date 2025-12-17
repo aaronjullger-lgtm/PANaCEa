@@ -17,6 +17,7 @@
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import { CONDITION_REGISTRY, buildConditionDefinition } from '../conditionRegistry';
+import { fileURLToPath } from 'url';
 
 // Load environment variables
 config();
@@ -206,7 +207,7 @@ async function main() {
 }
 
 // Run if executed directly
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch(console.error);
 }
 
