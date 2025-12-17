@@ -88,7 +88,7 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
     // Convert array of strings to bulleted list
     // Check if items already have bullets to avoid double-bulleting
     markdown = content
-      .map((line) => {
+      .map((line, idx) => {
         if (typeof line !== 'string') return '';
         const trimmed = line.trim();
         
@@ -97,9 +97,16 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
 
         if (!processed) return '';
 
-        // If the processed string already contains Markdown list items (possibly multi-line), keep it.
-        // Wrapping it again would break Markdown list parsing.
-        if (/^\s*[-*+]\s+/m.test(processed)) {
+        const alreadyList = /^\s*[-*+]\s+/m.test(processed);
+        if (alreadyList) {
+          return processed;
+        }
+
+        const looksLikeIntro = /:\s*$/.test(processed) && !processed.includes('\n');
+        const isLongParagraph = processed.length > 140 && ((processed.match(/\./g)?.length || 0) >= 2);
+
+        // Keep intros/long paragraphs unbulleted so following bullets nest correctly.
+        if (looksLikeIntro || isLongParagraph) {
           return processed;
         }
 
