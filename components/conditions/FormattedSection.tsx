@@ -11,31 +11,18 @@ interface FormattedSectionProps {
   content?: ConditionContent;
 }
 
-// Normalize stray artifacts without altering intentional DB bolding.
-const cleanArtifacts = (text: string): string => {
-  if (!text) return text;
-  let out = text;
-  // Fix spacing after colons
-  out = out.replace(/:\s*([A-Za-z])/g, ': $1');
-  // Remove lone asterisks near colons or at line boundaries (keep paired **)
-  out = out.replace(/:\s*\*\s*/g, ': ');
-  out = out.replace(/\s+\*\s*$/gm, '');
-  out = out.replace(/^\s*\*\s+/gm, '');
-  // Hyphen spacing like "Hyperplasia:- *"
-  out = out.replace(/:-\s*\*+/g, ': ');
-  // Quote spacing
-  out = out.replace(/"\s*\*\*/g, '" ');
-  out = out.replace(/\*\*\s*"/g, ' "');
-  // Collapse multiple spaces
-  out = out.replace(/\s{2,}/g, ' ');
-  return out.trim();
-};
-
-
+/**
+ * FormattedSection - Renders medical condition content from the database.
+ * 
+ * The DB content is already well-formatted markdown. This component:
+ * - Renders string fields (overview, pathophysiology, etc.) directly as markdown
+ * - Renders array fields (symptoms, physicalExam, etc.) as bullet lists
+ * - Preserves all existing bold, italic, headers, and nested structures from DB
+ */
 const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
   if (!content) return null;
 
-  // 1. Handle Structured Data (Steps/Grid)
+  // Handle Structured Data (Steps/Grid) - legacy renderers
   if (typeof content === 'object' && !Array.isArray(content) && content !== null) {
     const typedContent = content as any;
     
@@ -48,67 +35,72 @@ const FormattedSection: React.FC<FormattedSectionProps> = ({ content }) => {
     }
   }
 
-  // 2. Prepare Markdown Content
+  // Prepare Markdown Content
   let markdown = "";
 
   if (Array.isArray(content)) {
-    if (content.length === 0) return null; // Fix: Return null for empty arrays to avoid "No details available" flash
+    // Array fields: symptoms, physicalExam, riskFactors, complications, etc.
+    // Each item is already formatted with bold/content, just needs to be a list item
+    if (content.length === 0) return null;
 
-    // Convert array of strings to bulleted list
-    // Check if items already have bullets to avoid double-bulleting
     markdown = content
-      .map((line) => {
-        if (typeof line !== 'string') return '';
-        const trimmed = line.trim();
+      .map((item) => {
+        if (typeof item !== 'string') return '';
+        const cleaned = sanitizeMedicalMarkdown(item.trim());
+        if (!cleaned) return '';
         
-        // 1. Enhance readability by splitting run-on keys
-        let processed = cleanArtifacts(sanitizeMedicalMarkdown(trimmed));
-
-        if (!processed) return '';
-
-        const alreadyList = /^\s*[-*+]\s+/m.test(processed);
-        if (alreadyList) {
-          return processed;
+        // Check if the item already starts with a list marker
+        if (/^\s*[-*+]\s/.test(cleaned)) {
+          return cleaned;
         }
-
-        // If it clearly ends with a colon and is short, treat as heading and keep as-is.
-        const looksLikeIntro = /:\s*$/.test(processed) && processed.length < 160;
-        if (looksLikeIntro) {
-          return processed;
-        }
-
-        // Otherwise, make this array item a list item.
-        return `- ${processed}`;
+        
+        // Make it a bullet point
+        return `- ${cleaned}`;
       })
       .filter(Boolean)
       .join("\n");
   } else if (typeof content === "string") {
-    if (!content.trim()) return null; // Fix: Return null for empty strings
-    markdown = cleanArtifacts(sanitizeMedicalMarkdown(content));
+    // String fields: overview, pathophysiology, epidemiology, etc.
+    // Already properly formatted markdown from DB - preserve as-is
+    if (!content.trim()) return null;
+    markdown = sanitizeMedicalMarkdown(content);
   } else {
-    // Fallback for unknown object types
     return null;
   }
 
-  if (!markdown.trim()) return null; // Fix: Return null instead of "No details available" message
+  if (!markdown.trim()) return null;
 
-  // 3. Render Markdown
+  // Render with ReactMarkdown
   return (
     <div className="formatted-section condition-markdown">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
         components={{
-          // Keep headings semantically appropriate inside section cards.
-          h1: ({ node, ...props }) => <h4 {...props} />,
-          h2: ({ node, ...props }) => <h5 {...props} />,
-          h3: ({ node, ...props }) => <h6 {...props} />,
-
-          // Ensure tables are horizontally scrollable on narrow screens.
+          // Remap headings to fit within section cards (h3 -> h4, etc.)
+          h1: ({ node, ...props }) => <h4 className="condition-heading-1" {...props} />,
+          h2: ({ node, ...props }) => <h5 className="condition-heading-2" {...props} />,
+          h3: ({ node, ...props }) => <h6 className="condition-heading-3" {...props} />,
+          
+          // Ensure tables are scrollable on narrow screens
           table: ({ node, ...props }) => (
             <div className="condition-table-wrap">
               <table {...props} />
             </div>
+          ),
+          
+          // Style list items for better readability
+          li: ({ node, children, ...props }) => (
+            <li className="condition-list-item" {...props}>
+              {children}
+            </li>
+          ),
+          
+          // Style paragraphs within list items
+          p: ({ node, children, ...props }) => (
+            <p className="condition-paragraph" {...props}>
+              {children}
+            </p>
           ),
         }}
       >
