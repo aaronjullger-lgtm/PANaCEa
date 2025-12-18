@@ -2,13 +2,13 @@
  * Medical Wordle Mode
  * 
  * Daily medical term guessing game - Wordle-style with 6 attempts.
- * Uses getTodaysMedicalWordle() for consistent daily word selection.
+ * Loads the shared daily word via the Wordle API so progress is persisted server-side.
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, HelpCircle, Share2, RotateCcw, Trophy, Calendar } from 'lucide-react';
-import { getTodaysMedicalWordle } from '@/data/modes/dailyRitualsData';
+import { useWordleGame } from '@/hooks/useWordleGame';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { MedicalWordleGame } from '@/types';
 
@@ -32,37 +32,11 @@ const KEYBOARD_ROWS = [
 ];
 
 const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
-  const [game, setGame] = useState<MedicalWordleGame | null>(null);
-  const [guesses, setGuesses] = useState<string[]>([]);
+  const { game, guesses, status, error, submitGuess, refetch } = useWordleGame();
   const [currentGuess, setCurrentGuess] = useState('');
-  const [gameStatus, setGameStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   const [showHint, setShowHint] = useState(false);
   const [shake, setShake] = useState(false);
   const [revealRow, setRevealRow] = useState<number | null>(null);
-
-  // Load today's game on mount
-  useEffect(() => {
-    const todaysGame = getTodaysMedicalWordle();
-    setGame(todaysGame);
-
-    // Load saved progress from localStorage
-    const savedProgress = localStorage.getItem(`wordle-${todaysGame.date}`);
-    if (savedProgress) {
-      const { guesses: savedGuesses, status } = JSON.parse(savedProgress);
-      setGuesses(savedGuesses);
-      setGameStatus(status);
-    }
-  }, []);
-
-  // Save progress when guesses change
-  useEffect(() => {
-    if (game && guesses.length > 0) {
-      localStorage.setItem(`wordle-${game.date}`, JSON.stringify({
-        guesses,
-        status: gameStatus,
-      }));
-    }
-  }, [game, guesses, gameStatus]);
 
   // Calculate keyboard letter statuses
   const keyboardStatus = useMemo(() => {
@@ -127,42 +101,51 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
   }, [game]);
 
   // Handle keyboard input
-  const handleKeyPress = useCallback((key: string) => {
-    if (gameStatus !== 'playing' || !game) return;
+  const handleKeyPress = useCallback(
+    (key: string) => {
+      if (status !== 'playing' || !game) return;
 
-    const targetLength = game.targetWord.length;
+      const targetLength = game.targetWord.length;
 
-    if (key === 'ENTER') {
-      if (currentGuess.length !== targetLength) {
-        setShake(true);
-        setTimeout(() => setShake(false), 500);
-        return;
-      }
-
-      const upperGuess = currentGuess.toUpperCase();
-      const newGuesses = [...guesses, upperGuess];
-      setGuesses(newGuesses);
-      setRevealRow(guesses.length);
-
-      setTimeout(() => {
-        setRevealRow(null);
-
-        if (upperGuess === game.targetWord.toUpperCase()) {
-          setGameStatus('won');
-          hapticSuccess();
-        } else if (newGuesses.length >= MAX_ATTEMPTS) {
-          setGameStatus('lost');
-          hapticError();
+      if (key === 'ENTER') {
+        if (currentGuess.length !== targetLength) {
+          setShake(true);
+          setTimeout(() => setShake(false), 500);
+          return;
         }
-      }, targetLength * 150 + 300);
 
-      setCurrentGuess('');
-    } else if (key === '⌫' || key === 'BACKSPACE') {
-      setCurrentGuess((prev) => prev.slice(0, -1));
-    } else if (/^[A-Z]$/i.test(key) && currentGuess.length < targetLength) {
-      setCurrentGuess((prev) => prev + key.toUpperCase());
+        const upperGuess = currentGuess.toUpperCase();
+        setCurrentGuess('');
+        setRevealRow(guesses.length);
+
+        submitGuess(upperGuess)
+          .then(() => {
+            const revealDelay = targetLength * 150 + 300;
+            setTimeout(() => setRevealRow(null), revealDelay);
+          })
+          .catch(() => {
+            setRevealRow(null);
+            setCurrentGuess(upperGuess);
+            setShake(true);
+            hapticError();
+            setTimeout(() => setShake(false), 500);
+          });
+      } else if (key === '⌫' || key === 'BACKSPACE') {
+        setCurrentGuess((prev) => prev.slice(0, -1));
+      } else if (/^[A-Z]$/i.test(key) && currentGuess.length < targetLength) {
+        setCurrentGuess((prev) => prev + key.toUpperCase());
+      }
+    },
+    [currentGuess, game, guesses.length, status, submitGuess]
+  );
+
+  useEffect(() => {
+    if (status === 'won') {
+      hapticSuccess();
+    } else if (status === 'lost') {
+      hapticError();
     }
-  }, [currentGuess, game, gameStatus, guesses]);
+  }, [status]);
 
   // Physical keyboard handler
   useEffect(() => {
@@ -184,7 +167,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
 
   // Share results
   const handleShare = () => {
-    if (!game || gameStatus === 'playing') return;
+    if (!game || status === 'playing') return;
 
     const emojiGrid = guesses.map((guess) => {
       return evaluateGuess(guess)
@@ -196,7 +179,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
         .join('');
     }).join('\n');
 
-    const result = `PANaCEa Daily Term ${game.date}\n${gameStatus === 'won' ? guesses.length : 'X'}/${MAX_ATTEMPTS}\n\n${emojiGrid}`;
+    const result = `PANaCEa Daily Term ${game.date}\n${status === 'won' ? guesses.length : 'X'}/${MAX_ATTEMPTS}\n\n${emojiGrid}`;
 
     if (navigator.share) {
       navigator.share({ text: result });
@@ -210,7 +193,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
     if (!game) return null;
 
     const targetLength = game.targetWord.length;
-    const isCurrentRow = rowIndex === guesses.length && gameStatus === 'playing';
+    const isCurrentRow = rowIndex === guesses.length && status === 'playing';
     const isGuessedRow = rowIndex < guesses.length;
     const guess = isGuessedRow ? guesses[rowIndex] : isCurrentRow ? currentGuess : '';
     const results = isGuessedRow ? evaluateGuess(guess) : [];
@@ -277,7 +260,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
               <button
                 key={key}
                 onClick={() => handleKeyPress(key)}
-                disabled={gameStatus !== 'playing'}
+                disabled={status !== 'playing'}
                 className={`
                   ${isWide ? 'px-3 sm:px-4' : 'w-8 sm:w-10'}
                   h-12 sm:h-14 rounded-lg font-semibold text-sm sm:text-base
@@ -298,7 +281,20 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
   if (!game) {
     return (
       <div className="fixed inset-0 z-50 bg-slate-950 dark:bg-slate-950 flex items-center justify-center">
-        <div className="animate-pulse text-slate-400">Loading today's challenge...</div>
+        {error ? (
+          <div className="text-center space-y-3">
+            <p className="text-lg font-semibold text-slate-100">Wordle challenge unavailable</p>
+            <p className="text-sm text-slate-400">{error}</p>
+            <button
+              onClick={refetch}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="animate-pulse text-slate-400">Loading today's challenge...</div>
+        )}
       </div>
     );
   }
@@ -371,7 +367,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
 
       {/* Result Modal */}
       <AnimatePresence>
-        {gameStatus !== 'playing' && (
+        {status !== 'playing' && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -379,7 +375,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
             className="absolute inset-x-4 bottom-32 sm:bottom-40 mx-auto max-w-md bg-slate-800 rounded-xl p-6 shadow-2xl border border-slate-700"
           >
             <div className="text-center space-y-4">
-              {gameStatus === 'won' ? (
+              {status === 'won' ? (
                 <>
                   <Trophy className="w-12 h-12 text-amber-500 mx-auto" />
                   <h2 className="text-2xl font-bold text-emerald-400">Excellent!</h2>

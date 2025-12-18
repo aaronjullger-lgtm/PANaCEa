@@ -22,6 +22,7 @@ import Redis from 'ioredis';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { createRequestLogger } from './lib/logging/structuredLogger';
+import { getDailyWordForUser, submitWordleGuess, WordleServiceError } from './services/wordleService';
 
 // Load environment variables
 config();
@@ -440,6 +441,39 @@ app.get('/api/buzzwords/random', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch random buzzwords' });
   }
 });
+
+// Medical Wordle Endpoints
+app.get('/api/games/wordle/daily', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const payload = await getDailyWordForUser(req.auth.userId);
+    res.json(payload);
+  } catch (error) {
+    if (error instanceof WordleServiceError) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error('Error fetching Wordle daily word:', error);
+    res.status(500).json({ error: 'Failed to load Wordle challenge' });
+  }
+});
+
+app.post(
+  '/api/games/wordle/guess',
+  requireAuth,
+  validateRequired(['guess']),
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { guess } = req.body;
+      const payload = await submitWordleGuess(req.auth.userId, guess);
+      res.json(payload);
+    } catch (error) {
+      if (error instanceof WordleServiceError) {
+        return res.status(400).json({ error: error.message });
+      }
+      console.error('Error submitting Wordle guess:', error);
+      res.status(500).json({ error: 'Failed to submit Wordle guess' });
+    }
+  }
+);
 
 // Guidelines Endpoints
 app.get('/api/guidelines', async (req: Request, res: Response) => {

@@ -76,6 +76,9 @@ model User {
   /// User's saved pearls
   userPearls         UserPearl[]
 
+  /// Wordle daily game states
+  wordleStates       UserWordleState[]
+
   /// Active Patient Encounter Sessions
   patientEncounterSessions PatientEncounterSession[]
 
@@ -528,6 +531,43 @@ model Buzzword {
 
   @@index([system])
   @@index([condition])
+}
+
+/// Status for Wordle game
+enum WordleStatus {
+  playing
+  won
+  lost
+}
+
+/// Daily global word selection so all users share the same target
+model DailyWordle {
+  id     String   @id @default(uuid())
+  date   DateTime @db.Date @unique
+  wordId String
+
+  word Buzzword @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([wordId])
+}
+
+/// Per-user Wordle progress for a given date
+model UserWordleState {
+  id        String       @id @default(uuid())
+  userId    String
+  date      DateTime     @db.Date
+  guesses   String[]     @default([])
+  status    WordleStatus @default(playing)
+  updatedAt DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
 }
 
 /// Represents a historical version of content

@@ -189,7 +189,7 @@ export interface MedicalWordleGame {
   id: string;
   date: string; // ISO date
   targetWord: string;
-  category: 'drugs' | 'conditions' | 'anatomy';
+  category?: string;
   attempts?: string[];
   solved?: boolean;
   hints?: {
