@@ -2,7 +2,9 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMiniLabDrill, type LabCategory, type LabPanel, type LabValue } from '@/hooks/game/use-mini-lab-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
-import { Flame, X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity as ActivityIcon, Shuffle, AlertTriangle, Plus } from 'lucide-react';
+import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
+import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
+import { X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity as ActivityIcon, Shuffle, AlertTriangle, Plus } from 'lucide-react';
 
 interface MiniLabDrillSessionProps {
   onExit?: () => void;
@@ -157,12 +159,18 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   
   const [showOrderTestMenu, setShowOrderTestMenu] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [totalAttempts, setTotalAttempts] = React.useState(0);
 
   const handleExit = () => {
     exitToMenu();
     if (onExit) {
       onExit();
     }
+  };
+  
+  const handleReset = () => {
+    setTotalAttempts(0);
+    reset();
   };
 
   const handleStart = () => {
@@ -171,6 +179,11 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
       showCategoryMenu();
       setIsLoading(false);
     }, 500);
+  };
+
+  const handleSubmitAnswer = (answer: string) => {
+    setTotalAttempts(prev => prev + 1);
+    submitAnswer(answer);
   };
 
   const handleCategorySelect = (category: LabCategory) => {
@@ -201,104 +214,33 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   // =========================================================================
   if (status === 'landing') {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
-        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/80 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FlaskConical className="w-8 h-8 text-emerald-400" />
-              <div>
-                <h1 className="text-2xl font-bold">Mini Lab Mode</h1>
-                <p className="text-sm text-[var(--color-text-secondary)]">Clinical Lab Interpretation</p>
-              </div>
-            </div>
-            {onExit && (
-              <button
-                onClick={onExit}
-                className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="max-w-4xl mx-auto px-4 py-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center space-y-8"
-          >
-            <div className="space-y-4">
-              <h2 className="text-4xl font-bold text-emerald-400">Master Lab Interpretation</h2>
-              <p className="text-xl text-[var(--color-text-secondary)]">
-                Diagnose conditions from real lab values and clinical context
-              </p>
-            </div>
-
-            <div className="bg-[var(--color-bg-secondary)] backdrop-blur rounded-xl p-8 border border-[var(--color-border)] text-left space-y-6">
-              <h3 className="text-2xl font-semibold text-emerald-400">What You'll Practice</h3>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Hematology</h4>
-                  <p className="text-[var(--color-text-secondary)] text-sm">CBC, iron studies, coagulation disorders</p>
-                </div>
-                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Metabolic</h4>
-                  <p className="text-[var(--color-text-secondary)] text-sm">Electrolytes, ABG, acid-base analysis</p>
-                </div>
-                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Endocrine</h4>
-                  <p className="text-[var(--color-text-secondary)] text-sm">Thyroid, adrenal, glucose disorders</p>
-                </div>
-                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Renal</h4>
-                  <p className="text-[var(--color-text-secondary)] text-sm">Kidney function, electrolyte imbalances</p>
-                </div>
-                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Hepatic</h4>
-                  <p className="text-[var(--color-text-secondary)] text-sm">LFTs, bilirubin, liver disease</p>
-                </div>
-                <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                  <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Cardiac</h4>
-                  <p className="text-[var(--color-text-secondary)] text-sm">Troponin, BNP, cardiac markers</p>
-                </div>
-              </div>
-
-              <div className="bg-emerald-900/20 rounded-lg p-4 border border-emerald-800/30">
-                <p className="text-sm text-emerald-300 font-semibold mb-2">Features:</p>
-                <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
-                  <li>• Realistic clinical vignettes with patient demographics</li>
-                  <li>• Multiple lab panels (CBC, CMP, specific panels)</li>
-                  <li>• Order additional tests as needed</li>
-                  <li>• Highlighted abnormal and critical values</li>
-                  <li>• Detailed explanations of key findings</li>
-                </ul>
-              </div>
-            </div>
-
+      <DrillLandingPage
+        title="Mini Lab Mode"
+        description="Diagnose conditions from real lab values and clinical context"
+        icon={FlaskConical}
+        accentColor="green"
+        onStart={handleStart}
+        isLoading={isLoading}
+        instructions={[
+          'Realistic clinical vignettes with patient demographics',
+          'Multiple lab panels (CBC, CMP, specific panels)',
+          'Order additional tests as needed',
+          'Highlighted abnormal and critical values',
+          'Detailed explanations of key findings',
+        ]}
+      >
+        {/* Exit button overlay */}
+        {onExit && (
+          <div className="absolute top-4 right-4 z-10">
             <button
-              onClick={handleStart}
-              disabled={isLoading}
-              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-[var(--color-bg-tertiary)] 
-                       disabled:cursor-not-allowed rounded-lg font-semibold text-lg
-                       transition-colors flex items-center justify-center gap-3 mx-auto"
+              onClick={onExit}
+              className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors"
             >
-              {isLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                <>
-                  Choose Category
-                  <ArrowRight className="w-5 h-5" />
-                </>
-              )}
+              <X className="w-5 h-5" />
             </button>
-          </motion.div>
-        </div>
-      </div>
+          </div>
+        )}
+      </DrillLandingPage>
     );
   }
 
@@ -379,230 +321,203 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   // VIEW B: The Drill (Status: 'playing' | 'feedback')
   // =========================================================================
   if (status === 'playing' || status === 'feedback') {
-    return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
-        {/* Floating Header */}
-        <header className="flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
-          <button
-            onClick={handleExit}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-            aria-label="Exit session"
+    // Build the footer content
+    const footerContent = (
+      <AnimatePresence mode="wait">
+        {status === 'playing' && (
+          <motion.div
+            key="playing-controls"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="p-4"
           >
-            <X className="w-5 h-5" />
-            <span className="text-sm font-medium hidden sm:inline">Exit</span>
-          </button>
-
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-[var(--color-text-secondary)]">
-              Score: <span className="text-[var(--color-text-primary)] font-semibold">{score}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Flame
-                className={`w-5 h-5 ${
-                  streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
-                }`}
+            <div className="max-w-2xl mx-auto">
+              <p className="text-sm text-[var(--color-text-secondary)] mb-2 text-center">
+                What is your diagnosis?
+              </p>
+              <DiagnosisInput
+                onSubmit={handleSubmitAnswer}
+                autoFocus
+                options={validDiagnoses}
               />
-              <span
-                className={`text-sm font-bold ${
-                  streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
-                }`}
-              >
-                {streak}
-              </span>
             </div>
-          </div>
-        </header>
+          </motion.div>
+        )}
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 pb-32">
-          {currentCase && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="max-w-4xl mx-auto space-y-4"
-            >
-              {/* Clinical Context */}
-              <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
-                <div className="flex items-center gap-4 mb-3">
-                  <span className="px-2.5 py-1 bg-[var(--color-bg-tertiary)] rounded-lg text-xs font-semibold text-[var(--color-text-secondary)]">
-                    {currentCase.patientAge}yo {currentCase.patientSex === 'M' ? 'Male' : 'Female'}
-                  </span>
-                </div>
-                <p className="text-[var(--color-text-primary)] leading-relaxed">
-                  {currentCase.clinicalContext}
-                </p>
-              </div>
-
-              {/* Lab Panels */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {currentCase.panels.map((panel, index) => (
-                  <motion.div
-                    key={`${panel.name}-${index}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+        {status === 'feedback' && currentCase && (
+          <motion.div
+            key="feedback-controls"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className={`p-4 ${
+              isCorrect
+                ? 'bg-emerald-100 dark:bg-emerald-950/50 border-t-2 border-emerald-500'
+                : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'
+            }`}
+          >
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <div
+                    className={`text-lg font-bold ${
+                      isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'
+                    }`}
                   >
-                    <LabPanelCard panel={panel} />
-                  </motion.div>
-                ))}
+                    {isCorrect ? 'Correct!' : 'Incorrect'}
+                  </div>
+                  {!isCorrect && (
+                    <div className="text-sm text-[var(--color-text-secondary)] mt-1">
+                      Correct answer:{' '}
+                      <span className="font-semibold text-[var(--color-text-primary)]">
+                        {currentCase.correctDiagnosis}
+                      </span>
+                    </div>
+                  )}
+                  {userAnswer && !isCorrect && (
+                    <div className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                      Your answer: {userAnswer}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={nextCase}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
+                    isCorrect
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                      : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
+                  }`}
+                >
+                  Next Case
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
-              
-              {/* Order Additional Tests Button */}
-              {status === 'playing' && availableTests.length > 0 && (
+
+              {/* Key Findings */}
+              <div className="text-sm bg-[var(--color-bg-secondary)] rounded-lg p-4 mb-3">
+                <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Key Findings:</h4>
+                <ul className="space-y-1">
+                  {currentCase.keyFindings.map((finding, idx) => (
+                    <li key={idx} className="text-[var(--color-text-secondary)] flex items-start gap-2">
+                      <span className="text-emerald-500 mt-1">•</span>
+                      <span>{finding}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Explanation */}
+              <div className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] rounded-lg p-3">
+                <span className="font-medium text-[var(--color-text-primary)]">
+                  Explanation:{' '}
+                </span>
+                {currentCase.explanation}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+
+    return (
+      <MiniDrillLayout
+        title="Mini Lab Mode"
+        score={score}
+        totalAttempts={totalAttempts}
+        streak={streak}
+        isFeedback={status === 'feedback'}
+        isCorrect={isCorrect}
+        onExit={handleExit}
+        onReset={handleReset}
+        footer={footerContent}
+      >
+        {currentCase && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="max-w-4xl mx-auto space-y-4"
+          >
+            {/* Clinical Context */}
+            <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-4">
+              <div className="flex items-center gap-4 mb-3">
+                <span className="px-2.5 py-1 bg-[var(--color-bg-tertiary)] rounded-lg text-xs font-semibold text-[var(--color-text-secondary)]">
+                  {currentCase.patientAge}yo {currentCase.patientSex === 'M' ? 'Male' : 'Female'}
+                </span>
+              </div>
+              <p className="text-[var(--color-text-primary)] leading-relaxed">
+                {currentCase.clinicalContext}
+              </p>
+            </div>
+
+            {/* Lab Panels */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {currentCase.panels.map((panel, index) => (
                 <motion.div
+                  key={`${panel.name}-${index}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-4"
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <button
-                    onClick={() => setShowOrderTestMenu(!showOrderTestMenu)}
-                    className="w-full px-4 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-5 h-5" />
-                    Order Additional Tests ({availableTests.length} available)
-                  </button>
-                  
-                  {showOrderTestMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-2 p-4 bg-[var(--color-bg-tertiary)] rounded-xl border border-[var(--color-border)] max-h-64 overflow-y-auto"
-                      role="menu"
-                      aria-label="Available laboratory tests"
-                    >
-                      <div className="grid grid-cols-1 gap-2">
-                        {availableTests.map((testName, index) => (
-                          <button
-                            key={testName}
-                            onClick={() => handleOrderTest(testName)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                handleOrderTest(testName);
-                              }
-                            }}
-                            className="px-4 py-2 text-left bg-[var(--color-bg-secondary)] hover:bg-[var(--color-border)] focus:bg-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg text-[var(--color-text-primary)] transition-colors"
-                            role="menuitem"
-                            tabIndex={0}
-                            aria-label={`Order ${testName}`}
-                          >
-                            {testName}
-                          </button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
+                  <LabPanelCard panel={panel} />
                 </motion.div>
-              )}
-            </motion.div>
-          )}
-        </main>
-
-        {/* Fixed Bottom Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-bg-secondary)] border-t border-[var(--color-border)]">
-          <AnimatePresence mode="wait">
-            {status === 'playing' && (
+              ))}
+            </div>
+            
+            {/* Order Additional Tests Button */}
+            {status === 'playing' && availableTests.length > 0 && (
               <motion.div
-                key="playing-controls"
-                variants={feedbackVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.2 }}
-                className="p-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mt-4"
               >
-                <div className="max-w-2xl mx-auto">
-                  <p className="text-sm text-[var(--color-text-secondary)] mb-2 text-center">
-                    What is your diagnosis?
-                  </p>
-                  <DiagnosisInput
-                    onSubmit={submitAnswer}
-                    autoFocus
-                    options={validDiagnoses}
-                  />
-                </div>
-              </motion.div>
-            )}
-
-            {status === 'feedback' && currentCase && (
-              <motion.div
-                key="feedback-controls"
-                variants={feedbackVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={{ duration: 0.2 }}
-                className={`p-4 ${
-                  isCorrect
-                    ? 'bg-emerald-950/50 border-t-2 border-emerald-500'
-                    : 'bg-red-950/50 border-t-2 border-red-500'
-                }`}
-              >
-                <div className="max-w-4xl mx-auto">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <div
-                        className={`text-lg font-bold ${
-                          isCorrect ? 'text-emerald-400' : 'text-red-400'
-                        }`}
-                      >
-                        {isCorrect ? 'Correct!' : 'Incorrect'}
-                      </div>
-                      {!isCorrect && (
-                        <div className="text-sm text-[var(--color-text-secondary)] mt-1">
-                          Correct answer:{' '}
-                          <span className="font-semibold text-[var(--color-text-primary)]">
-                            {currentCase.correctDiagnosis}
-                          </span>
-                        </div>
-                      )}
-                      {userAnswer && !isCorrect && (
-                        <div className="text-sm text-[var(--color-text-muted)] mt-0.5">
-                          Your answer: {userAnswer}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={nextCase}
-                      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
-                        isCorrect
-                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                          : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
-                      }`}
-                    >
-                      Next Case
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Key Findings */}
-                  <div className="text-sm bg-[var(--color-bg-secondary)] rounded-lg p-4 mb-3">
-                    <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Key Findings:</h4>
-                    <ul className="space-y-1">
-                      {currentCase.keyFindings.map((finding, idx) => (
-                        <li key={idx} className="text-[var(--color-text-secondary)] flex items-start gap-2">
-                          <span className="text-emerald-500 mt-1">•</span>
-                          <span>{finding}</span>
-                        </li>
+                <button
+                  onClick={() => setShowOrderTestMenu(!showOrderTestMenu)}
+                  className="w-full px-4 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] border border-[var(--color-border)] rounded-xl text-[var(--color-text-primary)] font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  Order Additional Tests ({availableTests.length} available)
+                </button>
+                
+                {showOrderTestMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 p-4 bg-[var(--color-bg-tertiary)] rounded-xl border border-[var(--color-border)] max-h-64 overflow-y-auto"
+                    role="menu"
+                    aria-label="Available laboratory tests"
+                  >
+                    <div className="grid grid-cols-1 gap-2">
+                      {availableTests.map((testName) => (
+                        <button
+                          key={testName}
+                          onClick={() => handleOrderTest(testName)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleOrderTest(testName);
+                            }
+                          }}
+                          className="px-4 py-2 text-left bg-[var(--color-bg-secondary)] hover:bg-[var(--color-border)] focus:bg-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg text-[var(--color-text-primary)] transition-colors"
+                          role="menuitem"
+                          tabIndex={0}
+                          aria-label={`Order ${testName}`}
+                        >
+                          {testName}
+                        </button>
                       ))}
-                    </ul>
-                  </div>
-
-                  {/* Explanation */}
-                  <div className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] rounded-lg p-3">
-                    <span className="font-medium text-[var(--color-text-primary)]">
-                      Explanation:{' '}
-                    </span>
-                    {currentCase.explanation}
-                  </div>
-                </div>
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             )}
-          </AnimatePresence>
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </MiniDrillLayout>
     );
   }
 
@@ -636,7 +551,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
 
           <div className="flex flex-col gap-3">
             <button
-              onClick={reset}
+              onClick={handleReset}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
