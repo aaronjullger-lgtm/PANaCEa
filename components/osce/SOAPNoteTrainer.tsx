@@ -7,7 +7,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, CheckCircle, AlertCircle, Lightbulb, Award } from 'lucide-react';
-import { gradeSOAPNote, type GradingResult, type SOAPNote } from '@/services/geminiService';
+import type { SOAPNote } from '@/services/geminiService';
+import { gradeSoapNote, type GradingResult } from '@/lib/services/soapGradingService';
+import { storeSoapGradingEvent } from '@/lib/services/soapAnalyticsService';
 
 interface SOAPNoteTrainerProps {
   patientCase: PatientCase;
@@ -42,10 +44,16 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
     setIsGrading(true);
     
     try {
-      // Use Gemini-powered grading
-      const result = await gradeSOAPNote(soapNote, patientCase);
+      const studentNote = `Subjective (S):\n${soapNote.subjective}\n\nObjective (O):\n${soapNote.objective}\n\nAssessment (A):\n${soapNote.assessment}\n\nPlan (P):\n${soapNote.plan}`;
+
+      const caseContext = `Chief Complaint: ${patientCase.chiefComplaint}\nHistory: ${patientCase.history}\nVitals: ${patientCase.vitals}\nPhysical Exam: ${patientCase.physicalExam}\nLabs: ${patientCase.labs || 'N/A'}`;
+
+      const result = await gradeSoapNote(studentNote, caseContext);
       setGradingResult(result);
-      onComplete(result.overallScore);
+      onComplete(result.totalScore);
+
+      // Fire-and-forget analytics event; failures are handled inside the helper
+      void storeSoapGradingEvent(patientCase.id, result);
     } catch (error) {
       console.error("Grading failed:", error);
       // Handle error appropriately in UI
@@ -72,10 +80,14 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
     return 'text-red-600 dark:text-red-400';
   };
 
-  const getGradeIcon = (grade: string) => {
-    if (grade === 'A' || grade === 'B') return <Award className="w-8 h-8" />;
-    if (grade === 'C') return <CheckCircle className="w-8 h-8" />;
-    return <AlertCircle className="w-8 h-8" />;
+  const computeSectionTotal = (result: GradingResult | null) => {
+    if (!result) return 0;
+    return (
+      result.breakdown.subjective +
+      result.breakdown.objective +
+      result.breakdown.assessment +
+      result.breakdown.plan
+    );
   };
 
   return (
@@ -252,13 +264,42 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
               disabled={isGrading || !soapNote.subjective || !soapNote.objective || !soapNote.assessment || !soapNote.plan}
               className="w-full mt-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white
                 rounded-lg font-semibold hover:shadow-lg transition-all hover:scale-105
-                disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
             >
-              {isGrading ? 'Grading Note...' : 'Submit for AI Grading'}
+              {isGrading ? (
+                <>
+                  <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-transparent" />
+                  <span>Consulting Chief Resident...</span>
+                </>
+              ) : (
+                'Submit for AI Grading'
+              )}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Grading In-Progress Indicator */}
+      <AnimatePresence>
+        {isGrading && !gradingResult && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl flex items-center gap-4"
+          >
+            <span className="inline-flex h-10 w-10 animate-spin rounded-full border-4 border-blue-500/60 border-t-transparent" />
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                Consulting Chief Resident...
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Your SOAP note is being graded against the answer key.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Grading Results */}
       <AnimatePresence>
@@ -271,24 +312,56 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
           >
             {/* Overall Score */}
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 mb-6">
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6">
+                <div className="flex-1">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     Grading Results
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300">
-                    Your SOAP note has been analyzed by our AI attending
+                    Your SOAP note has been evaluated by a strict board-style examiner, focusing on safety,
+                    completeness, and clear clinical reasoning.
                   </p>
+                  {gradingResult.totalScore >= 90 && (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-50 dark:bg-green-900/20 px-3 py-1 text-xs font-semibold text-green-700 dark:text-green-300">
+                      <Award className="w-4 h-4" />
+                      Honors-level performance
+                    </div>
+                  )}
                 </div>
-                <div className="text-center">
-                  <div className={`flex items-center gap-2 ${getScoreColor(gradingResult.overallScore)} mb-2`}>
-                    {getGradeIcon(gradingResult.grade)}
-                  </div>
-                  <div className={`text-5xl font-bold ${getScoreColor(gradingResult.overallScore)}`}>
-                    {gradingResult.grade}
-                  </div>
-                  <div className="text-gray-600 dark:text-gray-400 text-sm">
-                    {gradingResult.overallScore}%
+                <div className="flex items-center gap-4">
+                  <svg
+                    className="w-24 h-24 -rotate-90"
+                    viewBox="0 0 100 100"
+                  >
+                    <circle
+                      className="text-gray-200 dark:text-gray-700"
+                      stroke="currentColor"
+                      strokeWidth="10"
+                      fill="transparent"
+                      r="45"
+                      cx="50"
+                      cy="50"
+                    />
+                    <circle
+                      className="text-blue-500"
+                      stroke="currentColor"
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                      fill="transparent"
+                      r="45"
+                      cx="50"
+                      cy="50"
+                      strokeDasharray={2 * Math.PI * 45}
+                      strokeDashoffset={
+                        2 * Math.PI * 45 * (1 - gradingResult.totalScore / 100)
+                      }
+                    />
+                  </svg>
+                  <div className="text-center">
+                    <div className={`text-4xl font-bold ${getScoreColor(gradingResult.totalScore)}`}>
+                      {gradingResult.totalScore}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Total Score / 100</div>
                   </div>
                 </div>
               </div>
@@ -296,16 +369,32 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
 
             {/* Section Scores */}
             <div className="grid md:grid-cols-4 gap-4 mb-6">
-              {Object.entries(gradingResult.sectionScores).map(([section, score]) => (
+              {([
+                ['subjective', gradingResult.breakdown.subjective],
+                ['objective', gradingResult.breakdown.objective],
+                ['assessment', gradingResult.breakdown.assessment],
+                ['plan', gradingResult.breakdown.plan],
+              ] as const).map(([section, score]) => (
                 <div key={section} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                   <div className="text-sm text-gray-600 dark:text-gray-400 mb-1 capitalize">
                     {section}
                   </div>
-                  <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
-                    {score}%
+                  <div className={`text-2xl font-bold ${getScoreColor((score / 25) * 100)}`}>
+                    {score} / 25
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Scoring Explanation */}
+            <div className="mb-6 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-900/40 p-4 text-sm text-gray-700 dark:text-gray-300">
+              <h4 className="font-semibold mb-1 text-gray-900 dark:text-white">How your score is calculated</h4>
+              <p>
+                Each SOAP section contributes up to <strong>25 points</strong>. The four section scores always add up to your{' '}
+                <strong>{computeSectionTotal(gradingResult)} / 100</strong> total, which is what you see displayed as{' '}
+                <strong>{gradingResult.totalScore} / 100</strong>. Use the Missed Concepts and Suggestions lists below as
+                a focused checklist for what to improve on your next attempt.
+              </p>
             </div>
 
             {/* Detailed Feedback */}
@@ -326,56 +415,41 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
                 </ul>
               </div>
 
-              {/* Areas for Improvement */}
+              {/* Missed Concepts */}
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                  <h4 className="font-bold text-gray-900 dark:text-white">Areas for Improvement</h4>
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <h4 className="font-bold text-gray-900 dark:text-white">Missed Concepts</h4>
                 </div>
                 <ul className="space-y-2">
-                  {gradingResult.feedback.improvements.map((item, i) => (
+                  {gradingResult.feedback.missedConcepts.map((item, i) => (
                     <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                      <span className="text-yellow-600 dark:text-yellow-400 mt-1">→</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Critical Missing */}
-              {gradingResult.feedback.criticalMissing.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-                    <h4 className="font-bold text-gray-900 dark:text-white">Critical Missing</h4>
-                  </div>
-                  <ul className="space-y-2">
-                    {gradingResult.feedback.criticalMissing.map((item, i) => (
-                      <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                        <span className="text-red-600 dark:text-red-400 mt-1">!</span>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Billing Elements */}
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <h4 className="font-bold text-gray-900 dark:text-white">Billing Elements</h4>
-                </div>
-                <ul className="space-y-2">
-                  {gradingResult.feedback.billingElements.map((item, i) => (
-                    <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                      <span className="text-blue-600 dark:text-blue-400 mt-1">$</span>
+                      <span className="text-red-600 dark:text-red-400 mt-1">!</span>
                       {item}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
+
+            {/* Suggestions */}
+            {gradingResult.feedback.suggestions.length > 0 && (
+              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Lightbulb className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <h4 className="font-bold text-gray-900 dark:text-white">Style & Phrasing Suggestions</h4>
+                </div>
+                <ul className="space-y-2">
+                  {gradingResult.feedback.suggestions.map((item, i) => (
+                    <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                      <span className="text-purple-600 dark:text-purple-400 mt-1">→</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

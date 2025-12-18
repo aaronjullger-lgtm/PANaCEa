@@ -2,7 +2,9 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2, Users, X, Trophy, GraduationCap } from "lucide-react";
+import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2, Users, X, Trophy, GraduationCap, Home, BarChart3, Dumbbell } from "lucide-react";
+import { useIsMobile } from "../lib/utils/responsive";
+import { useIsMobile } from "../lib/utils/responsive";
 import type {
   PerformanceRecord,
   SessionSettings,
@@ -127,6 +129,10 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showStudyGuide, setShowStudyGuide] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  
+  // Mobile navigation state
+  const [activeTab, setActiveTab] = useState<'home' | 'stats' | 'modes'>('home');
+  const isMobile = useIsMobile();
   
   // Dashboard state
   const [timeScope, setTimeScope] = useState<TimeScope>('1wk');
@@ -519,7 +525,48 @@ const MenuView: React.FC<MenuViewProps> = ({
         />
       )}
 
-      <div className="flex flex-col max-w-5xl mx-auto px-4">
+      {/* Mobile Bottom Navigation */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
+          <div className="grid grid-cols-3 gap-0">
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`flex flex-col items-center justify-center py-3 transition-colors ${
+                activeTab === 'home'
+                  ? 'text-primary bg-primary/5'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Home className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">Home</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('stats')}
+              className={`flex flex-col items-center justify-center py-3 transition-colors ${
+                activeTab === 'stats'
+                  ? 'text-primary bg-primary/5'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <BarChart3 className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">Stats</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('modes')}
+              className={`flex flex-col items-center justify-center py-3 transition-colors ${
+                activeTab === 'modes'
+                  ? 'text-primary bg-primary/5'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Dumbbell className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">Modes</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className={`flex flex-col max-w-5xl mx-auto px-4 ${isMobile ? 'pb-20' : ''}`}>
         <motion.h1 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -602,6 +649,15 @@ const MenuView: React.FC<MenuViewProps> = ({
         </motion.div>
 
         <div className="space-y-10">
+          {/* Mobile: Only show content for active tab */}
+          {isMobile && activeTab !== 'home' && activeTab !== 'stats' && activeTab !== 'modes' && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Use the bottom navigation to switch views</p>
+            </div>
+          )}
+
+          {/* Home Tab Content (or all content on desktop) */}
+          {(!isMobile || activeTab === 'home') && (
           {/* Welcome Card - Prioritized at Top */}
           <motion.section 
             initial={{ opacity: 0, y: 10 }}

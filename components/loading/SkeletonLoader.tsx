@@ -45,7 +45,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   };
   
   const baseClasses = `
-    bg-slate-200 dark:bg-slate-700
+    bg-muted/50
     ${radiusClasses[radius]}
     ${className}
   `;
@@ -93,7 +93,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
  */
 export const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
-    <div className={`p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-card-bg)] ${className}`}>
+    <div className={`p-4 border border-border rounded-lg bg-card ${className}`}>
       <Skeleton height="1.5rem" width="60%" className="mb-3" />
       <Skeleton height="1rem" width="100%" className="mb-2" />
       <Skeleton height="1rem" width="90%" className="mb-2" />
@@ -127,7 +127,7 @@ export const SkeletonText: React.FC<{
  */
 export const SkeletonQuizQuestion: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
-    <div className={`p-6 border border-[var(--color-border)] rounded-xl bg-[var(--color-card-bg)] ${className}`}>
+    <div className={`p-6 border border-border rounded-xl bg-card ${className}`}>
       {/* Question header */}
       <div className="mb-4">
         <Skeleton height="1.25rem" width="40%" className="mb-3" />
@@ -139,7 +139,7 @@ export const SkeletonQuizQuestion: React.FC<{ className?: string }> = ({ classNa
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="p-4 border border-[var(--color-border)] rounded-lg"
+            className="p-4 border border-border rounded-lg"
           >
             <Skeleton height="1rem" width="80%" />
           </div>
@@ -154,7 +154,7 @@ export const SkeletonQuizQuestion: React.FC<{ className?: string }> = ({ classNa
  */
 export const SkeletonDrillCard: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
-    <div className={`p-6 border border-[var(--color-border)] rounded-xl bg-[var(--color-card-bg)] ${className}`}>
+    <div className={`p-6 border border-border rounded-xl bg-card ${className}`}>
       <div className="flex items-start gap-4 mb-4">
         <Skeleton width="48px" height="48px" radius="lg" />
         <div className="flex-1">
@@ -172,13 +172,138 @@ export const SkeletonDrillCard: React.FC<{ className?: string }> = ({ className 
  */
 export const SkeletonWidget: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
-    <div className={`p-5 border border-[var(--color-border)] rounded-xl bg-[var(--color-card-bg)] ${className}`}>
+    <div className={`p-5 border border-border rounded-xl bg-card ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <Skeleton height="1.25rem" width="40%" />
         <Skeleton width="32px" height="32px" radius="md" />
       </div>
       <Skeleton height="3rem" width="50%" className="mb-4" />
       <SkeletonText lines={2} />
+    </div>
+  );
+};
+
+/**
+ * QuestionSkeleton - Mimics a quiz question with answer options
+ * Prevents layout shift when loading new questions in drill modes
+ */
+export const QuestionSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => {
+  return (
+    <div className={`space-y-6 ${className}`}>
+      {/* Question header */}
+      <div className="space-y-3">
+        <Skeleton height="1.5rem" width="30%" radius="md" />
+        <Skeleton height="1.25rem" width="100%" radius="md" />
+        <Skeleton height="1.25rem" width="95%" radius="md" />
+        <Skeleton height="1.25rem" width="85%" radius="md" />
+      </div>
+
+      {/* Answer options (4 bars) */}
+      <div className="grid grid-cols-1 gap-3 mt-8">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            key={index}
+            className="p-4 min-h-[56px] border border-border rounded-lg bg-card flex items-center"
+          >
+            <Skeleton height="1rem" width={`${70 + Math.random() * 20}%`} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * ChatSkeleton - Mimics alternating chat bubbles
+ * Used for patient encounter loading states
+ */
+export const ChatSkeleton: React.FC<{ 
+  messages?: number;
+  className?: string;
+}> = ({ messages = 3, className = '' }) => {
+  return (
+    <div className={`space-y-4 ${className}`}>
+      {Array.from({ length: messages }).map((_, index) => {
+        const isUser = index % 2 === 0;
+        return (
+          <div
+            key={index}
+            className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[80%] p-4 rounded-lg ${
+                isUser 
+                  ? 'bg-primary/10 rounded-br-none' 
+                  : 'bg-muted rounded-bl-none'
+              }`}
+            >
+              <Skeleton 
+                height="1rem" 
+                width={`${60 + Math.random() * 30}%`}
+                className="mb-2"
+              />
+              <Skeleton 
+                height="1rem" 
+                width={`${40 + Math.random() * 40}%`}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/**
+ * StatCardSkeleton - Small metric card placeholder
+ * Used for dashboard statistics that are loading
+ */
+export const StatCardSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => {
+  return (
+    <div className={`p-4 border border-border rounded-lg bg-card ${className}`}>
+      <Skeleton height="0.875rem" width="50%" className="mb-3" />
+      <Skeleton height="2rem" width="40%" className="mb-2" />
+      <Skeleton height="0.75rem" width="60%" />
+    </div>
+  );
+};
+
+/**
+ * TableSkeleton - Loading state for data tables
+ */
+export const TableSkeleton: React.FC<{ 
+  rows?: number;
+  columns?: number;
+  className?: string;
+}> = ({ rows = 5, columns = 4, className = '' }) => {
+  return (
+    <div className={`border border-border rounded-lg overflow-hidden ${className}`}>
+      {/* Header */}
+      <div className="bg-muted/30 p-4 border-b border-border">
+        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+          {Array.from({ length: columns }).map((_, i) => (
+            <Skeleton key={i} height="1rem" width="70%" />
+          ))}
+        </div>
+      </div>
+      
+      {/* Rows */}
+      {Array.from({ length: rows }).map((_, rowIndex) => (
+        <div 
+          key={rowIndex} 
+          className="p-4 border-b border-border last:border-b-0"
+        >
+          <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+            {Array.from({ length: columns }).map((_, colIndex) => (
+              <Skeleton 
+                key={colIndex} 
+                height="1rem" 
+                width={`${50 + Math.random() * 40}%`}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

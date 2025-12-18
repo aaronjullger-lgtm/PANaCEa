@@ -388,6 +388,33 @@ model DailyStreak {
   @@index([date])
 }
 
+/// Represents a daily Grand Rounds challenge available to all users
+model GrandRoundsChallenge {
+  id          String   @id @default(uuid())
+  date        DateTime @db.Date @unique // One challenge per calendar day
+  questionIds String[]
+  createdAt   DateTime @default(now())
+
+  attempts GrandRoundsAttempt[]
+}
+
+/// Represents a user's attempt at the daily Grand Rounds challenge
+model GrandRoundsAttempt {
+  id          String   @id @default(uuid())
+  userId      String
+  challengeId String
+  score       Int
+  timeSpentMs Int
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge GrandRoundsChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@index([challengeId])
+}
+
 /// Represents confusion pairs tracked for DDx analysis
 model ConfusionPair {
   id             String   @id @default(uuid())

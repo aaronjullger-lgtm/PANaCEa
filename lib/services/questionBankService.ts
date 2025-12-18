@@ -1,215 +1,173 @@
-/**
- * Question Bank Service
- * 
- * Manages pre-generated questions stored in the database.
- * Implements hybrid approach: query DB first, fallback to AI generation.
- * 
- * This reduces API costs and ensures consistent quality through the
- * staging/adequacy check pipeline.
- */
+import { Prisma } from '@prisma/client';
+import { prisma } from '../prisma';
+import { loadConditionData } from '../../services/conditionDataLoader';
+import { generateSingleQuestion } from '../questionGenerator';
 
-import type { Question, SessionSettings, SystemCode } from '../../src/types';
-
-export interface QuestionBankQuery {
-  system?: SystemCode;
-  conditionId?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
-  excludeUsed?: boolean; // Exclude questions user has already seen
-  userId?: string; // For tracking used questions
+export interface GetQuestionsParams {
+  system?: string;
+  limit: number;
+  difficulty?: string;
 }
 
-export interface StoredQuestion {
+export interface QuestionDTO {
   id: string;
-  questionType: string;
-  system: string | null;
-  conditionId: string | null;
+  vignette: string;
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+  system: string;
   difficulty: string;
-  questionData: any; // JSON containing the full question
-  generatedAt: Date;
-  usedAt: Date | null;
-  usedBy: string | null;
-  quality: number | null;
+  source: string;
+  tags?: string[];
 }
 
-/**
- * Query questions from the database
- * 
- * @param query - Query parameters
- * @returns Array of questions from the database
- */
-export async function queryQuestions(query: QuestionBankQuery): Promise<Question[]> {
-  try {
-    const params = new URLSearchParams();
-    
-    if (query.system) params.append('system', query.system);
-    if (query.conditionId) params.append('conditionId', query.conditionId);
-    if (query.difficulty) params.append('difficulty', query.difficulty);
-    if (query.excludeUsed) params.append('excludeUsed', 'true');
-    if (query.userId) params.append('userId', query.userId);
-    
-    const response = await fetch(`/api/questions/query?${params.toString()}`);
-    
-    if (!response.ok) {
-      console.error('[QuestionBank] Failed to query questions:', response.statusText);
-      return [];
-    }
-    
-    const data = await response.json();
-    return data.questions || [];
-  } catch (error) {
-    console.error('[QuestionBank] Error querying questions:', error);
-    return [];
-  }
+const MAX_LIMIT = 50;
+
+function clampLimit(limit: number): number {
+  if (Number.isNaN(limit) || limit <= 0) return 1;
+  return Math.min(limit, MAX_LIMIT);
 }
 
-/**
- * Mark a question as used by a specific user
- * 
- * @param questionId - ID of the question
- * @param userId - ID of the user
- */
-export async function markQuestionAsUsed(questionId: string, userId: string): Promise<void> {
-  try {
-    await fetch('/api/questions/mark-used', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ questionId, userId }),
-    });
-  } catch (error) {
-    console.error('[QuestionBank] Error marking question as used:', error);
-  }
-}
-
-/**
- * Save a newly generated question to the staging area
- * 
- * @param question - The question to save
- * @returns The saved question ID
- */
-export async function saveToStaging(question: Question): Promise<string | null> {
-  try {
-    const response = await fetch('/api/questions/staging', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(question),
-    });
-    
-    if (!response.ok) {
-      console.error('[QuestionBank] Failed to save to staging:', response.statusText);
-      return null;
-    }
-    
-    const data = await response.json();
-    return data.id;
-  } catch (error) {
-    console.error('[QuestionBank] Error saving to staging:', error);
-    return null;
-  }
-}
-
-/**
- * Get question statistics
- * 
- * @param system - Optional system to filter by
- * @returns Statistics about available questions
- */
-export async function getQuestionStats(system?: SystemCode): Promise<{
-  total: number;
-  byDifficulty: Record<string, number>;
-  bySystem: Record<string, number>;
-}> {
-  try {
-    const params = system ? `?system=${system}` : '';
-    const response = await fetch(`/api/questions/stats${params}`);
-    
-    if (!response.ok) {
-      console.error('[QuestionBank] Failed to get stats:', response.statusText);
-      return { total: 0, byDifficulty: {}, bySystem: {} };
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('[QuestionBank] Error getting stats:', error);
-    return { total: 0, byDifficulty: {}, bySystem: {} };
-  }
-}
-
-/**
- * Hybrid question fetcher: tries DB first, falls back to AI generation
- * 
- * @param settings - Session settings
- * @param userId - User ID for tracking
- * @param aiGenerateFallback - Function to generate question via AI
- * @returns Question (from DB or AI-generated)
- */
-export async function fetchQuestionHybrid(
-  settings: SessionSettings,
-  userId: string | null,
-  aiGenerateFallback: () => Promise<Question>
-): Promise<Question> {
-  // Build query based on settings
-  const query: QuestionBankQuery = {
-    excludeUsed: true,
-    userId: userId || undefined,
+function mapToDTO(record: any): QuestionDTO {
+  return {
+    id: record.id,
+    vignette: record.vignette,
+    question: record.question,
+    options: Array.isArray(record.options) ? record.options : [],
+    correctAnswer: record.correctAnswer,
+    explanation: typeof record.explanation === 'string' ? record.explanation : JSON.stringify(record.explanation),
+    system: record.system,
+    difficulty: record.difficulty,
+    source: record.source,
+    tags: Array.isArray(record.tags) ? record.tags : undefined,
   };
-  
-  if (settings.focus === 'topic' && settings.topic) {
-    query.system = settings.topic as SystemCode;
-  }
-  
-  if (settings.subcategoryName) {
-    // Note: We'd need to map subcategory to conditionId in a real implementation
-    // For now, just use system filtering
-  }
-  
-  // Map difficulty setting to database difficulty
-  if (settings.difficulty === 'easier') {
-    query.difficulty = 'easy';
-  } else if (settings.difficulty === 'harder') {
-    query.difficulty = 'hard';
-  } else {
-    query.difficulty = 'medium';
-  }
-  
-  // Try to get from database
-  const dbQuestions = await queryQuestions(query);
-  
-  if (dbQuestions.length > 0) {
-    // Pick a random question from the results
-    const question = dbQuestions[Math.floor(Math.random() * dbQuestions.length)];
-    
-    console.log('[QuestionBank] ✓ Using question from database');
-    
-    // Mark as used (fire and forget)
-    // Note: conditionId is used as the unique question identifier in the Question interface
-    if (userId && question.conditionId) {
-      markQuestionAsUsed(question.conditionId, userId);
-    }
-    
-    return question;
-  }
-  
-  // Fall back to AI generation
-  console.log('[QuestionBank] ⚠ No DB questions found, using AI generation');
-  const aiQuestion = await aiGenerateFallback();
-  
-  // Save to staging for future use (fire and forget)
-  saveToStaging(aiQuestion);
-  
-  return aiQuestion;
 }
 
-/**
- * Check if sufficient questions exist in the database for a given query
- * 
- * @param query - Query parameters
- * @param minCount - Minimum number of questions required
- * @returns Whether sufficient questions exist
- */
-export async function hasSufficientQuestions(
-  query: QuestionBankQuery,
-  minCount: number = 10
-): Promise<boolean> {
-  const questions = await queryQuestions(query);
-  return questions.length >= minCount;
+function buildWhere(params: GetQuestionsParams): Prisma.QuestionWhereInput {
+  const where: Prisma.QuestionWhereInput = {};
+  if (params.system) {
+    where.system = params.system;
+  }
+  if (params.difficulty) {
+    where.difficulty = params.difficulty;
+  }
+  return where;
+}
+
+function buildExplanationText(explanation: any): string {
+  if (!explanation) return '';
+  if (typeof explanation === 'string') return explanation;
+  if (typeof explanation === 'object') {
+    const rationale = explanation.rationale || '';
+    const incorrect = explanation.incorrect
+      ? Object.entries(explanation.incorrect)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n')
+      : '';
+    return [rationale, incorrect].filter(Boolean).join('\n\n');
+  }
+  return String(explanation);
+}
+
+async function getRandomPublishedConditionId(system?: string): Promise<string | null> {
+  const where: Prisma.MedicalContentWhereInput = {
+    status: 'published',
+    ...(system ? { system } : {}),
+  };
+
+  const total = await prisma.medicalContent.count({ where });
+  if (total === 0) return null;
+
+  const skip = Math.floor(Math.random() * total);
+  const record = await prisma.medicalContent.findFirst({ where, skip });
+  return record?.conditionId || null;
+}
+
+async function storeGeneratedQuestion(payload: {
+  system?: string;
+  difficulty?: string;
+}): Promise<QuestionDTO | null> {
+  const conditionId = await getRandomPublishedConditionId(payload.system);
+  if (!conditionId) return null;
+
+  const conditionData = await loadConditionData(conditionId);
+  if (!conditionData) return null;
+
+  const generated = await generateSingleQuestion(
+    {
+      condition: conditionData.name,
+      sections: {
+        overview: conditionData.content.overview,
+        etiology: conditionData.content.etiologyPathophysiology,
+        clinicalPresentation: conditionData.content.clinicalPresentation,
+        diagnostics: conditionData.content.diagnostics?.notes,
+        treatment: Array.isArray(conditionData.content.treatment)
+          ? conditionData.content.treatment.join('\n')
+          : conditionData.content.treatment,
+      },
+    },
+    'mcq'
+  );
+
+  if (!generated) return null;
+
+  const explanationText = buildExplanationText(generated.explanation);
+
+  const record = await prisma.question.create({
+    data: {
+      vignette: generated.question,
+      question: generated.question,
+      options: generated.options || [],
+      correctAnswer: generated.correctAnswer,
+      explanation: explanationText,
+      system: payload.system || conditionData.system,
+      tags: generated.sourceSections || [],
+      difficulty: payload.difficulty || 'medium',
+      source: 'ai_generated',
+    },
+  });
+
+  return mapToDTO(record);
+}
+
+export async function getQuestions(params: GetQuestionsParams): Promise<{ questions: QuestionDTO[]; total: number; }> {
+  const limit = clampLimit(params.limit);
+  const where = buildWhere(params);
+
+  const total = await prisma.question.count({ where });
+  if (total === 0) {
+    return { questions: [], total: 0 };
+  }
+
+  const maxSkip = Math.max(total - limit, 0);
+  const skip = maxSkip > 0 ? Math.floor(Math.random() * (maxSkip + 1)) : 0;
+
+  const records = await prisma.question.findMany({
+    where,
+    skip,
+    take: limit,
+  });
+
+  return {
+    questions: records.map(mapToDTO),
+    total,
+  };
+}
+
+export async function getQuestionsWithFallback(params: GetQuestionsParams): Promise<{ questions: QuestionDTO[]; source: 'database' | 'ai_fallback'; total: number; }> {
+  const { questions, total } = await getQuestions(params);
+
+  if (questions.length > 0) {
+    return { questions, source: 'database', total };
+  }
+
+  // Only trigger fallback generation when zero questions exist for the filter
+  const generated: QuestionDTO[] = [];
+  for (let i = 0; i < clampLimit(params.limit); i++) {
+    const created = await storeGeneratedQuestion(params);
+    if (created) generated.push(created);
+  }
+
+  return { questions: generated, source: 'ai_fallback', total: generated.length };
 }

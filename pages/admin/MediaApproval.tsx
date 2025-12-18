@@ -9,6 +9,18 @@
  * - Full preview with AI metadata and quality scores
  * - Batch approval/rejection actions
  * - Search and filter capabilities
+ * 
+ * SECURITY NOTE:
+ * ---------------
+ * Client-side access checks in this component are for UI/UX purposes only.
+ * All administrative operations are protected server-side via:
+ *   - /api/media/pending - requireAdmin() middleware
+ *   - /api/media/approve - requireAdmin() middleware  
+ *   - /api/media/stats - requireAdmin() middleware
+ * 
+ * The server validates Clerk JWT tokens and verifies admin role in database
+ * before allowing any data modification. Client-side checks prevent unnecessary
+ * API calls but do NOT provide security.
  */
 
 import React, { useState, useEffect } from 'react';

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Flame, ArrowRight, RotateCcw, CheckCircle, XCircle, Award } from 'lucide-react';
+import { useIsMobile } from '../../lib/utils/responsive';
 
 interface MiniDrillLayoutProps {
   /** Title for the header */
@@ -43,6 +44,8 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
   children,
   footer,
 }) => {
+  const isMobile = useIsMobile();
+  
   // Animation variants
   const flashVariants = {
     initial: { opacity: 0 },
@@ -68,38 +71,38 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Header - Responsive */}
+      {/* Header - Responsive with min touch targets */}
       <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
         <button
           onClick={onExit}
-          className="flex items-center gap-1.5 sm:gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors p-1"
-          aria-label="Exit"
+          className="flex items-center gap-1.5 sm:gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors p-2 min-h-[44px] min-w-[44px] justify-center sm:justify-start"
+          aria-label="Exit drill"
         >
           <X className="w-5 h-5" />
           <span className="text-sm font-medium hidden sm:inline">Exit</span>
         </button>
 
-        <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)] truncate max-w-[50%]">
+        <h1 className="text-base sm:text-lg font-semibold text-[var(--color-text-primary)] truncate px-2">
           {title}
         </h1>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* Score */}
-          <div className="text-xs sm:text-sm text-[var(--color-text-secondary)]">
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Score - Hidden on very small screens */}
+          <div className="text-xs sm:text-sm text-[var(--color-text-secondary)] hidden xs:block">
             <span className="text-[var(--color-text-primary)] font-semibold">{score}</span>
             <span className="text-[var(--color-text-muted)]">/{totalAttempts}</span>
           </div>
 
           {/* Streak Counter */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 min-h-[44px]">
             <Flame
-              className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                streak > 0 ? 'text-orange-500' : 'text-slate-400 dark:text-slate-600'
+              className={`w-5 h-5 sm:w-6 sm:h-6 ${
+                streak > 0 ? 'text-orange-500' : 'text-muted-foreground'
               }`}
             />
             <span
-              className={`text-xs sm:text-sm font-bold ${
-                streak > 0 ? 'text-orange-500' : 'text-slate-400 dark:text-slate-600'
+              className={`text-sm sm:text-base font-bold ${
+                streak > 0 ? 'text-orange-500' : 'text-muted-foreground'
               }`}
             >
               {streak}
@@ -108,8 +111,8 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
         </div>
       </header>
 
-      {/* Main Content Area - Responsive padding */}
-      <main className="flex-1 overflow-y-auto pt-14 sm:pt-16 pb-32 sm:pb-36 px-3 sm:px-4">
+      {/* Main Content Area - Responsive padding, stacks on mobile */}
+      <main className="flex-1 overflow-y-auto pt-16 sm:pt-16 pb-32 sm:pb-36 px-3 sm:px-6">
         {children}
       </main>
 
@@ -120,14 +123,14 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
         </div>
       )}
 
-      {/* Reset button (floating) - Responsive positioning */}
+      {/* Reset button (floating) - Responsive positioning with min touch target */}
       <button
         onClick={onReset}
-        className="fixed bottom-20 sm:bottom-24 right-3 sm:right-4 p-2.5 sm:p-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors shadow-lg z-20"
+        className="fixed bottom-20 sm:bottom-24 right-3 sm:right-4 p-3 min-h-[44px] min-w-[44px] bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors shadow-lg z-20 flex items-center justify-center"
         aria-label="Reset session"
         title="Reset session"
       >
-        <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+        <RotateCcw className="w-5 h-5" />
       </button>
     </div>
   );
@@ -193,11 +196,11 @@ export const AnswerOption: React.FC<AnswerOptionProps> = ({
   onSelect,
 }) => {
   let buttonClasses = 
-    'w-full text-left p-3 sm:p-4 rounded-lg sm:rounded-xl transition-all duration-200 border text-sm sm:text-base';
+    'w-full text-left p-4 min-h-[56px] rounded-lg sm:rounded-xl transition-all duration-200 border text-sm sm:text-base';
   
   if (isAnswered) {
     if (isCorrect === true) {
-      buttonClasses += ' bg-emerald-100 dark:bg-emerald-900/50 border-emerald-500 text-emerald-900 dark:text-emerald-100';
+      buttonClasses += ' bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400';
     } else if (isSelected) {
       buttonClasses += ' bg-red-100 dark:bg-red-900/50 border-red-500 text-red-900 dark:text-red-100';
     } else {
@@ -269,7 +272,7 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
       transition={{ duration: 0.2 }}
       className={`p-3 sm:p-4 ${
         isCorrect
-          ? 'bg-emerald-100 dark:bg-emerald-950/50 border-t-2 border-emerald-500'
+          ? 'bg-emerald-500/10 border-t-2 border-emerald-500'
           : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'
       }`}
     >
@@ -289,7 +292,7 @@ export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
             onClick={onNext}
             className={`inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium transition-colors text-sm sm:text-base w-full sm:w-auto ${
               isCorrect
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                 : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
             }`}
           >
@@ -356,10 +359,10 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       onClick={() => onClick(id)}
       className={`relative p-4 sm:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-br ${gradient} text-left shadow-xl overflow-hidden group`}
     >
-      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       
       <div className="relative z-10">
-        <div className="mb-2 sm:mb-3 p-2 sm:p-2.5 bg-white/20 rounded-lg sm:rounded-xl w-fit">
+        <div className="mb-2 sm:mb-3 p-2 sm:p-2.5 bg-foreground/20 rounded-lg sm:rounded-xl w-fit">
           {icon}
         </div>
         <h3 className="text-base sm:text-lg font-bold text-white mb-0.5 sm:mb-1">

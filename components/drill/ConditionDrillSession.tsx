@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, Stethoscope, Search, Layers, AlertCircle, Shuffle } from 'lucide-react';
+import { X, Stethoscope, Search, Layers, AlertCircle, Shuffle, Lightbulb } from 'lucide-react';
 import { useConditionDrill, type ConditionCategory } from '@/hooks/game/use-condition-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption, FeedbackPanel, CategoryCard } from './MiniDrillLayout';
+import { QuestionSkeleton } from '../loading/SkeletonLoader';
 
 interface ConditionDrillSessionProps {
   onExit?: () => void;
@@ -65,7 +66,14 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     userAnswerIndex,
     isCorrect,
     status,
+    isLoading,
+    error,
+    isSubmitting,
+    socraticHint,
+    isLoadingHint,
+    attemptNumber,
     submitAnswer,
+    retryAfterHint,
     nextQuestion,
     reset,
     startSession,
@@ -134,14 +142,59 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
             ))}
           </div>
         </main>
-      </div>
-    );
-  }
+  // =========================================================================
+  // PLAYING / FEEDBACK / COACHING VIEW
+  // =========================================================================
+  if (status === 'playing' || status === 'feedback' || status === 'coaching') {
+    // Show smooth skeleton while fetching questions
+    if (isLoading) {
+      return (
+        <MiniDrillLayout
+          title="Condition Drill"
+          score={score}
+          totalAttempts={totalAttempts}
+          streak={streak}
+          isFeedback={false}
+          isCorrect={null}
+          onExit={handleExit}
+          onReset={reset}
+        >
+          <div className="max-w-4xl mx-auto py-4 sm:py-8">
+            <QuestionSkeleton />
+          </div>
+        </MiniDrillLayout>
+      );
+    }
 
-  // =========================================================================
-  // PLAYING / FEEDBACK VIEW
-  // =========================================================================
-  if (status === 'playing' || status === 'feedback') {
+    // Show error state
+    if (error) {
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="text-red-500 mb-4">
+              <AlertCircle className="w-12 h-12 mx-auto" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Error Loading Questions</h2>
+            <p className="text-slate-400 mb-6">{error}</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={handleExit}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+              >
+                Exit
+              </button>
+              <button
+                onClick={reset}
+                className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <MiniDrillLayout
         title="Condition Drill"
@@ -171,8 +224,55 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
               subcategory={currentQuestion.type}
             />
 
+            {/* Coach's Corner - Socratic Hint UI */}
+            {status === 'coaching' && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 rounded-xl border-2 border-amber-500/50 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 p-6 shadow-lg"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
+                    <Lightbulb className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 mb-2">
+                      Coach's Corner
+                    </h3>
+                    {isLoadingHint ? (
+                      <div className="flex items-center gap-3 text-amber-700 dark:text-amber-300">
+                        <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm italic">Thinking about your answer...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-amber-900 dark:text-amber-100 mb-4 leading-relaxed">
+                          {socraticHint}
+                        </p>
+                        <button
+                          onClick={retryAfterHint}
+                          className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-all hover:scale-105 shadow-md"
+                        >
+                          Try Again
+                        </button>
+                        <p className="mt-3 text-xs text-amber-700 dark:text-amber-400">
+                          💡 Getting it right after this hint will award 50% points (0.5 score)
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
             {/* Answer Options */}
-            <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-2 sm:space-y-3 relative">
+              {/* Submitting overlay */}
+              {isSubmitting && (
+                <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center rounded-lg z-10">
+                  <div className="w-6 h-6 border-3 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
               {currentQuestion.options.map((option, index) => (
                 <AnswerOption
                   key={index}
@@ -185,7 +285,7 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
                       : null
                   }
                   isAnswered={status === 'feedback'}
-                  onSelect={submitAnswer}
+                  onSelect={isSubmitting ? () => {} : submitAnswer}
                 />
               ))}
             </div>

@@ -2,6 +2,17 @@
  * Admin Dashboard Page
  * Example protected route demonstrating RBAC
  * Only accessible to users with admin or superadmin roles
+ * 
+ * SECURITY NOTE:
+ * ---------------
+ * Client-side access checks in this component are for UI/UX purposes only.
+ * All administrative data is protected server-side via:
+ *   - /api/admin/check-access - requireAdmin() middleware (verifies access)
+ *   - /api/admin/stats - requireAdmin() middleware (returns system statistics)
+ * 
+ * The server validates Clerk JWT tokens and verifies admin role in database
+ * (or ADMIN_USER_IDS/SUPERADMIN_USER_IDS env fallback) before returning data.
+ * Client-side checks prevent unnecessary API calls but do NOT provide security.
  */
 
 import React, { useEffect, useState } from 'react';

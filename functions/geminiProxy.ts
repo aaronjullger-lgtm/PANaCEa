@@ -116,9 +116,32 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     
     const { modelName = "gemini-1.5-flash", prompt, temperature = 0.8 } = body;
 
-    if (!prompt) {
+    if (!prompt || typeof prompt !== 'string') {
       return new Response(
         JSON.stringify({ error: "Prompt is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
+      );
+    }
+
+    // Basic on-edge validation mirroring server-side policy
+    const trimmedPrompt = prompt.trim().slice(0, 2000);
+    const lower = trimmedPrompt.toLowerCase();
+
+    const hasMedicalKeyword = [
+      'diagnosis', 'treatment', 'symptom', 'symptoms', 'patient', 'patients', 'clinical',
+      'history', 'exam', 'lab', 'labs', 'medication', 'medications', 'dose', 'differential',
+      'etiology', 'pathophysiology', 'management', 'prognosis', 'contraindication',
+      'anatomy', 'physiology', 'guideline', 'guidelines', 'criteria', 'workup', 'screening',
+      'imaging', 'radiology', 'pance', 'panre', 'case vignette', 'osce'
+    ].some((kw) => lower.includes(kw));
+
+    if (!hasMedicalKeyword) {
+      console.warn('Blocked prompt injection attempt (edge): non-medical context');
+      return new Response(
+        JSON.stringify({
+          error: "Request rejected by security policy",
+          reason: "Prompt must be related to medical education or clinical content",
+        }),
         { status: 400, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } }
       );
     }

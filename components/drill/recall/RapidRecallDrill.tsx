@@ -1,9 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Flame, RotateCcw, ArrowRight, Loader2 } from 'lucide-react';
+import { X, Flame, RotateCcw, ArrowRight, Loader2, BadgeCheck } from 'lucide-react';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import { buzzwordService } from '@/services/buzzwordService';
-import { validateSemanticMatch } from '@/services/geminiService';
+import { semanticValidationService } from '@/lib/services/semanticValidationService';
 
 interface RapidRecallDrillProps {
   onExit?: () => void;
@@ -29,6 +29,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
   const [userAnswer, setUserAnswer] = useState<string>('');
   const [usedBuzzwords, setUsedBuzzwords] = useState<Set<string>>(new Set());
   const [isValidating, setIsValidating] = useState<boolean>(false);
+  const [acceptedSynonym, setAcceptedSynonym] = useState<boolean>(false);
   
   // Data state
   const [buzzwordDictionary, setBuzzwordDictionary] = useState<Record<string, string>>({});
@@ -123,22 +124,23 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
     const normalizedAnswer = normalizeDiagnosis(answer);
     const normalizedCorrect = normalizeDiagnosis(correctAnswer);
     
-    // Optimistic check: strict match
     let isAnswerCorrect = normalizedAnswer === normalizedCorrect;
+    let wasSemantic = false;
 
     if (!isAnswerCorrect) {
-      // If strict match fails, try semantic validation
       setIsValidating(true);
       try {
-        isAnswerCorrect = await validateSemanticMatch(answer, correctAnswer, currentBuzzword);
+        const result = await semanticValidationService.validate(answer, correctAnswer);
+        isAnswerCorrect = result.isEquivalent;
+        wasSemantic = result.viaModel && result.isEquivalent;
       } catch (error) {
-        console.error("Validation failed", error);
-        // Fallback to false if AI fails
+        console.error("Semantic validation failed", error);
       } finally {
         setIsValidating(false);
       }
     }
     
+    setAcceptedSynonym(wasSemantic);
     setUserAnswer(answer);
     setIsCorrect(isAnswerCorrect);
     setTotalAttempts((prev) => prev + 1);
@@ -151,13 +153,13 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
       setStreak(0);
     }
 
-    // Mark this buzzword as used
     setUsedBuzzwords((prev) => new Set([...prev, currentBuzzword]));
   }, [currentBuzzword, isValidating, buzzwordDictionary]);
 
   const handleNext = useCallback(() => {
     setCurrentBuzzword(getNextBuzzword());
     setUserAnswer('');
+    setAcceptedSynonym(false);
     setStatus('playing');
   }, [getNextBuzzword]);
 
@@ -168,6 +170,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
     setUsedBuzzwords(new Set());
     setCurrentBuzzword(getNextBuzzword());
     setUserAnswer('');
+    setAcceptedSynonym(false);
     setStatus('playing');
   }, [getNextBuzzword]);
 
@@ -294,11 +297,9 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
                   disabled={isValidating}
                 />
                 {isValidating && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-[var(--color-bg-secondary)]/50 backdrop-blur-sm rounded-lg z-10">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-tertiary)] rounded-full shadow-lg border border-[var(--color-border)]">
-                      <Loader2 className="w-4 h-4 animate-spin text-[var(--color-primary)]" />
-                      <span className="text-sm font-medium">Checking answer...</span>
-                    </div>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-[var(--color-text-secondary)]">
+                    <Loader2 className="w-4 h-4 animate-spin text-[var(--color-primary)]" />
+                    <span className="text-xs font-medium">Verifying...</span>
                   </div>
                 )}
               </div>
@@ -329,6 +330,11 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
                     >
                       {isCorrect ? 'Correct' : 'Incorrect'}
                     </div>
+                    {isCorrect && acceptedSynonym && (
+                      <div className="inline-flex items-center gap-2 mt-1 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-200 text-xs font-semibold">
+                        <BadgeCheck className="w-4 h-4" /> Close enough! Accepted synonym
+                      </div>
+                    )}
                     {!isCorrect && (
                       <div className="text-sm text-[var(--color-text-secondary)] mt-1">
                         Correct answer:{' '}

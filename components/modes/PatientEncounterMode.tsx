@@ -9,6 +9,7 @@ import { chatWithPatientSimulator, evaluateDiagnosis, performPhysicalExam, order
 import { startOSCESession, saveOSCEChat, completeOSCESession } from '@/services/osceService';
 import { Activity, Stethoscope, Microscope, FileText, Pill, ChevronRight, PauseCircle, PlayCircle } from 'lucide-react';
 import { Sparkline } from '@/components/Sparkline';
+import { ChatSkeleton } from '@/components/loading/SkeletonLoader';
 
 // Clinical Fidelity settings interface
 interface ClinicalFidelitySettings {
@@ -372,8 +373,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       case 'essential': return 'text-green-700 bg-green-50 border-green-200 dark:text-green-300 dark:bg-green-950/30 dark:border-green-900';
       case 'helpful': return 'text-blue-700 bg-blue-50 border-blue-200 dark:text-blue-300 dark:bg-blue-950/30 dark:border-blue-900';
       case 'unnecessary': return 'text-orange-700 bg-orange-50 border-orange-200 dark:text-orange-300 dark:bg-orange-950/30 dark:border-orange-900';
-      case 'redundant': return 'text-slate-700 bg-slate-50 border-slate-200 dark:text-slate-400 dark:bg-slate-900/30 dark:border-slate-700';
-      default: return 'text-slate-700 bg-slate-50 border-slate-200 dark:text-slate-400 dark:bg-slate-900/30 dark:border-slate-700';
+      case 'redundant': return 'text-muted-foreground bg-muted border-border';
+      default: return 'text-muted-foreground bg-muted border-border';
     }
   };
 
@@ -510,7 +511,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <motion.button
                 onClick={handleStartEncounter}
                 disabled={isLoading}
-                className="px-10 py-4 bg-[#1F283A] text-[#E9ECF1] dark:bg-[#E9ECF1] dark:text-[#1F283A] hover:bg-[#364154] dark:hover:bg-white
+                className="px-10 py-4 bg-card text-card-foreground dark:bg-foreground dark:text-background hover:bg-card/90 dark:hover:bg-foreground/90
                          disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-semibold text-lg
                          transition-all flex items-center justify-center gap-3 mx-auto shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.02 }}
@@ -1005,11 +1006,17 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                     </div>
                   )}
 
-                  {isTyping && (
-                    <div className="flex items-center gap-2 text-slate-400 italic p-4">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  {/* Loading state with smooth skeleton */}
+                  {isLoading && (
+                    <ChatSkeleton messages={2} className="mt-4" />
+                  )}
+
+                  {/* Typing indicator (when AI is responding but not loading) */}
+                  {isTyping && !isLoading && (
+                    <div className="flex items-center gap-2 text-muted-foreground italic p-4">
+                      <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                       <span className="text-sm ml-2">Processing...</span>
                     </div>
                   )}
@@ -1035,15 +1042,15 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     const isCorrectDiagnosis = diagnosisFeedback?.isCorrect ?? false;
 
     return (
-      <div className="min-h-screen bg-white dark:bg-[#1F283A] text-[#1F283A] dark:text-[#E9ECF1]">
+      <div className="min-h-screen bg-background text-foreground">
         {/* Header */}
-        <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#364154] sticky top-0 z-10 shadow-sm">
+        <div className="border-b border-border bg-card sticky top-0 z-10 shadow-sm">
           <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <MessageSquare className="w-8 h-8 text-[var(--color-accent)]" />
               <div>
                 <h1 className="text-2xl font-bold">Virtual OSCE - Results</h1>
-                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Performance Summary</p>
+                <p className="text-sm text-muted-foreground">Performance Summary</p>
               </div>
             </div>
             {onExit && (
@@ -1085,14 +1092,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
             
             {diagnosisFeedback?.feedback && (
-              <div className="mb-4 p-4 bg-white/50 dark:bg-black/20 rounded-lg border border-black/5 dark:border-white/5">
+              <div className="mb-4 p-4 bg-card/50 rounded-lg border border-border/50">
                 <p className="text-sm font-semibold mb-1 opacity-75">AI Feedback:</p>
-                <p className="text-[#364154] dark:text-[#cbd5e1] italic">"{diagnosisFeedback.feedback}"</p>
+                <p className="text-muted-foreground italic">"{diagnosisFeedback.feedback}"</p>
               </div>
             )}
 
-            <div className="bg-white dark:bg-[#364154] rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-              <p className="text-sm text-[#364154] dark:text-[#cbd5e1] mb-1">Correct Diagnosis:</p>
+            <div className="bg-card rounded-lg p-4 border border-border">
+              <p className="text-sm text-muted-foreground mb-1">Correct Diagnosis:</p>
               <p className="text-lg font-semibold text-[var(--color-accent)]">{currentCase.correctDiagnosis}</p>
             </div>
           </motion.div>
@@ -1106,7 +1113,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 text-center shadow-sm"
             >
               <Award className="w-8 h-8 text-[var(--color-accent)] mx-auto mb-2" />
-              <p className="text-sm text-[#364154] dark:text-[#cbd5e1] mb-1">Overall Score</p>
+              <p className="text-sm text-muted-foreground mb-1">Overall Score</p>
               <p className={`text-4xl font-bold ${getScoreColor(score.overall)}`}>
                 {Math.round(score.overall)}%
               </p>
@@ -1116,10 +1123,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 text-center shadow-sm"
+              className="bg-card rounded-xl p-6 border border-border text-center shadow-sm"
             >
               <CheckCircle className="w-8 h-8 text-green-500 dark:text-green-400 mx-auto mb-2" />
-              <p className="text-sm text-[#364154] dark:text-[#cbd5e1] mb-1">Thoroughness</p>
+              <p className="text-sm text-muted-foreground mb-1">Thoroughness</p>
               <p className={`text-4xl font-bold ${getScoreColor(score.thoroughness)}`}>
                 {Math.round(score.thoroughness)}%
               </p>
@@ -1129,10 +1136,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 text-center shadow-sm"
+              className="bg-card rounded-xl p-6 border border-border text-center shadow-sm"
             >
               <Clock className="w-8 h-8 text-blue-500 dark:text-blue-400 mx-auto mb-2" />
-              <p className="text-sm text-[#364154] dark:text-[#cbd5e1] mb-1">Efficiency</p>
+              <p className="text-sm text-muted-foreground mb-1">Efficiency</p>
               <p className={`text-4xl font-bold ${getScoreColor(score.efficiency)}`}>
                 {Math.round(score.efficiency)}%
               </p>
@@ -1145,12 +1152,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-white dark:bg-[#364154] rounded-xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm"
+              className="bg-card rounded-xl p-6 border border-border shadow-sm"
             >
               <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)] flex items-center gap-2">
                 <FileText className="w-5 h-5" /> After-Action Report
               </h3>
-              <div className="prose dark:prose-invert max-w-none text-[#364154] dark:text-[#cbd5e1] whitespace-pre-wrap">
+              <div className="prose dark:prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
                 {aar}
               </div>
             </motion.div>
@@ -1166,7 +1173,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)]">Ideal Workup</h3>
             <ul className="space-y-2">
               {currentCase.idealWorkup.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-[#364154] dark:text-[#cbd5e1]">
+                <li key={idx} className="flex items-start gap-2 text-muted-foreground">
                   <CheckCircle className="w-5 h-5 text-[var(--color-accent)] flex-shrink-0 mt-0.5" />
                   <span>{item}</span>
                 </li>

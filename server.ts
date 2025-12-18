@@ -17,8 +17,9 @@ import { config } from 'dotenv';
 import { sanitizeBody, validateRequired, validateEnum } from './lib/middleware/validation';
 import { requireAuth, AuthenticatedRequest } from './lib/middleware/clerkAuth';
 import { requireAdmin } from './lib/middleware/adminAuth';
+import { validateMedicalPrompt } from './lib/middleware/promptValidation';
 import { prisma } from './lib/prisma';
-import Redis from 'ioredis';
+import { redis } from './lib/redis';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { createRequestLogger } from './lib/logging/structuredLogger';
@@ -26,6 +27,30 @@ import { getDailyWordForUser, submitWordleGuess, WordleServiceError } from './se
 
 // Load environment variables
 config();
+
+// ============================================================================
+// CRITICAL SECURITY STARTUP CHECKS
+// These checks ensure the server cannot start without essential security config
+// ============================================================================
+const CLERK_SECRET_KEY = process.env.CLERK_SECRET_KEY;
+const ADMIN_USER_IDS = process.env.ADMIN_USER_IDS;
+const SUPERADMIN_USER_IDS = process.env.SUPERADMIN_USER_IDS;
+
+if (!CLERK_SECRET_KEY) {
+  console.error('\n🚨 CRITICAL SECURITY WARNING 🚨');
+  console.error('CLERK_SECRET_KEY is not set. Admin authentication will fail.');
+  console.error('Set this environment variable before deploying to production.\n');
+  
+  if (process.env.NODE_ENV === 'production') {
+    console.error('Refusing to start in production without CLERK_SECRET_KEY.');
+    process.exit(1);
+  }
+}
+
+if (!ADMIN_USER_IDS && !SUPERADMIN_USER_IDS) {
+  console.warn('\n⚠️  SECURITY WARNING: No ADMIN_USER_IDS or SUPERADMIN_USER_IDS configured.');
+  console.warn('Admin fallback authentication will rely solely on database roles.\n');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -96,14 +121,20 @@ app.post('/geminiProxy', async (req: Request, res: Response) => {
 
     const { modelName = 'gemini-1.5-flash', prompt, temperature = 0.8 } = req.body;
 
-    if (!prompt) {
+    if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({ error: 'Prompt is required' });
     }
 
-    // Basic prompt validation (Anti-Injection / Safety Filter)
-    const forbiddenKeywords = ['ignore all instructions', 'write a poem', 'write a story', 'act as a pirate'];
-    if (forbiddenKeywords.some(kw => prompt.toLowerCase().includes(kw))) {
-         return res.status(400).json({ error: 'Invalid prompt: Request rejected by safety filter.' });
+    const { isValid, reason } = validateMedicalPrompt(prompt);
+    if (!isValid) {
+      console.warn('Blocked prompt injection attempt:', {
+        ip: req.ip,
+        reason,
+      });
+      return res.status(400).json({
+        error: 'Request rejected by security policy',
+        reason,
+      });
     }
 
     // Call Gemini API
@@ -670,80 +701,60 @@ app.get('/api/reference/guidelines', requireAuth, async (req: AuthenticatedReque
   }
 });
 
-// Rate limiting setup
-let redisClient: Redis | null = null;
-if (process.env.REDIS_URL) {
-  redisClient = new Redis(process.env.REDIS_URL);
-  redisClient.on('error', (err) => console.error('Redis Client Error', err));
-} else {
-  console.warn('REDIS_URL not found, falling back to in-memory rate limiting. This is not recommended for production.');
+// Distributed rate limiting (Redis-backed)
+const RATE_LIMIT_MAX_REQUESTS = 100;
+const RATE_LIMIT_WINDOW_SECONDS = 3600; // 1 hour
+
+async function checkRateLimit(userId: string): Promise<boolean> {
+  if (!redis) {
+    // Fail open if Redis is not configured
+    return true;
+  }
+
+  const key = `panacea:ratelimit:${userId}`;
+
+  try {
+    const current = await redis.incr(key);
+    if (current === 1) {
+      await redis.expire(key, RATE_LIMIT_WINDOW_SECONDS);
+    }
+
+    if (current > RATE_LIMIT_MAX_REQUESTS) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.warn('Rate limiter bypassed due to Redis error', error);
+    return true; // Fail open on Redis errors
+  }
 }
 
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+function apiRateLimitMiddleware(req: Request, res: Response, next: NextFunction) {
+  const clientId = (req as AuthenticatedRequest).auth?.userId || req.ip || req.socket.remoteAddress || 'unknown';
 
-// Rate limiting middleware
-function customRateLimit(maxRequests: number, windowMs: number) {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const clientId = req.ip || req.socket.remoteAddress || 'unknown';
-    
-    if (redisClient) {
-      const key = `rate_limit:${clientId}`;
-      try {
-        const requests = await redisClient.incr(key);
-        if (requests === 1) {
-          await redisClient.expire(key, Math.ceil(windowMs / 1000));
-        }
-        
-        if (requests > maxRequests) {
-           const ttl = await redisClient.ttl(key);
-           return res.status(429).json({
-            error: 'Too many requests',
-            retryAfter: ttl
-          });
-        }
-        return next();
-      } catch (error) {
-        console.error('Redis rate limit error:', error);
-        // Fail open if Redis is down
-        return next();
-      }
-    } else {
-      // In-memory fallback
-      const now = Date.now();
-      const clientData = rateLimitMap.get(clientId);
-      
-      if (!clientData || now > clientData.resetTime) {
-        rateLimitMap.set(clientId, {
-          count: 1,
-          resetTime: now + windowMs
-        });
-        return next();
-      }
-      
-      if (clientData.count >= maxRequests) {
+  checkRateLimit(clientId)
+    .then((allowed) => {
+      if (!allowed) {
         return res.status(429).json({
           error: 'Too many requests',
-          retryAfter: Math.ceil((clientData.resetTime - now) / 1000)
+          retryAfter: RATE_LIMIT_WINDOW_SECONDS,
         });
       }
-      
-      clientData.count++;
-      next();
-    }
-  };
+      return next();
+    })
+    .catch((error) => {
+      console.warn('Rate limiter bypassed due to Redis error', error);
+      return next();
+    });
 }
 
-// Apply rate limiting to API endpoints (100 requests per 15 minutes)
-app.use('/api', customRateLimit(100, 15 * 60 * 1000));
+// Apply rate limiting to API endpoints (100 requests per hour)
+app.use('/api', apiRateLimitMiddleware);
 
-// Stricter rate limit for sync endpoints (30 requests per 5 minutes)
-// This prevents abuse while allowing reasonable sync frequency
-const syncRateLimit = customRateLimit(30, 5 * 60 * 1000);
-
-// API sync endpoint with authentication and rate limiting
-// Rate limiting: 30 requests per 5 minutes (in addition to global /api rate limit)
+// API sync endpoint with authentication (also covered by global /api rate limit)
 // Authentication: Clerk JWT token required via requireAuth middleware
-app.get('/api/sync', requireAuth, syncRateLimit, async (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/sync', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.auth.userId;
     
@@ -790,7 +801,7 @@ app.get('/api/sync', requireAuth, syncRateLimit, async (req: AuthenticatedReques
 
 // Rate limiting: 30 requests per 5 minutes (in addition to global /api rate limit)
 // Authentication: Clerk JWT token required via requireAuth middleware
-app.post('/api/sync', requireAuth, syncRateLimit, async (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/sync', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.auth.userId;
     const { performanceRecords, srsItems, savedQuestions } = req.body;
@@ -1045,6 +1056,48 @@ app.post('/api/analytics/confusion',
   }
 );
 
+// SOAP Note grading analytics (lightweight, optional persistence)
+app.post('/api/analytics/soap-note', async (req: Request, res: Response) => {
+  try {
+    const { caseId, totalScore, breakdown, userId } = req.body;
+
+    if (!caseId || typeof totalScore !== 'number' || !breakdown) {
+      return res.status(400).json({ success: false, error: 'Missing required analytics fields' });
+    }
+
+    // For now, this endpoint is intentionally lightweight.
+    // In production, you can persist to the database by adding
+    // a Prisma model (e.g., SoapNoteGradingEvent) and wiring it here.
+    if (process.env.DATABASE_URL) {
+      try {
+        const { prisma } = await import('./lib/prisma');
+        // Optional: only persist if such a model exists in the schema
+        // @ts-expect-error - model may not yet be present; keep this guarded
+        if (prisma.soapNoteGradingEvent) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          await prisma.soapNoteGradingEvent.create({
+            data: {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              userId: userId || null,
+              caseId,
+              totalScore,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              breakdown,
+            },
+          });
+        }
+      } catch (dbError) {
+        console.warn('SOAP analytics DB persistence skipped:', dbError);
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to store SOAP grading analytics:', error);
+    res.status(500).json({ success: false, error: 'Failed to store SOAP grading analytics' });
+  }
+});
+
 // Question flagging endpoints (Task 42: Feedback Loop Closure)
 app.post('/api/questions/flag',
   validateRequired(['userId', 'questionId', 'flagType', 'description']),
@@ -1108,7 +1161,9 @@ app.post('/api/questions/flag',
 );
 
 // Mark a flag as resolved and send notification to user
+// Security: Admin-only - only admins can resolve flagged questions
 app.post('/api/questions/flag/:flagId/resolve',
+  requireAdmin(),
   validateRequired(['reviewedBy', 'resolutionNote']),
   async (req: Request, res: Response) => {
     try {
@@ -1313,7 +1368,9 @@ app.post('/api/questions/generate',
 );
 
 // Content branching endpoints (Task 46)
+// Security: Admin-only - content branch management is a privileged operation
 app.post('/api/branches',
+  requireAdmin(),
   validateRequired(['name', 'createdBy']),
   async (req: Request, res: Response) => {
     try {
@@ -1355,7 +1412,9 @@ app.get('/api/branches', async (req: Request, res: Response) => {
   }
 });
 
+// Security: Admin-only - branch merging is a privileged operation
 app.post('/api/branches/:branchName/merge',
+  requireAdmin(),
   validateRequired(['mergedBy']),
   async (req: Request, res: Response) => {
     try {
@@ -1381,7 +1440,9 @@ app.post('/api/branches/:branchName/merge',
 // Hybrid Content Engine API Endpoints (Tasks 108-112)
 
 // Task 108: Staging Lake Architecture - Save question to staging
+// Security: Admin-only - staging content is a privileged operation
 app.post('/api/questions/staging',
+  requireAdmin(),
   validateRequired(['questionData']),
   async (req: Request, res: Response) => {
     try {
@@ -1401,7 +1462,9 @@ app.post('/api/questions/staging',
 );
 
 // Task 108: Run adequacy check on staging question
+// Security: Admin-only - staging operations are privileged
 app.post('/api/questions/staging/:id/check',
+  requireAdmin(),
   async (req: Request, res: Response) => {
     try {
       if (!process.env.DATABASE_URL) {
@@ -1420,7 +1483,9 @@ app.post('/api/questions/staging/:id/check',
 );
 
 // Task 108: Process staging queue (batch processing)
+// Security: Admin-only - batch processing is a privileged operation
 app.post('/api/questions/staging/process',
+  requireAdmin(),
   async (req: Request, res: Response) => {
     try {
       if (!process.env.DATABASE_URL) {
@@ -1982,7 +2047,8 @@ app.get('/widgets/stats/:userId', async (req: Request, res: Response) => {
 });
 
 // Get pending media (admin-only)
-app.get('/api/media/pending', requireAdmin, async (req: Request, res: Response) => {
+// Security: Enforced via requireAdmin() middleware - verifies Clerk token + database role
+app.get('/api/media/pending', requireAdmin(), async (req: Request, res: Response) => {
   try {
     const pendingHandler = await import('./functions/api/media/pending');
     await pendingHandler.default(req, res);
@@ -1993,7 +2059,8 @@ app.get('/api/media/pending', requireAdmin, async (req: Request, res: Response) 
 });
 
 // Approve or reject media (admin-only)
-app.post('/api/media/approve', requireAdmin, async (req: Request, res: Response) => {
+// Security: Enforced via requireAdmin() middleware - verifies Clerk token + database role
+app.post('/api/media/approve', requireAdmin(), async (req: Request, res: Response) => {
   try {
     const approveHandler = await import('./functions/api/media/approve');
     await approveHandler.default(req, res);
@@ -2004,7 +2071,8 @@ app.post('/api/media/approve', requireAdmin, async (req: Request, res: Response)
 });
 
 // Get media approval stats (admin-only)
-app.get('/api/media/stats', requireAdmin, async (req: Request, res: Response) => {
+// Security: Enforced via requireAdmin() middleware - verifies Clerk token + database role
+app.get('/api/media/stats', requireAdmin(), async (req: Request, res: Response) => {
   try {
     const statsHandler = await import('./functions/api/media/stats');
     await statsHandler.default(req, res);
@@ -2015,12 +2083,14 @@ app.get('/api/media/stats', requireAdmin, async (req: Request, res: Response) =>
 });
 
 // Check admin access (for frontend validation)
-app.get('/api/admin/check-access', requireAdmin, (req: Request, res: Response) => {
+// Security: Enforced via requireAdmin() middleware - verifies Clerk token + database role
+app.get('/api/admin/check-access', requireAdmin(), (req: Request, res: Response) => {
   res.json({ success: true, role: 'admin' });
 });
 
 // Admin Stats Endpoint
-app.get('/api/admin/stats', requireAdmin, async (req: Request, res: Response) => {
+// Security: Enforced via requireAdmin() middleware - verifies Clerk token + database role
+app.get('/api/admin/stats', requireAdmin(), async (req: Request, res: Response) => {
   try {
     // In a real implementation, this would query the database
     // For now, we'll return mock data or simple counts if DB is available
@@ -2057,14 +2127,186 @@ app.get('/api/admin/stats', requireAdmin, async (req: Request, res: Response) =>
 });
 
 // ============================================================================
+// Drill Session API - Secure answer submission with server-side grading
+// ============================================================================
+
+// Submit answer for a drill question - grades server-side and records progress
+app.post('/api/drill/submit',
+  requireAuth,
+  validateRequired(['questionId', 'selectedAnswer']),
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ error: 'Database not configured' });
+      }
+
+      const userId = req.auth.userId;
+      const { questionId, selectedAnswer, timeSpent } = req.body;
+
+      // 1. Fetch user from Clerk ID
+      const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // 2. Fetch the question from the database to get the correct answer
+      const question = await prisma.question.findUnique({
+        where: { id: questionId },
+      });
+
+      if (!question) {
+        return res.status(404).json({ error: 'Question not found' });
+      }
+
+      // 3. Server-side grading - never trust the client
+      const isCorrect = selectedAnswer === question.correctAnswer;
+
+      // 4. Create PerformanceRecord entry
+      await prisma.performanceRecord.create({
+        data: {
+          userId: user.id,
+          topic: question.system || 'General',
+          system: question.system,
+          focus: 'all',
+          difficulty: question.difficulty || 'medium',
+          isCorrect,
+          timestamp: BigInt(Date.now()),
+          conditionName: question.system,
+        },
+      });
+
+      // 5. Update aggregate stats in DailyStreak
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const existingStreak = await prisma.dailyStreak.findUnique({
+        where: {
+          userId_date: {
+            userId: user.id,
+            date: today,
+          },
+        },
+      });
+
+      if (existingStreak) {
+        const newTotal = existingStreak.questionsAnswered + 1;
+        // Recalculate accuracy: (oldCorrect + newCorrect) / newTotal
+        const oldCorrect = Math.round(
+          (existingStreak.accuracyPercent / 100) * existingStreak.questionsAnswered
+        );
+        const newCorrect = oldCorrect + (isCorrect ? 1 : 0);
+        const newAccuracy = (newCorrect / newTotal) * 100;
+
+        await prisma.dailyStreak.update({
+          where: { id: existingStreak.id },
+          data: {
+            questionsAnswered: newTotal,
+            accuracyPercent: newAccuracy,
+            studyMinutes: existingStreak.studyMinutes + Math.round((timeSpent || 0) / 60000),
+          },
+        });
+      } else {
+        await prisma.dailyStreak.create({
+          data: {
+            userId: user.id,
+            date: today,
+            questionsAnswered: 1,
+            accuracyPercent: isCorrect ? 100 : 0,
+            studyMinutes: Math.round((timeSpent || 0) / 60000),
+          },
+        });
+      }
+
+      // 6. Update question stats (timesSeen, timesCorrect)
+      await prisma.question.update({
+        where: { id: questionId },
+        data: {
+          timesSeen: { increment: 1 },
+          timesCorrect: isCorrect ? { increment: 1 } : undefined,
+        },
+      });
+
+      // 7. Calculate current streak (consecutive days with activity)
+      const streaks = await prisma.dailyStreak.findMany({
+        where: { userId: user.id },
+        orderBy: { date: 'desc' },
+        take: 30,
+      });
+
+      let currentStreak = 0;
+      const msPerDay = 86400000;
+      for (let i = 0; i < streaks.length; i++) {
+        const expectedDate = new Date(today.getTime() - i * msPerDay);
+        expectedDate.setHours(0, 0, 0, 0);
+        const streakDate = new Date(streaks[i].date);
+        streakDate.setHours(0, 0, 0, 0);
+        if (streakDate.getTime() === expectedDate.getTime()) {
+          currentStreak++;
+        } else {
+          break;
+        }
+      }
+
+      res.json({
+        success: true,
+        isCorrect,
+        correctAnswer: question.correctAnswer,
+        explanation: question.explanation,
+        newStreak: currentStreak,
+      });
+    } catch (error) {
+      console.error('Error submitting drill answer:', error);
+      res.status(500).json({ error: 'Failed to submit answer' });
+    }
+  }
+);
+
+// ============================================================================
 // Question Management API Endpoints (Smart Storage with No-Repeat)
 // ============================================================================
+
+// Fetch questions from the database-first question bank
+app.get('/api/questions', async (req: Request, res: Response) => {
+  try {
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Database not configured' });
+    }
+
+    const { system, difficulty } = req.query;
+    const limit = Number(req.query.limit) || 10;
+
+    const { getQuestionsWithFallback } = await import('./lib/services/questionBankService');
+
+    const result = await getQuestionsWithFallback({
+      system: system ? String(system) : undefined,
+      difficulty: difficulty ? String(difficulty) : undefined,
+      limit,
+    });
+
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    res.status(500).json({ error: 'Failed to fetch questions' });
+  }
+});
 
 // Fetch questions for a user (with no-repeat logic)
 app.post('/api/questions/fetch', async (req: Request, res: Response) => {
   try {
-    const fetchHandler = await import('./functions/api/questions/fetch');
-    await fetchHandler.default(req, res);
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Database not configured' });
+    }
+
+    const { system, difficulty, limit = 10 } = req.body || {};
+    const { getQuestionsWithFallback } = await import('./lib/services/questionBankService');
+
+    const result = await getQuestionsWithFallback({
+      system: system ? String(system) : undefined,
+      difficulty: difficulty ? String(difficulty) : undefined,
+      limit: Number(limit) || 10,
+    });
+
+    res.json({ success: true, ...result });
   } catch (error) {
     console.error('Error fetching questions:', error);
     res.status(500).json({ error: 'Failed to fetch questions' });
@@ -2512,6 +2754,188 @@ app.get('/api/drugs/search', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to search drugs' });
   }
 });
+
+// ============================================================================
+// Grand Rounds Daily Challenge API
+// ============================================================================
+
+// Get today's Grand Rounds challenge
+app.get('/api/grand-rounds/today', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!process.env.DATABASE_URL) {
+      return res.status(503).json({ error: 'Database not configured' });
+    }
+
+    const userId = req.auth.userId;
+
+    // Get internal user ID
+    const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { getOrCreateDailyChallenge, getUserAttemptForChallenge } = await import('./lib/services/grandRoundsService');
+
+    // Get or create today's challenge
+    const challenge = await getOrCreateDailyChallenge();
+
+    // Check if user already played today
+    const existingAttempt = await getUserAttemptForChallenge(user.id, challenge.id);
+
+    if (existingAttempt) {
+      // User already completed today's challenge
+      const { calculatePercentile, getRankingForChallenge } = await import('./lib/services/grandRoundsService');
+      
+      const percentile = await calculatePercentile(challenge.id, existingAttempt.score);
+      const ranking = await getRankingForChallenge(challenge.id, user.id);
+      const totalQuestions = challenge.questionIds.length;
+      
+      // Calculate correct count from score (20 points per correct)
+      const basePoints = existingAttempt.score;
+      const correctCount = Math.floor(basePoints / 20);
+      
+      return res.json({
+        status: 'completed',
+        stats: {
+          score: existingAttempt.score,
+          correctCount,
+          totalQuestions,
+          timeSpentMs: existingAttempt.timeSpentMs,
+          percentile,
+          ranking,
+        },
+      });
+    }
+
+    // Fetch questions for the challenge (without correct answers)
+    const questions = await prisma.question.findMany({
+      where: {
+        id: { in: challenge.questionIds },
+      },
+      select: {
+        id: true,
+        vignette: true,
+        question: true,
+        options: true,
+        // Exclude correctAnswer for security
+        system: true,
+        difficulty: true,
+      },
+    });
+
+    return res.json({
+      status: 'active',
+      challengeId: challenge.id,
+      questions,
+    });
+  } catch (error) {
+    console.error('Error fetching Grand Rounds challenge:', error);
+    res.status(500).json({ error: 'Failed to fetch challenge' });
+  }
+});
+
+// Submit Grand Rounds attempt
+app.post('/api/grand-rounds/submit',
+  requireAuth,
+  validateRequired(['challengeId', 'answers', 'timeSpentMs']),
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!process.env.DATABASE_URL) {
+        return res.status(503).json({ error: 'Database not configured' });
+      }
+
+      const userId = req.auth.userId;
+      const { challengeId, answers, timeSpentMs } = req.body;
+
+      // Validate answers is an object
+      if (typeof answers !== 'object' || Array.isArray(answers)) {
+        return res.status(400).json({ error: 'Invalid answers format' });
+      }
+
+      // Get internal user ID
+      const user = await prisma.user.findUnique({ where: { clerkId: userId } });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const { getUserAttemptForChallenge, calculatePercentile, getRankingForChallenge } = await import('./lib/services/grandRoundsService');
+
+      // Check if user already submitted
+      const existingAttempt = await getUserAttemptForChallenge(user.id, challengeId);
+      if (existingAttempt) {
+        return res.status(400).json({ error: 'Challenge already completed' });
+      }
+
+      // Get the challenge
+      const challenge = await prisma.grandRoundsChallenge.findUnique({
+        where: { id: challengeId },
+      });
+
+      if (!challenge) {
+        return res.status(404).json({ error: 'Challenge not found' });
+      }
+
+      // Fetch questions with correct answers for grading
+      const questions = await prisma.question.findMany({
+        where: {
+          id: { in: challenge.questionIds },
+        },
+        select: {
+          id: true,
+          correctAnswer: true,
+        },
+      });
+
+      // Grade the answers
+      let correctCount = 0;
+      const POINTS_PER_CORRECT = 20;
+
+      for (const question of questions) {
+        const userAnswer = answers[question.id];
+        if (userAnswer === question.correctAnswer) {
+          correctCount++;
+        }
+      }
+
+      // Calculate score with speed bonus
+      const rawScore = correctCount * POINTS_PER_CORRECT;
+      
+      // Speed bonus: faster answers get bonus points (max 20 bonus points)
+      // Formula: max(0, 20 - (timeSpentMs / 60000)) = 1 point per minute saved (capped at 20 minutes)
+      const timeInMinutes = timeSpentMs / 60000;
+      const speedBonus = correctCount > 0 ? Math.max(0, Math.min(20, 20 - timeInMinutes)) : 0;
+      
+      const finalScore = Math.round(rawScore + speedBonus);
+
+      // Save the attempt
+      const attempt = await prisma.grandRoundsAttempt.create({
+        data: {
+          userId: user.id,
+          challengeId,
+          score: finalScore,
+          timeSpentMs,
+        },
+      });
+
+      // Calculate percentile and ranking
+      const percentile = await calculatePercentile(challengeId, finalScore);
+      const ranking = await getRankingForChallenge(challengeId, finalScore, timeSpentMs);
+
+      return res.json({
+        success: true,
+        score: finalScore,
+        correctCount,
+        totalQuestions: questions.length,
+        percentile,
+        ranking,
+        speedBonus: Math.round(speedBonus),
+      });
+    } catch (error) {
+      console.error('Error submitting Grand Rounds attempt:', error);
+      res.status(500).json({ error: 'Failed to submit attempt' });
+    }
+  }
+);
 
 // Start the server
 app.listen(PORT, async () => {

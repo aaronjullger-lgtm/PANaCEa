@@ -3,6 +3,56 @@ import { callGeminiText } from './geminiService';
 import { GEMINI_FLASH_MODEL } from '../constants';
 
 /**
+ * Get a Socratic hint for an incorrect answer without revealing the solution
+ * This uses the Gemini proxy to generate a guiding hint based on the misconception
+ */
+export async function getSocraticHint(
+  questionText: string,
+  correctAnswer: string,
+  userAnswer: string
+): Promise<string> {
+  try {
+    const response = await fetch('/geminiProxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        modelName: 'gemini-1.5-flash',
+        prompt: `You are a wise medical attending using the Socratic method to guide PA students.
+
+Question: ${questionText}
+
+Student's Answer: ${userAnswer}
+Correct Answer: ${correctAnswer}
+
+Instructions:
+- Do NOT reveal the correct answer directly.
+- Identify the likely misconception that led the student to choose their answer.
+- Provide a single sentence hint that bridges the logical gap and guides them toward the right reasoning.
+- Focus on clinical findings, pathophysiology, or key differentiating features.
+- Keep the hint concise and actionable (under 30 words).
+
+Example format: "Consider the absence of wheezing and the presence of an S3 gallop; which pathology does that favor?"
+
+Provide ONLY the hint sentence, no additional commentary.`,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Gemini proxy error');
+    }
+
+    const data = await response.json();
+    const hint = typeof data === 'string' ? data : data.text || '';
+    return hint.trim();
+  } catch (error) {
+    console.error('Error generating Socratic hint:', error);
+    // Fallback hint if API fails
+    return "Think about the key clinical findings and what they tell you about the underlying pathology. What diagnosis best fits this pattern?";
+  }
+}
+
+/**
  * Parameters for AI tutor answer analysis
  */
 export interface AnalyzeAnswerParams {

@@ -116,7 +116,28 @@ body,
   /* Premium noise texture for glass cards (2.5% opacity grain overlay) */
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   
-  /* Theme-aware color variables - Light Mode */
+  /* ===== SEMANTIC DESIGN SYSTEM - LIGHT MODE ===== */
+  
+  /* Main backgrounds */
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+  
+  /* Card/Container system */
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  
+  /* Primary brand color */
+  --primary: #0284C7;
+  --primary-foreground: #FFFFFF;
+  
+  /* Muted/Secondary */
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  
+  /* Border */
+  --border: #E2E8F0;
+  
+  /* Legacy theme-aware variables (for backward compatibility) */
   --color-bg-primary: #FFFFFF;
   --color-bg-secondary: #F8FAFC;
   --color-bg-tertiary: #F1F5F9;
@@ -140,7 +161,28 @@ body,
 }
 
 .dark {
-  /* Theme-aware color variables - Dark Mode */
+  /* ===== SEMANTIC DESIGN SYSTEM - DARK MODE ===== */
+  
+  /* Main backgrounds */
+  --background: #0F172A;
+  --foreground: #F1F5F9;
+  
+  /* Card/Container system */
+  --card: #1E293B;
+  --card-foreground: #F1F5F9;
+  
+  /* Primary brand color */
+  --primary: #0EA5E9;
+  --primary-foreground: #FFFFFF;
+  
+  /* Muted/Secondary */
+  --muted: #334155;
+  --muted-foreground: #94A3B8;
+  
+  /* Border */
+  --border: #475569;
+  
+  /* Legacy theme-aware variables (for backward compatibility) */
   --color-bg-primary: #0F172A;
   --color-bg-secondary: #1E293B;
   --color-bg-tertiary: #334155;
