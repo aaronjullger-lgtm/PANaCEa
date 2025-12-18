@@ -1,14 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Scan, 
   Image, 
   FileCheck, 
   Beaker, 
   Pill,
   BookOpen,
   ArrowLeft,
-  ExternalLink
+  ExternalLink,
+  Wrench
 } from 'lucide-react';
 
 interface ToolkitHubProps {
@@ -27,15 +27,6 @@ interface ToolkitItem {
 }
 
 const TOOLKIT_ITEMS: ToolkitItem[] = [
-  {
-    id: 'ar_anatomy',
-    title: '3D Anatomy AR',
-    description: 'Interactive 3D anatomical structures with AR visualization',
-    icon: Scan,
-    color: 'text-violet-600 dark:text-violet-400',
-    bgGradient: 'from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20',
-    route: 'ar_anatomy'
-  },
   {
     id: 'radiology_scroll',
     title: 'Radiology Scroll',
@@ -101,8 +92,9 @@ export default function ToolkitHub({ onNavigateToItem, onClose }: ToolkitHubProp
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-3">
-            🧰 Toolkit Hub
+          <h1 className="text-4xl font-bold text-[var(--color-text-primary)] mb-3 flex items-center gap-3">
+            <Wrench className="w-10 h-10 text-[var(--color-accent)]" />
+            Toolkit Hub
           </h1>
           <p className="text-lg text-[var(--color-text-muted)] max-w-3xl">
             Reference materials and learning aids to support your PANCE preparation. 
@@ -167,8 +159,9 @@ export default function ToolkitHub({ onNavigateToItem, onClose }: ToolkitHubProp
         transition={{ duration: 0.4, delay: 0.6 }}
         className="max-w-6xl mx-auto mt-12 p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]"
       >
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-          💡 How to Use the Toolkit
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2 flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-[var(--color-accent)]" />
+          How to Use the Toolkit
         </h3>
         <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
           The Toolkit Hub contains reference materials and passive learning resources. 

@@ -106,6 +106,72 @@ export function generateSessionId(): string {
 }
 
 /**
+ * Save a single chat message to the session history
+ */
+export async function saveChatMessage(
+  sessionId: string, 
+  role: 'user' | 'patient', 
+  content: string
+): Promise<boolean> {
+  try {
+    const response = await fetch('/api/osce/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        sessionId, 
+        userId: 'current', // Will be replaced by server with actual userId from auth
+        role, 
+        message: content 
+      })
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Error saving chat message:', error);
+    return false;
+  }
+}
+
+/**
+ * Retrieve session chat history
+ */
+export async function getSessionHistory(sessionId: string): Promise<Array<{
+  id: string;
+  role: 'user' | 'patient';
+  message: string;
+  timestamp: string;
+  phase?: string;
+}> | null> {
+  try {
+    const response = await fetch(`/api/osce/history?sessionId=${encodeURIComponent(sessionId)}`);
+    
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    return data.history || [];
+  } catch (error) {
+    console.error('Error fetching session history:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear all chat messages for a session
+ */
+export async function clearSession(sessionId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`/api/osce/cleanup?sessionId=${encodeURIComponent(sessionId)}`, {
+      method: 'POST'
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('Error clearing session:', error);
+    return false;
+  }
+}
+
+/**
  * Calculate score for encounter session
  */
 export function calculateEncounterScore(

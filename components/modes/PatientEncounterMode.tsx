@@ -1,14 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight, ChevronDown, ChevronUp, Shield } from 'lucide-react';
 import type { PatientEncounterCase, PatientQuestion, EncounterSession } from '@/types/drill-modes';
-import { getRandomEncounterCase, calculateEncounterScore } from '@/services/osceService';
+import { getRandomEncounterCase, calculateEncounterScore, saveChatMessage, getSessionHistory, clearSession } from '@/services/osceService';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { translateToSpanish, type SpanishMode } from '@/services/medicalSpanishService';
 import { chatWithPatientSimulator, evaluateDiagnosis, performPhysicalExam, orderDiagnosticTest, evaluateTreatmentPlan, generateAfterActionReport } from '@/services/geminiService';
 import { startOSCESession, saveOSCEChat, completeOSCESession } from '@/services/osceService';
 import { Activity, Stethoscope, Microscope, FileText, Pill, ChevronRight, PauseCircle, PlayCircle } from 'lucide-react';
 import { Sparkline } from '@/components/Sparkline';
+
+// Clinical Fidelity settings interface
+interface ClinicalFidelitySettings {
+  emrInterface: boolean;
+  writeOrders: boolean;
+  rawLabValues: boolean;
+  multimediaAuscultation: boolean;
+}
+
+// Load clinical fidelity settings from localStorage
+function loadClinicalFidelitySettings(): ClinicalFidelitySettings {
+  const saved = localStorage.getItem('panceai_clinical_fidelity');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return { emrInterface: false, writeOrders: false, rawLabValues: false, multimediaAuscultation: false };
+    }
+  }
+  return { emrInterface: false, writeOrders: false, rawLabValues: false, multimediaAuscultation: false };
+}
 
 interface PatientEncounterModeProps {
   onExit?: () => void;
@@ -47,6 +68,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [treatmentFeedback, setTreatmentFeedback] = useState<{ isCorrect: boolean; feedback: string; score: number } | null>(null);
   const [aar, setAar] = useState<string>('');
   const [isPatientInfoExpanded, setIsPatientInfoExpanded] = useState(true);
+  
+  // Clinical Fidelity Mode
+  const [clinicalFidelity, setClinicalFidelity] = useState<ClinicalFidelitySettings>(() => loadClinicalFidelitySettings());
+  const isFidelityModeActive = clinicalFidelity.rawLabValues || clinicalFidelity.emrInterface;
+  
+  // Listen for changes to clinical fidelity settings
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'panceai_clinical_fidelity') {
+        setClinicalFidelity(loadClinicalFidelitySettings());
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const toggleLanguageMode = () => {
     setLanguageMode(prev => {
@@ -172,12 +208,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       
       setCurrentQuestion('');
 
-      // Persist chat
+      // Persist chat messages individually
       if (session.id) {
-        saveOSCEChat(session.id, [
-          { role: 'user', content: currentQuestion, timestamp: newQuestion.timestamp },
-          { role: 'model', content: response, timestamp: Date.now() }
-        ]);
+        // Save user message
+        await saveChatMessage(session.id, 'user', currentQuestion);
+        // Save patient response
+        await saveChatMessage(session.id, 'patient', response);
       }
 
     } catch (error) {
@@ -555,6 +591,13 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Clinical Fidelity Badge */}
+              {isFidelityModeActive && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full border border-amber-300 dark:border-amber-700">
+                  <Shield className="w-3.5 h-3.5" />
+                  <span className="text-xs font-semibold">Fidelity Mode</span>
+                </div>
+              )}
               <button
                 onClick={toggleLanguageMode}
                 aria-label="Toggle Language Mode"
@@ -921,7 +964,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                           <div className="flex items-center gap-2 text-xs font-bold text-purple-500 uppercase">
                             <Activity className="w-3 h-3" /> Diagnostics
                           </div>
-                          {trendData && (
+                          {trendData && !clinicalFidelity.rawLabValues && (
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-purple-400 uppercase font-semibold">Trend</span>
                               <Sparkline 
@@ -939,6 +982,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         <p className="text-[#364154] dark:text-[#cbd5e1] text-sm pl-4 border-l-2 border-purple-300 whitespace-pre-wrap font-mono">
                           Result: {r.result}
                         </p>
+                        {/* Hide interpretation in Clinical Fidelity mode - makes user interpret raw values */}
+                        {!clinicalFidelity.rawLabValues && r.interpretation && (
+                          <p className="text-[#64748b] dark:text-[#94a3b8] text-xs pl-4 border-l-2 border-purple-200 italic">
+                            Interpretation: {r.interpretation}
+                          </p>
+                        )}
                       </div>
                     );
                   })}

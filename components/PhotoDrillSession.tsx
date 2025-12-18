@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoDrill, type CategoryType, type ClinicalContext } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
+import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity as ActivityIcon, Shuffle, User, Heart, ClipboardList, Eye, EyeOff, Stethoscope } from 'lucide-react';
 
 export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
@@ -221,9 +222,9 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
   // =========================================================================
   if (status === 'playing' || status === 'feedback') {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-slate-950 text-[var(--color-text-primary)] flex flex-col">
         {/* Floating Header */}
-        <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
+        <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 dark:bg-slate-950/80 backdrop-blur-sm border-b border-[var(--color-border)]">
           <button
             onClick={handleExit}
             className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
@@ -372,14 +373,14 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                 
                 {/* Image View (shown for non-derm cases or when revealed) */}
                 {(imageRevealed || !currentCase.clinicalContext) && (
-                  <div className="relative bg-[var(--color-bg-secondary)] rounded-lg overflow-hidden shadow-2xl w-full">
+                  <div className="relative bg-slate-900 dark:bg-slate-950 rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto">
                     <img
                       src={currentCase.imageUrl}
                       alt={`Medical ${currentCase.modality.toUpperCase()} case`}
-                      className="w-full aspect-[3/2] object-contain"
+                      className="w-full max-h-[50vh] object-contain"
                     />
                     {/* Modality Badge */}
-                    <div className="absolute top-3 left-3 px-2.5 py-1 bg-[var(--color-bg-tertiary)]/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    <div className="absolute top-3 left-3 px-2.5 py-1 bg-slate-800/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-slate-300">
                       {currentCase.modality === 'derm' ? 'Clinical Presentation' : currentCase.modality}
                     </div>
                   </div>
@@ -434,7 +435,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                           isCorrect ? 'text-emerald-400' : 'text-red-400'
                         }`}
                       >
-                        {isCorrect ? 'Correct!' : 'Incorrect'}
+                        {isCorrect ? 'Correct' : 'Incorrect'}
                       </div>
                       {!isCorrect && (
                         <div className="text-sm text-[var(--color-text-secondary)] mt-1">

@@ -51,7 +51,7 @@ const MiniDrillLayout: React.FC<MiniDrillLayoutProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-slate-950 text-[var(--color-text-primary)] flex flex-col">
       {/* Flash overlay for correct/incorrect feedback */}
       <AnimatePresence>
         {isFeedback && isCorrect !== null && (

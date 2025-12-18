@@ -21,6 +21,10 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
   lastStudyDate,
   streakHistory = [],
 }) => {
+  // Handle loading/null states gracefully
+  const safeStreak = currentStreak ?? 0;
+  const safeBestStreak = bestStreak ?? 0;
+  
   // Use UTC date to ensure consistency regardless of client timezone
   const todayUTC = getTodayUTC();
   const today = todayUTC.toISOString().split('T')[0];
@@ -34,20 +38,21 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
   });
   
   const getStreakColor = () => {
-    if (currentStreak === 0) return 'text-slate-400';
-    if (currentStreak < 3) return 'text-orange-500';
-    if (currentStreak < 7) return 'text-orange-600';
-    if (currentStreak < 14) return 'text-red-500';
+    if (safeStreak === 0) return 'text-slate-400';
+    if (safeStreak < 3) return 'text-orange-500';
+    if (safeStreak < 7) return 'text-orange-600';
+    if (safeStreak < 14) return 'text-red-500';
     return 'text-red-600';
   };
   
   const getStreakMessage = () => {
-    if (currentStreak === 0) return "Start your streak today!";
-    if (currentStreak === 1) return "Great start! Keep it going!";
-    if (currentStreak < 7) return "Building momentum!";
-    if (currentStreak < 14) return "You're on fire!";
-    if (currentStreak < 30) return "Unstoppable! Keep crushing it!";
+    if (safeStreak === 0) return "Start your streak today!";
+    if (safeStreak === 1) return "Great start! Keep it going!";
+    if (safeStreak < 7) return "Building momentum!";
+    if (safeStreak < 14) return "You're on fire!";
+    if (safeStreak < 30) return "Unstoppable! Keep crushing it!";
     return "Legendary dedication!";
+  };
   };
   
   const hasStudiedOnDate = (date: string) => {
@@ -65,7 +70,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           <Flame className="w-5 h-5 text-orange-500" />
           Study Streak
         </h3>
-        {currentStreak >= bestStreak && currentStreak > 0 && (
+        {safeStreak >= safeBestStreak && safeStreak > 0 && (
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -81,16 +86,16 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
       <div className="flex items-center justify-between mb-6">
         <div>
           <motion.div
-            key={currentStreak}
+            key={safeStreak}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="flex items-baseline gap-2"
           >
             <span className={`text-5xl font-bold ${getStreakColor()}`}>
-              {currentStreak}
+              {safeStreak}
             </span>
             <span className="text-lg text-slate-600 dark:text-slate-400">
-              {currentStreak === 1 ? 'day' : 'days'}
+              {safeStreak === 1 ? 'day' : 'days'}
             </span>
           </motion.div>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -104,7 +109,7 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           </div>
           <div className="flex items-center gap-1 text-2xl font-bold text-slate-700 dark:text-slate-300">
             <TrendingUp className="w-5 h-5" />
-            {bestStreak}
+            {safeBestStreak}
           </div>
         </div>
       </div>
@@ -166,8 +171,8 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
           className="mt-4 p-3 bg-[var(--color-bg-secondary)] rounded-lg border border-[var(--color-border)]"
         >
           <p className="text-sm text-slate-700 dark:text-slate-300 text-center">
-            {currentStreak > 0 
-              ? `Keep your ${currentStreak}-day streak alive! Study today.`
+            {safeStreak > 0 
+              ? `Keep your ${safeStreak}-day streak alive! Study today.`
               : 'Start building your study habit today!'
             }
           </p>

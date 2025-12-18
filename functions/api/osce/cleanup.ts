@@ -1,6 +1,7 @@
 /**
  * API: Delete OSCE chat history for a session
  * DELETE /api/osce/history?sessionId={sessionId}
+ * POST /api/osce/cleanup?sessionId={sessionId}
  * 
  * Query params:
  * - sessionId: string (required)
@@ -11,13 +12,7 @@
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
-export async function onRequestDelete(context: { request: Request; env: Env }) {
-  const { request, env } = context;
-
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
-
+async function handleCleanup(request: Request, env: Env) {
   const authContext = await authenticateRequest(request, env);
   if (!authContext) {
     return createErrorResponse('Unauthorized', 401);
@@ -47,4 +42,24 @@ export async function onRequestDelete(context: { request: Request; env: Env }) {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+export async function onRequestDelete(context: { request: Request; env: Env }) {
+  const { request, env } = context;
+
+  if (request.method === 'OPTIONS') {
+    return handleCorsOptions();
+  }
+
+  return handleCleanup(request, env);
+}
+
+export async function onRequestPost(context: { request: Request; env: Env }) {
+  const { request, env } = context;
+
+  if (request.method === 'OPTIONS') {
+    return handleCorsOptions();
+  }
+
+  return handleCleanup(request, env);
 }

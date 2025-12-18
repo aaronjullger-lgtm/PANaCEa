@@ -42,10 +42,10 @@ const AntibioticMode = lazy(() => import("./components/modes/AntibioticMode"));
 const PatientEncounterMode = lazy(() => import("./components/modes/PatientEncounterMode"));
 const CodeBlueSpeedMode = lazy(() => import("./components/modes/CodeBlueSpeedMode"));
 const GrandRoundsMode = lazy(() => import("./components/modes/GrandRoundsMode"));
+const MedicalWordleMode = lazy(() => import("./components/modes/MedicalWordleMode"));
 const IntegrationsHub = lazy(() => import("./components/integrations/IntegrationsHub"));
 const SettingsStatsModal = lazy(() => import("./components/SettingsStatsModal"));
 const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcutsModal"));
-const ARAnatomyMode = lazy(() => import("./components/ar/ARAnatomyMode"));
 const PANRELASimulator = lazy(() => import("./components/lifelong-learning/PANRELASimulator"));
 const CramMode = lazy(() => import("./components/modes/CramMode"));
 const CommandPalette = lazy(() => import("./components/CommandPalette"));
@@ -76,8 +76,9 @@ const DRILL_MODE_PATIENT_ENCOUNTER: TrainingModeId = 'patient_encounter';
 const DRILL_MODE_CODE_BLUE: TrainingModeId = 'code_blue_speed';
 const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
 const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
+const DRILL_MODE_MEDICAL_WORDLE: TrainingModeId = 'medical_wordle';
 
-type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "ar_anatomy" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "admin_media" | "social_dashboard" | "toolkit";
+type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -418,12 +419,12 @@ const App: React.FC = () => {
       setView('code_blue_speed');
     } else if (modeId === DRILL_MODE_GRAND_ROUNDS) {
       setView('grand_rounds');
-    } else if (modeId === 'ar_anatomy') {
-      setView('ar_anatomy');
     } else if (modeId === 'panre_la') {
       setView('panre_la');
     } else if (modeId === DRILL_MODE_CRAM) {
       setView('cram_mode');
+    } else if (modeId === DRILL_MODE_MEDICAL_WORDLE) {
+      setView('medical_wordle');
     } else if (modeId === 'admin_media') {
       setView('admin_media');
     } else if (modeId === 'toolkit') {
@@ -720,12 +721,6 @@ const App: React.FC = () => {
             </Suspense>
           )}
 
-          {view === "ar_anatomy" && (
-            <Suspense fallback={<Loader />}>
-              <ARAnatomyMode onClose={() => setView("menu")} />
-            </Suspense>
-          )}
-
           {view === "panre_la" && (
             <Suspense fallback={<Loader />}>
               <PANRELASimulator onExit={() => setView("menu")} />
@@ -747,6 +742,12 @@ const App: React.FC = () => {
           {view === "grand_rounds" && (
             <Suspense fallback={<Loader />}>
               <GrandRoundsMode onExit={() => setView("menu")} />
+            </Suspense>
+          )}
+
+          {view === "medical_wordle" && (
+            <Suspense fallback={<Loader />}>
+              <MedicalWordleMode onExit={() => setView("menu")} />
             </Suspense>
           )}
 

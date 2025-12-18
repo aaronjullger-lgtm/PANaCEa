@@ -197,7 +197,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] dark:bg-slate-950 text-[var(--color-text-primary)] flex flex-col">
       {/* Flash overlay for correct/incorrect feedback */}
       <AnimatePresence>
         {status === 'feedback' && (
@@ -215,7 +215,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 backdrop-blur-sm border-b border-[var(--color-border)]">
+      <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)]/80 dark:bg-slate-950/80 backdrop-blur-sm border-b border-[var(--color-border)]">
         <button
           onClick={handleExit}
           className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
@@ -327,7 +327,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
                         isCorrect ? 'text-emerald-400' : 'text-red-400'
                       }`}
                     >
-                      {isCorrect ? 'Correct!' : 'Incorrect'}
+                      {isCorrect ? 'Correct' : 'Incorrect'}
                     </div>
                     {!isCorrect && (
                       <div className="text-sm text-[var(--color-text-secondary)] mt-1">
