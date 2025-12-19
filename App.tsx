@@ -54,6 +54,7 @@ const MediaApproval = lazy(() => import("./pages/admin/MediaApproval"));
 const StudyGroupDashboard = lazy(() => import("./components/social/StudyGroupDashboard"));
 const ToolkitHub = lazy(() => import("./components/toolkit/ToolkitHub"));
 const GapAnalysisDashboard = lazy(() => import("./components/dashboard/GapAnalysisDashboard"));
+const CommandCenterHub = lazy(() => import("./components/CommandCenterHub"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -79,7 +80,7 @@ const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
 const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
 const DRILL_MODE_MEDICAL_WORDLE: TrainingModeId = 'medical_wordle';
 
-type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis";
+type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -110,7 +111,7 @@ const App: React.FC = () => {
   // Check authentication status
   const { isSignedIn, isLoaded: authLoaded } = useUser();
 
-  const [view, setView] = useState<View>("menu");
+  const [view, setView] = useState<View>("command_center");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -356,8 +357,8 @@ const App: React.FC = () => {
   };
 
   const handleEndSession = () => {
-    // Just go back to menu; keep performance/missed/flagged
-    setView("menu");
+    // Just go back to command center; keep performance/missed/flagged
+    setView("command_center");
     setSessionSettings(null);
     setQuestionQueue([]);
   };
@@ -470,7 +471,7 @@ const App: React.FC = () => {
       <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <motion.button
-            onClick={() => setView("menu")}
+            onClick={() => setView("command_center")}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -557,6 +558,31 @@ const App: React.FC = () => {
         )}
 
         <AnimatePresence mode="wait">
+          {view === "command_center" && (
+            <motion.div
+              key="command_center"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <Suspense fallback={<Loader />}>
+                <CommandCenterHub
+                  performanceData={heatmapPerformance}
+                  missedQuestions={missedQuestions}
+                  flaggedQuestions={flaggedQuestions}
+                  onStartSession={handleStartSession}
+                  onNavigateToDrillMode={handleNavigateToDrillMode}
+                  onNavigateToToolkit={() => setView("toolkit")}
+                  onNavigateToGapAnalysis={() => setView("gap_analysis")}
+                  onNavigateToIntegrations={() => setView("integrations")}
+                  growthAreas={growthAreas}
+                />
+              </Suspense>
+            </motion.div>
+          )}
+
           {view === "menu" && (
             <motion.div
               key="menu"
@@ -615,7 +641,7 @@ const App: React.FC = () => {
                   sessionSettings={sessionSettings}
                   growthAreas={growthAreas}
                   onEndSession={handleEndSession}
-                  onShowMenu={() => setView("menu")}
+                  onShowMenu={() => setView("command_center")}
                   performanceData={heatmapPerformance}
                   fontSizeAdjustment={fontSizeAdjustment}
                   setFontSizeAdjustment={setFontSizeAdjustment}
@@ -630,86 +656,86 @@ const App: React.FC = () => {
 
           {view === "photo_drill" && (
             <Suspense fallback={<Loader />}>
-              <PhotoDrillSession onExit={() => setView("menu")} />
+              <PhotoDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {/* ECG, Derm, and Imaging drills use the same PhotoDrillSession component with different filters */}
           {view === "ecg_drill" && (
             <Suspense fallback={<Loader />}>
-              <PhotoDrillSession onExit={() => setView("menu")} filterType="ecg" />
+              <PhotoDrillSession onExit={() => setView("command_center")} filterType="ecg" />
             </Suspense>
           )}
 
           {view === "derm_drill" && (
             <Suspense fallback={<Loader />}>
-              <PhotoDrillSession onExit={() => setView("menu")} filterType="derm" />
+              <PhotoDrillSession onExit={() => setView("command_center")} filterType="derm" />
             </Suspense>
           )}
 
           {view === "imaging_drill" && (
             <Suspense fallback={<Loader />}>
-              <PhotoDrillSession onExit={() => setView("menu")} filterType="imaging" />
+              <PhotoDrillSession onExit={() => setView("command_center")} filterType="imaging" />
             </Suspense>
           )}
 
           {view === "rapid_recall" && (
             <Suspense fallback={<Loader />}>
-              <RapidRecallDrill onExit={() => setView("menu")} />
+              <RapidRecallDrill onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "ddx_compare" && (
             <Suspense fallback={<Loader />}>
-              <DDxCompareDrill onExit={() => setView("menu")} />
+              <DDxCompareDrill onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "mini_lab" && (
             <Suspense fallback={<Loader />}>
-              <MiniLabDrillSession onExit={() => setView("menu")} />
+              <MiniLabDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "pharmacology" && (
             <Suspense fallback={<Loader />}>
-              <PharmDrillSession onExit={() => setView("menu")} />
+              <PharmDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "first_line_treatment" && (
             <Suspense fallback={<Loader />}>
-              <FirstLineDrillSession onExit={() => setView("menu")} />
+              <FirstLineDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "condition_drill" && (
             <Suspense fallback={<Loader />}>
-              <ConditionDrillSession onExit={() => setView("menu")} />
+              <ConditionDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "guideline_drill" && (
             <Suspense fallback={<Loader />}>
-              <GuidelineDrillSession onExit={() => setView("menu")} />
+              <GuidelineDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "fluid_electrolyte" && (
             <Suspense fallback={<Loader />}>
-              <FluidElectrolyteMode onExit={() => setView("menu")} />
+              <FluidElectrolyteMode onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "antibiotic_mode" && (
             <Suspense fallback={<Loader />}>
-              <AntibioticMode onExit={() => setView("menu")} />
+              <AntibioticMode onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "patient_encounter" && (
             <Suspense fallback={<Loader />}>
-              <PatientEncounterMode onExit={() => setView("menu")} />
+              <PatientEncounterMode onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
@@ -718,38 +744,38 @@ const App: React.FC = () => {
               <IntegrationsHub
                 performanceData={performanceData}
                 missedQuestions={missedQuestions}
-                onBack={() => setView("menu")}
+                onBack={() => setView("command_center")}
               />
             </Suspense>
           )}
 
           {view === "panre_la" && (
             <Suspense fallback={<Loader />}>
-              <PANRELASimulator onExit={() => setView("menu")} />
+              <PANRELASimulator onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "cram_mode" && (
             <Suspense fallback={<Loader />}>
-              <CramMode onExit={() => setView("menu")} />
+              <CramMode onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "code_blue_speed" && (
             <Suspense fallback={<Loader />}>
-              <CodeBlueSpeedMode onExit={() => setView("menu")} />
+              <CodeBlueSpeedMode onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "grand_rounds" && (
             <Suspense fallback={<Loader />}>
-              <GrandRoundsMode onExit={() => setView("menu")} />
+              <GrandRoundsMode onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "medical_wordle" && (
             <Suspense fallback={<Loader />}>
-              <MedicalWordleMode onExit={() => setView("menu")} />
+              <MedicalWordleMode onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
@@ -757,7 +783,7 @@ const App: React.FC = () => {
             <Suspense fallback={<Loader />}>
               <div className="relative">
                 <button
-                  onClick={() => setView("menu")}
+                  onClick={() => setView("command_center")}
                   className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-slate-600 dark:text-slate-400"><path d="m15 18-6-6 6-6"/></svg>
@@ -769,7 +795,7 @@ const App: React.FC = () => {
 
           {view === "admin_media" && (
             <Suspense fallback={<Loader />}>
-              <MediaApproval onClose={() => setView("menu")} />
+              <MediaApproval onClose={() => setView("command_center")} />
             </Suspense>
           )}
 
@@ -784,7 +810,7 @@ const App: React.FC = () => {
             >
               <Suspense fallback={<Loader />}>
                 <ToolkitHub 
-                  onClose={() => setView("menu")}
+                  onClose={() => setView("command_center")}
                   onNavigateToItem={handleNavigateToDrillMode}
                 />
               </Suspense>

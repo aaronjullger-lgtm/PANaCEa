@@ -47,6 +47,7 @@ import DecisionTimeAnalysis from './analytics/DecisionTimeAnalysis';
 import LongitudinalProgressDashboard from './analytics/LongitudinalProgressDashboard';
 import WeaknessCheatsheetExporter from './analytics/WeaknessCheatsheetExporter';
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
+import EnhancedSettingsTab from './settings/EnhancedSettingsTab';
 
 // Lazy load Character Gallery
 const CharacterGallery = lazy(() => import('./characters/CharacterGallery'));
@@ -896,183 +897,19 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
               </div>
             ) : (
               <div className="space-y-4 sm:space-y-6">
-                {/* User Profile Section */}
-                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-4">
-                    <User className="w-5 h-5 text-[var(--color-accent)]" />
-                    <h3 className="font-medium text-[var(--color-text-primary)] dark:text-slate-100">Your Profile</h3>
-                  </div>
-                  <p className="text-xs text-[var(--color-text-muted)] dark:text-slate-100 mb-4">
-                    Keep your information updated to help us personalize your learning experience.
-                  </p>
-                  
-                  <div className="space-y-4">
-                    {/* School */}
-                    <div>
-                      <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
-                        <School className="w-4 h-4" />
-                        PA School/Program
-                      </label>
-                      <input
-                        type="text"
-                        value={userProfile.school || ''}
-                        onChange={(e) => handleUpdateSchool(e.target.value)}
-                        placeholder="e.g., Duke University, Stanford PA Program"
-                        className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
-                          text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]
-                          focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
-                          transition-all text-sm"
-                      />
-                    </div>
-
-                    {/* Graduation Date */}
-                    <div>
-                      <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
-                        <Calendar className="w-4 h-4" />
-                        Expected/Actual Graduation Month
-                      </label>
-                      <input
-                        type="month"
-                        value={userProfile.graduationDate || ''}
-                        onChange={(e) => handleUpdateGraduationDate(e.target.value)}
-                        className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
-                          text-[var(--color-text-primary)]
-                          focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
-                          transition-all text-sm"
-                      />
-                    </div>
-
-                    {/* Year in Program */}
-                    <div>
-                      <label className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)] mb-2">
-                        <GraduationCap className="w-4 h-4" />
-                        Where are you in your PA journey?
-                      </label>
-                      <select
-                        value={userProfile.yearInProgram || ''}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value && YEAR_IN_PROGRAM_OPTIONS.includes(value as YearInProgram)) {
-                            handleUpdateYearInProgram(value as YearInProgram);
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg 
-                          text-[var(--color-text-primary)]
-                          focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent
-                          transition-all text-sm"
-                      >
-                        <option value="">Select year...</option>
-                        {YEAR_IN_PROGRAM_OPTIONS.map((year) => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Rotation Selector - Only show if in Clinical Year */}
-                    {userProfile.yearInProgram === 'Clinical Year' && (
-                      <div>
-                        <RotationSelector
-                          value={userProfile.currentRotation}
-                          onChange={handleUpdateRotation}
-                          label="Current Clinical Rotation"
-                        />
-                      </div>
-                    )}
-
-                    {/* Certified PA Toggle */}
-                    <div>
-                      <label className="flex items-center justify-between cursor-pointer p-3 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors">
-                        <div className="flex items-center gap-3">
-                          <GraduationCap className="w-4 h-4 text-[var(--color-text-muted)]" />
-                          <div>
-                            <div className="font-medium text-[var(--color-text-primary)]">
-                              Certified PA
-                            </div>
-                            <div className="text-xs text-[var(--color-text-muted)]">
-                              Enable PANRE-LA Simulator access
-                            </div>
-                          </div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={userProfile.isCertifiedPA || false}
-                          onChange={(e) => {
-                            const updated = updateUserProfile({ isCertifiedPA: e.target.checked });
-                            setUserProfile(updated);
-                          }}
-                          className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Theme Toggle */}
-                {onToggleTheme && (
-                  <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {theme === 'dark' ? (
-                          <Moon className="w-5 h-5 text-[var(--color-text-muted)]" />
-                        ) : (
-                          <Sun className="w-5 h-5 text-amber-500" />
-                        )}
-                        <div>
-                          <div className="font-medium text-[var(--color-text-primary)]">Theme</div>
-                          <div className="text-sm text-[var(--color-text-muted)]">
-                            Currently using {theme} mode
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={onToggleTheme}
-                        className="px-4 py-2 bg-[var(--color-accent)] text-white dark:text-slate-900 rounded-lg hover:opacity-90 transition-opacity"
-                      >
-                        Switch to {theme === 'dark' ? 'Light' : 'Dark'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Analytics Color Palette */}
-                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
-                  <div className="mb-3">
-                    <h3 className="font-medium text-[var(--color-text-primary)]">Analytics Color Palette</h3>
-                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                      Choose color scheme for charts, heatmaps, progress bars, and data visualizations. This does not affect the main UI theme.
-                    </p>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {ANALYTICS_PALETTES.map(palette => (
-                      <button
-                        key={palette.id}
-                        onClick={() => handleSetAnalyticsPalette(palette.id)}
-                        className={`p-3 rounded-lg border-2 transition-all text-left ${
-                          analyticsPalette === palette.id
-                            ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
-                            : 'border-[var(--color-border)] hover:border-[var(--color-accent)]/50 bg-[var(--color-bg-primary)]'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-[var(--color-text-primary)]">{palette.label}</span>
-                          {analyticsPalette === palette.id && (
-                            <Check className="w-4 h-4 text-[var(--color-accent)]" />
-                          )}
-                        </div>
-                        <p className="text-xs text-[var(--color-text-muted)] mb-2">{palette.description}</p>
-                        <div className="flex gap-1">
-                          {Object.values(palette.colors).slice(0, 5).map((color, i) => (
-                            <div
-                              key={i}
-                              className="w-6 h-6 rounded-md border border-[var(--color-border)]"
-                              style={{ backgroundColor: color }}
-                            />
-                          ))}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                {/* Enhanced Settings Tab - Career Stage & Profile */}
+                <EnhancedSettingsTab
+                  theme={theme}
+                  onToggleTheme={onToggleTheme}
+                  analyticsPalette={analyticsPalette}
+                  onSetAnalyticsPalette={handleSetAnalyticsPalette}
+                />
+                
+                {/* Divider */}
+                <div className="border-t border-[var(--color-border)] pt-4">
+                  <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">
+                    Advanced Study Options
+                  </h3>
                 </div>
 
                 {/* System Selection */}

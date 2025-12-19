@@ -143,6 +143,7 @@ export interface UserProfile {
   yearInProgram?: YearInProgram;
   isCertifiedPA?: boolean;
   hasCompletedOnboarding: boolean;
+  specialty?: string; // For practicing PAs - their current specialty area
 }
 
 // Constants for dropdown options
