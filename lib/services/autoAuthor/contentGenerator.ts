@@ -16,9 +16,44 @@ import type {
   ContentGenerationResult,
 } from "./types";
 
-const MODEL_NAME = "gemini-2.0-flash-exp";
+const MODEL_CANDIDATES = [
+  process.env.GEMINI_PRO_MODEL || "gemini-2.5-pro",
+  "gemini-2.0-flash",
+  "gemini-1.5-pro",
+];
 const DEFAULT_TEMPERATURE = 0.7;
 const MAX_RETRIES = 2;
+
+async function generateTextWithFallback(
+  apiKey: string,
+  prompt: string,
+  temperature: number
+): Promise<{ text: string; modelUsed: string }> {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  let lastError: unknown;
+
+  for (const modelName of MODEL_CANDIDATES) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: { temperature },
+      });
+
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const text = response.text();
+
+      return { text, modelUsed: modelName };
+    } catch (error) {
+      lastError = error;
+      console.warn(`Gemini model ${modelName} failed, trying fallback...`);
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("All Gemini models failed");
+}
 
 /**
  * Clean markdown code fences from AI response
@@ -95,14 +130,6 @@ export async function generateConditionContent(
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: MODEL_NAME,
-      generationConfig: {
-        temperature: options.temperature || DEFAULT_TEMPERATURE,
-      },
-    });
-
     const prompt = buildContentPrompt(options);
     
     let lastError: Error | null = null;
@@ -110,9 +137,11 @@ export async function generateConditionContent(
     // Retry logic for transient failures
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        const text = response.text();
+        const { text, modelUsed } = await generateTextWithFallback(
+          apiKey,
+          prompt,
+          options.temperature || DEFAULT_TEMPERATURE
+        );
         
         // Clean response
         const cleanedText = stripCodeFences(text);
@@ -145,6 +174,7 @@ export async function generateConditionContent(
         return {
           success: true,
           content,
+          modelUsed,
         };
       } catch (err) {
         lastError = err as Error;
@@ -235,18 +265,11 @@ Return this exact JSON structure:
 }`;
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: MODEL_NAME,
-      generationConfig: { temperature },
-    });
-
     let lastError: Error | null = null;
     
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
         const cleanedText = stripCodeFences(text);
         const parsed = JSON.parse(cleanedText);
         
@@ -261,7 +284,7 @@ Return this exact JSON structure:
           indications: Array.isArray(parsed.indications) ? parsed.indications : [],
         };
         
-        return { success: true, content };
+        return { success: true, content, modelUsed };
       } catch (err) {
         lastError = err as Error;
         if (attempt < MAX_RETRIES) {
@@ -320,18 +343,11 @@ Return this exact JSON structure:
 }`;
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: MODEL_NAME,
-      generationConfig: { temperature },
-    });
-
     let lastError: Error | null = null;
     
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
         const cleanedText = stripCodeFences(text);
         const parsed = JSON.parse(cleanedText);
         
@@ -346,7 +362,7 @@ Return this exact JSON structure:
           radiationRisk: Boolean(parsed.radiationRisk),
         };
         
-        return { success: true, content };
+        return { success: true, content, modelUsed };
       } catch (err) {
         lastError = err as Error;
         if (attempt < MAX_RETRIES) {
@@ -405,18 +421,11 @@ Return this exact JSON structure:
 }`;
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: MODEL_NAME,
-      generationConfig: { temperature },
-    });
-
     let lastError: Error | null = null;
     
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
         const cleanedText = stripCodeFences(text);
         const parsed = JSON.parse(cleanedText);
         
@@ -431,7 +440,7 @@ Return this exact JSON structure:
           seriousSideEffects: Array.isArray(parsed.seriousSideEffects) ? parsed.seriousSideEffects : [],
         };
         
-        return { success: true, content };
+        return { success: true, content, modelUsed };
       } catch (err) {
         lastError = err as Error;
         if (attempt < MAX_RETRIES) {
@@ -489,18 +498,11 @@ Return this exact JSON structure:
 }`;
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: MODEL_NAME,
-      generationConfig: { temperature },
-    });
-
     let lastError: Error | null = null;
     
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const { text, modelUsed } = await generateTextWithFallback(apiKey, prompt, temperature);
         const cleanedText = stripCodeFences(text);
         const parsed = JSON.parse(cleanedText);
         
@@ -514,7 +516,7 @@ Return this exact JSON structure:
           clinicalSignificance: parsed.clinicalSignificance,
         };
         
-        return { success: true, content };
+        return { success: true, content, modelUsed };
       } catch (err) {
         lastError = err as Error;
         if (attempt < MAX_RETRIES) {

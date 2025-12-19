@@ -19,6 +19,14 @@ interface RequestBody {
   temperature?: number;
 }
 
+const DEFAULT_MODEL = "gemini-2.5-flash";
+const ALLOWED_MODELS = new Set([
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
+  "gemini-2.0-flash",
+  "gemini-1.5-pro",
+]);
+
 interface GeminiAPIResponse {
   candidates?: Array<{
     content?: {
@@ -114,7 +122,11 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       );
     }
     
-    const { modelName = "gemini-1.5-flash", prompt, temperature = 0.8 } = body;
+    const { modelName = DEFAULT_MODEL, prompt, temperature = 0.8 } = body;
+
+    const resolvedModel = ALLOWED_MODELS.has(modelName)
+      ? modelName
+      : DEFAULT_MODEL;
 
     if (!prompt || typeof prompt !== 'string') {
       return new Response(
@@ -147,7 +159,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     }
 
     // Call Gemini API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${resolvedModel}:generateContent?key=${apiKey}`;
     
     const geminiResponse = await fetch(geminiUrl, {
       method: "POST",

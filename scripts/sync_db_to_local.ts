@@ -1,53 +1,75 @@
+#!/usr/bin/env tsx
+/**
+ * Back-Sync Agent: DB → Local Registry Files
+ * 
+ * Ensures that new records created in the database (e.g., by AI or Admin Panel)
+ * get written back to the local TypeScript registry files so they aren't lost.
+ * 
+ * Logic:
+ * 1. Load all Conditions and Drugs from Prisma
+ * 2. Read local registry files as raw text
+ * 3. Find DB records not present in local files
+ * 4. Inject missing entries before the closing `];` bracket
+ * 5. Create .bak backup before writing
+ * 
+ * Usage: npx tsx scripts/sync_db_to_local.ts
+ */
 
 import { PrismaClient } from '@prisma/client';
-import fs from 'fs/promises';
+import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const prisma = new PrismaClient();
 
-// --- Cleaning Logic ---
+const CONDITION_REGISTRY_PATH = path.join(__dirname, '../conditionRegistry.ts');
+const DRUG_REGISTRY_PATH = path.join(__dirname, '../drugRegistry.ts');
 
-function cleanText(text: string): string {
-  if (!text) return text;
-  // Remove "---" separators often found in AI output
-  let cleaned = text.replace(/\n\s*---\s*\n/g, '\n\n');
-  cleaned = cleaned.trim();
-  return cleaned;
+/**
+ * Normalize a name for comparison (lowercase, remove special chars)
+ */
+function normalizeName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-function cleanContentObject(obj: any): any {
-  if (typeof obj === 'string') {
-    return cleanText(obj);
-  } else if (Array.isArray(obj)) {
-    return obj.map(item => cleanContentObject(item));
-  } else if (typeof obj === 'object' && obj !== null) {
-    const newObj: any = {};
-    for (const key in obj) {
-      newObj[key] = cleanContentObject(obj[key]);
+/**
+ * Check if a condition name exists in the file text
+ */
+function conditionExistsInFile(fileText: string, conditionName: string): boolean {
+  const normalized = normalizeName(conditionName);
+  const lines = fileText.split('\n');
+  
+  for (const line of lines) {
+    // Look for: condition: "..."
+    const match = line.match(/condition:\s*["']([^"']+)["']/);
+    if (match && normalizeName(match[1]) === normalized) {
+      return true;
     }
-    return newObj;
   }
-  return obj;
+  
+  return false;
 }
 
-// --- Main Sync Logic ---
-
-async function main() {
-  console.log('Starting DB -> Local JSON Sync & Cleanup...');
-
-  // 1. Fetch all content from DB
-  // We use a cursor-based approach or just fetch all if it fits in memory. 
-  // The previous error was 11MB, which is large but manageable if we don't select everything or increase limits.
-  // However, for the JSON files, we need the full content. 
-  // Let's fetch in batches to be safe, but build the full map in memory (Node can handle 11MB easily).
+/**
+ * Check if a drug name exists in the file text
+ */
+function drugExistsInFile(fileText: string, genericName: string): boolean {
+  const normalized = normalizeName(genericName);
+  const lines = fileText.split('\n');
   
-  const allDbContent = new Map<string, any>();
-  let updatedDbCount = 0;
+  for (const line of lines) {
+    // Look for: genericName: "..."
+    const match = line.match(/genericName:\s*["']([^"']+)["']/);
+    if (match && normalizeName(match[1]) === normalized) {
+      return true;
+    }
+  }
   
-  console.log('Fetching and cleaning DB records...');
-  
-  let cursor: string | undefined = undefined;
-  const BATCH_SIZE = 50;
+  return false;
+}
   
   while (true) {
     const batch = await prisma.medicalContent.findMany({

@@ -60,6 +60,7 @@ export interface ContentGenerationResult<T = any> {
   content?: T;
   error?: string;
   tokensUsed?: number;
+  modelUsed?: string;
 }
 
 export interface AutoAuthorStats {

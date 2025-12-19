@@ -9,6 +9,7 @@ assets/media
 assets/infographics
 *.log
 logs/
+backups/
 .cache
 .temp
 .tmp

@@ -76,7 +76,7 @@ export interface ParsedQuestionResponse {
 // --- Helper: call serverless function, which talks to Gemini ---
 
 export async function callGeminiText(
-  modelName: string,
+  modelName: string = GEMINI_FLASH_MODEL,
   prompt: string,
   temperature: number = 0.8
 ): Promise<string> {

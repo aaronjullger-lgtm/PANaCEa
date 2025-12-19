@@ -11,9 +11,43 @@
  * - Time-to-answer analysis
  */
 
-import { FSRS, FSRSCard, FSRSState, Rating, defaultParameters } from '../fsrs';
+import { FSRS, FSRSCard, FSRSState, Rating, defaultParameters, FSRSParameters } from '../fsrs';
 
 const fsrs = new FSRS();
+
+/**
+ * Load user-specific FSRS parameters from database
+ * Falls back to defaults if user has no custom config
+ */
+async function loadUserFSRSConfig(userId: string): Promise<FSRSParameters> {
+  try {
+    if (typeof window !== 'undefined' || !process.env.DATABASE_URL) {
+      return defaultParameters;
+    }
+    const { prisma } = await import('../prisma');
+    const config = await prisma.userSRSConfig.findUnique({
+      where: { userId },
+    });
+    if (config && Array.isArray(config.wWeights)) {
+      return {
+        request_retention: config.requestRetention,
+        maximum_interval: defaultParameters.maximum_interval,
+        w: config.wWeights as number[],
+      };
+    }
+  } catch (error) {
+    console.warn('[SRS] Failed to load user config, using defaults:', error);
+  }
+  return defaultParameters;
+}
+
+/**
+ * Create FSRS instance with user-specific or default parameters
+ */
+async function createUserFSRS(userId: string): Promise<FSRS> {
+  const params = await loadUserFSRSConfig(userId);
+  return new FSRS(params);
+}
 
 // ============================================================================
 // Types & Interfaces
@@ -349,11 +383,12 @@ export function getDueCards(
  * @param input - Review outcome data
  * @returns Computed schedule result
  */
-export function updateReviewOutcome(
+export async function updateReviewOutcome(
   userId: string,
   questionId: string,
   input: SRSUpdateInput
-): SRSScheduleResult {
+): Promise<SRSScheduleResult> {
+  const userFsrs = await createUserFSRS(userId);
   const items = loadSRSItems();
   let item = items.get(questionId);
   
@@ -376,7 +411,7 @@ export function updateReviewOutcome(
       last_review: item.fsrsLastReview || new Date(),
     };
 
-    const { card: newCard } = fsrs.next(card, new Date(), rating);
+    const { card: newCard } = userFsrs.next(card, new Date(), rating);
     
     const interval = Math.max(1, Math.round(newCard.scheduled_days));
     // Keep legacy easiness updated for backward compatibility/fallback
@@ -503,7 +538,7 @@ export function updateReviewOutcome(
     last_review: item.fsrsLastReview || item.lastReviewed,
   };
 
-  const scheduled = fsrs.next(fsrsCard, now, rating);
+  const scheduled = userFsrs.next(fsrsCard, now, rating);
   
   const newFsrsStability = scheduled.card.stability;
   const newFsrsDifficulty = scheduled.card.difficulty;

@@ -88,9 +88,31 @@ model User {
   /// Social
   studyGroups        StudyGroupMember[]
 
+  /// Grand Rounds attempts
+  grandRoundsAttempts GrandRoundsAttempt[]
+
+  /// User-specific FSRS tuning config
+  srsConfig          UserSRSConfig?
+
   @@index([clerkId])
   @@index([email])
   @@index([role])
+}
+
+/// Stores user-specific FSRS algorithm parameters (the 'w' weights) for personalized spaced repetition
+model UserSRSConfig {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  requestRetention Float    @default(0.9) // Target retention (0.8 - 0.95)
+  wWeights         Json     // Array of 19 FSRS parameters
+  lastTuned        DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([lastTuned])
 }
 
 /// Represents a laboratory test definition
@@ -553,6 +575,8 @@ model Buzzword {
   subcategory String?
   explanation String?
   
+  dailyWords  DailyWordle[] // Used in daily Wordle game
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
