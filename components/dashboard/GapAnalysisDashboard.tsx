@@ -81,12 +81,12 @@ interface HighYieldSidebarProps {
 
 const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudyClick }) => {
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
       <div className="flex items-center gap-2 mb-4">
         <Target className="w-5 h-5 text-amber-600" />
-        <h3 className="text-lg font-bold text-zinc-900">High Yield Focus</h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">High Yield Focus</h3>
       </div>
-      <p className="text-sm text-zinc-600 mb-6">
+      <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
         Top priorities based on gap size and question volume
       </p>
 
@@ -103,16 +103,16 @@ const HighYieldSidebar: React.FC<HighYieldSidebarProps> = ({ topSystems, onStudy
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-bold text-amber-600">#{index + 1}</span>
-                  <h4 className="font-semibold text-zinc-900">{system.name}</h4>
+                  <h4 className="font-semibold text-slate-900 dark:text-slate-100">{system.name}</h4>
                 </div>
-                <p className="text-sm text-zinc-600 mt-1">
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                   +{Math.round(system.topPerformerGap)}% to reach Top 10%
                 </p>
               </div>
             </div>
 
             <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-4 text-xs text-zinc-600">
+              <div className="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
                 <span>Your: {system.accuracy}%</span>
                 <span>Goal: {system.cohortP90}%</span>
               </div>
@@ -140,24 +140,24 @@ const CustomTooltip = ({ active, payload }: any) => {
 
   const data = payload[0].payload;
   return (
-    <div className="bg-white border border-zinc-200 rounded-lg px-4 py-3 shadow-lg">
-      <h4 className="font-bold text-zinc-900 mb-2">{data.name}</h4>
+    <div className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 shadow-lg">
+      <h4 className="font-bold text-slate-900 dark:text-slate-100 mb-2">{data.name}</h4>
       <div className="space-y-1 text-sm">
         <div className="flex items-center justify-between gap-4">
-          <span className="text-zinc-600">Your Accuracy:</span>
-          <span className="font-semibold text-blue-600">{data.accuracy}%</span>
+          <span className="text-slate-600 dark:text-slate-400">Your Accuracy:</span>
+          <span className="font-semibold text-blue-600 dark:text-blue-400">{data.accuracy}%</span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span className="text-zinc-600">Cohort Average:</span>
-          <span className="font-semibold text-zinc-700">{data.cohortAverage}%</span>
+          <span className="text-slate-600 dark:text-slate-400">Cohort Average:</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">{data.cohortAverage}%</span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span className="text-zinc-600">Top 10%:</span>
-          <span className="font-semibold text-amber-600">{data.cohortP90}%</span>
+          <span className="text-slate-600 dark:text-slate-400">Top 10%:</span>
+          <span className="font-semibold text-amber-600 dark:text-amber-500">{data.cohortP90}%</span>
         </div>
-        <div className="border-t border-zinc-200 pt-2 mt-2">
+        <div className="border-t border-slate-200 dark:border-slate-700 pt-2 mt-2">
           <div className="flex items-center justify-between gap-4">
-            <span className="text-zinc-600">Gap to Close:</span>
+            <span className="text-slate-600 dark:text-slate-400">Gap to Close:</span>
             <span className="font-bold text-amber-600">+{Math.round(data.topPerformerGap)}%</span>
           </div>
         </div>
@@ -223,12 +223,12 @@ export const GapAnalysisDashboard: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-zinc-50 p-6">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="h-8 bg-zinc-200 rounded w-1/3 animate-pulse mb-8" />
+          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-1/3 animate-pulse mb-8" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 h-96 bg-white rounded-2xl border border-zinc-200 animate-pulse" />
-            <div className="h-96 bg-white rounded-2xl border border-zinc-200 animate-pulse" />
+            <div className="lg:col-span-2 h-96 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 animate-pulse" />
+            <div className="h-96 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 animate-pulse" />
           </div>
         </div>
       </div>
@@ -238,11 +238,11 @@ export const GapAnalysisDashboard: React.FC = () => {
   // Error state
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl border border-red-200 p-8 max-w-md text-center">
-          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-zinc-900 mb-2">Unable to Load Analysis</h3>
-          <p className="text-zinc-600 mb-4">{error || 'No data available'}</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-red-200 dark:border-red-800 p-8 max-w-md text-center">
+          <AlertCircle className="w-12 h-12 text-red-600 dark:text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Unable to Load Analysis</h3>
+          <p className="text-slate-600 dark:text-slate-400 mb-4">{error || 'No data available'}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
@@ -281,7 +281,7 @@ export const GapAnalysisDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <motion.div
@@ -290,10 +290,10 @@ export const GapAnalysisDashboard: React.FC = () => {
           transition={{ duration: 0.4 }}
         >
           <div className="flex items-center gap-3 mb-2">
-            <TrendingUp className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-zinc-900">Gap Analysis</h1>
+            <TrendingUp className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Gap Analysis</h1>
           </div>
-          <p className="text-zinc-600">
+          <p className="text-slate-600 dark:text-slate-400">
             Your performance vs. Top 10% across all systems • {data.userTotalAttempts} total attempts
           </p>
         </motion.div>
@@ -349,11 +349,11 @@ export const GapAnalysisDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
-            className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 p-6"
+            className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6"
           >
             <div className="mb-6">
-              <h3 className="text-lg font-bold text-zinc-900 mb-1">Performance vs. Top 10%</h3>
-              <p className="text-sm text-zinc-600">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Performance vs. Top 10%</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 Sorted by improvement opportunity (highest yield first)
               </p>
             </div>
@@ -364,21 +364,21 @@ export const GapAnalysisDashboard: React.FC = () => {
                 layout="vertical"
                 margin={{ top: 20, right: 30, bottom: 20, left: 100 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" horizontal={false} />
                 
                 <XAxis
                   type="number"
                   domain={[0, 100]}
-                  stroke="#71717a"
-                  tick={{ fill: '#71717a', fontSize: 11 }}
-                  label={{ value: 'Accuracy (%)', position: 'bottom', fill: '#71717a', fontSize: 12 }}
+                  stroke="#64748b"
+                  tick={{ fill: '#64748b', fontSize: 11 }}
+                  label={{ value: 'Accuracy (%)', position: 'bottom', fill: '#64748b', fontSize: 12 }}
                 />
                 
                 <YAxis
                   type="category"
                   dataKey="name"
-                  stroke="#71717a"
-                  tick={{ fill: '#71717a', fontSize: 11 }}
+                  stroke="#64748b"
+                  tick={{ fill: '#64748b', fontSize: 11 }}
                   width={90}
                 />
 

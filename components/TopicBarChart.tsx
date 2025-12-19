@@ -8,9 +8,9 @@ interface TopicBarChartProps {
 
 const TopicBarChart: React.FC<TopicBarChartProps> = ({ topicScores }) => {
   const getBarColor = (score: number): string => {
-    if (score < 75) return 'bg-red-500';
-    if (score < 85) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (score < 75) return 'bg-gradient-to-r from-amber-500 to-orange-500';
+    if (score < 85) return 'bg-gradient-to-r from-blue-400 to-blue-600';
+    return 'bg-gradient-to-r from-emerald-400 to-teal-500';
   };
 
   return (
