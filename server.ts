@@ -1098,6 +1098,133 @@ app.post('/api/analytics/soap-note', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/analytics/performance-deltas
+ * 
+ * Computes performance deltas for a user compared to their cohort.
+ * Returns actionable insights showing where the user is weak compared to peers.
+ * 
+ * Query Parameters:
+ * - cohortId (optional): Specific cohort ID, defaults to user's first cohort or 'global'
+ * 
+ * Returns:
+ * {
+ *   userTotalAttempts: number;
+ *   overallPercentile: number;
+ *   systems: Array<{
+ *     name: string;
+ *     accuracy: number;
+ *     cohortAverage: number;
+ *     cohortP90: number;
+ *     cohortDelta: number;        // User - Average (positive = above average)
+ *     topPerformerGap: number;    // P90 - User (positive = room to improve)
+ *     yieldScore: number;         // Priority score (gap * questions / 10)
+ *     isInsufficientData: boolean;
+ *   }>
+ * }
+ */
+app.get('/api/analytics/performance-deltas', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const cohortId = req.query.cohortId as string | undefined;
+
+    // Import analytics service
+    const { generatePeerComparison, getCohortBenchmarks } = await import('./lib/services/analyticsService');
+
+    // Fetch user's peer comparison data
+    const peerComparison = await generatePeerComparison(userId, cohortId);
+
+    // Determine the effective cohort ID used
+    let effectiveCohortId = cohortId;
+    if (!effectiveCohortId) {
+      const userCohort = await prisma.cohortMember.findFirst({
+        where: { userId },
+        select: { cohortId: true },
+      });
+      effectiveCohortId = userCohort?.cohortId || 'global';
+    }
+
+    // Fetch cohort benchmarks to get P90 data
+    const cohortBenchmarks = await getCohortBenchmarks(effectiveCohortId);
+
+    // Create a map for quick P90 lookup
+    const p90Map = new Map<string, number>();
+    for (const benchmark of cohortBenchmarks) {
+      p90Map.set(benchmark.system, benchmark.p90Accuracy);
+    }
+
+    // Calculate total attempts and overall percentile
+    const totalAttempts = peerComparison.reduce((sum, item) => sum + item.totalQuestions, 0);
+    const averagePercentile = peerComparison.length > 0
+      ? peerComparison.reduce((sum, item) => sum + item.userPercentile, 0) / peerComparison.length
+      : 0;
+
+    // Transform data: calculate deltas and yield scores
+    const systems = peerComparison.map((item) => {
+      const cohortP90 = p90Map.get(item.system) || item.cohortAverage; // Fallback to average if P90 not available
+      
+      // Delta calculations
+      const cohortDelta = item.userAccuracy - item.cohortAverage;
+      const topPerformerGap = cohortP90 - item.userAccuracy;
+      
+      // Yield score: prioritize systems with large gaps and enough attempts to validate the weakness
+      const yieldScore = topPerformerGap * (item.totalQuestions / 10);
+      
+      // Flag insufficient data
+      const isInsufficientData = item.totalQuestions < 10;
+
+      // Determine performance status
+      let status: 'strength' | 'average' | 'weakness' | 'critical';
+      if (isInsufficientData) {
+        status = cohortDelta >= 0 ? 'average' : 'weakness';
+      } else if (cohortDelta >= 10) {
+        status = 'strength'; // 10+ points above average
+      } else if (cohortDelta >= -5) {
+        status = 'average'; // Within 5 points of average
+      } else if (cohortDelta >= -15) {
+        status = 'weakness'; // 5-15 points below average
+      } else {
+        status = 'critical'; // 15+ points below average
+      }
+
+      return {
+        name: item.system,
+        accuracy: Math.round(item.userAccuracy * 10) / 10, // Round to 1 decimal
+        cohortAverage: Math.round(item.cohortAverage * 10) / 10,
+        cohortP90: Math.round(cohortP90 * 10) / 10,
+        cohortDelta: Math.round(cohortDelta * 10) / 10,
+        topPerformerGap: Math.round(topPerformerGap * 10) / 10,
+        yieldScore: Math.round(yieldScore * 10) / 10,
+        status,
+        isInsufficientData,
+      };
+    });
+
+    // Sort by yield score descending (biggest fixable weaknesses first)
+    systems.sort((a, b) => b.yieldScore - a.yieldScore);
+
+    res.json({
+      success: true,
+      data: {
+        userTotalAttempts: totalAttempts,
+        overallPercentile: Math.round(averagePercentile * 10) / 10,
+        systems,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to compute performance deltas:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to compute performance deltas',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 // Question flagging endpoints (Task 42: Feedback Loop Closure)
 app.post('/api/questions/flag',
   validateRequired(['userId', 'questionId', 'flagType', 'description']),

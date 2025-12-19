@@ -1,0 +1,9 @@
+/**
+ * Layout Components Index
+ * Central exports for PANaCEa layout system
+ */
+
+export { default as Sidebar } from './Sidebar';
+export { default as MainLayout } from './MainLayout';
+export { SectorGrid } from './SectorGrid';
+export type { SectorItem } from './SectorGrid';

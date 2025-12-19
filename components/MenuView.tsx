@@ -86,6 +86,8 @@ interface MenuViewProps {
   onNavigateToSocial?: () => void;
   /** Callback for navigating to toolkit hub */
   onNavigateToToolkit?: () => void;
+  /** Callback for navigating to gap analysis dashboard */
+  onNavigateToGapAnalysis?: () => void;
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;
@@ -115,6 +117,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   onNavigateToIntegrations,
   onNavigateToSocial,
   onNavigateToToolkit,
+  onNavigateToGapAnalysis,
   isSyncing,
   lastSyncTime,
   syncError,
@@ -747,6 +750,26 @@ const MenuView: React.FC<MenuViewProps> = ({
                   Quick Actions
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {/* Gap Analysis Button */}
+                  {onNavigateToGapAnalysis && (
+                    <motion.button
+                      onClick={onNavigateToGapAnalysis}
+                      className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left relative overflow-hidden group"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="absolute top-0 right-0 p-1.5 opacity-50 group-hover:opacity-100 transition-opacity">
+                        <span className="flex h-2 w-2 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                      </div>
+                      <BarChart3 className="w-8 h-8 mb-2 text-emerald-500" />
+                      <div className="font-semibold text-sm text-slate-900 dark:text-white">Gap Analysis</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Peer Benchmarks</div>
+                    </motion.button>
+                  )}
+
                   <motion.button
                     onClick={() => setShowQuickReview(true)}
                     className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"

@@ -46,6 +46,7 @@ model User {
   /// Authentication fields
   emailVerified     DateTime? // Email verification timestamp
   role              String    @default("user") // user, viewer, editor, approver, admin, superadmin
+  isAnonymous       Boolean   @default(false) // Hide identity in peer comparisons
   resetToken        String? // Password reset token (hashed)
   resetTokenExpiry  DateTime? // Reset token expiration
   verifyToken       String? // Email verification token (hashed)
@@ -88,11 +89,17 @@ model User {
   /// Social
   studyGroups        StudyGroupMember[]
 
+  /// Cohort memberships (professional study groups)
+  cohorts            CohortMember[]
+
   /// Grand Rounds attempts
   grandRoundsAttempts GrandRoundsAttempt[]
 
   /// User-specific FSRS tuning config
   srsConfig          UserSRSConfig?
+  
+  /// Peer statistics snapshots
+  peerStats          PeerStatistic[]
 
   @@index([clerkId])
   @@index([email])
@@ -1153,6 +1160,64 @@ model StudyGroupMember {
 
   @@unique([userId, groupId])
   @@index([groupId])
+}
+
+/// Represents a professional cohort (class, program, or study group)
+model Cohort {
+  id           String   @id @default(uuid())
+  name         String
+  code         String   @unique // Join code for invitations
+  description  String?  @db.Text
+  institution  String?
+  isPublic     Boolean  @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members      CohortMember[]
+  peerStats    PeerStatistic[]
+
+  @@index([name])
+  @@index([isPublic])
+}
+
+/// Links users to cohorts with roles
+model CohortMember {
+  id        String     @id @default(uuid())
+  userId    String
+  cohortId  String
+  role      CohortRole @default(MEMBER)
+  joinedAt  DateTime   @default(now())
+
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cohort    Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cohortId])
+  @@index([cohortId])
+  @@index([userId])
+}
+
+/// Cached peer statistics for percentile calculations
+model PeerStatistic {
+  id         String   @id @default(uuid())
+  userId     String
+  cohortId   String?
+  system     String
+  accuracy   Float
+  percentile Float
+  recordedAt DateTime
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cohort  Cohort? @relation(fields: [cohortId], references: [id])
+
+  @@unique([userId, cohortId, system, recordedAt])
+  @@index([userId, recordedAt])
+  @@index([cohortId, recordedAt])
+}
+
+enum CohortRole {
+  ADMIN
+  MEMBER
 }
 
 /// Represents an active Patient Encounter / OSCE session

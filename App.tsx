@@ -53,6 +53,7 @@ const UserProfileModal = lazy(() => import("./components/onboarding/UserProfileM
 const MediaApproval = lazy(() => import("./pages/admin/MediaApproval"));
 const StudyGroupDashboard = lazy(() => import("./components/social/StudyGroupDashboard"));
 const ToolkitHub = lazy(() => import("./components/ToolkitHub"));
+const GapAnalysisDashboard = lazy(() => import("./components/dashboard/GapAnalysisDashboard"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -78,7 +79,7 @@ const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
 const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
 const DRILL_MODE_MEDICAL_WORDLE: TrainingModeId = 'medical_wordle';
 
-type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit";
+type View = "menu" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -583,6 +584,7 @@ const App: React.FC = () => {
                   onNavigateToIntegrations={() => setView("integrations")}
                   onNavigateToSocial={() => setView("social_dashboard")}
                   onNavigateToToolkit={() => setView("toolkit")}
+                  onNavigateToGapAnalysis={() => setView("gap_analysis")}
                   isSyncing={isSyncing}
                   lastSyncTime={lastSyncTime}
                   syncError={syncError}
@@ -784,6 +786,23 @@ const App: React.FC = () => {
                 <ToolkitHub 
                   onClose={() => setView("menu")}
                   onNavigateToItem={handleNavigateToDrillMode}
+                />
+              </Suspense>
+            </motion.div>
+          )}
+
+          {view === "gap_analysis" && (
+            <motion.div
+              key="gap_analysis"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <Suspense fallback={<Loader />}>
+                <GapAnalysisDashboard 
+                  onBack={() => setView("menu")}
                 />
               </Suspense>
             </motion.div>
