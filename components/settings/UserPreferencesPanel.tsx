@@ -26,21 +26,21 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-4">
-        <Settings className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+        <Settings className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
           Learning Preferences
         </h3>
       </div>
 
       {/* Unit System */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
         <div className="flex items-start gap-3 mb-3">
           <Beaker className="w-5 h-5 mt-1 text-blue-600" />
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-900 dark:text-white">
+            <h4 className="font-semibold text-slate-900 dark:text-white">
               Laboratory Units
             </h4>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               Choose between US standard and international (SI) units for lab values
             </p>
           </div>
@@ -82,9 +82,9 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
         </div>
 
         {/* Examples */}
-        <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded text-xs">
+        <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded text-xs">
           <p className="font-semibold mb-1">Example conversions:</p>
-          <ul className="space-y-1 text-gray-600 dark:text-gray-400">
+          <ul className="space-y-1 text-slate-600 dark:text-slate-400">
             <li>• Glucose: {preferences.unitSystem === 'si' ? '5.5 mmol/L' : '100 mg/dL'}</li>
             <li>• Creatinine: {preferences.unitSystem === 'si' ? '88 µmol/L' : '1.0 mg/dL'}</li>
           </ul>
@@ -92,11 +92,11 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
       </div>
 
       {/* Drug Naming Convention */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
         <div className="flex items-start gap-3 mb-3">
           <Globe className="w-5 h-5 mt-1 text-green-600" />
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-900 dark:text-white">
+            <h4 className="font-semibold text-slate-900 dark:text-white">
               Drug Naming Convention
             </h4>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">

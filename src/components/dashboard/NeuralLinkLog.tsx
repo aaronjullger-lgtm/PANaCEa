@@ -68,10 +68,10 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-green-500/30 rounded-lg shadow-2xl overflow-hidden"
+      className="w-full h-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg overflow-hidden"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-900/40 to-emerald-900/40 border-b border-green-500/30 px-4 py-3">
+      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-slate-700 dark:to-slate-700 border-b border-slate-200 dark:border-slate-600 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <motion.div
@@ -84,13 +84,13 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
-              className="w-2 h-2 bg-green-500 rounded-full shadow-lg shadow-green-500/50"
+              className="w-2 h-2 bg-blue-500 dark:bg-cyan-400 rounded-full shadow-lg shadow-blue-500/50 dark:shadow-cyan-400/50"
             ></motion.div>
-            <h3 className="text-sm font-bold text-green-400 tracking-wider font-mono">
+            <h3 className="text-sm font-bold text-blue-700 dark:text-cyan-300 tracking-wider font-mono">
               🧠 CORTEX OPTIMIZATION ENGINE: ONLINE
             </h3>
           </div>
-          <div className="text-xs text-gray-500 font-mono">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
             v2.1.4
           </div>
         </div>
@@ -107,13 +107,13 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
               transition={{ duration: 0.3 }}
               className={`flex items-start gap-2 ${
                 line.includes('[DONE]')
-                  ? 'text-green-400'
+                  ? 'text-blue-600 dark:text-cyan-400'
                   : line.includes('[TIGHTENING]') || line.includes('[LOOSENING]')
-                  ? 'text-yellow-400'
-                  : 'text-gray-400'
+                  ? 'text-amber-500 dark:text-amber-400'
+                  : 'text-slate-600 dark:text-slate-400'
               }`}
             >
-              <span className="text-green-500">$</span>
+              <span className="text-blue-500 dark:text-cyan-400">$</span>
               <span className="flex-1">
                 {line}
                 {index === displayedLines.length - 1 && isTyping && (
@@ -135,7 +135,7 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center gap-1 text-gray-600"
+            className="flex items-center gap-1 text-slate-600 dark:text-slate-400"
           >
             <motion.span
               animate={{ opacity: [0.3, 1, 0.3] }}
@@ -164,20 +164,20 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2.5 }}
-        className="border-t border-green-500/20 bg-gray-900/50 px-4 py-3"
+        className="border-t border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 px-4 py-3"
       >
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-            <span className="text-gray-500">Last Tuned:</span>
-            <span className="text-gray-300">
+            <div className="w-1.5 h-1.5 bg-blue-500 dark:bg-cyan-400 rounded-full"></div>
+            <span className="text-slate-600 dark:text-slate-400">Last Tuned:</span>
+            <span className="text-slate-900 dark:text-slate-200">
               {lastTuned.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
           
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-            <span className="text-gray-500">Adjustment:</span>
+            <span className="text-slate-600 dark:text-slate-400">Adjustment:</span>
             <span className={`font-semibold ${
               adjustment === 'tighten' ? 'text-orange-400' : 'text-blue-400'
             }`}>
@@ -186,9 +186,9 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-gray-500">Next Optimization:</span>
-            <span className="text-green-400 font-semibold">{nextOptTime}</span>
+            <div className="w-1.5 h-1.5 bg-blue-500 dark:bg-cyan-400 rounded-full animate-pulse"></div>
+            <span className="text-slate-600 dark:text-slate-400">Next Optimization:</span>
+            <span className="text-blue-600 dark:text-cyan-400 font-semibold">{nextOptTime}</span>
           </div>
         </div>
       </motion.div>
@@ -203,7 +203,7 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
           repeat: Infinity,
           ease: 'linear',
         }}
-        className="absolute inset-0 bg-gradient-to-b from-transparent via-green-500/5 to-transparent h-8 pointer-events-none"
+        className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 dark:via-cyan-400/5 to-transparent h-8 pointer-events-none"
         style={{ mixBlendMode: 'screen' }}
       ></motion.div>
     </motion.div>
