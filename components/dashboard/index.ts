@@ -9,3 +9,8 @@ export { default as DecayCurve } from './charts/DecayCurve';
 export { default as StabilityPyramid } from './charts/StabilityPyramid';
 export { default as NeuralLinkLog } from '../../src/components/dashboard/NeuralLinkLog';
 export { RetentionWidget } from './RetentionWidget';
+
+// New UX-enhanced components (Phase 14)
+export { GrandRoundsHero } from './GrandRoundsHero';
+export { default as TrainingMenuTiered } from './TrainingMenuTiered';
+export { GapAnalysisDashboard } from './GapAnalysisDashboard';
