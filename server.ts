@@ -1123,7 +1123,9 @@ app.post('/api/analytics/soap-note', async (req: Request, res: Response) => {
  *   }>
  * }
  */
+console.log('✓ Registering route: GET /api/analytics/performance-deltas');
 app.get('/api/analytics/performance-deltas', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  console.log('📊 Performance deltas endpoint hit by user:', req.auth?.userId);
   try {
     const userId = req.auth?.userId;
     if (!userId) {
@@ -3091,6 +3093,7 @@ app.listen(PORT, async () => {
 ║ API Endpoints:                                                 ║
 ║   - Health Check: http://localhost:${PORT}/health                 ║
 ║   - Content API: http://localhost:${PORT}/api/content/all         ║
+║   - Analytics: http://localhost:${PORT}/api/analytics/*           ║
 ║   - Gemini Proxy: http://localhost:${PORT}/geminiProxy            ║
 ║                                                                ║
 ║ Database: ${dbStatus.padEnd(50)}║
