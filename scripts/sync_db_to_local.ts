@@ -70,6 +70,17 @@ function drugExistsInFile(fileText: string, genericName: string): boolean {
   
   return false;
 }
+
+/**
+ * Main sync function
+ */
+async function main() {
+  const BATCH_SIZE = 100;
+  let cursor: string | undefined = undefined;
+  let updatedDbCount = 0;
+  const allDbContent = new Map<string, any>();
+  
+  console.log('Starting DB cleanup and sync...');
   
   while (true) {
     const batch = await prisma.medicalContent.findMany({
@@ -132,7 +143,7 @@ function drugExistsInFile(fileText: string, genericName: string): boolean {
     
     let fileContent: any[] = [];
     try {
-      const raw = await fs.readFile(filePath, 'utf-8');
+      const raw = await fs.promises.readFile(filePath, 'utf-8');
       fileContent = JSON.parse(raw);
     } catch (e) {
       console.log(`  - File ${filename} not found or invalid. Creating new.`);
@@ -181,7 +192,7 @@ function drugExistsInFile(fileText: string, genericName: string): boolean {
     // Sort by conditionId for stability
     newContentArray.sort((a, b) => a.conditionId.localeCompare(b.conditionId));
 
-    await fs.writeFile(filePath, JSON.stringify(newContentArray, null, 2));
+    await fs.promises.writeFile(filePath, JSON.stringify(newContentArray, null, 2));
     console.log(`  - Added ${addedCount} new records.`);
     console.log(`  - Updated ${modifiedCount} existing records.`);
     console.log(`  - Total records in file: ${newContentArray.length}`);

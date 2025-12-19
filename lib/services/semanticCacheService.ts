@@ -246,8 +246,8 @@ export async function getCacheStats(): Promise<{
     }, {} as Record<string, number>);
     
     const topConditions = Object.entries(systemCounts)
-      .map(([system, count]) => ({ system, count }))
-      .sort((a, b) => b.count - a.count)
+      .map(([system, count]) => ({ system, count: count as number }))
+      .sort((a, b) => (b.count as number) - (a.count as number))
       .slice(0, 10);
     
     return {

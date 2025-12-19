@@ -346,6 +346,21 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     handleSetAnalyticsPalette(analyticsPalette);
   }, []);
 
+  // Body scroll lock: Prevent background page scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      // Store original overflow value
+      const originalOverflow = document.body.style.overflow;
+      // Lock body scroll
+      document.body.style.overflow = 'hidden';
+      
+      // Cleanup: Restore original overflow on unmount or when modal closes
+      return () => {
+        document.body.style.overflow = originalOverflow || 'unset';
+      };
+    }
+  }, [isOpen]);
+
   // User profile update handlers
   const handleUpdateSchool = (school: string) => {
     const updated = updateUserProfile({ school });
@@ -524,14 +539,14 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-2 sm:p-4"
         onClick={onClose}
       >
         <motion.div 
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)] dark:border-slate-700"
+          className="flex flex-col bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-md rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-[var(--color-border)] dark:border-slate-700"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}

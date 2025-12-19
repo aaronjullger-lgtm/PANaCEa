@@ -112,7 +112,6 @@ export const NAVIGATION_STRUCTURE: NavigationCategory[] = [
       { label: 'Visual Diagnostics', path: '/skills/visuals', icon: 'Eye' },
     ],
   },
-];},
 ];
 
 // Add icon components to navigation items

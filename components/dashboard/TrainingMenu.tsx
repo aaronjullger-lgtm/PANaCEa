@@ -120,7 +120,45 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   // Filter out the core category and condition_drill (accessed via Condition Page) for the Bento grid
   // condition_drill is hidden from the main menu but users can access it via the Condition Page
   const HIDDEN_DRILL_MODES: TrainingModeId[] = ['condition_drill'];
-  const drillModes = MODE_REGISTRY.filter((mode) => mode.category !== 'core' && !HIDDEN_DRILL_MODES.includes(mode.id));
+  const drillModes = MODE_REGISTRY.filter((mode) => mode.intentGroup !== 'core_adaptive' && !HIDDEN_DRILL_MODES.includes(mode.id));
+
+  // Intent-based sections for clearer navigation
+  const INTENT_SECTIONS: Array<{
+    key: TrainingModeConfig['intentGroup'];
+    title: string;
+    description: string;
+  }> = [
+    {
+      key: 'clinical_reasoning',
+      title: 'Clinical Reasoning',
+      description: 'Differentials, scoring systems, and simulated patient encounters.',
+    },
+    {
+      key: 'visual_diagnostics',
+      title: 'Visual Diagnostics',
+      description: 'ECG, derm, imaging, and lab pattern recognition.',
+    },
+    {
+      key: 'high_yield_recall',
+      title: 'High-Yield Recall',
+      description: 'Rapid fire recall, pharmacology, and treatment-first thinking.',
+    },
+    {
+      key: 'mastery_competition',
+      title: 'Mastery & Competition',
+      description: 'Streak challenges, longitudinal assessments, and live competitions.',
+    },
+    {
+      key: 'fun_and_games',
+      title: 'Fun & Games',
+      description: 'Daily games and speed challenges to keep studying sticky.',
+    },
+    {
+      key: 'clinical_operations',
+      title: 'Clinical Ops & Procedures',
+      description: 'Fluid management, antibiotics, ventilators, and triage sims.',
+    },
+  ];
 
   /**
    * Get focus-specific description text
@@ -398,12 +436,13 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   /**
    * Render drill mode card with unique styling per mode - Clinical Theme
    */
-  const renderDrillCard = (mode: TrainingModeConfig) => {
+  const renderDrillCard = (mode: TrainingModeConfig, variant: 'featured' | 'standard' = 'standard') => {
     const ICON_MAP = getIconMap();
     const IconComponent = ICON_MAP[mode.iconName] ?? HelpCircle;
     const isDisabled = mode.isComingSoon;
     const styles = getDrillModeStyles(mode.id);
     const isStreakMode = mode.id === 'mastery_drill';
+    const featuredClasses = variant === 'featured' ? 'md:col-span-2 lg:col-span-2 shadow-lg hover:shadow-2xl' : '';
 
     return (
       <button
@@ -417,14 +456,15 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           ${styles.background}
           ${styles.border}
           ${isDisabled 
-            ? 'opacity-50 cursor-not-allowed grayscale' 
+            ? 'opacity-70 cursor-not-allowed bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-dashed' 
             : 'hover:scale-[1.02] cursor-pointer shadow-md hover:shadow-xl'
           }
+          ${featuredClasses}
           ${isStreakMode && streakHighScore > 0 ? 'animate-pulse-subtle' : ''}
         `}
       >
         {isDisabled && (
-          <span className="absolute top-2 right-2 text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full z-10">
+          <span className="absolute top-2 right-2 text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-200/80 dark:bg-slate-800/80 px-2 py-0.5 rounded-full z-10 border border-slate-300/60 dark:border-slate-700">
             Coming Soon
           </span>
         )}
@@ -455,8 +495,36 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     );
   };
 
+  /**
+   * Render a grouped section with a featured card and supporting cards
+   */
+  const renderSection = (key: TrainingModeConfig['intentGroup'], title: string, description: string) => {
+    const modes = drillModes.filter((mode) => mode.intentGroup === key);
+    if (modes.length === 0) return null;
+
+    const [featured, ...rest] = modes;
+
+    return (
+      <section key={key} className="space-y-3">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="text-lg font-bold text-[#1F283A] dark:text-[#E9ECF1]">{title}</h3>
+          <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">{description}</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Featured card spans two columns on lg */}
+          {featured && (
+            <div className="sm:col-span-2 lg:col-span-2">
+              {renderDrillCard(featured, 'featured')}
+            </div>
+          )}
+          {rest.map((mode) => renderDrillCard(mode, 'standard'))}
+        </div>
+      </section>
+    );
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Section A: The Core Adaptive Card */}
       {coreMode && (
         <div className="bg-white dark:bg-[#1F283A] rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
@@ -497,12 +565,11 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         </div>
       )}
 
-      {/* Section B: The Bento Grid */}
-      <div>
-        <h3 className="text-lg font-semibold text-[#1F283A] dark:text-[#E9ECF1] mb-4">Drill Modes</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {drillModes.map((mode) => renderDrillCard(mode))}
-        </div>
+      {/* Section B: Intent-Based Groups */}
+      <div className="space-y-8">
+        {INTENT_SECTIONS.map((section) =>
+          renderSection(section.key, section.title, section.description)
+        )}
       </div>
     </div>
   );

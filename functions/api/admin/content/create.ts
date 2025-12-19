@@ -56,7 +56,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     const newContent = await createDraft(
-      prisma,
+      prisma as any,
       {
         conditionId,
         system,

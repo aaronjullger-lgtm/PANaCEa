@@ -56,8 +56,18 @@ export interface TrainingModeConfig {
   label: string;
   /** Subtext/description displayed below the title */
   description: string;
-  /** Category grouping for the mode */
+  /** Legacy category (kept for backward compatibility) */
   category: 'core' | 'visual' | 'recall' | 'mastery' | 'pharmacology' | 'clinical';
+  /** Intent grouping for UI sections (drives TrainingMenu layout) */
+  intentGroup:
+    | 'core_adaptive'
+    | 'clinical_reasoning'
+    | 'visual_diagnostics'
+    | 'high_yield_recall'
+    | 'mastery_competition'
+    | 'fun_and_games'
+    | 'clinical_operations'
+    | 'other';
   /** Icon name (mapped to Lucide-React icons) */
   iconName: string;
   /** Theme color for Tailwind styling */
@@ -78,6 +88,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Core Adaptive',
     description: 'PANCE-level unique questions based on growth areas.',
     category: 'core',
+    intentGroup: 'core_adaptive',
     iconName: 'Brain',
     theme: 'stone',
     route: '/session/core-adaptive',
@@ -88,6 +99,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'ECG Interpretation',
     description: 'Master rhythm strips and 12-lead ECG patterns.',
     category: 'visual',
+    intentGroup: 'visual_diagnostics',
     iconName: 'Activity',
     theme: 'rose',
     route: '/drill/ecg',
@@ -97,6 +109,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Derm Recognition',
     description: 'Identify skin lesions and dermatological findings.',
     category: 'visual',
+    intentGroup: 'visual_diagnostics',
     iconName: 'Scan',
     theme: 'pink',
     route: '/drill/derm',
@@ -106,6 +119,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Imaging Review',
     description: 'X-ray, CT, and MRI pattern recognition.',
     category: 'visual',
+    intentGroup: 'visual_diagnostics',
     iconName: 'Image',
     theme: 'slate',
     route: '/drill/imaging',
@@ -115,6 +129,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Mini Lab Mode',
     description: 'Diagnose from structured lab results.',
     category: 'visual',
+    intentGroup: 'visual_diagnostics',
     iconName: 'ClipboardList',
     theme: 'emerald',
     route: '/drill/mini-lab',
@@ -125,6 +140,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Rapid Recall',
     description: 'High-yield buzzwords & flashcards.',
     category: 'recall',
+    intentGroup: 'high_yield_recall',
     iconName: 'Zap',
     theme: 'amber',
     route: '/session/rapid-recall',
@@ -134,6 +150,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'DDx Compare',
     description: 'Confusion mapping & side-by-side comparison.',
     category: 'recall',
+    intentGroup: 'clinical_reasoning',
     iconName: 'GitCompare',
     theme: 'blue',
     route: '/session/ddx-compare',
@@ -143,6 +160,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Guideline Mode',
     description: 'Scoring systems & clinical criteria.',
     category: 'recall',
+    intentGroup: 'clinical_reasoning',
     iconName: 'FileCheck',
     theme: 'teal',
     route: '/guidelines',
@@ -153,6 +171,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Condition Drill',
     description: '5-stage progressive drills for any condition.',
     category: 'recall',
+    intentGroup: 'clinical_reasoning',
     iconName: 'Layers',
     theme: 'violet',
     route: '/drill/condition',
@@ -164,6 +183,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'First Line Treatment',
     description: 'What is the go-to treatment for each condition?',
     category: 'pharmacology',
+    intentGroup: 'high_yield_recall',
     iconName: 'Pill',
     theme: 'cyan',
     route: '/drill/first-line',
@@ -174,6 +194,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Pharmacology Quiz',
     description: 'Drug mechanisms, side effects, and interactions.',
     category: 'pharmacology',
+    intentGroup: 'high_yield_recall',
     iconName: 'Beaker',
     theme: 'purple',
     route: '/drill/pharm',
@@ -185,6 +206,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Streak Challenge',
     description: 'Answer until you miss. How long can you survive?',
     category: 'mastery',
+    intentGroup: 'mastery_competition',
     iconName: 'Flame',
     theme: 'red',
     route: '/session/mastery-drill',
@@ -195,6 +217,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Hydro-Mode',
     description: 'Fluid & electrolyte calculations with numeric validation.',
     category: 'clinical',
+    intentGroup: 'clinical_operations',
     iconName: 'Droplets',
     theme: 'cyan',
     route: '/drill/fluid-electrolyte',
@@ -205,6 +228,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Bug-Drug Mastery',
     description: 'Antibiotic selection with rotating drill types.',
     category: 'clinical',
+    intentGroup: 'clinical_operations',
     iconName: 'Pill',
     theme: 'purple',
     route: '/drill/antibiotic',
@@ -215,6 +239,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Virtual OSCE',
     description: 'Interactive patient interviews with scoring.',
     category: 'clinical',
+    intentGroup: 'clinical_reasoning',
     iconName: 'MessageSquare',
     theme: 'teal',
     route: '/drill/patient-encounter',
@@ -225,6 +250,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'PANRE-LA Simulator',
     description: 'Practice longitudinal assessment format with quarterly tracking.',
     category: 'mastery',
+    intentGroup: 'mastery_competition',
     iconName: 'GraduationCap',
     theme: 'indigo',
     route: '/panre-la',
@@ -236,6 +262,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Code Blue Speed Mode',
     description: 'Timed ACLS/PALS rapid-fire. 5 seconds per question!',
     category: 'clinical',
+    intentGroup: 'fun_and_games',
     iconName: 'Siren',
     theme: 'red',
     route: '/drill/code-blue',
@@ -246,6 +273,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Grand Rounds Live',
     description: 'Weekly live quiz competitions (HQ Trivia style).',
     category: 'mastery',
+    intentGroup: 'mastery_competition',
     iconName: 'Trophy',
     theme: 'amber',
     route: '/drill/grand-rounds',
@@ -256,6 +284,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Cram Button',
     description: '50 highest-yield questions for rapid review.',
     category: 'core',
+    intentGroup: 'high_yield_recall',
     iconName: 'Clock',
     theme: 'orange',
     route: '/drill/cram',
@@ -267,6 +296,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Commuter Mode',
     description: 'Text-to-Speech with voice control for studying on-the-go.',
     category: 'core',
+    intentGroup: 'fun_and_games',
     iconName: 'Headphones',
     theme: 'cyan',
     route: '/drill/commuter',
@@ -278,6 +308,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Daily Term Challenge',
     description: 'Daily medical word guessing game. 6 tries to guess the drug or condition!',
     category: 'recall',
+    intentGroup: 'fun_and_games',
     iconName: 'Hash',
     theme: 'green',
     route: '/drill/medical-wordle',
@@ -289,6 +320,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Ventilator Hero',
     description: 'Adjust vent settings to manage ARDS, COPD, and critical patients.',
     category: 'clinical',
+    intentGroup: 'clinical_operations',
     iconName: 'Wind',
     theme: 'blue',
     route: '/drill/ventilator-hero',
@@ -299,6 +331,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Triage Tent',
     description: 'Mass casualty triage. Swipe to categorize victims using START protocol.',
     category: 'clinical',
+    intentGroup: 'clinical_operations',
     iconName: 'AlertTriangle',
     theme: 'red',
     route: '/drill/triage-tent',
@@ -309,6 +342,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Polypharmacy Puzzle',
     description: 'Geriatrics deprescribing challenge. Which meds can be safely stopped?',
     category: 'clinical',
+    intentGroup: 'clinical_operations',
     iconName: 'PillBottle',
     theme: 'amber',
     route: '/drill/polypharmacy',
@@ -319,6 +353,7 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     label: 'Radiology Scroll',
     description: 'Interactive DICOM viewer. Scroll through CT/MRI slices to find pathology.',
     category: 'visual',
+    intentGroup: 'visual_diagnostics',
     iconName: 'Layers',
     theme: 'slate',
     route: '/drill/radiology-scroll',

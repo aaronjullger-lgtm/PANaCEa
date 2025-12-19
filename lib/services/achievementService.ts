@@ -87,8 +87,8 @@ export async function getUserAchievements(
     return {
       achievementId: def.id,
       isUnlocked: !!unlocked,
-      progress: unlocked?.progress || 0,
-      unlockedAt: unlocked?.unlockedAt,
+      progress: (unlocked as any)?.progress || 0,
+      unlockedAt: (unlocked as any)?.unlockedAt,
     };
   });
 }

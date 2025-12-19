@@ -79,9 +79,9 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({
     const categoryLabels = {
       ecg: 'ECG Interpretation',
       derm: 'Clinical Presentation',
-      radiology: 'Imaging Analysis',
+      xray: 'Imaging Analysis',
     };
-    return categoryLabels[currentCase.category as keyof typeof categoryLabels] || 'Photo Drill';
+    return categoryLabels[currentCase.modality as keyof typeof categoryLabels] || 'Photo Drill';
   };
 
   // ============================================================================
@@ -160,7 +160,7 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({
             {/* Clinical Context (for derm mode) */}
             {currentCase.clinicalContext && !imageRevealed && (
               <div className="mb-6 p-6 bg-blue-500/10 border border-blue-500/30 rounded-xl">
-                <p className="text-lg text-blue-100">{currentCase.clinicalContext}</p>
+                <p className="text-lg text-blue-100">{JSON.stringify(currentCase.clinicalContext)}</p>
                 <button
                   onClick={() => setImageRevealed(true)}
                   className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
@@ -173,7 +173,7 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({
             {/* Image (auto-reveal for ECG/imaging, gated for derm) */}
             {(!currentCase.clinicalContext || imageRevealed) && (
               <img
-                src={currentCase.mediaUrl}
+                src={currentCase.imageUrl}
                 alt="Clinical case"
                 className="w-full rounded-xl shadow-2xl"
               />
@@ -184,13 +184,10 @@ const PhotoDrillSessionRefactored: React.FC<PhotoDrillSessionProps> = ({
         {/* Answer Input */}
         <div className="w-full max-w-2xl mx-auto px-4">
           <DiagnosisInput
-            value={userAnswer}
             onSubmit={submitAnswer}
-            validDiagnoses={validDiagnoses}
-            isCorrect={isCorrect}
-            correctAnswer={currentCase?.diagnosis || ''}
-            isDisabled={isCorrect !== null}
-            placeholder="Type the diagnosis..."
+            options={validDiagnoses}
+            disabled={isCorrect !== null}
+            autoFocus={true}
           />
 
           {/* Feedback & Next Button */}

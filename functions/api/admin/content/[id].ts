@@ -91,7 +91,7 @@ export async function onRequestPut(context: { request: Request; env: Env; params
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     const updated = await updateContent(
-      prisma,
+      prisma as any,
       params.id,
       { content: contentData },
       {

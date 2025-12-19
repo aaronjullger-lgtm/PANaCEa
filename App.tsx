@@ -52,7 +52,7 @@ const CommandPalette = lazy(() => import("./components/CommandPalette"));
 const UserProfileModal = lazy(() => import("./components/onboarding/UserProfileModal"));
 const MediaApproval = lazy(() => import("./pages/admin/MediaApproval"));
 const StudyGroupDashboard = lazy(() => import("./components/social/StudyGroupDashboard"));
-const ToolkitHub = lazy(() => import("./components/ToolkitHub"));
+const ToolkitHub = lazy(() => import("./components/toolkit/ToolkitHub"));
 const GapAnalysisDashboard = lazy(() => import("./components/dashboard/GapAnalysisDashboard"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
@@ -801,9 +801,7 @@ const App: React.FC = () => {
               transition={pageTransition}
             >
               <Suspense fallback={<Loader />}>
-                <GapAnalysisDashboard 
-                  onBack={() => setView("menu")}
-                />
+                <GapAnalysisDashboard />
               </Suspense>
             </motion.div>
           )}

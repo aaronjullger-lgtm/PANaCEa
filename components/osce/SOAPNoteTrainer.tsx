@@ -448,7 +448,6 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
                   ))}
                 </ul>
               </div>
-            </div>
             )}
           </motion.div>
         )}

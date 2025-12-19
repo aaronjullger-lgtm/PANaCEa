@@ -334,11 +334,17 @@ export async function getUserFavoritePearls(userId: string) {
 
   const pearlMap = new Map(pearls.map((p) => [p.id, p]));
 
-  return userPearls.map((up) => ({
-    ...pearlMap.get(up.pearlId),
-    notes: up.notes,
-    viewedAt: up.viewedAt,
-  }));
+  return userPearls
+    .map((up) => {
+      const pearl = pearlMap.get(up.pearlId);
+      if (!pearl) return null;
+      return {
+        ...(pearl as object),
+        notes: up.notes,
+        viewedAt: up.viewedAt,
+      };
+    })
+    .filter((p): p is NonNullable<typeof p> => p !== null);
 }
 
 /**

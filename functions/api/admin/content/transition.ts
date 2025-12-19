@@ -77,7 +77,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     const updated = await transitionStatus(
-      prisma,
+      prisma as any,
       contentId,
       newStatus as ContentStatus,
       {

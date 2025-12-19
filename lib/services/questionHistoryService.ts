@@ -326,7 +326,7 @@ export async function getQuestionsModifiedInRange(
     
     return Object.entries(grouped).map(([questionId, versions]) => ({
       questionId,
-      versions,
+      versions: versions as number,
     }));
   } catch (error) {
     console.error('[QuestionHistory] Error getting modified questions:', error);

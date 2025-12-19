@@ -89,7 +89,7 @@ export const onRequestPost = async (context) => {
     // Only ranked attempts should feed FSRS/Global stats pipelines
     if (isRankedAttempt) {
       try {
-        await updateGlobalAccuracy(prisma, userId);
+        await updateGlobalAccuracy(prisma as any, userId);
       } catch (statsError) {
         console.warn('Failed to update ranked stats', statsError);
       }
