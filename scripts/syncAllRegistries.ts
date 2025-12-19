@@ -16,6 +16,7 @@
 
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
+import { closeRegistrySync, formatSummary, syncConditions, syncDrugs } from '../lib/services/sync/registrySync';
 
 // Load environment variables
 config();
@@ -29,6 +30,7 @@ interface SyncResult {
   success: boolean;
   error?: string;
   duration: number;
+  summary?: string;
 }
 
 const results: SyncResult[] = [];
@@ -36,7 +38,7 @@ const results: SyncResult[] = [];
 /**
  * Run a sync script and capture result
  */
-async function runSync(registryName: string, syncFunction: () => Promise<void>): Promise<void> {
+async function runSync(registryName: string, syncFunction: () => Promise<string | void>): Promise<void> {
   const startTime = Date.now();
   
   try {
@@ -44,16 +46,20 @@ async function runSync(registryName: string, syncFunction: () => Promise<void>):
     console.log(`Starting: ${registryName}`);
     console.log('='.repeat(60));
     
-    await syncFunction();
+    const summary = await syncFunction();
     
     const duration = Date.now() - startTime;
     results.push({
       registry: registryName,
       success: true,
       duration,
+      summary,
     });
     
     console.log(`\n✅ ${registryName} completed in ${(duration / 1000).toFixed(2)}s`);
+    if (summary) {
+      console.log(`   → ${summary}`);
+    }
   } catch (error: any) {
     const duration = Date.now() - startTime;
     results.push({
@@ -76,17 +82,36 @@ async function main() {
   // Import and run all sync scripts
   try {
     // Core medical entities
-    const { syncAllConditions } = await import('./syncConditionTable');
-    await runSync('Conditions', syncAllConditions);
-    
-    const { syncAllDrugs } = await import('./syncDrugTable');
-    await runSync('Drugs', syncAllDrugs);
+    await runSync('Conditions', async () => {
+      const stats = await syncConditions();
+      return formatSummary('Conditions', stats);
+    });
+
+    await runSync('Drugs', async () => {
+      const stats = await syncDrugs();
+      return formatSummary('Drugs', stats);
+    });
     
     const { syncAllTests } = await import('./syncSpecialTestTable');
     await runSync('Special Tests', syncAllTests);
     
     const { syncAllAnatomy } = await import('./syncAnatomyTable');
     await runSync('Anatomy', syncAllAnatomy);
+
+    const { syncAllLabs } = await import('./syncLabTable');
+    await runSync('Lab Tests', syncAllLabs);
+
+    const { syncAllImaging } = await import('./syncImagingTable');
+    await runSync('Imaging Studies', syncAllImaging);
+
+    const { syncAllFindings } = await import('./syncFindingTable');
+    await runSync('Physical Exam Findings', syncAllFindings);
+
+    const { syncAllPhysiology } = await import('./syncPhysiologyTable');
+    await runSync('Physiology Concepts', syncAllPhysiology);
+
+    const { syncAllTreatments } = await import('./syncTreatmentTable');
+    await runSync('Treatments', syncAllTreatments);
     
     // Note: Additional sync scripts need to be created for:
     // - Lab Tests
@@ -119,6 +144,9 @@ async function main() {
       const icon = result.success ? '✅' : '❌';
       const duration = (result.duration / 1000).toFixed(2);
       console.log(`  ${index + 1}. ${icon} ${result.registry} (${duration}s)`);
+      if (result.summary) {
+        console.log(`     ${result.summary}`);
+      }
       if (result.error) {
         console.log(`     Error: ${result.error}`);
       }
@@ -138,8 +166,10 @@ async function main() {
       console.log('\n💡 Next steps:');
       console.log('   1. Run automation to generate content: npm run automation:daily');
       console.log('   2. Check weekly report: npm run automation:weekly\n');
-      process.exit(0);
+      await closeRegistrySync();
+      process.exit(1);
     }
+      await closeRegistrySync();
   } catch (error: any) {
     console.error('\n❌ Fatal error during master sync:', error);
     process.exit(1);

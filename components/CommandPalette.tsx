@@ -2,14 +2,18 @@
  * Command Palette Component
  * Provides quick navigation and search functionality across the app
  * Activated with Cmd+K / Ctrl+K
+ * 
+ * Search Features:
+ * - Server-side database search with intelligent ranking
+ * - Debounced API calls (300ms)
+ * - Medical alias matching
+ * - Loading states and error handling
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, ArrowRight } from 'lucide-react';
+import { Search, X, ArrowRight, Loader2 } from 'lucide-react';
 import { MODE_REGISTRY } from '../config/training-modes';
-import { searchConditions } from '../src/lib/conditionSearch';
-import { searchDrugs } from '../src/lib/drugSearch';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -25,6 +29,37 @@ interface SearchResult {
   action: () => void;
 }
 
+interface ApiSearchResult {
+  id: string;
+  title: string;
+  type: 'condition' | 'drug';
+  snippet: string;
+  matchType: 'exact' | 'alias' | 'fuzzy' | 'keyword';
+  score: number;
+  metadata?: {
+    system?: string;
+    drugClass?: string;
+    matchedAlias?: string;
+  };
+}
+
+// Debounce utility
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 export const CommandPalette: React.FC<CommandPaletteProps> = ({
   isOpen,
   onClose,
@@ -32,8 +67,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  // Debounce search query
+  const debouncedQuery = useDebounce(query, 300);
+
+  // Debounce search query
+  const debouncedQuery = useDebounce(query, 300);
 
   // Focus input when opened
   useEffect(() => {
@@ -47,15 +90,46 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     if (!isOpen) {
       setQuery('');
       setSelectedIndex(0);
+      setSearchError(null);
     }
   }, [isOpen]);
 
   const [results, setResults] = useState<SearchResult[]>([]);
 
-  // Search results
+  /**
+   * Fetch search results from server-side API
+   */
+  const fetchServerResults = useCallback(async (searchQuery: string): Promise<ApiSearchResult[]> => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      return [];
+    }
+
+    try {
+      setSearchError(null);
+      const response = await fetch(
+        `/api/content/search?q=${encodeURIComponent(searchQuery)}&limit=10`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Search failed');
+      }
+
+      const data = await response.json();
+      return data.results || [];
+    } catch (error) {
+      console.error('Search API error:', error);
+      setSearchError(error instanceof Error ? error.message : 'Search failed');
+      return [];
+    }
+  }, []);
+
+  /**
+   * Search results effect - triggers on debounced query change
+   */
   useEffect(() => {
     const fetchResults = async () => {
-      if (!query.trim()) {
+      if (!debouncedQuery.trim()) {
         // Show popular modes when no query
         setResults(MODE_REGISTRY.slice(0, 8).map(mode => ({
           id: mode.id,
@@ -67,13 +141,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             onClose();
           },
         })));
+        setIsSearching(false);
         return;
       }
 
+      setIsSearching(true);
       const searchResults: SearchResult[] = [];
-      const lowerQuery = query.toLowerCase();
+      const lowerQuery = debouncedQuery.toLowerCase();
 
-      // Search training modes
+      // Search training modes (client-side, instant)
       MODE_REGISTRY.forEach(mode => {
         if (
           mode.label.toLowerCase().includes(lowerQuery) ||
@@ -93,65 +169,35 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         }
       });
 
-      // Search conditions (limit to top 5)
+      // Search medical content (server-side, database)
       try {
-        const conditionResults = await searchConditions(query);
-        conditionResults.slice(0, 5).forEach(result => {
-          // Clean display name (remove parentheses)
-          const displayName = result.condition.replace(/\s*\([^)]*\)/g, '').trim();
-          
-          // Check if query matched an alias
-          const aliases = result.aliases || [];
-          const matchedAlias = aliases.find(alias => 
-            alias.toLowerCase().includes(lowerQuery) || 
-            lowerQuery.includes(alias.toLowerCase())
-          );
-          
-          const subtitle = matchedAlias 
-            ? `${result.system} • matches "${matchedAlias}"`
-            : `${result.system} - View condition details`;
+        const apiResults = await fetchServerResults(debouncedQuery);
+        
+        apiResults.forEach(result => {
+          const category = result.type === 'condition' ? 'condition' : 'drug';
           
           searchResults.push({
-            id: `condition-${result.id}`,
-            title: displayName,
-            subtitle,
-            category: 'condition',
+            id: `${result.type}-${result.id}`,
+            title: result.title,
+            subtitle: result.snippet,
+            category,
             action: () => {
-              // This would navigate to condition detail
-              console.log('Navigate to condition:', result.id);
+              // Navigate to condition/drug detail
+              console.log(`Navigate to ${result.type}:`, result.id);
               onClose();
             },
           });
         });
       } catch (error) {
-        console.error('Error searching conditions:', error);
-      }
-
-      // Search drugs (limit to top 5)
-      try {
-        const drugResults = await searchDrugs(query);
-        drugResults.slice(0, 5).forEach(result => {
-          searchResults.push({
-            id: `drug-${result.id}`,
-            title: result.drugName,
-            subtitle: `${result.drugName} - ${result.drugClass}`,
-            category: 'drug',
-            action: () => {
-              // This would navigate to drug detail
-              console.log('Navigate to drug:', result.id);
-              onClose();
-            },
-          });
-        });
-      } catch (error) {
-        console.error('Error searching drugs:', error);
+        console.error('Error fetching server results:', error);
       }
 
       setResults(searchResults.slice(0, 10));
+      setIsSearching(false);
     };
 
     fetchResults();
-  }, [query, onNavigate, onClose]);
+  }, [debouncedQuery, onNavigate, onClose, fetchServerResults]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -233,7 +279,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         >
           {/* Search Input */}
           <div className="flex items-center px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-            <Search className="w-5 h-5 text-slate-400 mr-3" />
+            {isSearching ? (
+              <Loader2 className="w-5 h-5 text-blue-500 mr-3 animate-spin" />
+            ) : (
+              <Search className="w-5 h-5 text-slate-400 mr-3" />
+            )}
             <input
               ref={inputRef}
               type="text"
@@ -250,14 +300,35 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </button>
           </div>
 
+          {/* Search Error */}
+          {searchError && (
+            <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
+              <p className="text-sm text-red-600 dark:text-red-400">
+                ⚠️ {searchError}
+              </p>
+            </div>
+          )}
+
           {/* Results */}
           <div
             ref={resultsRef}
             className="max-h-[60vh] overflow-y-auto py-2"
           >
-            {results.length === 0 ? (
+            {isSearching && query.trim().length >= 2 ? (
               <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-                No results found for "{query}"
+                <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-blue-500" />
+                <p>Searching medical content...</p>
+              </div>
+            ) : results.length === 0 ? (
+              <div className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                {query.trim() ? (
+                  <>
+                    <p className="font-medium mb-1">No results found</p>
+                    <p className="text-sm">Try a different search term</p>
+                  </>
+                ) : (
+                  <p>Start typing to search...</p>
+                )}
               </div>
             ) : (
               results.map((result, index) => (

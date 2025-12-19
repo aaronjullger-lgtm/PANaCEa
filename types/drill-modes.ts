@@ -103,6 +103,47 @@ export interface AntibioticMatchPair {
 export type QuestionCategory = 'history' | 'physical' | 'labs' | 'other';
 export type QuestionRelevance = 'essential' | 'helpful' | 'unnecessary' | 'redundant';
 
+// Persona used by the Patient Encounter Simulation engine
+export type PatientPersonality =
+  | 'Anxious'
+  | 'Stoic'
+  | 'Confused'
+  | 'Hostile'
+  | 'Pleasant';
+
+export interface PatientPersona {
+  id: string;
+  demographics: {
+    name: string;
+    age: number;
+    gender: string;
+  };
+  chiefComplaint: string;
+  /**
+   * Core HPI narrative used as context for the AI patient.
+   * This should describe the story in 2-5 sentences.
+   */
+  history: string;
+  vitals: {
+    hr: number;
+    bp: string;
+    temp: number;
+    rr: number;
+    o2: number;
+  };
+  personality: PatientPersonality;
+  /**
+   * Ground-truth diagnosis for grading and internal consistency.
+   * MUST never be shown directly to the learner.
+   */
+  secretDiagnosis: string;
+  /**
+   * High-yield findings the learner should uncover (e.g., "Pleuritic chest pain",
+   * "Recent long-haul flight", "Sudden onset dyspnea").
+   */
+  criticalCues: string[];
+}
+
 export interface PatientEncounterCase {
   id: string;
   patientName: string;

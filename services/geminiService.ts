@@ -15,7 +15,7 @@ import type {
   SystemCode,
   ConditionDefinition,
 } from "../types";
-import type { PatientEncounterCase } from '../types/drill-modes';
+import type { PatientEncounterCase, PatientPersona } from '../types/drill-modes';
 import {
   buildConditionDefinition,
   getRandomConditionForSystem,
@@ -697,17 +697,34 @@ Your Task:
 export async function chatWithPatientSimulator(
   caseData: PatientEncounterCase,
   chatHistory: ChatMessage[],
-  userMessage: string
+  userMessage: string,
+  persona?: PatientPersona | null,
 ): Promise<string> {
+  const personaHeader = persona
+    ? `
+PATIENT PERSONA (for internal consistency – NEVER reveal directly):
+- Name: ${persona.demographics.name}
+- Age: ${persona.demographics.age}
+- Gender: ${persona.demographics.gender}
+- Personality: ${persona.personality}
+- Secret Diagnosis: ${persona.secretDiagnosis}
+- Core HPI Narrative: ${persona.history}
+- Critical Cues: ${persona.criticalCues.join('; ')}
+
+Use this persona to guide how the patient speaks, what details they volunteer, and how their emotional tone feels. Do NOT state the secret diagnosis explicitly or list "critical cues" to the learner.
+`
+    : '';
+
   const systemPrompt = `
 You are a Virtual OSCE Patient Simulator. You are playing the role of the patient and the clinical environment.
 
-PATIENT DATA:
+PATIENT DATA (STRUCTURED CASE):
 Name: ${caseData.patientName}
 Age: ${caseData.age}
 Sex: ${caseData.sex}
 Chief Complaint: ${caseData.chiefComplaint}
 Vitals: BP ${caseData.vitalSigns.bp}, HR ${caseData.vitalSigns.hr}, RR ${caseData.vitalSigns.rr}, Temp ${caseData.vitalSigns.temp}, O2 ${caseData.vitalSigns.o2sat}%
+${personaHeader}
 
 HISTORY DATA (Reveal only if asked):
 ${JSON.stringify(caseData.historyData, null, 2)}
@@ -720,9 +737,9 @@ ${JSON.stringify(caseData.labData, null, 2)}
 
 INSTRUCTIONS:
 1. ROLEPLAY: Act as the patient. Speak in first person ("I feel..."). Be realistic. Do not volunteer information unless specifically asked.
-2. PHYSICAL EXAMS: If the user says "I listen to the heart" or "Examine abdomen", provide the specific finding from the PHYSICAL EXAM FINDINGS section. Format these findings in brackets, e.g., "[Exam Finding] The abdomen is soft, non-tender."
-3. LABS/IMAGING: If the user orders a test (e.g., "Order CBC", "Get a CXR"), provide the result from the LABS/IMAGING RESULTS section. If the test is not listed, assume it is normal/unremarkable. Format as "[Lab Result] CBC: WBC 12k...".
-4. TONE: Match the patient's likely demeanor based on their condition (e.g., anxious if chest pain).
+2. PERSONALITY: If a persona is provided, let it influence how forthcoming or guarded the patient is, their anxiety level, and their communication style.
+3. PHYSICAL EXAMS: If the user says "I listen to the heart" or "Examine abdomen", provide the specific finding from the PHYSICAL EXAM FINDINGS section. Format these findings in brackets, e.g., "[Exam Finding] The abdomen is soft, non-tender."
+4. LABS/IMAGING: If the user orders a test (e.g., "Order CBC", "Get a CXR"), provide the result from the LABS/IMAGING RESULTS section. If the test is not listed, assume it is normal/unremarkable. Format as "[Lab Result] CBC: WBC 12k...".
 5. LANGUAGE: If the user speaks Spanish, respond in Spanish.
 6. DO NOT reveal the diagnosis or the "correct" answer. You are the simulation, not the grader.
 

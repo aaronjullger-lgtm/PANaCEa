@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight, ChevronDown, ChevronUp, Shield } from 'lucide-react';
-import type { PatientEncounterCase, PatientQuestion, EncounterSession } from '@/types/drill-modes';
+import type { PatientEncounterCase, PatientQuestion, EncounterSession, PatientPersona } from '@/types/drill-modes';
 import { getRandomEncounterCase, calculateEncounterScore, saveChatMessage, getSessionHistory, clearSession } from '@/services/osceService';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { translateToSpanish, type SpanishMode } from '@/services/medicalSpanishService';
 import { chatWithPatientSimulator, evaluateDiagnosis, performPhysicalExam, orderDiagnosticTest, evaluateTreatmentPlan, generateAfterActionReport } from '@/services/geminiService';
+import { generatePatientCase } from '@/services/patientEncounterGenerator';
 import { startOSCESession, saveOSCEChat, completeOSCESession } from '@/services/osceService';
+import { generateDebrief, type PreceptorFeedback } from '@/services/virtualPreceptorService';
 import { Activity, Stethoscope, Microscope, FileText, Pill, ChevronRight, PauseCircle, PlayCircle } from 'lucide-react';
 import { Sparkline } from '@/components/Sparkline';
 import { ChatSkeleton } from '@/components/loading/SkeletonLoader';
+import { useVitalsEngine } from '@/hooks/useVitalsEngine';
 
 // Clinical Fidelity settings interface
 interface ClinicalFidelitySettings {
@@ -46,6 +49,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   
   const [currentCase, setCurrentCase] = useState<PatientEncounterCase | null>(null);
   const [session, setSession] = useState<EncounterSession | null>(null);
+  const [patientPersona, setPatientPersona] = useState<PatientPersona | null>(null);
+  const [secretDiagnosis, setSecretDiagnosis] = useState<string | null>(null);
   
   // Phase Inputs
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
@@ -69,10 +74,23 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [treatmentFeedback, setTreatmentFeedback] = useState<{ isCorrect: boolean; feedback: string; score: number } | null>(null);
   const [aar, setAar] = useState<string>('');
   const [isPatientInfoExpanded, setIsPatientInfoExpanded] = useState(true);
+  const [preceptorFeedback, setPreceptorFeedback] = useState<PreceptorFeedback | null>(null);
   
   // Clinical Fidelity Mode
   const [clinicalFidelity, setClinicalFidelity] = useState<ClinicalFidelitySettings>(() => loadClinicalFidelitySettings());
   const isFidelityModeActive = clinicalFidelity.rawLabValues || clinicalFidelity.emrInterface;
+
+  const fallbackVitals = useMemo(() => ({
+    hr: 82,
+    bp: '122/76',
+    rr: 16,
+    o2sat: 98,
+  }), []);
+
+  const initialVitals = useMemo(() => currentCase?.vitalSigns || fallbackVitals, [currentCase, fallbackVitals]);
+  const pathologyKey = useMemo(() => currentCase?.correctDiagnosis || currentCase?.chiefComplaint || 'stable', [currentCase]);
+
+  const { currentVitals, history: vitalsHistory, registerTick, applyIntervention } = useVitalsEngine(initialVitals, pathologyKey);
   
   // Listen for changes to clinical fidelity settings
   useEffect(() => {
@@ -84,6 +102,49 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
+
+  // Generate a dynamic patient persona on initial mount
+  useEffect(() => {
+    let isActive = true;
+
+    const initPersona = async () => {
+      try {
+        const persona = await generatePatientCase();
+        if (!isActive) return;
+        setPatientPersona(persona);
+        // Store secret diagnosis separately so it is never accidentally rendered
+        setSecretDiagnosis(persona.secretDiagnosis || null);
+      } catch (error) {
+        console.error('Failed to generate patient persona:', error);
+      }
+    };
+
+    initPersona();
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!session || session.questions.length === 0) return;
+    registerTick();
+  }, [session?.questions.length, registerTick, session]);
+
+  const getSemanticVitalClass = useCallback((value: number, range?: [number, number]) => {
+    if (!range) return 'text-[var(--color-text-primary)]';
+    return value < range[0] || value > range[1] ? 'text-red-500' : 'text-green-500';
+  }, []);
+
+  const detectInterventionIntent = useCallback((text: string) => {
+    if (!text) return;
+    const lower = text.toLowerCase();
+    if (/(fluid|bolus|saline|lactated|ringer|ivf)/.test(lower)) {
+      applyIntervention('fluids');
+    }
+    if (/(oxygen|o2|nasal cannula|non[-\s]?rebreather|mask|supplemental)/.test(lower)) {
+      applyIntervention('oxygen');
+    }
+  }, [applyIntervention]);
 
   const toggleLanguageMode = () => {
     setLanguageMode(prev => {
@@ -143,7 +204,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const handleStartEncounter = async () => {
     setIsLoading(true);
     
-    // Use dynamic generation to ensure fresh content each time
+    // Use dynamic generation to ensure fresh content each time (backend OSCE case)
     const newCase = await getRandomEncounterCase();
     
     if (!newCase) {
@@ -183,6 +244,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     if (!currentQuestion.trim() || !currentCase || !session) return;
 
     setIsTyping(true);
+    detectInterventionIntent(currentQuestion);
     
     // Prepare history for AI
     const chatHistory = session.questions.map(q => [
@@ -192,7 +254,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
     try {
       // Call Gemini Simulator
-      const response = await chatWithPatientSimulator(currentCase, chatHistory, currentQuestion);
+      const response = await chatWithPatientSimulator(
+        currentCase,
+        chatHistory,
+        currentQuestion,
+        patientPersona,
+      );
       
       const newQuestion: PatientQuestion = {
         questionText: currentQuestion,
@@ -258,9 +325,12 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setTreatmentFeedback(null);
     setPhysicalFindings([]);
     setDiagnosticResults([]);
+    setPatientPersona(null);
+    setSecretDiagnosis(null);
     setDifferentialDiagnoses([]);
     setTreatmentPlan('');
     setAar('');
+    setPreceptorFeedback(null);
   };
 
   const handlePhysicalExam = async () => {
@@ -309,34 +379,62 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       const feedback = await evaluateTreatmentPlan(treatmentPlan, currentCase);
       setTreatmentFeedback(feedback);
       
-      // Generate AAR
+      // Complete session in backend
+      if (session?.id) {
+        await completeOSCESession(session.id, userDiagnosis, treatmentPlan);
+      }
+    } catch (error) {
+      console.error("Treatment error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEndEncounter = async () => {
+    if (!currentCase || !session) return;
+    
+    setIsLoading(true);
+    try {
+      // Prepare session summary for Virtual Preceptor
+      const sessionSummary = {
+        transcript: session.questions.flatMap(q => [
+          { role: 'user' as const, content: q.questionText },
+          { role: 'model' as const, content: q.response }
+        ]),
+        physicalExams: physicalFindings,
+        diagnosticTests: diagnosticResults,
+        diagnosisSubmitted: userDiagnosis,
+        treatmentPlan: treatmentPlan || undefined,
+        differentials: differentialDiagnoses.length > 0 ? differentialDiagnoses : undefined,
+      };
+      
+      // Get Virtual Preceptor evaluation
+      const feedback = await generateDebrief(sessionSummary, currentCase);
+      setPreceptorFeedback(feedback);
+      
+      // Generate legacy AAR for compatibility
       const report = await generateAfterActionReport({
         sessionId: session?.id || 'unknown',
         startTime: new Date(session?.startTime || Date.now()).toISOString(),
         endTime: new Date().toISOString(),
         testsOrdered: diagnosticResults.map(r => r.testName),
-        chatHistory: session?.questions.flatMap(q => [
+        chatHistory: session.questions.flatMap(q => [
           { role: 'user', content: q.questionText },
           { role: 'model', content: q.response }
-        ]) || [],
+        ]),
         actionsPerformed: [
           ...physicalFindings.map(f => `Exam: ${f.maneuver} -> ${f.finding}`),
           ...diagnosticResults.map(r => `Lab: ${r.testName} -> ${r.result}`)
         ],
         diagnosisSubmitted: userDiagnosis,
-        treatmentPlan: [treatmentPlan],
-        score: (diagnosisFeedback?.score || 0) + (feedback?.score || 0)
+        treatmentPlan: treatmentPlan ? [treatmentPlan] : [],
+        score: feedback.score
       }, currentCase);
       setAar(report);
       
-      // Complete session in backend
-      if (session?.id) {
-        await completeOSCESession(session.id, userDiagnosis, treatmentPlan);
-      }
-      
       setViewState('results');
     } catch (error) {
-      console.error("Treatment error:", error);
+      console.error("Error ending encounter:", error);
     } finally {
       setIsLoading(false);
     }
@@ -674,28 +772,79 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                         </p>
                       </div>
 
-                      <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)]">
-                        <p className="text-xs font-semibold text-[var(--color-text-secondary)] mb-3">VITAL SIGNS</p>
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <span className="text-[var(--color-text-secondary)]">BP:</span>
-                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.bp}</span>
+                      <div className="bg-[var(--color-bg-tertiary)] rounded-lg p-4 border border-[var(--color-border)] space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold text-[var(--color-text-secondary)]">EMR MONITOR</p>
+                          <span className="text-[10px] uppercase tracking-wide text-[var(--color-accent)]">Live</span>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[12px] text-[var(--color-text-secondary)]">Blood Pressure</span>
+                              <span className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.sbp, [90, 140])}`}>
+                                {Math.round(currentVitals.sbp)}/{Math.round(currentVitals.dbp)} mmHg
+                              </span>
+                            </div>
+                            <Sparkline
+                              data={vitalsHistory.sbp}
+                              width={180}
+                              height={48}
+                              referenceRange={[90, 140]}
+                              showDots={false}
+                              fillArea
+                            />
                           </div>
-                          <div>
-                            <span className="text-[var(--color-text-secondary)]">HR:</span>
-                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.hr} bpm</span>
+
+                          <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[12px] text-[var(--color-text-secondary)]">Heart Rate</span>
+                              <span className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.hr, [60, 100])}`}>
+                                {Math.round(currentVitals.hr)} bpm
+                              </span>
+                            </div>
+                            <Sparkline
+                              data={vitalsHistory.hr}
+                              width={180}
+                              height={48}
+                              referenceRange={[60, 100]}
+                              showDots={false}
+                              fillArea
+                            />
                           </div>
-                          <div>
-                            <span className="text-[var(--color-text-secondary)]">RR:</span>
-                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.rr} /min</span>
+
+                          <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[12px] text-[var(--color-text-secondary)]">Respiratory Rate</span>
+                              <span className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.rr, [12, 20])}`}>
+                                {Math.round(currentVitals.rr)} /min
+                              </span>
+                            </div>
+                            <Sparkline
+                              data={vitalsHistory.rr}
+                              width={180}
+                              height={48}
+                              referenceRange={[12, 20]}
+                              showDots={false}
+                              fillArea
+                            />
                           </div>
-                          <div>
-                            <span className="text-[var(--color-text-secondary)]">Temp:</span>
-                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.temp}°F</span>
-                          </div>
-                          <div className="col-span-2">
-                            <span className="text-[var(--color-text-secondary)]">O₂ Sat:</span>
-                            <span className="ml-2 font-mono text-[var(--color-text-primary)]">{currentCase.vitalSigns.o2sat}%</span>
+
+                          <div className="bg-[var(--color-bg-primary)] rounded-md p-3 border border-[var(--color-border)]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[12px] text-[var(--color-text-secondary)]">O₂ Saturation</span>
+                              <span className={`text-lg font-semibold ${getSemanticVitalClass(currentVitals.o2, [94, 100])}`}>
+                                {Math.round(currentVitals.o2)}%
+                              </span>
+                            </div>
+                            <Sparkline
+                              data={vitalsHistory.o2}
+                              width={180}
+                              height={48}
+                              referenceRange={[94, 100]}
+                              showDots={false}
+                              fillArea
+                            />
                           </div>
                         </div>
                       </div>
@@ -886,34 +1035,68 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="bg-[var(--color-bg-secondary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md"
+                  className="bg-[var(--color-bg-secondary)] rounded-xl p-4 md:p-6 border border-[var(--color-border)] shadow-md space-y-4"
                 >
-                  <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Treatment Plan</h3>
-                  <p className="text-sm text-[var(--color-text-muted)] mb-3">Outline your management plan (medications, disposition, follow-up).</p>
-                  <textarea
-                    value={treatmentPlan}
-                    onChange={(e) => setTreatmentPlan(e.target.value)}
-                    placeholder="e.g., Admit to telemetry, start Aspirin 325mg, Heparin drip..."
-                    className="w-full px-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg mb-4
-                             text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] 
-                             focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm min-h-[120px]"
-                  />
-                  <button
-                    onClick={handleTreatmentSubmit}
-                    disabled={!treatmentPlan.trim() || isLoading}
-                    className="w-full bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
-                             disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
-                             transition-colors shadow-sm flex items-center justify-center gap-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Finalizing...
-                      </>
-                    ) : (
-                      'Finalize Encounter'
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4 text-[var(--color-accent)]">Treatment Plan</h3>
+                    <p className="text-sm text-[var(--color-text-muted)] mb-3">Outline your management plan (medications, disposition, follow-up).</p>
+                    <textarea
+                      value={treatmentPlan}
+                      onChange={(e) => setTreatmentPlan(e.target.value)}
+                      placeholder="e.g., Admit to telemetry, start Aspirin 325mg, Heparin drip..."
+                      className="w-full px-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-lg
+                               text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] 
+                               focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] focus:border-transparent shadow-sm min-h-[120px]"
+                    />
+                  </div>
+                  
+                  {treatmentFeedback && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-100 dark:border-blue-800">
+                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">Treatment Feedback:</p>
+                      <p className="text-sm text-[var(--color-text-secondary)]">{treatmentFeedback.feedback}</p>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-3">
+                    {!treatmentFeedback && (
+                      <button
+                        onClick={handleTreatmentSubmit}
+                        disabled={!treatmentPlan.trim() || isLoading}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 
+                                 disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
+                                 transition-colors shadow-sm flex items-center justify-center gap-2"
+                      >
+                        {isLoading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Evaluating...
+                          </>
+                        ) : (
+                          'Submit Treatment Plan'
+                        )}
+                      </button>
                     )}
-                  </button>
+                    
+                    <button
+                      onClick={handleEndEncounter}
+                      disabled={isLoading}
+                      className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] disabled:bg-slate-300 dark:disabled:bg-slate-700 
+                               disabled:cursor-not-allowed py-3 rounded-lg font-semibold text-white
+                               transition-colors shadow-sm flex items-center justify-center gap-2"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Consulting Preceptor...
+                        </>
+                      ) : (
+                        <>
+                          <Award className="w-5 h-5" />
+                          End Encounter & Get Feedback
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </motion.div>
               )}
 
@@ -1036,7 +1219,277 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     );
   }
 
-  // Results View
+  // Results View - Virtual Preceptor Report Card
+  if (viewState === 'results' && currentCase && preceptorFeedback) {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)]">
+        {/* Header */}
+        <div className="border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10 shadow-sm">
+          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Award className="w-8 h-8 text-[var(--color-accent)]" />
+              <div>
+                <h1 className="text-2xl font-bold">Virtual Preceptor Debrief</h1>
+                <p className="text-sm text-[var(--color-text-secondary)]">Performance Evaluation</p>
+              </div>
+            </div>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+          {/* Overall Score Hero */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-8 text-white shadow-xl text-center"
+          >
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm mb-4">
+              <Award className="w-12 h-12" />
+            </div>
+            <h2 className="text-5xl font-bold mb-2">{Math.round(preceptorFeedback.score)}%</h2>
+            <p className="text-xl opacity-90">Overall Performance</p>
+          </motion.div>
+
+          {/* Clinical Reasoning Breakdown */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
+          >
+            <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)]">Clinical Competencies</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              {[
+                { label: 'History-Taking', score: preceptorFeedback.clinicalReasoning.historyTaking, icon: MessageSquare },
+                { label: 'Physical Exam', score: preceptorFeedback.clinicalReasoning.physicalExam, icon: Stethoscope },
+                { label: 'Diagnosis', score: preceptorFeedback.clinicalReasoning.diagnosis, icon: FileText },
+                { label: 'Management', score: preceptorFeedback.clinicalReasoning.management, icon: Pill },
+              ].map((item, idx) => {
+                const percentage = (item.score / 10) * 100;
+                const Icon = item.icon;
+                return (
+                  <div key={idx} className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Icon className="w-5 h-5 text-[var(--color-accent)]" />
+                        <span className="font-semibold text-[var(--color-text-primary)]">{item.label}</span>
+                      </div>
+                      <span className={`text-2xl font-bold ${getScoreColor(percentage)}`}>
+                        {item.score}/10
+                      </span>
+                    </div>
+                    <div className="w-full bg-[var(--color-bg-tertiary)] rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentage}%` }}
+                        transition={{ duration: 0.8, delay: 0.2 + idx * 0.1 }}
+                        className={`h-full rounded-full ${
+                          percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Preceptor Narrative Feedback */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-[var(--color-accent)]">Your Preceptor's Feedback</h3>
+                <p className="text-sm text-[var(--color-text-secondary)]">Clinical reasoning assessment</p>
+              </div>
+            </div>
+            <div className="bg-[var(--color-bg-secondary)] rounded-lg p-5 border border-[var(--color-border)]">
+              <p className="text-[var(--color-text-primary)] leading-relaxed italic">
+                "{preceptorFeedback.feedback}"
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Strengths & Areas for Improvement */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {preceptorFeedback.strengths.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-800"
+              >
+                <h3 className="text-lg font-semibold mb-4 text-green-700 dark:text-green-300 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5" /> Strengths
+                </h3>
+                <ul className="space-y-2">
+                  {preceptorFeedback.strengths.map((strength, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-green-900 dark:text-green-100">
+                      <span className="text-green-500 mt-0.5">•</span>
+                      <span>{strength}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+
+            {preceptorFeedback.areasForImprovement.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-6 border border-orange-200 dark:border-orange-800"
+              >
+                <h3 className="text-lg font-semibold mb-4 text-orange-700 dark:text-orange-300 flex items-center gap-2">
+                  <ArrowRight className="w-5 h-5" /> Areas for Improvement
+                </h3>
+                <ul className="space-y-2">
+                  {preceptorFeedback.areasForImprovement.map((area, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-orange-900 dark:text-orange-100">
+                      <span className="text-orange-500 mt-0.5">•</span>
+                      <span>{area}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Missed Critical Cues */}
+          {preceptorFeedback.missedCriticalCues.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="bg-red-50 dark:bg-red-900/20 rounded-xl p-6 border border-red-200 dark:border-red-800"
+            >
+              <h3 className="text-lg font-semibold mb-4 text-red-700 dark:text-red-300 flex items-center gap-2">
+                <XCircle className="w-5 h-5" /> Missed Critical Cues
+              </h3>
+              <p className="text-sm text-red-900 dark:text-red-100 mb-3">
+                The patient mentioned these important details that you didn't follow up on:
+              </p>
+              <ul className="space-y-2">
+                {preceptorFeedback.missedCriticalCues.map((cue, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm text-red-900 dark:text-red-100 bg-red-100 dark:bg-red-900/30 rounded p-3 border border-red-200 dark:border-red-800">
+                    <span className="text-red-500 font-bold mt-0.5">!</span>
+                    <span>{cue}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+
+          {/* Differential Diagnoses to Consider */}
+          {preceptorFeedback.differentialDiagnosis.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800"
+            >
+              <h3 className="text-lg font-semibold mb-4 text-purple-700 dark:text-purple-300 flex items-center gap-2">
+                <Activity className="w-5 h-5" /> Differential Diagnoses to Consider
+              </h3>
+              <p className="text-sm text-purple-900 dark:text-purple-100 mb-3">
+                Based on the presentation, you should have considered:
+              </p>
+              <div className="grid sm:grid-cols-2 gap-2">
+                {preceptorFeedback.differentialDiagnosis.map((dx, idx) => (
+                  <div key={idx} className="bg-purple-100 dark:bg-purple-900/30 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
+                    <span className="font-semibold text-purple-900 dark:text-purple-100">{dx}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Correct Diagnosis Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800"
+          >
+            <h3 className="text-lg font-semibold mb-3 text-blue-700 dark:text-blue-300">Correct Diagnosis</h3>
+            <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 mb-3">{currentCase.correctDiagnosis}</p>
+            {currentCase.teachingPoints && currentCase.teachingPoints.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">Teaching Points:</p>
+                <ul className="space-y-1">
+                  {currentCase.teachingPoints.map((point, idx) => (
+                    <li key={idx} className="text-sm text-blue-900 dark:text-blue-100 flex items-start gap-2">
+                      <span className="text-blue-500">💎</span>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Legacy AAR (if available) */}
+          {aar && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="bg-[var(--color-bg-primary)] rounded-xl p-6 border border-[var(--color-border)] shadow-md"
+            >
+              <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)] flex items-center gap-2">
+                <FileText className="w-5 h-5" /> Additional Notes
+              </h3>
+              <div className="prose dark:prose-invert max-w-none text-[var(--color-text-secondary)] whitespace-pre-wrap text-sm">
+                {aar}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-4">
+            <motion.button
+              onClick={handleNewCase}
+              className="flex-1 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] py-4 rounded-xl font-semibold text-white
+                       transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <MessageSquare className="w-5 h-5" />
+              Try Another Case
+            </motion.button>
+            {onExit && (
+              <motion.button
+                onClick={onExit}
+                className="px-8 py-4 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-secondary)] rounded-xl font-semibold
+                         text-[var(--color-text-primary)] transition-colors border border-[var(--color-border)]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Exit
+              </motion.button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Legacy results view (fallback if no preceptor feedback)
   if (viewState === 'results' && currentCase && session && session.score) {
     const { score } = session;
     const isCorrectDiagnosis = diagnosisFeedback?.isCorrect ?? false;

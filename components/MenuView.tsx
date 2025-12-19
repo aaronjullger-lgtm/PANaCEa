@@ -2,8 +2,11 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2, Users, X, Trophy, GraduationCap, Home, BarChart3, Dumbbell } from "lucide-react";
-import { useIsMobile } from "../lib/utils/responsive";
+import { useUser, SignOutButton } from "@clerk/clerk-react";
+import { 
+  Award, Hospital, Pill, RotateCcw, Bookmark, FileText, Link2, Users, X, Trophy, 
+  GraduationCap, Home, BarChart3, Dumbbell, User, Settings, ChevronRight 
+} from "lucide-react";
 import { useIsMobile } from "../lib/utils/responsive";
 import type {
   PerformanceRecord,
@@ -130,8 +133,10 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [showStudyGuide, setShowStudyGuide] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   
+  const { user } = useUser();
+  
   // Mobile navigation state
-  const [activeTab, setActiveTab] = useState<'home' | 'stats' | 'modes'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'stats' | 'drills' | 'settings'>('home');
   const isMobile = useIsMobile();
   
   // Dashboard state
@@ -528,7 +533,7 @@ const MenuView: React.FC<MenuViewProps> = ({
       {/* Mobile Bottom Navigation */}
       {isMobile && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
-          <div className="grid grid-cols-3 gap-0">
+          <div className="grid grid-cols-4 gap-0">
             <button
               onClick={() => setActiveTab('home')}
               className={`flex flex-col items-center justify-center py-3 transition-colors ${
@@ -539,6 +544,17 @@ const MenuView: React.FC<MenuViewProps> = ({
             >
               <Home className="w-5 h-5 mb-1" />
               <span className="text-xs font-medium">Home</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('drills')}
+              className={`flex flex-col items-center justify-center py-3 transition-colors ${
+                activeTab === 'drills'
+                  ? 'text-primary bg-primary/5'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Dumbbell className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">Drills</span>
             </button>
             <button
               onClick={() => setActiveTab('stats')}
@@ -552,15 +568,15 @@ const MenuView: React.FC<MenuViewProps> = ({
               <span className="text-xs font-medium">Stats</span>
             </button>
             <button
-              onClick={() => setActiveTab('modes')}
+              onClick={() => setActiveTab('settings')}
               className={`flex flex-col items-center justify-center py-3 transition-colors ${
-                activeTab === 'modes'
+                activeTab === 'settings'
                   ? 'text-primary bg-primary/5'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <Dumbbell className="w-5 h-5 mb-1" />
-              <span className="text-xs font-medium">Modes</span>
+              <User className="w-5 h-5 mb-1" />
+              <span className="text-xs font-medium">Profile</span>
             </button>
           </div>
         </div>
@@ -649,268 +665,311 @@ const MenuView: React.FC<MenuViewProps> = ({
         </motion.div>
 
         <div className="space-y-10">
-          {/* Mobile: Only show content for active tab */}
-          {isMobile && activeTab !== 'home' && activeTab !== 'stats' && activeTab !== 'modes' && (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Use the bottom navigation to switch views</p>
-            </div>
-          )}
-
           {/* Home Tab Content (or all content on desktop) */}
           {(!isMobile || activeTab === 'home') && (
-          {/* Welcome Card - Prioritized at Top */}
-          <motion.section 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <div className="card-premium-glass card-noise-texture p-6 rounded-2xl shadow-lg">
-              <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-slate-100 mb-2">
-                {getTimeBasedGreeting()}.
-              </h2>
-              {stats.systemComparisonData.length > 0 ? (
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Your recommended focus is{' '}
-                  <span className="font-semibold text-[var(--color-accent)]">
-                    {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0]?.system] || stats.systemComparisonData[0]?.system}
-                  </span>
-                  .
-                </p>
-              ) : (
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Start studying to unlock personalized recommendations.
-                </p>
-              )}
-            </div>
-          </motion.section>
-
-          {/* Daily Prescription - Smart Action Card */}
-          <motion.section 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
-            <DailyPrescription 
-              performanceData={performanceData}
-              onStartFocusSession={handleStartFocusSession}
-            />
-          </motion.section>
-
-          {/* Session controls */}
-          <motion.section 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-center space-y-3"
-          >
-            {hasActiveSession && (
-              <motion.button
-                onClick={onBackToQuiz}
-                className="w-full px-6 py-3 btn-glass font-bold rounded-xl"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+            <>
+              {/* Welcome Card - Prioritized at Top */}
+              <motion.section 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm"
               >
-                Continue Study Session
-              </motion.button>
-            )}
-            <motion.button
-              onClick={onStartSession}
-              className="w-full px-6 py-4 btn-glass text-lg font-bold tracking-tight rounded-xl"
-              whileHover={{ scale: 1.01, y: -2 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              {hasActiveSession ? "Start New Session" : "Start Study Session"}
-            </motion.button>
-          </motion.section>
+                <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-slate-100 mb-2">
+                  {getTimeBasedGreeting()}.
+                </h2>
+                {stats.systemComparisonData.length > 0 ? (
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Your recommended focus is{' '}
+                    <span className="font-semibold text-[var(--color-accent)]">
+                      {SYSTEM_DISPLAY_NAMES[stats.systemComparisonData[0]?.system] || stats.systemComparisonData[0]?.system}
+                    </span>
+                    .
+                  </p>
+                ) : (
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Start studying to unlock personalized recommendations.
+                  </p>
+                )}
+              </motion.section>
 
-          {/* Quick Actions - New Feature Shortcuts */}
-          <motion.section 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.23 }}
-            className="pt-2"
-          >
-            <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-4">
-              Quick Actions
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              <motion.button
-                onClick={() => setShowQuickReview(true)}
-                className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
+              {/* Daily Prescription - Smart Action Card */}
+              <motion.section 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
               >
-                <RotateCcw className="w-8 h-8 mb-2 text-blue-500" />
-                <div className="font-semibold text-sm text-slate-900 dark:text-white">Quick Review</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Recent misses</div>
-              </motion.button>
-
-              <motion.button
-                onClick={() => setShowBookmarks(true)}
-                className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Bookmark className="w-8 h-8 mb-2 text-amber-500" />
-                <div className="font-semibold text-sm text-slate-900 dark:text-white">Bookmarks</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Saved questions</div>
-              </motion.button>
-
-              <motion.button
-                onClick={() => setShowStudyGuide(true)}
-                className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <FileText className="w-8 h-8 mb-2 text-slate-500" />
-                <div className="font-semibold text-sm text-slate-900 dark:text-white">Study Guide</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Print/Export</div>
-              </motion.button>
-
-              <motion.button
-                onClick={() => setShowLeaderboard(true)}
-                className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Award className="w-8 h-8 mb-2 text-amber-500" />
-                <div className="font-semibold text-sm text-slate-900 dark:text-white">Leaderboard</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Compare stats</div>
-              </motion.button>
-
-              {onNavigateToIntegrations && (
-                <motion.button
-                  onClick={onNavigateToIntegrations}
-                  className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Link2 className="w-8 h-8 mb-2 text-indigo-500" />
-                  <div className="font-semibold text-sm text-slate-900 dark:text-white">Integrations</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">Anki, Calendar</div>
-                </motion.button>
-              )}
-
-              {onNavigateToSocial && (
-                <motion.button
-                  onClick={onNavigateToSocial}
-                  className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Users className="w-8 h-8 mb-2 text-pink-500" />
-                  <div className="font-semibold text-sm text-slate-900 dark:text-white">Social</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">Groups & Friends</div>
-                </motion.button>
-              )}
-
-              {onNavigateToToolkit && (
-                <motion.button
-                  onClick={onNavigateToToolkit}
-                  className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <GraduationCap className="w-8 h-8 mb-2 text-emerald-500" />
-                  <div className="font-semibold text-sm text-slate-900 dark:text-white">Toolkit Hub</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">Learning Resources</div>
-                </motion.button>
-              )}
-            </div>
-          </motion.section>
-
-          {/* Streak Tracker */}
-          <motion.section 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.24 }}
-          >
-            <StreakTracker
-              currentStreak={stats.widgetData.currentStreak}
-              bestStreak={stats.widgetData.bestStreak}
-              lastStudyDate={performanceData.length > 0 ? new Date(performanceData[performanceData.length - 1].timestamp).toISOString().split('T')[0] : undefined}
-            />
-          </motion.section>
-
-          {/* Analytics Dashboard */}
-          <motion.section 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="pt-2"
-          >
-
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-                Analytics Dashboard
-              </h2>
-              <TimeScopeFilter value={timeScope} onChange={setTimeScope} />
-            </div>
-            
-            {/* Widget Grid */}
-            <WidgetGrid 
-              data={stats.widgetData} 
-              enabledWidgets={enabledWidgets}
-              timeScope={timeScope}
-            />
-            
-            {/* Root Cause Analysis Widget - shows breakdown of why questions are missed */}
-            {stats.totalIncorrect > 0 && (
-              <div className="mt-6">
-                <RootCauseAnalysis 
-                  errorCounts={stats.errorCounts}
-                  totalIncorrect={stats.totalIncorrect}
+                <DailyPrescription 
+                  performanceData={performanceData}
+                  onStartFocusSession={handleStartFocusSession}
                 />
+              </motion.section>
+
+              {/* Session controls */}
+              <motion.section 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-center space-y-3"
+              >
+                {hasActiveSession && (
+                  <motion.button
+                    onClick={onBackToQuiz}
+                    className="w-full px-6 py-3 btn-glass font-bold rounded-xl"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    Continue Study Session
+                  </motion.button>
+                )}
+                <motion.button
+                  onClick={onStartSession}
+                  className="w-full px-6 py-4 btn-glass text-lg font-bold tracking-tight rounded-xl"
+                  whileHover={{ scale: 1.01, y: -2 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  {hasActiveSession ? "Start New Session" : "Start Study Session"}
+                </motion.button>
+              </motion.section>
+            </>
+          )}
+
+          {/* Drills Tab Content (or all content on desktop) */}
+          {(!isMobile || activeTab === 'drills') && (
+            <>
+              {/* Quick Actions - New Feature Shortcuts */}
+              <motion.section 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.23 }}
+                className="pt-2"
+              >
+                <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-4">
+                  Quick Actions
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  <motion.button
+                    onClick={() => setShowQuickReview(true)}
+                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <RotateCcw className="w-8 h-8 mb-2 text-blue-500" />
+                    <div className="font-semibold text-sm text-slate-900 dark:text-white">Quick Review</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Recent misses</div>
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => setShowBookmarks(true)}
+                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Bookmark className="w-8 h-8 mb-2 text-amber-500" />
+                    <div className="font-semibold text-sm text-slate-900 dark:text-white">Bookmarks</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Saved questions</div>
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => setShowStudyGuide(true)}
+                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <FileText className="w-8 h-8 mb-2 text-slate-500" />
+                    <div className="font-semibold text-sm text-slate-900 dark:text-white">Study Guide</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Print/Export</div>
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => setShowLeaderboard(true)}
+                    className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Award className="w-8 h-8 mb-2 text-amber-500" />
+                    <div className="font-semibold text-sm text-slate-900 dark:text-white">Leaderboard</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">Compare stats</div>
+                  </motion.button>
+
+                  {onNavigateToIntegrations && (
+                    <motion.button
+                      onClick={onNavigateToIntegrations}
+                      className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Link2 className="w-8 h-8 mb-2 text-indigo-500" />
+                      <div className="font-semibold text-sm text-slate-900 dark:text-white">Integrations</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Anki, Calendar</div>
+                    </motion.button>
+                  )}
+
+                  {onNavigateToSocial && (
+                    <motion.button
+                      onClick={onNavigateToSocial}
+                      className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Users className="w-8 h-8 mb-2 text-pink-500" />
+                      <div className="font-semibold text-sm text-slate-900 dark:text-white">Social</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Groups & Friends</div>
+                    </motion.button>
+                  )}
+
+                  {onNavigateToToolkit && (
+                    <motion.button
+                      onClick={onNavigateToToolkit}
+                      className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all duration-200 text-left"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <GraduationCap className="w-8 h-8 mb-2 text-emerald-500" />
+                      <div className="font-semibold text-sm text-slate-900 dark:text-white">Toolkit Hub</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">Learning Resources</div>
+                    </motion.button>
+                  )}
+                </div>
+              </motion.section>
+            </>
+          )}
+
+          {/* Stats Tab Content (or all content on desktop) */}
+          {(!isMobile || activeTab === 'stats') && (
+            <>
+              {/* Streak Tracker */}
+              <motion.section 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.24 }}
+              >
+                <StreakTracker
+                  currentStreak={stats.widgetData.currentStreak}
+                  bestStreak={stats.widgetData.bestStreak}
+                  lastStudyDate={performanceData.length > 0 ? new Date(performanceData[performanceData.length - 1].timestamp).toISOString().split('T')[0] : undefined}
+                />
+              </motion.section>
+
+              {/* Analytics Dashboard */}
+              <motion.section 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="pt-2"
+              >
+
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                    Analytics Dashboard
+                  </h2>
+                  <TimeScopeFilter value={timeScope} onChange={setTimeScope} />
+                </div>
+                
+                {/* Widget Grid */}
+                <WidgetGrid 
+                  data={stats.widgetData} 
+                  enabledWidgets={enabledWidgets}
+                  timeScope={timeScope}
+                />
+                
+                {/* Root Cause Analysis Widget - shows breakdown of why questions are missed */}
+                {stats.totalIncorrect > 0 && (
+                  <div className="mt-6">
+                    <RootCauseAnalysis 
+                      errorCounts={stats.errorCounts}
+                      totalIncorrect={stats.totalIncorrect}
+                    />
+                  </div>
+                )}
+              </motion.section>
+
+              {/* Study Activity Heatmap */}
+              {stats.heatmapData.length > 0 && (
+                <motion.section
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 }}
+                >
+                  <HeatmapCalendar 
+                    records={stats.heatmapData} 
+                    metric="attempts"
+                    weeks={12}
+                  />
+                </motion.section>
+              )}
+
+              {/* System Comparison */}
+              {stats.systemComparisonData.length > 0 && (
+                <motion.section
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <SystemComparison 
+                    summary={stats.systemComparisonData}
+                    onSystemClick={(system) => setSelectedSystem(system as SystemCode)}
+                  />
+                </motion.section>
+              )}
+
+              {/* System Mastery Grid – now by PANCE system */}
+              <motion.section
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+              >
+                <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-5">
+                  System Mastery Grid
+                </h2>
+                <TopicHeatmap
+                  topicScores={stats.topicScores || []}
+                  onTopicClick={(topicStats) => {
+                    // topicStats is a TopicStats object; its `.topic` is your "CV", "GI", etc.
+                    setSelectedSystem(topicStats.topic as SystemCode);
+                  }}
+                />
+              </motion.section>
+            </>
+          )}
+
+          {/* Settings Tab Content (Mobile only) */}
+          {isMobile && activeTab === 'settings' && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm"
+            >
+              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-6">
+                Settings & Profile
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <User className="w-5 h-5 text-slate-500" />
+                    <span className="font-medium text-slate-900 dark:text-white">Account</span>
+                  </div>
+                  <span className="text-sm text-slate-500">{user?.primaryEmailAddress?.emailAddress}</span>
+                </div>
+                <button 
+                  onClick={() => onNavigateToIntegrations?.()}
+                  className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Settings className="w-5 h-5 text-slate-500" />
+                    <span className="font-medium text-slate-900 dark:text-white">Preferences</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-400" />
+                </button>
+                <div className="pt-4">
+                  <SignOutButton>
+                    <button className="w-full px-6 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                      Sign Out
+                    </button>
+                  </SignOutButton>
+                </div>
               </div>
-            )}
-          </motion.section>
-
-          {/* Study Activity Heatmap */}
-          {stats.heatmapData.length > 0 && (
-            <motion.section
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-            >
-              <HeatmapCalendar 
-                records={stats.heatmapData} 
-                metric="attempts"
-                weeks={12}
-              />
             </motion.section>
           )}
-
-          {/* System Comparison */}
-          {stats.systemComparisonData.length > 0 && (
-            <motion.section
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <SystemComparison 
-                summary={stats.systemComparisonData}
-                onSystemClick={(system) => setSelectedSystem(system as SystemCode)}
-              />
-            </motion.section>
-          )}
-
-          {/* System Mastery Grid – now by PANCE system */}
-          <motion.section
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35 }}
-          >
-            <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-5">
-              System Mastery Grid
-            </h2>
-            <TopicHeatmap
-              topicScores={stats.topicScores || []}
-              onTopicClick={(topicStats) => {
-                // topicStats is a TopicStats object; its `.topic` is your "CV", "GI", etc.
-                setSelectedSystem(topicStats.topic as SystemCode);
-              }}
-            />
-          </motion.section>
         </div>
       </div>
 

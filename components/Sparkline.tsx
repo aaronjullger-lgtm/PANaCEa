@@ -32,6 +32,8 @@ export interface SparklineProps {
   showLastValue?: boolean;
   /** Format function for the last value label */
   formatValue?: (value: number) => string;
+  /** Optional reference range to shade normal limits */
+  referenceRange?: [number, number];
 }
 
 export function Sparkline({
@@ -47,6 +49,7 @@ export function Sparkline({
   className = '',
   showLastValue = false,
   formatValue = (v) => v.toFixed(1),
+  referenceRange,
 }: SparklineProps) {
   if (!data || data.length === 0) {
     return null;
@@ -71,24 +74,64 @@ export function Sparkline({
   });
 
   // Generate SVG path
-  const pathData = points.map((point, index) => {
-    const command = index === 0 ? 'M' : 'L';
-    return `${command} ${point.x},${point.y}`;
-  }).join(' ');
+  const buildSmoothPath = () => {
+    if (points.length === 1) {
+      return `M ${points[0].x},${points[0].y}`;
+    }
+
+    const d: string[] = [`M ${points[0].x},${points[0].y}`];
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i - 1] || points[i];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[i + 2] || p2;
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      d.push(`C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`);
+    }
+
+    return d.join(' ');
+  };
+
+  const pathData = buildSmoothPath();
 
   // Generate area path if needed
   const areaPathData = fillArea
     ? `${pathData} L ${points[points.length - 1].x},${height - padding} L ${padding},${height - padding} Z`
     : '';
 
+  const lastValue = data[data.length - 1];
+  const inRange = referenceRange
+    ? lastValue >= referenceRange[0] && lastValue <= referenceRange[1]
+    : true;
+  const semanticColorClass = inRange ? 'text-green-500' : 'text-red-500';
+  const effectiveColor = color || (inRange ? '#16a34a' : '#ef4444');
+
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
       <svg width={width} height={height} className="sparkline">
+        {referenceRange && (
+          <rect
+            x={padding}
+            width={chartWidth}
+            y={padding + chartHeight - ((referenceRange[1] - min) / range) * chartHeight}
+            height={((referenceRange[1] - referenceRange[0]) / range) * chartHeight}
+            fill="#22c55e"
+            fillOpacity={0.08}
+            rx={2}
+          />
+        )}
+
         {/* Fill area under the line */}
         {fillArea && (
           <path
             d={areaPathData}
-            fill={color}
+            fill={effectiveColor}
             fillOpacity={0.1}
           />
         )}
@@ -97,7 +140,7 @@ export function Sparkline({
         <path
           d={pathData}
           fill="none"
-          stroke={color}
+          stroke={effectiveColor}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -110,7 +153,7 @@ export function Sparkline({
             cx={point.x}
             cy={point.y}
             r={strokeWidth}
-            fill={color}
+            fill={effectiveColor}
           />
         ))}
         
@@ -120,7 +163,7 @@ export function Sparkline({
             cx={points[points.length - 1].x}
             cy={points[points.length - 1].y}
             r={strokeWidth * 1.5}
-            fill={color}
+            fill={effectiveColor}
             opacity={0.8}
           />
         )}
@@ -128,7 +171,7 @@ export function Sparkline({
       
       {/* Last value label */}
       {showLastValue && data.length > 0 && (
-        <span className="text-sm font-medium" style={{ color }}>
+        <span className={`text-sm font-medium ${semanticColorClass}`} style={{ color: effectiveColor }}>
           {formatValue(data[data.length - 1])}
         </span>
       )}
