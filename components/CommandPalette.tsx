@@ -75,9 +75,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   // Debounce search query
   const debouncedQuery = useDebounce(query, 300);
 
-  // Debounce search query
-  const debouncedQuery = useDebounce(query, 300);
-
   // Focus input when opened
   useEffect(() => {
     if (isOpen && inputRef.current) {
