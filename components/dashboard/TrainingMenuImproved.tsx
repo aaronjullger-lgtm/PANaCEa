@@ -35,7 +35,6 @@ import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED
 
 /**
  * Icon mapping helper to map string names from the config to Lucide React components.
- * Using a function to ensure icons are fully loaded before mapping.
  */
 const getIconMap = (): Record<string, LucideIcon> => ({
   Brain,
@@ -61,43 +60,36 @@ const getIconMap = (): Record<string, LucideIcon> => ({
   Hash,
   Wind,
   AlertTriangle,
-  Search,
-  TrendingUp,
-  ChevronRight,
-  PillBottle: Pill, // Alias for Polypharmacy
+  PillBottle: Pill,
 });
 
 type FocusOption = 'all' | 'growth' | 'flagged' | 'due';
 
 interface TrainingMenuProps {
   onStartSession?: (modeId: string, focus?: FocusOption) => void;
-  /** Callback for navigating to a dedicated mode route */
   onNavigateToMode?: (route: string, mode: TrainingModeConfig) => void;
   onClose?: () => void;
-  /** Number of questions due for spaced repetition review */
   dueQuestionsCount?: number;
-  /** Number of flagged questions */
   flaggedQuestionsCount?: number;
-  /** Number of growth areas identified */
   growthAreasCount?: number;
   /** User's progress data for each mode (for progress indicators) */
   modeProgress?: Record<string, { masteryPercent: number; lastPracticed?: Date; questionsAnswered?: number }>;
+  /** Last practiced mode ID for daily recommended badge */
+  lastPracticedMode?: string;
 }
 
 /**
- * TrainingMenu Component
- *
- * Enhanced with:
+ * Enhanced TrainingMenu with:
  * - Visual hierarchy (dimmed Coming Soon cards)
  * - Progress indicators
- * - Sticky category sidebar navigation
+ * - Sticky category sidebar
  * - Search functionality
  * - Daily recommended badges
- * - Contextual live stats
+ * - Live stats
  * - Standardized 3-column grid
  * - Mobile horizontal scrolling
  */
-const TrainingMenu: React.FC<TrainingMenuProps> = ({ 
+const TrainingMenuImproved: React.FC<TrainingMenuProps> = ({ 
   onStartSession,
   onNavigateToMode,
   onClose,
@@ -105,20 +97,16 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   flaggedQuestionsCount = 0,
   growthAreasCount = 0,
   modeProgress = {},
+  lastPracticedMode,
 }) => {
-  // Localized state for the Core Adaptive focus toggle
   const [focus, setFocus] = useState<FocusOption>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  
-  // Get the core adaptive mode from registry
-  const coreMode = MODE_REGISTRY.find((mode) => mode.category === 'core' && mode.id === 'core_adaptive');
 
-  // Filter out the core category and condition_drill (accessed via Condition Page) for the Bento grid
+  const coreMode = MODE_REGISTRY.find((mode) => mode.category === 'core' && mode.id === 'core_adaptive');
   const HIDDEN_DRILL_MODES: TrainingModeId[] = ['condition_drill'];
   const drillModes = MODE_REGISTRY.filter((mode) => mode.intentGroup !== 'core_adaptive' && !HIDDEN_DRILL_MODES.includes(mode.id));
 
-  // Intent-based sections for clearer navigation
   const INTENT_SECTIONS: Array<{
     key: TrainingModeConfig['intentGroup'];
     title: string;
@@ -172,9 +160,11 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
    * Calculate daily recommended mode (mode not practiced recently)
    */
   const dailyRecommended = useMemo(() => {
+    // Find mode with lowest recent activity
     const activeModes = drillModes.filter(mode => !mode.isComingSoon);
     if (activeModes.length === 0) return null;
 
+    // Prioritize modes with progress but not practiced recently
     const modesWithProgress = activeModes.filter(mode => modeProgress[mode.id]?.questionsAnswered);
     if (modesWithProgress.length > 0) {
       return modesWithProgress.sort((a, b) => {
@@ -184,88 +174,42 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       })[0].id;
     }
 
+    // Otherwise suggest a mode they haven't tried
     const untriedMode = activeModes.find(mode => !modeProgress[mode.id]?.questionsAnswered);
     return untriedMode?.id || null;
   }, [drillModes, modeProgress]);
 
-  /**
-   * Get focus-specific description text
-   */
   const getFocusDescription = (): string => {
     switch (focus) {
       case 'all':
-        return 'The gold standard adaptive quiz engine. Practice PANCE-level questions tailored to your knowledge gaps and performance history.';
+        return 'The gold standard adaptive quiz engine. Practice PANCE-level questions tailored to your knowledge gaps.';
       case 'growth':
         return `Focus on your ${growthAreasCount} identified weak areas. Target the topics where you need the most improvement.`;
       case 'flagged':
         return `Review your ${flaggedQuestionsCount} flagged questions. Revisit concepts you marked for extra practice.`;
       case 'due':
-        return `${dueQuestionsCount} questions are due for spaced repetition review. Strengthen long-term retention with timed reviews.`;
+        return `${dueQuestionsCount} questions are due for spaced repetition review. Strengthen long-term retention.`;
       default:
         return 'Practice PANCE-level questions tailored to your needs.';
     }
   };
 
-  /**
-   * Get background color class based on theme
-   */
-  const getThemeBackground = (theme: string): string => {
-    const themeMap: Record<string, string> = {
-      stone: 'bg-[var(--color-bg-secondary)]',
-      slate: 'bg-slate-100',
-      amber: 'bg-amber-100',
-      blue: 'bg-blue-100',
-      teal: 'bg-teal-100',
-      red: 'bg-red-100',
-      emerald: 'bg-emerald-100',
-    };
-    return themeMap[theme] || 'bg-gray-100';
-  };
-
-  /**
-   * Handle drill mode card click
-   */
   const handleDrillClick = (mode: TrainingModeConfig) => {
-    // Check if mode is blocked due to "coming soon" status
     if (mode.isComingSoon) {
-      console.warn(`[TrainingMenu] Mode "${mode.label}" is marked as coming soon. Check config to enable.`);
+      console.warn(`[TrainingMenu] Mode "${mode.label}" is marked as coming soon.`);
       return;
     }
-    
-    // Debug logging to help troubleshoot routing issues
-    console.log('[TrainingMenu] handleDrillClick:', {
-      modeId: mode.id,
-      route: mode.route,
-      hasDedicatedRoute: MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId),
-    });
 
-    // Log the route we're attempting to navigate to (for debugging)
-    console.log('Attempting nav to:', mode.route);
-
-    // Check if this mode has a dedicated route
     if (MODES_WITH_DEDICATED_ROUTES.includes(mode.id as TrainingModeId)) {
-      console.log(`[TrainingMenu] Navigating to dedicated route: ${mode.route}`);
-      if (onNavigateToMode) {
-        onNavigateToMode(mode.route, mode);
-      } else {
-        console.warn('[TrainingMenu] onNavigateToMode callback not provided. Navigation will not occur.');
-      }
+      onNavigateToMode?.(mode.route, mode);
       onClose?.();
       return;
     }
 
-    // Fall back to standard session start
-    if (onStartSession) {
-      onStartSession(mode.id);
-    } else {
-      console.warn('[TrainingMenu] onStartSession callback not provided. Session will not start.');
-    }
+    onStartSession?.(mode.id);
     onClose?.();
   };
 
-  /**
-   * Handle core session start
-   */
   const handleCoreStart = () => {
     if (coreMode) {
       onStartSession?.(coreMode.id, focus);
@@ -273,9 +217,6 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     }
   };
 
-  /**
-   * Render focus toggle (segmented control)
-   */
   const renderFocusToggle = () => {
     const options: { value: FocusOption; label: string; count?: number; disabled?: boolean }[] = [
       { value: 'all', label: 'All Topics' },
@@ -315,114 +256,6 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     );
   };
 
-  /**
-   * Get special styling for specific drill modes - Clinical Theme
-   */
-  const getDrillModeStyles = (modeId: string): { 
-    background: string; 
-    border: string;
-    overlay?: string;
-    iconBg: string;
-    iconColor: string;
-  } => {
-    // Clinical Theme: Clean whites/navy with subtle color accents
-    const baseStyles = {
-      light: 'bg-[var(--color-bg-primary)]',
-      border: 'border-[var(--color-border)]',
-      iconBg: 'bg-[var(--color-bg-tertiary)]',
-    };
-
-    switch (modeId) {
-      case 'photo_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-slate-600 dark:text-slate-300',
-        };
-      case 'ecg_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-rose-600 dark:text-rose-400',
-        };
-      case 'derm_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-pink-600 dark:text-pink-400',
-        };
-      case 'imaging_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-slate-600 dark:text-slate-300',
-        };
-      case 'mini_lab':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-emerald-600 dark:text-emerald-400',
-        };
-      case 'rapid_recall':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-amber-600 dark:text-amber-400',
-        };
-      case 'ddx_compare':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-blue-600 dark:text-blue-400',
-        };
-      case 'guideline_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-teal-600 dark:text-teal-400',
-        };
-      case 'condition_drill':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-violet-600 dark:text-violet-400',
-        };
-      case 'first_line_treatment':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-cyan-600 dark:text-cyan-400',
-        };
-      case 'pharmacology':
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-purple-600 dark:text-purple-400',
-        };
-      default:
-        return {
-          background: baseStyles.light,
-          border: baseStyles.border,
-          iconBg: baseStyles.iconBg,
-          iconColor: 'text-[#364154] dark:text-[#E9ECF1]',
-        };
-    }
-  };
-
-  /**
-   * Render progress bar with mastery percentage and last practiced info
-   */
   const renderProgressBar = (modeId: string) => {
     const progress = modeProgress[modeId];
     if (!progress) return null;
@@ -455,48 +288,11 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     );
   };
 
-  /**
-   * Get custom description for drill modes
-   */
-  const getDrillDescription = (mode: TrainingModeConfig): string => {
-    switch (mode.id) {
-      case 'ddx_compare':
-        return 'Confusing Appendicitis vs. Diverticulitis? Master the differences.';
-      case 'photo_drill':
-        return 'ECG rhythms, derm lesions, and imaging findings. Train your visual diagnosis.';
-      case 'ecg_drill':
-        return 'Master rhythm strips and 12-lead ECG interpretation.';
-      case 'derm_drill':
-        return 'Identify skin lesions, rashes, and dermatological findings.';
-      case 'imaging_drill':
-        return 'X-ray, CT, and MRI pattern recognition training.';
-      case 'rapid_recall':
-        return 'Lightning-fast buzzwords and flashcard drills.';
-      case 'mini_lab':
-        return 'Interpret lab panels and make the diagnosis.';
-      case 'guideline_drill':
-        return 'Glasgow coma, Light\'s criteria, JONES, and more.';
-      case 'condition_drill':
-        return '5-stage progressive questions for any condition.';
-      case 'first_line_treatment':
-        return 'What\'s the go-to treatment for each condition?';
-      case 'pharmacology':
-        return 'Drug mechanisms, side effects, and interactions.';
-      default:
-        return mode.description;
-    }
-  };
-
-  /**
-   * Render drill mode card with unique styling per mode - Clinical Theme
-   */
-  const renderDrillCard = (mode: TrainingModeConfig, variant: 'featured' | 'standard' = 'standard') => {
+  const renderDrillCard = (mode: TrainingModeConfig) => {
     const ICON_MAP = getIconMap();
     const IconComponent = ICON_MAP[mode.iconName] ?? HelpCircle;
     const isDisabled = mode.isComingSoon;
-    const styles = getDrillModeStyles(mode.id);
     const isDailyRecommended = dailyRecommended === mode.id;
-    const featuredClasses = variant === 'featured' ? 'md:col-span-2 lg:col-span-2 shadow-lg hover:shadow-2xl' : '';
 
     return (
       <button
@@ -507,13 +303,10 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         className={`
           relative p-5 rounded-2xl border overflow-hidden
           text-left transition-all duration-200
-          ${styles.background}
-          ${styles.border}
           ${isDisabled 
             ? 'opacity-40 grayscale cursor-not-allowed bg-slate-50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-600 border-dashed' 
-            : 'hover:scale-[1.02] cursor-pointer shadow-md hover:shadow-xl'
+            : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:scale-[1.02] cursor-pointer shadow-md hover:shadow-xl'
           }
-          ${featuredClasses}
           ${isDailyRecommended && !isDisabled ? 'ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-slate-900' : ''}
         `}
       >
@@ -522,8 +315,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             Coming Soon
           </span>
         )}
-        
-        {/* Daily Recommended badge */}
+
         {isDailyRecommended && !isDisabled && (
           <div className="absolute top-2 right-2 flex items-center gap-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg">
             <TrendingUp className="w-3 h-3" />
@@ -532,15 +324,15 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         )}
         
         <div className="flex flex-col gap-3 relative z-[1]">
-          <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shadow-sm ${isDisabled ? 'opacity-50' : ''}`}>
-            <IconComponent className={`w-5 h-5 ${styles.iconColor} ${isDisabled ? 'opacity-50' : ''}`} />
+          <div className={`w-10 h-10 rounded-xl bg-[var(--color-bg-tertiary)] flex items-center justify-center shadow-sm ${isDisabled ? 'opacity-50' : ''}`}>
+            <IconComponent className={`w-5 h-5 text-[var(--color-text-secondary)] ${isDisabled ? 'opacity-50' : ''}`} />
           </div>
           <div className="min-h-[80px]">
             <h3 className={`font-semibold text-[#1F283A] dark:text-[#E9ECF1] text-base flex items-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}>
               {mode.label}
             </h3>
             <p className={`text-sm text-[#364154] dark:text-[#cbd5e1] mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}>
-              {getDrillDescription(mode)}
+              {mode.description}
             </p>
           </div>
           {!isDisabled && renderProgressBar(mode.id)}
@@ -549,18 +341,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     );
   };
 
-  /**
-   * Scroll to a specific section
-   */
   const scrollToSection = (sectionKey: string) => {
     setActiveSection(sectionKey);
     const element = document.getElementById(`section-${sectionKey}`);
     element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  /**
-   * Render a grouped section with standardized 3-column grid
-   */
   const renderSection = (key: TrainingModeConfig['intentGroup'], title: string, description: string) => {
     const modes = filteredModes.filter((mode) => mode.intentGroup === key);
     if (modes.length === 0) return null;
@@ -574,7 +360,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         
         {/* Desktop: Standard 3-column grid */}
         <div className="hidden md:grid grid-cols-3 gap-4">
-          {modes.map((mode) => renderDrillCard(mode, 'standard'))}
+          {modes.map((mode) => renderDrillCard(mode))}
         </div>
 
         {/* Mobile: Horizontal scrolling */}
@@ -582,7 +368,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           <div className="flex gap-4" style={{ width: 'max-content' }}>
             {modes.map((mode) => (
               <div key={mode.id} className="w-[280px] flex-shrink-0">
-                {renderDrillCard(mode, 'standard')}
+                {renderDrillCard(mode)}
               </div>
             ))}
           </div>
@@ -674,7 +460,6 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           )}
         </div>
 
-        {/* No Results Message */}
         {searchQuery && filteredModes.length === 0 && (
           <div className="text-center py-12">
             <p className="text-[var(--color-text-muted)]">No modes found matching "{searchQuery}"</p>
@@ -685,4 +470,4 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   );
 };
 
-export default TrainingMenu;
+export default TrainingMenuImproved;

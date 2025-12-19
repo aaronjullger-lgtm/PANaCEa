@@ -16,7 +16,6 @@ export type TrainingModeId =
   | 'rapid_recall'
   | 'ddx_compare'
   | 'guideline_drill'
-  | 'mastery_drill'
   | 'mini_lab'
   | 'first_line_treatment'
   | 'pharmacology'
@@ -31,7 +30,6 @@ export type TrainingModeId =
   | 'commuter_mode'
   | 'medical_wordle'
   | 'ventilator_hero'
-  | 'triage_tent'
   | 'polypharmacy_puzzle'
   | 'radiology_scroll';
 
@@ -200,17 +198,6 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     route: '/drill/pharm',
     isComingSoon: false,
   },
-  // Mastery Mode
-  {
-    id: 'mastery_drill',
-    label: 'Streak Challenge',
-    description: 'Answer until you miss. How long can you survive?',
-    category: 'mastery',
-    intentGroup: 'mastery_competition',
-    iconName: 'Flame',
-    theme: 'red',
-    route: '/session/mastery-drill',
-  },
   // Clinical Simulation Modes
   {
     id: 'fluid_electrolyte',
@@ -270,8 +257,8 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
   },
   {
     id: 'grand_rounds',
-    label: 'Grand Rounds Live',
-    description: 'Weekly live quiz competitions (HQ Trivia style).',
+    label: 'Grand Rounds',
+    description: 'Daily challenge quiz to test your clinical knowledge.',
     category: 'mastery',
     intentGroup: 'mastery_competition',
     iconName: 'Trophy',
@@ -327,17 +314,6 @@ export const MODE_REGISTRY: TrainingModeConfig[] = [
     isComingSoon: true,
   },
   {
-    id: 'triage_tent',
-    label: 'Triage Tent',
-    description: 'Mass casualty triage. Swipe to categorize victims using START protocol.',
-    category: 'clinical',
-    intentGroup: 'clinical_operations',
-    iconName: 'AlertTriangle',
-    theme: 'red',
-    route: '/drill/triage-tent',
-    isComingSoon: true,
-  },
-  {
     id: 'polypharmacy_puzzle',
     label: 'Polypharmacy Puzzle',
     description: 'Geriatrics deprescribing challenge. Which meds can be safely stopped?',
@@ -387,7 +363,6 @@ export const MODES_WITH_DEDICATED_ROUTES: TrainingModeId[] = [
   'commuter_mode',
   'medical_wordle',
   'ventilator_hero',
-  'triage_tent',
   'polypharmacy_puzzle',
   'radiology_scroll'
 ];
@@ -416,7 +391,6 @@ export const ALL_MINI_MODES: TrainingModeId[] = [
   'commuter_mode',
   'medical_wordle',
   'ventilator_hero',
-  'triage_tent',
   'polypharmacy_puzzle',
   'radiology_scroll'
 ];
