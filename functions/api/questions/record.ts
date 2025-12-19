@@ -1,5 +1,7 @@
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
+import { isRankedMode } from '../../../config/training-modes';
+import { updateGlobalAccuracy } from '../../../lib/services/userStatsService';
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -23,7 +25,9 @@ export const onRequestPost = async (context) => {
     }
 
     const body = await request.json();
-    const { userId, questionId, questionType, system, conditionId, wasCorrect } = body;
+    const { userId, questionId, questionType, system, conditionId, wasCorrect, mode } = body;
+
+    const isRankedAttempt = isRankedMode(mode);
 
     // Validate required fields
     if (!userId || !questionId || !questionType) {
@@ -50,7 +54,7 @@ export const onRequestPost = async (context) => {
 
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
-    // Record the question as seen
+    // Record the question as seen (no-repeat guard)
     await prisma.userQuestionHistory.upsert({
       where: {
         userId_questionId: {
@@ -68,9 +72,33 @@ export const onRequestPost = async (context) => {
       },
     });
 
+    // Always log attempts for drill history / analytics
+    await prisma.questionAttempt.create({
+      data: {
+        userId,
+        questionId,
+        questionType: questionType || null,
+        system: system || null,
+        conditionId: conditionId || null,
+        mode: mode || null,
+        wasCorrect: Boolean(wasCorrect),
+        isRankedAttempt,
+      },
+    });
+
+    // Only ranked attempts should feed FSRS/Global stats pipelines
+    if (isRankedAttempt) {
+      try {
+        await updateGlobalAccuracy(prisma, userId);
+      } catch (statsError) {
+        console.warn('Failed to update ranked stats', statsError);
+      }
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: 'Question recorded successfully',
+      isRankedAttempt,
     }), {
       headers: { 
         'Content-Type': 'application/json',

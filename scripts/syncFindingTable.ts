@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
-import { PHYSICAL_EXAM_FINDINGS_REGISTRY } from '../findingRegistry';
+import { FINDING_REGISTRY } from '../findingRegistry';
 
 config();
 const prisma = new PrismaClient();
@@ -15,7 +15,7 @@ interface SyncStats {
 export async function syncAllFindings(): Promise<string> {
   const stats: SyncStats = { created: 0, updated: 0, skipped: 0 };
 
-  for (const finding of PHYSICAL_EXAM_FINDINGS_REGISTRY) {
+  for (const finding of FINDING_REGISTRY) {
     try {
       const existing = await prisma.physicalExamFinding.findUnique({ where: { name: finding.name } });
 

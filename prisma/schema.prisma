@@ -1007,6 +1007,25 @@ model UserQuestionHistory {
   @@index([userId])
 }
 
+/// Tracks every attempt for audit trails and ranked vs sandbox separation
+model QuestionAttempt {
+  id               String   @id @default(uuid())
+  userId           String
+  questionId       String
+  questionType     String?
+  system           String?
+  conditionId      String?
+  mode             String?
+  wasCorrect       Boolean  @default(false)
+  isRankedAttempt  Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([questionId])
+  @@index([mode])
+  @@index([isRankedAttempt])
+}
+
 /// Stores high-yield clinical pearls extracted from questions
 /// Task 112: The "Pearl" Harvester
 model ClinicalPearl {

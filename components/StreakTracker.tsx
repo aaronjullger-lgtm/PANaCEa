@@ -53,7 +53,6 @@ export const StreakTracker: React.FC<StreakTrackerProps> = ({
     if (safeStreak < 30) return "Unstoppable! Keep crushing it!";
     return "Legendary dedication!";
   };
-  };
   
   const hasStudiedOnDate = (date: string) => {
     return streakHistory.some(entry => entry.date === date && entry.studied) || 

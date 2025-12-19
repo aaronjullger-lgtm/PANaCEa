@@ -35,6 +35,16 @@ export type TrainingModeId =
   | 'polypharmacy_puzzle'
   | 'radiology_scroll';
 
+// Modes that count toward ranked stats/FSRS pipelines
+export const RANKED_MODES = ['GRAND_ROUNDS', 'SMART_REVIEW', 'PANCE_SIMULATOR'] as const;
+
+/** Helper to check ranked status across legacy/lowercase identifiers */
+export function isRankedMode(mode?: string | null): boolean {
+  if (!mode) return false;
+  const normalized = mode.replace(/-/g, '_').toUpperCase();
+  return RANKED_MODES.includes(normalized as (typeof RANKED_MODES)[number]);
+}
+
 /**
  * Configuration interface for training mode cards.
  * Defines the metadata needed to render a mode card in the UI.

@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, HelpCircle, Share2, RotateCcw, Trophy, Calendar } from 'lucide-react';
-import { useWordleGame } from '@/hooks/useWordleGame';
+import { useWordleGame, type WordleStatus } from '../../src/hooks/useWordleGame';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { MedicalWordleGame } from '@/types';
 
@@ -248,11 +248,11 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
       {KEYBOARD_ROWS.map((row, rowIndex) => (
         <div key={rowIndex} className="flex gap-1 justify-center">
           {row.map((key) => {
-            const status = keyboardStatus[key];
+            const keyStatus = keyboardStatus[key];
             let bgClass = 'bg-slate-700 hover:bg-slate-600';
-            if (status === 'correct') bgClass = 'bg-emerald-600';
-            else if (status === 'present') bgClass = 'bg-amber-600';
-            else if (status === 'absent') bgClass = 'bg-slate-800';
+            if (keyStatus === 'correct') bgClass = 'bg-emerald-600';
+            else if (keyStatus === 'present') bgClass = 'bg-amber-600';
+            else if (keyStatus === 'absent') bgClass = 'bg-slate-800';
 
             const isWide = key === 'ENTER' || key === '⌫';
 

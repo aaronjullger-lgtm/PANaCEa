@@ -111,7 +111,7 @@ export async function autoAuthorMissingContent(
           // Content failed quality gate
           stats.validationFailed++;
           stats.errors.push({
-            condition: condition.name,
+            entity: condition.name,
             error: `Quality validation failed: ${validation.issues.join("; ")}`,
           });
           console.log(`   ❌ Content failed quality validation`);
@@ -132,7 +132,7 @@ export async function autoAuthorMissingContent(
           } else {
             stats.failed++;
             stats.errors.push({
-              condition: condition.name,
+              entity: condition.name,
               error: "Failed to save to database",
             });
             console.log(`   ❌ Generated but failed to save`);
@@ -141,7 +141,7 @@ export async function autoAuthorMissingContent(
       } else {
         stats.failed++;
         stats.errors.push({
-          condition: condition.name,
+          entity: condition.name,
           error: result.error || "Unknown error",
         });
         console.log(`   ❌ Generation failed: ${result.error}`);
@@ -169,7 +169,7 @@ export async function autoAuthorMissingContent(
     if (stats.errors.length > 0) {
       console.log("\n⚠️  Errors:");
       stats.errors.slice(0, 10).forEach((err, idx) => {
-        console.log(`   ${idx + 1}. ${err.condition}: ${err.error}`);
+        console.log(`   ${idx + 1}. ${err.entity}: ${err.error}`);
       });
       if (stats.errors.length > 10) {
         console.log(`   ... and ${stats.errors.length - 10} more errors`);

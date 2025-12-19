@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
-import { PHYSIOLOGY_REGISTRY } from '../physiologyRegistry';
+import { PHYSIOLOGY_CONCEPT_REGISTRY } from '../physiologyRegistry';
 
 config();
 const prisma = new PrismaClient();
@@ -15,7 +15,7 @@ interface SyncStats {
 export async function syncAllPhysiology(): Promise<string> {
   const stats: SyncStats = { created: 0, updated: 0, skipped: 0 };
 
-  for (const concept of PHYSIOLOGY_REGISTRY) {
+  for (const concept of PHYSIOLOGY_CONCEPT_REGISTRY) {
     try {
       const existing = await prisma.physiologyConcept.findUnique({ where: { name: concept.name } });
 
@@ -23,17 +23,24 @@ export async function syncAllPhysiology(): Promise<string> {
         where: { name: concept.name },
         update: {
           category: concept.category,
-          system: concept.system ?? concept.category ?? null,
+          system: concept.category ?? null,
+          aliases: concept.aliases ?? [],
+          description: concept.description ?? null,
+          relatedConditions: concept.relatedConditions ?? [],
+          relatedDrugs: concept.relatedDrugs ?? [],
+          displayName: concept.displayName ?? concept.name,
+          mechanism: null,
+          clinicalSignificance: null,
         },
         create: {
           name: concept.name,
           displayName: concept.displayName ?? concept.name,
           aliases: concept.aliases ?? [],
           category: concept.category,
-          system: concept.system ?? concept.category ?? null,
+          system: concept.category ?? null,
           description: concept.description ?? null,
-          mechanism: concept.mechanism ?? null,
-          clinicalSignificance: concept.clinicalSignificance ?? null,
+          mechanism: null,
+          clinicalSignificance: null,
           relatedConditions: concept.relatedConditions ?? [],
           relatedDrugs: concept.relatedDrugs ?? [],
         },

@@ -1,5 +1,6 @@
-import { Prisma, WordleStatus } from '@prisma/client';
 import { prisma } from '../lib/prisma';
+
+type WordleStatus = 'playing' | 'won' | 'lost';
 
 export const WORDLE_MAX_ATTEMPTS = 6;
 
@@ -31,11 +32,28 @@ const getSeedFromDate = (isoDate: string): number => {
   return Number(digits) || Date.now();
 };
 
-type DailyWordleWithWord = Prisma.DailyWordleGetPayload<{
-  include: { word: true };
-}>;
+type DailyWordleWithWord = {
+  id: string;
+  date: Date;
+  wordId: string;
+  word: {
+    id: string;
+    buzzword: string;
+    condition: string;
+    system: string;
+    subcategory: string | null;
+    explanation: string | null;
+  };
+};
 
-type UserWordleStateRecord = Prisma.UserWordleStateGetPayload<{}>;
+type UserWordleStateRecord = {
+  id: string;
+  userId: string;
+  date: Date;
+  guesses: string[];
+  status: WordleStatus;
+  updatedAt: Date;
+};
 
 const getOrCreateDailyWord = async (normalized: NormalizedWordleDate): Promise<DailyWordleWithWord> => {
   const existing = await prisma.dailyWordle.findUnique({
@@ -174,7 +192,7 @@ export async function submitWordleGuess(userId: string, guess: string, date?: st
 
   const state = await getOrCreateUserState(userId, normalized);
 
-  if (state.status !== WordleStatus.playing) {
+  if (state.status !== 'playing') {
     throw new WordleServiceError('You have already completed today\'s Wordle');
   }
 
@@ -183,10 +201,10 @@ export async function submitWordleGuess(userId: string, guess: string, date?: st
   const updatedGuesses = [...state.guesses, sanitizedGuess];
   const isCorrect = sanitizedGuess === target;
   const newStatus: WordleStatus = isCorrect
-    ? WordleStatus.won
+    ? 'won'
     : updatedGuesses.length >= WORDLE_MAX_ATTEMPTS
-      ? WordleStatus.lost
-      : WordleStatus.playing;
+      ? 'lost'
+      : 'playing';
 
   const updatedState = await prisma.userWordleState.update({
     where: {

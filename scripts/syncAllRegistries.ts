@@ -46,7 +46,7 @@ async function runSync(registryName: string, syncFunction: () => Promise<string 
     console.log(`Starting: ${registryName}`);
     console.log('='.repeat(60));
     
-    const summary = await syncFunction();
+    const summary = (await syncFunction()) || undefined;
     
     const duration = Date.now() - startTime;
     results.push({
