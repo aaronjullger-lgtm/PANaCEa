@@ -142,6 +142,10 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
             ))}
           </div>
         </main>
+      </div>
+    );
+  }
+
   // =========================================================================
   // PLAYING / FEEDBACK / COACHING VIEW
   // =========================================================================
