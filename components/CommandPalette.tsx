@@ -78,7 +78,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   // Focus input when opened
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+      // Use setTimeout to ensure focus happens after render
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
     }
   }, [isOpen]);
 
@@ -179,8 +182,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             subtitle: result.snippet,
             category,
             action: () => {
-              // Navigate to condition/drug detail
-              console.log(`Navigate to ${result.type}:`, result.id);
+              // Navigate to condition/drug detail with structured ID
+              onNavigate(`${result.type}:${result.id}`);
               onClose();
             },
           });
@@ -256,7 +259,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4">
+      <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}

@@ -157,7 +157,6 @@ export async function tuneUserAlgorithm(userId: string): Promise<TuningResult> {
     },
   });
 
-  console.log(`[SRS Tuner] Successfully tuned for ${userId}: ${tuningResult.reason}`);
   return tuningResult;
 }
 

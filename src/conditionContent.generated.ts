@@ -76,26 +76,19 @@ export async function loadConditionContent(): Promise<Record<string, ConditionCo
       if (Object.keys(data).length > 0) {
         // Content loaded from database
         conditionContentCache = data;
-        console.log(`✓ Loaded ${Object.keys(data).length} condition content entries from database`);
         return data;
       }
     } else if (!contentType?.includes('application/json')) {
-      console.warn('⚠ Database API returned non-JSON response');
-      console.warn('This usually means the backend server is not running.');
-      console.warn('Start with: npm run dev:all (or npm run dev:server + npm run dev)');
+      console.warn('⚠ Database API unavailable - backend server may not be running');
     } else if (response.status === 503) {
-      console.error('⚠ Database is unavailable - ensure DATABASE_URL is configured');
+      console.error('⚠ Database unavailable - check DATABASE_URL configuration');
     }
   } catch (error) {
-    console.error('✗ Failed to load content from DB API:', error);
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.error('Network error - backend server may not be running');
-    }
+    console.error('Failed to load content from database:', error instanceof Error ? error.message : 'Unknown error');
   }
 
   // No static file fallback - enforce database-first architecture
   // Return empty object to prevent crashes
-  console.warn('⚠ Returning empty dataset - condition content requires database connection');
   conditionContentCache = {};
   return {};
 }

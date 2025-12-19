@@ -1,152 +1,243 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img width="1200" height="475" alt="PANaCEa Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+
+# PANaCEa
+
+**AI-Powered PANCE/PANRE Exam Preparation Platform**
+
+Adaptive learning meets medical education excellence for Physician Assistant students.
+
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-Latest-purple.svg)](https://vitejs.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue.svg)](https://www.postgresql.org/)
+
 </div>
 
-# Run and deploy your AI Studio app
+---
 
-This contains everything you need to run your app locally.
+## 🎯 Overview
 
-View your app in AI Studio: https://ai.studio/apps/drive/1XKKOL9unGhpt6WDahRfrws6I92V3mjTJ
+PANaCEa is a comprehensive medical education platform designed specifically for PA students preparing for their PANCE/PANRE board exams. It combines cutting-edge AI with proven spaced repetition algorithms (FSRS v5) to create a personalized learning experience.
 
-## Run Locally
+### ✨ Key Features
 
-**Prerequisites:**  Node.js (v18 or higher)
+- **🧠 AI-Generated Questions**: Clinical scenarios powered by Google Gemini API
+- **📊 Adaptive Learning**: FSRS v5 spaced repetition with user-specific tuning
+- **🎮 Gamified Training**: Multiple drill modes including Photo Drill, Rapid Recall, DDx Compare
+- **📈 Analytics Dashboard**: Track performance across all PANCE organ systems
+- **🏥 Virtual Patient Encounters**: Interactive clinical case simulations
+- **📱 PWA Support**: Study offline with progressive web app capabilities
 
-1. **Install dependencies:**
+### 🛠️ Tech Stack
+
+- **Frontend**: React 19, TypeScript, Vite, TailwindCSS, Framer Motion
+- **Backend**: Express.js, Node.js
+- **Database**: PostgreSQL with Prisma ORM
+- **AI**: Google Gemini API
+- **Authentication**: Clerk
+- **Deployment**: Cloudflare Pages + Functions
+
+---
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Node.js** v18 or higher
+- **PostgreSQL** database
+- **Google Gemini API** key ([Get one here](https://makersuite.google.com/app/apikey))
+- **Clerk Account** for authentication ([Sign up](https://clerk.com))
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/aaronjullger-lgtm/PANaCEa.git
+   cd PANaCEa
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. **Set up environment variables:**
+3. **Set up environment variables**
    ```bash
    cp .env.example .env
    ```
-   Then edit `.env` and add:
-   - `VITE_CLERK_PUBLISHABLE_KEY`: Your Clerk publishable key (from https://dashboard.clerk.com)
-   - `CLERK_SECRET_KEY`: Your Clerk secret key
-   - `GEMINI_API_KEY`: Your Gemini API key
-   - `DATABASE_URL`: **REQUIRED** - Your PostgreSQL connection string
    
-   **⚠️ DATABASE_URL is REQUIRED** - This app uses a database-first architecture. All content is stored in PostgreSQL.
+   Edit `.env` and configure:
+   ```env
+   # Clerk Authentication
+   VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+   CLERK_SECRET_KEY=sk_test_...
    
-   See [AUTHENTICATION_SETUP.md](AUTHENTICATION_SETUP.md) for detailed authentication setup instructions.
+   # Google Gemini AI
+   GEMINI_API_KEY=your_gemini_api_key
+   
+   # PostgreSQL Database (REQUIRED)
+   DATABASE_URL=postgresql://user:password@host:5432/database
+   ```
+   
+   > ⚠️ **DATABASE_URL is REQUIRED** - PANaCEa uses a database-first architecture
 
-3. **Generate Prisma Client:**
+4. **Initialize the database**
    ```bash
    npm run db:generate
-   ```
-
-4. **Start the application:**
-   
-   **⚠️ IMPORTANT: You must run BOTH frontend and backend servers**
-   
-   **Option A - Run both together (RECOMMENDED):**
-   ```bash
-   npm run dev:all
-   ```
-   This starts:
-   - Backend server (Express) on `http://localhost:3001` - Handles API and database
-   - Frontend dev server (Vite) on `http://localhost:3000` - React UI
-   
-   **Option B - Run separately:**
-   ```bash
-   # Terminal 1 - Backend (MUST be started first)
-   npm run dev:server
-   
-   # Terminal 2 - Frontend
-   npm run dev
-   ```
-   
-   **❌ DO NOT run `npm run dev` alone** - This only starts the frontend. API calls will fail with "Unexpected token '<'" errors because the backend isn't running.
-
-5. **Open your browser:**
-   Navigate to `http://localhost:3000`
-
-## Deploy to Production
-
-⚠️ **Before deploying to production, you MUST set up your database first!**
-
-### Quick Production Setup:
-
-1. **Set up your database:**
-   ```bash
-   # Set production DATABASE_URL in .env
-   DATABASE_URL="postgresql://your-production-db-url"
-   
-   # Run database migration
    npm run migrate:production
    ```
 
-2. **Deploy to Cloudflare Pages:**
-   - Follow the step-by-step guide: [PRODUCTION_DEPLOYMENT_CHECKLIST.md](PRODUCTION_DEPLOYMENT_CHECKLIST.md)
-   - Detailed deployment instructions: [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md)
+5. **Start the development servers**
+   
+   **⚠️ CRITICAL**: You must run BOTH frontend and backend servers
+   
+   ```bash
+   npm run dev:all
+   ```
+   
+   This starts:
+   - 🔧 Backend (Express) on `http://localhost:3001`
+   - ⚛️ Frontend (Vite) on `http://localhost:3000`
+   
+   <details>
+   <summary>Alternative: Run servers separately</summary>
+   
+   ```bash
+   # Terminal 1 - Backend (start first)
+   npm run dev:server
+   
+   # Terminal 2 - Frontend  
+   npm run dev
+   ```
+   </details>
 
-📖 **Read the comprehensive guides:**
-- [DATABASE_MIGRATION.md](DATABASE_MIGRATION.md) - Database setup and migration
-- [PRODUCTION_DEPLOYMENT_CHECKLIST.md](PRODUCTION_DEPLOYMENT_CHECKLIST.md) - Complete deployment checklist
-- [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md) - Cloudflare Pages configuration
+6. **Open your browser**
+   
+   Navigate to `http://localhost:3000`
 
-## Available Scripts
+---
 
-### Development Scripts
-- `npm run dev` - Start frontend development server
-- `npm run dev:server` - Start backend server with hot reload
-- `npm run dev:all` - Start both frontend and backend concurrently
-- `npm run preview` - Preview production build
-- `npm test` - Run test suite
+## 🚢 Deployment
 
-### Build Scripts
-- `npm run build` - Build frontend for production
-- `npm run build:server` - Build backend for production
+For production deployment to Cloudflare Pages:
 
-### Database Scripts
-- `npm run migrate:production` - Apply database migrations to production (interactive)
-- `npm run db:migrate:deploy` - Deploy migrations (non-interactive)
-- `npm run db:migrate:dev` - Create and apply migrations in development
-- `npm run db:generate` - Generate Prisma client
-- `npm run db:push` - Push schema to database (development only)
-- `npm run db:studio` - Open Prisma Studio database GUI
+1. Set production `DATABASE_URL` in Cloudflare environment variables
+2. Run database migrations: `npm run migrate:production`
+3. Follow the detailed guide: [CLOUDFLARE_DEPLOYMENT.md](CLOUDFLARE_DEPLOYMENT.md)
 
-## 🔍 Troubleshooting
+📖 **Deployment Resources:**
+- [Production Deployment Checklist](PRODUCTION_DEPLOYMENT_CHECKLIST.md)
+- [Database Migration Guide](DATABASE_MIGRATION.md)
 
-### "SyntaxError: Unexpected token '<' in JSON"
+---
 
-**Problem:** Frontend trying to parse HTML instead of JSON from API calls.
+## 📜 Available Scripts
 
-**Cause:** Backend server is not running. The Vite dev server returns the React app's `index.html` for unknown routes instead of JSON from the API.
+| Command | Description |
+|---------|-------------|
+| `npm run dev:all` | Start both frontend and backend (recommended) |
+| `npm run dev:server` | Start backend only |
+| `npm run dev` | Start frontend only |
+| `npm run build` | Build frontend for production |
+| `npm run build:server` | Build backend for production |
+| `npm test` | Run test suite |
+| `npm run db:studio` | Open Prisma Studio (database GUI) |
+| `npm run migrate:production` | Run database migrations |
+| `npm run orchestrate:full` | Run automated content pipeline |
 
-**Solution:** 
-```bash
-# Stop frontend-only dev server (Ctrl+C)
-# Start both servers together:
-npm run dev:all
+---
+
+## 🏗️ Project Structure
+
+```
+PANaCEa/
+├── components/         # React UI components
+│   ├── drill/         # Drill mode components
+│   ├── modes/         # Training mode implementations
+│   └── admin/         # Admin dashboard components
+├── services/          # Business logic layer
+├── lib/
+│   ├── services/      # Backend services (CMS, SRS, Auto-author)
+│   ├── middleware/    # Express middleware (auth, validation)
+│   └── fsrs.ts        # FSRS v5 spaced repetition algorithm
+├── server.ts          # Express backend server
+├── App.tsx            # Main React application
+├── conditionRegistry.ts # Medical condition definitions (2195 entries)
+└── prisma/            # Database schema and migrations
 ```
 
-### "Failed to fetch from /api/content/all"
+---
 
-**Problem:** API requests failing with network errors.
+## 🐛 Troubleshooting
 
-**Cause:** Backend Express server (port 3001) is not running.
+### "Unexpected token '<'" error
+**Problem**: Frontend returns HTML instead of JSON for API calls  
+**Solution**: Backend server is not running. Use `npm run dev:all`
 
-**Solution:**
-```bash
-npm run dev:all  # Always use this command for development
-```
+### Database connection errors
+**Problem**: Can't connect to PostgreSQL  
+**Solutions**:
+- Verify `DATABASE_URL` is set in `.env`
+- Run `npm run db:generate` to sync Prisma client
+- Check database is accessible
 
-### "Database unavailable" or connection errors
+### Gemini API errors  
+**Problem**: AI question generation fails  
+**Solutions**:
+- Verify `GEMINI_API_KEY` is set correctly
+- Ensure backend server is running on port 3001
+- Check API key validity at [Google AI Studio](https://makersuite.google.com)
 
-**Problem:** Backend server starts but can't connect to database.
+---
 
-**Causes:**
-1. `DATABASE_URL` not set in `.env`
-2. Database not accessible (wrong credentials, network issues)
-3. Prisma client not generated
+## 📚 Documentation
 
-**Solution:**
-```bash
-# 1. Check .env file has DATABASE_URL
-# 2. Generate Prisma client:
-npm run db:generate
+- [Developer Guide](DEVELOPER_GUIDE.md) - Architecture deep dive
+- [Database Implementation](DATABASE_IMPLEMENTATION.md) - Schema and no-repeat logic
+- [Deployment Guide](CLOUDFLARE_DEPLOYMENT.md) - Production deployment
+- [Authentication Setup](AUTHENTICATION_SETUP.md) - Clerk configuration
+- [Copilot Instructions](.github/copilot-instructions.md) - AI coding assistant guide
+
+---
+
+## 🤝 Contributing
+
+This is an educational project for PA students. Contributions are welcome!
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 🙏 Acknowledgments
+
+- **PANCE Blueprint** - NCCPA exam content outline
+- **Google Gemini** - AI question generation
+- **Clerk** - Authentication infrastructure  
+- **Supabase/PostgreSQL** - Database hosting
+- **Open FSRS** - Spaced repetition algorithm
+
+---
+
+<div align="center">
+
+**Built with ❤️ for PA Students**
+
+[Report Bug](https://github.com/aaronjullger-lgtm/PANaCEa/issues) · [Request Feature](https://github.com/aaronjullger-lgtm/PANaCEa/issues)
+
+</div>
 
 # 3. Verify database connection:
 npm run db:studio  # Opens Prisma Studio - if this works, DB is accessible
