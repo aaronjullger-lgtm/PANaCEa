@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Globe, Beaker, Watch } from 'lucide-react';
+import { Settings, Globe, Beaker, Watch, Lightbulb } from 'lucide-react';
 import type { UnitSystem, DrugNamingConvention, UserPreferences } from '@/types';
 
 interface UserPreferencesPanelProps {
@@ -198,8 +198,9 @@ const UserPreferencesPanel: React.FC<UserPreferencesPanelProps> = ({
 
       {/* Info */}
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-        <p className="text-sm text-blue-900 dark:text-blue-200">
-          💡 <span className="font-semibold">Tip:</span> Your preferences are saved locally and apply to all study modes and questions.
+        <p className="text-sm text-blue-900 dark:text-blue-200 flex items-start gap-2">
+          <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          <span><span className="font-semibold">Tip:</span> Your preferences are saved locally and apply to all study modes and questions.</span>
         </p>
       </div>
     </div>

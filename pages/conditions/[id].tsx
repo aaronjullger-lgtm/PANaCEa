@@ -1,5 +1,27 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  ClipboardList,
+  Lightbulb,
+  Dna,
+  Microscope,
+  BarChart3,
+  AlertTriangle,
+  Stethoscope,
+  ThermometerSun,
+  UserCheck,
+  Search,
+  HelpCircle,
+  Pill,
+  Hospital,
+  Gem,
+  Zap,
+  Flag,
+  TrendingUp,
+  GraduationCap,
+  Target,
+  type LucideIcon,
+} from "lucide-react";
 import FormattedSection from "../../components/conditions/FormattedSection";
 import { BuzzwordBanner } from "../../components/conditions/BuzzwordBanner";
 import {
@@ -20,33 +42,33 @@ const getConditionIdFromPath = (): string => {
 /**
  * Standardized ordering for condition page sections (PA School focused)
  */
-const SECTION_ORDER: { key: string; title: string; emoji?: string }[] = [
-  { key: "overview", title: "Overview", emoji: "📋" },
-  { key: "keyPoints", title: "Key Points", emoji: "💡" },
-  { key: "etiologyPathophysiology", title: "Pathophysiology (The Why)", emoji: "🧬" },
-  { key: "etiology", title: "Etiology", emoji: "🔬" },
-  { key: "epidemiology", title: "Epidemiology", emoji: "📊" },
-  { key: "riskFactors", title: "Risk Factors", emoji: "⚠️" },
-  { key: "clinicalPresentation", title: "Clinical Presentation (Signs & Symptoms)", emoji: "🩺" },
-  { key: "symptoms", title: "Symptoms", emoji: "🤒" },
-  { key: "physicalExam", title: "Physical Exam", emoji: "👨‍⚕️" },
-  { key: "examFindings", title: "Exam Findings", emoji: "🔍" },
-  { key: "diagnostics", title: "Diagnosis (Labs, Imaging, Special Tests)", emoji: "🔬" },
-  { key: "differentialDiagnosis", title: "Differential Diagnosis", emoji: "🤔" },
-  { key: "management", title: "Management (First Line, Second Line, Patient Ed)", emoji: "💊" },
-  { key: "treatment", title: "Treatment", emoji: "🏥" },
-  { key: "treatmentPearls", title: "Treatment Pearls", emoji: "💎" },
-  { key: "complications", title: "Complications", emoji: "⚡" },
-  { key: "redFlags", title: "Red Flags", emoji: "🚩" },
-  { key: "prognosis", title: "Prognosis", emoji: "📈" },
-  { key: "preventionEducation", title: "Prevention & Education", emoji: "🎓" },
-  { key: "pearls", title: "Pearls (High-Yield Facts for Exams)", emoji: "🎯" },
+const SECTION_ORDER: { key: string; title: string; Icon?: LucideIcon }[] = [
+  { key: "overview", title: "Overview", Icon: ClipboardList },
+  { key: "keyPoints", title: "Key Points", Icon: Lightbulb },
+  { key: "etiologyPathophysiology", title: "Pathophysiology (The Why)", Icon: Dna },
+  { key: "etiology", title: "Etiology", Icon: Microscope },
+  { key: "epidemiology", title: "Epidemiology", Icon: BarChart3 },
+  { key: "riskFactors", title: "Risk Factors", Icon: AlertTriangle },
+  { key: "clinicalPresentation", title: "Clinical Presentation (Signs & Symptoms)", Icon: Stethoscope },
+  { key: "symptoms", title: "Symptoms", Icon: ThermometerSun },
+  { key: "physicalExam", title: "Physical Exam", Icon: UserCheck },
+  { key: "examFindings", title: "Exam Findings", Icon: Search },
+  { key: "diagnostics", title: "Diagnosis (Labs, Imaging, Special Tests)", Icon: Microscope },
+  { key: "differentialDiagnosis", title: "Differential Diagnosis", Icon: HelpCircle },
+  { key: "management", title: "Management (First Line, Second Line, Patient Ed)", Icon: Pill },
+  { key: "treatment", title: "Treatment", Icon: Hospital },
+  { key: "treatmentPearls", title: "Treatment Pearls", Icon: Gem },
+  { key: "complications", title: "Complications", Icon: Zap },
+  { key: "redFlags", title: "Red Flags", Icon: Flag },
+  { key: "prognosis", title: "Prognosis", Icon: TrendingUp },
+  { key: "preventionEducation", title: "Prevention & Education", Icon: GraduationCap },
+  { key: "pearls", title: "Pearls (High-Yield Facts for Exams)", Icon: Target },
 ];
 
 interface ContentSection {
   key: string;
   title: string;
-  emoji?: string;
+  Icon?: LucideIcon;
   content?: ConditionContent;
 }
 
@@ -266,7 +288,7 @@ const ConditionPage: React.FC = () => {
               className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
             >
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                {section.emoji && <span>{section.emoji}</span>}
+                {section.Icon && <section.Icon className="w-5 h-5 text-[var(--color-accent)]" />}
                 <span>{section.title}</span>
               </h3>
               <svg

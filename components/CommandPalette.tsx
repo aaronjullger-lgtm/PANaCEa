@@ -12,7 +12,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, ArrowRight, Loader2 } from 'lucide-react';
+import { Search, X, ArrowRight, Loader2, AlertTriangle } from 'lucide-react';
 import { MODE_REGISTRY } from '../config/training-modes';
 
 interface CommandPaletteProps {
@@ -303,8 +303,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           {/* Search Error */}
           {searchError && (
             <div className="px-4 py-3 bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800">
-              <p className="text-sm text-red-600 dark:text-red-400">
-                ⚠️ {searchError}
+              <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                <span>{searchError}</span>
               </p>
             </div>
           )}

@@ -219,8 +219,8 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
             className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center"
           >
             <Trophy className="w-20 h-20 mx-auto mb-6 text-orange-500" />
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              Cram Session Complete! 🎉
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-center gap-2">
+              Cram Session Complete! <Trophy className="w-8 h-8 text-amber-500" />
             </h2>
             
             <div className="grid grid-cols-2 gap-4 my-8">

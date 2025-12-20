@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, XCircle, Droplets, ArrowRight, RotateCcw, Play } from 'lucide-react';
+import { X, CheckCircle, XCircle, Droplets, ArrowRight, RotateCcw, Play, FlaskConical, BarChart2, Droplet, Calculator } from 'lucide-react';
 import type { FluidElectrolyteCase } from '@/types/drill-modes';
 import { 
   FLUID_ELECTROLYTE_CASES, 
@@ -150,14 +150,14 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
               
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  { title: 'FENa Calculations', desc: 'Fractional excretion of sodium for AKI workup', icon: '⚗️' },
-                  { title: 'Anion Gap', desc: 'Acid-base disorder assessment', icon: '📊' },
-                  { title: 'Maintenance Fluids', desc: '4-2-1 rule and pediatric calculations', icon: '💧' },
-                  { title: 'Free Water Deficit', desc: 'Hypernatremia management', icon: '🧮' },
+                  { title: 'FENa Calculations', desc: 'Fractional excretion of sodium for AKI workup', Icon: FlaskConical },
+                  { title: 'Anion Gap', desc: 'Acid-base disorder assessment', Icon: BarChart2 },
+                  { title: 'Maintenance Fluids', desc: '4-2-1 rule and pediatric calculations', Icon: Droplet },
+                  { title: 'Free Water Deficit', desc: 'Hypernatremia management', Icon: Calculator },
                 ].map((item, i) => (
                   <div key={i} className="bg-[#E9ECF1] dark:bg-[#1F283A] rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl">{item.icon}</span>
+                      <item.Icon className="w-6 h-6 text-[var(--color-accent)]" />
                       <h4 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1]">{item.title}</h4>
                     </div>
                     <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">{item.desc}</p>

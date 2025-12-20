@@ -20,7 +20,8 @@ import {
   Zap,
   Info,
   ChevronRight,
-  X
+  X,
+  Gem
 } from 'lucide-react';
 
 export interface DrugCard {
@@ -262,7 +263,9 @@ export default function DrugCardRenderer({
                     : 'bg-yellow-900/20 border border-yellow-800'
                 }`}
               >
-                <span className="text-xl">💎</span>
+                <Gem className={`w-5 h-5 flex-shrink-0 ${
+                  theme === 'light' ? 'text-amber-500' : 'text-amber-400'
+                }`} />
                 <span
                   className={`text-sm ${
                     theme === 'light' ? 'text-yellow-900' : 'text-yellow-100'

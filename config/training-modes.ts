@@ -39,7 +39,6 @@ export type TrainingModeId =
   | 'code_blue_speed'
   | 'grand_rounds'
   | 'cram_mode'
-  | 'commuter_mode'
   | 'medical_wordle'
   | 'ventilator_hero'
   | 'polypharmacy_puzzle'
@@ -332,17 +331,6 @@ export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
     theme: 'orange',
     route: 'cram_mode',
     estimatedMinutes: 30,
-  },
-  {
-    id: 'commuter_mode',
-    label: 'Commuter Mode',
-    description: 'Audio-based studying on-the-go',
-    category: 'specialty_drills',
-    iconName: 'Headphones',
-    theme: 'cyan',
-    route: 'commuter_mode',
-    isComingSoon: true,
-    estimatedMinutes: 15,
   },
 ];
 

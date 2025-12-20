@@ -87,7 +87,7 @@ const NeuralLinkLog: React.FC<NeuralLinkLogProps> = ({
               className="w-2 h-2 bg-blue-500 dark:bg-cyan-400 rounded-full shadow-lg shadow-blue-500/50 dark:shadow-cyan-400/50"
             ></motion.div>
             <h3 className="text-sm font-bold text-blue-700 dark:text-cyan-300 tracking-wider font-mono">
-              🧠 CORTEX OPTIMIZATION ENGINE: ONLINE
+              CORTEX OPTIMIZATION ENGINE: ONLINE
             </h3>
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">

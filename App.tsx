@@ -25,6 +25,7 @@ import {
   saveUserProfile 
 } from "./services/userProfileService";
 import type { TrainingModeId } from "./config/training-modes";
+import { CommuterProvider } from "./contexts/CommuterContext";
 
 // Lazy load components for better performance
 const QuizView = lazy(() => import("./components/QuizView"));
@@ -463,6 +464,7 @@ const App: React.FC = () => {
 
   // Main authenticated app
   return (
+    <CommuterProvider>
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
       {/* Loading Progress Bar */}
       <LoadingProgress isLoading={isLoading} />
@@ -861,6 +863,7 @@ const App: React.FC = () => {
         />
       </Suspense>
     </div>
+    </CommuterProvider>
   );
 };
 

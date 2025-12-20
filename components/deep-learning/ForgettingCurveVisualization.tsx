@@ -6,7 +6,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingDown, AlertCircle, CheckCircle } from 'lucide-react';
+import { TrendingDown, AlertCircle, CheckCircle, AlertTriangle, BookOpen, BarChart2 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '../../types';
 
 interface ForgettingCurveProps {
@@ -73,15 +73,15 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
 
   const getRecommendation = (data: TopicProficiency) => {
     if (data.status === 'critical') {
-      return `⚠️ Urgent review needed! Your proficiency has dropped significantly.`;
+      return `Urgent review needed! Your proficiency has dropped significantly.`;
     }
     if (data.status === 'declining') {
-      return `📉 Review now to boost proficiency back up before further decay.`;
+      return `Review now to boost proficiency back up before further decay.`;
     }
     if (data.status === 'good') {
-      return `📚 Schedule a review within the next few days to maintain proficiency.`;
+      return `Schedule a review within the next few days to maintain proficiency.`;
     }
-    return `✅ Keep up the great work! Your proficiency is strong.`;
+    return `Keep up the great work! Your proficiency is strong.`;
   };
 
   return (
@@ -223,7 +223,9 @@ export const ForgettingCurveVisualization: React.FC<ForgettingCurveProps> = ({
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white"
       >
-        <h4 className="text-lg font-bold mb-2">📊 Recommendation</h4>
+        <h4 className="text-lg font-bold mb-2 flex items-center gap-2">
+          <BarChart2 className="w-5 h-5" /> Recommendation
+        </h4>
         <p className="text-white/90 mb-4">{getRecommendation(proficiencyData)}</p>
         <button className="px-6 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
           Review {topic} Now

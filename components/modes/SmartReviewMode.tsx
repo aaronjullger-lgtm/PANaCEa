@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Brain, Clock, Zap, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Brain, Clock, Zap, TrendingUp, CheckCircle, AlertCircle, AlertTriangle, Sparkles, FileText } from 'lucide-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 
 interface ReviewItem {
@@ -111,7 +111,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   const showSpeedFeedback = (timeMs: number) => {
     // Placeholder: implement toast/animation based on speed
     const isFast = timeMs < 15000;
-    console.log(isFast ? '⚡ Fast Recall (Easy)' : '🐢 Slow Recall (Hard)');
+    console.log(isFast ? 'Fast Recall (Easy)' : 'Slow Recall (Hard)');
   };
 
   const handleNext = () => {
@@ -128,13 +128,13 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   const getBadgeConfig = (reason: string) => {
     switch (reason) {
       case 'OVERDUE':
-        return { icon: '🚨', label: 'Memory Critical', color: 'bg-red-500 text-white' };
+        return { Icon: AlertCircle, label: 'Memory Critical', color: 'bg-red-500 text-white' };
       case 'WEAK_SPOT':
-        return { icon: '⚠️', label: 'Weak Area', color: 'bg-orange-500 text-white' };
+        return { Icon: AlertTriangle, label: 'Weak Area', color: 'bg-orange-500 text-white' };
       case 'NEW':
-        return { icon: '🆕', label: 'New Concept', color: 'bg-blue-500 text-white' };
+        return { Icon: Sparkles, label: 'New Concept', color: 'bg-blue-500 text-white' };
       default:
-        return { icon: '📝', label: 'Review', color: 'bg-gray-500 text-white' };
+        return { Icon: FileText, label: 'Review', color: 'bg-gray-500 text-white' };
     }
   };
 
@@ -173,7 +173,9 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
             <CheckCircle className="w-24 h-24 text-white mx-auto mb-6" />
           </motion.div>
 
-          <h1 className="text-4xl font-bold text-white mb-4">🧠 Brain Upgraded!</h1>
+          <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
+            <Brain className="w-10 h-10" /> Brain Upgraded!
+          </h1>
           <p className="text-white/80 mb-8">You've completed all your reviews for today.</p>
 
           <div className="bg-white/10 backdrop-blur rounded-2xl p-6 mb-6">
@@ -243,7 +245,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
             {/* Reason Badge */}
             <div className="flex justify-center">
               <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${badge.color} shadow-lg`}>
-                <span className="text-lg">{badge.icon}</span>
+                <badge.Icon className="w-5 h-5" />
                 <span className="font-semibold text-sm">{badge.label}</span>
               </div>
             </div>
@@ -303,7 +305,7 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
                   )}
                   <div>
                     <div className="font-semibold text-lg mb-2">
-                      {isCorrect ? '✅ Correct!' : '❌ Incorrect'}
+                      {isCorrect ? 'Correct!' : 'Incorrect'}
                     </div>
                     <p className="text-sm text-[var(--color-text-muted)]">{currentItem.question.explanation}</p>
                   </div>

@@ -108,7 +108,7 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
               </button>
             )}
             {dueCount === 0 && (
-              <div className="text-white/70 text-sm">✨ All caught up! Great work!</div>
+              <div className="text-white/70 text-sm">All caught up! Great work!</div>
             )}
           </div>
 

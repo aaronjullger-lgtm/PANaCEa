@@ -528,49 +528,110 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
           >
             {/* Hero Section */}
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">Ready to Interview Your Patient?</h2>
-              <p className="text-xl text-[var(--color-text-secondary)]">
-                Test your clinical reasoning and history-taking skills
+              <h2 className="text-4xl font-bold text-[var(--color-text-primary)]">Virtual Patient Encounter</h2>
+              <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+                Practice clinical reasoning in a realistic patient interview simulation. 
+                Gather history, perform exams, order tests, and make your diagnosis.
               </p>
+            </div>
+
+            {/* What You'll Practice */}
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <div className="bg-slate-teal-50 dark:bg-slate-teal-950/20 rounded-2xl p-6 border border-slate-teal-200 dark:border-slate-teal-800">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                  <Stethoscope className="w-5 h-5 text-slate-teal-600 dark:text-slate-teal-400" />
+                  Clinical Skills Practiced
+                </h3>
+                <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    History-taking and interview technique
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    Physical examination interpretation
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    Diagnostic test selection and interpretation
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    Differential diagnosis development
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    Treatment planning
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-dusty-plum-50 dark:bg-dusty-plum-950/20 rounded-2xl p-6 border border-dusty-plum-200 dark:border-dusty-plum-800">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                  <Award className="w-5 h-5 text-dusty-plum-600 dark:text-dusty-plum-400" />
+                  How You're Evaluated
+                </h3>
+                <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
+                  <li className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-dusty-plum-500 flex-shrink-0" />
+                    Efficiency: Minimal unnecessary questions
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-dusty-plum-500 flex-shrink-0" />
+                    Thoroughness: Covering key clinical domains
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-dusty-plum-500 flex-shrink-0" />
+                    Diagnostic accuracy: Correct final diagnosis
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-dusty-plum-500 flex-shrink-0" />
+                    Treatment appropriateness: Evidence-based plan
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* How It Works Card */}
             <div className="bg-[var(--color-bg-primary)] rounded-2xl p-8 border border-[var(--color-border)] shadow-lg space-y-6">
-              <h3 className="text-2xl font-semibold text-[var(--color-text-primary)]">How It Works</h3>
+              <h3 className="text-2xl font-semibold text-[var(--color-text-primary)]">Encounter Flow</h3>
               
               <div className="space-y-5">
                 {[
                   {
                     num: 1,
                     title: 'Review the Chief Complaint',
-                    desc: "You'll be presented with a patient's chief complaint and vital signs",
-                    icon: '👤'
+                    desc: "You'll be presented with a patient's chief complaint and vital signs. The patient will respond dynamically to your questions.",
+                    Icon: User
                   },
                   {
                     num: 2,
-                    title: 'Ask Questions',
-                    desc: 'Type questions to gather history, physical exam findings, and test results. Information is revealed only when you ask!',
-                    icon: '💬'
+                    title: 'Take History',
+                    desc: 'Type questions to gather history. Use focused, open-ended questions first, then targeted follow-ups. Information is revealed only when you ask!',
+                    Icon: MessageSquare
                   },
                   {
                     num: 3,
-                    title: 'Make Your Diagnosis',
-                    desc: 'Submit your diagnosis when you feel you have enough information',
-                    icon: '🔍'
+                    title: 'Physical Exam & Diagnostics',
+                    desc: 'Request physical exam maneuvers and order labs/imaging. Build your differential diagnosis as you gather data.',
+                    Icon: Microscope
                   },
                   {
                     num: 4,
-                    title: 'Get Scored',
-                    desc: 'Receive feedback on your thoroughness, efficiency, and diagnostic accuracy',
-                    icon: '📊'
+                    title: 'Diagnose & Treat',
+                    desc: 'Submit your diagnosis and treatment plan. Receive detailed feedback from a virtual preceptor on your clinical reasoning.',
+                    Icon: FileText
                   }
                 ].map((step) => (
                   <div key={step.num} className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl bg-[var(--color-bg-secondary)] flex items-center justify-center flex-shrink-0 border border-[var(--color-border)]">
-                      <span className="text-xl">{step.icon}</span>
+                      <step.Icon className="w-5 h-5 text-[var(--color-accent)]" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">{step.title}</h4>
+                      <h4 className="font-semibold text-[var(--color-text-primary)] mb-1">
+                        <span className="text-[var(--color-text-secondary)] mr-2">{step.num}.</span>
+                        {step.title}
+                      </h4>
                       <p className="text-[var(--color-text-secondary)] text-sm">{step.desc}</p>
                     </div>
                   </div>
@@ -581,26 +642,32 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
               <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 border border-[var(--color-border)]">
                 <p className="text-sm text-[var(--color-accent)] font-semibold mb-3 flex items-center gap-2">
                   <Award className="w-4 h-4" />
-                  Pro Tips
+                  Clinical Pearls
                 </p>
                 <ul className="text-sm text-[var(--color-text-secondary)] space-y-2">
                   <li className="flex items-start gap-2">
-                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
-                    <span>Ask essential questions first (onset, character, severity)</span>
+                    <ChevronRight className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
+                    <span>Start with open-ended questions (onset, location, duration, character, aggravating/alleviating factors)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
-                    <span>Avoid unnecessary questions that waste time</span>
+                    <ChevronRight className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
+                    <span>Review of systems should be targeted based on your differential</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
-                    <span>Be thorough but efficient - quality over quantity</span>
+                    <ChevronRight className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
+                    <span>Order tests to rule in or rule out specific diagnoses, not as a shotgun approach</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="text-[var(--color-accent)] mt-0.5">•</span>
-                    <span>Consider differential diagnoses as you gather information</span>
+                    <ChevronRight className="w-4 h-4 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
+                    <span>Think about pre-test probability before ordering expensive or invasive tests</span>
                   </li>
                 </ul>
+              </div>
+
+              {/* Estimated Time */}
+              <div className="flex items-center justify-center gap-2 text-sm text-[var(--color-text-secondary)]">
+                <Clock className="w-4 h-4" />
+                <span>Typical encounter: 10-20 minutes</span>
               </div>
             </div>
 
@@ -1434,7 +1501,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                 <ul className="space-y-1">
                   {currentCase.teachingPoints.map((point, idx) => (
                     <li key={idx} className="text-sm text-blue-900 dark:text-blue-100 flex items-start gap-2">
-                      <span className="text-blue-500">💎</span>
+                      <Award className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                       <span>{point}</span>
                     </li>
                   ))}

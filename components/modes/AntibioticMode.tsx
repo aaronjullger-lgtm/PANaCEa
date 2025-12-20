@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, XCircle, Pill, ArrowRight, RotateCcw, Shuffle, Play } from 'lucide-react';
+import { X, CheckCircle, XCircle, Pill, ArrowRight, RotateCcw, Shuffle, Play, Bug, Zap, AlertTriangle, Target } from 'lucide-react';
 import type { AntibioticDrillQuestion, OrganismInfection, AntibioticDrug } from '@/types/drill-modes';
 import { ORGANISMS, ANTIBIOTICS, COVERAGE_MAP, generateAntibioticDrill } from '@/data/modes/antibioticData';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
@@ -289,14 +289,14 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
               
               <div className="grid md:grid-cols-2 gap-4">
                 {[
-                  { title: 'Bug-Drug Coverage', desc: 'Match organisms to appropriate antibiotics', icon: '🦠' },
-                  { title: 'Mechanism of Action', desc: 'Understand how antibiotics work', icon: '⚡' },
-                  { title: 'Side Effects', desc: 'Know the adverse reactions and contraindications', icon: '⚠️' },
-                  { title: 'Empiric Therapy', desc: 'Choose the right antibiotic for clinical scenarios', icon: '🎯' }
+                  { title: 'Bug-Drug Coverage', desc: 'Match organisms to appropriate antibiotics', Icon: Bug },
+                  { title: 'Mechanism of Action', desc: 'Understand how antibiotics work', Icon: Zap },
+                  { title: 'Side Effects', desc: 'Know the adverse reactions and contraindications', Icon: AlertTriangle },
+                  { title: 'Empiric Therapy', desc: 'Choose the right antibiotic for clinical scenarios', Icon: Target }
                 ].map((drill, i) => (
                   <div key={i} className="bg-[#E9ECF1] dark:bg-[#1F283A] rounded-xl p-4 border border-slate-200 dark:border-slate-700">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl">{drill.icon}</span>
+                      <drill.Icon className="w-6 h-6 text-[var(--color-accent)]" />
                       <h4 className="font-semibold text-[#1F283A] dark:text-[#E9ECF1]">{drill.title}</h4>
                     </div>
                     <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">{drill.desc}</p>

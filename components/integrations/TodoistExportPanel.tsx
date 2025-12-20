@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { CheckSquare, Download, Info } from 'lucide-react';
+import { CheckSquare, Download, Info, Sparkles } from 'lucide-react';
 import {
   generateStudyTasks,
   generateMissedQuestionTasks,
@@ -218,8 +218,8 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
 
       {/* Feature Highlight */}
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
-          ✨ Why Todoist?
+        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+          <Sparkles className="w-4 h-4" /> Why Todoist?
         </h3>
         <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1">
           <li>• Smart scheduling with priority levels</li>

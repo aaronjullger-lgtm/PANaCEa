@@ -26,7 +26,12 @@ import {
   Sparkles,
   User,
   School,
-  GraduationCap
+  GraduationCap,
+  Headphones,
+  Volume2,
+  Mic,
+  Eye,
+  Building2,
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode, UserProfile, ClinicalRotation, YearInProgram } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
@@ -48,6 +53,7 @@ import LongitudinalProgressDashboard from './analytics/LongitudinalProgressDashb
 import WeaknessCheatsheetExporter from './analytics/WeaknessCheatsheetExporter';
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 import EnhancedSettingsTab from './settings/EnhancedSettingsTab';
+import { useCommuter } from '@/contexts/CommuterContext';
 
 // Lazy load Character Gallery
 const CharacterGallery = lazy(() => import('./characters/CharacterGallery'));
@@ -153,6 +159,148 @@ export const ANALYTICS_PALETTES: AnalyticsPaletteConfig[] = [
 // Get default enabled widgets
 const getDefaultWidgets = (): WidgetId[] => 
   DEFAULT_WIDGET_CONFIG.filter(w => w.enabled).map(w => w.id);
+
+/**
+ * AccessibilitySettings - Commuter Mode / Voice-First Configuration
+ */
+const AccessibilitySettings: React.FC = () => {
+  // Try to use commuter context, but handle case where provider might not be available
+  let commuterContext;
+  try {
+    commuterContext = useCommuter();
+  } catch {
+    // Provider not available - render fallback
+    return (
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Headphones className="w-5 h-5 text-[var(--color-accent)]" />
+          <h3 className="font-medium text-[var(--color-text-primary)]">Accessibility</h3>
+        </div>
+        <p className="text-xs text-[var(--color-text-muted)]">
+          Voice mode is initializing. Please refresh the page if this persists.
+        </p>
+      </div>
+    );
+  }
+
+  const { 
+    isCommuterMode, 
+    settings, 
+    toggleCommuterMode, 
+    updateSettings 
+  } = commuterContext;
+
+  return (
+    <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+      <div className="flex items-center gap-2 mb-3">
+        <Headphones className="w-5 h-5 text-[var(--color-accent)]" />
+        <h3 className="font-medium text-[var(--color-text-primary)]">Accessibility - Voice Mode</h3>
+      </div>
+      <p className="text-xs text-[var(--color-text-muted)] mb-4">
+        Enable hands-free study with voice commands and text-to-speech. 
+        Perfect for commuting or when you need larger touch targets.
+      </p>
+
+      {/* Main Toggle */}
+      <label className="flex items-center justify-between p-3 bg-[var(--color-bg-primary)] rounded-lg hover:bg-[var(--color-border)] transition-colors cursor-pointer mb-3">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+            isCommuterMode 
+              ? 'bg-sage-500 text-white' 
+              : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+          }`}>
+            <Headphones className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-[var(--color-text-primary)]">
+              Commuter Mode
+            </div>
+            <div className="text-xs text-[var(--color-text-muted)]">
+              Voice-first interaction layer
+            </div>
+          </div>
+        </div>
+        <input
+          type="checkbox"
+          checked={isCommuterMode}
+          onChange={toggleCommuterMode}
+          className="w-5 h-5 rounded border-gray-300 text-sage-600 focus:ring-sage-500"
+        />
+      </label>
+
+      {/* Sub-settings when enabled */}
+      {isCommuterMode && (
+        <div className="space-y-2 pl-2 border-l-2 border-sage-300 dark:border-sage-700">
+          {/* Auto-read questions */}
+          <label className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--color-bg-primary)] transition-colors cursor-pointer">
+            <div className="flex items-center gap-2">
+              <Volume2 className="w-4 h-4 text-[var(--color-text-muted)]" />
+              <span className="text-sm text-[var(--color-text-primary)]">Read questions aloud</span>
+            </div>
+            <input
+              type="checkbox"
+              checked={settings.autoReadQuestions}
+              onChange={() => updateSettings({ autoReadQuestions: !settings.autoReadQuestions })}
+              className="w-4 h-4 rounded border-gray-300 text-sage-600 focus:ring-sage-500"
+            />
+          </label>
+
+          {/* Voice input */}
+          <label className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--color-bg-primary)] transition-colors cursor-pointer">
+            <div className="flex items-center gap-2">
+              <Mic className="w-4 h-4 text-[var(--color-text-muted)]" />
+              <span className="text-sm text-[var(--color-text-primary)]">Voice input enabled</span>
+            </div>
+            <input
+              type="checkbox"
+              checked={settings.voiceEnabled}
+              onChange={() => updateSettings({ voiceEnabled: !settings.voiceEnabled })}
+              className="w-4 h-4 rounded border-gray-300 text-sage-600 focus:ring-sage-500"
+            />
+          </label>
+
+          {/* High contrast */}
+          <label className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--color-bg-primary)] transition-colors cursor-pointer">
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4 text-[var(--color-text-muted)]" />
+              <span className="text-sm text-[var(--color-text-primary)]">High contrast mode</span>
+            </div>
+            <input
+              type="checkbox"
+              checked={settings.highContrastMode}
+              onChange={() => updateSettings({ highContrastMode: !settings.highContrastMode })}
+              className="w-4 h-4 rounded border-gray-300 text-sage-600 focus:ring-sage-500"
+            />
+          </label>
+
+          {/* Speech rate */}
+          <div className="p-2">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-[var(--color-text-primary)]">Speech rate</span>
+              <span className="text-xs text-[var(--color-text-muted)]">{settings.speechRate}x</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={settings.speechRate}
+              onChange={(e) => updateSettings({ speechRate: parseFloat(e.target.value) })}
+              className="w-full h-2 bg-[var(--color-bg-tertiary)] rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="mt-3 p-3 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg">
+        <p className="text-xs text-sage-900 dark:text-sage-300">
+          Voice mode works with Main Session and Patient Encounter modes. 
+          Say "A", "B", "C", or "D" to select answers.
+        </p>
+      </div>
+    </div>
+  );
+};
 
 /**
  * SettingsStatsModal - Comprehensive settings and statistics view
@@ -1121,23 +1269,6 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                         ))}
                       </div>
                     </div>
-
-                    {/* Commuter Mode (Phase 8) */}
-                    <div>
-                      <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Accessibility (Coming Soon)</div>
-                      <div className="grid grid-cols-2 gap-2 opacity-60">
-                        <div
-                          className={`p-2 rounded-lg text-left text-xs cursor-not-allowed ${
-                            enabledMiniModes.has('commuter_mode')
-                              ? 'bg-[var(--color-accent)]/50 text-[var(--color-btn-primary-text)]'
-                              : 'bg-[var(--color-bg-primary)] text-[var(--color-text-muted)]'
-                          }`}
-                        >
-                          <div className="font-semibold">Commuter Mode</div>
-                          <div className="text-xs opacity-75">Voice/TTS</div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                   
                   <div className="mt-3 text-xs text-[var(--color-text-muted)]">
@@ -1146,10 +1277,13 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
 
                   <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                     <p className="text-xs text-green-900 dark:text-green-300">
-                      [✓] <strong>PANCE System Protected:</strong> Your main adaptive PANCE question system is always available regardless of these settings.
+                      Your main adaptive PANCE question system is always available regardless of these settings.
                     </p>
                   </div>
                 </div>
+
+                {/* Accessibility - Commuter/Voice Mode */}
+                <AccessibilitySettings />
 
                 {/* Clinical Fidelity Mode */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
@@ -1304,8 +1438,8 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   </div>
 
                   <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                    <p className="text-xs text-purple-900 dark:text-purple-300">
-                      🏫 <strong>For Institutions:</strong> Contact us to enable these features for your PA program.
+                    <p className="text-xs text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+                      <Building2 className="w-4 h-4" /> <strong>For Institutions:</strong> Contact us to enable these features for your PA program.
                     </p>
                   </div>
                 </div>

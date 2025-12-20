@@ -26,6 +26,7 @@ import {
   Target,
   Award,
   AlertCircle,
+  Lightbulb,
 } from 'lucide-react';
 import type { UserProfile, YearInProgram, ClinicalRotation } from '@/types';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
@@ -475,8 +476,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
 
       {/* Info Tip */}
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
-        <p className="text-sm text-blue-900 dark:text-blue-200">
-          💡 <strong>Tip:</strong> Your settings are saved automatically and sync across devices when logged in.
+        <p className="text-sm text-blue-900 dark:text-blue-200 flex items-start gap-2">
+          <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          <span><strong>Tip:</strong> Your settings are saved automatically and sync across devices when logged in.</span>
         </p>
       </div>
     </div>

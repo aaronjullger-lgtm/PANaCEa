@@ -1,6 +1,7 @@
 // components/TopicDetailModal.tsx
 
 import React, { useMemo, useState } from "react";
+import { X } from 'lucide-react';
 import type { TopicStats, PerformanceRecord } from "../types";
 import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
 
@@ -145,7 +146,7 @@ const TopicDetailModal: React.FC<TopicDetailModalProps> = ({
           className="absolute top-3 right-3 text-slate-500 hover:text-slate-800"
           aria-label="Close"
         >
-          ✕
+          <X className="w-5 h-5" />
         </button>
 
         {/* Header */}

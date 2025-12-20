@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { motion, Reorder, AnimatePresence } from 'framer-motion';
-import { GripVertical, Award, AlertCircle, CheckCircle } from 'lucide-react';
+import { GripVertical, Award, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react';
 
 interface Diagnosis {
   id: string;
@@ -317,8 +317,9 @@ export const DifferentialDiagnosisRanker: React.FC<DifferentialDiagnosisRankerPr
           transition={{ delay: 0.3 }}
           className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg"
         >
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            💡 Teaching Points
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Lightbulb className="w-5 h-5 text-amber-500" />
+            Teaching Points
           </h3>
           <div className="space-y-3 text-gray-700 dark:text-gray-300">
             <p>

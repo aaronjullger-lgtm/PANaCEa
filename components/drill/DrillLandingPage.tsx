@@ -3,14 +3,18 @@
  * 
  * Provides a consistent entry point for all drill modes with:
  * - Title and description
+ * - Learning objectives
  * - Start button
  * - History/Stats summary
  * - Instructions
+ * - Estimated time
+ * 
+ * Uses muted semantic color palette for professional appearance.
  */
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon, Play, BarChart3, Clock, Target } from 'lucide-react';
+import { LucideIcon, Play, BarChart3, Clock, Target, BookOpen, Lightbulb, ArrowLeft } from 'lucide-react';
 
 export interface DrillStats {
   totalAttempts?: number;
@@ -25,18 +29,28 @@ export interface DrillLandingPageProps {
   title: string;
   /** Description/subtitle */
   description: string;
+  /** Extended description with more context */
+  longDescription?: string;
   /** Icon for the drill mode */
   icon: LucideIcon;
-  /** Color theme for the drill (e.g., 'blue', 'green', 'purple') */
+  /** Color theme for the drill (e.g., 'sage', 'slate-teal', 'dusty-rose', 'steel-blue', 'muted-amber', 'deep-plum') */
   accentColor?: string;
   /** Stats to display */
   stats?: DrillStats;
   /** Instructions or tips for the drill */
   instructions?: string[];
+  /** Learning objectives */
+  objectives?: string[];
+  /** Estimated time in minutes */
+  estimatedMinutes?: number;
+  /** PANCE blueprint categories covered */
+  categories?: string[];
   /** Callback when user clicks Start */
   onStart: () => void;
   /** Callback when user wants to view history */
   onViewHistory?: () => void;
+  /** Callback to exit/go back */
+  onExit?: () => void;
   /** Optional children for custom content */
   children?: React.ReactNode;
   /** Whether drill is loading */
@@ -46,49 +60,104 @@ export interface DrillLandingPageProps {
 export function DrillLandingPage({
   title,
   description,
+  longDescription,
   icon: Icon,
-  accentColor = 'blue',
+  accentColor = 'steel-blue',
   stats,
   instructions,
+  objectives,
+  estimatedMinutes,
+  categories,
   onStart,
   onViewHistory,
+  onExit,
   children,
   isLoading = false,
 }: DrillLandingPageProps) {
+  // Muted semantic color palette
   const colorClasses = {
+    // Legacy colors (still supported)
     blue: {
-      bg: 'bg-blue-50 dark:bg-blue-950/20',
-      border: 'border-blue-200 dark:border-blue-800',
-      text: 'text-blue-600 dark:text-blue-400',
-      button: 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400',
+      bg: 'bg-steel-blue-50 dark:bg-steel-blue-900/20',
+      border: 'border-steel-blue-200 dark:border-steel-blue-800',
+      text: 'text-steel-blue-600 dark:text-steel-blue-400',
+      button: 'bg-steel-blue-600 hover:bg-steel-blue-700 dark:bg-steel-blue-500 dark:hover:bg-steel-blue-400',
+      tag: 'bg-steel-blue-100 text-steel-blue-700 dark:bg-steel-blue-900/30 dark:text-steel-blue-300',
     },
     green: {
-      bg: 'bg-green-50 dark:bg-green-950/20',
-      border: 'border-green-200 dark:border-green-800',
-      text: 'text-green-600 dark:text-green-400',
-      button: 'bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400',
+      bg: 'bg-sage-50 dark:bg-sage-900/20',
+      border: 'border-sage-200 dark:border-sage-800',
+      text: 'text-sage-600 dark:text-sage-400',
+      button: 'bg-sage-600 hover:bg-sage-700 dark:bg-sage-500 dark:hover:bg-sage-400',
+      tag: 'bg-sage-100 text-sage-700 dark:bg-sage-900/30 dark:text-sage-300',
     },
     purple: {
-      bg: 'bg-purple-50 dark:bg-purple-950/20',
-      border: 'border-purple-200 dark:border-purple-800',
-      text: 'text-purple-600 dark:text-purple-400',
-      button: 'bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-400',
+      bg: 'bg-deep-plum-50 dark:bg-deep-plum-900/20',
+      border: 'border-deep-plum-200 dark:border-deep-plum-800',
+      text: 'text-deep-plum-600 dark:text-deep-plum-400',
+      button: 'bg-deep-plum-600 hover:bg-deep-plum-700 dark:bg-deep-plum-500 dark:hover:bg-deep-plum-400',
+      tag: 'bg-deep-plum-100 text-deep-plum-700 dark:bg-deep-plum-900/30 dark:text-deep-plum-300',
     },
     orange: {
-      bg: 'bg-orange-50 dark:bg-orange-950/20',
-      border: 'border-orange-200 dark:border-orange-800',
-      text: 'text-orange-600 dark:text-orange-400',
-      button: 'bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-400',
+      bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
+      border: 'border-muted-amber-200 dark:border-muted-amber-800',
+      text: 'text-muted-amber-600 dark:text-muted-amber-400',
+      button: 'bg-muted-amber-600 hover:bg-muted-amber-700 dark:bg-muted-amber-500 dark:hover:bg-muted-amber-400',
+      tag: 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-300',
     },
     red: {
-      bg: 'bg-red-50 dark:bg-red-950/20',
-      border: 'border-red-200 dark:border-red-800',
-      text: 'text-red-600 dark:text-red-400',
-      button: 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-400',
+      bg: 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20',
+      border: 'border-dusty-rose-200 dark:border-dusty-rose-800',
+      text: 'text-dusty-rose-600 dark:text-dusty-rose-400',
+      button: 'bg-dusty-rose-600 hover:bg-dusty-rose-700 dark:bg-dusty-rose-500 dark:hover:bg-dusty-rose-400',
+      tag: 'bg-dusty-rose-100 text-dusty-rose-700 dark:bg-dusty-rose-900/30 dark:text-dusty-rose-300',
+    },
+    // New muted semantic colors
+    'sage': {
+      bg: 'bg-sage-50 dark:bg-sage-900/20',
+      border: 'border-sage-200 dark:border-sage-800',
+      text: 'text-sage-600 dark:text-sage-400',
+      button: 'bg-sage-600 hover:bg-sage-700 dark:bg-sage-500 dark:hover:bg-sage-400',
+      tag: 'bg-sage-100 text-sage-700 dark:bg-sage-900/30 dark:text-sage-300',
+    },
+    'slate-teal': {
+      bg: 'bg-slate-teal-50 dark:bg-slate-teal-900/20',
+      border: 'border-slate-teal-200 dark:border-slate-teal-800',
+      text: 'text-slate-teal-600 dark:text-slate-teal-400',
+      button: 'bg-slate-teal-600 hover:bg-slate-teal-700 dark:bg-slate-teal-500 dark:hover:bg-slate-teal-400',
+      tag: 'bg-slate-teal-100 text-slate-teal-700 dark:bg-slate-teal-900/30 dark:text-slate-teal-300',
+    },
+    'dusty-rose': {
+      bg: 'bg-dusty-rose-50 dark:bg-dusty-rose-900/20',
+      border: 'border-dusty-rose-200 dark:border-dusty-rose-800',
+      text: 'text-dusty-rose-600 dark:text-dusty-rose-400',
+      button: 'bg-dusty-rose-600 hover:bg-dusty-rose-700 dark:bg-dusty-rose-500 dark:hover:bg-dusty-rose-400',
+      tag: 'bg-dusty-rose-100 text-dusty-rose-700 dark:bg-dusty-rose-900/30 dark:text-dusty-rose-300',
+    },
+    'steel-blue': {
+      bg: 'bg-steel-blue-50 dark:bg-steel-blue-900/20',
+      border: 'border-steel-blue-200 dark:border-steel-blue-800',
+      text: 'text-steel-blue-600 dark:text-steel-blue-400',
+      button: 'bg-steel-blue-600 hover:bg-steel-blue-700 dark:bg-steel-blue-500 dark:hover:bg-steel-blue-400',
+      tag: 'bg-steel-blue-100 text-steel-blue-700 dark:bg-steel-blue-900/30 dark:text-steel-blue-300',
+    },
+    'muted-amber': {
+      bg: 'bg-muted-amber-50 dark:bg-muted-amber-900/20',
+      border: 'border-muted-amber-200 dark:border-muted-amber-800',
+      text: 'text-muted-amber-600 dark:text-muted-amber-400',
+      button: 'bg-muted-amber-600 hover:bg-muted-amber-700 dark:bg-muted-amber-500 dark:hover:bg-muted-amber-400',
+      tag: 'bg-muted-amber-100 text-muted-amber-700 dark:bg-muted-amber-900/30 dark:text-muted-amber-300',
+    },
+    'deep-plum': {
+      bg: 'bg-deep-plum-50 dark:bg-deep-plum-900/20',
+      border: 'border-deep-plum-200 dark:border-deep-plum-800',
+      text: 'text-deep-plum-600 dark:text-deep-plum-400',
+      button: 'bg-deep-plum-600 hover:bg-deep-plum-700 dark:bg-deep-plum-500 dark:hover:bg-deep-plum-400',
+      tag: 'bg-deep-plum-100 text-deep-plum-700 dark:bg-deep-plum-900/30 dark:text-deep-plum-300',
     },
   };
 
-  const colors = colorClasses[accentColor as keyof typeof colorClasses] || colorClasses.blue;
+  const colors = colorClasses[accentColor as keyof typeof colorClasses] || colorClasses['steel-blue'];
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] py-8 px-4">
@@ -97,6 +166,19 @@ export function DrillLandingPage({
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto"
       >
+        {/* Back Button */}
+        {onExit && (
+          <motion.button
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={onExit}
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Training</span>
+          </motion.button>
+        )}
+
         {/* Header */}
         <div className={`rounded-2xl p-8 border ${colors.border} ${colors.bg} mb-6`}>
           <div className="flex items-center gap-4 mb-4">
@@ -113,6 +195,32 @@ export function DrillLandingPage({
             </div>
           </div>
 
+          {/* Meta info row */}
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            {estimatedMinutes && (
+              <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
+                <Clock className="w-4 h-4" />
+                <span>~{estimatedMinutes} minutes</span>
+              </div>
+            )}
+            {categories && categories.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat, idx) => (
+                  <span key={idx} className={`text-xs px-2 py-1 rounded-full ${colors.tag}`}>
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Long Description */}
+          {longDescription && (
+            <p className="text-[var(--color-text-secondary)] mb-6 leading-relaxed">
+              {longDescription}
+            </p>
+          )}
+
           {/* Start Button */}
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -126,6 +234,33 @@ export function DrillLandingPage({
           </motion.button>
         </div>
 
+        {/* Learning Objectives */}
+        {objectives && objectives.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 mb-6"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Lightbulb className={`w-5 h-5 ${colors.text}`} />
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
+                Learning Objectives
+              </h2>
+            </div>
+            <ul className="space-y-2">
+              {objectives.map((objective, index) => (
+                <li key={index} className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    <span className={`text-xs font-bold ${colors.text}`}>{index + 1}</span>
+                  </div>
+                  <span className="text-[var(--color-text-secondary)]">{objective}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -133,7 +268,7 @@ export function DrillLandingPage({
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.15 }}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -167,14 +302,14 @@ export function DrillLandingPage({
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.25 }}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="w-4 h-4 text-[var(--color-text-muted)]" />
                   <span className="text-sm text-[var(--color-text-muted)]">Best Score</span>
                 </div>
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <div className={`text-2xl font-bold ${colors.text}`}>
                   {stats.bestScore.toFixed(0)}%
                 </div>
               </motion.div>
@@ -184,7 +319,7 @@ export function DrillLandingPage({
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.3 }}
                 className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-4"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -204,12 +339,15 @@ export function DrillLandingPage({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: 0.35 }}
             className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6 mb-6"
           >
-            <h2 className="text-lg font-bold text-[var(--color-text-primary)] mb-4">
-              How it Works
-            </h2>
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen className={`w-5 h-5 ${colors.text}`} />
+              <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
+                How it Works
+              </h2>
+            </div>
             <ul className="space-y-3">
               {instructions.map((instruction, index) => (
                 <li key={index} className="flex items-start gap-3">
@@ -230,7 +368,7 @@ export function DrillLandingPage({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.4 }}
           >
             {children}
           </motion.div>
@@ -241,14 +379,14 @@ export function DrillLandingPage({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
+            transition={{ delay: 0.45 }}
             className="text-center"
           >
             <button
               onClick={onViewHistory}
               className="btn-ghost"
             >
-              View History & Stats
+              View History and Stats
             </button>
           </motion.div>
         )}

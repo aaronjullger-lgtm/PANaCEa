@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, BookOpen, CheckCircle, Calendar, AlertCircle, Award } from 'lucide-react';
+import { Clock, BookOpen, CheckCircle, Calendar, AlertCircle, Award, XCircle, Book } from 'lucide-react';
 
 interface Question {
   id: string;
@@ -386,16 +386,18 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
                     ? 'text-green-800 dark:text-green-200'
                     : 'text-red-800 dark:text-red-200'
                 }`}>
-                  {selectedAnswer === currentQuestionData.correctAnswerIndex 
-                    ? '✅ Correct Answer!' 
-                    : '❌ Incorrect'}
+                  <span className="flex items-center gap-2">
+                    {selectedAnswer === currentQuestionData.correctAnswerIndex 
+                      ? <><CheckCircle className="w-5 h-5" /> Correct Answer!</> 
+                      : <><XCircle className="w-5 h-5" /> Incorrect</>}
+                  </span>
                 </h4>
                 <p className="text-gray-700 dark:text-gray-300 mb-4">
                   {currentQuestionData.rationale}
                 </p>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-                  <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    📚 References:
+                  <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                    <BookOpen className="w-4 h-4" /> References:
                   </h5>
                   <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                     {currentQuestionData.references.map((ref, i) => (
@@ -411,8 +413,8 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
         {/* Resources Sidebar */}
         <div className="space-y-4">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h3 className="font-bold text-gray-900 dark:text-white mb-4">
-              📖 Quick Resources
+            <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Book className="w-5 h-5" /> Quick Resources
             </h3>
             
             {isResourcesOpen ? (

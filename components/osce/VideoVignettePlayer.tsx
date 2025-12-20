@@ -6,7 +6,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Lightbulb, CheckCircle, XCircle } from 'lucide-react';
 
 interface VideoVignettePlayerProps {
   videoUrl: string;
@@ -214,8 +214,9 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
               animate={{ opacity: 1, y: 0 }}
               className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4"
             >
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                💡 Watch the full video at least once before answering
+              <p className="text-sm text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                <span>Watch the full video at least once before answering</span>
               </p>
             </motion.div>
           )}
@@ -269,12 +270,14 @@ export const VideoVignettePlayer: React.FC<VideoVignettePlayerProps> = ({
                 : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'
             }`}
           >
-            <h4 className={`text-xl font-bold mb-3 ${
+            <h4 className={`text-xl font-bold mb-3 flex items-center gap-2 ${
               selectedAnswer === correctAnswerIndex
                 ? 'text-green-800 dark:text-green-200'
                 : 'text-red-800 dark:text-red-200'
             }`}>
-              {selectedAnswer === correctAnswerIndex ? '✅ Correct!' : '❌ Incorrect'}
+              {selectedAnswer === correctAnswerIndex 
+                ? <><CheckCircle className="w-6 h-6" /> Correct!</> 
+                : <><XCircle className="w-6 h-6" /> Incorrect</>}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
               {explanation}

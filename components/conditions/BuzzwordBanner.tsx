@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Lightbulb } from 'lucide-react';
 import { getBuzzword, loadBuzzwords, BuzzwordEntry } from '../../lib/buzzwordRegistry';
 
 interface BuzzwordBannerProps {
@@ -30,8 +31,8 @@ export const BuzzwordBanner: React.FC<BuzzwordBannerProps> = ({ conditionName })
       <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-blue-100 dark:bg-blue-900/30 blur-2xl" />
       
       <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50 text-2xl">
-          💡
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
+          <Lightbulb className="w-6 h-6 text-amber-500" />
         </div>
         
         <div className="flex-1">

@@ -259,8 +259,9 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
                         >
                           Try Again
                         </button>
-                        <p className="mt-3 text-xs text-amber-700 dark:text-amber-400">
-                          💡 Getting it right after this hint will award 50% points (0.5 score)
+                        <p className="mt-3 text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                          <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span>Getting it right after this hint will award 50% points (0.5 score)</span>
                         </p>
                       </>
                     )}

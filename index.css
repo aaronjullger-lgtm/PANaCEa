@@ -158,6 +158,14 @@ body,
   
   /* Card background for table content */
   --color-card-bg: #FFFFFF;
+  
+  /* ===== MUTED SEMANTIC CATEGORY ACCENTS ===== */
+  --color-category-visual: #A67F7F;       /* Dusty Rose */
+  --color-category-simulation: #9A7F9A;   /* Deep Plum */
+  --color-category-practice: #728BA6;     /* Steel Blue */
+  --color-category-specialty: #B39B6C;    /* Muted Amber */
+  --color-category-toolkit: #7A8F6E;      /* Sage */
+  --color-category-command: #5E8686;      /* Slate-Teal */
 }
 
 .dark {
@@ -203,6 +211,67 @@ body,
   
   /* Card background for table content */
   --color-card-bg: #1E293B;
+  
+  /* ===== MUTED SEMANTIC CATEGORY ACCENTS (Dark Mode) ===== */
+  --color-category-visual: #C09E9E;       /* Dusty Rose (lighter) */
+  --color-category-simulation: #B6A0B6;   /* Deep Plum (lighter) */
+  --color-category-practice: #91A6BD;     /* Steel Blue (lighter) */
+  --color-category-specialty: #C5B38A;    /* Muted Amber (lighter) */
+  --color-category-toolkit: #96A78A;      /* Sage (lighter) */
+  --color-category-command: #7DA3A3;      /* Slate-Teal (lighter) */
+}
+
+/* ===== COMMUTER MODE / VOICE-FIRST ACCESSIBILITY ===== */
+
+.commuter-mode {
+  /* High contrast but not bright - easier on eyes */
+  --color-bg-primary: #1a1a2e;
+  --color-bg-secondary: #252540;
+  --color-text-primary: #E8E8E8;
+  --color-text-secondary: #B8B8C8;
+  --color-accent: #6B8F71;
+  --color-accent-hover: #7FA385;
+  
+  /* Larger touch targets via scaling */
+  --commuter-scale: 1.15;
+  --commuter-button-min-height: 56px;
+  --commuter-font-size-base: 1.125rem;
+}
+
+.commuter-mode .btn-primary,
+.commuter-mode .btn-secondary,
+.commuter-mode .btn-success {
+  min-height: var(--commuter-button-min-height);
+  font-size: var(--commuter-font-size-base);
+  padding: 1rem 1.5rem;
+}
+
+.commuter-mode .answer-button {
+  min-height: 72px;
+  font-size: 1.125rem;
+  padding: 1.25rem;
+}
+
+/* Voice indicator animation */
+@keyframes voice-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+.voice-listening {
+  animation: voice-pulse 1.5s ease-in-out infinite;
+}
+
+.voice-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #6B8F71;
+}
+
+.voice-indicator.active {
+  background-color: #7FA385;
+  animation: voice-pulse 1s ease-in-out infinite;
 }
 
 /* -----------------------------------------------------

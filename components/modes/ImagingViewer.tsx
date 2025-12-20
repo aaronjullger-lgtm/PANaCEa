@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ZoomIn, ZoomOut, RotateCw, Move, Maximize2 } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, RotateCw, Move, Maximize2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface MedicalImage {
@@ -210,7 +210,7 @@ export const ImagingViewer: React.FC<ImagingViewerProps> = ({
                             key={idx}
                             className="flex items-start gap-2 text-sm text-slate-400"
                           >
-                            <span className="text-green-400 mt-0.5">✓</span>
+                            <Check className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
                             <span>{finding}</span>
                           </li>
                         ))}

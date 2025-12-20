@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, CheckCircle, AlertCircle, Lightbulb, Award } from 'lucide-react';
+import { FileText, CheckCircle, AlertCircle, Lightbulb, Award, Check } from 'lucide-react';
 import type { SOAPNote } from '@/services/geminiService';
 import { gradeSoapNote, type GradingResult } from '@/lib/services/soapGradingService';
 import { storeSoapGradingEvent } from '@/lib/services/soapAnalyticsService';
@@ -408,7 +408,7 @@ export const SOAPNoteTrainer: React.FC<SOAPNoteTrainerProps> = ({
                 <ul className="space-y-2">
                   {gradingResult.feedback.strengths.map((item, i) => (
                     <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                      <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
+                      <Check className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                       {item}
                     </li>
                   ))}

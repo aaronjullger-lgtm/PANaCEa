@@ -6,7 +6,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, TrendingUp, Sun, Moon, Sunrise, Sunset } from 'lucide-react';
+import { Clock, TrendingUp, Sun, Moon, Sunrise, Sunset, BarChart2 } from 'lucide-react';
 import type { PerformanceRecord } from '../../types';
 import {
   analyzeCircadianPerformance,
@@ -188,7 +188,9 @@ export const CircadianPerformanceChart: React.FC<CircadianPerformanceChartProps>
         <div className="flex items-start gap-4">
           <TrendingUp className="w-8 h-8 flex-shrink-0" />
           <div>
-            <h4 className="text-lg font-bold mb-2">📊 Personalized Recommendation</h4>
+            <h4 className="text-lg font-bold mb-2 flex items-center gap-2">
+              <BarChart2 className="w-5 h-5" /> Personalized Recommendation
+            </h4>
             <p className="text-white/90 leading-relaxed">{insights.recommendation}</p>
           </div>
         </div>

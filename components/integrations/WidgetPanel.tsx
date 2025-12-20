@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Code, Copy, CheckCircle, RefreshCw } from 'lucide-react';
+import { Code, Copy, CheckCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useUser } from '@clerk/clerk-react';
 import {
   calculateStreak,
@@ -266,8 +266,9 @@ export const WidgetPanel: React.FC<WidgetPanelProps> = ({
         </h3>
         <div className="space-y-2">
           <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded border border-yellow-300 dark:border-yellow-700 mb-2">
-            <p className="text-xs font-medium text-yellow-900 dark:text-yellow-300">
-              ⚠️ Important: Replace YOUR_USER_ID in the URL with your actual user ID before embedding.
+            <p className="text-xs font-medium text-yellow-900 dark:text-yellow-300 flex items-start gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+              <span>Important: Replace YOUR_USER_ID in the URL with your actual user ID before embedding.</span>
             </p>
           </div>
           <div>

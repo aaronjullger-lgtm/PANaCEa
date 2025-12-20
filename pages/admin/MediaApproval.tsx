@@ -24,7 +24,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Check, ThumbsDown, Eye, AlertCircle, TrendingUp, Filter, Search, RefreshCw } from 'lucide-react';
+import { X, Check, ThumbsDown, Eye, AlertCircle, TrendingUp, Filter, Search, RefreshCw, FileText, Video, Music, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@clerk/clerk-react';
 
@@ -211,11 +211,12 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
   };
 
   const getMediaTypeIcon = (mediaType: string) => {
+    const iconClass = "w-5 h-5";
     switch (mediaType) {
-      case 'pdf': return '📄';
-      case 'video': return '🎥';
-      case 'audio': return '🎵';
-      default: return '🖼️';
+      case 'pdf': return <FileText className={iconClass} />;
+      case 'video': return <Video className={iconClass} />;
+      case 'audio': return <Music className={iconClass} />;
+      default: return <Image className={iconClass} />;
     }
   };
 

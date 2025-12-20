@@ -124,8 +124,8 @@ export const GrandRoundsHero: React.FC<GrandRoundsHeroProps> = ({
             <span className="text-sm text-amber-300/70 ml-2">{challengeTopic}</span>
           </div>
           {userStatus === 'completed' && (
-            <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs rounded-full border border-emerald-500/30">
-              ✓ Completed
+            <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs rounded-full border border-emerald-500/30 flex items-center gap-1">
+              <CheckCircle className="w-3 h-3" /> Completed
             </span>
           )}
         </div>

@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Diamond, Calendar, CheckCircle, ClipboardList, Link } from 'lucide-react';
 import { AnkiExportPanel } from './AnkiExportPanel';
 import { CalendarSyncPanel } from './CalendarSyncPanel';
 import { WidgetPanel } from './WidgetPanel';
@@ -62,53 +62,53 @@ export const IntegrationsHub: React.FC<IntegrationsHubProps> = ({
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
           <button
             onClick={() => setActiveTab('anki')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
               activeTab === 'anki'
                 ? 'bg-blue-600 text-white shadow-lg'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
             }`}
           >
-            [◆] Anki Export
+            <Diamond className="w-4 h-4" /> Anki Export
           </button>
           <button
             onClick={() => setActiveTab('calendar')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
               activeTab === 'calendar'
                 ? 'bg-purple-600 text-white shadow-lg'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
             }`}
           >
-            📅 Calendar Sync
+            <Calendar className="w-4 h-4" /> Calendar Sync
           </button>
           <button
             onClick={() => setActiveTab('todoist')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
               activeTab === 'todoist'
                 ? 'bg-red-600 text-white shadow-lg'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
             }`}
           >
-            ✓ Todoist
+            <CheckCircle className="w-4 h-4" /> Todoist
           </button>
           <button
             onClick={() => setActiveTab('trello')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
               activeTab === 'trello'
                 ? 'bg-blue-500 text-white shadow-lg'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
             }`}
           >
-            📋 Trello
+            <ClipboardList className="w-4 h-4" /> Trello
           </button>
           <button
             onClick={() => setActiveTab('widgets')}
-            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+            className={`px-6 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
               activeTab === 'widgets'
                 ? 'bg-indigo-600 text-white shadow-lg'
                 : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
             }`}
           >
-            🔗 Widgets
+            <Link className="w-4 h-4" /> Widgets
           </button>
         </div>
 
