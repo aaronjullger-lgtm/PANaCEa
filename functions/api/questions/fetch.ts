@@ -1,9 +1,10 @@
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
+import { handleCorsOptions, verifyAuthToken, type Env } from '../_shared/auth';
+import type { CloudflareContext } from '../_shared/types';
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestPost = async (context) => {
+export const onRequestPost = async (context: CloudflareContext<Env>) => {
   const corsResponse = await handleCorsOptions(context);
   if (corsResponse) return corsResponse;
 
@@ -48,7 +49,12 @@ export const onRequestPost = async (context) => {
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     // 1. Get seen question IDs
-    const historyWhere: any = { userId };
+    const historyWhere: {
+      userId: string;
+      system?: string;
+      conditionId?: string;
+      questionType?: string;
+    } = { userId };
     if (system) historyWhere.system = system;
     if (conditionId) historyWhere.conditionId = conditionId;
     if (questionType) historyWhere.questionType = questionType;

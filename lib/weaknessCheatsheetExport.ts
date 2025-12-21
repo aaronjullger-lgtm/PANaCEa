@@ -407,11 +407,15 @@ function generateCheatsheetHTML(
  * Export weakness cheatsheet as printable HTML
  * Opens in new window for printing to PDF
  */
+/**
+ * Export weakness data as printable HTML cheatsheet
+ * @returns boolean - true if window opened successfully, false if blocked
+ */
 export function exportWeaknessCheatsheet(
   performanceData: PerformanceRecord[],
   allQuestions: Question[],
   options: CheatsheetOptions = {}
-): void {
+): boolean {
   const weaknesses = identifyWeaknesses(performanceData, allQuestions, options);
   const html = generateCheatsheetHTML(weaknesses, options.days || 30);
 
@@ -427,8 +431,9 @@ export function exportWeaknessCheatsheet(
         printWindow.focus();
       }, 250);
     };
+    return true;
   } else {
-    alert('Please allow pop-ups to generate the study guide.');
+    return false;
   }
 }
 

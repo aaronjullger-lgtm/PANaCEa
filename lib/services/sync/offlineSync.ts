@@ -277,6 +277,57 @@ export function clearDebouncedSaves(): void {
 }
 
 /**
+ * Flush all pending debounced saves immediately to localStorage queue
+ * This should be called on beforeunload to prevent data loss
+ * Note: This is synchronous to work with beforeunload
+ */
+export function flushPendingToLocalStorage(): void {
+  // Get current performance data from localStorage and ensure it's queued
+  const performanceKey = 'panceai_performance_v2';
+  const missedKey = 'panceai_missed_v2';
+  const flaggedKey = 'panceai_flagged_v2';
+  
+  try {
+    // Read current data
+    const performanceData = localStorage.getItem(performanceKey);
+    const missedData = localStorage.getItem(missedKey);
+    const flaggedData = localStorage.getItem(flaggedKey);
+    
+    // Queue any pending operations synchronously
+    if (performanceData || missedData || flaggedData) {
+      const queue = getQueue();
+      const existingProgressOp = queue.find(op => op.operation === 'save_progress' && op.status === 'pending');
+      
+      if (!existingProgressOp) {
+        // Create a new pending operation for the sync endpoint
+        const op: SyncOperation = {
+          id: `save_progress_beforeunload_${Date.now()}`,
+          operation: 'save_progress',
+          data: {
+            performanceRecords: performanceData ? JSON.parse(performanceData) : [],
+            savedQuestions: [
+              ...(missedData ? JSON.parse(missedData).map((q: any) => ({ ...q, type: 'missed' })) : []),
+              ...(flaggedData ? JSON.parse(flaggedData).map((q: any) => ({ ...q, type: 'flagged' })) : []),
+            ],
+          },
+          timestamp: Date.now(),
+          attempts: 0,
+          status: 'pending',
+        };
+        queue.push(op);
+        saveQueue(queue);
+        console.log('[OfflineSync] Flushed pending data to queue on beforeunload');
+      }
+    }
+  } catch (error) {
+    console.error('[OfflineSync] Failed to flush pending data:', error);
+  }
+  
+  // Clear any pending timeouts
+  clearDebouncedSaves();
+}
+
+/**
  * Clear all pending operations (use with caution)
  */
 export function clearQueue(): void {

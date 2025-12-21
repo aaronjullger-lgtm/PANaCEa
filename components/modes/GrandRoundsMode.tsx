@@ -113,7 +113,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         }
       } catch (err) {
         console.error('Error fetching challenge:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load challenge');
+        // Use user-friendly error message instead of technical details
+        const isNetworkIssue = err instanceof TypeError || (err instanceof Error && /fetch|network/i.test(err.message));
+        setError(isNetworkIssue 
+          ? 'Unable to connect. Please check your internet connection and try again.'
+          : 'Unable to load today\'s challenge. Please try again in a moment.');
         setViewState('error');
       }
     };
@@ -225,7 +229,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     } catch (err) {
       console.error('Error submitting challenge:', err);
       hapticError();
-      setError(err instanceof Error ? err.message : 'Failed to submit challenge');
+      // User-friendly error message - don't expose technical details
+      setError('Unable to submit your results. Your progress has been saved locally. Please try again.');
       setViewState('error');
     } finally {
       setIsSubmitting(false);

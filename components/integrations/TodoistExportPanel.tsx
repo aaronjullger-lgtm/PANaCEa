@@ -6,6 +6,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { CheckSquare, Download, Info, Sparkles } from 'lucide-react';
+import { useToast } from '../../contexts/ToastContext';
 import {
   generateStudyTasks,
   generateMissedQuestionTasks,
@@ -27,6 +28,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
   missedQuestions,
   userExamDate,
 }) => {
+  const { showToast } = useToast();
   const [exportMode, setExportMode] = useState<ExportMode>('study-plan');
   const [showInstructions, setShowInstructions] = useState(false);
   const [examDate, setExamDate] = useState<string>(
@@ -54,7 +56,7 @@ export const TodoistExportPanel: React.FC<TodoistExportPanelProps> = ({
 
   const handleDownloadCSV = () => {
     if (tasks.length === 0) {
-      alert('No tasks to export. Please set an exam date or complete some questions.');
+      showToast({ type: 'warning', message: 'No tasks to export. Please set an exam date or complete some questions.' });
       return;
     }
 

@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '../../contexts/ToastContext';
 import { Clock, BookOpen, CheckCircle, Calendar, AlertCircle, Award, XCircle, Book } from 'lucide-react';
 
 interface Question {
@@ -37,6 +38,7 @@ interface PANRELASimulatorProps {
 }
 
 export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
+  const { showToast } = useToast();
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -112,7 +114,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
     if (selectedAnswer !== null) {
       handleSubmit();
     } else {
-      alert('Time expired! Please select an answer.');
+      showToast({ type: 'warning', message: 'Time expired! Please select an answer.' });
     }
   };
 
@@ -123,7 +125,7 @@ export default function PANRELASimulator({ onExit }: PANRELASimulatorProps) {
 
   const handleSubmit = () => {
     if (selectedAnswer === null) {
-      alert('Please select an answer before submitting.');
+      showToast({ type: 'warning', message: 'Please select an answer before submitting.' });
       return;
     }
 

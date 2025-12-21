@@ -26,6 +26,7 @@ import ErrorTagger from "./quiz/ErrorTagger";
 import Loader from "./Loader";
 import WellnessCheckModal from "./wellness/WellnessCheckModal";
 import { recordCircadianPerformance } from "../services/circadianAnalyticsService";
+import { feedback } from "../services/feedbackService";
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -284,12 +285,11 @@ const QuizView: React.FC<QuizViewProps> = ({
     // keep both queues in sync
     setParentQueue((prev) => [...prev, newQuestion]);
     setQueue((prev) => [...prev, newQuestion]);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Failed to replenish queue:", err);
-    // soft-fail: show a small error but don't kill the session
+    // soft-fail: show a user-friendly error but don't kill the session
     setError(
-      err?.message ||
-        "Failed to load the next question. You can keep working with the current queue."
+      "Unable to load more questions right now. You can continue with your current questions."
     );
   } finally {
     setIsGeneratingQuestion(false);
@@ -369,6 +369,13 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     setIsAnswered(true);
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
+
+    // Trigger sensory feedback (haptic + optional sound)
+    if (isCorrect) {
+      feedback.correct();
+    } else {
+      feedback.incorrect();
+    }
 
     if (sessionSettings.focus === "review") {
       updateReviewQuestion(currentQuestion, isCorrect);
@@ -516,15 +523,11 @@ const QuizView: React.FC<QuizViewProps> = ({
       );
       setAlternateRationale(explanation);
     } catch (err) {
-      if (err instanceof Error) {
-        setAlternateRationale(
-          `Sorry, an error occurred while generating a new explanation: ${err.message}`
-        );
-      } else {
-        setAlternateRationale(
-          "Sorry, an unknown error occurred while generating a new explanation."
-        );
-      }
+      // User-friendly error message instead of technical details
+      console.error('Error generating alternate rationale:', err);
+      setAlternateRationale(
+        "Sorry, we couldn't generate a new explanation right now. The AI service may be temporarily busy. Please try again in a moment."
+      );
     } finally {
       setIsExplainerLoading(false);
     }

@@ -207,7 +207,8 @@ export const GapAnalysisDashboard: React.FC = () => {
         }
       } catch (err) {
         console.error('Error fetching performance deltas:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load data');
+        // User-friendly error message
+        setError('Unable to load your performance data. Please try refreshing the page.');
       } finally {
         setIsLoading(false);
       }

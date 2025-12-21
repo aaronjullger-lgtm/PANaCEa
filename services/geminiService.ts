@@ -75,11 +75,52 @@ export interface ParsedQuestionResponse {
 
 // --- Helper: call serverless function, which talks to Gemini ---
 
+/**
+ * Custom error class for Gemini API errors with retry metadata
+ */
+export class GeminiApiError extends Error {
+  constructor(
+    message: string,
+    public status?: number,
+    public retryable: boolean = false,
+    public retryAfterMs?: number
+  ) {
+    super(message);
+    this.name = 'GeminiApiError';
+  }
+}
+
+/**
+ * Determines if an error is retryable and how long to wait
+ */
+function getRetryInfo(status: number): { retryable: boolean; retryAfterMs: number } {
+  switch (status) {
+    case 429: // Rate limited
+      return { retryable: true, retryAfterMs: 60000 };
+    case 503: // Service unavailable
+    case 502: // Bad gateway
+    case 504: // Gateway timeout
+      return { retryable: true, retryAfterMs: 3000 };
+    case 408: // Request timeout
+      return { retryable: true, retryAfterMs: 1000 };
+    default:
+      return { retryable: status >= 500, retryAfterMs: 2000 };
+  }
+}
+
+/**
+ * Sleep helper for retry delays
+ */
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export async function callGeminiText(
   modelName: string = GEMINI_FLASH_MODEL,
   prompt: string,
-  temperature: number = 0.8
+  temperature: number = 0.8,
+  options: { maxRetries?: number } = {}
 ): Promise<string> {
+  const { maxRetries = 2 } = options;
+  
   const isTestEnv = typeof process !== 'undefined' && (process.env.VITEST || process.env.NODE_ENV === 'test');
   if (isTestEnv) {
     const hash = Array.from(prompt || '').reduce((acc, char) => (acc + char.charCodeAt(0)) % 100000, 0);
@@ -88,25 +129,66 @@ export async function callGeminiText(
     return mock.length < 40 ? mock.padEnd(40, '.') : mock;
   }
 
-  const response = await fetch(getApiEndpoint(API_ENDPOINTS.GEMINI_PROXY), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ modelName, prompt, temperature }),
-  });
+  let lastError: GeminiApiError | Error | null = null;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(getApiEndpoint(API_ENDPOINTS.GEMINI_PROXY), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelName, prompt, temperature }),
+      });
 
-  if (!response.ok) {
-    console.error("Gemini proxy returned error status", response.status);
-    throw new Error("Gemini proxy error");
+      if (!response.ok) {
+        const { retryable, retryAfterMs } = getRetryInfo(response.status);
+        
+        // If retryable and we have retries left, wait and continue
+        if (retryable && attempt < maxRetries) {
+          console.warn(`[Gemini] Request failed with ${response.status}, retrying in ${retryAfterMs}ms (attempt ${attempt + 1}/${maxRetries})`);
+          await sleep(retryAfterMs);
+          continue;
+        }
+        
+        // Non-retryable or out of retries
+        throw new GeminiApiError(
+          `Gemini API error: ${response.status} ${response.statusText}`,
+          response.status,
+          retryable,
+          retryAfterMs
+        );
+      }
+
+      const data = await response.json();
+      const text = typeof data === "string" ? data : data.text;
+
+      if (!text || !text.trim()) {
+        throw new Error("Empty response from Gemini");
+      }
+
+      return text;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      // If it's already a GeminiApiError, rethrow (already handled retry logic above)
+      if (error instanceof GeminiApiError) {
+        throw error;
+      }
+      
+      // For network errors, attempt retry
+      if (attempt < maxRetries && (
+        error instanceof TypeError || // Network error
+        (error instanceof Error && error.message.includes('fetch'))
+      )) {
+        console.warn(`[Gemini] Network error, retrying in 2000ms (attempt ${attempt + 1}/${maxRetries})`);
+        await sleep(2000);
+        continue;
+      }
+      
+      throw lastError;
+    }
   }
-
-  const data = await response.json();
-  const text = typeof data === "string" ? data : data.text;
-
-  if (!text || !text.trim()) {
-    throw new Error("Empty response from Gemini");
-  }
-
-  return text;
+  
+  throw lastError || new Error("Gemini request failed after retries");
 }
 
 // --- Helper: strip any HTML tags from a string (for options/condition) ---

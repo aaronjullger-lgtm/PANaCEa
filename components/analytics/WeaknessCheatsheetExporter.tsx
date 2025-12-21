@@ -12,6 +12,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, Download, AlertCircle, Check } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
 import type { PerformanceRecord } from '@/types';
 import { getWeaknessSummary } from '@/lib/weaknessCheatsheetExport';
 
@@ -26,6 +27,7 @@ export default function WeaknessCheatsheetExporter({
   theme = 'light',
   onExport,
 }: WeaknessCheatsheetExporterProps): React.ReactElement {
+  const { showToast } = useToast();
   const [days, setDays] = useState(30);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
@@ -38,7 +40,11 @@ export default function WeaknessCheatsheetExporter({
     try {
       // Since we don't have direct access to all questions in this component,
       // we'll generate a simplified HTML export based on performance data alone
-      generateSimplifiedCheatsheet(performanceData, days);
+      const success = generateSimplifiedCheatsheet(performanceData, days);
+      if (!success) {
+        showToast({ type: 'warning', message: 'Please allow pop-ups to generate the study guide.' });
+        return;
+      }
       setExportStatus('success');
       setTimeout(() => setExportStatus('idle'), 3000);
       onExport?.();
@@ -240,11 +246,12 @@ export default function WeaknessCheatsheetExporter({
 /**
  * Generate simplified cheatsheet from performance data
  * (without full question details)
+ * @returns boolean - true if window opened successfully
  */
 function generateSimplifiedCheatsheet(
   performanceData: PerformanceRecord[],
   days: number
-): void {
+): boolean {
   const cutoffDate = Date.now() - days * 24 * 60 * 60 * 1000;
   const recentData = performanceData.filter(
     (record) => record.timestamp >= cutoffDate && !record.isCorrect
@@ -411,7 +418,8 @@ function generateSimplifiedCheatsheet(
     printWindow.onload = () => {
       setTimeout(() => printWindow.focus(), 250);
     };
+    return true;
   } else {
-    alert('Please allow pop-ups to generate the study guide.');
+    return false;
   }
 }

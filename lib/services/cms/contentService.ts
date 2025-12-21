@@ -300,3 +300,117 @@ function getChangeType(status: ContentStatus): 'publish' | 'unpublish' | 'approv
       return 'update';
   }
 }
+
+// ============================================================================
+// CONVENIENCE METHODS FOR COMMON TRANSITIONS
+// ============================================================================
+
+/**
+ * Submit content for review (draft -> pending_review)
+ */
+export async function submitForReview(
+  prisma: PrismaClientLike,
+  contentId: string,
+  options: ContentTransitionOptions
+): Promise<any> {
+  return transitionStatus(prisma, contentId, 'pending_review', {
+    ...options,
+    description: options.description || 'Submitted for review',
+  });
+}
+
+/**
+ * Approve content (pending_review -> approved)
+ * Requires approver role
+ */
+export async function approveContent(
+  prisma: PrismaClientLike,
+  contentId: string,
+  options: ContentTransitionOptions & { reviewNotes?: string }
+): Promise<any> {
+  // Validate role - only approvers/admins can approve
+  const approverRoles = ['approver', 'admin', 'superadmin'];
+  if (!approverRoles.includes(options.userRole)) {
+    throw new Error(`Role ${options.userRole} is not authorized to approve content`);
+  }
+  
+  return transitionStatus(prisma, contentId, 'approved', {
+    ...options,
+    description: options.reviewNotes || options.description || 'Content approved',
+  });
+}
+
+/**
+ * Reject content and return to draft (pending_review -> draft)
+ */
+export async function rejectContent(
+  prisma: PrismaClientLike,
+  contentId: string,
+  options: ContentTransitionOptions & { rejectionReason: string }
+): Promise<any> {
+  if (!options.rejectionReason?.trim()) {
+    throw new Error('Rejection reason is required');
+  }
+  
+  return transitionStatus(prisma, contentId, 'draft', {
+    ...options,
+    description: `Rejected: ${options.rejectionReason}`,
+  });
+}
+
+/**
+ * Publish approved content (approved -> published)
+ */
+export async function publishContent(
+  prisma: PrismaClientLike,
+  contentId: string,
+  options: ContentTransitionOptions
+): Promise<any> {
+  return transitionStatus(prisma, contentId, 'published', {
+    ...options,
+    description: options.description || 'Content published',
+  });
+}
+
+/**
+ * Archive content (any state -> archived)
+ */
+export async function archiveContent(
+  prisma: PrismaClientLike,
+  contentId: string,
+  options: ContentTransitionOptions & { archiveReason?: string }
+): Promise<any> {
+  return transitionStatus(prisma, contentId, 'archived', {
+    ...options,
+    description: options.archiveReason || options.description || 'Content archived',
+  });
+}
+
+/**
+ * Unarchive content (archived -> draft)
+ */
+export async function unarchiveContent(
+  prisma: PrismaClientLike,
+  contentId: string,
+  options: ContentTransitionOptions
+): Promise<any> {
+  return transitionStatus(prisma, contentId, 'draft', {
+    ...options,
+    description: options.description || 'Content unarchived and returned to draft',
+  });
+}
+
+/**
+ * Get content status info with available transitions
+ */
+export function getAvailableTransitions(currentStatus: ContentStatus): ContentStatus[] {
+  const allowedTransitions: Record<ContentStatus, ContentStatus[]> = {
+    draft: ['pending_review', 'archived'],
+    pending_review: ['draft', 'approved', 'archived'],
+    approved: ['published', 'draft', 'archived'],
+    published: ['archived', 'draft'],
+    archived: ['draft'],
+  };
+  
+  return allowedTransitions[currentStatus] || [];
+}

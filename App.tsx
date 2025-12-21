@@ -12,6 +12,8 @@ import { prefetchQuestions } from "./services/geminiService";
 import { useUserStats } from "./hooks/useUserStats";
 import { preloadData } from "./lib/utils/dataLoader";
 import { useAccessibleTransition } from "./hooks/useReducedMotion";
+import { flushPendingToLocalStorage } from "./lib/services/sync/offlineSync";
+import { GeminiErrorBoundary } from "./components/GeminiErrorBoundary";
 import type {
   Question,
   PerformanceRecord,
@@ -26,6 +28,7 @@ import {
 } from "./services/userProfileService";
 import type { TrainingModeId } from "./config/training-modes";
 import { CommuterProvider } from "./contexts/CommuterContext";
+import { ToastProvider } from "./contexts/ToastContext";
 
 // Lazy load components for better performance
 const QuizView = lazy(() => import("./components/QuizView"));
@@ -180,7 +183,19 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
 
-  // ---- derived: “growth areas” and heatmap data ----
+  // ---- Safety net: flush pending sync data before browser closes ----
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Flush any pending debounced operations to localStorage queue
+      // This ensures data isn't lost if user closes tab during debounce window
+      flushPendingToLocalStorage();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // ---- derived: "growth areas" and heatmap data ----
   // Heatmap must ONLY use PANCE-level all-topics sessions
   const heatmapPerformance = useMemo(
     () =>
@@ -464,6 +479,7 @@ const App: React.FC = () => {
 
   // Main authenticated app
   return (
+    <ToastProvider>
     <CommuterProvider>
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
       {/* Loading Progress Bar */}
@@ -630,6 +646,7 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
+              <GeminiErrorBoundary onRetry={() => setView("quiz")}>
               <Suspense fallback={<Loader />}>
                 <QuizView
                   initialQueue={questionQueue}
@@ -653,6 +670,7 @@ const App: React.FC = () => {
                   updateQuestionNote={updateQuestionNote}
                 />
               </Suspense>
+              </GeminiErrorBoundary>
             </motion.div>
           )}
 
@@ -736,9 +754,11 @@ const App: React.FC = () => {
           )}
 
           {view === "patient_encounter" && (
+            <GeminiErrorBoundary onRetry={() => setView("patient_encounter")}>
             <Suspense fallback={<Loader />}>
               <PatientEncounterMode onExit={() => setView("command_center")} />
             </Suspense>
+            </GeminiErrorBoundary>
           )}
 
           {view === "integrations" && (
@@ -758,9 +778,11 @@ const App: React.FC = () => {
           )}
 
           {view === "cram_mode" && (
+            <GeminiErrorBoundary onRetry={() => setView("cram_mode")}>
             <Suspense fallback={<Loader />}>
               <CramMode onExit={() => setView("command_center")} />
             </Suspense>
+            </GeminiErrorBoundary>
           )}
 
           {view === "code_blue_speed" && (
@@ -864,6 +886,7 @@ const App: React.FC = () => {
       </Suspense>
     </div>
     </CommuterProvider>
+    </ToastProvider>
   );
 };
 

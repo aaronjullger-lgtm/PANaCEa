@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Brain, TrendingUp, Calendar, ArrowRight } from 'lucide-react';
+import { Brain, TrendingUp, Calendar, ArrowRight, Sparkles } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
+import { EmptyState } from '../ui/EmptyState';
 
 interface SRSStats {
   dueCount: number;
@@ -16,15 +18,27 @@ interface RetentionWidgetProps {
 export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
   const [stats, setStats] = useState<SRSStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { getToken, isSignedIn } = useAuth();
 
   useEffect(() => {
-    loadSRSStats();
-  }, []);
+    if (isSignedIn) {
+      loadSRSStats();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isSignedIn]);
 
   const loadSRSStats = async () => {
     try {
+      const token = await getToken();
+      if (!token) {
+        console.warn('[RetentionWidget] No auth token available');
+        setIsLoading(false);
+        return;
+      }
+      
       const response = await fetch('/api/srs/stats', {
-        headers: { Authorization: `Bearer ${await getAuthToken()}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
 
@@ -36,11 +50,6 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getAuthToken = async (): Promise<string> => {
-    // Placeholder: integrate with Clerk or your auth provider
-    return 'mock-token';
   };
 
   if (isLoading) {
@@ -56,7 +65,17 @@ export function RetentionWidget({ onReviewClick }: RetentionWidgetProps) {
   }
 
   if (!stats) {
-    return null;
+    return (
+      <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-6">
+        <EmptyState
+          icon={Sparkles}
+          title="Start practicing to track memory"
+          description="Complete some questions to see your spaced repetition stats and optimize your learning."
+          action={onReviewClick ? { label: 'Start Learning', onClick: onReviewClick } : undefined}
+          compact
+        />
+      </div>
+    );
   }
 
   const { dueCount, totalCards, retentionRate, matureCards } = stats;

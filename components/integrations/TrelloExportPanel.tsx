@@ -6,6 +6,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Trello, Download, Info, ExternalLink, ClipboardList, Pin, Target, BookOpen, Zap, Circle, CheckCircle, Book } from 'lucide-react';
+import { useToast } from '../../contexts/ToastContext';
 import {
   generateStudyBoard,
   downloadTrelloJSON,
@@ -22,6 +23,7 @@ interface TrelloExportPanelProps {
 export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({
   userExamDate,
 }) => {
+  const { showToast } = useToast();
   const [showInstructions, setShowInstructions] = useState(false);
   const [examDate, setExamDate] = useState<string>(
     userExamDate?.toISOString().split('T')[0] || ''
@@ -38,7 +40,7 @@ export const TrelloExportPanel: React.FC<TrelloExportPanelProps> = ({
 
   const handleDownloadJSON = () => {
     if (!board) {
-      alert('Please set an exam date to generate your study board.');
+      showToast({ type: 'warning', message: 'Please set an exam date to generate your study board.' });
       return;
     }
 

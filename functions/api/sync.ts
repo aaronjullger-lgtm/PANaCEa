@@ -20,20 +20,62 @@ interface PagesContext {
   env: Env;
 }
 
+// Typed sync payload interfaces
+interface SyncPerformanceRecord {
+  id?: string;
+  topic: string;
+  system?: string | null;
+  focus: string;
+  difficulty: number;
+  isCorrect: boolean;
+  timestamp: number;
+  questionWordCount?: number | null;
+  errorTag?: string | null;
+  subcategoryName?: string | null;
+  conditionName?: string | null;
+}
+
+interface SyncSRSItem {
+  questionId: string;
+  interval: number;
+  repetition: number;
+  easiness: number;
+  dueDate: string;
+  lastReviewed: string;
+  quality: number;
+  difficulty: number;
+  stabilityScore?: number;
+  updatedAt?: string;
+}
+
+interface SyncSavedQuestion {
+  questionId: string;
+  questionText: string;
+  correctAnswer: string;
+  explanation?: string;
+  topic: string;
+  system?: string;
+  type: 'missed' | 'flagged';
+  userNote?: string;
+  repetitionLevel?: number;
+  nextReviewDate?: string;
+  updatedAt?: string;
+}
+
 interface SyncPayload {
   userId: string;
-  performanceRecords?: any[];
-  srsItems?: any[];
-  savedQuestions?: any[];
+  performanceRecords?: SyncPerformanceRecord[];
+  srsItems?: SyncSRSItem[];
+  savedQuestions?: SyncSavedQuestion[];
 }
 
 interface SyncResponse {
   success: boolean;
   message?: string;
   data?: {
-    performanceRecords: any[];
-    srsItems: any[];
-    savedQuestions: any[];
+    performanceRecords: SyncPerformanceRecord[];
+    srsItems: SyncSRSItem[];
+    savedQuestions: SyncSavedQuestion[];
   };
 }
 
