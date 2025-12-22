@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, ChevronRight, Filter, Pill, Search, Stethoscope, Activity } from 'lucide-react';
+import { BookOpen, ChevronRight, Filter, Pill, Search, Stethoscope, Activity, AlertCircle, RefreshCw, WifiOff } from 'lucide-react';
 import type { ClinicalBrowsePayload, ClinicalSystem, ClinicalCategory, ClinicalCondition } from '@/services/clinicalBrowserService';
-import { fetchClinicalBrowse } from '@/services/clinicalBrowserService';
+import { fetchClinicalBrowse, BackendUnavailableError, AuthenticationError } from '@/services/clinicalBrowserService';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
 
 interface ClinicalLibraryProps {
@@ -18,13 +18,15 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'auth' | 'unavailable' | 'generic' | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadData = () => {
     setLoading(true);
+    setError(null);
+    setErrorType(null);
+    
     fetchClinicalBrowse()
       .then((payload) => {
-        if (cancelled) return;
         setData(payload);
         // Default to first system with data
         const firstSystem = payload.systems[0]?.code ?? null;
@@ -32,16 +34,24 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
         setActiveCategory(null);
       })
       .catch((err) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Failed to load clinical data');
+        if (err instanceof AuthenticationError) {
+          setError('Please sign in to access clinical content');
+          setErrorType('auth');
+        } else if (err instanceof BackendUnavailableError) {
+          setError('Clinical database is currently unavailable. Please try again later.');
+          setErrorType('unavailable');
+        } else {
+          setError(err instanceof Error ? err.message : 'Failed to load clinical data');
+          setErrorType('generic');
+        }
       })
       .finally(() => {
-        if (cancelled) return;
         setLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const filteredSystems: ClinicalSystem[] = useMemo(() => {
@@ -93,7 +103,27 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
+        <div className={`p-4 rounded-xl border text-sm flex items-center gap-3 ${
+          errorType === 'unavailable' 
+            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300' 
+            : errorType === 'auth'
+            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300'
+            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-700 dark:text-red-300'
+        }`}>
+          {errorType === 'unavailable' ? (
+            <WifiOff className="w-5 h-5 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          )}
+          <span className="flex-1">{error}</span>
+          <button 
+            onClick={loadData}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/50 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/20 transition-colors text-xs font-medium"
+          >
+            <RefreshCw className="w-3 h-3" />
+            Retry
+          </button>
+        </div>
       )}
 
       {loading && (

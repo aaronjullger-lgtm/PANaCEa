@@ -32,20 +32,20 @@ interface DailyStats {
 
 /**
  * Color intensity based on questions answered per day
- * Uses consistent UI theme colors - different shades of the same base color
+ * Uses vibrant color scale: darker = more activity
  */
 function getIntensityColor(count: number): string {
   if (count === 0) {
     return 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700';
   } else if (count <= 5) {
-    return 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600';
+    return 'bg-blue-200 dark:bg-blue-900/50 border-blue-300 dark:border-blue-800';
   } else if (count <= 15) {
-    return 'bg-slate-300 dark:bg-slate-600 border-slate-400 dark:border-slate-500';
+    return 'bg-blue-400 dark:bg-blue-700 border-blue-500 dark:border-blue-600';
   } else if (count <= 30) {
-    return 'bg-slate-400 dark:bg-slate-500 border-slate-500 dark:border-slate-400';
+    return 'bg-blue-600 dark:bg-blue-600 border-blue-700 dark:border-blue-500';
   } else {
-    // High activity → darkest shade
-    return 'bg-slate-500 dark:bg-slate-400 border-slate-600 dark:border-slate-300';
+    // High activity → darkest, most vibrant shade
+    return 'bg-blue-800 dark:bg-blue-500 border-blue-900 dark:border-blue-400';
   }
 }
 

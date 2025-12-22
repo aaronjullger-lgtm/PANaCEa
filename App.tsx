@@ -6,7 +6,6 @@ import { useUser } from "@clerk/clerk-react";
 import Loader from "./components/Loader";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import { LandingPage } from "./components/LandingPage";
-import { AccountFooter } from "./components/AccountFooter";
 import { LoadingProgress } from "./components/LoadingProgress";
 import { prefetchQuestions } from "./services/geminiService";
 import { useUserStats } from "./hooks/useUserStats";
@@ -61,6 +60,8 @@ const ToolkitHub = lazy(() => import("./components/toolkit/ToolkitHub"));
 const GapAnalysisDashboard = lazy(() => import("./components/dashboard/GapAnalysisDashboard"));
 const CommandCenterHub = lazy(() => import("./components/CommandCenterHub"));
 const TrainingMenu = lazy(() => import("./components/dashboard/TrainingMenu"));
+const SimulationPage = lazy(() => import("./pages/SimulationPage").then(m => ({ default: m.SimulationPage })));
+const CommandCenterPage = lazy(() => import("./pages/CommandCenterPage").then(m => ({ default: m.CommandCenterPage })));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -86,7 +87,7 @@ const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
 const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
 const DRILL_MODE_MEDICAL_WORDLE: TrainingModeId = 'medical_wordle';
 
-type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "training_menu";
+type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "training_menu" | "simulation_page" | "command_center_page";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -487,6 +488,16 @@ const App: React.FC = () => {
     }
   };
 
+  // Navigate to simulation page
+  const handleNavigateToSimulation = () => {
+    setView('simulation_page');
+  };
+
+  // Navigate to command center page
+  const handleNavigateToCommandCenter = () => {
+    setView('command_center_page');
+  };
+
   // Animation variants for page transitions
   // Elegant page transition animations - smooth and fluid, respects reduced motion preference
   const pageVariants = {
@@ -579,6 +590,9 @@ const App: React.FC = () => {
           clearFlaggedQuestionsData={clearFlaggedQuestionsData}
           missedQuestionsCount={missedQuestions.length}
           flaggedQuestionsCount={flaggedQuestions.length}
+          isSyncing={isSyncing}
+          lastSyncTime={lastSyncTime}
+          syncError={syncError}
         />
       </Suspense>
 
@@ -623,6 +637,7 @@ const App: React.FC = () => {
                   onNavigateToToolkit={() => setView("toolkit")}
                   onNavigateToGapAnalysis={() => setView("gap_analysis")}
                   onNavigateToIntegrations={() => setView("integrations")}
+                  onNavigateToSimulation={handleNavigateToSimulation}
                   growthAreas={growthAreas}
                   examLabel={examLabel}
                 />
@@ -658,6 +673,7 @@ const App: React.FC = () => {
                   onNavigateToSocial={() => setView("social_dashboard")}
                   onNavigateToToolkit={() => setView("toolkit")}
                   onNavigateToGapAnalysis={() => setView("gap_analysis")}
+                  onNavigateToSimulation={handleNavigateToSimulation}
                   isSyncing={isSyncing}
                   lastSyncTime={lastSyncTime}
                   syncError={syncError}
@@ -906,16 +922,58 @@ const App: React.FC = () => {
               </Suspense>
             </motion.div>
           )}
+
+          {view === "simulation_page" && (
+            <motion.div
+              key="simulation_page"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <Suspense fallback={<Loader />}>
+                <SimulationPage 
+                  onStartSession={handleConfirmSession}
+                  onBack={() => setView("command_center")}
+                  performanceData={heatmapPerformance}
+                  flaggedQuestions={flaggedQuestions}
+                  growthAreas={growthAreas}
+                  examLabel={examLabel}
+                />
+              </Suspense>
+            </motion.div>
+          )}
+
+          {view === "command_center_page" && (
+            <motion.div
+              key="command_center_page"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <Suspense fallback={<Loader />}>
+                <CommandCenterPage 
+                  performanceData={heatmapPerformance}
+                  missedQuestions={missedQuestions}
+                  flaggedQuestions={flaggedQuestions}
+                  growthAreas={growthAreas}
+                  dueCount={dueQuestionsCount}
+                  examLabel={examLabel}
+                  onStartSession={handleConfirmSession}
+                  onNavigateToDrillMode={handleNavigateToDrillMode}
+                  onNavigateToToolkit={() => setView("toolkit")}
+                  onNavigateToGapAnalysis={() => setView("gap_analysis")}
+                  onNavigateToIntegrations={() => setView("integrations")}
+                  onBack={() => setView("command_center")}
+                />
+              </Suspense>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
-
-      {/* Account Footer - Persistent bottom bar */}
-      <AccountFooter
-        isSyncing={isSyncing}
-        lastSyncTime={lastSyncTime}
-        syncError={syncError}
-        onOpenSettings={() => setIsSettingsModalOpen(true)}
-      />
 
       {/* Command Palette */}
       <Suspense fallback={null}>

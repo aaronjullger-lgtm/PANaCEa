@@ -79,6 +79,9 @@ interface CommandCenterHubProps {
   onNavigateToToolkit: () => void;
   onNavigateToGapAnalysis: () => void;
   onNavigateToIntegrations?: () => void;
+  onNavigateToSimulation?: () => void;
+}
+  onNavigateToIntegrations?: () => void;
 }
 
 // Icon mapping
@@ -154,54 +157,62 @@ const CoreAdaptiveHero: React.FC<{
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-800 dark:via-slate-900 dark:to-black p-6 mb-6"
+      className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 p-[1px] mb-6"
     >
-      {/* Background effects */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(59,130,246,0.4),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_70%,rgba(168,85,247,0.3),transparent_50%)]" />
-      </div>
-      
-      <div className="relative">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-3 rounded-xl bg-white/10">
-                <Brain className="w-8 h-8 text-white" />
+      {/* Gradient border effect */}
+      <div className="relative overflow-hidden rounded-[15px] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-slate-900 dark:via-slate-950 dark:to-black p-6 sm:p-8">
+        {/* Background effects */}
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="relative">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex-1">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-xl">
+                  <Brain className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                      {examLabel} Prep
+                    </span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                    Core PANCE Simulation
+                  </h2>
+                  <p className="text-slate-200/80 text-sm sm:text-base leading-relaxed max-w-xl">
+                    AI-powered adaptive questions that target your knowledge gaps
+                  </p>
+                </div>
               </div>
-              <div>
-                <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
-                  {examLabel} Prep
-                </span>
-                <h2 className="text-2xl font-bold text-white">Adaptive Questions</h2>
+              
+              {/* Stats cards */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 backdrop-blur-sm rounded-lg border border-emerald-400/20">
+                  <Target className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm font-medium text-emerald-300">{accuracy}% accuracy</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 backdrop-blur-sm rounded-lg border border-blue-400/20">
+                  <CheckCircle className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm font-medium text-blue-300">{questionsToday} today</span>
+                </div>
               </div>
             </div>
-            <p className="text-slate-300 text-sm mb-4 max-w-lg">
-              AI-powered questions that adapt to your knowledge gaps. The core of your board prep.
-            </p>
             
-            {/* Mini stats */}
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <Target className="w-4 h-4 text-emerald-400" />
-                <span className="text-slate-300">{accuracy}% accuracy</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-blue-400" />
-                <span className="text-slate-300">{questionsToday} today</span>
-              </div>
-            </div>
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onStart}
+              className="flex items-center justify-center gap-3 px-8 py-4 bg-white hover:bg-blue-50 text-slate-900 font-bold rounded-xl shadow-2xl shadow-blue-900/50 transition-all text-base sm:text-lg hover:shadow-blue-800/60 border-2 border-white/20"
+            >
+              <Play className="w-5 h-5" />
+              <span>Start Session</span>
+              <ChevronRight className="w-5 h-5" />
+            </motion.button>
           </div>
-          
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onStart}
-            className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white font-bold rounded-xl shadow-xl shadow-purple-500/25 transition-all text-lg"
-          >
-            <Play className="w-6 h-6" />
-            Start Session
-          </motion.button>
         </div>
       </div>
     </motion.div>
@@ -215,35 +226,50 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500/10 to-cyan-500/10 border border-teal-500/30 p-5 mb-6"
+      className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-500/10 via-cyan-500/5 to-emerald-500/10 border-2 border-teal-500/20 hover:border-teal-500/40 p-6 mb-6 transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/10"
     >
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-teal-500/20">
-            <MessageSquare className="w-6 h-6 text-teal-500" />
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500 rounded-full blur-3xl" />
+      </div>
+      
+      <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
+          <div className="p-3.5 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/25">
+            <MessageSquare className="w-7 h-7 text-white" />
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Virtual OSCE</h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Full interactive patient encounters with AI-powered scoring
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-xl font-bold text-[var(--color-text-primary)]">Virtual OSCE</h3>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+                Interactive
+              </span>
+            </div>
+            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+              Full interactive patient encounters with AI-powered evaluation and real-time feedback
             </p>
+            <div className="flex items-center gap-4 mt-3">
+              <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                <Timer className="w-3.5 h-3.5" /> 
+                <span className="font-medium">~20 minutes</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                <Stethoscope className="w-3.5 h-3.5" /> 
+                <span className="font-medium">Clinical Skills</span>
+              </span>
+            </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-500 flex items-center gap-1">
-            <Timer className="w-3 h-3" /> ~20 min
-          </span>
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onStart}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white font-medium rounded-lg transition-colors"
-          >
-            Start Encounter
-            <ChevronRight className="w-4 h-4" />
+        <motion.button
+          whileHover={{ scale: 1.03, y: -1 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={onStart}
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white font-semibold rounded-xl shadow-lg shadow-teal-500/30 transition-all hover:shadow-xl hover:shadow-teal-500/40"
+        >
+          <span>Start Encounter</span>
+          <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </motion.button>
-        </div>
       </div>
     </motion.div>
   );
@@ -391,6 +417,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToToolkit,
   onNavigateToGapAnalysis,
   onNavigateToIntegrations,
+  onNavigateToSimulation,
 }) => {
   const { user } = useUser();
   const { showPANREContent } = useUserContext();
@@ -398,8 +425,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
   // Calculate stats for the dashboard
   const stats = useMemo(() => {
-    const streak = 5; // Mock streak for now
-    const accuracy = 85; // Mock accuracy for now
+    const recent = performanceData.slice(-100);
+    const correct = recent.filter(r => r.isCorrect).length;
+    const accuracy = recent.length > 0 ? Math.round((correct / recent.length) * 100) : 0;
+    
     const todayRecords = (performanceData || []).filter(r => {
       if (!r?.timestamp) return false;
       const date = new Date(r.timestamp);
@@ -408,6 +437,35 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
              date.getMonth() === today.getMonth() &&
              date.getFullYear() === today.getFullYear();
     });
+    
+    // Calculate streak from performance data
+    let streak = 0;
+    const sortedData = [...(performanceData || [])].sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let checkDate = new Date(today);
+    const dateSet = new Set<string>();
+    
+    for (const record of sortedData) {
+      const recordDate = new Date(record.timestamp);
+      recordDate.setHours(0, 0, 0, 0);
+      const dateStr = recordDate.toISOString().split('T')[0];
+      
+      if (!dateSet.has(dateStr)) {
+        dateSet.add(dateStr);
+        
+        if (recordDate.getTime() === checkDate.getTime()) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else if (recordDate.getTime() < checkDate.getTime()) {
+          break;
+        }
+      }
+    }
     
     const dueCount = propDueCount !== undefined ? propDueCount : ((flaggedQuestions?.length || 0) + (missedQuestions?.length || 0));
     
@@ -429,11 +487,16 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
   const handleModeSelect = useCallback((mode: TrainingModeConfig) => {
     if (mode.route === 'core_adaptive') {
-      onStartSession({ focus: 'all', difficulty: 'same' });
+      // Navigate to dedicated simulation page instead of opening modal
+      if (onNavigateToSimulation) {
+        onNavigateToSimulation();
+      } else {
+        onStartSession({ focus: 'all', difficulty: 'same' });
+      }
     } else {
       onNavigateToDrillMode(mode.route);
     }
-  }, [onNavigateToDrillMode, onStartSession]);
+  }, [onNavigateToDrillMode, onStartSession, onNavigateToSimulation]);
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -471,7 +534,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
 
       {/* Core Adaptive - THE MAIN EVENT */}
       <CoreAdaptiveHero
-        onStart={() => onStartSession()}
+        onStart={() => onNavigateToSimulation ? onNavigateToSimulation() : onStartSession()}
         accuracy={stats.accuracy}
         questionsToday={stats.questionsToday}
         examLabel={examLabel}
@@ -483,7 +546,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.005 }}
-          onClick={() => onStartSession({ focus: 'review', difficulty: 'same' })}
+          onClick={() => onNavigateToSimulation ? onNavigateToSimulation() : onStartSession({ focus: 'review', difficulty: 'same' })}
           className="w-full mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-xl flex items-center justify-between group"
         >
           <div className="flex items-center gap-3">

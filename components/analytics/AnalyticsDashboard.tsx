@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
-import { Sparkles, Gauge, Clock, TrendingUp, Activity } from 'lucide-react';
+import { Sparkles, Gauge, Clock, TrendingUp, Activity, AlertCircle, BarChart3 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
 
@@ -10,7 +10,6 @@ interface AnalyticsDashboardProps {
 
 type SystemRadarDatum = { system: string; accuracy: number; attempts: number };
 type TrendDatum = { label: string; accuracy: number; pace: number };
-
 type TimeDatum = { system: string; seconds: number; accuracy: number };
 
 function calculateReadinessScore(records: PerformanceRecord[]): number {
@@ -34,11 +33,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
         total: existing.total + 1,
       });
     });
-    return Array.from(map.entries()).map(([system, stats]) => ({
-      system: ABBREVIATION_TO_TOPIC_MAP[system] || system,
-      accuracy: stats.total ? Math.round((stats.correct / stats.total) * 100) : 0,
-      attempts: stats.total,
-    }));
+    return Array.from(map.entries())
+      .map(([system, stats]) => ({
+        system: ABBREVIATION_TO_TOPIC_MAP[system] || system,
+        accuracy: stats.total ? Math.round((stats.correct / stats.total) * 100) : 0,
+        attempts: stats.total,
+      }))
+      .sort((a, b) => b.attempts - a.attempts) // Sort by most attempted
+      .slice(0, 10); // Show top 10 systems
   }, [performanceData]);
 
   const readinessScore = useMemo(() => calculateReadinessScore(performanceData), [performanceData]);
@@ -72,107 +74,201 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
         correct: existing.correct + (r.isCorrect ? 1 : 0),
       });
     });
-    return Array.from(map.entries()).map(([system, stats]) => ({
-      system: ABBREVIATION_TO_TOPIC_MAP[system] || system,
-      seconds: Math.round(stats.time / stats.count / 1000),
-      accuracy: Math.round((stats.correct / stats.count) * 100),
-    }));
+    return Array.from(map.entries())
+      .map(([system, stats]) => ({
+        system: ABBREVIATION_TO_TOPIC_MAP[system] || system,
+        seconds: Math.round(stats.time / stats.count / 1000),
+        accuracy: Math.round((stats.correct / stats.count) * 100),
+      }))
+      .sort((a, b) => b.accuracy - a.accuracy) // Sort by accuracy
+      .slice(0, 8); // Top 8 systems
   }, [performanceData]);
+
+  // Find weakest areas (for student context)
+  const weakestAreas = useMemo(() => {
+    return radarData
+      .filter((d) => d.attempts >= 5) // Only include systems with enough data
+      .sort((a, b) => a.accuracy - b.accuracy)
+      .slice(0, 3);
+  }, [radarData]);
+
+  const hasData = performanceData.length > 0;
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-          <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
-            <Sparkles className="w-4 h-4" /> Exam Readiness
-          </div>
-          <div className="flex items-center gap-3 mt-3">
-            <Gauge className="w-10 h-10 text-[var(--color-accent)]" />
+      {/* Context Banner for Students */}
+      {hasData && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800">
+          <div className="flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
             <div>
-              <div className="text-3xl font-bold text-[var(--color-text-primary)]">{readinessScore}%</div>
-              <p className="text-sm text-[var(--color-text-muted)]">Weighted blend of accuracy + coverage</p>
+              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                PANCE Readiness Overview
+              </h4>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Track your progress across all organ systems. Focus on your weakest areas for maximum improvement.
+              </p>
             </div>
           </div>
         </div>
-        <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-          <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
-            <TrendingUp className="w-4 h-4" /> Recent Accuracy
-          </div>
-          <div className="text-3xl font-bold text-[var(--color-text-primary)] mt-3">
-            {trendData.at(-1)?.accuracy ?? 0}%
-          </div>
-          <p className="text-sm text-[var(--color-text-muted)]">Last {trendData.length} sessions</p>
-        </div>
-        <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-          <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
-            <Clock className="w-4 h-4" /> Avg Decision Time
-          </div>
-          <div className="text-3xl font-bold text-[var(--color-text-primary)] mt-3">
-            {timeData.length ? `${Math.round(timeData.reduce((s, t) => s + t.seconds, 0) / timeData.length)}s` : '—'}
-          </div>
-          <p className="text-sm text-[var(--color-text-muted)]">Per question across tracked systems</p>
-        </div>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-          <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
-            <Activity className="w-4 h-4" /> System Radar (Accuracy)
+      {/* Empty State */}
+      {!hasData && (
+        <div className="flex flex-col items-center justify-center py-12 px-4 bg-[var(--color-bg-secondary)] rounded-xl">
+          <div className="mb-4">
+            <BarChart3 className="w-16 h-16 text-[var(--color-text-muted)] opacity-50" />
           </div>
-          {radarData.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-muted)]">No data yet.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={320}>
-              <RadarChart data={radarData} outerRadius={120}>
-                <PolarGrid stroke="#e2e8f0" />
-                <PolarAngleAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
-                <Radar name="Accuracy" dataKey="accuracy" stroke="#6366f1" fill="#6366f1" fillOpacity={0.35} />
-              </RadarChart>
-            </ResponsiveContainer>
+          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
+            No Analytics Data Yet
+          </h3>
+          <p className="text-sm text-[var(--color-text-muted)] text-center max-w-sm">
+            Complete a few practice sessions to see your performance analytics and track your progress.
+          </p>
+        </div>
+      )}
+
+      {/* Stats Grid - Student Context */}
+      {hasData && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-blue-500/50 transition-colors">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
+                <Gauge className="w-4 h-4" /> 
+                <span className="font-medium">Exam Readiness</span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <div className="text-4xl font-bold text-[var(--color-text-primary)]">{readinessScore}%</div>
+                <TrendingUp className="w-5 h-5 text-emerald-500" />
+              </div>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Based on accuracy ({Math.round((performanceData.filter(r => r.isCorrect).length / performanceData.length) * 100)}%) + coverage
+              </p>
+            </div>
+            
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-emerald-500/50 transition-colors">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
+                <TrendingUp className="w-4 h-4" /> 
+                <span className="font-medium">Recent Performance</span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <div className="text-4xl font-bold text-[var(--color-text-primary)]">{trendData.at(-1)?.accuracy ?? 0}%</div>
+                <Activity className="w-5 h-5 text-blue-500" />
+              </div>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Last {trendData.length} session{trendData.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            
+            <div className="p-5 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-bg-primary)] hover:border-amber-500/50 transition-colors">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-2">
+                <Clock className="w-4 h-4" /> 
+                <span className="font-medium">Decision Speed</span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
+                  {timeData.length ? `${Math.round(timeData.reduce((s, t) => s + t.seconds, 0) / timeData.length)}s` : '—'}
+                </div>
+              </div>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                Average per question
+              </p>
+            </div>
+          </div>
+
+          {/* Weakest Subject Areas - Student Priority */}
+          {weakestAreas.length > 0 && (
+            <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-200 dark:border-amber-800">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <h3 className="font-bold text-amber-900 dark:text-amber-100">
+                  Focus Areas - Highest Impact
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {weakestAreas.map((area) => (
+                  <div key={area.system} className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800">
+                    <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
+                      {area.system}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                        {area.accuracy}%
+                      </span>
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        {area.attempts} Q's
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
-        </div>
 
-        <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-          <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
-            <TrendingUp className="w-4 h-4" /> Accuracy & Pace Trend
+          {/* Visual vs Text Performance Split */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
+                <Activity className="w-4 h-4" /> System Performance Radar
+              </div>
+              {radarData.length === 0 ? (
+                <p className="text-sm text-[var(--color-text-muted)]">No data yet.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={320}>
+                  <RadarChart data={radarData} outerRadius={120}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 12 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
+                    <Radar name="Accuracy" dataKey="accuracy" stroke="#6366f1" fill="#6366f1" fillOpacity={0.35} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
+            <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
+                <TrendingUp className="w-4 h-4" /> Accuracy & Pace Trend
+              </div>
+              {trendData.length === 0 ? (
+                <p className="text-sm text-[var(--color-text-muted)]">Start a session to see trends.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={trendData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                    <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} domain={[0, 100]} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                    <Tooltip />
+                    <Line yAxisId="left" type="monotone" dataKey="accuracy" stroke="#10b981" strokeWidth={2} dot={false} name="Accuracy (%)" />
+                    <Line yAxisId="right" type="monotone" dataKey="pace" stroke="#6366f1" strokeWidth={2} dot={false} name="Pace (s)" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
-          {trendData.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-muted)]">Start a session to see trends.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="label" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-                <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} domain={[0, 100]} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-                <Tooltip />
-                <Line yAxisId="left" type="monotone" dataKey="accuracy" stroke="#10b981" strokeWidth={2} dot={false} name="Accuracy (%)" />
-                <Line yAxisId="right" type="monotone" dataKey="pace" stroke="#6366f1" strokeWidth={2} dot={false} name="Pace (s)" />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
 
-      <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
-        <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
-          <Clock className="w-4 h-4" /> Decision Time by System
-        </div>
-        {timeData.length === 0 ? (
-          <p className="text-sm text-[var(--color-text-muted)]">Time tracking will appear once you complete timed sessions.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={timeData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} interval={0} angle={-20} height={60} />
-              <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="seconds" fill="#f59e0b" radius={[6,6,0,0]} name="Avg seconds" />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </div>
+          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+            <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-3">
+              <Clock className="w-4 h-4" /> Decision Time by System
+            </div>
+            {timeData.length === 0 ? (
+              <p className="text-sm text-[var(--color-text-muted)]">Time tracking will appear once you complete timed sessions.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={timeData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="system" tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} interval={0} angle={-20} height={60} />
+                  <YAxis tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="seconds" fill="#f59e0b" radius={[6,6,0,0]} name="Avg seconds" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 };

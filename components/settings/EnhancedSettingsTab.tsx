@@ -5,10 +5,12 @@
  * 1. Career Stage selection prominently displayed
  * 2. Better grouped sections
  * 3. Context-aware options based on PANCE/PANRE selection
+ * 4. Account info and sync status (moved from AccountFooter)
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import {
   User,
   GraduationCap,
@@ -27,11 +29,17 @@ import {
   Award,
   AlertCircle,
   Lightbulb,
+  Cloud,
+  CheckCircle,
+  XCircle,
+  LogOut,
+  Mail,
 } from 'lucide-react';
 import type { UserProfile, YearInProgram, ClinicalRotation } from '@/types';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/userProfileService';
 import { getUserContext, setUserContext, CareerStage } from '@/services/userContextService';
+import { refreshUserContext } from '@/hooks/useUserContext';
 import { RotationSelector } from '../onboarding/RotationSelector';
 import { ANALYTICS_PALETTES, type AnalyticsPalette } from '../SettingsStatsModal';
 
@@ -40,6 +48,10 @@ interface EnhancedSettingsTabProps {
   onToggleTheme?: () => void;
   analyticsPalette: AnalyticsPalette;
   onSetAnalyticsPalette: (palette: AnalyticsPalette) => void;
+  // Sync status props (passed from parent)
+  isSyncing?: boolean;
+  lastSyncTime?: number | null;
+  syncError?: string | null;
 }
 
 // Career stage options with descriptions
@@ -63,7 +75,14 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   onToggleTheme,
   analyticsPalette,
   onSetAnalyticsPalette,
+  isSyncing,
+  lastSyncTime,
+  syncError,
 }) => {
+  // Clerk user & auth
+  const { isSignedIn, user, isLoaded } = useUser();
+  const { signOut } = useClerk();
+  
   // User profile state
   const [userProfile, setUserProfileState] = useState<UserProfile>(() => {
     return loadUserProfile() || { hasCompletedOnboarding: false };
@@ -102,6 +121,9 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
   const handleCareerStageChange = (stage: CareerStage) => {
     setCareerStageState(stage);
     setUserContext({ careerStage: stage });
+    
+    // Notify all listeners to update their context immediately
+    refreshUserContext();
     
     // Also update profile if changing to practicing and not already graduated
     if (stage === 'practicing' && userProfile.yearInProgram !== 'Graduated') {
@@ -473,6 +495,96 @@ const EnhancedSettingsTab: React.FC<EnhancedSettingsTabProps> = ({
           )}
         </AnimatePresence>
       </section>
+
+      {/* Account & Sync Status Section */}
+      {isLoaded && isSignedIn && (
+        <section className="bg-[var(--color-bg-secondary)] rounded-xl overflow-hidden">
+          <button
+            onClick={() => toggleSection('account')}
+            className="w-full p-4 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--color-accent)] flex items-center justify-center text-white font-bold ring-2 ring-white/30 dark:ring-white/20">
+                {user?.firstName?.charAt(0) || user?.emailAddresses[0]?.emailAddress?.charAt(0).toUpperCase() || 'S'}
+              </div>
+              <div className="text-left">
+                <h3 className="font-medium text-[var(--color-text-primary)]">
+                  {user?.fullName || user?.firstName || 'Account'}
+                </h3>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Account & Cloud Sync
+                </p>
+              </div>
+            </div>
+            {expandedSections.has('account') ? (
+              <ChevronUp className="w-5 h-5 text-[var(--color-text-muted)]" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
+            )}
+          </button>
+          
+          <AnimatePresence>
+            {expandedSections.has('account') && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="p-4 pt-0 space-y-4">
+                  {/* Email */}
+                  <div className="flex items-center gap-3 p-3 bg-[var(--color-bg-primary)] rounded-lg">
+                    <Mail className="w-5 h-5 text-[var(--color-text-muted)]" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-[var(--color-text-muted)]">Email</div>
+                      <div className="text-sm text-[var(--color-text-primary)] truncate">
+                        {user?.emailAddresses[0]?.emailAddress || 'No email'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sync Status */}
+                  <div className="flex items-center gap-3 p-3 bg-[var(--color-bg-primary)] rounded-lg">
+                    {isSyncing ? (
+                      <Cloud className="w-5 h-5 text-blue-500 animate-pulse" />
+                    ) : syncError ? (
+                      <XCircle className="w-5 h-5 text-red-500" />
+                    ) : lastSyncTime ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Cloud className="w-5 h-5 text-[var(--color-text-muted)]" />
+                    )}
+                    <div className="flex-1">
+                      <div className="text-xs text-[var(--color-text-muted)]">Cloud Sync</div>
+                      <div className={`text-sm ${
+                        isSyncing ? 'text-blue-600 dark:text-blue-400' :
+                        syncError ? 'text-red-600 dark:text-red-400' :
+                        lastSyncTime ? 'text-green-600 dark:text-green-400' :
+                        'text-[var(--color-text-primary)]'
+                      }`}>
+                        {isSyncing ? 'Syncing...' :
+                         syncError ? 'Sync Error' :
+                         lastSyncTime ? 'Synced' :
+                         'Local Only'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sign Out Button */}
+                  <button
+                    onClick={() => signOut()}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-red-600 dark:text-red-400 font-medium transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </section>
+      )}
 
       {/* Info Tip */}
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">

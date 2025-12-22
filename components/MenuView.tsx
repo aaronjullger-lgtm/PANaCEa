@@ -86,6 +86,8 @@ interface MenuViewProps {
   onNavigateToToolkit?: () => void;
   /** Callback for navigating to gap analysis dashboard */
   onNavigateToGapAnalysis?: () => void;
+  /** Callback for navigating to simulation page */
+  onNavigateToSimulation?: () => void;
   isSyncing?: boolean;
   lastSyncTime?: number | null;
   syncError?: string | null;
@@ -114,6 +116,7 @@ const MenuView: React.FC<MenuViewProps> = ({
   onNavigateToSocial,
   onNavigateToToolkit,
   onNavigateToGapAnalysis,
+  onNavigateToSimulation,
   isSyncing,
   lastSyncTime,
   syncError,
@@ -653,12 +656,12 @@ const MenuView: React.FC<MenuViewProps> = ({
                   </motion.button>
                 )}
                 <motion.button
-                  onClick={onStartSession}
+                  onClick={() => onNavigateToSimulation?.()} 
                   className="w-full px-6 py-4 btn-glass text-lg font-bold tracking-tight rounded-xl"
                   whileHover={{ scale: 1.01, y: -2 }}
                   whileTap={{ scale: 0.99 }}
                 >
-                  {hasActiveSession ? "Start New Session" : "Start Study Session"}
+                  Start Adaptive Session
                 </motion.button>
               </motion.section>
             </>

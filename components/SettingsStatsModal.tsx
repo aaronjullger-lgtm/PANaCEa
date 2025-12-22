@@ -75,6 +75,10 @@ interface SettingsStatsModalProps {
   onToggleTheme?: () => void;
   enabledWidgets?: WidgetId[];
   onUpdateWidgets?: (widgets: WidgetId[]) => void;
+  // Sync status props (passed from App.tsx)
+  isSyncing?: boolean;
+  lastSyncTime?: number | null;
+  syncError?: string | null;
 }
 
 type TabId = 'stats' | 'settings' | 'preferences' | 'activity'; // | 'characters' - disabled for now
@@ -318,6 +322,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
   onToggleTheme,
   enabledWidgets: externalEnabledWidgets,
   onUpdateWidgets,
+  isSyncing,
+  lastSyncTime,
+  syncError,
 }) => {
   const [activeTab, setActiveTab] = useState<TabId>('stats');
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -1051,6 +1058,9 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                   onToggleTheme={onToggleTheme}
                   analyticsPalette={analyticsPalette}
                   onSetAnalyticsPalette={handleSetAnalyticsPalette}
+                  isSyncing={isSyncing}
+                  lastSyncTime={lastSyncTime}
+                  syncError={syncError}
                 />
                 
                 {/* Divider */}

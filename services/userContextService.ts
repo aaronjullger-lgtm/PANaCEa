@@ -18,18 +18,38 @@ export interface UserContext {
 }
 
 const USER_CONTEXT_KEY = 'panceai_user_context';
+const CAREER_STAGE_KEY = 'panceai_career_stage'; // Dedicated key for career stage
 
 /**
  * Get user context from localStorage and user profile
+ * Priority: 1) Explicit career stage setting, 2) User profile inference
  */
 export function getUserContext(): UserContext {
-  // First check user profile for career stage info
   const profile = loadUserProfile();
   
-  // Determine career stage from profile
+  // PRIORITY 1: Check for explicit career stage setting (this persists user's choice)
   let careerStage: CareerStage = 'unknown';
   
-  if (profile) {
+  try {
+    const explicitStage = localStorage.getItem(CAREER_STAGE_KEY);
+    if (explicitStage && (explicitStage === 'student' || explicitStage === 'practicing')) {
+      careerStage = explicitStage as CareerStage;
+    } else {
+      // PRIORITY 2: Try stored context object
+      const stored = localStorage.getItem(USER_CONTEXT_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.careerStage && parsed.careerStage !== 'unknown') {
+          careerStage = parsed.careerStage;
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[UserContext] Failed to parse stored context:', e);
+  }
+
+  // PRIORITY 3: Infer from profile only if no explicit setting exists
+  if (careerStage === 'unknown' && profile) {
     if (profile.isCertifiedPA) {
       careerStage = 'practicing';
     } else if (profile.yearInProgram === 'Graduated' || profile.yearInProgram === 'Post-Graduate') {
@@ -38,40 +58,44 @@ export function getUserContext(): UserContext {
       careerStage = 'student';
     }
   }
-
-  // Also check localStorage for explicit setting
-  try {
-    const stored = localStorage.getItem(USER_CONTEXT_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed.careerStage && parsed.careerStage !== 'unknown') {
-        careerStage = parsed.careerStage;
-      }
-    }
-  } catch (e) {
-    console.error('[UserContext] Failed to parse stored context:', e);
+  
+  // Default to student if still unknown (PANCE is the most common use case)
+  if (careerStage === 'unknown') {
+    careerStage = 'student';
   }
   
   return {
     careerStage,
-    isPANCEUser: careerStage === 'student' || careerStage === 'unknown',
+    isPANCEUser: careerStage === 'student',
     isPANREUser: careerStage === 'practicing',
     isCertifiedPA: profile?.isCertifiedPA,
   };
 }
 
 /**
- * Update user context
+ * Update user context - persists to both dedicated key and full context
  */
 export function setUserContext(context: Partial<UserContext>): void {
   const current = getUserContext();
+  const newCareerStage = context.careerStage ?? current.careerStage;
+  
   const updated = {
     ...current,
     ...context,
-    isPANCEUser: (context.careerStage ?? current.careerStage) === 'student' || (context.careerStage ?? current.careerStage) === 'unknown',
-    isPANREUser: (context.careerStage ?? current.careerStage) === 'practicing',
+    careerStage: newCareerStage,
+    isPANCEUser: newCareerStage === 'student',
+    isPANREUser: newCareerStage === 'practicing',
   };
+  
+  // Save to both keys for maximum reliability
   localStorage.setItem(USER_CONTEXT_KEY, JSON.stringify(updated));
+  
+  // Also save career stage to dedicated key (most important for persistence)
+  if (context.careerStage) {
+    localStorage.setItem('panceai_career_stage', context.careerStage);
+  }
+  
+  console.log('[UserContext] Saved context:', { careerStage: updated.careerStage, isPANREUser: updated.isPANREUser });
 }
 
 /**
