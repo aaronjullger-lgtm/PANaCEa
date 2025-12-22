@@ -14,7 +14,9 @@ import {
   Calendar,
   BarChart3,
   Brain,
-  Activity
+  Activity,
+  ArrowLeft,
+  FileText
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
@@ -737,201 +739,282 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
               </button>
             )}
 
-            {/* Conditions List with SRS Data - Master-Detail View */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-[var(--color-text-primary)]">
-                Conditions ({currentSubcategoryStats.conditions.length})
-              </h3>
-              
-              {/* Master View: Simple List */}
-              {!selectedCondition && (
-                <div className="space-y-2">
-                  {currentSubcategoryStats.conditions.map(condition => (
-                    <button
-                      key={condition.name}
-                      onClick={() => setSelectedCondition(condition)}
-                      className="w-full text-left p-4 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="flex-1">
-                            <div className="font-semibold text-[var(--color-text-primary)] mb-1">
-                              {condition.name}
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
-                              <span>{condition.totalQuestions} attempts</span>
-                              <span>Accuracy: {condition.accuracy}%</span>
-                              {condition.trend === 'improving' && (
-                                <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                                  <TrendingUp className="w-3 h-3" />
-                                  Improving
-                                </span>
-                              )}
-                              {condition.trend === 'declining' && (
-                                <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                                  <TrendingDown className="w-3 h-3" />
-                                  Declining
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Detail View: Full Condition Details */}
-              {selectedCondition && (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-4"
-                >
-                  {/* Back Button */}
-                  <button
-                    onClick={() => setSelectedCondition(null)}
-                    className="flex items-center gap-2 px-4 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)] rounded-lg transition-all"
+            {/* Conditions Master-Detail View */}
+            <div className="space-y-4">
+              <AnimatePresence mode="wait">
+                {/* VIEW A: Interactive List (Master) */}
+                {!selectedCondition && (
+                  <motion.div
+                    key="list"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="space-y-3"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back to Conditions
-                  </button>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                      Conditions ({currentSubcategoryStats.conditions.length})
+                    </h3>
+                    
+                    {currentSubcategoryStats.conditions.length === 0 ? (
+                      /* Empty State */
+                      <div className="flex flex-col items-center justify-center py-16 px-4">
+                        <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" />
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                          No conditions found
+                        </p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                          Questions will appear here as you practice
+                        </p>
+                      </div>
+                    ) : (
+                      /* List of Conditions */
+                      <div className="space-y-2">
+                        {currentSubcategoryStats.conditions.map((condition) => (
+                          <motion.button
+                            key={condition.name}
+                            onClick={() => setSelectedCondition(condition)}
+                            className="w-full group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 transition-all duration-200 hover:translate-x-1 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm"
+                            whileHover={{ x: 2 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1 text-left">
+                                <div className="font-medium text-slate-700 dark:text-slate-200 mb-1 flex items-center gap-2">
+                                  {condition.name}
+                                  {condition.trend === 'improving' && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md text-xs font-medium">
+                                      <TrendingUp className="w-3 h-3" />
+                                    </span>
+                                  )}
+                                  {condition.trend === 'declining' && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md text-xs font-medium">
+                                      <TrendingDown className="w-3 h-3" />
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                  <span>{condition.totalQuestions} attempts</span>
+                                  <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                                  <span>{condition.accuracy}% accuracy</span>
+                                </div>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
 
-                  {/* Condition Detail Card */}
-                  <div className="p-6 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                {/* VIEW B: Detail Page */}
+                {selectedCondition && (
+                  <motion.div
+                    key="detail"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    className="space-y-6"
+                  >
+                    {/* Sticky Header Bar */}
+                    <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 -mx-6 -mt-6 px-6 py-4">
+                      <button
+                        onClick={() => setSelectedCondition(null)}
+                        className="flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                        Back to Conditions
+                      </button>
+                    </div>
+
+                    {/* Hero Section */}
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                             {selectedCondition.name}
-                          </h4>
-                          {selectedCondition.trend === 'improving' && (
-                            <div className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
-                              <TrendingUp className="w-4 h-4" />
-                              Improving
-                            </div>
-                          )}
-                          {selectedCondition.trend === 'declining' && (
-                            <div className="flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-sm font-medium">
-                              <TrendingDown className="w-3 h-3" />
-                              Declining
-                            </div>
-                          )}
-                          {selectedCondition.trend === 'stable' && (
-                            <div className="flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
-                              <Circle className="w-4 h-4" />
-                              Stable
-                            </div>
-                          )}
+                          </h2>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+                              {selectedSubcategory}
+                            </span>
+                            {selectedCondition.trend === 'improving' && (
+                              <span className="inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+                                <TrendingUp className="w-3 h-3" />
+                                Improving
+                              </span>
+                            )}
+                            {selectedCondition.trend === 'declining' && (
+                              <span className="inline-flex items-center gap-1 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+                                <TrendingDown className="w-3 h-3" />
+                                Declining
+                              </span>
+                            )}
+                            {selectedCondition.trend === 'stable' && (
+                              <span className="inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-400 text-xs font-bold uppercase tracking-wide px-2 py-1 rounded-md">
+                                <Circle className="w-3 h-3" />
+                                Stable
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
-                        <div className="text-xs text-[var(--color-text-muted)] mb-1">Accuracy</div>
-                        <div className="text-2xl font-bold text-[var(--color-accent)]">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Accuracy</span>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                           {selectedCondition.accuracy}%
                         </div>
-                        <div className="text-xs text-[var(--color-text-muted)]">
-                          {selectedCondition.correctAnswers}/{selectedCondition.totalQuestions}
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          {selectedCondition.correctAnswers}/{selectedCondition.totalQuestions} correct
                         </div>
                       </div>
 
-                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
-                        <div className="text-xs text-[var(--color-text-muted)] mb-1">Attempts</div>
-                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-2 mb-2">
+                          <BarChart3 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Attempts</span>
+                        </div>
+                        <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                           {selectedCondition.totalQuestions}
                         </div>
-                        <div className="text-xs text-[var(--color-text-muted)]">
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           Total questions
                         </div>
                       </div>
 
-                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
-                        <div className="text-xs text-[var(--color-text-muted)] mb-1 flex items-center gap-1">
-                          <Brain className="w-3 h-3" />
-                          Retention
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Brain className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Retention</span>
                         </div>
                         <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                           {selectedCondition.retentionScore}%
                         </div>
-                        <div className="text-xs text-[var(--color-text-muted)]">
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           Memory strength
                         </div>
                       </div>
 
-                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
-                        <div className="text-xs text-[var(--color-text-muted)] mb-1 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          Avg Time
+                      <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Avg Time</span>
                         </div>
-                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                        <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                           {(selectedCondition.avgDecisionTimeMs / 1000).toFixed(1)}s
                         </div>
-                        <div className="text-xs text-[var(--color-text-muted)]">
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                           Per question
                         </div>
                       </div>
                     </div>
 
-                    {/* Progress Bar */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-sm text-[var(--color-text-muted)]">
-                        <span>Accuracy Progress</span>
-                        <span>{selectedCondition.accuracy}%</span>
+                    {/* Performance Section */}
+                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-6">
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                        Performance Metrics
+                      </h3>
+
+                      {/* Accuracy Progress */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium text-slate-700 dark:text-slate-300">Accuracy Rate</span>
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">{selectedCondition.accuracy}%</span>
+                        </div>
+                        <div className="relative w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${selectedCondition.accuracy}%` }}
+                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                            className={`absolute inset-y-0 left-0 rounded-full ${
+                              selectedCondition.accuracy >= 80
+                                ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                                : selectedCondition.accuracy >= 60
+                                ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                                : 'bg-gradient-to-r from-orange-500 to-red-500'
+                            }`}
+                          />
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {selectedCondition.correctAnswers} out of {selectedCondition.totalQuestions} questions answered correctly
+                        </p>
                       </div>
-                      <div className="relative w-full h-4 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
-                        <div
-                          className={`absolute inset-y-0 left-0 rounded-full transition-all ${
-                            selectedCondition.accuracy >= 80
-                              ? 'bg-gradient-to-r from-green-400 to-emerald-500'
-                              : selectedCondition.accuracy >= 60
-                              ? 'bg-gradient-to-r from-blue-400 to-indigo-500'
-                              : 'bg-gradient-to-r from-orange-400 to-red-500'
-                          }`}
-                          style={{ width: `${selectedCondition.accuracy}%` }}
-                        />
+
+                      {/* Retention Progress */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium text-slate-700 dark:text-slate-300">Retention Strength</span>
+                          <span className="font-semibold text-purple-600 dark:text-purple-400">{selectedCondition.retentionScore}%</span>
+                        </div>
+                        <div className="relative w-full h-3 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${selectedCondition.retentionScore}%` }}
+                            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+                          />
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Predicted memory stability based on spaced repetition algorithm
+                        </p>
                       </div>
                     </div>
 
-                    {/* Retention Progress */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm text-[var(--color-text-muted)]">
-                        <span>Retention Strength</span>
-                        <span>{selectedCondition.retentionScore}%</span>
-                      </div>
-                      <div className="relative w-full h-4 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
-                        <div
-                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all"
-                          style={{ width: `${selectedCondition.retentionScore}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Next Due Date */}
+                    {/* Next Review Card */}
                     {selectedCondition.nextDue && (
-                      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <div className="flex items-center gap-2 text-blue-900 dark:text-blue-300">
-                          <Calendar className="w-5 h-5" />
-                          <div>
-                            <div className="font-semibold">Next Review Due</div>
-                            <div className="text-sm">
-                              {Math.round((selectedCondition.nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days
-                            </div>
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+                            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
+                              Next Review Scheduled
+                            </h4>
+                            <p className="text-sm text-blue-700 dark:text-blue-400">
+                              Due in {Math.round((selectedCondition.nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days
+                            </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">
+                              {selectedCondition.nextDue.toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </p>
                           </div>
                         </div>
                       </div>
                     )}
-                  </div>
-                </motion.div>
-              )}
+
+                    {/* Study Recommendation */}
+                    <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2 flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-amber-500" />
+                        Study Recommendation
+                      </h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                        {selectedCondition.accuracy < 60 
+                          ? "This condition needs more practice. Consider reviewing the material and attempting more questions."
+                          : selectedCondition.accuracy < 80
+                          ? "You're making good progress! A few more practice sessions will solidify this knowledge."
+                          : selectedCondition.retentionScore < 70
+                          ? "Strong accuracy! Focus on retention by spacing out your review sessions."
+                          : "Excellent mastery! Maintain your knowledge with periodic reviews."}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}
