@@ -1,39 +1,66 @@
+/**
+ * Clerk Webhook Handler for Cloudflare Pages
+ * Handles user lifecycle events: created, updated, deleted
+ */
+
 import { Webhook } from 'svix';
-import { headers } from 'next/headers';
-import { WebhookEvent } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/prisma';
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
-export async function POST(req: Request) {
-  // Get the Clerk webhook secret from environment
-  const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
+interface Env {
+  CLERK_WEBHOOK_SECRET?: string;
+  DATABASE_URL?: string;
+}
 
+interface PagesContext {
+  request: Request;
+  env: Env;
+}
+
+interface EmailAddress {
+  id: string;
+  email_address: string;
+}
+
+interface ClerkUserEvent {
+  id: string;
+  email_addresses?: EmailAddress[];
+  primary_email_address_id?: string;
+  first_name?: string | null;
+  last_name?: string | null;
+}
+
+interface WebhookEvent {
+  type: string;
+  data: ClerkUserEvent;
+}
+
+export async function onRequestPost(context: PagesContext): Promise<Response> {
+  const { request, env } = context;
+
+  // Get webhook secret
+  const WEBHOOK_SECRET = env.CLERK_WEBHOOK_SECRET;
   if (!WEBHOOK_SECRET) {
     console.error('CLERK_WEBHOOK_SECRET is not configured');
     return new Response('Error: Webhook secret not configured', { status: 500 });
   }
 
-  // Get the headers
-  const headerPayload = headers();
-  const svix_id = headerPayload.get('svix-id');
-  const svix_timestamp = headerPayload.get('svix-timestamp');
-  const svix_signature = headerPayload.get('svix-signature');
+  // Get Svix headers
+  const svix_id = request.headers.get('svix-id');
+  const svix_timestamp = request.headers.get('svix-timestamp');
+  const svix_signature = request.headers.get('svix-signature');
 
-  // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
     console.error('Missing svix headers');
     return new Response('Error: Missing svix headers', { status: 400 });
   }
 
-  // Get the body
-  const payload = await req.json();
-  const body = JSON.stringify(payload);
+  // Get request body
+  const body = await request.text();
 
-  // Create a new Svix instance with your webhook secret
+  // Verify webhook signature
   const wh = new Webhook(WEBHOOK_SECRET);
-
   let evt: WebhookEvent;
 
-  // Verify the webhook signature
   try {
     evt = wh.verify(body, {
       'svix-id': svix_id,
@@ -45,7 +72,9 @@ export async function POST(req: Request) {
     return new Response('Error: Verification failed', { status: 400 });
   }
 
-  // Handle the webhook event using switch statement
+  // Initialize Prisma client
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
     switch (evt.type) {
       case 'user.created':
@@ -121,5 +150,8 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Error processing webhook:', error);
     return new Response('Error: Processing failed', { status: 500 });
+  } finally {
+    // Disconnect Prisma client
+    await prisma.$disconnect();
   }
 }
