@@ -141,6 +141,7 @@ const App: React.FC = () => {
   const [fontSizeAdjustment, setFontSizeAdjustment] = useState<number>(0);
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
