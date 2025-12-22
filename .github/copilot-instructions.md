@@ -4,9 +4,32 @@
 
 PANaCEa is a medical education platform for PA (Physician Assistant) students preparing for PANCE/PANRE exams. It combines adaptive learning (FSRS-based SRS), gamification, and AI-generated clinical scenarios.
 
-**Tech Stack**: React 19 + TypeScript + Vite (frontend), Express.js (backend), PostgreSQL + Prisma (database), Google Gemini API (AI), Clerk (auth), Framer Motion (animations)
+**Tech Stack**: 
+- **Frontend**: React 19 + TypeScript + Vite, Framer Motion (animations), Tailwind CSS
+- **Backend**: Cloudflare Functions (serverless), Express.js (optional traditional hosting)
+- **Database**: PostgreSQL (Supabase) + Prisma ORM
+- **AI**: Google Gemini API
+- **Auth**: Clerk (with webhook sync to Prisma)
+- **Deployment**: Cloudflare Pages
 
 ## Critical Architecture Patterns
+
+### Cloudflare Functions Architecture (Primary)
+**PANaCEa runs on Cloudflare Pages with Functions** - serverless-first approach:
+- **Functions directory**: `/functions/` contains all serverless API routes
+  - `/functions/api/` - API endpoints (conditions, drugs, srs, achievements, etc.)
+  - `/functions/api/webhooks/clerk.ts` - Clerk user lifecycle webhook
+  - `/functions/geminiProxy.ts` - Gemini API proxy
+- **Request pattern**: `onRequestPost(context: PagesContext)` or `onRequestGet`
+- **Environment**: Access via `context.env` (e.g., `env.DATABASE_URL`, `env.GEMINI_API_KEY`)
+- **Prisma Edge**: Use `createEdgePrismaClient(env.DATABASE_URL)` from `/functions/api/_shared/prisma-edge.ts`
+- **Auth**: Import `authenticateRequest` from `/functions/api/_shared/auth.ts`
+- **No Express.js required** for Cloudflare deployment
+
+### Legacy Express Backend (Optional)
+- `server.ts` exists for local development or traditional Node.js hosting
+- **For Cloudflare deployments, ignore `server.ts`** - use Functions instead
+- If running locally: `npm run dev:all` starts both Vite (3000) and Express (3001)
 
 ### Database-First Architecture
 **ALL content comes from PostgreSQL** - no static JSON fallbacks in production:
@@ -16,29 +39,32 @@ PANaCEa is a medical education platform for PA (Physician Assistant) students pr
 - Migration: `npm run migrate:production` (interactive) or `npm run db:migrate:deploy` (CI/CD)
 - Scripts in `scripts/` handle content generation, sync, and orchestration
 
-### Frontend-Backend Split (Dual Server Architecture)
-- **Frontend** (`:3000`): Vite dev server; proxies `/geminiProxy` and `/api/*` to backend
-- **Backend** (`:3001`): Express server; handles auth, rate limiting, Gemini API, database queries
-- **MUST run both**: `npm run dev:all` (recommended) or separate terminals
-- **Common error**: Running only `npm run dev` causes "Unexpected token '<'" errors (HTML returned for API calls)
-
 ### Data Flow Pattern
 1. User action in React component → service call (e.g., `services/geminiService.ts`)
-2. Service calls `/geminiProxy` or `/api/*` endpoint on backend
-3. Backend (`server.ts`) authenticates via Clerk middleware, validates/sanitizes input
-4. Proxies to Gemini API or queries database via Prisma
+2. Service calls `/api/*` endpoint (Cloudflare Function)
+3. Function authenticates via Clerk, validates/sanitizes input
+4. Queries database via Prisma Edge or proxies to Gemini API
 5. Response flows back through service → component state
 
 ### Key File Organization
 - `App.tsx`: Main router with lazy-loaded drill mode components (`lazy(() => import(...))`)
-- `components/`: React UI, organized by feature (drill/, modes/, admin/, integrations/)
-- `services/`: Pure business logic (geminiService, srsService, conditionDataLoader)
+- `components/`: React UI, organized by feature
+  - `analytics/` - IntelligenceHub with Master-Detail conditions view
+  - `drill/` - Drill mode components
+  - `modes/` - Training modes
+  - `admin/` - Admin/CMS components
+  - `integrations/` - External tool integrations
+- `functions/`: Cloudflare Functions (serverless API)
+  - `api/_shared/` - Shared utilities (auth, prisma, validation)
+  - `api/webhooks/` - Webhook handlers
+  - `geminiProxy.ts` - AI proxy
+- `services/`: Frontend business logic (geminiService, srsService, conditionDataLoader)
 - `lib/services/`: Backend services (cms/, srsService, autoAuthor/)
-- `lib/middleware/`: Express middleware (clerkAuth, adminAuth, validation, promptValidation)
-- `server.ts`: Express app (3100 lines); all API routes, health checks, Gemini proxy
-- `types.ts`: Core TypeScript definitions (Question, PerformanceRecord, SessionSettings) - **deprecated but still widely used**
-- `src/types/`: New type definitions (drill-modes.ts, etc.) - **preferred for new code**
+- `lib/middleware/`: Express middleware (validation, auth) - **legacy, use Functions auth instead**
+- `types.ts`: Core TypeScript definitions - **deprecated, prefer `src/types/`**
+- `src/types/`: New type definitions (drill-modes.ts, etc.)
 - `conditionRegistry.ts`: Master registry mapping condition IDs to metadata (2195 lines)
+- `public/_headers`: CSP and security headers for Cloudflare Pages
 
 ## Content & Condition System
 
@@ -58,7 +84,6 @@ HEME, ENDO, HEENT, RENAL, REPRO, PSYCH, ID, GU, PRO (Professional), OTHER (inter
 
 ### Content Generation Pipeline
 Scripts in `scripts/` (run via npm scripts):
-- **Conversion**: `npm run sync:condition-content` - Convert markdown → JSON (legacy, database-first now)
 - **AI Generation**: `npm run generate:lab|clinical|basic-science-links` - Generate content via Gemini
 - **Media**: `npm run media:integrate|process-existing` - Process and link media assets
 - **Database Sync**: `npm run sync:all` - Sync all registries (conditions, drugs, anatomy, etc.) to database
@@ -67,6 +92,16 @@ Scripts in `scripts/` (run via npm scripts):
 
 ## Key Patterns & Conventions
 
+### Authentication & Authorization
+- **Clerk**: Handles user authentication (sign-in, sign-up, session management)
+- **Webhook sync**: `/functions/api/webhooks/clerk.ts` syncs user lifecycle to Prisma
+  - Handles: `user.created`, `user.updated`, `user.deleted`
+  - Creates users with default `USER` role
+  - Uses Cloudflare Turnstile for bot protection
+- **API auth**: All endpoints use `authenticateRequest()` from `/_shared/auth.ts`
+- **Admin endpoints**: Check user role from Prisma User table
+- **No middleware pattern**: Functions handle auth directly in handler
+
 ### State Management
 - **Performance data**: Stored in localStorage (`panceai_performance_v2`, `panceai_missed_v2`, `panceai_flagged_v2`)
 - **SRS scheduling**: FSRS v5 algorithm (`lib/fsrs.ts`) with user-specific tuning (UserSRSConfig in Prisma)
@@ -74,14 +109,25 @@ Scripts in `scripts/` (run via npm scripts):
 - **Session settings**: SessionSettings type controls focus (all/growth/review/topic), difficulty, filtering
 
 ### Error Handling
-- Validation middleware in `lib/middleware/validation.ts`:
-  - `validateRequired(fields)` - Check required fields exist
-  - `validateStringLength(field, min, max)` - Enforce string constraints
-  - `validateEnum(field, allowedValues)` - Validate against enum
-  - `sanitizeBody` - Middleware to sanitize all request bodies
-- ErrorBoundary component catches React errors; server logs all errors
-- Always include try-catch in services; propagate meaningful error messages
-- Express endpoints return `{ error: string, details?: any }` on failure
+- **Functions**: Return standard `Response` objects with appropriate status codes
+  - Success: `new Response(JSON.stringify(data), { status: 200 })`
+  - Error: `new Response(JSON.stringify({ error: 'message' }), { status: 400 })`
+- **Validation**: Use helper functions from `/_shared/validation.ts`
+- **ErrorBoundary**: Component catches React errors
+- **Try-catch**: Always wrap database/API calls; log errors with context
+
+### Design System (Clinical UI)
+- **Colors**: 
+  - Text: `slate-900` (primary), `slate-500` (secondary), `slate-400` (muted)
+  - Accents: `blue-600`, `blue-500`, `blue-300`
+  - Backgrounds: `white`, `slate-50` (cards), `slate-100` (subtle)
+  - Borders: `slate-200`, `slate-100`
+- **Typography**: Inter/sans-serif, `font-medium` for labels, `font-bold` for headings
+- **Spacing**: Consistent rounded-xl corners, generous padding (p-4, p-6)
+- **Hover states**: `hover:translate-x-1`, `hover:border-blue-300`, `hover:shadow-sm` (no generic gray)
+- **Icons**: Lucide React, consistent sizing (w-4 h-4 for small, w-5 h-5 for medium)
+- **Animations**: Framer Motion with `easeOut` transitions, 0.2-0.3s duration
+- **Master-Detail pattern**: List view → Detail view with sticky headers, AnimatePresence
 
 ### Build & Chunking (vite.config.ts)
 - **Manual chunks** for better caching:
@@ -95,21 +141,20 @@ Scripts in `scripts/` (run via npm scripts):
 - **Source maps**: `hidden` in production (generated but not referenced in code)
 
 ### Database Access
-- **Prisma client**: Initialized with Edge Adapter (`@prisma/adapter-neon`) for serverless
-- **Connection pooling**: Use Supabase "Transaction" mode for best performance
+- **Prisma Edge**: Use `createEdgePrismaClient()` in Cloudflare Functions
+- **Connection pooling**: Supabase "Transaction" mode for best performance
 - **Key models**: User, PerformanceRecord, SRSItem, SavedQuestion, UserAchievement, DailyStreak, MedicalContent, UserSRSConfig
-- **Environment**: `DATABASE_URL` required for production; optional for development
-- **Migrations**: `npm run migrate:production` (interactive) or `npm run db:migrate:deploy` (CI/CD)
+- **Migrations**: `npm run db:migrate:dev` (development), `npm run db:migrate:deploy` (CI/CD)
+- **Always disconnect**: Call `await prisma.$disconnect()` in finally blocks
 
-### API Conventions (Express in server.ts)
-- **Authentication**: All endpoints require `requireAuth` middleware (adds `req.auth.userId`)
-- **Admin endpoints**: Use `requireAdmin({ roles: ['admin', 'superadmin'] })`
-- **Input validation**: Chain `validateRequired`, `validateEnum`, `validateStringLength` before handler
-- **Input sanitization**: `sanitizeBody` middleware auto-applied to all routes
-- **Typed requests**: Use `AuthenticatedRequest` type for authenticated endpoints
-- **Error responses**: Always `{ error: string, details?: any }` with appropriate HTTP status
-- **Rate limiting**: Applied globally via `express-rate-limit` (100 req/15min per IP)
-- **Security**: `helmet` middleware for security headers; CORS restricted to frontend URL
+### Content Security Policy
+- **File**: `public/_headers`
+- **Critical domains**:
+  - Clerk: `https://*.clerk.accounts.dev`, `https://*.clerk.com`, `https://clerk.studypanacea.com`
+  - Cloudflare: `https://challenges.cloudflare.com` (Turnstile)
+  - Supabase: `https://*.supabase.co`, `wss://*.supabase.co`
+  - Gemini: `https://generativelanguage.googleapis.com`
+- **Directives**: `default-src`, `script-src`, `connect-src`, `frame-src`, `img-src`, `style-src`
 
 ## Development Workflow
 
@@ -117,8 +162,15 @@ Scripts in `scripts/` (run via npm scripts):
 ```bash
 npm install
 cp .env.example .env
-# Add: VITE_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, GEMINI_API_KEY, DATABASE_URL (optional)
-npm run dev:all  # Start both frontend and backend
+# Add required vars:
+# - VITE_CLERK_PUBLISHABLE_KEY (frontend)
+# - CLERK_SECRET_KEY (backend/functions)
+# - CLERK_WEBHOOK_SECRET (webhook verification)
+# - GEMINI_API_KEY (AI generation)
+# - DATABASE_URL (Supabase connection string)
+npm run dev:all  # Start both frontend (Vite) and backend (Express) for local dev
+# OR for Cloudflare Functions testing:
+npm run dev  # Frontend only, uses deployed Functions
 ```
 
 ### Testing & Validation
@@ -128,32 +180,53 @@ npm run dev:all  # Start both frontend and backend
 - Health check: `npm run health-check` (content validation script)
 
 ### Important Scripts
-- **Development**: `npm run dev:all` (frontend + backend), `npm run dev:server` (backend only), `npm run dev` (frontend only)
-- **Content generation**: `npm run generate:lab`, `npm run generate:clinical`, `npm run generate:basic-science-links`
-- **Database sync**: `npm run sync:all` (sync all registries), `npm run sync:conditions|drugs|anatomy` (individual)
-- **Database migrations**: `npm run db:migrate:dev` (development), `npm run migrate:production` (production)
-- **Orchestration**: `npm run orchestrate:full` (full pipeline), `npm run automation:hourly|daily|weekly` (scheduled tasks)
-- **Build**: `npm run build` (frontend), `npm run build:server` (backend)
+- **Development**: 
+  - `npm run dev:all` - Frontend + Express backend (local testing)
+  - `npm run dev` - Frontend only (uses deployed Functions)
+  - `npm run dev:server` - Express backend only (legacy)
+- **Content generation**: 
+  - `npm run generate:lab` - Generate lab content
+  - `npm run generate:clinical` - Generate clinical content
+  - `npm run generate:basic-science-links` - Generate basic science links
+- **Database**:
+  - `npm run sync:all` - Sync all registries to database
+  - `npm run db:migrate:dev` - Create/apply development migration
+  - `npm run db:migrate:deploy` - Apply migrations in production
+  - `npm run migrate:production` - Interactive production migration
+- **Build**: 
+  - `npm run build` - Build frontend for production
+  - `npm run build:server` - Build Express backend (legacy)
 
-### Deployment
-- Frontend: Build with `npm run build`; deploy to Cloudflare Pages
-- Backend: Cloudflare Functions handle `/functions/geminiProxy.ts` (for serverless)
-- Or run `server.ts` as Node.js server for traditional hosting
-- See `CLOUDFLARE_DEPLOYMENT.md` for full setup
+### Deployment (Cloudflare Pages)
+1. **Frontend**: Automatic on push to main branch
+2. **Environment Variables**: Set in Cloudflare Pages dashboard
+   - `CLERK_WEBHOOK_SECRET`
+   - `GEMINI_API_KEY`
+   - `DATABASE_URL`
+   - `CLERK_SECRET_KEY`
+   - `VITE_*` vars (public, set in wrangler.toml)
+3. **Migrations**: Run `npm run db:migrate:deploy` before deployment
+4. **Webhook URL**: Configure in Clerk dashboard: `https://studypanacea.com/api/webhooks/clerk`
+5. **Verify**: Check Functions logs in Cloudflare dashboard
 
 ## Critical Considerations
 
 ### Security
-- Never use `VITE_` prefixed env vars on backend (they're client-side only)
-- Always sanitize request bodies; validate input types/lengths
-- Clerk authentication required for all API endpoints
-- Rate limiting implemented in-memory; use Redis for distributed deployments
+- **Environment variables**: 
+  - `VITE_*` prefixed vars are PUBLIC (bundled in frontend)
+  - Non-prefixed vars are SERVER-ONLY (Functions/backend)
+  - Never use `VITE_` prefix for secrets (API keys, etc.)
+- **Webhook verification**: Always verify Svix signatures in webhook handlers
+- **Input sanitization**: Validate all user input before database queries
+- **Rate limiting**: Applied globally via Cloudflare (100 req/15min per IP)
+- **CSP**: Strict Content Security Policy in `public/_headers`
 
 ### Performance
-- Lazy-load drill mode components via dynamic imports (see `App.tsx` lazy() calls)
-- Data files (conditions, drugs) split into separate chunks
-- Use `useMemo` for expensive calculations; memoize components
-- Prefetch Gemini questions: `prefetchQuestions()` in background
+- **Lazy loading**: Drill modes loaded on-demand via dynamic imports
+- **Code splitting**: Manual chunks for better caching
+- **Prefetching**: `prefetchQuestions()` for background loading
+- **Memoization**: Use `useMemo` for expensive calculations
+- **Database queries**: Use Prisma's query optimization (select specific fields, use includes wisely)
 
 ### No-Repeat Logic
 - Questions tracked in localStorage; SRS items in Prisma
@@ -164,21 +237,63 @@ npm run dev:all  # Start both frontend and backend
 ### Admin & CMS
 - Content lifecycle: DRAFT → PENDING_REVIEW → APPROVED → PUBLISHED → ARCHIVED
 - Audit logging tracks all changes (who, what, when)
+- Role-based access control (USER, VIEWER, EDITOR, APPROVER, ADMIN, SUPERADMIN)
 - Only admins/approvers can transition states (RBAC in `lib/services/cms/`)
 
 ## Where to Look for Help
 
-- Architecture deep dive: `DEVELOPER_GUIDE.md`
-- Database schema & no-repeat logic: `DATABASE_IMPLEMENTATION.md`
-- CMS/content lifecycle: `ADMIN_CMS_IMPLEMENTATION.md` & `lib/services/cms/contentService.ts`
-- Drill modes: `PHASE_11_IMPLEMENTATION.md` (integrations), `HYBRID_CONTENT_ENGINE.md`
-- Deployment: `PRODUCTION_DEPLOYMENT_CHECKLIST.md`, `CLOUDFLARE_DEPLOYMENT.md`
+- **Architecture**: `DEVELOPER_GUIDE.md`
+- **Database**: `DATABASE_IMPLEMENTATION.md`, `DATABASE_FIRST_ARCHITECTURE.md`
+- **Cloudflare**: `CLOUDFLARE_DEPLOYMENT.md`, `CLOUDFLARE_FUNCTIONS_GUIDE.md`
+- **CMS**: `ADMIN_CMS_IMPLEMENTATION.md`, `lib/services/cms/contentService.ts`
+- **Drill modes**: `PHASE_11_IMPLEMENTATION.md`, `HYBRID_CONTENT_ENGINE.md`
+- **Deployment**: `PRODUCTION_DEPLOYMENT_CHECKLIST.md`
+- **Authentication**: `AUTHENTICATION_SETUP.md`, `SUPABASE_CLERK_INTEGRATION.md`
 
 ## Quick Troubleshooting
 
-**Gemini proxy failing**: Check `GEMINI_API_KEY` in `.env` (not `VITE_`); backend server must be running
-**Questions not loading**: Run `npm run sync:condition-content` to regenerate condition JSON
-**Database errors**: Ensure `DATABASE_URL` set; run `npm run db:generate` to sync Prisma client
-**Build slow**: Check chunk sizes; ensure vendor splits in `vite.config.ts` are up-to-date
-**"Unexpected token '<'" errors**: Backend not running - use `npm run dev:all` instead of `npm run dev` alone
-**API endpoints return HTML**: Vite dev server intercepting API routes - ensure backend is running on port 3001
+### Common Issues
+
+**Gemini proxy failing**
+- Check `GEMINI_API_KEY` in Cloudflare environment variables (NOT `VITE_` prefixed)
+- Verify Function is deployed and accessible
+- Check Cloudflare Functions logs for errors
+
+**Questions not loading**
+- Run `npm run sync:all` to sync registries to database
+- Check `DATABASE_URL` connection string
+- Verify Prisma client is generated: `npm run db:generate`
+
+**Clerk authentication failing**
+- Verify `VITE_CLERK_PUBLISHABLE_KEY` in frontend env
+- Check `CLERK_SECRET_KEY` in backend/Functions env
+- Test webhook at Clerk dashboard (should return 200)
+- Verify CSP allows Clerk domains in `public/_headers`
+
+**Database errors**
+- Ensure `DATABASE_URL` is set correctly
+- Run `npm run db:generate` to sync Prisma client
+- Check Supabase connection pooling mode (use "Transaction")
+- Verify migrations are applied: `npm run db:migrate:deploy`
+
+**Build/deployment issues**
+- Check chunk sizes in build output
+- Verify all dependencies are installed
+- Ensure Prisma is externalized in `vite.config.ts`
+- Clear build cache: `rm -rf dist node_modules/.vite`
+
+**CSP violations**
+- Check browser console for specific blocked resource
+- Add domain to appropriate directive in `public/_headers`
+- Common additions: Clerk (`*.clerk.com`), Turnstile (`challenges.cloudflare.com`)
+
+**Webhook 405 errors**
+- Verify using Cloudflare Functions (`/functions/api/webhooks/clerk.ts`)
+- NOT Next.js App Router (`/app/api/webhooks/clerk/route.ts`) - delete if exists
+- Use `onRequestPost` export pattern for Functions
+
+**"Unexpected token '<'" errors**
+- Frontend receiving HTML instead of JSON
+- Usually means API route not found or server not running
+- For local dev: Ensure `npm run dev:all` is running (not just `npm run dev`)
+- For production: Verify Function is deployed at correct path

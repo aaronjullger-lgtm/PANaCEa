@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, ChevronRight, Filter, Pill, Search, Stethoscope, Activity, AlertCircle, RefreshCw, WifiOff } from 'lucide-react';
+import { BookOpen, ChevronRight, Filter, Pill, Search, Stethoscope, Activity, AlertCircle, RefreshCw, WifiOff, ArrowLeft } from 'lucide-react';
 import type { ClinicalBrowsePayload, ClinicalSystem, ClinicalCategory, ClinicalCondition } from '@/services/clinicalBrowserService';
 import { fetchClinicalBrowse, BackendUnavailableError, AuthenticationError } from '@/services/clinicalBrowserService';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
@@ -15,6 +15,7 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
   const [data, setData] = useState<ClinicalBrowsePayload | null>(null);
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [selectedCondition, setSelectedCondition] = useState<ClinicalCondition | null>(null);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -199,40 +200,126 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
               <Stethoscope className="w-4 h-4 text-[var(--color-text-muted)]" />
               <h4 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">Conditions</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[520px] overflow-auto pr-1">
-              {(activeCategoryData?.conditions || []).map((condition) => (
-                <motion.button
-                  key={condition.id}
-                  onClick={() => onSelectCondition?.(condition.conditionId)}
-                  whileHover={{ scale: 1.01 }}
-                  className="text-left p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] hover:border-[var(--color-accent)]/60 transition-all"
+            
+            <AnimatePresence mode="wait">
+              {/* MASTER VIEW: List of Conditions */}
+              {!selectedCondition && (
+                <motion.div
+                  key="condition-list"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-2"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold text-[var(--color-text-primary)] mb-1">{condition.name}</div>
-                      <div className="text-xs text-[var(--color-text-muted)] mb-2">{condition.subcategory}</div>
-                      {condition.overview && (
-                        <p className="text-sm text-[var(--color-text-muted)] line-clamp-2">{condition.overview}</p>
-                      )}
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[520px] overflow-auto pr-1">
+                    {(activeCategoryData?.conditions || []).map((condition) => (
+                      <motion.button
+                        key={condition.id}
+                        onClick={() => setSelectedCondition(condition)}
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        className="text-left p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{condition.name}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">{condition.subcategory}</div>
+                            {condition.overview && (
+                              <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">{condition.overview}</p>
+                            )}
+                          </div>
+                        </div>
+                        {condition.buzzwords && condition.buzzwords.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-3">
+                            {condition.buzzwords.slice(0, 4).map((buzz) => (
+                              <span key={buzz} className="px-2 py-1 text-[10px] rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300">
+                                {buzz}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </motion.button>
+                    ))}
                   </div>
-                  {condition.buzzwords && condition.buzzwords.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {condition.buzzwords.slice(0, 4).map((buzz) => (
-                        <span key={buzz} className="px-2 py-1 text-[10px] rounded-full bg-[var(--color-bg-primary)] border border-[var(--color-border)] text-[var(--color-text-secondary)]">
-                          {buzz}
-                        </span>
-                      ))}
+                  
+                  {(activeCategoryData?.conditions || []).length === 0 && (
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-sm">
+                      No conditions match this filter.
                     </div>
                   )}
-                </motion.button>
-              ))}
-              {(activeCategoryData?.conditions || []).length === 0 && (
-                <div className="p-4 rounded-xl border border-[var(--color-border)] text-[var(--color-text-muted)] text-sm">
-                  No conditions match this filter.
-                </div>
+                </motion.div>
               )}
-            </div>
+
+              {/* DETAIL VIEW: Selected Condition */}
+              {selectedCondition && (
+                <motion.div
+                  key="condition-detail"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className="space-y-4 max-h-[520px] overflow-auto pr-1"
+                >
+                  {/* Sticky Header with Back Button */}
+                  <div className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">
+                    <button
+                      onClick={() => setSelectedCondition(null)}
+                      className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors mb-3"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back to list
+                    </button>
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{selectedCondition.name}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{selectedCondition.subcategory} • {selectedCondition.system}</p>
+                    </div>
+                  </div>
+
+                  {/* Placeholder Content Area */}
+                  <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+                    <div className="space-y-4">
+                      {/* Overview Section */}
+                      {selectedCondition.overview && (
+                        <div>
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Overview</h4>
+                          <p className="text-slate-700 dark:text-slate-300">{selectedCondition.overview}</p>
+                        </div>
+                      )}
+
+                      {/* Buzzwords */}
+                      {selectedCondition.buzzwords && selectedCondition.buzzwords.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Key Features</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedCondition.buzzwords.map((buzz) => (
+                              <span key={buzz} className="px-3 py-1 text-sm rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300">
+                                {buzz}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Button */}
+                      {onSelectCondition && (
+                        <button
+                          onClick={() => onSelectCondition(selectedCondition.conditionId)}
+                          className="w-full p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all"
+                        >
+                          View Full Details
+                        </button>
+                      )}
+
+                      {/* Placeholder for future dedicated renderer */}
+                      <div className="text-xs text-slate-400 dark:text-slate-500 italic text-center pt-2">
+                        Detailed content renderer coming soon
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Pharmacology + Physiology quick links */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
