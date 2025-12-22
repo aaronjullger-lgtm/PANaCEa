@@ -330,8 +330,7 @@ export function LandingPage() {
                         footerActionLink: 'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
                       },
                     }}
-                    afterSignInUrl="/"
-                    afterSignUpUrl="/"
+                    fallbackRedirectUrl="/"
                   />
                 </div>
               </div>
