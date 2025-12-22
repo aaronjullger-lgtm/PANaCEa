@@ -71,11 +71,12 @@ type ViewLevel = 'dashboard' | 'system' | 'subcategory';
 const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
   performanceData,
   onStartSession,
-  theme = 'light'
+  theme = 'dark'
 }) => {
   const [viewLevel, setViewLevel] = useState<ViewLevel>('dashboard');
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [selectedCondition, setSelectedCondition] = useState<ConditionStats | null>(null);
 
   // Calculate system statistics with subcategories and conditions
   const systemStats = useMemo(() => {
@@ -736,83 +737,201 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
               </button>
             )}
 
-            {/* Conditions List with SRS Data */}
+            {/* Conditions List with SRS Data - Master-Detail View */}
             <div className="space-y-3">
               <h3 className="font-semibold text-[var(--color-text-primary)]">
                 Conditions ({currentSubcategoryStats.conditions.length})
               </h3>
-              {currentSubcategoryStats.conditions.map(condition => (
-                <div
-                  key={condition.name}
-                  className="p-4 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-[var(--color-text-primary)]">
-                          {condition.name}
-                        </h4>
-                        {condition.trend === 'improving' && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-xs font-medium">
-                            <TrendingUp className="w-3 h-3" />
-                            Improving
+              
+              {/* Master View: Simple List */}
+              {!selectedCondition && (
+                <div className="space-y-2">
+                  {currentSubcategoryStats.conditions.map(condition => (
+                    <button
+                      key={condition.name}
+                      onClick={() => setSelectedCondition(condition)}
+                      className="w-full text-left p-4 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="flex-1">
+                            <div className="font-semibold text-[var(--color-text-primary)] mb-1">
+                              {condition.name}
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-[var(--color-text-muted)]">
+                              <span>{condition.totalQuestions} attempts</span>
+                              <span>Accuracy: {condition.accuracy}%</span>
+                              {condition.trend === 'improving' && (
+                                <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                  <TrendingUp className="w-3 h-3" />
+                                  Improving
+                                </span>
+                              )}
+                              {condition.trend === 'declining' && (
+                                <span className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                                  <TrendingDown className="w-3 h-3" />
+                                  Declining
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        )}
-                        {condition.trend === 'declining' && (
-                          <div className="flex items-center gap-1 px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-xs font-medium">
-                            <TrendingDown className="w-3 h-3" />
-                            Declining
-                          </div>
-                        )}
+                          <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4 text-xs text-[var(--color-text-muted)]">
-                        <span>{condition.totalQuestions} attempts</span>
-                        <span className="flex items-center gap-1">
-                          <Brain className="w-3 h-3" />
-                          Retention: {condition.retentionScore}%
-                        </span>
-                        {condition.nextDue && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            Due in {Math.round((condition.nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-[var(--color-accent)]">
-                        {condition.accuracy}%
-                      </div>
-                      <div className="text-xs text-[var(--color-text-muted)]">
-                        {condition.correctAnswers}/{condition.totalQuestions}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="relative w-full h-3 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
-                    <div
-                      className={`absolute inset-y-0 left-0 rounded-full transition-all ${
-                        condition.accuracy >= 80
-                          ? 'bg-gradient-to-r from-green-400 to-emerald-500'
-                          : condition.accuracy >= 60
-                          ? 'bg-gradient-to-r from-blue-400 to-indigo-500'
-                          : 'bg-gradient-to-r from-orange-400 to-red-500'
-                      }`}
-                      style={{ width: `${condition.accuracy}%` }}
-                    />
-                    {/* Retention overlay */}
-                    <div
-                      className="absolute inset-y-0 left-0 bg-purple-500/30 rounded-full"
-                      style={{ width: `${condition.retentionScore}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-[var(--color-text-muted)] mt-1">
-                    <span>Accuracy: {condition.accuracy}%</span>
-                    <span>Retention: {condition.retentionScore}%</span>
-                  </div>
+                    </button>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* Detail View: Full Condition Details */}
+              {selectedCondition && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-4"
+                >
+                  {/* Back Button */}
+                  <button
+                    onClick={() => setSelectedCondition(null)}
+                    className="flex items-center gap-2 px-4 py-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)] rounded-lg transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back to Conditions
+                  </button>
+
+                  {/* Condition Detail Card */}
+                  <div className="p-6 bg-[var(--color-bg-primary)] rounded-lg border border-[var(--color-border)]">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="text-2xl font-bold text-[var(--color-text-primary)]">
+                            {selectedCondition.name}
+                          </h4>
+                          {selectedCondition.trend === 'improving' && (
+                            <div className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">
+                              <TrendingUp className="w-4 h-4" />
+                              Improving
+                            </div>
+                          )}
+                          {selectedCondition.trend === 'declining' && (
+                            <div className="flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-sm font-medium">
+                              <TrendingDown className="w-3 h-3" />
+                              Declining
+                            </div>
+                          )}
+                          {selectedCondition.trend === 'stable' && (
+                            <div className="flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">
+                              <Circle className="w-4 h-4" />
+                              Stable
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
+                        <div className="text-xs text-[var(--color-text-muted)] mb-1">Accuracy</div>
+                        <div className="text-2xl font-bold text-[var(--color-accent)]">
+                          {selectedCondition.accuracy}%
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)]">
+                          {selectedCondition.correctAnswers}/{selectedCondition.totalQuestions}
+                        </div>
+                      </div>
+
+                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
+                        <div className="text-xs text-[var(--color-text-muted)] mb-1">Attempts</div>
+                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                          {selectedCondition.totalQuestions}
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)]">
+                          Total questions
+                        </div>
+                      </div>
+
+                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
+                        <div className="text-xs text-[var(--color-text-muted)] mb-1 flex items-center gap-1">
+                          <Brain className="w-3 h-3" />
+                          Retention
+                        </div>
+                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                          {selectedCondition.retentionScore}%
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)]">
+                          Memory strength
+                        </div>
+                      </div>
+
+                      <div className="bg-[var(--color-bg-secondary)] rounded-lg p-3">
+                        <div className="text-xs text-[var(--color-text-muted)] mb-1 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Avg Time
+                        </div>
+                        <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                          {(selectedCondition.avgDecisionTimeMs / 1000).toFixed(1)}s
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)]">
+                          Per question
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm text-[var(--color-text-muted)]">
+                        <span>Accuracy Progress</span>
+                        <span>{selectedCondition.accuracy}%</span>
+                      </div>
+                      <div className="relative w-full h-4 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+                        <div
+                          className={`absolute inset-y-0 left-0 rounded-full transition-all ${
+                            selectedCondition.accuracy >= 80
+                              ? 'bg-gradient-to-r from-green-400 to-emerald-500'
+                              : selectedCondition.accuracy >= 60
+                              ? 'bg-gradient-to-r from-blue-400 to-indigo-500'
+                              : 'bg-gradient-to-r from-orange-400 to-red-500'
+                          }`}
+                          style={{ width: `${selectedCondition.accuracy}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Retention Progress */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm text-[var(--color-text-muted)]">
+                        <span>Retention Strength</span>
+                        <span>{selectedCondition.retentionScore}%</span>
+                      </div>
+                      <div className="relative w-full h-4 bg-[var(--color-bg-secondary)] rounded-full overflow-hidden">
+                        <div
+                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all"
+                          style={{ width: `${selectedCondition.retentionScore}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Next Due Date */}
+                    {selectedCondition.nextDue && (
+                      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="flex items-center gap-2 text-blue-900 dark:text-blue-300">
+                          <Calendar className="w-5 h-5" />
+                          <div>
+                            <div className="font-semibold">Next Review Due</div>
+                            <div className="text-sm">
+                              {Math.round((selectedCondition.nextDue.getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         )}
