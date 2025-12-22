@@ -10,29 +10,31 @@ describe('TrainingMenu Component Logic', () => {
   describe('Mode Registry Filtering', () => {
     it('should have exactly one core_adaptive mode', () => {
       const coreModes = MODE_REGISTRY.filter(
-        (mode) => mode.category === 'core' && mode.id === 'core_adaptive'
+        (mode) => mode.id === 'core_adaptive'
       );
       expect(coreModes).toHaveLength(1);
     });
 
-    it('should filter out core category for drill modes grid', () => {
-      const drillModes = MODE_REGISTRY.filter((mode) => mode.category !== 'core');
+    it('should filter visual_diagnostics modes for drill modes grid', () => {
+      const drillModes = MODE_REGISTRY.filter((mode) => mode.category === 'visual_diagnostics');
       
-      // Should not include any 'core' category modes
+      // Should only include visual_diagnostics category modes
       drillModes.forEach((mode) => {
-        expect(mode.category).not.toBe('core');
+        expect(mode.category).toBe('visual_diagnostics');
       });
       
-      // Should include modes from other categories
-      const categories = new Set(drillModes.map((mode) => mode.category));
-      expect(categories.has('visual')).toBe(true);
-      expect(categories.has('recall')).toBe(true);
-      expect(categories.has('mastery')).toBe(true);
+      // Should have at least a few visual modes
+      expect(drillModes.length).toBeGreaterThanOrEqual(2);
     });
 
-    it('should have at least 4 drill modes after filtering', () => {
-      const drillModes = MODE_REGISTRY.filter((mode) => mode.category !== 'core');
-      expect(drillModes.length).toBeGreaterThanOrEqual(4);
+    it('should have modes from all categories', () => {
+      const categories = new Set(MODE_REGISTRY.map((mode) => mode.category));
+      expect(categories.has('visual_diagnostics')).toBe(true);
+      expect(categories.has('question_practice')).toBe(true);
+    });
+
+    it('should have at least 10 total modes', () => {
+      expect(MODE_REGISTRY.length).toBeGreaterThanOrEqual(10);
     });
   });
 
@@ -138,7 +140,7 @@ describe('TrainingMenu Component Logic', () => {
 
   describe('Core Adaptive Mode', () => {
     const coreMode = MODE_REGISTRY.find(
-      (mode) => mode.category === 'core' && mode.id === 'core_adaptive'
+      (mode) => mode.id === 'core_adaptive'
     );
 
     it('should have core adaptive mode in registry', () => {

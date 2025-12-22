@@ -41,8 +41,8 @@ async function loadDrugRegistry() {
   try {
     const registry = await import('../drugRegistry');
     
-    // Collect all exported arrays
-    const allDrugs: Array<{ name: string; class?: string; category?: string }> = [];
+    // Collect all exported arrays - DrugMeta has genericName, not name
+    const allDrugs: Array<{ genericName: string; drugClass?: string[]; brandName?: string }> = [];
     
     for (const [key, value] of Object.entries(registry)) {
       if (key.startsWith('DRUG_REGISTRY_') && Array.isArray(value)) {
