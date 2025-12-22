@@ -1,7 +1,7 @@
 // App.tsx
 import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Keyboard } from "lucide-react";
+import { Settings, Keyboard, X } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import Loader from "./components/Loader";
 import ThemeToggleButton from "./components/ThemeToggleButton";
@@ -59,6 +59,7 @@ const StudyGroupDashboard = lazy(() => import("./components/social/StudyGroupDas
 const ToolkitHub = lazy(() => import("./components/toolkit/ToolkitHub"));
 const GapAnalysisDashboard = lazy(() => import("./components/dashboard/GapAnalysisDashboard"));
 const CommandCenterHub = lazy(() => import("./components/CommandCenterHub"));
+const TrainingMenu = lazy(() => import("./components/dashboard/TrainingMenu"));
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -84,7 +85,7 @@ const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
 const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
 const DRILL_MODE_MEDICAL_WORDLE: TrainingModeId = 'medical_wordle';
 
-type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis";
+type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "training_menu";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -140,10 +141,23 @@ const App: React.FC = () => {
   const [fontSizeAdjustment, setFontSizeAdjustment] = useState<number>(0);
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
-  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
+
+  const dueQuestionsCount = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    return missedQuestions.filter(q => q.nextReviewDate && q.nextReviewDate <= today).length;
+  }, [missedQuestions]);
 
   // ---- Preload large data files in background for better performance ----
   useEffect(() => {
@@ -328,11 +342,6 @@ const App: React.FC = () => {
     setFlaggedQuestions([]);
   };
 
-  // ---- starting a session ----
-  const handleStartSession = () => {
-    setIsModalOpen(true);
-  };
-
   const handleConfirmSession = async (settings: SessionSettings) => {
     setIsModalOpen(false);
     setSessionSettings(settings);
@@ -369,6 +378,27 @@ const App: React.FC = () => {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleTrainingMenuStart = (modeId: string, focus?: 'all' | 'growth' | 'flagged' | 'due') => {
+    let sessionFocus: SessionSettings['focus'] = 'all';
+    if (focus === 'flagged') sessionFocus = 'reviewFlagged';
+    else if (focus === 'due') sessionFocus = 'review';
+    else if (focus === 'growth') sessionFocus = 'growth';
+    
+    handleConfirmSession({
+      focus: sessionFocus,
+      difficulty: 'same',
+    });
+  };
+
+  // ---- starting a session ----
+  const handleStartSession = (settings?: SessionSettings) => {
+    if (settings && typeof settings === 'object' && 'focus' in settings) {
+      handleConfirmSession(settings);
+    } else {
+      setIsModalOpen(true);
     }
   };
 
@@ -580,6 +610,7 @@ const App: React.FC = () => {
                   performanceData={heatmapPerformance}
                   missedQuestions={missedQuestions}
                   flaggedQuestions={flaggedQuestions}
+                  dueCount={dueQuestionsCount}
                   onStartSession={handleStartSession}
                   onNavigateToDrillMode={handleNavigateToDrillMode}
                   onNavigateToToolkit={() => setView("toolkit")}
@@ -845,6 +876,28 @@ const App: React.FC = () => {
               </Suspense>
             </motion.div>
           )}
+
+          {view === "training_menu" && (
+            <motion.div
+              key="training_menu"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <Suspense fallback={<Loader />}>
+                <TrainingMenu 
+                  onClose={() => setView("command_center")}
+                  onNavigateToMode={(route, mode) => handleNavigateToDrillMode(mode.id)}
+                  onStartSession={handleTrainingMenuStart}
+                  dueQuestionsCount={dueQuestionsCount}
+                  flaggedQuestionsCount={flaggedQuestions.length}
+                  growthAreasCount={growthAreas.length}
+                />
+              </Suspense>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
 
@@ -864,6 +917,52 @@ const App: React.FC = () => {
           onNavigate={handleNavigateToDrillMode}
         />
       </Suspense>
+
+      {/* Global Session Setup Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-50 p-4" 
+            onClick={() => setIsModalOpen(false)}
+          >
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-4 md:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]" 
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Training Command Center</h2>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                  aria-label="Close modal"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <Suspense fallback={<Loader />}>
+                <TrainingMenu
+                  onStartSession={handleTrainingMenuStart}
+                  onNavigateToMode={(route, mode) => {
+                    setIsModalOpen(false);
+                    handleNavigateToDrillMode(mode.id);
+                  }}
+                  onClose={() => setIsModalOpen(false)}
+                  dueQuestionsCount={dueQuestionsCount}
+                  flaggedQuestionsCount={flaggedQuestions.length}
+                  growthAreasCount={growthAreas.length}
+                />
+              </Suspense>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* User Profile Onboarding Modal */}
       <Suspense fallback={null}>

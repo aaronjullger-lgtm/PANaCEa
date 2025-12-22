@@ -150,12 +150,25 @@ export async function callGeminiText(
         }
         
         // Non-retryable or out of retries
+        let errorDetails = "";
+        try {
+          const errorData = await response.json();
+          errorDetails = errorData.error || errorData.details || response.statusText;
+        } catch {
+          errorDetails = response.statusText;
+        }
+
         throw new GeminiApiError(
-          `Gemini API error: ${response.status} ${response.statusText}`,
+          `Gemini API error: ${response.status} ${errorDetails}`,
           response.status,
           retryable,
           retryAfterMs
         );
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Backend server returned non-JSON response. Please ensure the server is running (npm run dev:all).");
       }
 
       const data = await response.json();

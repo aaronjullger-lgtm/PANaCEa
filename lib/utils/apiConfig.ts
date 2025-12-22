@@ -14,16 +14,18 @@
 export function getApiUrl(): string {
   // Browser environment
   if (typeof window !== 'undefined') {
-    return (import.meta as any).env?.VITE_API_URL || 'http://localhost:3001';
+    // Use VITE_API_URL if provided, otherwise default to empty string 
+    // to use relative paths (which works with Vite proxy and Cloudflare)
+    return (import.meta as any).env?.VITE_API_URL || "";
   }
   
   // Server/Node environment
-  if (typeof process !== 'undefined') {
-    return process.env.VITE_API_URL || 'http://localhost:3001';
+  if (typeof process !== "undefined") {
+    return process.env.VITE_API_URL || "http://localhost:3001";
   }
   
   // Fallback
-  return 'http://localhost:3001';
+  return "";
 }
 
 /**

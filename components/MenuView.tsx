@@ -74,8 +74,6 @@ interface MenuViewProps {
   setIsLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   onStartSession: () => void;
-  isModalOpen: boolean;
-  onCloseModal: () => void;
   onConfirmSession: (settings: SessionSettings) => void;
   growthAreas: string[];
   /** Callback for navigating to dedicated drill mode views */
@@ -109,8 +107,6 @@ const MenuView: React.FC<MenuViewProps> = ({
   onBackToQuiz,
   hasActiveSession,
   onStartSession,
-  isModalOpen,
-  onCloseModal,
   onConfirmSession,
   growthAreas,
   onNavigateToDrillMode,
@@ -148,19 +144,6 @@ const MenuView: React.FC<MenuViewProps> = ({
   const [enabledWidgets, setEnabledWidgets] = useState<WidgetId[]>(() => 
     loadWidgetPreferences<WidgetId>(defaultWidgets)
   );
-
-  // Prevent scrolling when modal is open
-  useEffect(() => {
-    if (isModalOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [isModalOpen]);
 
   const stats = useMemo(() => {
     // Overall score = last 360 questions (any mode) as before
@@ -436,61 +419,6 @@ const MenuView: React.FC<MenuViewProps> = ({
   return (
     <>
       <AnimatePresence>
-        {isModalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-50 p-4" 
-            onClick={onCloseModal}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2 }}
-              className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-4 md:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]" 
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Training Command Center</h2>
-                <button
-                  onClick={onCloseModal}
-                  className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-                  aria-label="Close modal"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <TrainingMenu
-                onStartSession={(modeId, focus) => {
-                  // Map TrainingMenu focus to SessionSettings format
-                  let sessionFocus: SessionSettings['focus'] = 'all';
-                  if (focus === 'flagged') sessionFocus = 'reviewFlagged';
-                  else if (focus === 'due') sessionFocus = 'review';
-                  else if (focus === 'growth') sessionFocus = 'growth';
-                  
-                  onConfirmSession({
-                    focus: sessionFocus,
-                    difficulty: 'same',
-                  });
-                }}
-                onNavigateToMode={(route, mode) => {
-                  // Navigate to the dedicated drill mode view
-                  if (onNavigateToDrillMode) {
-                    onNavigateToDrillMode(mode.id);
-                  }
-                }}
-                onClose={onCloseModal}
-                dueQuestionsCount={dueQuestionsCount}
-                flaggedQuestionsCount={flaggedQuestions.length}
-                growthAreasCount={growthAreas.length}
-              />
-            </motion.div>
-          </motion.div>
-        )}
       </AnimatePresence>
 
       {selectedSystem && (

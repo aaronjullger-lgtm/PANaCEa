@@ -1,15 +1,6 @@
 /**
- * API: Save OSCE chat message
- * POST /api/osce/chat
- * 
- * Body: {
- *   sessionId: string,
- *   userId: string,
- *   role: 'user' | 'patient',
- *   message: string,
- *   phase?: string,
- *   isRelevant?: boolean
- * }
+ * API: Complete OSCE session
+ * POST /api/osce/complete
  */
 
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
@@ -31,26 +22,25 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
   try {
     const body = await request.json();
-    const { sessionId, messages } = body;
+    const { sessionId, diagnosis, treatmentPlan } = body;
 
-    // Validate required fields
-    if (!sessionId || !messages) {
-      return createErrorResponse('Missing required fields', 400);
+    if (!sessionId) {
+      return createErrorResponse('Missing sessionId', 400);
     }
 
     await prisma.patientEncounterSession.update({
       where: { id: sessionId },
       data: {
-        messages: messages,
+        status: 'completed',
+        diagnosis,
+        treatmentPlan,
         updatedAt: new Date()
       }
     });
 
     return createSuccessResponse({ success: true });
   } catch (error: any) {
-    console.error('Error saving chat message:', error);
-    return createErrorResponse('Failed to save chat message', 500);
-  } finally {
-    await prisma.$disconnect();
+    console.error('Error completing OSCE session:', error);
+    return createErrorResponse('Internal server error', 500);
   }
 }
