@@ -110,7 +110,7 @@ export const DrillLoadingState: React.FC<DrillLoadingStateProps> = ({
           {/* Answer options skeleton */}
           {variant !== 'encounter' && (
             <div className="space-y-3">
-              {Array.from({ length: optionCount }).map((_, idx) => (
+              {Array.from({ length: optionCount || 4 }).map((_, idx) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0.5 }}

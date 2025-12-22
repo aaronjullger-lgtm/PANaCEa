@@ -854,7 +854,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
                         <p className="text-xs font-semibold text-[var(--color-accent)] mb-1">CHIEF COMPLAINT</p>
                         <p className="text-lg font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap">
-                          {getTranslatedText(currentCase.chiefComplaint)}
+                          {currentCase?.chiefComplaint ? getTranslatedText(currentCase.chiefComplaint) : 'Loading...'}
                         </p>
                       </div>
 
@@ -1354,10 +1354,10 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             <h3 className="text-xl font-semibold mb-4 text-[var(--color-accent)]">Clinical Competencies</h3>
             <div className="grid md:grid-cols-2 gap-4">
               {[
-                { label: 'History-Taking', score: preceptorFeedback.clinicalReasoning.historyTaking, icon: MessageSquare },
-                { label: 'Physical Exam', score: preceptorFeedback.clinicalReasoning.physicalExam, icon: Stethoscope },
-                { label: 'Diagnosis', score: preceptorFeedback.clinicalReasoning.diagnosis, icon: FileText },
-                { label: 'Management', score: preceptorFeedback.clinicalReasoning.management, icon: Pill },
+                { label: 'History-Taking', score: preceptorFeedback?.clinicalReasoning?.historyTaking || 0, icon: MessageSquare },
+                { label: 'Physical Exam', score: preceptorFeedback?.clinicalReasoning?.physicalExam || 0, icon: Stethoscope },
+                { label: 'Diagnosis', score: preceptorFeedback?.clinicalReasoning?.diagnosis || 0, icon: FileText },
+                { label: 'Management', score: preceptorFeedback?.clinicalReasoning?.management || 0, icon: Pill },
               ].map((item, idx) => {
                 const percentage = (item.score / 10) * 100;
                 const Icon = item.icon;

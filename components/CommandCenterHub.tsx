@@ -71,6 +71,7 @@ interface CommandCenterHubProps {
   flaggedQuestions: Question[];
   growthAreas: string[];
   dueCount?: number;
+  examLabel?: string;
   onStartSession: (settings?: SessionSettings) => void;
   onNavigateToDrillMode: (modeId: string) => void;
   onNavigateToToolkit: () => void;
@@ -382,6 +383,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   flaggedQuestions,
   growthAreas,
   dueCount: propDueCount,
+  examLabel = 'PANCE',
   onStartSession,
   onNavigateToDrillMode,
   onNavigateToToolkit,
@@ -396,7 +398,8 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   const stats = useMemo(() => {
     const streak = 5; // Mock streak for now
     const accuracy = 85; // Mock accuracy for now
-    const todayRecords = performanceData.filter(r => {
+    const todayRecords = (performanceData || []).filter(r => {
+      if (!r?.timestamp) return false;
       const date = new Date(r.timestamp);
       const today = new Date();
       return date.getDate() === today.getDate() &&
@@ -404,10 +407,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
              date.getFullYear() === today.getFullYear();
     });
     
-    const dueCount = propDueCount !== undefined ? propDueCount : (flaggedQuestions.length + missedQuestions.length);
+    const dueCount = propDueCount !== undefined ? propDueCount : ((flaggedQuestions?.length || 0) + (missedQuestions?.length || 0));
     
     return { streak, dueCount, accuracy, questionsToday: todayRecords.length };
-  }, [performanceData, flaggedQuestions.length, missedQuestions.length, propDueCount]);
+  }, [performanceData, flaggedQuestions, missedQuestions, propDueCount]);
 
   // Filter modes based on user context (PANCE vs PANRE)
   const filteredModes = useMemo(() => {

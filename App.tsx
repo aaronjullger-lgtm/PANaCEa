@@ -26,6 +26,7 @@ import {
   hasCompletedOnboarding, 
   saveUserProfile 
 } from "./services/userProfileService";
+import { getExamLabel } from "./services/userContextService";
 import type { TrainingModeId } from "./config/training-modes";
 import { CommuterProvider } from "./contexts/CommuterContext";
 import { ToastProvider } from "./contexts/ToastContext";
@@ -145,6 +146,9 @@ const App: React.FC = () => {
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState<boolean>(false);
+
+  // Get exam label based on user context (PANCE or PANRE)
+  const examLabel = getExamLabel();
 
   useEffect(() => {
     if (isModalOpen) {
@@ -620,6 +624,7 @@ const App: React.FC = () => {
                   onNavigateToGapAnalysis={() => setView("gap_analysis")}
                   onNavigateToIntegrations={() => setView("integrations")}
                   growthAreas={growthAreas}
+                  examLabel={examLabel}
                 />
               </Suspense>
             </motion.div>

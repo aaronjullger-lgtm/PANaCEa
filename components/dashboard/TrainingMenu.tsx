@@ -153,8 +153,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     if (!searchQuery.trim()) return drillModes;
     const query = searchQuery.toLowerCase();
     return drillModes.filter((mode) =>
-      mode.label.toLowerCase().includes(query) ||
-      mode.description.toLowerCase().includes(query)
+      mode?.label?.toLowerCase().includes(query) ||
+      mode?.description?.toLowerCase().includes(query)
     );
   }, [searchQuery, drillModes]);
 
@@ -473,7 +473,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       case 'pharmacology':
         return 'Drug mechanisms, side effects, and interactions.';
       default:
-        return mode.description;
+        return mode?.description || 'Practice PANCE-level questions tailored to your needs.';
     }
   };
 

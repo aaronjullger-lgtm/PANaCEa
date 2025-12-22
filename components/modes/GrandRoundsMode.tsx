@@ -647,7 +647,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
               {/* Options */}
               <div className="space-y-3">
-                {currentQuestion.options.map((option, index) => {
+                {currentQuestion?.options?.map((option, index) => {
+                  if (!option) return null;
                   const isSelected = selectedAnswer === index;
 
                   return (
