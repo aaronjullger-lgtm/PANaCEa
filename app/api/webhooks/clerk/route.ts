@@ -2,14 +2,14 @@ import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   // Get the Clerk webhook secret from environment
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    throw new Error('CLERK_WEBHOOK_SECRET is not set in environment variables');
+    console.error('CLERK_WEBHOOK_SECRET is not configured');
+    return new Response('Error: Webhook secret not configured', { status: 500 });
   }
 
   // Get the headers
@@ -20,7 +20,8 @@ export async function POST(req: Request) {
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new NextResponse('Error: Missing svix headers', { status: 400 });
+    console.error('Missing svix headers');
+    return new Response('Error: Missing svix headers', { status: 400 });
   }
 
   // Get the body
@@ -41,56 +42,84 @@ export async function POST(req: Request) {
     }) as WebhookEvent;
   } catch (err) {
     console.error('Error verifying webhook:', err);
-    return new NextResponse('Error: Verification failed', { status: 400 });
+    return new Response('Error: Verification failed', { status: 400 });
   }
 
-  // Handle the webhook event
-  const eventType = evt.type;
+  // Handle the webhook event using switch statement
+  try {
+    switch (evt.type) {
+      case 'user.created':
+      case 'user.updated': {
+        const { id, email_addresses, first_name, last_name, primary_email_address_id } = evt.data;
 
-  if (eventType === 'user.created' || eventType === 'user.updated') {
-    const { id, email_addresses, first_name, last_name } = evt.data;
+        // Robust email extraction: try primary first, fallback to first email
+        let primaryEmail = email_addresses?.find(
+          (email) => email.id === primary_email_address_id
+        );
 
-    // Get the primary email
-    const primaryEmail = email_addresses?.find(
-      (email) => email.id === evt.data.primary_email_address_id
-    );
+        // Fallback to first email if primary not found
+        if (!primaryEmail && email_addresses && email_addresses.length > 0) {
+          primaryEmail = email_addresses[0];
+        }
 
-    if (!primaryEmail?.email_address) {
-      return new NextResponse('Error: No primary email found', { status: 400 });
-    }
+        if (!primaryEmail?.email_address) {
+          console.error('No email found for user:', id);
+          return new Response('Error: No email found', { status: 400 });
+        }
 
-    try {
-      if (eventType === 'user.created') {
-        // Create new user with default role USER
-        await prisma.user.create({
-          data: {
+        // Upsert user - create if doesn't exist, update if exists
+        await prisma.user.upsert({
+          where: { clerkId: id },
+          create: {
             clerkId: id,
             email: primaryEmail.email_address,
             firstName: first_name || null,
             lastName: last_name || null,
-            role: 'USER',
+            role: 'USER', // Default role on creation
           },
-        });
-      } else if (eventType === 'user.updated') {
-        // Update existing user without changing role
-        await prisma.user.update({
-          where: { clerkId: id },
-          data: {
+          update: {
             email: primaryEmail.email_address,
             firstName: first_name || null,
             lastName: last_name || null,
-            // Explicitly do not update role - preserve existing value
+            // Explicitly do NOT update role - preserve existing value
           },
         });
+
+        console.log(`User ${evt.type === 'user.created' ? 'created' : 'updated'}: ${id}`);
+        return new Response('Success', { status: 200 });
       }
 
-      return new NextResponse('Success', { status: 200 });
-    } catch (error) {
-      console.error('Error syncing user to database:', error);
-      return new NextResponse('Error: Database sync failed', { status: 500 });
-    }
-  }
+      case 'user.deleted': {
+        const { id } = evt.data;
 
-  // Return 200 for unhandled event types
-  return new NextResponse('Success', { status: 200 });
+        if (!id) {
+          console.error('No user ID provided for deletion');
+          return new Response('Error: No user ID', { status: 400 });
+        }
+
+        try {
+          // Attempt to delete the user
+          await prisma.user.delete({
+            where: { clerkId: id },
+          });
+          console.log(`User deleted: ${id}`);
+        } catch (error) {
+          // User might already be deleted or not exist - log but don't fail
+          console.warn(`Could not delete user ${id}:`, error);
+          // Return 200 anyway so Clerk stops retrying
+        }
+        
+        return new Response('Success', { status: 200 });
+      }
+
+      default:
+        // Safety valve: handles role.*, subscription.*, and any other events
+        // Log and ignore to prevent Clerk retry storms
+        console.log(`Ignored event: ${evt.type}`);
+        return new Response('Ignored', { status: 200 });
+    }
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    return new Response('Error: Processing failed', { status: 500 });
+  }
 }
