@@ -33,6 +33,15 @@ datasource db {
   directUrl = env("DIRECT_DATABASE_URL") // Optional: For migrations, bypass pooler
 }
 
+enum UserRole {
+  USER
+  VIEWER
+  EDITOR
+  APPROVER
+  ADMIN
+  SUPERADMIN
+}
+
 /// Represents a user in the learning platform, linked to Clerk authentication
 model User {
   id        String   @id @default(uuid())
@@ -45,7 +54,7 @@ model User {
 
   /// Authentication fields
   emailVerified     DateTime? // Email verification timestamp
-  role              String    @default("user") // user, viewer, editor, approver, admin, superadmin
+  role              UserRole  @default(USER)
   isAnonymous       Boolean   @default(false) // Hide identity in peer comparisons
   resetToken        String? // Password reset token (hashed)
   resetTokenExpiry  DateTime? // Reset token expiration
