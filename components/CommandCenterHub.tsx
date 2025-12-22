@@ -81,8 +81,6 @@ interface CommandCenterHubProps {
   onNavigateToIntegrations?: () => void;
   onNavigateToSimulation?: () => void;
 }
-  onNavigateToIntegrations?: () => void;
-}
 
 // Icon mapping
 const ICON_MAP: Record<string, LucideIcon> = {
