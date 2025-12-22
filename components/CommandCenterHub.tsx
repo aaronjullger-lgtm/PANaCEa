@@ -46,6 +46,8 @@ import {
   LucideIcon,
 } from 'lucide-react';
 import type { PerformanceRecord, Question, SessionSettings } from '../types';
+import { AnalyticsDashboard } from './analytics/AnalyticsDashboard';
+import { ClinicalLibrary } from './toolkit/ClinicalLibrary';
 import {
   VISUAL_DIAGNOSTICS_MODES,
   CLINICAL_SIMULATION_MODES,
@@ -641,6 +643,20 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </button>
               </div>
             </section>
+            
+            {/* Clinical Knowledge Browser */}
+            <section>
+              <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[var(--color-text-muted)]" />
+                Clinical Knowledge
+              </h3>
+              <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+                <ClinicalLibrary onSelectCondition={(conditionId) => {
+                  // Navigate to condition detail or show in modal
+                  console.log('Selected condition:', conditionId);
+                }} />
+              </div>
+            </section>
           </motion.div>
         )}
 
@@ -657,7 +673,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 <BarChart3 className="w-5 h-5 text-[var(--color-text-muted)]" />
                 Performance Analysis
               </h3>
-              <div className="grid md:grid-cols-2 gap-4">
+              
+              {/* Integrated Analytics Dashboard with radar chart, readiness score, and trends */}
+              <AnalyticsDashboard performanceData={performanceData} />
+              
+              {/* Additional navigation to detailed views */}
+              <div className="grid md:grid-cols-2 gap-4 mt-6">
                 <button
                   onClick={onNavigateToGapAnalysis}
                   className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group"
