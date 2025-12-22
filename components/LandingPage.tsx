@@ -3,9 +3,9 @@
  * First page users see before signing in
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SignIn } from '@clerk/clerk-react';
+import { SignIn, SignUp } from '@clerk/clerk-react';
 import { 
   BookOpen, 
   Brain, 
@@ -19,7 +19,30 @@ import {
 } from 'lucide-react';
 
 export function LandingPage() {
-  const [showSignIn, setShowSignIn] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<'sign-in' | 'sign-up'>('sign-in');
+
+  // Disable body scroll when modal is open
+  useEffect(() => {
+    if (showAuth) {
+      document.body.style.overflow = 'hidden';
+      
+      // Handle escape key
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setShowAuth(false);
+        }
+      };
+      
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.body.style.overflow = 'unset';
+        document.removeEventListener('keydown', handleEscape);
+      };
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [showAuth]);
 
   const features = [
     {
@@ -85,7 +108,10 @@ export function LandingPage() {
           <motion.button
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            onClick={() => setShowSignIn(true)}
+            onClick={() => {
+              setAuthMode('sign-in');
+              setShowAuth(true);
+            }}
             className="px-6 py-2.5 bg-[#0284C7] hover:bg-[#0369a1] text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:scale-105"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -121,7 +147,10 @@ export function LandingPage() {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <motion.button
-              onClick={() => setShowSignIn(true)}
+              onClick={() => {
+                setAuthMode('sign-up');
+                setShowAuth(true);
+              }}
               className="group px-8 py-4 bg-[#0284C7] hover:bg-[#0369a1] text-white rounded-lg font-bold text-lg shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -211,7 +240,10 @@ export function LandingPage() {
                 Track your performance, identify knowledge gaps, and focus your study time effectively.
               </p>
               <motion.button
-                onClick={() => setShowSignIn(true)}
+                onClick={() => {
+                  setAuthMode('sign-up');
+                  setShowAuth(true);
+                }}
                 className="px-8 py-4 bg-white text-[#1F283A] rounded-lg font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -261,7 +293,10 @@ export function LandingPage() {
             Access all study modes and features with a free account.
           </p>
           <motion.button
-            onClick={() => setShowSignIn(true)}
+            onClick={() => {
+              setAuthMode('sign-up');
+              setShowAuth(true);
+            }}
             className="px-10 py-5 bg-[#0284C7] hover:bg-[#0369a1] text-white rounded-lg font-bold text-xl shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-3 mx-auto"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -279,30 +314,32 @@ export function LandingPage() {
         </div>
       </footer>
 
-      {/* Sign In Modal */}
+      {/* Auth Modal */}
       <AnimatePresence>
-        {showSignIn && (
+        {showAuth && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4"
-            onClick={() => setShowSignIn(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto"
+            onClick={() => setShowAuth(false)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md"
+              className="w-full max-w-md my-8"
             >
               <div className="bg-[var(--color-bg-secondary)] rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)]">
                 {/* Modal Header */}
                 <div className="bg-gradient-to-r from-[#1F283A] to-[#364154] dark:from-[#364154] dark:to-[#1F283A] px-6 py-5 text-white">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-2xl font-bold">Welcome to PANaCEa</h3>
+                    <h3 className="text-2xl font-bold">
+                      {authMode === 'sign-up' ? 'Join PANaCEa' : 'Welcome Back'}
+                    </h3>
                     <button
-                      onClick={() => setShowSignIn(false)}
+                      onClick={() => setShowAuth(false)}
                       className="p-1 hover:bg-white/20 rounded-lg transition-colors"
                       aria-label="Close"
                     >
@@ -312,26 +349,46 @@ export function LandingPage() {
                     </button>
                   </div>
                   <p className="text-[#E9ECF1] text-base">
-                    Sign in to access your personalized study dashboard
+                    {authMode === 'sign-up' 
+                      ? 'Create your free account to start studying' 
+                      : 'Sign in to access your personalized study dashboard'
+                    }
                   </p>
                 </div>
 
-                {/* Clerk Sign In Component */}
+                {/* Clerk Component */}
                 <div className="p-6">
-                  <SignIn 
-                    appearance={{
-                      elements: {
-                        rootBox: 'mx-auto',
-                        card: 'bg-transparent shadow-none',
-                        headerTitle: 'hidden',
-                        headerSubtitle: 'hidden',
-                        socialButtonsBlockButton: 'hover:scale-105 transition-transform',
-                        formButtonPrimary: 'bg-[#1F283A] hover:bg-[#364154] hover:shadow-lg',
-                        footerActionLink: 'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
-                      },
-                    }}
-                    fallbackRedirectUrl="/"
-                  />
+                  {authMode === 'sign-up' ? (
+                    <SignUp 
+                      appearance={{
+                        elements: {
+                          rootBox: 'mx-auto',
+                          card: 'bg-transparent shadow-none',
+                          headerTitle: 'hidden',
+                          headerSubtitle: 'hidden',
+                          socialButtonsBlockButton: 'hover:scale-105 transition-transform',
+                          formButtonPrimary: 'bg-[#1F283A] hover:bg-[#364154] hover:shadow-lg',
+                          footerActionLink: 'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
+                        },
+                      }}
+                      fallbackRedirectUrl="/"
+                    />
+                  ) : (
+                    <SignIn 
+                      appearance={{
+                        elements: {
+                          rootBox: 'mx-auto',
+                          card: 'bg-transparent shadow-none',
+                          headerTitle: 'hidden',
+                          headerSubtitle: 'hidden',
+                          socialButtonsBlockButton: 'hover:scale-105 transition-transform',
+                          formButtonPrimary: 'bg-[#1F283A] hover:bg-[#364154] hover:shadow-lg',
+                          footerActionLink: 'text-[#1F283A] hover:text-[#364154] dark:text-[#E9ECF1] dark:hover:text-white',
+                        },
+                      }}
+                      fallbackRedirectUrl="/"
+                    />
+                  )}
                 </div>
               </div>
             </motion.div>
