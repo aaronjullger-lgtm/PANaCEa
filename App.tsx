@@ -518,16 +518,6 @@ const App: React.FC = () => {
           </motion.button>
           <div className="flex items-center gap-2">
             <motion.button
-              onClick={() => setIsShortcutsModalOpen(true)}
-              className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
-              aria-label="Keyboard Shortcuts (Ctrl+K)"
-              title="Keyboard Shortcuts (Ctrl+K)"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Keyboard className="w-5 h-5" />
-            </motion.button>
-            <motion.button
               onClick={() => setIsSettingsModalOpen(true)}
               className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
               aria-label="Settings and Stats"

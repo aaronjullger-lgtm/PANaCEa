@@ -14,6 +14,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
+// Web Speech API types are defined in types/speech.d.ts
+
 export interface CommuterSettings {
   voiceEnabled: boolean;
   autoReadQuestions: boolean;
@@ -247,14 +249,6 @@ export function useCommuter(): CommuterContextType {
     throw new Error('useCommuter must be used within a CommuterProvider');
   }
   return context;
-}
-
-// Type declarations for Web Speech API
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
 }
 
 export type { CommuterContextType };

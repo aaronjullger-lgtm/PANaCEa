@@ -206,4 +206,5 @@ class FeedbackService {
 export const feedback = new FeedbackService();
 
 // Export types and config helpers
-export { FeedbackConfig, loadConfig, getDefaultConfig };
+export type { FeedbackConfig };
+export { loadConfig, getDefaultConfig };

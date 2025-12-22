@@ -283,7 +283,7 @@ const MedicalWordleMode: React.FC<MedicalWordleModeProps> = ({ onExit }) => {
       <div className="fixed inset-0 z-50 bg-slate-950 dark:bg-slate-950 flex items-center justify-center">
         {error ? (
           <div className="text-center space-y-3">
-            <p className="text-lg font-semibold text-slate-100">Wordle challenge unavailable</p>
+            <p className="text-lg font-semibold text-slate-100">Daily challenge unavailable</p>
             <p className="text-sm text-slate-400">{error}</p>
             <button
               onClick={refetch}

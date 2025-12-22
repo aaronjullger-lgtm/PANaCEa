@@ -5,10 +5,10 @@
  * Modes are organized by PRIMARY LEARNING ACTIVITY TYPE.
  * 
  * Categories:
- * 1. VISUAL DIAGNOSTICS - Pattern recognition with images/media
- * 2. CLINICAL SIMULATION - Interactive patient scenarios (fluids, vent, etc.)
- * 3. QUESTION PRACTICE - Traditional Q&A including pharm/abx
- * 4. SPECIALTY DRILLS - High-yield focused drills (recall, first-line, wordle, etc.)
+ * 1. VISUAL DIAGNOSTICS - Pattern recognition with images/media (3 modes - 1 row)
+ * 2. CLINICAL SIMULATION - Interactive patient scenarios (6 modes - 2 rows)
+ * 3. QUESTION PRACTICE - Traditional Q&A including pharm/abx, cram, rapid recall (9 modes - 3 rows)
+ * 4. SPECIALTY DRILLS - High-yield focused drills (6 modes - 2 rows)
  * 
  * Special standalone modes:
  * - CORE ADAPTIVE (main event - front and center)
@@ -43,7 +43,8 @@ export type TrainingModeId =
   | 'ventilator_hero'
   | 'polypharmacy_puzzle'
   | 'radiology_scroll'
-  | 'physiology_drill';
+  | 'physiology_drill'
+  | 'anatomy_review';
 
 /**
  * Categories based on learning activity type
@@ -103,7 +104,9 @@ export const CATEGORY_INFO: Record<TrainingCategory, {
   },
 };
 
-// VISUAL DIAGNOSTICS
+// ============================================================================
+// VISUAL DIAGNOSTICS - Pattern recognition with images/media (3 modes = 1 row)
+// ============================================================================
 export const VISUAL_DIAGNOSTICS_MODES: TrainingModeConfig[] = [
   {
     id: 'ecg_drill',
@@ -127,7 +130,7 @@ export const VISUAL_DIAGNOSTICS_MODES: TrainingModeConfig[] = [
   },
   {
     id: 'imaging_drill',
-    label: 'Imaging Review',
+    label: 'Radiology Review',
     description: 'X-ray, CT, and MRI pattern recognition',
     category: 'visual_diagnostics',
     iconName: 'Image',
@@ -135,30 +138,11 @@ export const VISUAL_DIAGNOSTICS_MODES: TrainingModeConfig[] = [
     route: 'imaging_drill',
     estimatedMinutes: 10,
   },
-  {
-    id: 'mini_lab',
-    label: 'Lab Interpretation',
-    description: 'CBC, CMP, and specialty lab panels',
-    category: 'visual_diagnostics',
-    iconName: 'FlaskConical',
-    theme: 'emerald',
-    route: 'mini_lab',
-    estimatedMinutes: 8,
-  },
-  {
-    id: 'radiology_scroll',
-    label: 'Radiology Scroll',
-    description: 'Interactive CT/MRI slice viewing',
-    category: 'visual_diagnostics',
-    iconName: 'Layers',
-    theme: 'slate',
-    route: 'radiology_scroll',
-    isComingSoon: true,
-    estimatedMinutes: 15,
-  },
 ];
 
-// CLINICAL SIMULATION
+// ============================================================================
+// CLINICAL SIMULATION - Interactive patient scenarios (6 modes = 2 rows)
+// ============================================================================
 export const CLINICAL_SIMULATION_MODES: TrainingModeConfig[] = [
   {
     id: 'fluid_electrolyte',
@@ -168,6 +152,26 @@ export const CLINICAL_SIMULATION_MODES: TrainingModeConfig[] = [
     iconName: 'Droplets',
     theme: 'cyan',
     route: 'fluid_electrolyte',
+    estimatedMinutes: 10,
+  },
+  {
+    id: 'mini_lab',
+    label: 'Lab Interpretation',
+    description: 'CBC, CMP, and specialty lab panels',
+    category: 'clinical_simulation',
+    iconName: 'FlaskConical',
+    theme: 'emerald',
+    route: 'mini_lab',
+    estimatedMinutes: 8,
+  },
+  {
+    id: 'ddx_compare',
+    label: 'DDx Compare',
+    description: 'Side-by-side differential diagnosis',
+    category: 'clinical_simulation',
+    iconName: 'GitCompare',
+    theme: 'blue',
+    route: 'ddx_compare',
     estimatedMinutes: 10,
   },
   {
@@ -182,16 +186,6 @@ export const CLINICAL_SIMULATION_MODES: TrainingModeConfig[] = [
     estimatedMinutes: 15,
   },
   {
-    id: 'ddx_compare',
-    label: 'DDx Compare',
-    description: 'Side-by-side differential diagnosis',
-    category: 'clinical_simulation',
-    iconName: 'GitCompare',
-    theme: 'blue',
-    route: 'ddx_compare',
-    estimatedMinutes: 10,
-  },
-  {
     id: 'polypharmacy_puzzle',
     label: 'Polypharmacy Puzzle',
     description: 'Geriatric deprescribing challenge',
@@ -203,40 +197,43 @@ export const CLINICAL_SIMULATION_MODES: TrainingModeConfig[] = [
     panreOnly: true,
     estimatedMinutes: 12,
   },
+  {
+    id: 'radiology_scroll',
+    label: 'Radiology Scroll',
+    description: 'Interactive CT/MRI slice viewing',
+    category: 'clinical_simulation',
+    iconName: 'Layers',
+    theme: 'slate',
+    route: 'radiology_scroll',
+    isComingSoon: true,
+    estimatedMinutes: 15,
+  },
 ];
 
-// QUESTION PRACTICE (including pharm/abx)
+// ============================================================================
+// QUESTION PRACTICE - Board-style Q&A (6 modes = 2 rows)
+// Includes: pharm, system drills, cram session
+// ============================================================================
 export const QUESTION_PRACTICE_MODES: TrainingModeConfig[] = [
   {
+    id: 'cram_mode',
+    label: 'Cram Session',
+    description: '50 highest-yield PANCE questions',
+    category: 'question_practice',
+    iconName: 'Clock',
+    theme: 'orange',
+    route: 'cram_mode',
+    estimatedMinutes: 30,
+  },
+  {
     id: 'pharmacology',
-    label: 'Pharmacology',
+    label: 'Pharmacology Quiz',
     description: 'Drug mechanisms, side effects, and interactions',
     category: 'question_practice',
     iconName: 'Beaker',
     theme: 'purple',
     route: 'pharmacology',
     estimatedMinutes: 10,
-  },
-  {
-    id: 'antibiotic_mode',
-    label: 'Bug-Drug Mastery',
-    description: 'Antibiotic selection by pathogen and resistance',
-    category: 'question_practice',
-    iconName: 'Pill',
-    theme: 'green',
-    route: 'antibiotic_mode',
-    estimatedMinutes: 8,
-  },
-  {
-    id: 'physiology_drill',
-    label: 'Physiology Review',
-    description: 'Organ system physiology and pathophysiology',
-    category: 'question_practice',
-    iconName: 'Heart',
-    theme: 'red',
-    route: 'physiology_drill',
-    isComingSoon: true,
-    estimatedMinutes: 12,
   },
   {
     id: 'system_drill',
@@ -268,9 +265,33 @@ export const QUESTION_PRACTICE_MODES: TrainingModeConfig[] = [
     route: 'condition_drill',
     estimatedMinutes: 10,
   },
+  {
+    id: 'physiology_drill',
+    label: 'Physiology Review',
+    description: 'Organ system physiology and pathophysiology',
+    category: 'question_practice',
+    iconName: 'Heart',
+    theme: 'red',
+    route: 'physiology_drill',
+    isComingSoon: true,
+    estimatedMinutes: 12,
+  },
+  {
+    id: 'anatomy_review',
+    label: 'Anatomy Review',
+    description: 'Regional anatomy and clinical correlations',
+    category: 'question_practice',
+    iconName: 'Bone',
+    theme: 'stone',
+    route: 'anatomy_review',
+    isComingSoon: true,
+    estimatedMinutes: 15,
+  },
 ];
 
-// SPECIALTY DRILLS (rapid recall, first-line, wordle, code blue, guideline, cram)
+// ============================================================================
+// SPECIALTY DRILLS - High-yield focused practice (6 modes = 2 rows)
+// ============================================================================
 export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
   {
     id: 'rapid_recall',
@@ -283,6 +304,16 @@ export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
     estimatedMinutes: 5,
   },
   {
+    id: 'antibiotic_mode',
+    label: 'Bug-Drug Mastery',
+    description: 'Antibiotic selection by pathogen and resistance',
+    category: 'specialty_drills',
+    iconName: 'Pill',
+    theme: 'green',
+    route: 'antibiotic_mode',
+    estimatedMinutes: 8,
+  },
+  {
     id: 'first_line_treatment',
     label: 'First-Line Treatments',
     description: 'What is the go-to treatment?',
@@ -290,6 +321,16 @@ export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
     iconName: 'Pill',
     theme: 'cyan',
     route: 'first_line_treatment',
+    estimatedMinutes: 8,
+  },
+  {
+    id: 'guideline_drill',
+    label: 'Clinical Guidelines',
+    description: 'Scoring systems & clinical criteria',
+    category: 'specialty_drills',
+    iconName: 'FileCheck',
+    theme: 'teal',
+    route: 'guideline_drill',
     estimatedMinutes: 8,
   },
   {
@@ -312,29 +353,11 @@ export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
     route: 'code_blue_speed',
     estimatedMinutes: 5,
   },
-  {
-    id: 'guideline_drill',
-    label: 'Clinical Guidelines',
-    description: 'Scoring systems & clinical criteria',
-    category: 'specialty_drills',
-    iconName: 'FileCheck',
-    theme: 'teal',
-    route: 'guideline_drill',
-    estimatedMinutes: 8,
-  },
-  {
-    id: 'cram_mode',
-    label: 'Cram Session',
-    description: '50 highest-yield questions',
-    category: 'specialty_drills',
-    iconName: 'Clock',
-    theme: 'orange',
-    route: 'cram_mode',
-    estimatedMinutes: 30,
-  },
 ];
 
+// ============================================================================
 // STANDALONE MODES
+// ============================================================================
 
 export const CORE_ADAPTIVE_MODE: TrainingModeConfig = {
   id: 'core_adaptive',
@@ -381,7 +404,10 @@ export const PANRE_LA_MODE: TrainingModeConfig = {
   estimatedMinutes: 25,
 };
 
+// ============================================================================
 // Combined registries
+// ============================================================================
+
 export const MODE_REGISTRY: TrainingModeConfig[] = [
   CORE_ADAPTIVE_MODE,
   ...VISUAL_DIAGNOSTICS_MODES,

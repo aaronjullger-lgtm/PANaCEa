@@ -10,11 +10,17 @@
  * Use for medical images (X-rays, CTs, dermoscopy) throughout the app.
  */
 
-import React, { useState, useRef, useEffect, ImgHTMLAttributes } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
 import { ImageOff, Loader2 } from 'lucide-react';
 
-export interface SmartImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'onLoad' | 'onError'> {
+// Only include props that don't conflict with framer-motion
+type SafeImgProps = Pick<
+  React.ImgHTMLAttributes<HTMLImageElement>,
+  'crossOrigin' | 'decoding' | 'height' | 'width' | 'referrerPolicy' | 'sizes' | 'srcSet' | 'useMap' | 'id' | 'title' | 'tabIndex' | 'role' | 'aria-label' | 'aria-describedby' | 'aria-hidden'
+>;
+
+export interface SmartImageProps extends SafeImgProps {
   /** Image source URL */
   src: string;
   /** Alt text for accessibility */
@@ -33,6 +39,8 @@ export interface SmartImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement
   onLoadError?: (error: Error) => void;
   /** Container className */
   containerClassName?: string;
+  /** Image className */
+  className?: string;
 }
 
 type LoadState = 'idle' | 'loading' | 'loaded' | 'error';

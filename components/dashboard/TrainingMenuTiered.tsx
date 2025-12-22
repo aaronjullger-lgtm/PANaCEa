@@ -87,6 +87,8 @@ const TIME_INVESTMENT_MAP: Record<TrainingModeId, TimeInvestment> = {
   'first_line_treatment': 'targeted',
   'pharmacology': 'targeted',
   'condition_drill': 'targeted',
+  'system_drill': 'targeted',
+  'subcategory_drill': 'targeted',
   'antibiotic_mode': 'targeted',
   'photo_drill': 'targeted',
   'grand_rounds': 'targeted',
@@ -98,7 +100,8 @@ const TIME_INVESTMENT_MAP: Record<TrainingModeId, TimeInvestment> = {
   'ventilator_hero': 'deep',
   'polypharmacy_puzzle': 'deep',
   'radiology_scroll': 'deep',
-  'commuter_mode': 'deep',
+  'physiology_drill': 'deep',
+  'anatomy_review': 'deep',
 };
 
 const TIME_TIER_CONFIG: Record<TimeInvestment, { label: string; description: string; timeRange: string; icon: LucideIcon; color: string }> = {

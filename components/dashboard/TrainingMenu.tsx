@@ -31,7 +31,7 @@ import {
   TrendingUp,
   ChevronRight,
 } from 'lucide-react';
-import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
+import { MODE_REGISTRY, TrainingModeConfig, TrainingModeId, TrainingCategory, MODES_WITH_DEDICATED_ROUTES } from '@/config/training-modes';
 
 /**
  * Icon mapping helper to map string names from the config to Lucide React components.
@@ -112,47 +112,37 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   const [activeSection, setActiveSection] = useState<string | null>(null);
   
   // Get the core adaptive mode from registry
-  const coreMode = MODE_REGISTRY.find((mode) => mode.category === 'core' && mode.id === 'core_adaptive');
+  const coreMode = MODE_REGISTRY.find((mode) => mode.id === 'core_adaptive');
 
-  // Filter out the core category and condition_drill (accessed via Condition Page) for the Bento grid
-  const HIDDEN_DRILL_MODES: TrainingModeId[] = ['condition_drill'];
-  const drillModes = MODE_REGISTRY.filter((mode) => mode.intentGroup !== 'core_adaptive' && !HIDDEN_DRILL_MODES.includes(mode.id));
+  // Filter out the core mode and condition_drill (accessed via Condition Page) for the Bento grid
+  const HIDDEN_DRILL_MODES: TrainingModeId[] = ['condition_drill', 'core_adaptive'];
+  const drillModes = MODE_REGISTRY.filter((mode) => !HIDDEN_DRILL_MODES.includes(mode.id));
 
-  // Intent-based sections for clearer navigation
-  const INTENT_SECTIONS: Array<{
-    key: TrainingModeConfig['intentGroup'];
+  // Category-based sections for clearer navigation (using TrainingCategory)
+  const CATEGORY_SECTIONS: Array<{
+    key: TrainingCategory;
     title: string;
     description: string;
   }> = [
-    {
-      key: 'clinical_reasoning',
-      title: 'Clinical Reasoning',
-      description: 'Differentials, scoring systems, and simulated encounters',
-    },
     {
       key: 'visual_diagnostics',
       title: 'Visual Diagnostics',
       description: 'ECG, derm, imaging, and lab pattern recognition',
     },
     {
-      key: 'high_yield_recall',
-      title: 'High-Yield Recall',
-      description: 'Rapid recall, pharmacology, and treatment-first thinking',
+      key: 'clinical_simulation',
+      title: 'Clinical Simulation',
+      description: 'Interactive patient scenarios and management',
     },
     {
-      key: 'mastery_competition',
-      title: 'Mastery & Competition',
-      description: 'Longitudinal assessments and daily challenges',
+      key: 'question_practice',
+      title: 'Question Practice',
+      description: 'Board-style questions with explanations',
     },
     {
-      key: 'fun_and_games',
-      title: 'Fun & Games',
-      description: 'Daily games and speed challenges',
-    },
-    {
-      key: 'clinical_operations',
-      title: 'Clinical Operations',
-      description: 'Fluid management, antibiotics, and procedures',
+      key: 'specialty_drills',
+      title: 'Specialty Drills',
+      description: 'Focused high-yield practice',
     },
   ];
 
@@ -561,8 +551,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
   /**
    * Render a grouped section with standardized 3-column grid
    */
-  const renderSection = (key: TrainingModeConfig['intentGroup'], title: string, description: string) => {
-    const modes = filteredModes.filter((mode) => mode.intentGroup === key);
+  const renderSection = (key: TrainingCategory, title: string, description: string) => {
+    const modes = filteredModes.filter((mode) => mode.category === key);
     if (modes.length === 0) return null;
 
     return (
@@ -599,7 +589,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
           <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3 px-2">
             Categories
           </h3>
-          {INTENT_SECTIONS.map((section) => (
+          {CATEGORY_SECTIONS.map((section) => (
             <button
               key={section.key}
               onClick={() => scrollToSection(section.key)}
@@ -669,7 +659,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
 
         {/* Intent-Based Sections */}
         <div className="space-y-8">
-          {INTENT_SECTIONS.map((section) =>
+          {CATEGORY_SECTIONS.map((section) =>
             renderSection(section.key, section.title, section.description)
           )}
         </div>

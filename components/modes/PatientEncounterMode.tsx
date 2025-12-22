@@ -68,6 +68,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [languageMode, setLanguageMode] = useState<SpanishMode>('english');
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   // Feedback
   const [diagnosisFeedback, setDiagnosisFeedback] = useState<{ isCorrect: boolean; feedback: string; score: number } | null>(null);
@@ -203,6 +204,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
   const handleStartEncounter = async () => {
     setIsLoading(true);
+    setLoadError(null);
     
     // Use dynamic generation to ensure fresh content each time (backend OSCE case)
     const newCase = await getRandomEncounterCase();
@@ -210,7 +212,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     if (!newCase) {
       console.error("Failed to load case");
       setIsLoading(false);
-      // Ideally show a toast or error message here
+      setLoadError("Unable to load patient case. Please ensure the backend server is running (npm run dev:all) and try again.");
       return;
     }
     
@@ -672,7 +674,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
 
             {/* Start Button */}
-            <div className="text-center">
+            <div className="text-center space-y-4">
               <motion.button
                 onClick={handleStartEncounter}
                 disabled={isLoading}
@@ -694,6 +696,23 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                   </>
                 )}
               </motion.button>
+              
+              {/* Error Message */}
+              {loadError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="max-w-md mx-auto p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl"
+                >
+                  <p className="text-sm text-red-700 dark:text-red-300">{loadError}</p>
+                  <button
+                    onClick={() => setLoadError(null)}
+                    className="mt-2 text-xs text-red-600 dark:text-red-400 hover:underline"
+                  >
+                    Dismiss
+                  </button>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         </div>

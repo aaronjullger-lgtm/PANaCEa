@@ -16,13 +16,22 @@ export interface OSCESession {
 }
 
 /**
+ * Helper to check if response is JSON and parse it
+ */
+async function parseJsonResponse(response: Response): Promise<any | null> {
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    console.error('Response is not JSON. Backend server may not be running.');
+    return null;
+  }
+  return response.json();
+}
+
+/**
  * Fetch a random patient encounter case
  */
 export async function getRandomEncounterCase(): Promise<any | null> {
   try {
-    // Note: Auth is handled by Clerk middleware/interceptor if configured, 
-    // or we might need to pass the token explicitly if not using cookies.
-    // Assuming standard fetch for now as per existing patterns.
     const response = await fetch('/api/osce/cases/random');
     
     if (!response.ok) {
@@ -30,7 +39,7 @@ export async function getRandomEncounterCase(): Promise<any | null> {
       return null;
     }
     
-    return await response.json();
+    return await parseJsonResponse(response);
   } catch (error) {
     console.error('Error fetching random case:', error);
     return null;
@@ -50,8 +59,8 @@ export async function startOSCESession(caseId: string): Promise<OSCESession | nu
     
     if (!response.ok) return null;
     
-    const data = await response.json();
-    return data.session;
+    const data = await parseJsonResponse(response);
+    return data?.session ?? null;
   } catch (error) {
     console.error('Error starting OSCE session:', error);
     return null;

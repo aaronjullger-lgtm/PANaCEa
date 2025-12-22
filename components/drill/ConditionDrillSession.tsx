@@ -88,9 +88,9 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
   };
 
   // =========================================================================
-  // MENU VIEW
+  // MENU VIEW (landing or menu status)
   // =========================================================================
-  if (status === 'menu') {
+  if (status === 'menu' || status === 'landing') {
     return (
       <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col">
         {/* Header */}

@@ -1,11 +1,12 @@
 /**
  * Cram Mode Component
  * 
- * High-yield rapid review mode featuring the 50 most important PANCE concepts.
+ * High-yield rapid review mode featuring the 50 most important PANCE conditions.
+ * Generates PANCE-style clinical vignette questions using AI.
  * Optimized for last-minute review and quick knowledge reinforcement.
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Clock, 
@@ -17,10 +18,12 @@ import {
   Zap,
   BookOpen,
   Target,
-  Loader2
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
-import { buzzwordService } from '../../services/buzzwordService';
-import type { BuzzwordEntry } from '../../src/types';
+import { TOP_50_HIGH_YIELD_CONDITIONS, getRandomHighYield, type HighYieldCondition } from '../../data/highYieldConditions';
+import { callGeminiText } from '../../services/geminiService';
+import { GEMINI_FLASH_MODEL } from '../../constants';
 import type { SystemCode } from '../../types';
 
 interface CramModeProps {
@@ -29,99 +32,133 @@ interface CramModeProps {
 
 interface CramQuestion {
   id: string;
-  buzzword: string;
-  condition: string;
-  system: SystemCode;
-  explanation: string;
+  vignette: string;
+  question: string;
   options: string[];
   correctIndex: number;
+  explanation: string;
+  condition: string;
+  system: SystemCode;
+  pearl: string;
 }
 
 /**
- * Select 50 highest-yield buzzwords across all systems
- * Prioritized based on PANCE frequency and clinical importance
+ * Generate a PANCE-style vignette question for a condition
  */
-const selectHighYieldBuzzwords = (allBuzzwords: BuzzwordEntry[]): BuzzwordEntry[] => {
-  // Priority topics based on PANCE blueprint
-  const prioritySystems: Record<string, number> = {
-    'CV': 11,      // 11% of exam
-    'PULM': 9,     // 9% of exam
-    'GI': 8,       // 8% of exam
-    'MSK': 8,      // 8% of exam
-    'ID': 7,       // 7% of exam
-    'NEURO': 7,    // 7% of exam
-    'PSYCH': 7,    // 7% of exam
-    'REPRO': 7,    // 7% of exam
-    'ENDO': 6,     // 6% of exam
-    'HEENT': 6,    // 6% of exam
-    'PRO': 6,      // 6% of exam
-    'HEME': 5,     // 5% of exam
-    'RENAL': 5,    // 5% of exam
-    'DERM': 4,     // 4% of exam
-    'GU': 4,       // 4% of exam
-  };
-
-  // Calculate number of questions per system
-  const questionsPerSystem: Record<string, number> = {} as any;
-  let total = 0;
-  Object.entries(prioritySystems).forEach(([system, percentage]) => {
-    const count = Math.round((percentage / 100) * 50);
-    questionsPerSystem[system] = count;
-    total += count;
-  });
-
-  // Adjust to exactly 50 if rounding caused issues
-  if (total < 50) {
-    questionsPerSystem['CV'] += (50 - total);
-  }
-
-  // Select buzzwords proportionally by system
-  const selected: BuzzwordEntry[] = [];
-  Object.entries(questionsPerSystem).forEach(([system, count]) => {
-    const systemBuzzwords = allBuzzwords.filter(b => b.system === system);
-    const shuffled = [...systemBuzzwords].sort(() => Math.random() - 0.5);
-    selected.push(...shuffled.slice(0, count));
-  });
-
-  // Shuffle the final list
-  return selected.sort(() => Math.random() - 0.5).slice(0, 50);
-};
-
-/**
- * Generate distractor options for multiple choice
- */
-const generateOptions = (correct: string, allBuzzwords: BuzzwordEntry[]): string[] => {
-  const distractors = allBuzzwords
-    .filter(b => b.condition !== correct)
-    .map(b => b.condition)
+async function generateVignetteQuestion(
+  condition: HighYieldCondition,
+  allConditions: HighYieldCondition[],
+  index: number
+): Promise<CramQuestion> {
+  // Generate distractors from same or related systems
+  const distractors = allConditions
+    .filter(c => c.condition !== condition.condition)
     .sort(() => Math.random() - 0.5)
-    .slice(0, 3);
-  
-  const options = [...distractors, correct];
-  return options.sort(() => Math.random() - 0.5);
-};
+    .slice(0, 3)
+    .map(c => c.condition);
 
-/**
- * Convert buzzword entries to cram questions
- */
-const createCramQuestions = (buzzwords: BuzzwordEntry[], allBuzzwords: BuzzwordEntry[]): CramQuestion[] => {
-  return buzzwords.map((entry, index) => {
-    const options = generateOptions(entry.condition, allBuzzwords);
+  const allOptions = [condition.condition, ...distractors].sort(() => Math.random() - 0.5);
+  const correctIndex = allOptions.indexOf(condition.condition);
+
+  const prompt = `Generate a PANCE-style clinical vignette question for: ${condition.condition}
+
+KEY CLINICAL FEATURES to incorporate:
+- Buzzwords: ${condition.buzzwords.join(', ')}
+- Pearl: ${condition.pearl}
+
+REQUIREMENTS:
+1. Create a realistic patient scenario (age, gender, chief complaint, relevant history)
+2. Include 2-3 key clinical findings from the buzzwords
+3. Ask "What is the most likely diagnosis?" or similar diagnostic question
+4. Keep the vignette to 3-4 sentences
+5. Provide a clear, educational explanation (2-3 sentences)
+
+FORMAT YOUR RESPONSE AS VALID JSON:
+{
+  "vignette": "A [age]-year-old [gender] presents with...",
+  "question": "What is the most likely diagnosis?",
+  "explanation": "This presentation is classic for [condition] because..."
+}
+
+IMPORTANT: Return ONLY valid JSON, no markdown or code blocks.`;
+
+  try {
+    const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.7);
+    
+    // Clean response - remove markdown code blocks if present
+    let cleanedResponse = response.trim();
+    if (cleanedResponse.startsWith('```json')) {
+      cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (cleanedResponse.startsWith('```')) {
+      cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+
+    const parsed = JSON.parse(cleanedResponse);
+
     return {
       id: `cram-${index}`,
-      buzzword: entry.buzzword,
-      condition: entry.condition,
-      system: entry.system,
-      explanation: entry.explanation || `Key finding associated with ${entry.condition}`,
-      options,
-      correctIndex: options.indexOf(entry.condition),
+      vignette: parsed.vignette || `Patient presents with ${condition.buzzwords[0]}`,
+      question: parsed.question || "What is the most likely diagnosis?",
+      options: allOptions,
+      correctIndex,
+      explanation: parsed.explanation || condition.pearl,
+      condition: condition.condition,
+      system: condition.system,
+      pearl: condition.pearl
     };
-  });
-};
+  } catch (error) {
+    console.error(`Failed to generate question for ${condition.condition}:`, error);
+    
+    // Fallback to a simple question if AI generation fails
+    return {
+      id: `cram-${index}`,
+      vignette: `A patient presents with ${condition.buzzwords.slice(0, 2).join(' and ')}.`,
+      question: "What is the most likely diagnosis?",
+      options: allOptions,
+      correctIndex,
+      explanation: condition.pearl,
+      condition: condition.condition,
+      system: condition.system,
+      pearl: condition.pearl
+    };
+  }
+}
+
+/**
+ * Generate questions in batches with rate limiting
+ */
+async function generateQuestionBatch(
+  conditions: HighYieldCondition[],
+  batchSize: number = 5,
+  onProgress?: (completed: number, total: number) => void
+): Promise<CramQuestion[]> {
+  const questions: CramQuestion[] = [];
+  
+  for (let i = 0; i < conditions.length; i += batchSize) {
+    const batch = conditions.slice(i, i + batchSize);
+    const batchPromises = batch.map((condition, idx) => 
+      generateVignetteQuestion(condition, conditions, i + idx)
+    );
+    
+    const batchResults = await Promise.all(batchPromises);
+    questions.push(...batchResults);
+    
+    onProgress?.(Math.min(i + batchSize, conditions.length), conditions.length);
+    
+    // Small delay between batches to avoid rate limiting
+    if (i + batchSize < conditions.length) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+  
+  return questions;
+}
 
 export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   const [questions, setQuestions] = useState<CramQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState({ completed: 0, total: 50 });
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -134,12 +171,21 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const allBuzzwords = await buzzwordService.getAllBuzzwords();
-        const highYieldBuzzwords = selectHighYieldBuzzwords(allBuzzwords);
-        const cramQuestions = createCramQuestions(highYieldBuzzwords, allBuzzwords);
-        setQuestions(cramQuestions);
+        setLoadError(null);
+        const selectedConditions = getRandomHighYield(50);
+        
+        const generatedQuestions = await generateQuestionBatch(
+          selectedConditions,
+          5,
+          (completed, total) => setLoadingProgress({ completed, total })
+        );
+        
+        // Shuffle the final questions
+        const shuffled = generatedQuestions.sort(() => Math.random() - 0.5);
+        setQuestions(shuffled);
       } catch (error) {
-        console.error("Failed to load buzzwords", error);
+        console.error("Failed to generate questions:", error);
+        setLoadError("Failed to generate questions. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -194,9 +240,54 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading high-yield buzzwords...</p>
+        <div className="text-center max-w-md mx-auto p-8">
+          <Loader2 className="w-12 h-12 animate-spin text-orange-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Generating PANCE Questions
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Creating clinical vignettes for the Top 50 High-Yield Conditions...
+          </p>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+            <div 
+              className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${(loadingProgress.completed / loadingProgress.total) * 100}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            {loadingProgress.completed} / {loadingProgress.total} questions
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center max-w-md mx-auto p-8">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+            Failed to Load
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {loadError}
+          </p>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={handleRestart}
+              className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition-colors"
+            >
+              <RotateCcw className="w-5 h-5" />
+              Try Again
+            </button>
+            <button
+              onClick={onExit}
+              className="flex items-center gap-2 px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-xl font-semibold transition-colors"
+            >
+              Exit
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -294,10 +385,10 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                  Cram Mode
+                  Cram Session
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  50 High-Yield PANCE Concepts
+                  Top 50 High-Yield PANCE Questions
                 </p>
               </div>
             </div>
@@ -347,20 +438,17 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
               </span>
             </div>
 
-            {/* Buzzword/Clinical Finding */}
-            <div className="mb-8">
-              <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wide">
-                Clinical Finding:
-              </h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white leading-relaxed">
-                "{currentQuestion.buzzword}"
+            {/* Clinical Vignette */}
+            <div className="mb-6">
+              <p className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed">
+                {currentQuestion.vignette}
               </p>
             </div>
 
             {/* Question */}
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Which condition is most commonly associated with this finding?
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                {currentQuestion.question}
               </h3>
             </div>
 
@@ -413,15 +501,27 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800"
+                  className="mt-6 space-y-4"
                 >
-                  <h4 className="font-bold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
-                    <BookOpen className="w-5 h-5" />
-                    Explanation
-                  </h4>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {currentQuestion.explanation}
-                  </p>
+                  <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <h4 className="font-bold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+                      <BookOpen className="w-5 h-5" />
+                      Explanation
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {currentQuestion.explanation}
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                    <h4 className="font-bold text-amber-900 dark:text-amber-300 mb-2 flex items-center gap-2">
+                      <Target className="w-5 h-5" />
+                      High-Yield Pearl
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                      {currentQuestion.pearl}
+                    </p>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

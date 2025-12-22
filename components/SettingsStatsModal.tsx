@@ -1285,6 +1285,72 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 {/* Accessibility - Commuter/Voice Mode */}
                 <AccessibilitySettings />
 
+                {/* Keyboard Shortcuts */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
+                  <div className="mb-3">
+                    <h3 className="font-medium text-[var(--color-text-primary)]">Keyboard Shortcuts</h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      Use these shortcuts to navigate faster during quizzes and study sessions.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Quiz Shortcuts */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Quiz Mode</h4>
+                      <div className="space-y-1">
+                        {[
+                          { keys: ['A'], description: 'Select answer option A' },
+                          { keys: ['B'], description: 'Select answer option B' },
+                          { keys: ['C'], description: 'Select answer option C' },
+                          { keys: ['D'], description: 'Select answer option D' },
+                          { keys: ['Space'], description: 'Toggle explanation after selection' },
+                          { keys: ['Enter'], description: 'Proceed to next question' },
+                          { keys: ['Esc'], description: 'Return to dashboard' },
+                        ].map((shortcut, idx) => (
+                          <div key={idx} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--color-bg-primary)] transition-colors">
+                            <span className="text-sm text-[var(--color-text-secondary)]">{shortcut.description}</span>
+                            <div className="flex items-center gap-1">
+                              {shortcut.keys.map((key, keyIdx) => (
+                                <kbd key={keyIdx} className="px-2 py-0.5 text-xs font-mono font-semibold bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-md min-w-[28px] text-center">
+                                  {key}
+                                </kbd>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* General Shortcuts */}
+                    <div>
+                      <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">General</h4>
+                      <div className="space-y-1">
+                        {[
+                          { keys: ['⌘/Ctrl', 'K'], description: 'Open command palette (quick navigation)' },
+                          { keys: ['⌘/Ctrl', '/'], description: 'Open keyboard shortcuts' },
+                        ].map((shortcut, idx) => (
+                          <div key={idx} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-[var(--color-bg-primary)] transition-colors">
+                            <span className="text-sm text-[var(--color-text-secondary)]">{shortcut.description}</span>
+                            <div className="flex items-center gap-1">
+                              {shortcut.keys.map((key, keyIdx) => (
+                                <React.Fragment key={keyIdx}>
+                                  <kbd className="px-2 py-0.5 text-xs font-mono font-semibold bg-[var(--color-bg-primary)] text-[var(--color-text-secondary)] border border-[var(--color-border)] rounded-md min-w-[28px] text-center">
+                                    {key}
+                                  </kbd>
+                                  {keyIdx < shortcut.keys.length - 1 && (
+                                    <span className="text-[var(--color-text-muted)] text-xs">+</span>
+                                  )}
+                                </React.Fragment>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Clinical Fidelity Mode */}
                 <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4">
                   <div className="mb-3">

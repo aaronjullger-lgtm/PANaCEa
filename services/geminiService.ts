@@ -307,6 +307,31 @@ export async function fetchNewQuestion(
 ): Promise<Question> {
   const { focus, difficulty } = settings;
 
+  // Get user context for career-aware prompting
+  let userContextInstruction = "";
+  try {
+    const { getUserContext } = await import('./userContextService');
+    const userContext = getUserContext();
+    
+    if (userContext.isPANREUser) {
+      userContextInstruction = `
+Context: This question is for a PRACTICING PA preparing for PANRE recertification.
+- Assume baseline clinical competency and familiarity with common presentations.
+- Focus on nuanced clinical decision-making, complex patient scenarios, and current guideline updates.
+- Include scenarios with multiple comorbidities where appropriate.
+- Test clinical reasoning and management more than basic recognition.`;
+    } else {
+      userContextInstruction = `
+Context: This question is for a PA STUDENT preparing for the initial PANCE certification exam.
+- Focus on building foundational knowledge and recognition of classic presentations.
+- Emphasize first-order clinical reasoning (diagnosis, classic findings, first-line treatments).
+- Use clear, textbook presentations for "easier" difficulty, and standard PANCE complexity for "same" difficulty.`;
+    }
+  } catch (e) {
+    // If userContextService fails, continue without context adjustment
+    console.warn('[geminiService] Could not load user context, continuing without context-aware prompting');
+  }
+
   let detailedDifficultyInstruction = "";
   switch (difficulty) {
     case "easier":
@@ -407,6 +432,7 @@ export async function fetchNewQuestion(
     if (contentTopicAbbr === "PRO") {
       // Professional Practice special handling (no condition registry)
       prompt = `You are generating a structured JSON object for a PANCE practice question.
+${userContextInstruction}
 
 Generate one new, unique, PANCE-style multiple-choice question on the topic of "Professional Practice".
 
@@ -453,6 +479,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
       const topicFieldInstruction = `The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".`;
 
       prompt = `You are generating a structured JSON object for a PANCE practice question.
+${userContextInstruction}
 
 ${conditionContext}
 
@@ -542,6 +569,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
   }
     
     prompt = `You are generating a structured JSON object for a PANCE practice question.
+${userContextInstruction}
 
 Generate one new, unique, PANCE-style multiple-choice question.
 

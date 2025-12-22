@@ -84,6 +84,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
           },
         });
 
+        // Check if response is actually JSON (backend might not be running)
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Backend server not available. Please ensure the server is running (npm run dev:all).');
+        }
+
         if (!response.ok) {
           throw new Error('Failed to fetch challenge');
         }

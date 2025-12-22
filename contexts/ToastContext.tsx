@@ -39,6 +39,8 @@ interface ToastContextType {
   error: (message: string, duration?: number) => string;
   warning: (message: string, duration?: number) => string;
   info: (message: string, duration?: number) => string;
+  // Legacy method for backward compatibility
+  showToast: (options: { type?: 'success' | 'error' | 'warning' | 'info'; message: string; duration?: number }) => string;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -119,6 +121,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     return addToast({ message, variant: 'info', duration });
   }, [addToast]);
 
+  // Legacy showToast method for backward compatibility
+  const showToast = useCallback((
+    options: { type?: 'success' | 'error' | 'warning' | 'info'; message: string; duration?: number }
+  ) => {
+    const variant = options.type || 'info';
+    return addToast({ message: options.message, variant, duration: options.duration });
+  }, [addToast]);
+
   const value: ToastContextType = {
     toasts,
     addToast,
@@ -128,6 +138,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     error,
     warning,
     info,
+    showToast,
   };
 
   return (

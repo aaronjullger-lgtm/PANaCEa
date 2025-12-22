@@ -182,7 +182,7 @@ export function DrillLandingPage({
         {/* Header */}
         <div className={`rounded-2xl p-8 border ${colors.border} ${colors.bg} mb-6`}>
           <div className="flex items-center gap-4 mb-4">
-            <div className={`p-4 rounded-xl ${colors.text} bg-white dark:bg-slate-800`}>
+            <div className={`p-4 rounded-xl ${colors.text} bg-[var(--color-bg-tertiary)]`}>
               <Icon className="w-12 h-12" />
             </div>
             <div className="flex-1">
