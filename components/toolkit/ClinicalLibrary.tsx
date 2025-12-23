@@ -4,6 +4,7 @@ import { BookOpen, ChevronRight, Filter, Pill, Search, Stethoscope, Activity, Al
 import type { ClinicalBrowsePayload, ClinicalSystem, ClinicalCategory, ClinicalCondition } from '@/services/clinicalBrowserService';
 import { fetchClinicalBrowse, BackendUnavailableError, AuthenticationError } from '@/services/clinicalBrowserService';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+import { MedicalContentRenderer } from './MedicalContentRenderer';
 
 interface ClinicalLibraryProps {
   onSelectCondition?: (conditionId: string) => void;
@@ -16,6 +17,9 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
   const [activeSystem, setActiveSystem] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedCondition, setSelectedCondition] = useState<ClinicalCondition | null>(null);
+  const [medicalContent, setMedicalContent] = useState<any>(null);
+  const [contentLoading, setContentLoading] = useState(false);
+  const [contentError, setContentError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +58,47 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
   useEffect(() => {
     loadData();
   }, []);
+
+  // Fetch detailed medical content from database when a condition is selected
+  useEffect(() => {
+    if (!selectedCondition) {
+      setMedicalContent(null);
+      setContentError(null);
+      return;
+    }
+
+    const fetchMedicalContent = async () => {
+      setContentLoading(true);
+      setContentError(null);
+
+      try {
+        const response = await fetch(`/api/content/${selectedCondition.conditionId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch content: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setMedicalContent(data);
+      } catch (err) {
+        console.error('Error fetching medical content:', err);
+        setContentError(err instanceof Error ? err.message : 'Failed to load clinical content');
+        // Set basic content from registry as fallback
+        setMedicalContent({
+          id: selectedCondition.id,
+          condition: selectedCondition.name,
+          system: selectedCondition.system,
+          subcategory: selectedCondition.subcategory,
+          overview: selectedCondition.overview,
+          buzzwords: selectedCondition.buzzwords,
+        });
+      } finally {
+        setContentLoading(false);
+      }
+    };
+
+    fetchMedicalContent();
+  }, [selectedCondition]);
 
   const filteredSystems: ClinicalSystem[] = useMemo(() => {
     if (!data) return [];
@@ -270,53 +315,42 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
                       <ArrowLeft className="w-4 h-4" />
                       Back to list
                     </button>
-                    <div>
-                      <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{selectedCondition.name}</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{selectedCondition.subcategory} • {selectedCondition.system}</p>
-                    </div>
                   </div>
 
-                  {/* Placeholder Content Area */}
-                  <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-                    <div className="space-y-4">
-                      {/* Overview Section */}
-                      {selectedCondition.overview && (
-                        <div>
-                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Overview</h4>
-                          <p className="text-slate-700 dark:text-slate-300">{selectedCondition.overview}</p>
-                        </div>
-                      )}
-
-                      {/* Buzzwords */}
-                      {selectedCondition.buzzwords && selectedCondition.buzzwords.length > 0 && (
-                        <div>
-                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">Key Features</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {selectedCondition.buzzwords.map((buzz) => (
-                              <span key={buzz} className="px-3 py-1 text-sm rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300">
-                                {buzz}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Action Button */}
-                      {onSelectCondition && (
-                        <button
-                          onClick={() => onSelectCondition(selectedCondition.conditionId)}
-                          className="w-full p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all"
-                        >
-                          View Full Details
-                        </button>
-                      )}
-
-                      {/* Placeholder for future dedicated renderer */}
-                      <div className="text-xs text-slate-400 dark:text-slate-500 italic text-center pt-2">
-                        Detailed content renderer coming soon
+                  {/* Error State */}
+                  {contentError && (
+                    <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20">
+                      <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="text-sm">{contentError}</span>
                       </div>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Showing basic information from registry</p>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Medical Content Renderer */}
+                  <MedicalContentRenderer 
+                    content={medicalContent || {
+                      id: selectedCondition.id,
+                      condition: selectedCondition.name,
+                      system: selectedCondition.system,
+                      subcategory: selectedCondition.subcategory,
+                      overview: selectedCondition.overview,
+                      buzzwords: selectedCondition.buzzwords,
+                    }}
+                    loading={contentLoading}
+                  />
+
+                  {/* Action Button */}
+                  {onSelectCondition && !contentLoading && (
+                    <button
+                      onClick={() => onSelectCondition(selectedCondition.conditionId)}
+                      className="w-full p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all flex items-center justify-center gap-2"
+                    >
+                      <BookOpen className="w-5 h-5" />
+                      View Full Details in Modal
+                    </button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

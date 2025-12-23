@@ -237,7 +237,17 @@ model SavedQuestion {
 model Condition {
   id        String   @id @default(uuid())
   name      String
-  system    String // Organ system (e.g., "cardiovascular", "respiratory")
+  system    String // Organ system (e.g., "CV", "PULM", "GI")
+  
+  /// Subcategory within system (e.g., "Arrhythmias", "Valvular")
+  subcategory String?
+  
+  /// Cross-system tagging for conditions that span multiple systems
+  /// e.g., SLE appears in Rheumatology, Derm, Renal
+  relatedSystems String[] @default([])
+  
+  /// Status for visibility in UI
+  status    String   @default("published") // draft, published, archived
   
   /// Parent-child relationships for condition variants
   parentId  String?  // Reference to parent condition (null if this is a parent)
@@ -250,7 +260,7 @@ model Condition {
   /// Alternative names and aliases for search
   aliases   String[] @default([])
   
-  /// Content sections (as JSONB)
+  /// Content sections (as JSONB) - for inline content
   content   Json?    // Pathophysiology, Clinical Presentation, Diagnosis, Management, Pearls
   
   createdAt DateTime @default(now())
@@ -269,6 +279,8 @@ model Condition {
   @@index([name])
   @@index([parentId])
   @@index([displayName])
+  @@index([status])
+  @@index([subcategory])
 }
 
 /// Represents an anatomical structure relevant to medical conditions
@@ -537,30 +549,75 @@ model MedicalContent {
   subcategory String
   condition   String
 
-  /// NEW: Array for cross-system tagging (e.g., ["DERM", "HEENT"])
-  /// Enables conditions like Sarcoidosis to appear in multiple system quizzes
+  /// Cross-system tagging (e.g., ["DERM", "HEENT"])
   relatedSystems String[] @default([])
 
-  /// Content sections stored as specific columns for better organization
+  // =========================================================================
+  // DEEP DIVE CONTENT (Markdown text for prose rendering)
+  // =========================================================================
   overview              String?   @db.Text
   etiology              String?   @db.Text
   pathophysiology       String?   @db.Text
   epidemiology          String?   @db.Text
-  symptoms              String[]  @default([])
-  physicalExam          String[]  @default([])
-  diagnostics           Json?     // Complex object or array
-  treatment             Json?     // Complex object or array
+  symptoms              String?   @db.Text // Markdown list
+  physicalExam          String?   @db.Text // Markdown list
+  diagnostics           String?   @db.Text // Comprehensive diagnostic approach
+  treatment             String?   @db.Text // Markdown list
   prognosis             String?   @db.Text
-  differentialDiagnosis String[]  @default([])
-  riskFactors           String[]  @default([])
-  complications         String[]  @default([])
-  buzzwords             String[]  @default([])
+  differentialDiagnosis String?   @db.Text // Markdown list
+  riskFactors           String?   @db.Text // Markdown list
+  complications         String?   @db.Text // Markdown list
 
-  /// Workflow state machine
+  // =========================================================================
+  // HIGH-YIELD METADATA (Badge-style quick reference)
+  // =========================================================================
+  buzzwords             String[]  @default([])
+  classic_triad         Json?     // ["Fever", "Murmur", "Osler Nodes"]
+  clinical_pearls       Json?     // Full sentences with actionable advice
+  gold_standard_dx      String?   @db.Text // Concise badge (< 8 words)
+  first_line_rx         String?   @db.Text // Concise badge (< 8 words)
+  best_initial_test     String?   @db.Text // Screening test done FIRST
+
+  // =========================================================================
+  // PHARMACOLOGY CONTEXT (For the First-Line Rx)
+  // =========================================================================
+  rx_mechanism          String?   @db.Text // MOA of first-line treatment
+  rx_side_effects       String?   @db.Text // Top testable side effects
+
+  // =========================================================================
+  // VIGNETTE & SEARCH (Board-style recognition)
+  // =========================================================================
+  classic_patient       String?   @db.Text // "Fat, Forty, Female, Fertile"
+  synonyms              Json?     // ["GCA", "Temporal Arteritis", "Horton Disease"]
+  mnemonic              String?   @db.Text // "SAD for Aortic Stenosis"
+
+  // =========================================================================
+  // STRUCTURED DIFFERENTIALS (For comparison tables)
+  // =========================================================================
+  differentials         Json?     // [{ condition: "X", rule_out: "Y" }]
+
+  // =========================================================================
+  // CLINICAL MANAGEMENT & COUNSELING
+  // =========================================================================
+  patient_education     String?   @db.Text // Key counseling points
+  disposition           String?   @db.Text // Admission criteria, referrals
+  prevention            String?   @db.Text // Screening guidelines (USPSTF)
+  guidelines            String?   @db.Text // "2023 ACR Guidelines"
+
+  // =========================================================================
+  // DEMOGRAPHICS & STUDY PRIORITIZATION
+  // =========================================================================
+  age_demographic       Json?     // ["Child", "Adult", "Elderly"]
+  gender_bias           String?   // "Female > Male"
+  pance_yield           Int?      // 1=Low, 2=Medium, 3=High
+  image_query           String?   // Search term for clinical images
+
+  // =========================================================================
+  // WORKFLOW & METADATA
+  // =========================================================================
   status  String @default("draft") // draft, pending_review, approved, published, archived
   version Int    @default(1)
 
-  /// Timestamps and attribution
   createdAt   DateTime  @default(now())
   createdBy   String // User ID
   updatedAt   DateTime  @updatedAt
@@ -571,12 +628,12 @@ model MedicalContent {
   approvedBy  String?
 
   /// Relations
-  versions  ContentVersion[]
-  auditLogs ContentAuditLog[]
+  versions       ContentVersion[]
+  auditLogs      ContentAuditLog[]
 
   @@index([conditionId])
   @@index([system])
-  @@index([relatedSystems]) // NEW: Index for efficient multi-system queries
+  @@index([relatedSystems])
   @@index([status])
   @@index([createdBy])
   @@index([updatedAt])

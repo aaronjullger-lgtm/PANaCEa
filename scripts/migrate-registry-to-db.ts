@@ -1,0 +1,133 @@
+/**
+ * scripts/migrate-registry-to-db.ts
+ * 
+ * One-time migration script to move conditionRegistry.ts entries to the Condition table.
+ * This enables dynamic content generation and CMS management.
+ * 
+ * Usage: npx ts-node scripts/migrate-registry-to-db.ts
+ */
+
+import { PrismaClient } from '@prisma/client';
+import { CONDITION_REGISTRY } from '../conditionRegistry.ts';
+
+const prisma = new PrismaClient();
+
+/**
+ * Generate a stable ID from condition metadata
+ * Format: SYSTEM__subcategory__condition_name (snake_case)
+ */
+function generateConditionId(system: string, subcategory: string, conditionName: string): string {
+  const sanitize = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+  return `${system}__${sanitize(subcategory)}__${sanitize(conditionName)}`;
+}
+
+async function migrateRegistry() {
+  console.log('🚀 Starting condition registry migration...\n');
+
+  let created = 0;
+  let updated = 0;
+  let skipped = 0;
+  let errors = 0;
+
+  const systemCounts: Record<string, number> = {};
+
+  for (const condition of CONDITION_REGISTRY) {
+    try {
+      // Generate stable ID
+      const conditionId = generateConditionId(
+        condition.system,
+        condition.subcategory,
+        condition.condition
+      );
+
+      // Track system counts
+      systemCounts[condition.system] = (systemCounts[condition.system] || 0) + 1;
+
+      // Upsert condition into database
+      const result = await prisma.condition.upsert({
+        where: { id: conditionId },
+        create: {
+          id: conditionId,
+          name: condition.condition,
+          system: condition.system,
+          subcategory: condition.subcategory,
+          relatedSystems: condition.relatedSystems || [],
+          aliases: condition.aliases || [],
+          displayName: condition.condition.replace(/\s*\([^)]*\)/g, '').trim(),
+          status: 'published',
+          content: {
+            overview: condition.overview || null,
+            keyPoints: condition.keyPoints || [],
+            redFlags: condition.redFlags || [],
+            treatmentPearls: condition.treatmentPearls || [],
+          },
+        },
+        update: {
+          name: condition.condition,
+          system: condition.system,
+          subcategory: condition.subcategory,
+          relatedSystems: condition.relatedSystems || [],
+          aliases: condition.aliases || [],
+          displayName: condition.condition.replace(/\s*\([^)]*\)/g, '').trim(),
+          content: {
+            overview: condition.overview || null,
+            keyPoints: condition.keyPoints || [],
+            redFlags: condition.redFlags || [],
+            treatmentPearls: condition.treatmentPearls || [],
+          },
+        },
+      });
+
+      // Check if created or updated
+      const isNew = result.createdAt.getTime() === result.updatedAt.getTime();
+      if (isNew) {
+        created++;
+        console.log(`  ✅ Created: ${condition.condition} (${condition.system})`);
+      } else {
+        updated++;
+        console.log(`  🔄 Updated: ${condition.condition} (${condition.system})`);
+      }
+    } catch (error) {
+      errors++;
+      console.error(`  ❌ Error: ${condition.condition} - ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // Summary
+  console.log('\n' + '═'.repeat(60));
+  console.log('📊 MIGRATION SUMMARY');
+  console.log('═'.repeat(60));
+  console.log(`  Total conditions in registry: ${CONDITION_REGISTRY.length}`);
+  console.log(`  ✅ Created: ${created}`);
+  console.log(`  🔄 Updated: ${updated}`);
+  console.log(`  ⏭️  Skipped: ${skipped}`);
+  console.log(`  ❌ Errors: ${errors}`);
+  console.log('\n📈 By System:');
+  
+  Object.entries(systemCounts)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([system, count]) => {
+      console.log(`  ${system}: ${count} conditions`);
+    });
+
+  console.log('═'.repeat(60));
+  console.log('✨ Migration complete!\n');
+}
+
+async function main() {
+  try {
+    await migrateRegistry();
+  } catch (error) {
+    console.error('💥 Migration failed:', error);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+main();

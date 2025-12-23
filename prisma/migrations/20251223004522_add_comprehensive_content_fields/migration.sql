@@ -1,0 +1,16 @@
+-- AlterTable
+ALTER TABLE "MedicalContent" ADD COLUMN     "age_demographic" JSONB,
+ADD COLUMN     "best_initial_test" TEXT,
+ADD COLUMN     "classic_patient" TEXT,
+ADD COLUMN     "differentials" JSONB,
+ADD COLUMN     "disposition" TEXT,
+ADD COLUMN     "gender_bias" TEXT,
+ADD COLUMN     "guidelines" TEXT,
+ADD COLUMN     "image_query" TEXT,
+ADD COLUMN     "mnemonic" TEXT,
+ADD COLUMN     "pance_yield" INTEGER,
+ADD COLUMN     "patient_education" TEXT,
+ADD COLUMN     "prevention" TEXT,
+ADD COLUMN     "rx_mechanism" TEXT,
+ADD COLUMN     "rx_side_effects" TEXT,
+ADD COLUMN     "synonyms" JSONB;

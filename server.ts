@@ -305,6 +305,71 @@ app.get('/api/conditions/:identifier/extended', requireAuth, async (req: Authent
   }
 });
 
+// Get all conditions from database (Registry replacement)
+// Enables dynamic condition management via CMS
+app.get('/api/conditions', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { system, includeContent } = req.query;
+
+    // Build where clause
+    const where: any = {
+      status: 'published',
+    };
+    
+    if (system && typeof system === 'string') {
+      where.OR = [
+        { system: system.toUpperCase() },
+        { relatedSystems: { has: system.toUpperCase() } },
+      ];
+    }
+
+    // Query conditions
+    const conditions = await prisma.condition.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        system: true,
+        subcategory: true,
+        relatedSystems: true,
+        aliases: true,
+        displayName: true,
+        status: true,
+        content: includeContent === 'true',
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: [
+        { system: 'asc' },
+        { subcategory: 'asc' },
+        { name: 'asc' },
+      ],
+    });
+
+    // Group by system for frontend convenience
+    const bySystem: Record<string, typeof conditions> = {};
+    for (const condition of conditions) {
+      if (!bySystem[condition.system]) {
+        bySystem[condition.system] = [];
+      }
+      bySystem[condition.system].push(condition);
+    }
+
+    res.json({
+      conditions,
+      bySystem,
+      total: conditions.length,
+      systems: Object.keys(bySystem),
+    });
+  } catch (error) {
+    console.error('[Conditions API] Error fetching conditions:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'Failed to fetch conditions',
+    });
+  }
+});
+
 // Get all medical content (Replacement for static JSON file)
 // Public endpoint to allow loading content before auth (mimics static file behavior)
 app.get('/api/content/all', async (req: Request, res: Response) => {
@@ -383,45 +448,136 @@ app.get('/api/content/all', async (req: Request, res: Response) => {
 });
 
 // Single Condition Content Endpoint
-app.get('/api/content/condition/:conditionId', async (req: Request, res: Response) => {
+app.get('/api/content/condition/:conditionId', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { conditionId } = req.params;
     
+    // Validate and sanitize conditionId parameter
+    if (!conditionId || typeof conditionId !== 'string' || conditionId.trim() === '') {
+      return res.status(400).json({ 
+        error: 'Invalid request', 
+        message: 'conditionId parameter is required and must be a valid string' 
+      });
+    }
+    
+    // Sanitize: remove any potentially dangerous characters
+    const sanitizedId = conditionId.trim().replace(/[<>"'`;]/g, '');
+    
+    // Query with flexible matching - return FULL object for Reference Grade UI
     const content = await prisma.medicalContent.findFirst({
       where: { 
-        conditionId,
+        OR: [
+          { conditionId: { equals: sanitizedId, mode: 'insensitive' } },
+          { condition: { equals: sanitizedId, mode: 'insensitive' } },
+        ],
         status: 'published'
+      }
+      // No select: return the entire MedicalContent object
+      // This includes: overview, etiology, pathophysiology, epidemiology,
+      // symptoms, physicalExam, diagnostics, treatment, prognosis,
+      // differentialDiagnosis, riskFactors, complications, buzzwords,
+      // AND the new high-yield fields: classic_triad, clinical_pearls,
+      // gold_standard_dx, first_line_rx
+    });
+    
+    if (!content) {
+      return res.status(404).json({ 
+        error: 'Content not found',
+        message: `No published medical content found for condition: ${sanitizedId}`,
+        conditionId: sanitizedId 
+      });
+    }
+    
+    res.json(content);
+  } catch (error) {
+    console.error('[Content API] Error fetching condition:', {
+      conditionId: req.params.conditionId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'Failed to fetch medical content. Please try again later.',
+    });
+  }
+});
+
+// Alias route for simpler frontend access: /api/content/:conditionId
+app.get('/api/content/:conditionId', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { conditionId } = req.params;
+    
+    // Validate and sanitize conditionId parameter
+    if (!conditionId || typeof conditionId !== 'string' || conditionId.trim() === '') {
+      return res.status(400).json({ 
+        error: 'Invalid request', 
+        message: 'conditionId parameter is required and must be a valid string' 
+      });
+    }
+    
+    // Sanitize: remove any potentially dangerous characters
+    const sanitizedId = conditionId.trim().replace(/[<>"'`;]/g, '');
+    
+    // Query with flexible matching - return FULL object for Reference Grade UI
+    const content = await prisma.medicalContent.findFirst({
+      where: { 
+        OR: [
+          { conditionId: { equals: sanitizedId, mode: 'insensitive' } },
+          { condition: { equals: sanitizedId, mode: 'insensitive' } },
+        ],
+        status: 'published'
+      }
+      // No select: return the entire MedicalContent object
+      // Includes high-yield fields: classic_triad, clinical_pearls,
+      // gold_standard_dx, first_line_rx, plus all clinical content
+    });
+    
+    if (!content) {
+      return res.status(404).json({ 
+        error: 'Content not found',
+        message: `No published medical content found for condition: ${sanitizedId}`,
+        conditionId: sanitizedId 
+      });
+    }
+    
+    res.json(content);
+  } catch (error) {
+    console.error('[Content API] Error fetching condition:', {
+      conditionId: req.params.conditionId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'Failed to fetch medical content. Please try again later.',
+    });
+  }
+});
+        // Metadata
+        createdAt: true,
+        updatedAt: true,
       }
     });
     
     if (!content) {
       return res.status(404).json({ 
-        error: 'Condition not found',
+        error: 'Content not found',
+        message: `No published medical content found for condition: ${conditionId}`,
         conditionId 
       });
     }
     
     res.json({
-      conditionId: content.conditionId,
-      condition: content.condition,
-      system: content.system,
-      subcategory: content.subcategory,
-      overview: content.overview,
-      etiology: content.etiology,
-      pathophysiology: content.pathophysiology,
-      epidemiology: content.epidemiology,
-      symptoms: content.symptoms,
-      physicalExam: content.physicalExam,
-      diagnostics: content.diagnostics,
-      treatment: content.treatment,
-      prognosis: content.prognosis,
-      differentialDiagnosis: content.differentialDiagnosis,
-      riskFactors: content.riskFactors,
-      complications: content.complications
+      success: true,
+      data: content
     });
   } catch (error) {
-    console.error('Error fetching condition:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('[Content API] Error fetching condition:', {
+      conditionId: req.params.conditionId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      message: 'Failed to fetch medical content. Please try again later.',
+    });
   }
 });
 
