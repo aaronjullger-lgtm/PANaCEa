@@ -307,65 +307,30 @@ app.get('/api/conditions/:identifier/extended', requireAuth, async (req: Authent
 
 // Get all conditions from database (Registry replacement)
 // Enables dynamic condition management via CMS
+// Lightweight conditions endpoint - Returns only essential fields for registry
+// Does NOT fetch heavy MedicalContent relations
 app.get('/api/conditions', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { system, includeContent } = req.query;
-
-    // Build where clause
-    const where: any = {
-      status: 'published',
-    };
-    
-    if (system && typeof system === 'string') {
-      where.OR = [
-        { system: system.toUpperCase() },
-        { relatedSystems: { has: system.toUpperCase() } },
-      ];
-    }
-
-    // Query conditions
     const conditions = await prisma.condition.findMany({
-      where,
+      where: {
+        status: 'published',
+      },
       select: {
         id: true,
         name: true,
         system: true,
         subcategory: true,
-        relatedSystems: true,
-        aliases: true,
-        displayName: true,
-        status: true,
-        content: includeContent === 'true',
-        createdAt: true,
-        updatedAt: true,
       },
-      orderBy: [
-        { system: 'asc' },
-        { subcategory: 'asc' },
-        { name: 'asc' },
-      ],
+      orderBy: {
+        name: 'asc',
+      },
     });
 
-    // Group by system for frontend convenience
-    const bySystem: Record<string, typeof conditions> = {};
-    for (const condition of conditions) {
-      if (!bySystem[condition.system]) {
-        bySystem[condition.system] = [];
-      }
-      bySystem[condition.system].push(condition);
-    }
-
-    res.json({
-      conditions,
-      bySystem,
-      total: conditions.length,
-      systems: Object.keys(bySystem),
-    });
+    res.json(conditions);
   } catch (error) {
     console.error('[Conditions API] Error fetching conditions:', error);
     res.status(500).json({ 
-      error: 'Internal server error',
-      message: 'Failed to fetch conditions',
+      error: 'Failed to fetch conditions',
     });
   }
 });

@@ -18,7 +18,6 @@ import type {
 import type { PatientEncounterCase, PatientPersona } from '../types/drill-modes';
 import {
   buildConditionDefinition,
-  getRandomConditionForSystem,
   findConditionMeta,
   type ConditionMeta,
 } from "../conditionRegistry";
@@ -28,6 +27,11 @@ import {
   normalizeConditionContent,
 } from "../lib/loadConditions";
 import { getApiEndpoint, API_ENDPOINTS } from "../lib/utils/apiConfig";
+import {
+  getRandomConditionForSystem as getRandomConditionForSystemDB,
+  findConditionByName,
+  type ConditionMetadata,
+} from "./conditionRegistryService";
 
 // ============================================================================
 // TYPE DEFINITIONS FOR GEMINI SERVICE
@@ -417,7 +421,22 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
     // Hybrid: pick a random condition within this system (except PRO/OTHER)
     let selectedConditionMeta: ConditionMeta | undefined;
     if (systemCode !== "PRO" && systemCode !== "OTHER") {
-      selectedConditionMeta = getRandomConditionForSystem(systemCode);
+      // NEW: Use database-driven registry instead of static import
+      try {
+        const dbCondition = await getRandomConditionForSystemDB(systemCode);
+        if (dbCondition) {
+          // Convert database metadata to ConditionMeta for compatibility
+          const compatMeta = findConditionMeta(dbCondition.name);
+          if (compatMeta) {
+            selectedConditionMeta = compatMeta;
+            chosenConditionMeta = selectedConditionMeta;
+            chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching random condition for ${systemCode}:`, error);
+      }
+      
       if (selectedConditionMeta) {
         chosenConditionMeta = selectedConditionMeta;
         chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
