@@ -261,7 +261,6 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
     const sessionSettings: SessionSettings = {
       focus: 'all',
       difficulty: 'same',
-      system: selectedSystem,
     };
 
     return (
