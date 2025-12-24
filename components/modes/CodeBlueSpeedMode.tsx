@@ -3,6 +3,8 @@
  * 
  * Timed ACLS/PALS rapid-fire drill mode with 5 seconds per question.
  * High-intensity training for emergency cardiac and pediatric protocols.
+ * 
+ * Database-driven: Fetches questions from /api/drills/code-blue
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -30,94 +32,39 @@ interface CodeBlueQuestion {
   options: string[];
   correctIndex: number;
   explanation: string;
-  category: 'ACLS' | 'PALS' | 'Critical Care';
+  category: 'ACLS' | 'PALS' | 'BLS' | 'Critical Care';
 }
 
-type ViewState = 'landing' | 'active' | 'complete';
+type ViewState = 'landing' | 'loading' | 'active' | 'complete' | 'error';
 
-// Sample ACLS/PALS questions for the speed drill
-const CODE_BLUE_QUESTIONS: CodeBlueQuestion[] = [
-  {
-    id: 'cb1',
-    question: 'First medication in cardiac arrest with shockable rhythm?',
-    options: ['Amiodarone', 'Epinephrine', 'Atropine', 'Lidocaine'],
-    correctIndex: 1,
-    explanation: 'Epinephrine 1mg IV/IO every 3-5 minutes is the first medication in cardiac arrest.',
-    category: 'ACLS'
-  },
-  {
-    id: 'cb2',
-    question: 'Initial joules for adult defibrillation (biphasic)?',
-    options: ['50J', '100J', '120-200J', '360J'],
-    correctIndex: 2,
-    explanation: 'Biphasic defibrillators: 120-200J initially. Monophasic: 360J.',
-    category: 'ACLS'
-  },
-  {
-    id: 'cb3',
-    question: 'Compression-to-ventilation ratio for pediatric 2-rescuer CPR?',
-    options: ['30:2', '15:2', '5:1', '3:1'],
-    correctIndex: 1,
-    explanation: '15:2 for 2-rescuer pediatric CPR. 30:2 for single rescuer.',
-    category: 'PALS'
-  },
-  {
-    id: 'cb4',
-    question: 'Target EtCO2 during CPR?',
-    options: ['<10 mmHg', '10-20 mmHg', '35-40 mmHg', '>45 mmHg'],
-    correctIndex: 1,
-    explanation: 'EtCO2 >10 mmHg indicates adequate chest compressions. <10 mmHg suggests poor perfusion.',
-    category: 'ACLS'
-  },
-  {
-    id: 'cb5',
-    question: 'Pediatric defibrillation dose (J/kg)?',
-    options: ['1 J/kg', '2 J/kg', '4 J/kg', '10 J/kg'],
-    correctIndex: 1,
-    explanation: 'Initial: 2 J/kg. Subsequent: 4 J/kg (max 10 J/kg or adult dose).',
-    category: 'PALS'
-  },
-  {
-    id: 'cb6',
-    question: 'Amiodarone dose in cardiac arrest?',
-    options: ['150mg', '300mg', '500mg', '1g'],
-    correctIndex: 1,
-    explanation: 'First dose: 300mg IV/IO. Second dose: 150mg IV/IO.',
-    category: 'ACLS'
-  },
-  {
-    id: 'cb7',
-    question: 'Minimum depth for adult chest compressions?',
-    options: ['1 inch', '1.5 inches', '2 inches', '3 inches'],
-    correctIndex: 2,
-    explanation: 'At least 2 inches (5cm), no more than 2.4 inches (6cm).',
-    category: 'ACLS'
-  },
-  {
-    id: 'cb8',
-    question: 'Pediatric epinephrine dose in cardiac arrest?',
-    options: ['0.01 mg/kg IV', '0.1 mg/kg IV', '1 mg/kg IV', '0.01 mg/kg ET'],
-    correctIndex: 0,
-    explanation: '0.01 mg/kg IV/IO (1:10,000). Max single dose: 1mg.',
-    category: 'PALS'
-  },
-  {
-    id: 'cb9',
-    question: 'Rate of chest compressions (all ages)?',
-    options: ['60-80/min', '80-100/min', '100-120/min', '120-140/min'],
-    correctIndex: 2,
-    explanation: '100-120 compressions per minute for all ages.',
-    category: 'ACLS'
-  },
-  {
-    id: 'cb10',
-    question: 'Post-cardiac arrest targeted temperature?',
-    options: ['32-34°C', '36°C', '37.5°C', '39°C'],
-    correctIndex: 0,
-    explanation: 'Targeted temperature management: 32-36°C for at least 24 hours.',
-    category: 'Critical Care'
+// ============================================================================
+// API FETCHING
+// ============================================================================
+
+/**
+ * Fetch Code Blue questions from the database API
+ */
+async function fetchCodeBlueQuestions(count: number = 10): Promise<CodeBlueQuestion[]> {
+  try {
+    const response = await fetch(`/api/drills/code-blue?count=${count}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || `API request failed: ${response.status}`);
+    }
+    
+    const questions = await response.json();
+    
+    if (!Array.isArray(questions) || questions.length === 0) {
+      throw new Error('No Code Blue questions available');
+    }
+    
+    return questions;
+  } catch (error) {
+    console.error('[Code Blue] Failed to fetch questions:', error);
+    throw error;
   }
-];
+}
 
 const TIME_PER_QUESTION = 5; // seconds
 
@@ -130,15 +77,32 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [timeLeft, setTimeLeft] = useState(TIME_PER_QUESTION);
   const [isTimeUp, setIsTimeUp] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
-  // Shuffle questions on start
-  const handleStart = useCallback(() => {
-    const shuffled = [...CODE_BLUE_QUESTIONS].sort(() => Math.random() - 0.5);
-    setQuestions(shuffled);
-    setCurrentQuestionIndex(0);
-    setScore({ correct: 0, total: 0 });
-    setTimeLeft(TIME_PER_QUESTION);
-    setViewState('active');
+  // Fetch questions and start game
+  const handleStart = useCallback(async () => {
+    setViewState('loading');
+    setErrorMessage('');
+    
+    try {
+      const fetchedQuestions = await fetchCodeBlueQuestions(10);
+      setQuestions(fetchedQuestions);
+      setCurrentQuestionIndex(0);
+      setScore({ correct: 0, total: 0 });
+      setTimeLeft(TIME_PER_QUESTION);
+      setSelectedAnswer(null);
+      setIsSubmitted(false);
+      setIsTimeUp(false);
+      setViewState('active');
+    } catch (error) {
+      console.error('[Code Blue] Failed to start:', error);
+      setErrorMessage(
+        error instanceof Error 
+          ? error.message 
+          : 'Failed to load questions. Please try again.'
+      );
+      setViewState('error');
+    }
   }, []);
 
   // Timer countdown
@@ -296,6 +260,75 @@ const CodeBlueSpeedMode: React.FC<CodeBlueSpeedModeProps> = ({ onExit }) => {
                 Back to Menu
               </button>
             </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (viewState === 'loading') {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center space-y-4"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+            className="inline-flex items-center justify-center w-16 h-16 bg-red-500/10 rounded-full"
+          >
+            <Siren className="w-8 h-8 text-red-500" />
+          </motion.div>
+          <p className="text-[var(--color-text-muted)]">Loading questions...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (viewState === 'error') {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full space-y-6"
+        >
+          <div className="text-center space-y-4">
+            <XCircle className="w-16 h-16 text-red-500 mx-auto" />
+            <h2 className="text-2xl font-bold">Unable to Load Questions</h2>
+            <p className="text-[var(--color-text-muted)]">{errorMessage}</p>
+          </div>
+
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 space-y-4">
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Make sure the database is seeded with questions:
+            </p>
+            <code className="block bg-[var(--color-bg-primary)] p-3 rounded text-sm">
+              npx ts-node scripts/seed-code-blue.ts
+            </code>
+          </div>
+
+          <div className="flex gap-3">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleStart}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            >
+              Try Again
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onExit}
+              className="flex-1 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-accent)]/10 text-[var(--color-text-primary)] font-semibold py-3 px-6 rounded-lg transition-colors"
+            >
+              Exit
+            </motion.button>
           </div>
         </motion.div>
       </div>

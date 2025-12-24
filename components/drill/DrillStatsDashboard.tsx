@@ -30,6 +30,9 @@ import {
   Bone,
   Layers,
   FolderTree,
+  HeartPulse,
+  Droplets,
+  Bug,
 } from 'lucide-react';
 import {
   getAllDrillStats,
@@ -37,6 +40,7 @@ import {
   getDrillProgress,
   getCategoryBreakdown,
   getDrillsDueForReview,
+  getSimulationStats,
   type DrillType,
   type DrillStatistics,
 } from '@/services/drillStatsService';
@@ -74,6 +78,7 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
   const allStats = getAllDrillStats();
   const summary = getDrillPerformanceSummary();
   const dueForReview = getDrillsDueForReview();
+  const simulationStats = getSimulationStats();
 
   // Filter drills with activity
   const activeDrills = useMemo(() => {
@@ -204,6 +209,132 @@ const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onSt
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Clinical Simulations Section */}
+          {(simulationStats.codeBlue.hasActivity || simulationStats.fluids.hasActivity || simulationStats.antibiotics.hasActivity) && (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                Clinical Simulations
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Code Blue Speed Mode */}
+                {simulationStats.codeBlue.hasActivity && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0 }}
+                    className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-red-300 dark:hover:border-red-700 transition-all duration-300 cursor-pointer"
+                    onClick={() => onStartDrill?.('code_blue_speed')}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2.5 rounded-lg bg-red-100 dark:bg-red-900/20">
+                        <HeartPulse className="w-5 h-5 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div>
+                        <div className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
+                          Resuscitation
+                        </div>
+                        <div className="text-sm font-semibold text-[var(--color-text-primary)]">
+                          Code Blue
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <div className="text-3xl font-bold text-red-600 dark:text-red-400">
+                        {simulationStats.codeBlue.survivalRate}%
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)] mt-1">
+                        Survival Rate
+                      </div>
+                    </div>
+                    {simulationStats.codeBlue.bestTime && (
+                      <div className="text-xs text-[var(--color-text-secondary)] mt-3 pt-3 border-t border-[var(--color-border)]">
+                        Best Time: {Math.round(simulationStats.codeBlue.bestTime)}s
+                      </div>
+                    )}
+                    {!simulationStats.codeBlue.bestTime && (
+                      <div className="text-xs text-[var(--color-text-muted)] mt-3 pt-3 border-t border-[var(--color-border)]">
+                        {simulationStats.codeBlue.totalAttempts} {simulationStats.codeBlue.totalAttempts === 1 ? 'case' : 'cases'} attempted
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* Fluids & Electrolytes Mode */}
+                {simulationStats.fluids.hasActivity && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-cyan-300 dark:hover:border-cyan-700 transition-all duration-300 cursor-pointer"
+                    onClick={() => onStartDrill?.('fluid_electrolyte')}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2.5 rounded-lg bg-cyan-100 dark:bg-cyan-900/20">
+                        <Droplets className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                      </div>
+                      <div>
+                        <div className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
+                          Nephrology
+                        </div>
+                        <div className="text-sm font-semibold text-[var(--color-text-primary)]">
+                          Fluids & Lytes
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <div className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">
+                        {simulationStats.fluids.casesSolved}
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)] mt-1">
+                        Cases Managed
+                      </div>
+                    </div>
+                    <div className="text-xs text-[var(--color-text-secondary)] mt-3 pt-3 border-t border-[var(--color-border)]">
+                      {simulationStats.fluids.averageAccuracy}% accuracy
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Antibiotic Coverage Mode */}
+                {simulationStats.antibiotics.hasActivity && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] p-5 hover:shadow-lg hover:border-teal-300 dark:hover:border-teal-700 transition-all duration-300 cursor-pointer"
+                    onClick={() => onStartDrill?.('antibiotic_mode')}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2.5 rounded-lg bg-teal-100 dark:bg-teal-900/20">
+                        <Bug className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                      </div>
+                      <div>
+                        <div className="text-xs uppercase tracking-wider text-[var(--color-text-muted)] font-medium">
+                          Infectious Disease
+                        </div>
+                        <div className="text-sm font-semibold text-[var(--color-text-primary)]">
+                          Antibiotics
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mb-2">
+                      <div className="text-3xl font-bold text-teal-600 dark:text-teal-400">
+                        {simulationStats.antibiotics.coverageMastery}%
+                      </div>
+                      <div className="text-xs text-[var(--color-text-muted)] mt-1">
+                        Coverage Mastery
+                      </div>
+                    </div>
+                    <div className="text-xs text-[var(--color-text-secondary)] mt-3 pt-3 border-t border-[var(--color-border)]">
+                      {simulationStats.antibiotics.totalChallenges} {simulationStats.antibiotics.totalChallenges === 1 ? 'challenge' : 'challenges'} completed
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </div>
           )}

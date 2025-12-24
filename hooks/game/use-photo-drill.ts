@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { submitDrillResult } from '@/services/drillService';
 import { recordDrillSession, getRecommendedDifficulty, type DrillType } from '@/services/drillStatsService';
 
@@ -65,304 +65,55 @@ export type GameState = 'loading' | 'active' | 'feedback' | 'summary';
 export type CategoryType = 'ecg' | 'derm' | 'radiology' | 'random' | null;
 
 // ============================================================================
-// MASTER CONDITION LIST
+// API FETCHING FOR DATABASE-DRIVEN QUESTIONS
 // ============================================================================
 
 /**
- * Master list of medical conditions used for both case generation and search.
- * This ensures the user can always find the answer in the type-ahead search.
+ * Fetch photo cases from the database API
+ * 
+ * @param modality - The image modality to fetch ('ecg', 'derm', 'radiology', or null for random)
+ * @param count - Number of cases to fetch (default 20)
+ * @returns Array of PhotoCase objects from approved media assets
  */
-export const MASTER_CONDITION_LIST: string[] = [
-  // Cardiac / ECG
-  'Atrial Fibrillation',
-  'Atrial Flutter',
-  'Ventricular Tachycardia',
-  'STEMI',
-  'NSTEMI',
-  'Pericarditis',
-  'Sinus Bradycardia',
-  'Heart Block',
-  'Hyperkalemia',
-  'Wolff-Parkinson-White Syndrome',
-  // Dermatology
-  'Psoriasis',
-  'Eczema',
-  'Shingles',
-  'Contact Dermatitis',
-  'Cellulitis',
-  'Melanoma',
-  'Basal Cell Carcinoma',
-  'Impetigo',
-  // Radiology (includes MSK imaging)
-  'Pneumothorax',
-  'Pneumonia',
-  'Pulmonary Embolism',
-  'Pleural Effusion',
-  'Cardiomegaly',
-  'Rib Fracture',
-  'Gout',
-  'Rheumatoid Arthritis',
-];
-
-// ============================================================================
-// CATEGORY-SPECIFIC CONDITION MAPPINGS
-// ============================================================================
-
-const ECG_CONDITIONS = [
-  'Atrial Fibrillation',
-  'Atrial Flutter',
-  'Ventricular Tachycardia',
-  'STEMI',
-  'NSTEMI',
-  'Pericarditis',
-  'Sinus Bradycardia',
-  'Heart Block',
-  'Hyperkalemia',
-  'Wolff-Parkinson-White Syndrome',
-];
-
-const DERM_CONDITIONS = [
-  'Psoriasis',
-  'Eczema',
-  'Shingles',
-  'Contact Dermatitis',
-  'Cellulitis',
-  'Melanoma',
-  'Basal Cell Carcinoma',
-  'Impetigo',
-];
-
-const RADIOLOGY_CONDITIONS = [
-  'Pneumothorax',
-  'Pneumonia',
-  'Pulmonary Embolism',
-  'Pleural Effusion',
-  'Cardiomegaly',
-  'Rib Fracture',
-  'Gout',
-  'Rheumatoid Arthritis',
-];
-
-// ============================================================================
-// CLINICAL CONTEXT FOR CLINICAL PRESENTATION MODE
-// ============================================================================
-
-/**
- * Clinical context templates for each derm condition.
- * Used to generate realistic "patient chart" presentations.
- */
-const DERM_CLINICAL_CONTEXTS: Record<string, Omit<ClinicalContext, 'age' | 'sex'> & { ageRange: [number, number] }> = {
-  'Psoriasis': {
-    ageRange: [20, 60],
-    chiefComplaint: 'Itchy, scaly patches on elbows and knees for 3 months',
-    vitals: 'BP 128/82, HR 76, Temp 98.4°F, RR 16',
-    history: 'Patient reports intermittent flares, worse in winter. Family history of autoimmune disease.',
-    additionalFindings: ['Nail pitting noted', 'No joint pain or swelling'],
-  },
-  'Eczema': {
-    ageRange: [5, 40],
-    chiefComplaint: 'Intensely itchy, red patches in flexural areas',
-    vitals: 'BP 118/76, HR 82, Temp 98.2°F, RR 14',
-    history: 'History of asthma and seasonal allergies. Symptoms worsen with stress and dry weather.',
-    additionalFindings: ['Dry, lichenified skin', 'Excoriations from scratching'],
-  },
-  'Shingles': {
-    ageRange: [50, 85],
-    chiefComplaint: 'Painful, burning rash on one side of trunk for 5 days',
-    vitals: 'BP 142/88, HR 88, Temp 99.8°F, RR 18',
-    history: 'Pain preceded the rash by 2-3 days. History of childhood chickenpox. No recent immunosuppression.',
-    additionalFindings: ['Rash follows dermatome', 'Allodynia in affected area'],
-  },
-  'Contact Dermatitis': {
-    ageRange: [18, 65],
-    chiefComplaint: 'Itchy, blistering rash after gardening 48 hours ago',
-    vitals: 'BP 120/78, HR 72, Temp 98.6°F, RR 14',
-    history: 'Was working in yard without gloves. Similar reaction to poison ivy 2 years ago.',
-    additionalFindings: ['Linear pattern of vesicles', 'Sharp demarcation at clothing line'],
-  },
-  'Cellulitis': {
-    ageRange: [30, 75],
-    chiefComplaint: 'Rapidly spreading red, warm, swollen area on lower leg',
-    vitals: 'BP 132/86, HR 98, Temp 101.2°F, RR 18',
-    history: 'Noticed small cut on leg 4 days ago. Diabetes with A1c of 8.2%. No recent hospitalization.',
-    additionalFindings: ['Tenderness to palpation', 'No fluctuance or drainage'],
-  },
-  'Melanoma': {
-    ageRange: [35, 70],
-    chiefComplaint: 'Changing mole on back noticed by spouse',
-    vitals: 'BP 124/80, HR 70, Temp 98.4°F, RR 14',
-    history: 'Mole has been present for years but recently changed color and became asymmetric. History of blistering sunburns.',
-    additionalFindings: ['Irregular borders', 'Multiple colors within lesion', 'Greater than 6mm diameter'],
-  },
-  'Basal Cell Carcinoma': {
-    ageRange: [55, 80],
-    chiefComplaint: 'Non-healing sore on nose for 6 months',
-    vitals: 'BP 138/84, HR 68, Temp 98.2°F, RR 14',
-    history: 'Outdoor occupation for 30 years. Fair skin with history of frequent sunburns.',
-    additionalFindings: ['Pearly, translucent appearance', 'Central ulceration', 'Telangiectasias visible'],
-  },
-  'Impetigo': {
-    ageRange: [2, 12],
-    chiefComplaint: 'Honey-colored crusted lesions around mouth and nose',
-    vitals: 'BP 90/60, HR 95, Temp 99.4°F, RR 20',
-    history: 'Lesions started as small blisters 4 days ago. Attends daycare. Several classmates have similar symptoms.',
-    additionalFindings: ['Easily rupturing vesicles', 'Satellite lesions spreading'],
-  },
-};
-
-/**
- * Generate clinical context for a derm case
- */
-function generateClinicalContext(diagnosis: string): ClinicalContext {
-  const template = DERM_CLINICAL_CONTEXTS[diagnosis];
-  
-  if (!template) {
-    // Fallback for conditions without specific templates
-    return {
-      age: 45,
-      sex: Math.random() > 0.5 ? 'M' : 'F',
-      chiefComplaint: 'Skin lesion requiring evaluation',
-      vitals: 'BP 120/80, HR 72, Temp 98.6°F, RR 14',
-      history: 'Patient presents for dermatological evaluation.',
-    };
+async function fetchPhotoCases(
+  modality: 'ecg' | 'derm' | 'radiology' | null,
+  count: number = 20
+): Promise<PhotoCase[]> {
+  try {
+    // Build API URL
+    const params = new URLSearchParams();
+    if (modality) {
+      params.append('modality', modality);
+    }
+    params.append('count', count.toString());
+    
+    const url = `/api/drills/media?${params.toString()}`;
+    
+    // Fetch from API
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || `API request failed: ${response.status}`);
+    }
+    
+    const cases = await response.json();
+    
+    if (!Array.isArray(cases) || cases.length === 0) {
+      throw new Error('No photo cases available');
+    }
+    
+    return cases;
+  } catch (error) {
+    console.error('[Photo Drill] Failed to fetch cases:', error);
+    throw error;
   }
-  
-  // Generate random age within range
-  const [minAge, maxAge] = template.ageRange;
-  const age = Math.floor(Math.random() * (maxAge - minAge + 1)) + minAge;
-  
-  // Random sex
-  const sex: 'M' | 'F' = Math.random() > 0.5 ? 'M' : 'F';
-  
-  return {
-    age,
-    sex,
-    chiefComplaint: template.chiefComplaint,
-    vitals: template.vitals,
-    history: template.history,
-    additionalFindings: template.additionalFindings,
-  };
 }
 
 // ============================================================================
-// HELPER: generateRandomCase
+// FUZZY MATCH HELPER
 // ============================================================================
 
-let caseCounter = 0;
-
-/**
- * Options for generating a random case.
- */
-export interface GenerateCaseOptions {
-  /** Custom educational caption/explanation from manifest data */
-  educationalCaption?: string;
-}
-
-/**
- * Generates a random PhotoCase based on the selected category.
- * Diagnoses are strictly selected from MASTER_CONDITION_LIST.
- *
- * @param category - The category to generate a case for
- * @param options - Optional configuration including educational caption
- * @returns A new PhotoCase object
- */
-export function generateRandomCase(
-  category: CategoryType,
-  options?: GenerateCaseOptions
-): PhotoCase {
-  caseCounter++;
-  const id = `case-${Date.now()}-${caseCounter}`;
-
-  let modality: 'ecg' | 'xray' | 'derm';
-  let conditionPool: string[];
-
-  switch (category) {
-    case 'ecg':
-      modality = 'ecg';
-      conditionPool = ECG_CONDITIONS;
-      break;
-    case 'derm':
-      modality = 'derm';
-      conditionPool = DERM_CONDITIONS;
-      break;
-    case 'radiology':
-      modality = 'xray';
-      conditionPool = RADIOLOGY_CONDITIONS;
-      break;
-    case 'random':
-    default:
-      // Random mix of all categories
-      const rand = Math.random();
-      if (rand < 0.33) {
-        modality = 'ecg';
-        conditionPool = ECG_CONDITIONS;
-      } else if (rand < 0.66) {
-        modality = 'derm';
-        conditionPool = DERM_CONDITIONS;
-      } else {
-        modality = 'xray';
-        conditionPool = RADIOLOGY_CONDITIONS;
-      }
-      break;
-  }
-
-  // Randomly select a diagnosis from the condition pool
-  const diagnosis = conditionPool[Math.floor(Math.random() * conditionPool.length)];
-
-  // Generate image URL - placeholder with condition name for easy matching later
-  const categoryColors: Record<string, string> = {
-    ecg: '1e293b',
-    derm: '8b5cf6',
-    xray: '0ea5e9',
-  };
-  const color = categoryColors[modality] || '64748b';
-  const imageUrl = `https://placehold.co/600x400/${color}/FFF?text=${encodeURIComponent(diagnosis)}`;
-
-  // Generate distractors from the same pool (excluding the correct answer)
-  const otherConditions = conditionPool.filter((c) => c !== diagnosis);
-  const shuffled = otherConditions.sort(() => Math.random() - 0.5);
-  const distractors = shuffled.slice(0, Math.min(3, shuffled.length));
-
-  // Use educational caption from manifest if provided, otherwise fallback to generic
-  const explanation =
-    options?.educationalCaption ?? 'Key features support this diagnosis.';
-
-  // Generate clinical context for derm cases (Clinical Presentation Mode)
-  const clinicalContext = modality === 'derm' 
-    ? generateClinicalContext(diagnosis) 
-    : undefined;
-
-  return {
-    id,
-    imageUrl,
-    modality,
-    correctDiagnosis: diagnosis,
-    distractors,
-    explanation,
-    clinicalContext,
-  };
-}
-
-// ============================================================================
-// MOCK DATA REMOVED - All cases now generated dynamically
-// ============================================================================
-// Photo drill uses procedurally generated cases via generateRandomCase()
-// based on category selection (ECG/Derm/Radiology)
-// See generateRandomCase() function below for case generation logic
-
-// ============================================================================
-// FUZZY MATCH HELPER (STUB)
-// ============================================================================
-
-/**
- * Stub for fuzzy string matching.
- * To be implemented with string distance algorithms (e.g., Levenshtein) later.
- *
- * @param input - The user's input
- * @param target - The target string to match against
- * @param threshold - Similarity threshold (0-1), default 0.8
- * @returns true if strings are similar enough
- */
 /**
  * Calculate the Levenshtein distance between two strings.
  * This measures the minimum number of single-character edits (insertions, deletions, or substitutions)
@@ -487,7 +238,7 @@ const MAX_RECENT_DIAGNOSES = 15; // Track last 15 diagnoses to avoid repetition
 
 /**
  * Custom hook for managing a photo drill game session with category-aware infinite queue.
- * All cases are generated dynamically via generateRandomCase() - no static data used.
+ * All cases are fetched from the database via /api/drills/media endpoint - no static data used.
  *
  * @returns Game state and actions
  */
@@ -517,52 +268,39 @@ export function usePhotoDrill(): UsePhotoDrillReturn {
   const totalCases = queue.length;
 
   /**
-   * Derive valid diagnoses based on selectedCategory.
-   * When a specific category is selected, only show conditions for that modality.
-   * For 'random' or null, show all conditions.
+   * Derive valid diagnoses from current queue (all unique diagnoses + distractors).
+   * Used for type-ahead search - dynamically populated from API data.
    */
   const validDiagnoses = useMemo(() => {
-    switch (selectedCategory) {
-      case 'ecg':
-        return ECG_CONDITIONS;
-      case 'derm':
-        return DERM_CONDITIONS;
-      case 'radiology':
-        return RADIOLOGY_CONDITIONS;
-      case 'random':
-      default:
-        return MASTER_CONDITION_LIST;
-    }
-  }, [selectedCategory]);
+    const diagnoses = new Set<string>();
+    
+    queue.forEach(photoCase => {
+      diagnoses.add(photoCase.correctDiagnosis);
+      photoCase.distractors.forEach(d => diagnoses.add(d));
+    });
+    
+    return Array.from(diagnoses).sort();
+  }, [queue]);
 
   /**
-   * Generate a new case while avoiding recently seen diagnoses
+   * Fetch new cases from API and add to queue
    */
-  const generateNewCase = useCallback((category: CategoryType): PhotoCase => {
-    let attempts = 0;
-    let newCase: PhotoCase;
-    
-    // Try to generate a case we haven't seen recently
-    do {
-      newCase = generateRandomCase(category);
-      attempts++;
-    } while (recentDiagnosesRef.current.has(newCase.correctDiagnosis) && attempts < 10);
-    
-    // Add to recent diagnoses and maintain max size
-    recentDiagnosesRef.current.add(newCase.correctDiagnosis);
-    if (recentDiagnosesRef.current.size > MAX_RECENT_DIAGNOSES) {
-      const firstItem = recentDiagnosesRef.current.values().next().value;
-      if (firstItem) recentDiagnosesRef.current.delete(firstItem);
+  const fetchMoreCases = useCallback(async (category: CategoryType, count: number = 20) => {
+    try {
+      const modality = category === 'random' ? null : category;
+      const cases = await fetchPhotoCases(modality, count);
+      return cases;
+    } catch (error) {
+      console.error('[Photo Drill] Failed to fetch cases:', error);
+      throw error;
     }
-    
-    return newCase;
   }, []);
 
   /**
    * Start a new session with the specified category.
-   * Generates initial queue and transitions to playing state.
+   * Fetches initial queue from API and transitions to playing state.
    */
-  const startSession = useCallback((category: CategoryType) => {
+  const startSession = useCallback(async (category: CategoryType) => {
     setSelectedCategory(category);
     recentDiagnosesRef.current.clear(); // Clear history on new session
     
@@ -574,14 +312,40 @@ export function usePhotoDrill(): UsePhotoDrillReturn {
       bestStreak: 0,
     };
     
-    // Generate initial queue
-    const initialQueue: PhotoCase[] = [];
-    for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      initialQueue.push(generateNewCase(category));
+    try {
+      // Fetch initial queue from API
+      const initialQueue = await fetchMoreCases(category, INITIAL_QUEUE_SIZE);
+      setQueue(initialQueue);
+      setCurrentCaseIndex(0);
+      setScore(0);
+      setStreak(0);
+      setUserAnswer(null);
+      setIsCorrect(null);
+      setStatus('playing');
+    } catch (error) {
+      console.error('[Photo Drill] Failed to start session:', error);
+      // Fallback: stay on menu with error state
+      setStatus('menu');
+      alert('Failed to load photo cases. Please try again or check your connection.');
     }
+  }, [fetchMoreCases]);
+  
+  /**
+   * Auto-refill queue when running low (background prefetch)
+   */
+  useEffect(() => {
+    const MIN_QUEUE_SIZE = 5;
     
-    setQueue(initialQueue);
-  }, [generateNewCase]);
+    if (selectedCategory && queue.length > 0 && queue.length - currentCaseIndex <= MIN_QUEUE_SIZE) {
+      // Running low on cases, fetch more in background
+      fetchMoreCases(selectedCategory, 10).then(newCases => {
+        setQueue(prev => [...prev, ...newCases]);
+      }).catch(error => {
+        console.error('[Photo Drill] Background refill failed:', error);
+        // Fail silently - user can continue with existing queue
+      });
+    }
+  }, [currentCaseIndex, queue.length, selectedCategory, fetchMoreCases]);
 
   /**
    * Exit to the menu screen.
@@ -666,18 +430,21 @@ export function usePhotoDrill(): UsePhotoDrillReturn {
 
   /**
    * Advance to the next case.
-   * For infinite mode, generates a new case and appends to queue.
+   * For infinite mode, moves to next case in queue (auto-refill handled by useEffect).
    */
   const nextCase = useCallback(() => {
     // For infinite queue mode (when we have a selected category)
     if (selectedCategory !== null) {
-      // Generate a new case and append to queue
-      const newCase = generateNewCase(selectedCategory);
-      setQueue((prev) => [...prev, newCase]);
-      setCurrentCaseIndex((prev) => prev + 1);
-      setUserAnswer(null);
-      setIsCorrect(null);
-      setStatus('playing');
+      // Move to next case (queue auto-refills in background)
+      if (currentCaseIndex >= totalCases - 1) {
+        // Reached end of queue - should have been refilled by now
+        setStatus('summary');
+      } else {
+        setCurrentCaseIndex((prev) => prev + 1);
+        setUserAnswer(null);
+        setIsCorrect(null);
+        setStatus('playing');
+      }
     } else {
       // Legacy mode - finite cases
       if (currentCaseIndex >= totalCases - 1) {
@@ -689,7 +456,7 @@ export function usePhotoDrill(): UsePhotoDrillReturn {
         setStatus('playing');
       }
     }
-  }, [currentCaseIndex, totalCases, selectedCategory, generateNewCase]);
+  }, [currentCaseIndex, totalCases, selectedCategory]);
 
   /**
    * Skip the current case (counts as incorrect).
@@ -704,28 +471,20 @@ export function usePhotoDrill(): UsePhotoDrillReturn {
     setUserAnswer(null);
     setIsCorrect(false);
 
-    // For infinite queue mode
-    if (selectedCategory !== null) {
-      const newCase = generateNewCase(selectedCategory);
-      setQueue((prev) => [...prev, newCase]);
+    // Move to next case (queue auto-refills)
+    if (currentCaseIndex >= totalCases - 1) {
+      setStatus('summary');
+    } else {
       setCurrentCaseIndex((prev) => prev + 1);
       setStatus('playing');
-    } else {
-      // Legacy mode
-      if (currentCaseIndex >= totalCases - 1) {
-        setStatus('summary');
-      } else {
-        setCurrentCaseIndex((prev) => prev + 1);
-        setStatus('playing');
-      }
     }
-  }, [currentCaseIndex, totalCases, status, selectedCategory, generateNewCase]);
+  }, [currentCaseIndex, totalCases, status]);
 
   /**
    * Reset the game to start fresh (legacy support).
    * For new infinite mode, use startSession instead.
    */
-  const reset = useCallback(() => {
+  const reset = useCallback(async () => {
     recentDiagnosesRef.current.clear(); // Clear history on reset
     setCurrentCaseIndex(0);
     setScore(0);
@@ -733,18 +492,20 @@ export function usePhotoDrill(): UsePhotoDrillReturn {
     setUserAnswer(null);
     setIsCorrect(null);
     
-    // If we have a category, regenerate queue
+    // If we have a category, fetch new queue
     if (selectedCategory !== null) {
-      const newQueue: PhotoCase[] = [];
-      for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-        newQueue.push(generateNewCase(selectedCategory));
+      try {
+        const newQueue = await fetchMoreCases(selectedCategory, INITIAL_QUEUE_SIZE);
+        setQueue(newQueue);
+        setStatus('playing');
+      } catch (error) {
+        console.error('[Photo Drill] Failed to reset:', error);
+        setStatus('menu');
       }
-      setQueue(newQueue);
-      setStatus('playing');
     } else {
       setStatus('playing');
     }
-  }, [selectedCategory, generateNewCase]);
+  }, [selectedCategory, fetchMoreCases]);
 
   return {
     currentCase,

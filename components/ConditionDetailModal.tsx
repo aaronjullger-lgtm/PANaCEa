@@ -1,10 +1,7 @@
 // src/components/ConditionDetailModal.tsx
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  buildConditionDefinition,
-  type ConditionMeta,
-} from "../conditionRegistry";
+import type { ConditionMeta } from "../src/types/conditions";
 import {
   getConditionById,
   getConditionByIdSync,
@@ -16,6 +13,19 @@ import ConditionSidebar from "./ConditionSidebar";
 import FormattedSection from "./conditions/FormattedSection";
 import { BuzzwordBanner } from "./conditions/BuzzwordBanner";
 import { useAuth } from "@clerk/clerk-react";
+
+/**
+ * Build a standardized condition ID from metadata
+ */
+function buildConditionId(meta: ConditionMeta): string {
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
+
+  return `${meta.system}__${norm(meta.subcategory)}__${norm(meta.condition)}`;
+}
 
 interface ConditionDetailModalProps {
   condition: ConditionMeta;
@@ -72,7 +82,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   const [content, setContent] = useState<ConditionEntry | undefined>(undefined);
   
   const conditionId = useMemo(
-    () => buildConditionDefinition(condition).id,
+    () => buildConditionId(condition),
     [condition]
   );
 

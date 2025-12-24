@@ -30,8 +30,7 @@ import {
   type ConditionContent,
   type ConditionEntry,
 } from "../../lib/loadConditions";
-import { findConditionMetaById } from "../../src/lib/conditionSearch";
-import type { ConditionMeta } from "../../conditionRegistry";
+import type { ConditionMeta } from "../../src/types/conditions";
 
 const getConditionIdFromPath = (): string => {
   if (typeof window === "undefined") return "";

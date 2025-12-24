@@ -21,7 +21,7 @@ import TopicHeatmap from "./TopicHeatmap";
 import SystemDrilldownModal from "./SystemDrilldownModal";
 import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
 import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
-import type { ConditionMeta } from "../conditionRegistry";
+import type { ConditionMeta } from "../src/types/conditions";
 import ConditionDetailModal from "./ConditionDetailModal";
 import DrugDetailModal from "./DrugDetailModal";
 import { findConditionMetaById } from "../src/lib/conditionSearch";
@@ -559,7 +559,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     type="button"
                     onClick={async () => {
                       if (result.type === "condition" && result.conditionData) {
-                        const meta = findConditionMetaById(result.id);
+                        const meta = await findConditionMetaById(result.id);
                         if (meta) {
                           setSelectedCondition(meta);
                         }
@@ -953,9 +953,9 @@ const MenuView: React.FC<MenuViewProps> = ({
             // Note: Full implementation would update in parent state/database
             const updatedQuestion = { ...question, isBookmarked: false };
           }}
-          onViewQuestion={(question) => {
+          onViewQuestion={async (question) => {
             // Open question in a review modal or navigate to it
-            const meta = findConditionMetaById(question.conditionId);
+            const meta = await findConditionMetaById(question.conditionId);
             if (meta) {
               setSelectedCondition(meta);
             }

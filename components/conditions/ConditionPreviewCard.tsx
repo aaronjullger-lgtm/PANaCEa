@@ -18,7 +18,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight, Sparkles } from 'lucide-react';
 import { getSystemAccent } from '../../lib/utils/textFormatting';
 import { RichText, stripMarkdown } from '../../src/components/ui/RichText';
-import type { ConditionMeta } from '../../conditionRegistry';
+import type { ConditionMeta } from '../../src/types/conditions';
 
 interface ConditionPreviewCardProps {
   condition: ConditionMeta;

@@ -563,3 +563,56 @@ export function getCategoryBreakdown(
     }))
     .sort((a, b) => b.attempts - a.attempts);
 }
+
+/**
+ * Get simulation-specific statistics for clinical modes
+ * Returns metrics unique to Code Blue, Fluids, and Antibiotic modes
+ */
+export function getSimulationStats() {
+  const codeBlueStats = getDrillStats('code_blue_speed');
+  const fluidsStats = getDrillStats('fluid_electrolyte');
+  const antibioticStats = getDrillStats('antibiotic_mode');
+
+  // Code Blue: Calculate survival rate (accuracy) and best time
+  const codeBlueSurvivalRate = codeBlueStats.totalSessions > 0
+    ? Math.round(codeBlueStats.averageAccuracy)
+    : 0;
+  
+  // Extract best time from recent sessions metadata if available
+  let codeBluebestTime: number | null = null;
+  if (codeBlueStats.recentSessions.length > 0) {
+    const timesInSeconds = codeBlueStats.recentSessions
+      .filter(s => s.metadata?.completionTime)
+      .map(s => s.metadata!.completionTime as number);
+    if (timesInSeconds.length > 0) {
+      codeBluebestTime = Math.min(...timesInSeconds);
+    }
+  }
+
+  // Fluids: Total cases solved (count of sessions)
+  const fluidsCasesSolved = fluidsStats.totalSessions;
+
+  // Antibiotics: Coverage mastery (accuracy %)
+  const antibioticCoverageMastery = antibioticStats.totalSessions > 0
+    ? Math.round(antibioticStats.averageAccuracy)
+    : 0;
+
+  return {
+    codeBlue: {
+      survivalRate: codeBlueSurvivalRate,
+      bestTime: codeBluebestTime,
+      totalAttempts: codeBlueStats.totalSessions,
+      hasActivity: codeBlueStats.totalSessions > 0,
+    },
+    fluids: {
+      casesSolved: fluidsCasesSolved,
+      averageAccuracy: Math.round(fluidsStats.averageAccuracy),
+      hasActivity: fluidsStats.totalSessions > 0,
+    },
+    antibiotics: {
+      coverageMastery: antibioticCoverageMastery,
+      totalChallenges: antibioticStats.totalSessions,
+      hasActivity: antibioticStats.totalSessions > 0,
+    },
+  };
+}

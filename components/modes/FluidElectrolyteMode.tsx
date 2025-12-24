@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, XCircle, Droplets, ArrowRight, RotateCcw, Play, FlaskConical, BarChart2, Droplet, Calculator } from 'lucide-react';
+import { X, CheckCircle, XCircle, Droplets, ArrowRight, RotateCcw, Play, FlaskConical, BarChart2, Droplet, Calculator, AlertCircle } from 'lucide-react';
 import type { FluidElectrolyteCase } from '@/types/drill-modes';
-import { 
-  FLUID_ELECTROLYTE_CASES, 
-  URINE_CHEMISTRY_REFERENCE, 
-  getRandomFluidCase, 
-  validateNumericAnswer 
-} from '@/data/modes/fluidElectrolyteData';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { MiniModeLayout, MiniModeHeader, MiniModeCard } from './MiniModeLayout';
 import { useTheme } from '@/hooks/useTheme';
@@ -17,7 +11,85 @@ interface FluidElectrolyteModeProps {
   onExit?: () => void;
 }
 
-type ViewState = 'landing' | 'active';
+type ViewState = 'landing' | 'loading' | 'active' | 'error';
+
+/**
+ * Urine Chemistry Reference Table (static reference data)
+ */
+const URINE_CHEMISTRY_REFERENCE = {
+  reference: [
+    {
+      parameter: 'Sodium (Na)',
+      normalRange: '40-220',
+      unit: 'mEq/L',
+      interpretation: 'Varies with dietary intake'
+    },
+    {
+      parameter: 'Potassium (K)',
+      normalRange: '25-125',
+      unit: 'mEq/L',
+      interpretation: 'Reflects dietary intake'
+    },
+    {
+      parameter: 'Chloride (Cl)',
+      normalRange: '110-250',
+      unit: 'mEq/L'
+    },
+    {
+      parameter: 'Creatinine',
+      normalRange: '20-320',
+      unit: 'mg/dL',
+      interpretation: 'Used in FENa calculation'
+    },
+    {
+      parameter: 'Osmolality',
+      normalRange: '50-1200',
+      unit: 'mOsm/kg',
+      interpretation: 'Reflects concentrating ability'
+    },
+    {
+      parameter: 'Specific Gravity',
+      normalRange: '1.002-1.030',
+      unit: '',
+      interpretation: 'Correlates with osmolality'
+    }
+  ]
+};
+
+/**
+ * Validate numeric answer with margin of error
+ */
+const validateNumericAnswer = (
+  userAnswer: number,
+  correctAnswer: number,
+  marginOfError: number
+): { isCorrect: boolean; difference: number } => {
+  const difference = Math.abs(userAnswer - correctAnswer);
+  return {
+    isCorrect: difference <= marginOfError,
+    difference,
+  };
+};
+
+/**
+ * Fetch random fluid case from database API
+ */
+const fetchFluidCase = async (): Promise<FluidElectrolyteCase | null> => {
+  try {
+    const response = await fetch('/api/drills/fluids?count=1');
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    const data = await response.json();
+    if (!data.cases || data.cases.length === 0) {
+      throw new Error('No cases returned from API');
+    }
+    return data.cases[0];
+  } catch (error) {
+    console.error('Failed to fetch fluid case:', error);
+    return null;
+  }
+};
 
 const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) => {
   const [theme] = useTheme();
@@ -28,7 +100,7 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   const [isCorrect, setIsCorrect] = useState(false);
   const [feedback, setFeedback] = useState<string>('');
   const [score, setScore] = useState({ correct: 0, total: 0 });
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Theme styling
   const containerText = theme === 'dark' ? 'text-[#101729]' : 'text-[#E9ECF1]';
@@ -36,14 +108,20 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
   const accentBg = 'bg-[#364154]';
   const accentText = 'text-[#E9ECF1]';
 
-  const handleStart = () => {
-    setIsLoading(true);
-    // Simulate loading for content generation buffer
-    setTimeout(() => {
-      setCurrentCase(getRandomFluidCase());
-      setIsLoading(false);
-      setViewState('active');
-    }, 1000);
+  const handleStart = async () => {
+    setViewState('loading');
+    setError(null);
+    
+    const fluidCase = await fetchFluidCase();
+    
+    if (!fluidCase) {
+      setError('Failed to load fluid case. Please try again.');
+      setViewState('error');
+      return;
+    }
+    
+    setCurrentCase(fluidCase);
+    setViewState('active');
   };
 
   const handleSubmit = () => {
@@ -90,12 +168,24 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
     );
   };
 
-  const handleNext = () => {
-    setCurrentCase(getRandomFluidCase());
+  const handleNext = async () => {
+    setViewState('loading');
     setUserAnswer('');
     setIsSubmitted(false);
     setIsCorrect(false);
     setFeedback('');
+    setError(null);
+    
+    const fluidCase = await fetchFluidCase();
+    
+    if (!fluidCase) {
+      setError('Failed to load next case. Please try again.');
+      setViewState('error');
+      return;
+    }
+    
+    setCurrentCase(fluidCase);
+    setViewState('active');
   };
 
   const handleReset = () => {
@@ -199,14 +289,14 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
             <div className="text-center">
               <motion.button
                 onClick={handleStart}
-                disabled={isLoading}
+                disabled={viewState === 'loading'}
                 className="px-10 py-4 bg-[#1F283A] text-[#E9ECF1] dark:bg-[#E9ECF1] dark:text-[#1F283A] hover:bg-[#364154] dark:hover:bg-white
                          disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-semibold text-lg
                          transition-all flex items-center justify-center gap-3 mx-auto shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {isLoading ? (
+                {viewState === 'loading' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Loading Case...
@@ -218,6 +308,80 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
                   </>
                 )}
               </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading State
+  if (viewState === 'loading') {
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#1F283A] text-[#1F283A] dark:text-[#E9ECF1] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 border-4 border-cyan-200 dark:border-cyan-900 border-t-cyan-600 dark:border-t-cyan-400 rounded-full animate-spin mx-auto" />
+          <p className="text-lg font-medium text-[#364154] dark:text-[#cbd5e1]">Loading case...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error State
+  if (viewState === 'error') {
+    return (
+      <div className="min-h-screen bg-white dark:bg-[#1F283A] text-[#1F283A] dark:text-[#E9ECF1]">
+        {/* Header */}
+        <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1F283A] sticky top-0 z-10 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-[#E9ECF1] dark:bg-[#364154] flex items-center justify-center shadow-sm">
+                <Droplets className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Hydro-Mode</h1>
+                <p className="text-sm text-[#364154] dark:text-[#cbd5e1]">Fluid & Electrolyte Management</p>
+              </div>
+            </div>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#364154] dark:hover:bg-slate-700 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Error Display */}
+        <div className="max-w-2xl mx-auto px-4 py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-50 dark:bg-red-950/30 rounded-2xl p-8 border border-red-200 dark:border-red-900 text-center"
+          >
+            <AlertCircle className="w-16 h-16 text-red-600 dark:text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-red-700 dark:text-red-300 mb-2">Error Loading Case</h2>
+            <p className="text-[#364154] dark:text-[#cbd5e1] mb-6">
+              {error || 'An unexpected error occurred. Please try again.'}
+            </p>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={handleStart}
+                className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-semibold transition-colors"
+              >
+                Try Again
+              </button>
+              {onExit && (
+                <button
+                  onClick={onExit}
+                  className="px-6 py-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 
+                           text-[#1F283A] dark:text-[#E9ECF1] rounded-lg font-semibold transition-colors"
+                >
+                  Exit
+                </button>
+              )}
             </div>
           </motion.div>
         </div>

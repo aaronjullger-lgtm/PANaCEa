@@ -21,8 +21,7 @@ import {
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
 import { ConditionPreviewCard } from '../conditions/ConditionPreviewCard';
-import { findConditionMeta } from '../../conditionRegistry';
-import type { ConditionMeta } from '../../conditionRegistry';
+import type { ConditionMeta } from '../../src/types/conditions';
 
 interface IntelligenceHubProps {
   performanceData: PerformanceRecord[];
@@ -774,36 +773,14 @@ const IntelligenceHub: React.FC<IntelligenceHubProps> = ({
                       /* Grid of Condition Preview Cards */
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {currentSubcategoryStats.conditions.map((condition, index) => {
-                          // Convert ConditionStats to ConditionMeta for the preview card
-                          const conditionMeta = findConditionMeta(condition.name);
-                          
-                          // Fallback if condition not found in registry
-                          if (!conditionMeta) {
-                            return (
-                              <motion.button
-                                key={condition.name}
-                                onClick={() => setSelectedCondition(condition)}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: index * 0.05 }}
-                                className="w-full group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 transition-all duration-200 hover:translate-x-1 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm text-left"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1">
-                                    <div className="font-medium text-slate-700 dark:text-slate-200 mb-1">
-                                      {condition.name}
-                                    </div>
-                                    <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                                      <span>{condition.totalQuestions} attempts</span>
-                                      <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                                      <span>{condition.accuracy}% accuracy</span>
-                                    </div>
-                                  </div>
-                                  <ChevronRight className="w-5 h-5 text-slate-400 dark:text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors" />
-                                </div>
-                              </motion.button>
-                            );
-                          }
+                          // Build ConditionMeta from performance data
+                          // We have the condition name and can infer system/subcategory from context
+                          const conditionMeta: ConditionMeta = {
+                            system: selectedSystem!,
+                            subcategory: selectedSubcategory!,
+                            condition: condition.name,
+                            aliases: [],
+                          };
                           
                           // Use the polished ConditionPreviewCard
                           return (

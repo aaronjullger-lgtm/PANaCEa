@@ -5,8 +5,7 @@
  * No filesystem operations - all content retrieved via Prisma queries on published content.
  */
 
-import { CONDITION_REGISTRY } from '../conditionRegistry';
-import type { ConditionMeta } from '../conditionRegistry';
+import type { ConditionMeta } from '../src/types/conditions';
 import type { SystemCode } from '../types';
 
 const VALID_SYSTEMS: SystemCode[] = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'ENDO', 'HEME', 'ID', 'RENAL', 'REPRO', 'DERM', 'GU', 'HEENT', 'PSYCH', 'PRO'];
@@ -43,27 +42,52 @@ export interface LoadedConditionData {
 }
 
 /**
- * Find condition metadata by ID or name
+ * Find condition metadata by ID or name from the database
+ * Note: This is a server-side only function
  */
-function findConditionMeta(conditionId: string): ConditionMeta | null {
-  // Try to find in registry by matching the condition name
-  const allConditions = [
-    ...CONDITION_REGISTRY,
-  ];
-
-  // First try exact match on condition name
-  let found = allConditions.find(c => 
-    c.condition.toLowerCase() === conditionId.toLowerCase()
-  );
-
-  // If not found, try matching against aliases
-  if (!found) {
-    found = allConditions.find(c => 
-      c.aliases?.some(alias => alias.toLowerCase() === conditionId.toLowerCase())
-    );
+async function findConditionMeta(conditionId: string): Promise<ConditionMeta | null> {
+  // Server-side only - use Prisma to query database
+  if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
+    console.error('findConditionMeta should not be called in browser environment');
+    return null;
   }
 
-  return found || null;
+  try {
+    const { PrismaClient } = await import('@prisma/client');
+    const prisma = new PrismaClient();
+
+    // Search by name in Condition table
+    const condition = await prisma.condition.findFirst({
+      where: {
+        OR: [
+          { name: { equals: conditionId, mode: 'insensitive' } },
+          { id: conditionId },
+        ],
+        status: 'published',
+      },
+      select: {
+        id: true,
+        name: true,
+        system: true,
+        subcategory: true,
+      },
+    });
+
+    await prisma.$disconnect();
+
+    if (!condition) return null;
+
+    // Convert to ConditionMeta format
+    return {
+      system: condition.system as SystemCode,
+      subcategory: condition.subcategory,
+      condition: condition.name,
+      aliases: [],
+    };
+  } catch (error) {
+    console.error('Error finding condition meta:', error);
+    return null;
+  }
 }
 
 /**
@@ -132,7 +156,7 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
           .filter((sys): sys is SystemCode => VALID_SYSTEMS.includes(sys as SystemCode))
       : [];
 
-    const meta: ConditionMeta = findConditionMeta(record.condition) || {
+    const meta: ConditionMeta = (await findConditionMeta(record.condition)) || {
       system: safeSystem,
       subcategory: record.subcategory,
       condition: record.condition,

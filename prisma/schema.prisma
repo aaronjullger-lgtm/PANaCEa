@@ -383,6 +383,11 @@ model MediaAsset {
   sourceUrl String? // Where it came from (if scraped)
   citation  String? // "Harrison's Principles of Internal Medicine, 21st Ed."
 
+  /// Drill/Quiz fields for Photo/ECG/Derm drills
+  correctDiagnosis String? // The correct diagnosis for this image (used in drills)
+  distractors      Json? // Array of incorrect diagnoses for multiple choice
+  clinicalContext  Json? // Patient demographics, vitals, chief complaint (ClinicalContext interface)
+
   /// Upload tracking
   uploadedBy String? // User ID
   uploadedAt DateTime @default(now())
@@ -404,6 +409,56 @@ model MediaAsset {
   @@index([folder])
   @@index([mediaType])
   @@index([approvedAt])
+}
+
+/// Represents rapid-fire ACLS/PALS/BLS questions for Code Blue Speed Mode
+model ACLSQuestion {
+  id           String   @id @default(uuid())
+  question     String   @db.Text
+  options      Json     // Array of strings (answer choices)
+  correctIndex Int      // Index of the correct answer (0-based)
+  category     String   // "ACLS" | "PALS" | "BLS" | "Critical Care"
+  explanation  String   @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category])
+}
+
+/// Represents fluid/electrolyte clinical cases for calculation drills
+model FluidCase {
+  id            String   @id @default(uuid())
+  title         String
+  scenario      String   @db.Text
+  labs          Json     // Complex lab data: { bmp: {...}, urineNa: 12, urineCr: 180 }
+  correctAnswer Float    // Numeric answer (e.g., 0.36 for FENa)
+  unit          String   // Unit of measurement (%, mEq/L, L, mL/hr)
+  marginOfError Float    // Acceptable deviation from correct answer
+  explanation   String   @db.Text
+  calculationHint String? @db.Text // Formula hint (e.g., "FENa = [(UNa × SCr) / (SNa × UCr)] × 100")
+  category      String   // "fena" | "anion_gap" | "free_water_deficit" | "maintenance_fluids"
+  difficulty    String   @default("medium") // "easy" | "medium" | "hard"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([category])
+  @@index([difficulty])
+}
+
+/// Represents antibiotic-organism coverage guidelines for Bug-Drug drill
+model AntibioticGuideline {
+  id          String   @id @default(uuid())
+  organism    String   // Organism name (e.g., "Pseudomonas aeruginosa")
+  class       String   // Organism class (e.g., "Gram Negative", "Atypical")
+  effective   Json     // Array of effective antibiotics (e.g., ["Cefepime", "Meropenem"])
+  resistant   Json     // Array of resistant/ineffective antibiotics
+  notes       String?  @db.Text // Additional clinical notes
+  description String?  // Clinical context (e.g., "Most common cause of CAP")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([organism])
+  @@index([class])
 }
 
 /// Represents an achievement earned by a user

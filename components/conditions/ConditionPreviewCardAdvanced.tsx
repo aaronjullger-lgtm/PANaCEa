@@ -13,7 +13,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, Target, BookmarkPlus, Share2, Sparkles } from 'lucide-react';
 import { extractSnippets, getSystemAccent } from '../../lib/utils/textFormatting';
-import type { ConditionMeta } from '../../conditionRegistry';
+import type { ConditionMeta } from '../../src/types/conditions';
 
 interface ConditionPreviewCardAdvancedProps {
   condition: ConditionMeta;

@@ -1,22 +1,15 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MASTER_CONDITION_LIST } from '@/hooks/game/use-photo-drill';
 
 /** Delay in ms before closing dropdown on blur, allows click events to register */
 const BLUR_DELAY_MS = 150;
-
-/**
- * Re-export for backwards compatibility.
- * @deprecated Use MASTER_CONDITION_LIST from use-photo-drill.ts instead.
- */
-export const ALL_CONDITIONS: string[] = MASTER_CONDITION_LIST;
 
 interface DiagnosisInputProps {
   onSubmit: (value: string) => void;
   disabled?: boolean;
   autoFocus?: boolean;
-  /** Optional list of valid diagnoses to filter against. Defaults to MASTER_CONDITION_LIST. */
-  options?: string[];
+  /** Required list of valid diagnoses to filter against. Passed from parent hook. */
+  options: string[];
 }
 
 /**
@@ -29,7 +22,7 @@ const DiagnosisInput: React.FC<DiagnosisInputProps> = ({
   onSubmit,
   disabled = false,
   autoFocus = false,
-  options = MASTER_CONDITION_LIST,
+  options,
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);

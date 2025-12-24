@@ -1,13 +1,9 @@
-import {
-  CONDITION_REGISTRY,
-  buildConditionDefinition,
-  type ConditionMeta,
-} from "../../conditionRegistry.ts";
 import type { SystemCode } from "../../types.ts";
 
 export interface ConditionSearchFilters {
   system?: SystemCode;
   subcategory?: string;
+  limit?: number;
 }
 
 export interface ConditionSearchResult {
@@ -19,75 +15,10 @@ export interface ConditionSearchResult {
   score: number;
 }
 
-// Scoring constants for search result ranking
-const SCORE_EXACT_MATCH = 3;
-const SCORE_STARTS_WITH = 2.5;
-const SCORE_CONTAINS_BASE = 2;
-
-function levenshtein(a: string, b: string): number {
-  const dp = Array.from({ length: a.length + 1 }, () =>
-    new Array(b.length + 1).fill(0)
-  );
-  for (let i = 0; i <= a.length; i++) dp[i][0] = i;
-  for (let j = 0; j <= b.length; j++) dp[0][j] = j;
-
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      dp[i][j] = Math.min(
-        dp[i - 1][j] + 1,
-        dp[i][j - 1] + 1,
-        dp[i - 1][j - 1] + cost
-      );
-    }
-  }
-  return dp[a.length][b.length];
-}
-
-function similarityScore(query: string, target: string): number {
-  const normalizedQuery = query.toLowerCase();
-  const normalizedTarget = target.toLowerCase();
-  
-  // Exact match gets highest score
-  if (normalizedTarget === normalizedQuery) {
-    return SCORE_EXACT_MATCH;
-  }
-  
-  // Starts with match gets higher score (checked before includes)
-  if (normalizedTarget.startsWith(normalizedQuery)) {
-    return SCORE_STARTS_WITH;
-  }
-  
-  // Contains match gets high score
-  if (normalizedTarget.includes(normalizedQuery)) {
-    const lengthBoost = normalizedQuery.length / Math.max(normalizedTarget.length, 1);
-    return SCORE_CONTAINS_BASE + lengthBoost;
-  }
-  
-  // Fuzzy match based on Levenshtein distance
-  const distance = levenshtein(normalizedQuery, normalizedTarget);
-  return 1 / (1 + distance);
-}
-
-function bestTermScore(query: string, term: string): number {
-  const candidates = [term, ...term.split(/\s+|[-–—]/).filter(Boolean)];
-  return candidates.reduce(
-    (score, candidate) => Math.max(score, similarityScore(query, candidate)),
-    0
-  );
-}
-
-export function getSystemOptions(): SystemCode[] {
-  return Array.from(new Set(CONDITION_REGISTRY.map((c) => c.system)));
-}
-
-export function getSubcategoryOptions(system?: SystemCode): string[] {
-  const filtered = system
-    ? CONDITION_REGISTRY.filter((c) => c.system === system)
-    : CONDITION_REGISTRY;
-  return Array.from(new Set(filtered.map((c) => c.subcategory)));
-}
-
+/**
+ * Search conditions via API endpoint
+ * Uses database-backed search with fuzzy matching
+ */
 export async function searchConditions(
   rawQuery: string,
   filters: ConditionSearchFilters = {}
@@ -95,52 +26,107 @@ export async function searchConditions(
   const query = rawQuery.trim();
   if (!query) return [];
 
-  // Skip database search in browser environment - only use registry
-  // Database queries should only run in server context (Node.js/Edge runtime)
-  // The browser cannot and should not import Prisma client
-  
-  // Fallback to existing registry search
-  const results: ConditionSearchResult[] = [];
+  try {
+    // Build query params
+    const params = new URLSearchParams({
+      q: query,
+    });
 
-  for (const meta of CONDITION_REGISTRY) {
-    if (
-      filters.system &&
-      meta.system !== filters.system &&
-      !meta.relatedSystems?.includes(filters.system)
-    ) {
-      continue;
-    }
-    if (filters.subcategory && meta.subcategory !== filters.subcategory) continue;
-
-    const aliases = meta.aliases ?? [];
-    const terms = [meta.condition, ...aliases];
-    let bestScore = 0;
-
-    for (const term of terms) {
-      const score = bestTermScore(query, term);
-      if (score > bestScore) bestScore = score;
+    if (filters.system) {
+      params.append('system', filters.system);
     }
 
-    if (bestScore > 0.1) {
-      const id = buildConditionDefinition(meta).id;
-      results.push({
-        id,
-        condition: meta.condition,
-        system: meta.system,
-        subcategory: meta.subcategory,
-        aliases,
-        score: bestScore,
-      });
+    if (filters.subcategory) {
+      params.append('subcategory', filters.subcategory);
     }
+
+    if (filters.limit) {
+      params.append('limit', filters.limit.toString());
+    }
+
+    // Call search API endpoint
+    const response = await fetch(`/api/conditions/search?${params.toString()}`);
+
+    if (!response.ok) {
+      console.error('Search API error:', response.status, response.statusText);
+      return [];
+    }
+
+    const results: ConditionSearchResult[] = await response.json();
+    return results;
+
+  } catch (error) {
+    console.error('Error searching conditions:', error);
+    return [];
   }
-
-  return results
-    .sort((a, b) => b.score - a.score || a.condition.localeCompare(b.condition))
-    .slice(0, 30);
 }
 
-export function findConditionMetaById(id: string): ConditionMeta | undefined {
-  return CONDITION_REGISTRY.find(
-    (meta) => buildConditionDefinition(meta).id === id
-  );
+/**
+ * Get all available system codes from the database
+ */
+export async function getSystemOptions(): Promise<SystemCode[]> {
+  try {
+    const response = await fetch('/api/conditions?includeContent=false');
+    if (!response.ok) {
+      console.error('Failed to fetch systems');
+      return [];
+    }
+
+    const conditions = await response.json();
+    const systems = new Set<SystemCode>();
+    conditions.forEach((c: any) => {
+      if (c.system) systems.add(c.system as SystemCode);
+    });
+
+    return Array.from(systems).sort();
+  } catch (error) {
+    console.error('Error fetching system options:', error);
+    return [];
+  }
+}
+
+/**
+ * Get all subcategories for a given system
+ */
+export async function getSubcategoryOptions(system?: SystemCode): Promise<string[]> {
+  try {
+    const url = system 
+      ? `/api/conditions?system=${system}&includeContent=false`
+      : '/api/conditions?includeContent=false';
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error('Failed to fetch subcategories');
+      return [];
+    }
+
+    const conditions = await response.json();
+    const subcategories = new Set<string>();
+    conditions.forEach((c: any) => {
+      if (c.subcategory) subcategories.add(c.subcategory);
+    });
+
+    return Array.from(subcategories).sort();
+  } catch (error) {
+    console.error('Error fetching subcategory options:', error);
+    return [];
+  }
+}
+
+/**
+ * Find a condition by its ID
+ */
+export async function findConditionMetaById(id: string): Promise<any | undefined> {
+  try {
+    const response = await fetch(`/api/conditions/${id}`);
+    if (!response.ok) {
+      return undefined;
+    }
+
+    const condition = await response.json();
+    return condition;
+  } catch (error) {
+    console.error('Error finding condition by ID:', error);
+    return undefined;
+  }
 }

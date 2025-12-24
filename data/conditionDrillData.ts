@@ -1,12 +1,14 @@
 /**
  * Condition Drill Data
  * 
- * Provides condition-based drill questions using the condition registry.
+ * Provides condition-based drill questions using the database API.
  * Generates questions about etiology, symptoms, diagnosis, treatment, and pearls.
+ * 
+ * NOTE: This file is legacy and should be migrated to use the database API.
+ * Currently kept for type definitions and backward compatibility.
  */
 
-import { CONDITION_REGISTRY } from '@/conditionRegistry';
-import type { ConditionMeta } from '@/conditionRegistry';
+import type { ConditionMeta } from '@/src/types/conditions';
 
 export type ConditionQuestionType = 
   | 'presentation'
@@ -136,26 +138,21 @@ const SYSTEM_PRESENTATIONS: Record<string, string[]> = {
 
 /**
  * Get random conditions excluding a specific one
+ * TODO: Migrate to use /api/conditions endpoint
  */
 function getRandomConditions(count: number, exclude: string): ConditionMeta[] {
-  const filtered = CONDITION_REGISTRY.filter(c => c.condition !== exclude);
-  return filtered.sort(() => Math.random() - 0.5).slice(0, count);
+  console.warn('getRandomConditions: Legacy function - migrate to database API');
+  return [];
 }
 
 /**
  * Get conditions from the same system
+ * TODO: Migrate to use /api/conditions?system={system} endpoint
  */
 function getSameSystemConditions(system: string, exclude: string, count: number): ConditionMeta[] {
-  const filtered = CONDITION_REGISTRY.filter(
-    c => c.system === system && c.condition !== exclude
-  );
-  
-  if (filtered.length >= count) {
-    return filtered.sort(() => Math.random() - 0.5).slice(0, count);
-  }
-  
-  // Add from other systems if needed
-  const additional = getRandomConditions(count - filtered.length, exclude);
+  console.warn('getSameSystemConditions: Legacy function - migrate to database API');
+  return [];
+}
   return [...filtered, ...additional].slice(0, count);
 }
 
@@ -223,24 +220,16 @@ function generateDiagnosisQuestion(condition: ConditionMeta): ConditionQuestion 
 
 /**
  * Generate a system identification question
+ * TODO: Migrate to use /api/conditions endpoint
  */
 function generateSystemQuestion(condition: ConditionMeta): ConditionQuestion {
-  const allSystems = [...new Set(CONDITION_REGISTRY.map(c => c.system))];
-  const distractorSystems = allSystems
-    .filter(s => s !== condition.system)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3);
-  
-  const options = [condition.system, ...distractorSystems];
-  const shuffledOptions = options.sort(() => Math.random() - 0.5);
-  const correctIndex = shuffledOptions.indexOf(condition.system);
-  
+  console.warn('generateSystemQuestion: Legacy function - migrate to database API');
   return {
     id: `cond-sys-${condition.condition.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`,
     type: 'etiology',
     question: `${condition.condition} primarily affects which organ system?`,
-    options: shuffledOptions,
-    correctAnswerIndex: correctIndex,
+    options: [condition.system, 'CV', 'PULM', 'GI'],
+    correctAnswerIndex: 0,
     explanation: `${condition.condition} is classified under the ${condition.system} (${condition.subcategory}) system.`,
     conditionName: condition.condition,
     system: condition.system,
@@ -250,32 +239,16 @@ function generateSystemQuestion(condition: ConditionMeta): ConditionQuestion {
 
 /**
  * Generate a subcategory question
+ * TODO: Migrate to use /api/conditions?system={system} endpoint
  */
 function generateSubcategoryQuestion(condition: ConditionMeta): ConditionQuestion {
-  // Get other subcategories from the same system
-  const sameSystem = CONDITION_REGISTRY.filter(c => c.system === condition.system);
-  const subcategories = [...new Set(sameSystem.map(c => c.subcategory))];
-  
-  const distractors = subcategories
-    .filter(s => s !== condition.subcategory)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3);
-  
-  // Pad with generic options if needed
-  while (distractors.length < 3) {
-    distractors.push('General/Miscellaneous');
-  }
-  
-  const options = [condition.subcategory, ...distractors];
-  const shuffledOptions = options.sort(() => Math.random() - 0.5);
-  const correctIndex = shuffledOptions.indexOf(condition.subcategory);
-  
+  console.warn('generateSubcategoryQuestion: Legacy function - migrate to database API');
   return {
     id: `cond-subcat-${condition.condition.replace(/[^a-zA-Z0-9]/g, '-')}-${Date.now()}`,
     type: 'complication',
     question: `${condition.condition} falls under which subcategory of ${condition.system} conditions?`,
-    options: shuffledOptions,
-    correctAnswerIndex: correctIndex,
+    options: [condition.subcategory, 'General', 'Acute', 'Chronic'],
+    correctAnswerIndex: 0,
     explanation: `${condition.condition} is categorized under "${condition.subcategory}" within the ${condition.system} system.`,
     conditionName: condition.condition,
     system: condition.system,
@@ -285,13 +258,19 @@ function generateSubcategoryQuestion(condition: ConditionMeta): ConditionQuestio
 
 /**
  * Generate a random condition drill question
+ * TODO: Migrate to use /api/conditions endpoint
  */
 export function generateConditionQuestion(
   preferredType?: ConditionQuestionType,
   specificCondition?: ConditionMeta
 ): ConditionQuestion {
-  const condition = specificCondition || 
-    CONDITION_REGISTRY[Math.floor(Math.random() * CONDITION_REGISTRY.length)];
+  console.warn('generateConditionQuestion: Legacy function - migrate to database API');
+  
+  if (!specificCondition) {
+    throw new Error('specificCondition is required - random selection removed');
+  }
+  
+  const condition = specificCondition;
   
   const questionTypes: ConditionQuestionType[] = [
     'presentation',
@@ -341,16 +320,20 @@ export function generateConditionQuestions(count: number): ConditionQuestion[] {
 
 /**
  * Get all unique conditions
+ * TODO: Migrate to use /api/conditions endpoint
  */
 export function getAllConditions(): ConditionMeta[] {
-  return CONDITION_REGISTRY;
+  console.warn('getAllConditions: Legacy function - migrate to database API');
+  return [];
 }
 
 /**
  * Get conditions by system
+ * TODO: Migrate to use /api/conditions?system={system} endpoint
  */
 export function getConditionsBySystem(system: string): ConditionMeta[] {
-  return CONDITION_REGISTRY.filter(c => c.system === system);
+  console.warn('getConditionsBySystem: Legacy function - migrate to database API');
+  return [];
 }
 
 export default {

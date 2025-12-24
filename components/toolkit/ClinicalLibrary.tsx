@@ -4,9 +4,10 @@ import { BookOpen, ChevronRight, Filter, Pill, Search, Stethoscope, Activity, Al
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
 import { MedicalContentRenderer } from './MedicalContentRenderer';
 import { ConditionPreviewCard } from '../conditions/ConditionPreviewCard';
-import { findConditionMeta } from '../../conditionRegistry';
-import type { ConditionMeta } from '../../conditionRegistry';
+import type { ConditionMeta } from '../../src/types/conditions';
 import clsx from 'clsx';
+
+// Note: findConditionMeta removed - will be replaced with database query
 
 // Lightweight condition type from database
 interface ConditionMetadata {
@@ -335,33 +336,14 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[520px] overflow-auto pr-1">
                     {(activeCategoryData?.conditions || []).map((condition, index) => {
-                      // Convert ConditionMetadata to ConditionMeta for the preview card
-                      const conditionMeta = findConditionMeta(condition.name);
-                      
-                      // Fallback if condition not found in registry
-                      if (!conditionMeta) {
-                        return (
-                          <motion.button
-                            key={condition.id}
-                            onClick={() => setSelectedCondition({ ...condition, conditionId: condition.id })}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.05 }}
-                            whileHover={{ scale: 1.02 }}
-                            className="text-left p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-sm transition-all"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <div className="font-semibold text-slate-900 dark:text-slate-100 mb-1">{condition.name}</div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">{condition.subcategory}</div>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
-                                  {condition.system} • {condition.id}
-                                </p>
-                              </div>
-                            </div>
-                          </motion.button>
-                        );
-                      }
+                      // Map ConditionMetadata to ConditionMeta for the preview card
+                      const conditionMeta: ConditionMeta = {
+                        system: condition.system as any, // SystemCode type
+                        subcategory: condition.subcategory,
+                        condition: condition.name,
+                        aliases: [],
+                        // These will be populated when content is loaded
+                      };
                       
                       // Use the polished ConditionPreviewCard
                       return (

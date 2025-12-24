@@ -16,11 +16,7 @@ import type {
   ConditionDefinition,
 } from "../types";
 import type { PatientEncounterCase, PatientPersona } from '../types/drill-modes';
-import {
-  buildConditionDefinition,
-  findConditionMeta,
-  type ConditionMeta,
-} from "../conditionRegistry";
+import type { ConditionMeta } from "../src/types/conditions";
 import {
   getConditionByIdSync,
   isMeaningfulContent,
@@ -32,6 +28,56 @@ import {
   findConditionByName,
   type ConditionMetadata,
 } from "./conditionRegistryService";
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Build a standardized condition ID from metadata
+ * Replaces the old buildConditionDefinition from conditionRegistry
+ */
+function buildConditionId(meta: ConditionMeta): string {
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
+
+  return `${meta.system}__${norm(meta.subcategory)}__${norm(meta.condition)}`;
+}
+
+/**
+ * Build a ConditionDefinition from ConditionMeta
+ */
+function buildConditionDefinition(meta: ConditionMeta): ConditionDefinition {
+  return {
+    id: buildConditionId(meta),
+    system: meta.system,
+    subcategory: meta.subcategory,
+    condition: meta.condition,
+  };
+}
+
+/**
+ * Find condition metadata by name using the API
+ */
+async function findConditionMeta(conditionName: string): Promise<ConditionMeta | undefined> {
+  try {
+    const conditionData = await findConditionByName(conditionName);
+    if (!conditionData) return undefined;
+
+    return {
+      system: conditionData.system as SystemCode,
+      subcategory: conditionData.subcategory,
+      condition: conditionData.name,
+      aliases: [],
+    };
+  } catch (error) {
+    console.error('Error finding condition meta:', error);
+    return undefined;
+  }
+}
 
 // ============================================================================
 // TYPE DEFINITIONS FOR GEMINI SERVICE
@@ -385,7 +431,7 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
     chosenSubcategory = settings.subcategoryName;
   }
   if (settings.conditionName) {
-    const meta = findConditionMeta(settings.conditionName);
+    const meta = await findConditionMeta(settings.conditionName);
     if (meta) {
       chosenConditionMeta = meta;
       chosenConditionDef = buildConditionDefinition(meta);
@@ -426,7 +472,7 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
         const dbCondition = await getRandomConditionForSystemDB(systemCode);
         if (dbCondition) {
           // Convert database metadata to ConditionMeta for compatibility
-          const compatMeta = findConditionMeta(dbCondition.name);
+          const compatMeta = await findConditionMeta(dbCondition.name);
           if (compatMeta) {
             selectedConditionMeta = compatMeta;
             chosenConditionMeta = selectedConditionMeta;

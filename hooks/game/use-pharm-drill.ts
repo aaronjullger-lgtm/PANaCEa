@@ -1,6 +1,26 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { generatePharmQuestion, type PharmQuestion, type PharmQuestionType, type Drug } from '@/data/pharmQuizData';
-import { drugService } from '@/services/drugService';
+
+// Import type definitions from the API endpoint
+export interface PharmQuestion {
+  id: string;
+  type: PharmQuestionType;
+  question: string;
+  options: string[];
+  correctAnswerIndex: number;
+  explanation: string;
+  drugName: string;
+  drugClass: string | string[];
+  difficulty: 'easy' | 'medium' | 'hard';
+}
+
+export type PharmQuestionType = 
+  | 'mechanism'
+  | 'side_effect'
+  | 'contraindication'
+  | 'drug_class'
+  | 'antidote'
+  | 'interaction'
+  | 'clinical_use';
 
 export type PharmDrillStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
@@ -32,8 +52,8 @@ export interface UsePharmDrillReturn {
   showCategoryMenu: () => void;
 }
 
-const INITIAL_QUEUE_SIZE = 3;
-const MAX_RECENT_DRUGS = 20; // Track last 20 drugs to avoid repetition
+const INITIAL_QUEUE_SIZE = 10; // Fetch multiple questions at once
+const REFILL_THRESHOLD = 3; // Refill queue when this many questions remain
 
 export function usePharmDrill(): UsePharmDrillReturn {
   const [selectedCategory, setSelectedCategory] = useState<PharmCategory>('random');
@@ -45,73 +65,88 @@ export function usePharmDrill(): UsePharmDrillReturn {
   const [userAnswerIndex, setUserAnswerIndex] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [status, setStatus] = useState<PharmDrillStatus>('landing');
-  const [drugs, setDrugs] = useState<Drug[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Track recently used drugs to avoid repetition
-  const recentDrugsRef = useRef<Set<string>>(new Set());
-
-  // Fetch drugs on mount
-  useEffect(() => {
-    const loadDrugs = async () => {
-      try {
-        // Fetch all drugs to have a good pool for distractors
-        const fetchedDrugs = await drugService.getAll();
-        setDrugs(fetchedDrugs);
-      } catch (error) {
-        console.error('Failed to load drugs:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadDrugs();
-  }, []);
+  // Track if we're currently fetching to prevent duplicate requests
+  const isFetchingRef = useRef(false);
 
   const currentQuestion = queue[currentIndex] ?? null;
 
-  const getQuestionType = useCallback((category: PharmCategory): PharmQuestionType | undefined => {
-    if (category === 'random') return undefined;
-    return category as PharmQuestionType;
+  /**
+   * Fetch questions from the API
+   */
+  const fetchQuestions = useCallback(async (category: PharmCategory, count: number = INITIAL_QUEUE_SIZE): Promise<PharmQuestion[]> => {
+    if (isFetchingRef.current) return [];
+    
+    isFetchingRef.current = true;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams({
+        count: count.toString(),
+      });
+
+      // Map category to API question type
+      if (category !== 'random') {
+        params.append('category', category);
+      }
+
+      const response = await fetch(`/api/drills/pharm?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch questions: ${response.statusText}`);
+      }
+
+      const questions: PharmQuestion[] = await response.json();
+      return questions;
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load questions';
+      setError(errorMessage);
+      console.error('Error fetching pharm questions:', err);
+      return [];
+    } finally {
+      setIsLoading(false);
+      isFetchingRef.current = false;
+    }
   }, []);
 
-  const generateNewQuestion = useCallback((category: PharmCategory): PharmQuestion | null => {
-    if (drugs.length === 0) return null;
-
-    const type = getQuestionType(category);
-    let attempts = 0;
-    let drug: Drug;
+  /**
+   * Refill the question queue when running low
+   */
+  const refillQueue = useCallback(async () => {
+    const remainingQuestions = queue.length - currentIndex;
     
-    // Try to generate a question with a drug we haven't seen recently
-    do {
-      drug = drugs[Math.floor(Math.random() * drugs.length)];
-      attempts++;
-    } while (recentDrugsRef.current.has(drug.genericName) && attempts < 10);
-    
-    const question = generatePharmQuestion(drug, drugs, type);
-
-    // Add to recent drugs and maintain max size
-    recentDrugsRef.current.add(question.drugName);
-    if (recentDrugsRef.current.size > MAX_RECENT_DRUGS) {
-      const firstItem = recentDrugsRef.current.values().next().value;
-      if (firstItem) recentDrugsRef.current.delete(firstItem);
+    if (remainingQuestions <= REFILL_THRESHOLD && !isFetchingRef.current) {
+      const newQuestions = await fetchQuestions(selectedCategory, INITIAL_QUEUE_SIZE);
+      if (newQuestions.length > 0) {
+        setQueue(prev => [...prev, ...newQuestions]);
+      }
     }
-    
-    return question;
-  }, [drugs, getQuestionType]);
+  }, [queue.length, currentIndex, selectedCategory, fetchQuestions]);
 
-  const startSession = useCallback((category: PharmCategory) => {
-    if (drugs.length === 0) return;
+  // Auto-refill queue when needed
+  useEffect(() => {
+    if (status === 'playing') {
+      refillQueue();
+    }
+  }, [currentIndex, status, refillQueue]);
 
+  const startSession = useCallback(async (category: PharmCategory) => {
     setSelectedCategory(category);
-    recentDrugsRef.current.clear(); // Clear history on new session
+    setIsLoading(true);
     
-    const initialQueue: PharmQuestion[] = [];
-    for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      const q = generateNewQuestion(category);
-      if (q) initialQueue.push(q);
+    const initialQuestions = await fetchQuestions(category, INITIAL_QUEUE_SIZE);
+    
+    if (initialQuestions.length === 0) {
+      setError('Failed to load questions. Please try again.');
+      setStatus('landing');
+      return;
     }
     
-    setQueue(initialQueue);
+    setQueue(initialQuestions);
     setCurrentIndex(0);
     setScore(0);
     setStreak(0);
@@ -119,7 +154,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [generateNewQuestion, drugs]);
+  }, [fetchQuestions]);
 
   const showCategoryMenu = useCallback(() => {
     setStatus('menu');
@@ -156,26 +191,24 @@ export function usePharmDrill(): UsePharmDrillReturn {
   }, [currentQuestion, status]);
 
   const nextQuestion = useCallback(() => {
-    const newQuestion = generateNewQuestion(selectedCategory);
-    if (newQuestion) {
-      setQueue(prev => [...prev, newQuestion]);
-    }
     setCurrentIndex(prev => prev + 1);
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [selectedCategory, generateNewQuestion]);
+  }, []);
 
-  const reset = useCallback(() => {
-    if (drugs.length === 0) return;
-    recentDrugsRef.current.clear(); // Clear history on reset
-    const newQueue: PharmQuestion[] = [];
-    for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      const q = generateNewQuestion(selectedCategory);
-      if (q) newQueue.push(q);
+  const reset = useCallback(async () => {
+    setIsLoading(true);
+    
+    const newQuestions = await fetchQuestions(selectedCategory, INITIAL_QUEUE_SIZE);
+    
+    if (newQuestions.length === 0) {
+      setError('Failed to load questions. Please try again.');
+      setStatus('landing');
+      return;
     }
     
-    setQueue(newQueue);
+    setQueue(newQuestions);
     setCurrentIndex(0);
     setScore(0);
     setStreak(0);
@@ -183,7 +216,7 @@ export function usePharmDrill(): UsePharmDrillReturn {
     setUserAnswerIndex(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [selectedCategory, generateNewQuestion]);
+  }, [selectedCategory, fetchQuestions]);
 
   return {
     isLoading,

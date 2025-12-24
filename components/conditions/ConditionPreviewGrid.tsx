@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ConditionPreviewCard } from './ConditionPreviewCard';
-import type { ConditionMeta } from '../../conditionRegistry';
+import type { ConditionMeta } from '../../src/types/conditions';
 
 interface ConditionPreviewGridProps {
   conditions: ConditionMeta[];
