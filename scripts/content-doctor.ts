@@ -717,25 +717,48 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
 }
 
 // ============================================================================
-// BUZZWORDS-ONLY REGENERATION
+// FIELD-SPECIFIC REGENERATION
 // ============================================================================
 
-async function regenerateBuzzwords(targetSystem?: string) {
-  console.log('🔑 Starting buzzwords-only regeneration...\n');
+async function regenerateField(fieldName: string, targetSystem?: string) {
+  console.log(`🔑 Starting ${fieldName} regeneration...\n`);
 
-  // Find conditions with empty or missing buzzwords
-  const conditions = await prisma.medicalContent.findMany({
-    where: {
-      AND: [
-        targetSystem ? { system: targetSystem } : {},
-        {
-          OR: [
-            { buzzwords: { isEmpty: true } },
-            { buzzwords: { has: 'NONE' } }
-          ]
-        }
+  // Build query based on field type
+  let whereClause: any = {
+    AND: [
+      targetSystem ? { system: targetSystem } : {},
+    ]
+  };
+
+  // Handle different field types
+  if (fieldName === 'buzzwords' || fieldName === 'clinical_pearls') {
+    whereClause.AND.push({
+      OR: [
+        { [fieldName]: { isEmpty: true } },
+        { [fieldName]: { has: 'NONE' } }
       ]
-    },
+    });
+  } else if (fieldName === 'classic_triad') {
+    // JSONB field
+    whereClause.AND.push({
+      OR: [
+        { [fieldName]: null },
+        { [fieldName]: { equals: null } }
+      ]
+    });
+  } else {
+    // String fields
+    whereClause.AND.push({
+      OR: [
+        { [fieldName]: null },
+        { [fieldName]: 'NONE' },
+        { [fieldName]: '' }
+      ]
+    });
+  }
+
+  const conditions = await prisma.medicalContent.findMany({
+    where: whereClause,
     select: {
       id: true,
       conditionId: true,
@@ -747,10 +770,10 @@ async function regenerateBuzzwords(targetSystem?: string) {
     }
   });
 
-  console.log(`Found ${conditions.length} conditions needing buzzwords`);
+  console.log(`Found ${conditions.length} conditions needing ${fieldName}`);
   
   if (conditions.length === 0) {
-    console.log('✅ All conditions have buzzwords!');
+    console.log(`✅ All conditions have ${fieldName}!`);
     return;
   }
 
@@ -764,51 +787,24 @@ async function regenerateBuzzwords(targetSystem?: string) {
 
     const promises = batch.map(async (condition) => {
       try {
-        const prompt = `You are a medical education expert creating high-yield PANCE exam preparation content.
-
-Generate ONLY the buzzwords field for this condition:
-
-Condition: ${condition.condition}
-System: ${condition.system}
-Overview: ${condition.overview || 'Not provided'}
-
-Return ONLY a JSON object with this exact structure:
-{
-  "buzzwords": ["buzzword1", "buzzword2", "buzzword3", ...]
-}
-
-Buzzwords should be:
-- Highly specific diagnostic clues or pathognomonic findings
-- What PA students MUST recognize on the PANCE
-- Classic presentations, lab values, imaging findings, or physical exam findings
-- 3-8 memorable items
-
-Examples of good buzzwords:
-- "Boot-shaped heart on CXR" (Tetralogy of Fallot)
-- "Soap bubble on x-ray" (GCT of bone)
-- "Target sign on imaging" (Intussusception)
-- "Strawberry tongue" (Scarlet fever, Kawasaki)
-
-Return ONLY valid JSON, no markdown, no explanation.`;
-
+        const prompt = generateFieldPrompt(fieldName, condition);
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        const data = parseGeminiJson<{ buzzwords: string[] }>(text);
+        const data = parseGeminiJson<any>(text);
 
-        if (!data || !data.buzzwords || !Array.isArray(data.buzzwords)) {
-          console.error(`  ⚠️  ${condition.conditionId}: Failed to parse buzzwords`);
+        if (!data || !data[fieldName]) {
+          console.error(`  ⚠️  ${condition.conditionId}: Failed to parse ${fieldName}`);
           return { success: false };
         }
 
-        // Update only the buzzwords field
+        // Update only the specific field
         await prisma.medicalContent.update({
           where: { id: condition.id },
-          data: {
-            buzzwords: data.buzzwords
-          }
+          data: { [fieldName]: data[fieldName] }
         });
 
-        console.log(`  ✅ ${condition.conditionId}: Added ${data.buzzwords.length} buzzwords`);
+        const count = Array.isArray(data[fieldName]) ? data[fieldName].length : 1;
+        console.log(`  ✅ ${condition.conditionId}: Added ${count} ${fieldName}`);
         await sleep(RATE_LIMIT_DELAY);
         return { success: true };
 
@@ -828,7 +824,122 @@ Return ONLY valid JSON, no markdown, no explanation.`;
   }
 
   console.log('\n' + '─'.repeat(70));
-  console.log(`📈 Buzzwords Summary: Generated ${generated} buzzword sets, ${errors} errors`);
+  console.log(`📈 ${fieldName} Summary: Generated ${generated}, ${errors} errors`);
+}
+
+function generateFieldPrompt(fieldName: string, condition: any): string {
+  const baseContext = `Condition: ${condition.condition}
+System: ${condition.system}
+Overview: ${condition.overview || 'Not provided'}`;
+
+  const prompts: Record<string, string> = {
+    buzzwords: `You are a medical education expert creating high-yield PANCE exam preparation content.
+
+Generate ONLY the buzzwords field for this condition:
+
+${baseContext}
+
+Return ONLY a JSON object with this exact structure:
+{
+  "buzzwords": ["buzzword1", "buzzword2", "buzzword3", ...]
+}
+
+Buzzwords should be:
+- Highly specific diagnostic clues or pathognomonic findings
+- What PA students MUST recognize on the PANCE
+- Classic presentations, lab values, imaging findings, or physical exam findings
+- 3-8 memorable items
+
+Examples: "Boot-shaped heart on CXR", "Strawberry tongue", "Target sign on imaging"
+
+Return ONLY valid JSON, no markdown, no explanation.`,
+
+    mnemonic: `You are a medical education expert creating memory aids for PA students.
+
+Generate a mnemonic for this condition:
+
+${baseContext}
+
+Return ONLY a JSON object:
+{
+  "mnemonic": "SHORT acronym with explanation (e.g., MUDPILES for metabolic acidosis: Methanol, Uremia, DKA...)"
+}
+
+Requirements:
+- Must be memorable and commonly used in medical education
+- Include the acronym AND what each letter stands for
+- If no standard mnemonic exists, return "NONE"
+
+Return ONLY valid JSON, no markdown.`,
+
+    guidelines: `You are a medical education expert familiar with clinical practice guidelines.
+
+Generate the most relevant clinical guideline for this condition:
+
+${baseContext}
+
+Return ONLY a JSON object:
+{
+  "guidelines": "YYYY Organization Guideline Name (e.g., 2023 AHA/ACC/HFSA Heart Failure Guideline)"
+}
+
+Requirements:
+- Use the most recent, authoritative guideline
+- Include year, organization, and specific guideline name
+- Commonly cited on PANCE (AHA, ACC, USPSTF, CDC, ACOG, etc.)
+- If no specific guideline exists, return "NONE"
+
+Return ONLY valid JSON, no markdown.`,
+
+    classic_triad: `You are a medical education expert creating PANCE study materials.
+
+Generate the classic triad (3-4 cardinal features) for this condition:
+
+${baseContext}
+
+Return ONLY a JSON object:
+{
+  "classic_triad": ["Feature 1", "Feature 2", "Feature 3"]
+}
+
+Requirements:
+- 3-4 most distinctive clinical features
+- Must be commonly tested on PANCE
+- Can include symptoms, signs, or diagnostic findings
+- Should help distinguish from similar conditions
+
+Return ONLY valid JSON, no markdown.`,
+
+    clinical_pearls: `You are a medical education expert creating clinical pearls for PA students.
+
+Generate 3-5 high-yield clinical pearls for this condition:
+
+${baseContext}
+
+Return ONLY a JSON object:
+{
+  "clinical_pearls": [
+    "Pearl 1: Full sentence with clinical insight",
+    "Pearl 2: Another actionable clinical tip",
+    ...
+  ]
+}
+
+Requirements:
+- Each pearl should be a complete sentence
+- Focus on diagnostic pitfalls, treatment pearls, or test-taking strategies
+- Must be clinically accurate and PANCE-relevant
+- 3-5 pearls per condition
+
+Return ONLY valid JSON, no markdown.`
+  };
+
+  return prompts[fieldName] || prompts.buzzwords;
+}
+
+async function regenerateBuzzwords(targetSystem?: string) {
+  // Keep old function for backward compatibility
+  await regenerateField('buzzwords', targetSystem);
 }
 
 // ============================================================================
@@ -840,10 +951,23 @@ async function main() {
   const runPhase1 = args.includes('--phase1');
   const runPhase2 = args.includes('--phase2');
   const runBuzzwords = args.includes('--buzzwords');
+  const runMnemonics = args.includes('--mnemonics');
+  const runGuidelines = args.includes('--guidelines');
+  const runTriads = args.includes('--triads');
+  const runPearls = args.includes('--pearls');
   const systemArg = args.find(arg => arg.startsWith('--system='));
   const targetSystem = systemArg ? systemArg.split('=')[1] : undefined;
 
   console.log('🩺 PANaCEa Content Doctor Starting...\n');
+  console.log('Available flags:');
+  console.log('  --phase1            Run gap analysis');
+  console.log('  --phase2            Run full content generation');
+  console.log('  --buzzwords         Regenerate buzzwords only');
+  console.log('  --mnemonics         Regenerate mnemonics only');
+  console.log('  --guidelines        Regenerate guidelines only');
+  console.log('  --triads            Regenerate classic triads only');
+  console.log('  --pearls            Regenerate clinical pearls only');
+  console.log('  --system=CODE       Target specific system (CV, PULM, etc.)\n');
 
   if (targetSystem) {
     console.log(`🎯 Target System: ${SYSTEM_LABELS[targetSystem] || targetSystem}`);
@@ -851,7 +975,15 @@ async function main() {
 
   try {
     if (runBuzzwords) {
-      await regenerateBuzzwords(targetSystem);
+      await regenerateField('buzzwords', targetSystem);
+    } else if (runMnemonics) {
+      await regenerateField('mnemonic', targetSystem);
+    } else if (runGuidelines) {
+      await regenerateField('guidelines', targetSystem);
+    } else if (runTriads) {
+      await regenerateField('classic_triad', targetSystem);
+    } else if (runPearls) {
+      await regenerateField('clinical_pearls', targetSystem);
     } else if (runPhase1) {
       await phase1GapAnalysis(targetSystem);
     } else if (runPhase2) {
