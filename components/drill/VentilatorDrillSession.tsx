@@ -16,23 +16,7 @@ interface VentilatorDrillSessionProps {
   onExit?: () => void;
 }
 
-const ACTION_OPTIONS: Array<{
-  id: string;
-  label: string;
-  description: string;
-}> = [
-  { id: 'Increase Tidal Volume', label: 'Increase Tidal Volume', description: 'Improve ventilation' },
-  { id: 'Decrease Tidal Volume', label: 'Decrease Tidal Volume', description: 'Lung-protective strategy' },
-  { id: 'Increase Respiratory Rate', label: 'Increase Respiratory Rate', description: 'Eliminate CO2' },
-  { id: 'Decrease Respiratory Rate', label: 'Decrease Respiratory Rate', description: 'Reduce over-ventilation' },
-  { id: 'Increase PEEP', label: 'Increase PEEP', description: 'Improve oxygenation' },
-  { id: 'Decrease PEEP', label: 'Decrease PEEP', description: 'Reduce barotrauma risk' },
-  { id: 'Increase FiO2', label: 'Increase FiO2', description: 'Improve oxygen delivery' },
-  { id: 'Decrease FiO2', label: 'Decrease FiO2', description: 'Reduce oxygen toxicity' },
-  { id: 'Increase Pressure Support', label: 'Increase Pressure Support', description: 'Reduce work of breathing' },
-  { id: 'Initiate Weaning', label: 'Initiate Weaning', description: 'SBT or extubation' },
-  { id: 'No Change Needed', label: 'No Change Needed', description: 'Settings appropriate' },
-];
+
 
 const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit }) => {
   const {

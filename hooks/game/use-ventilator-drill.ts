@@ -5,7 +5,7 @@
  * Practice adjusting ventilator settings based on clinical scenarios and ABG results.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { recordDrillSession } from '@/services/drillStatsService';
 
 export type VentMode = 'AC' | 'SIMV' | 'PRVC' | 'PS' | 'CPAP';

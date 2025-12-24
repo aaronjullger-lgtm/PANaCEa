@@ -344,56 +344,11 @@ export function generateRandomCase(
 }
 
 // ============================================================================
-// MOCK DATA (Legacy support)
+// MOCK DATA REMOVED - All cases now generated dynamically
 // ============================================================================
-
-export const MOCK_CASES: PhotoCase[] = [
-  {
-    id: 'case-ecg-001',
-    imageUrl: 'https://placehold.co/600x400/1e293b/FFF?text=ECG+Example',
-    modality: 'ecg',
-    correctDiagnosis: 'Atrial Fibrillation',
-    distractors: ['Ventricular Tachycardia', 'Sinus Bradycardia', 'Heart Block'],
-    explanation:
-      'The irregularly irregular rhythm with absent P waves is characteristic of atrial fibrillation. The ventricular rate is variable and there is no consistent PR interval.',
-  },
-  {
-    id: 'case-derm-001',
-    imageUrl: 'https://placehold.co/600x400/8b5cf6/FFF?text=Derm+Lesion',
-    modality: 'derm',
-    correctDiagnosis: 'Psoriasis',
-    distractors: ['Eczema', 'Contact Dermatitis', 'Ringworm'],
-    explanation:
-      'The well-demarcated, erythematous plaques with silvery scales on extensor surfaces are classic findings for psoriasis. Auspitz sign may be present when scales are removed.',
-  },
-  {
-    id: 'case-xray-001',
-    imageUrl: 'https://placehold.co/600x400/0ea5e9/FFF?text=Chest+XRay',
-    modality: 'xray',
-    correctDiagnosis: 'Pneumothorax',
-    distractors: ['Pleural Effusion', 'Pneumonia', 'Cardiomegaly'],
-    explanation:
-      'The absence of lung markings in the peripheral lung field with a visible visceral pleural line indicates pneumothorax. There is no mediastinal shift suggesting a simple rather than tension pneumothorax.',
-  },
-  {
-    id: 'case-ecg-002',
-    imageUrl: 'https://placehold.co/600x400/1e293b/FFF?text=ECG+STEMI',
-    modality: 'ecg',
-    correctDiagnosis: 'STEMI',
-    distractors: ['NSTEMI', 'Pericarditis', 'Hyperkalemia'],
-    explanation:
-      'ST segment elevation in contiguous leads with reciprocal changes is diagnostic of STEMI. Immediate reperfusion therapy is indicated.',
-  },
-  {
-    id: 'case-derm-002',
-    imageUrl: 'https://placehold.co/600x400/8b5cf6/FFF?text=Derm+Rash',
-    modality: 'derm',
-    correctDiagnosis: 'Shingles',
-    distractors: ['Herpes Simplex', 'Cellulitis', 'Impetigo'],
-    explanation:
-      'The unilateral, dermatomal distribution of grouped vesicles on an erythematous base is pathognomonic for herpes zoster (shingles). Pain often precedes the rash.',
-  },
-];
+// Photo drill uses procedurally generated cases via generateRandomCase()
+// based on category selection (ECG/Derm/Radiology)
+// See generateRandomCase() function below for case generation logic
 
 // ============================================================================
 // FUZZY MATCH HELPER (STUB)
@@ -532,13 +487,11 @@ const MAX_RECENT_DIAGNOSES = 15; // Track last 15 diagnoses to avoid repetition
 
 /**
  * Custom hook for managing a photo drill game session with category-aware infinite queue.
+ * All cases are generated dynamically via generateRandomCase() - no static data used.
  *
- * @param cases - Array of PhotoCase objects to use (defaults to MOCK_CASES for legacy support)
  * @returns Game state and actions
  */
-export function usePhotoDrill(
-  cases: PhotoCase[] = MOCK_CASES
-): UsePhotoDrillReturn {
+export function usePhotoDrill(): UsePhotoDrillReturn {
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>(null);
   const [queue, setQueue] = useState<PhotoCase[]>([]);
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
@@ -559,10 +512,9 @@ export function usePhotoDrill(
     bestStreak: 0,
   });
 
-  // Use queue if we have a session, otherwise fall back to legacy cases
-  const activeCases = queue.length > 0 ? queue : cases;
-  const currentCase = activeCases.length > 0 ? activeCases[currentCaseIndex] ?? null : null;
-  const totalCases = activeCases.length;
+  // Current case from queue (all cases are dynamically generated)
+  const currentCase = queue.length > 0 ? queue[currentCaseIndex] ?? null : null;
+  const totalCases = queue.length;
 
   /**
    * Derive valid diagnoses based on selectedCategory.

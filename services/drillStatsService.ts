@@ -308,7 +308,7 @@ async function syncToBackend(session: DrillSession): Promise<void> {
     }
 
     const result = await response.json();
-    console.log('Performance data synced to backend:', result.recordId);
+    // Successfully synced to backend - data persisted in both localStorage and database
   } catch (error) {
     // Log error but don't throw - localStorage backup remains
     console.warn('Backend sync failed, data preserved in localStorage:', error);

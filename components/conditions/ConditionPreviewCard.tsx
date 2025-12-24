@@ -2,21 +2,22 @@
  * ConditionPreviewCard
  * 
  * A polished, high-density preview card for medical conditions.
- * Displays bite-sized snippets from classic_triad, clinical_pearls, buzzwords, etc.
- * Acts as a clickable teaser that navigates to the full condition page.
+ * Intelligently renders content with proper formatting and visual hierarchy.
  * 
  * Features:
- * - Smart snippet extraction (auto-truncate, priority ordering)
- * - Markdown stripping for clean display
+ * - Intelligent content rendering (pills for short items, blocks for long)
+ * - RichText rendering for markdown bold/italic
  * - System-based color accents
- * - Hover states with subtle lift effect
- * - Limited to 2-3 info pills to prevent clutter
+ * - Visual hierarchy with prominent title and category badge
+ * - Hover effects with border color transition
+ * - Automatic content type detection
  */
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
-import { extractSnippets, getSystemAccent } from '../../lib/utils/textFormatting';
+import { ChevronRight, Sparkles } from 'lucide-react';
+import { getSystemAccent } from '../../lib/utils/textFormatting';
+import { RichText, stripMarkdown } from '../../src/components/ui/RichText';
 import type { ConditionMeta } from '../../conditionRegistry';
 
 interface ConditionPreviewCardProps {
@@ -26,76 +27,181 @@ interface ConditionPreviewCardProps {
   index?: number; // For staggered animations
 }
 
+interface ContentItem {
+  text: string;
+  type: 'pill' | 'block';
+  source: string; // field name for debugging
+}
+
+/**
+ * Intelligently extract and categorize content items
+ * Short items (<30 chars) → pills, Long items → blocks
+ */
+function extractContentItems(content: any, maxItems: number = 5): ContentItem[] {
+  if (!content) return [];
+
+  const items: ContentItem[] = [];
+
+  // Priority order for fields
+  const fieldConfigs = [
+    { field: 'classic_triad', priority: 1 },
+    { field: 'buzzwords', priority: 2 },
+    { field: 'clinical_pearls', priority: 3 },
+    { field: 'classic_patient', priority: 4 },
+    { field: 'gold_standard_dx', priority: 5 },
+    { field: 'first_line_rx', priority: 6 },
+    { field: 'best_initial_test', priority: 7 },
+  ];
+
+  for (const { field } of fieldConfigs) {
+    if (items.length >= maxItems) break;
+
+    const value = content[field];
+    if (!value) continue;
+
+    // Handle arrays
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (items.length >= maxItems) break;
+
+        const text = typeof item === 'string' ? item : String(item);
+        const stripped = stripMarkdown(text);
+
+        if (stripped.length === 0) continue;
+
+        // Determine type: pill if short, block if long
+        const type = stripped.length <= 30 ? 'pill' : 'block';
+
+        items.push({ text, type, source: field });
+      }
+    }
+    // Handle strings
+    else if (typeof value === 'string' && value.length > 0) {
+      const stripped = stripMarkdown(value);
+      if (stripped.length === 0) continue;
+
+      const type = stripped.length <= 30 ? 'pill' : 'block';
+      items.push({ text: value, type, source: field });
+    }
+  }
+
+  return items;
+}
+
 export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
   condition,
   content,
   onClick,
   index = 0,
 }) => {
-  const snippets = extractSnippets(content, 3, 30);
+  const contentItems = extractContentItems(content, 5);
   const accent = getSystemAccent(condition.system);
+
+  // Separate pills and blocks
+  const pills = contentItems.filter((item) => item.type === 'pill');
+  const blocks = contentItems.filter((item) => item.type === 'block');
 
   return (
     <motion.button
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05, ease: 'easeOut' }}
-      whileHover={{ 
-        y: -2,
-        transition: { duration: 0.2 }
+      whileHover={{
+        y: -4,
+        transition: { duration: 0.2 },
       }}
       onClick={() => onClick(condition)}
       className={`
         w-full text-left
-        p-4 rounded-xl border-2
-        ${accent.bg} ${accent.border} ${accent.hover}
+        p-5 rounded-xl border-2
+        ${accent.bg} ${accent.border}
         transition-all duration-200
-        hover:shadow-md
+        hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400
         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
         group
       `}
     >
-      {/* Header */}
+      {/* Header Section */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 line-clamp-2">
+          {/* Condition Name - Prominent */}
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1.5 leading-tight">
             {condition.condition}
           </h3>
-          <p className={`text-xs font-medium ${accent.text}`}>
-            {condition.subcategory}
-          </p>
+
+          {/* Category Badge */}
+          <div className="flex items-center gap-2">
+            <span
+              className={`
+                inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold
+                ${accent.text} bg-white/80 dark:bg-slate-800/80 border ${accent.border}
+              `}
+            >
+              <Sparkles className="w-3 h-3" />
+              {condition.subcategory}
+            </span>
+            
+            {/* System badge if different from subcategory */}
+            {condition.system && (
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                {condition.system}
+              </span>
+            )}
+          </div>
         </div>
-        
-        <ChevronRight 
-          className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors" 
-        />
+
+        {/* Arrow Icon */}
+        <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0 mt-1 group-hover:text-blue-500 dark:group-hover:text-blue-400 group-hover:translate-x-1 transition-all duration-200" />
       </div>
 
-      {/* Body - Info Pills */}
-      {snippets.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {snippets.map((snippet, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 + idx * 0.05 }}
-              className="inline-flex items-center px-2.5 py-1 rounded-lg bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700"
-            >
-              <span className="text-xs font-medium text-slate-700 dark:text-slate-300 line-clamp-1">
-                {snippet}
-              </span>
-            </motion.div>
-          ))}
-        </div>
-      )}
+      {/* Content Section */}
+      <div className="space-y-3">
+        {/* Pills - Short content items */}
+        {pills.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {pills.map((item, idx) => (
+              <motion.div
+                key={`pill-${idx}`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 + idx * 0.05 }}
+                className="inline-flex items-center px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"
+              >
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  <RichText accentColor="blue">{item.text}</RichText>
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
-      {/* Empty State - Show when no snippets */}
-      {snippets.length === 0 && (
-        <div className="text-xs text-slate-500 dark:text-slate-400 italic">
-          Click to view full details
-        </div>
-      )}
+        {/* Blocks - Long content items */}
+        {blocks.length > 0 && (
+          <div className="space-y-2">
+            {blocks.map((item, idx) => (
+              <motion.div
+                key={`block-${idx}`}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 + idx * 0.05 + 0.1 }}
+                className="p-3 rounded-lg bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-800/50 border border-slate-200 dark:border-slate-700"
+              >
+                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <RichText accentColor="blue">{item.text}</RichText>
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {contentItems.length === 0 && (
+          <div className="text-sm text-slate-500 dark:text-slate-400 italic flex items-center gap-2">
+            <ChevronRight className="w-4 h-4" />
+            Click to view full details
+          </div>
+        )}
+      </div>
     </motion.button>
   );
 };
