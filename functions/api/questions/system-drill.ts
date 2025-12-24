@@ -15,9 +15,10 @@ export const onRequestPost = async (context: any) => {
   if (corsResponse) return corsResponse;
 
   // Authenticate user
-  const { user, error: authError } = await authenticateRequest(context);
-  if (authError) {
-    return new Response(JSON.stringify({ error: authError }), {
+  const env = context.env as any;
+  const authResult = await authenticateRequest(context.request, env);
+  if (!authResult) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
