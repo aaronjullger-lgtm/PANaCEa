@@ -1,19 +1,19 @@
 /**
- * SystemDrillSession - Organ system-based drill
+ * PharmacologyDrillSession - Drug-focused drill mode
  * 
- * Allows users to select a PANCE system and practice questions from that system.
- * Uses /api/questions/system-drill endpoint for database-driven content.
+ * Allows users to practice pharmacology questions by drug class.
+ * Uses /api/questions/pharmacology-drill endpoint for database-driven content.
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, X, Heart, Brain, Activity, Droplets, Bone, Eye, Ear, Scissors, Baby, Users, Stethoscope, Shield, ArrowRight, BarChart3, Loader2 } from 'lucide-react';
+import { Pill, X, Heart, Shield, Brain, Zap, Droplets, Activity, Syringe, ArrowRight, BarChart3, Loader2 } from 'lucide-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { getDrillLandingStats, getCategoryBreakdown } from '@/services/drillStatsService';
 import QuizView from '../QuizView';
 import type { Question, PerformanceRecord, SessionSettings } from '../../types';
 
-interface SystemDrillSessionProps {
+interface PharmacologyDrillSessionProps {
   onExit?: () => void;
   addPerformanceRecord: (record: PerformanceRecord) => void;
   addMissedQuestion: (question: Question) => void;
@@ -28,23 +28,24 @@ interface SystemDrillSessionProps {
   updateQuestionNote: (question: Question, note: string) => void;
 }
 
-const SYSTEM_OPTIONS = [
-  { id: 'CV', name: 'Cardiovascular', icon: Heart, color: 'red', description: 'Heart, vessels, hypertension' },
-  { id: 'NEURO', name: 'Neurology', icon: Brain, color: 'purple', description: 'CNS, PNS, stroke, seizures' },
-  { id: 'PULM', name: 'Pulmonary', icon: Activity, color: 'blue', description: 'Lungs, asthma, COPD, pneumonia' },
-  { id: 'GI', name: 'Gastroenterology', icon: Droplets, color: 'amber', description: 'GI tract, liver, pancreas' },
-  { id: 'MSK', name: 'Musculoskeletal', icon: Bone, color: 'slate', description: 'Bones, joints, ligaments' },
-  { id: 'DERM', name: 'Dermatology', icon: Scissors, color: 'pink', description: 'Skin lesions, rashes' },
-  { id: 'HEENT', name: 'HEENT', icon: Eye, color: 'teal', description: 'Head, eyes, ears, nose, throat' },
-  { id: 'ENDO', name: 'Endocrine', icon: Stethoscope, color: 'indigo', description: 'Diabetes, thyroid, hormones' },
-  { id: 'RENAL', name: 'Renal/Urology', icon: Droplets, color: 'cyan', description: 'Kidneys, UTI, stones' },
-  { id: 'REPRO', name: 'Reproductive', icon: Baby, color: 'rose', description: 'OB/GYN, pregnancy, STIs' },
-  { id: 'HEME', name: 'Hematology', icon: Droplets, color: 'red', description: 'Anemia, coagulation, blood' },
-  { id: 'ID', name: 'Infectious Disease', icon: Shield, color: 'green', description: 'Bacteria, viruses, parasites' },
-  { id: 'PSYCH', name: 'Psychiatry', icon: Brain, color: 'violet', description: 'Mental health, mood, psychosis' },
+const DRUG_CLASS_OPTIONS = [
+  { id: 'beta-blockers', name: 'Beta Blockers', icon: Heart, color: 'red', description: 'Metoprolol, Atenolol, Carvedilol' },
+  { id: 'ace-inhibitors', name: 'ACE Inhibitors', icon: Heart, color: 'rose', description: 'Lisinopril, Enalapril, Ramipril' },
+  { id: 'antibiotics', name: 'Antibiotics', icon: Shield, color: 'green', description: 'Penicillins, Cephalosporins, Fluoroquinolones' },
+  { id: 'anticoagulants', name: 'Anticoagulants', icon: Droplets, color: 'red', description: 'Warfarin, Heparin, DOACs' },
+  { id: 'antidiabetics', name: 'Antidiabetics', icon: Activity, color: 'blue', description: 'Metformin, Insulin, SGLT2i' },
+  { id: 'antihypertensives', name: 'Antihypertensives', icon: Heart, color: 'purple', description: 'CCBs, ARBs, Diuretics' },
+  { id: 'antipsychotics', name: 'Antipsychotics', icon: Brain, color: 'violet', description: 'Haloperidol, Risperidone, Quetiapine' },
+  { id: 'antidepressants', name: 'Antidepressants', icon: Brain, color: 'indigo', description: 'SSRIs, SNRIs, TCAs' },
+  { id: 'bronchodilators', name: 'Bronchodilators', icon: Activity, color: 'cyan', description: 'Albuterol, Ipratropium, Theophylline' },
+  { id: 'corticosteroids', name: 'Corticosteroids', icon: Syringe, color: 'amber', description: 'Prednisone, Hydrocortisone, Dexamethasone' },
+  { id: 'diuretics', name: 'Diuretics', icon: Droplets, color: 'teal', description: 'Furosemide, HCTZ, Spironolactone' },
+  { id: 'nsaids', name: 'NSAIDs', icon: Zap, color: 'orange', description: 'Ibuprofen, Naproxen, Ketorolac' },
+  { id: 'opioids', name: 'Opioids', icon: Pill, color: 'slate', description: 'Morphine, Oxycodone, Hydrocodone' },
+  { id: 'statins', name: 'Statins', icon: Heart, color: 'pink', description: 'Atorvastatin, Simvastatin, Rosuvastatin' },
 ];
 
-const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({ 
+const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({ 
   onExit,
   addPerformanceRecord,
   addMissedQuestion,
@@ -58,21 +59,21 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   removeFlaggedQuestion,
   updateQuestionNote,
 }) => {
-  const [selectedSystem, setSelectedSystem] = useState<string | null>(null);
+  const [selectedDrugClass, setSelectedDrugClass] = useState<string | null>(null);
   const [showLanding, setShowLanding] = useState(true);
   const [queue, setQueue] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const stats = getDrillLandingStats('system_drill');
-  const categoryBreakdown = getCategoryBreakdown('system_drill');
+  const stats = getDrillLandingStats('pharmacology_drill');
+  const categoryBreakdown = getCategoryBreakdown('pharmacology_drill');
 
   // Fetch question from API
-  const fetchSystemQuestion = useCallback(async (system: string, difficulty?: string): Promise<Question> => {
-    const response = await fetch('/api/questions/system-drill', {
+  const fetchPharmQuestion = useCallback(async (drugClass?: string, difficulty?: string): Promise<Question> => {
+    const response = await fetch('/api/questions/pharmacology-drill', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system, difficulty }),
+      body: JSON.stringify({ drugClass, difficulty }),
     });
 
     if (!response.ok) {
@@ -85,17 +86,19 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
     return response.json();
   }, []);
 
-  // Load initial questions when system is selected
+  // Load initial questions when drug class is selected (or on "All Drug Classes")
   useEffect(() => {
-    if (selectedSystem && queue.length === 0) {
+    if ((selectedDrugClass || selectedDrugClass === 'all') && queue.length === 0) {
       setIsLoading(true);
       setError(null);
 
+      const drugClassParam = selectedDrugClass === 'all' ? undefined : selectedDrugClass;
+
       // Load 3 questions initially
       Promise.all([
-        fetchSystemQuestion(selectedSystem),
-        fetchSystemQuestion(selectedSystem),
-        fetchSystemQuestion(selectedSystem),
+        fetchPharmQuestion(drugClassParam),
+        fetchPharmQuestion(drugClassParam),
+        fetchPharmQuestion(drugClassParam),
       ])
         .then((questions) => {
           setQueue(questions);
@@ -107,37 +110,38 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
           setIsLoading(false);
         });
     }
-  }, [selectedSystem, fetchSystemQuestion, queue.length]);
+  }, [selectedDrugClass, fetchPharmQuestion, queue.length]);
 
   // Replenish queue when running low
   const replenishQueue = useCallback(async () => {
-    if (!selectedSystem) return;
+    if (!selectedDrugClass && selectedDrugClass !== 'all') return;
 
     try {
-      const newQuestion = await fetchSystemQuestion(selectedSystem);
+      const drugClassParam = selectedDrugClass === 'all' ? undefined : selectedDrugClass;
+      const newQuestion = await fetchPharmQuestion(drugClassParam);
       setQueue((prev) => [...prev, newQuestion]);
     } catch (err) {
       console.error('Failed to replenish queue:', err);
       // Soft fail - don't interrupt the session
     }
-  }, [selectedSystem, fetchSystemQuestion]);
+  }, [selectedDrugClass, fetchPharmQuestion]);
 
   const handleStart = () => {
     setShowLanding(false);
   };
 
-  const handleSystemSelect = (systemId: string) => {
-    setSelectedSystem(systemId);
+  const handleDrugClassSelect = (drugClassId: string) => {
+    setSelectedDrugClass(drugClassId);
   };
 
   const handleBackToMenu = () => {
-    setSelectedSystem(null);
+    setSelectedDrugClass(null);
     setQueue([]);
     setError(null);
   };
 
   const handleEndSession = () => {
-    setSelectedSystem(null);
+    setSelectedDrugClass(null);
     setQueue([]);
     setShowLanding(true);
   };
@@ -150,23 +154,23 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   if (showLanding) {
     return (
       <DrillLandingPage
-        title="System Drill"
-        description="Master an entire organ system"
-        icon={Layers}
-        accentColor="indigo"
+        title="Pharmacology Drill"
+        description="Master drug classes and mechanisms"
+        icon={Pill}
+        accentColor="green"
         stats={stats}
         onStart={handleStart}
         instructions={[
-          'Choose a PANCE organ system',
-          'Practice conditions from that system',
-          'Build comprehensive system knowledge',
-          'Master high-yield system content',
+          'Choose a drug class or practice all',
+          'Learn mechanisms of action',
+          'Master side effects and interactions',
+          'Build pharmacology expertise',
         ]}
         objectives={[
-          'Deep dive into one organ system',
-          'Connect related conditions',
-          'Build system-specific expertise',
-          'Prepare for system-heavy PANCE sections',
+          'Understand drug mechanisms',
+          'Recognize adverse effects',
+          'Learn drug-drug interactions',
+          'Apply pharmacology to clinical scenarios',
         ]}
         estimatedMinutes={15}
       >
@@ -182,8 +186,8 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
         {categoryBreakdown.length > 0 && (
           <div className="mt-6 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">System Progress</h3>
+              <BarChart3 className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Drug Class Progress</h3>
             </div>
             <div className="space-y-2">
               {categoryBreakdown.slice(0, 5).map((cat) => (
@@ -208,14 +212,16 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
     );
   }
 
-  // If system selected, show QuizView with system-specific questions
-  if (selectedSystem && !showLanding) {
+  // If drug class selected, show QuizView with pharmacology questions
+  if (selectedDrugClass && !showLanding) {
     if (isLoading && queue.length === 0) {
       return (
         <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
-            <p className="text-[var(--color-text-secondary)]">Loading {SYSTEM_OPTIONS.find(s => s.id === selectedSystem)?.name} questions...</p>
+            <Loader2 className="w-12 h-12 animate-spin text-green-600 mx-auto mb-4" />
+            <p className="text-[var(--color-text-secondary)]">
+              Loading {selectedDrugClass === 'all' ? 'pharmacology' : DRUG_CLASS_OPTIONS.find(d => d.id === selectedDrugClass)?.name} questions...
+            </p>
           </div>
         </div>
       );
@@ -230,7 +236,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
             <p className="text-[var(--color-text-secondary)] mb-4">{error}</p>
             <div className="flex gap-2 justify-center">
               <button onClick={handleBackToMenu} className="btn-glass px-4 py-2">
-                Back to Systems
+                Back to Drug Classes
               </button>
               <button onClick={() => window.location.reload()} className="btn-secondary px-4 py-2">
                 Reload Page
@@ -247,21 +253,21 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
           <div className="text-center max-w-md mx-auto p-6">
             <h2 className="text-xl font-bold mb-2 text-[var(--color-text-primary)]">No Questions Available</h2>
             <p className="text-[var(--color-text-secondary)] mb-4">
-              No questions found for {SYSTEM_OPTIONS.find(s => s.id === selectedSystem)?.name}
+              No pharmacology questions found for {selectedDrugClass === 'all' ? 'all drug classes' : DRUG_CLASS_OPTIONS.find(d => d.id === selectedDrugClass)?.name}
             </p>
             <button onClick={handleBackToMenu} className="btn-glass px-4 py-2">
-              Back to Systems
+              Back to Drug Classes
             </button>
           </div>
         </div>
       );
     }
 
-    // Create session settings for system drill
+    // Create session settings for pharmacology drill
     const sessionSettings: SessionSettings = {
-      focus: 'all',
+      focus: 'topic',
       difficulty: 'ALL',
-      system: selectedSystem,
+      topic: 'Pharmacology',
     };
 
     return (
@@ -293,7 +299,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
     );
   }
 
-  // System selection menu
+  // Drug class selection menu
   return (
     <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex flex-col">
       {/* Header */}
@@ -302,40 +308,63 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
           <X className="w-5 h-5" />
           <span className="text-sm font-medium">Exit</span>
         </button>
-        <h1 className="text-lg font-semibold">System Drill</h1>
+        <h1 className="text-lg font-semibold">Pharmacology Drill</h1>
         <div className="w-16" />
       </header>
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-2">Select Organ System</h2>
-          <p className="text-[var(--color-text-secondary)]">Master conditions from a single system</p>
+          <h2 className="text-3xl font-bold mb-2">Select Drug Class</h2>
+          <p className="text-[var(--color-text-secondary)]">Master pharmacology by drug class</p>
         </motion.div>
 
-        {/* System grid */}
+        {/* "All Drug Classes" option */}
+        <div className="max-w-6xl mx-auto mb-6">
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => handleDrugClassSelect('all')}
+            className="w-full p-6 rounded-xl bg-gradient-to-r from-green-600 to-emerald-700 text-white hover:shadow-lg transition-all group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-white/20">
+                  <Pill className="w-8 h-8" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-xl font-bold mb-1">All Drug Classes</h3>
+                  <p className="text-sm text-green-100">Practice all pharmacology topics</p>
+                </div>
+              </div>
+              <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </motion.button>
+        </div>
+
+        {/* Drug class grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
-          {SYSTEM_OPTIONS.map((system, index) => {
-            const Icon = system.icon;
+          {DRUG_CLASS_OPTIONS.map((drugClass, index) => {
+            const Icon = drugClass.icon;
             return (
               <motion.button
-                key={system.id}
+                key={drugClass.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => handleSystemSelect(system.id)}
-                className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-indigo-300 hover:shadow-md transition-all text-left group"
+                transition={{ delay: (index + 1) * 0.05 }}
+                onClick={() => handleDrugClassSelect(drugClass.id)}
+                className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-green-300 hover:shadow-md transition-all text-left group"
               >
                 <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-lg bg-${system.color}-100 dark:bg-${system.color}-900/20`}>
-                    <Icon className={`w-6 h-6 text-${system.color}-600 dark:text-${system.color}-400`} />
+                  <div className={`p-3 rounded-lg bg-${drugClass.color}-100 dark:bg-${drugClass.color}-900/20`}>
+                    <Icon className={`w-6 h-6 text-${drugClass.color}-600 dark:text-${drugClass.color}-400`} />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">
-                      {system.name}
+                      {drugClass.name}
                     </h3>
                     <p className="text-sm text-[var(--color-text-muted)]">
-                      {system.description}
+                      {drugClass.description}
                     </p>
                   </div>
                   <ArrowRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-1 transition-transform" />
@@ -349,4 +378,4 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   );
 };
 
-export default SystemDrillSession;
+export default PharmacologyDrillSession;

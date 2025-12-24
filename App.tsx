@@ -42,6 +42,7 @@ const FirstLineDrillSession = lazy(() => import("./components/drill/FirstLineDri
 const ConditionDrillSession = lazy(() => import("./components/drill/ConditionDrillSession"));
 const GuidelineDrillSession = lazy(() => import("./components/drill/GuidelineDrillSession"));
 const SystemDrillSession = lazy(() => import("./components/drill/SystemDrillSession"));
+const PharmacologyDrillSession = lazy(() => import("./components/drill/PharmacologyDrillSession"));
 const SubcategoryDrillSession = lazy(() => import("./components/drill/SubcategoryDrillSession"));
 const VentilatorDrillSession = lazy(() => import("./components/drill/VentilatorDrillSession"));
 const PhysiologyDrillSession = lazy(() => import("./components/drill/PhysiologyDrillSession"));
@@ -779,7 +780,20 @@ const App: React.FC = () => {
 
           {view === "pharmacology" && (
             <Suspense fallback={<Loader />}>
-              <PharmDrillSession onExit={() => setView("command_center")} />
+              <PharmacologyDrillSession 
+                onExit={() => setView("command_center")}
+                addPerformanceRecord={addPerformanceRecord}
+                addMissedQuestion={addMissedQuestion}
+                updateReviewQuestion={updateReviewQuestion}
+                updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                performanceData={performanceData}
+                fontSizeAdjustment={fontSizeAdjustment}
+                setFontSizeAdjustment={setFontSizeAdjustment}
+                flaggedQuestions={flaggedQuestions}
+                addFlaggedQuestion={addFlaggedQuestion}
+                removeFlaggedQuestion={removeFlaggedQuestion}
+                updateQuestionNote={updateQuestionNote}
+              />
             </Suspense>
           )}
 
@@ -797,7 +811,20 @@ const App: React.FC = () => {
 
           {view === "system_drill" && (
             <Suspense fallback={<Loader />}>
-              <SystemDrillSession onExit={() => setView("command_center")} />
+              <SystemDrillSession 
+                onExit={() => setView("command_center")}
+                addPerformanceRecord={addPerformanceRecord}
+                addMissedQuestion={addMissedQuestion}
+                updateReviewQuestion={updateReviewQuestion}
+                updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                performanceData={performanceData}
+                fontSizeAdjustment={fontSizeAdjustment}
+                setFontSizeAdjustment={setFontSizeAdjustment}
+                flaggedQuestions={flaggedQuestions}
+                addFlaggedQuestion={addFlaggedQuestion}
+                removeFlaggedQuestion={removeFlaggedQuestion}
+                updateQuestionNote={updateQuestionNote}
+              />
             </Suspense>
           )}
 
