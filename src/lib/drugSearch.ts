@@ -5,11 +5,53 @@ import type { DrugEntry, DrugSearchResult, DrugSearchFilters } from "../../pharm
 import { BRAND_NAME_MAP } from "../../lib/drugBrandNames";
 import { drugService } from "../../services/drugService";
 
+// ============================================================================
+// TYPES
+// ============================================================================
+
+/**
+ * Drug data structure from Prisma database
+ * Matches the Drug model from schema.prisma
+ */
+export interface DrugData {
+  id: string;
+  genericName: string;
+  brandName: string | null;
+  drugClass: string[];
+  mechanismOfAction: string | null;
+  indications: string[];
+  contraindications: string[];
+  sideEffects: string[];
+  interactions: string[];
+  dosing: string | null;
+  displayName: string | null;
+  aliases: string[];
+  tags: string[];
+  isHighYield: boolean;
+  clinicalNotes: string | null;
+  antidote: string | null;
+  metabolism: string | null;
+  elimination: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================================================
+// CACHE
+// ============================================================================
+
 // Cache for drugs loaded from API
 let drugRegistry: Map<string, DrugEntry> | null = null;
 
-// Helper to map Prisma Drug to DrugEntry
-function mapDrugToEntry(drug: any): DrugEntry {
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Map Prisma Drug to DrugEntry format
+ * Transforms database schema to internal search format
+ */
+function mapDrugToEntry(drug: DrugData): DrugEntry {
   return {
     term: drug.genericName,
     type: 'Small Molecule', // Default
@@ -29,7 +71,11 @@ function mapDrugToEntry(drug: any): DrugEntry {
   };
 }
 
-async function ensureRegistryLoaded() {
+/**
+ * Ensure drug registry is loaded from API
+ * Uses caching to avoid repeated API calls
+ */
+async function ensureRegistryLoaded(): Promise<void> {
   if (drugRegistry) return;
   
   try {
@@ -64,6 +110,13 @@ async function ensureRegistryLoaded() {
   }
 }
 
+/**
+ * Calculate Levenshtein distance between two strings
+ * Used for fuzzy matching in drug name searches
+ * @param a - First string
+ * @param b - Second string
+ * @returns Edit distance (number of operations to transform a into b)
+ */
 function levenshtein(a: string, b: string): number {
   const dp = Array.from({ length: a.length + 1 }, () =>
     new Array(b.length + 1).fill(0)
@@ -84,6 +137,13 @@ function levenshtein(a: string, b: string): number {
   return dp[a.length][b.length];
 }
 
+/**
+ * Calculate similarity score between query and target string
+ * Higher score = better match (0-3+ scale)
+ * @param query - Search query string
+ * @param target - Target string to compare against
+ * @returns Similarity score (higher is better)
+ */
 function similarityScore(query: string, target: string): number {
   const normalizedQuery = query.toLowerCase();
   const normalizedTarget = target.toLowerCase();
@@ -99,6 +159,13 @@ function similarityScore(query: string, target: string): number {
   return 1 / (1 + distance);
 }
 
+/**
+ * Find best matching score for a term including its brand name
+ * Checks multiple variations (full term, split words, brand names)
+ * @param query - Search query string
+ * @param term - Drug term to score (can be null/undefined)
+ * @returns Best similarity score found across all term variations
+ */
 function bestTermScore(query: string, term: string | undefined | null): number {
   if (!term || typeof term !== 'string') return 0;
   
@@ -112,6 +179,12 @@ function bestTermScore(query: string, term: string | undefined | null): number {
   );
 }
 
+/**
+ * Capitalize drug name with special handling for acronyms
+ * (NSAID, SSRI, ACE, ARB, etc.)
+ * @param name - Drug name to capitalize (can be null/undefined)
+ * @returns Properly capitalized drug name
+ */
 function capitalizeDrugName(name: string | undefined | null): string {
   if (!name || typeof name !== 'string') return "";
   const specialCases: Record<string, string> = {
@@ -124,10 +197,24 @@ function capitalizeDrugName(name: string | undefined | null): string {
   }).join(' ');
 }
 
+/**
+ * Generate a stable drug ID from drug name
+ * Format: DRUG__lowercase_with_underscores
+ * @param drugName - Drug name to convert to ID
+ * @returns Stable drug identifier
+ */
 function generateDrugId(drugName: string): string {
   return `DRUG__${drugName.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "")}`;
 }
 
+// ============================================================================
+// EXPORTED FUNCTIONS
+// ============================================================================
+
+/**
+ * Get all unique drug class options for filtering
+ * @returns Sorted array of drug class names
+ */
 export async function getDrugClassOptions(): Promise<string[]> {
   await ensureRegistryLoaded();
   if (!drugRegistry) return [];
@@ -138,6 +225,10 @@ export async function getDrugClassOptions(): Promise<string[]> {
   return Array.from(classes).sort();
 }
 
+/**
+ * Get all unique drug type options for filtering
+ * @returns Sorted array of drug type names
+ */
 export async function getDrugTypeOptions(): Promise<string[]> {
   await ensureRegistryLoaded();
   if (!drugRegistry) return [];
@@ -148,6 +239,13 @@ export async function getDrugTypeOptions(): Promise<string[]> {
   return Array.from(types).sort();
 }
 
+/**
+ * Search for drugs by name, class, or ingredients
+ * Uses fuzzy matching with similarity scoring
+ * @param rawQuery - Search query string
+ * @param filters - Optional filters (drugClass, type)
+ * @returns Array of search results sorted by relevance (max 30)
+ */
 export async function searchDrugs(
   rawQuery: string,
   filters: DrugSearchFilters = {}
@@ -208,6 +306,12 @@ export async function searchDrugs(
     .slice(0, 30);
 }
 
+/**
+ * Find a drug by its ID
+ * Handles both DRUG__format IDs and direct name lookups
+ * @param id - Drug ID (e.g., "DRUG__metoprolol" or direct name)
+ * @returns Drug entry if found, undefined otherwise
+ */
 export async function findDrugById(id: string): Promise<DrugEntry | undefined> {
   await ensureRegistryLoaded();
   if (!drugRegistry) return undefined;
@@ -225,12 +329,23 @@ export async function findDrugById(id: string): Promise<DrugEntry | undefined> {
   return drugRegistry.get(id.toLowerCase());
 }
 
+/**
+ * Find a drug by its generic name
+ * Case-insensitive exact match
+ * @param name - Generic drug name
+ * @returns Drug entry if found, undefined otherwise
+ */
 export async function findDrugByName(name: string): Promise<DrugEntry | undefined> {
   await ensureRegistryLoaded();
   if (!drugRegistry) return undefined;
   return drugRegistry.get(name.toLowerCase());
 }
 
+/**
+ * Get all drugs belonging to a specific class
+ * @param drugClass - Drug class name (exact match)
+ * @returns Array of drug entries sorted alphabetically
+ */
 export async function getDrugsByClass(drugClass: string): Promise<DrugEntry[]> {
   await ensureRegistryLoaded();
   if (!drugRegistry) return [];
@@ -241,6 +356,10 @@ export async function getDrugsByClass(drugClass: string): Promise<DrugEntry[]> {
   return results.sort((a, b) => a.term.localeCompare(b.term));
 }
 
+/**
+ * Get total count of drugs in registry
+ * @returns Number of drugs loaded in cache
+ */
 export async function getDrugCount(): Promise<number> {
   await ensureRegistryLoaded();
   return drugRegistry ? drugRegistry.size : 0;

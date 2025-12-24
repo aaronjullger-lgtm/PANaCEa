@@ -7,6 +7,8 @@ import React, {
   useRef,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useShortcut } from "../src/context/ShortcutContext";
+import { useUser } from "@clerk/clerk-react";
 import {
   fetchNewQuestion,
   generateAlternateRationale,
@@ -27,6 +29,9 @@ import Loader from "./Loader";
 import WellnessCheckModal from "./wellness/WellnessCheckModal";
 import { recordCircadianPerformance } from "../services/circadianAnalyticsService";
 import { feedback } from "../services/feedbackService";
+import { updateReviewOutcome, type SRSScheduleResult } from "../lib/services/srsService";
+import { calculateParTime } from '../lib/utils/questionComplexity';
+import { SRSFeedbackBadge } from "./quiz/SRSFeedbackBadge";
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -208,6 +213,9 @@ const QuizView: React.FC<QuizViewProps> = ({
   removeFlaggedQuestion,
   updateQuestionNote,
 }) => {
+  // ---- CLERK USER ----
+  const { user } = useUser();
+
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(
@@ -218,6 +226,10 @@ const QuizView: React.FC<QuizViewProps> = ({
     useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
   const [questionNumber, setQuestionNumber] = useState<number>(1);
+
+  // ---- SRS RESULT STATE ----
+  const [srsResult, setSrsResult] = useState<SRSScheduleResult | null>(null);
+  const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
 
   const [showRationale, setShowRationale] = useState<boolean>(false);
   const [alternateRationale, setAlternateRationale] =
@@ -311,6 +323,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     setIsExplainerLoading(false);
     setQuestionNumber((prev) => prev + 1);
     setEliminatedAnswers(new Set()); // Reset eliminated answers for new question
+    setSrsResult(null); // Reset SRS result for new question
+    setQuestionStartTime(Date.now()); // Track time for new question
 
     setQueue((prev) => {
       if (prev.length === 0) return prev;
@@ -413,6 +427,60 @@ const QuizView: React.FC<QuizViewProps> = ({
       topic: currentQuestion.topic,
     });
 
+    // Update SRS schedule (if user is authenticated)
+    if (user?.id && currentQuestion.id) {
+      const timeToAnswer = Date.now() - questionStartTime;
+      
+      // Calculate complexity-aware par time based on word count, images, and labs
+      const baselineTime = calculateParTime(currentQuestion);
+      const performanceRatio = timeToAnswer / baselineTime;
+      
+      // Calculate quality score (0-5 scale) using FSRS v5 adaptive logic
+      // Quality accounts for both correctness AND time relative to question complexity
+      let quality: number;
+      if (isCorrect) {
+        // Correct answers: quality depends on speed relative to question complexity
+        if (performanceRatio < 0.75) {
+          quality = 5; // Easy - significantly faster than par (mastery)
+        } else if (performanceRatio < 1.25) {
+          quality = 4; // Good - within normal range
+        } else {
+          quality = 3; // Hard - slower than expected but still correct
+        }
+      } else {
+        // Incorrect answers: quality depends on whether it was rushed or thoughtful
+        if (performanceRatio < 0.5) {
+          quality = 1; // Failed - incorrect AND rushed (likely guessing/anchoring bias)
+        } else {
+          quality = 2; // Again - incorrect but took time (knowledge gap, not careless)
+        }
+      }
+
+      // Check if in red zone (performance < 75%)
+      const topicPerformance = performanceData
+        .filter((p) => p.topic === currentQuestion.topic)
+        .slice(-20);
+      const recentCorrect = topicPerformance.filter((p) => p.isCorrect).length;
+      const isInRedZone = topicPerformance.length > 0 && 
+        (recentCorrect / topicPerformance.length) < 0.75;
+
+      // Update SRS schedule asynchronously (non-blocking)
+      // FSRS v5 will apply additional modifiers based on quality, time, and red zone status
+      updateReviewOutcome(user.id, currentQuestion.id, {
+        quality,
+        timeToAnswer,
+        baselineTime,
+        isInRedZone,
+      })
+        .then((result) => {
+          setSrsResult(result);
+        })
+        .catch((err) => {
+          console.error('Failed to update SRS schedule:', err);
+          // Silent failure - don't block the user
+        });
+    }
+
     // Track questions answered and check for wellness triggers
     questionsAnsweredInSession.current += 1;
 
@@ -429,8 +497,33 @@ const QuizView: React.FC<QuizViewProps> = ({
       setWellnessReason('late_night');
       setShowWellnessModal(true);
     }
-  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance]);
+  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance, user, questionStartTime, performanceData]);
 
+  // Keyboard shortcuts using centralized shortcut context
+  // FLIP_CARD: Toggle showing the explanation/rationale after answering
+  useShortcut(
+    'FLIP_CARD',
+    () => {
+      if (isAnswered) {
+        setShowRationale(prev => !prev);
+      }
+    },
+    { enabled: isAnswered }
+  );
+
+  // NEXT_QUESTION: Go to next question after answering
+  useShortcut(
+    'NEXT_QUESTION',
+    () => {
+      if (isAnswered) {
+        nextButtonRef.current?.click();
+      }
+    },
+    { enabled: isAnswered }
+  );
+
+  // Keep the legacy keyboard handler for quiz-specific shortcuts (A/B/C/D, Shift+A/B/C/D, Enter, Escape)
+  // These are quiz-specific and don't map to global actions
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -474,19 +567,6 @@ const QuizView: React.FC<QuizViewProps> = ({
         event.preventDefault();
         handleSubmitAnswer();
         return;
-      }
-
-      // Space to reveal explanation (toggle showRationale)
-      if (isAnswered && event.key === " " && !event.ctrlKey && !event.metaKey) {
-        event.preventDefault();
-        setShowRationale(prev => !prev);
-        return;
-      }
-
-      // Cmd/Ctrl + Enter OR just Enter to go to next question (after answered)
-      if (isAnswered && event.key === "Enter") {
-        event.preventDefault();
-        nextButtonRef.current?.click();
       }
     };
 
@@ -744,6 +824,16 @@ const QuizView: React.FC<QuizViewProps> = ({
       {/* FEEDBACK / RATIONALE */}
       {isAnswered && (
         <div className="mt-6 animate-fade-in space-y-4">
+          {/* SRS Feedback Badge */}
+          {srsResult && (
+            <div className="flex justify-center mb-4">
+              <SRSFeedbackBadge 
+                result={srsResult} 
+                isCorrect={selectedAnswerIndex === currentQuestion.correctAnswerIndex} 
+              />
+            </div>
+          )}
+
           {topicStats && (
             <div className="p-4 bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-lg">
               <div className="flex justify-between items-center mb-1 text-sm">

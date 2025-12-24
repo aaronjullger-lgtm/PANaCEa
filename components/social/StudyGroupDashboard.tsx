@@ -30,7 +30,16 @@ export default function StudyGroupDashboard() {
   const [activeTab, setActiveTab] = useState<'groups' | 'leaderboard'>('groups');
   const [groups, setGroups] = useState<StudyGroup[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  // Loading states
+  const [isLoadingGroups, setIsLoadingGroups] = useState(true);
+  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState(false);
+  
+  // Error states
+  const [groupsError, setGroupsError] = useState<string | null>(null);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+  
+  // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   
@@ -39,7 +48,7 @@ export default function StudyGroupDashboard() {
   const [groupDesc, setGroupDesc] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Fetch data
   useEffect(() => {
@@ -53,41 +62,57 @@ export default function StudyGroupDashboard() {
   }, [activeTab]);
 
   const fetchGroups = async () => {
+    setIsLoadingGroups(true);
+    setGroupsError(null);
     try {
       const token = await getToken();
       const res = await fetch('/api/social/groups', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setGroups(data);
+      
+      if (!res.ok) {
+        throw new Error(`Failed to fetch groups: ${res.status} ${res.statusText}`);
       }
+      
+      const data = await res.json();
+      setGroups(data);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching groups:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load study groups';
+      setGroupsError(errorMessage);
     } finally {
-      setIsLoading(false);
+      setIsLoadingGroups(false);
     }
   };
 
   const fetchLeaderboard = async () => {
+    setIsLoadingLeaderboard(true);
+    setLeaderboardError(null);
     try {
       const token = await getToken();
       const res = await fetch('/api/social/leaderboard?period=weekly', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setLeaderboard(data?.entries || []);
+      
+      if (!res.ok) {
+        throw new Error(`Failed to fetch leaderboard: ${res.status} ${res.statusText}`);
       }
+      
+      const data = await res.json();
+      setLeaderboard(data?.entries || []);
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching leaderboard:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load leaderboard';
+      setLeaderboardError(errorMessage);
+    } finally {
+      setIsLoadingLeaderboard(false);
     }
   };
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError(null);
+    setFormError(null);
     try {
       const token = await getToken();
       const res = await fetch('/api/social/groups', {
@@ -106,7 +131,9 @@ export default function StudyGroupDashboard() {
       setGroupName('');
       setGroupDesc('');
     } catch (err) {
-      setError('Failed to create group. Please try again.');
+      console.error('Error creating group:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create group. Please try again.';
+      setFormError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -115,7 +142,7 @@ export default function StudyGroupDashboard() {
   const handleJoinGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError(null);
+    setFormError(null);
     try {
       const token = await getToken();
       const res = await fetch('/api/social/groups/join', {
@@ -136,7 +163,9 @@ export default function StudyGroupDashboard() {
       setShowJoinModal(false);
       setJoinCode('');
     } catch (err: any) {
-      setError(err.message);
+      console.error('Error joining group:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to join group. Please try again.';
+      setFormError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -212,13 +241,44 @@ export default function StudyGroupDashboard() {
 
             {/* Groups List */}
             <h3 className="text-lg font-semibold mb-4">Your Groups</h3>
-            {isLoading ? (
-              <div className="flex justify-center py-8"><Loader2 className="animate-spin text-slate-400" /></div>
+            
+            {/* Loading State */}
+            {isLoadingGroups ? (
+              <div className="flex flex-col items-center justify-center py-16 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <Loader2 className="w-10 h-10 animate-spin text-blue-600 dark:text-blue-400 mb-4" />
+                <p className="text-slate-600 dark:text-slate-400 font-medium">Loading study groups...</p>
+              </div>
+            ) : groupsError ? (
+              /* Error State */
+              <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-red-800 dark:text-red-300 font-semibold text-lg mb-1">Failed to Load Groups</h4>
+                    <p className="text-red-700 dark:text-red-400 text-sm mb-4">{groupsError}</p>
+                    <button
+                      onClick={fetchGroups}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              </div>
             ) : groups.length === 0 ? (
+              /* Empty State */
               <div className="text-center py-8 text-slate-500 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
                 You haven't joined any groups yet.
               </div>
             ) : (
+              /* Success State - Groups List */
               <div className="grid gap-4">
                 {groups.map(group => (
                   <div key={group.id} className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
@@ -254,11 +314,45 @@ export default function StudyGroupDashboard() {
                 </select>
               </div>
               
-              {leaderboard.length === 0 ? (
+              {/* Loading State */}
+              {isLoadingLeaderboard ? (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <Loader2 className="w-10 h-10 animate-spin text-amber-600 dark:text-amber-400 mb-4" />
+                  <p className="text-slate-600 dark:text-slate-400 font-medium">Loading leaderboard...</p>
+                </div>
+              ) : leaderboardError ? (
+                /* Error State */
+                <div className="p-6">
+                  <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-6">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-red-800 dark:text-red-300 font-semibold text-lg mb-1">Failed to Load Leaderboard</h4>
+                        <p className="text-red-700 dark:text-red-400 text-sm mb-4">{leaderboardError}</p>
+                        <button
+                          onClick={fetchLeaderboard}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Retry
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : leaderboard.length === 0 ? (
+                /* Empty State */
                 <div className="p-8 text-center text-slate-500">
                   No leaderboard data available yet.
                 </div>
               ) : (
+                /* Success State - Leaderboard List */
                 <div className="divide-y divide-slate-100 dark:divide-slate-700">
                   {leaderboard.map((entry, index) => (
                     <div key={entry.id} className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
@@ -313,7 +407,11 @@ export default function StudyGroupDashboard() {
                   rows={3}
                 />
               </div>
-              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              {formError && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-red-700 dark:text-red-400 text-sm">{formError}</p>
+                </div>
+              )}
               <div className="flex justify-end gap-3">
                 <button 
                   type="button"
@@ -352,7 +450,11 @@ export default function StudyGroupDashboard() {
                   placeholder="e.g. X7Y9Z2"
                 />
               </div>
-              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              {formError && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-red-700 dark:text-red-400 text-sm">{formError}</p>
+                </div>
+              )}
               <div className="flex justify-end gap-3">
                 <button 
                   type="button"
