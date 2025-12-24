@@ -17,6 +17,7 @@ export interface PhysiologyQuestion {
   correctIndex: number;
   explanation: string;
   tags: string[];
+  system?: string; // Physiological system category
 }
 
 export interface UsePhysiologyDrillReturn {

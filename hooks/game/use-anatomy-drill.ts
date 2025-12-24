@@ -17,6 +17,7 @@ export interface AnatomyQuestion {
   correctIndex: number;
   explanation: string;
   tags: string[];
+  region?: string; // Anatomical region category
 }
 
 export interface UseAnatomyDrillReturn {

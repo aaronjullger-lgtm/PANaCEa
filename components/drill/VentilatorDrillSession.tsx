@@ -12,6 +12,19 @@ import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { getDrillLandingStats } from '@/services/drillStatsService';
 
+// Action options for ventilator adjustments
+const ACTION_OPTIONS = [
+  { id: 'increase-peep', label: 'Increase PEEP' },
+  { id: 'decrease-peep', label: 'Decrease PEEP' },
+  { id: 'increase-fio2', label: 'Increase FiO2' },
+  { id: 'decrease-fio2', label: 'Decrease FiO2' },
+  { id: 'increase-rr', label: 'Increase Respiratory Rate' },
+  { id: 'decrease-rr', label: 'Decrease Respiratory Rate' },
+  { id: 'increase-tv', label: 'Increase Tidal Volume' },
+  { id: 'decrease-tv', label: 'Decrease Tidal Volume' },
+  { id: 'no-change', label: 'No Change Needed' },
+];
+
 interface VentilatorDrillSessionProps {
   onExit?: () => void;
 }

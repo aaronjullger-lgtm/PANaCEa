@@ -37,8 +37,12 @@ export interface VentCase {
   prompt: string;
   options: string[];
   correctAnswer: string;
+  correctAction?: string; // For displaying correct action label
   explanation: string;
   tags: string[];
+  patientInfo?: string;
+  indication?: string;
+  physicalExam?: string;
 }
 
 export interface UseVentilatorDrillReturn {
