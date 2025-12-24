@@ -61,9 +61,7 @@ export class AuthenticationError extends Error {
  */
 async function getAuthToken(): Promise<string | null> {
   try {
-    // Try to get token from Clerk's session
-    const { Clerk } = await import('@clerk/clerk-react');
-    // Access the global Clerk instance
+    // Access the global Clerk instance directly
     const clerk = (window as any).__clerk_frontend_api || (window as any).Clerk;
     if (clerk?.session) {
       const token = await clerk.session.getToken();

@@ -30,7 +30,7 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
   examLabel = 'PANCE',
 }) => {
   const [selectedFocus, setSelectedFocus] = useState<FocusOption>('all');
-  const [difficulty, setDifficulty] = useState<'same' | 'increase' | 'decrease'>('same');
+  const [difficulty, setDifficulty] = useState<'same' | 'easier' | 'harder'>('same');
 
   // Calculate real stats from performance data
   const stats = useMemo(() => {
@@ -248,9 +248,9 @@ export const SimulationPage: React.FC<SimulationPageProps> = ({
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { id: 'decrease' as const, label: 'Easier', desc: 'Build confidence' },
+              { id: 'easier' as const, label: 'Easier', desc: 'Build confidence' },
               { id: 'same' as const, label: 'Adaptive', desc: 'Match your level' },
-              { id: 'increase' as const, label: 'Harder', desc: 'Challenge yourself' },
+              { id: 'harder' as const, label: 'Harder', desc: 'Challenge yourself' },
             ].map((option) => (
               <button
                 key={option.id}

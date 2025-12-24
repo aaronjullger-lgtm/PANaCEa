@@ -664,8 +664,6 @@ const App: React.FC = () => {
                   setIsLoading={setIsLoading}
                   setError={setError}
                   onStartSession={handleStartSession}
-                  isModalOpen={isModalOpen}
-                  onCloseModal={() => setIsModalOpen(false)}
                   onConfirmSession={handleConfirmSession}
                   growthAreas={growthAreas}
                   onNavigateToDrillMode={handleNavigateToDrillMode}

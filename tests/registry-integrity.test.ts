@@ -168,7 +168,12 @@ describe('Drug Registry Integrity', () => {
   let allDrugs: Array<{ name: string; class?: string; category?: string }>;
 
   beforeAll(async () => {
-    allDrugs = await loadDrugRegistry();
+    const drugs = await loadDrugRegistry();
+    allDrugs = drugs.map(d => ({
+      name: d.genericName,
+      class: d.drugClass?.[0],
+      category: undefined
+    }));
   });
 
   it('should have no duplicate drug names', () => {

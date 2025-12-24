@@ -23,8 +23,8 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
   const { request, env } = context;
 
   // Authenticate the request
-  const authResult = await authenticateRequest(request, env.CLERK_SECRET_KEY);
-  if (!authResult.authenticated) {
+  const authResult = await authenticateRequest(request, env);
+  if (!authResult) {
     return new Response(
       JSON.stringify({ 
         error: 'Unauthorized', 

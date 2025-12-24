@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 import { ConditionPreviewCard } from './components/conditions/ConditionPreviewCard';
 import { ConditionPreviewGrid } from './components/conditions/ConditionPreviewGrid';
-import { ConditionDetailModal } from './components/ConditionDetailModal';
+import ConditionDetailModal from './components/ConditionDetailModal';
 import { CONDITION_REGISTRY_CV, CONDITION_REGISTRY_PULM } from './conditionRegistry';
 import type { ConditionMeta } from './conditionRegistry';
 

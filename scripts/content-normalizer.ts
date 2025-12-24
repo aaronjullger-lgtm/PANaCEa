@@ -266,7 +266,7 @@ function normalizeDifferentialsArray(value: any): Array<{ condition: string; rea
 
 interface ChangeLog {
   condition: string;
-  conditionId: number;
+  conditionId: string;
   changes: string[];
 }
 
@@ -277,7 +277,7 @@ function detectChanges(
   before: any,
   after: any,
   conditionName: string,
-  conditionId: number
+  conditionId: string
 ): ChangeLog | null {
   const changes: string[] = [];
   

@@ -116,23 +116,6 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({ 
             ))}
           </div>
         )}
-      </div>pan>•</span>
-          <span>{content.subcategory}</span>
-        </div>
-        {content.overview && (
-          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{content.overview}</p>
-        )}
-        
-        {/* Buzzwords */}
-        {content.buzzwords && content.buzzwords.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {content.buzzwords.map((buzz) => (
-              <span key={buzz} className="px-3 py-1 text-sm rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                {buzz}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Classic Triad - Red/Rose Callout */}
@@ -166,6 +149,11 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({ 
                 <span className="text-amber-500 dark:text-amber-400 mt-1">💡</span>
                 <span>{pearl}</span>
               </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* First-Line Treatment - Green Section */}
       {content.first_line_rx && (
         <div className="p-5 rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20">
@@ -264,7 +252,13 @@ export const MedicalContentRenderer: React.FC<MedicalContentRendererProps> = ({ 
             )}
           </div>
         </div>
-      )}    <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+      )}
+
+      {/* Gold Standard Diagnosis - Blue Section */}
+      {content.gold_standard_dx && (
+        <div className="p-5 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <h4 className="font-semibold text-blue-900 dark:text-blue-100">Gold Standard Diagnosis</h4>
           </div>
           <p className="text-blue-800 dark:text-blue-200">{content.gold_standard_dx}</p>

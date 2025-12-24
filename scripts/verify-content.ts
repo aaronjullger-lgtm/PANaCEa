@@ -45,7 +45,7 @@ async function verify() {
   console.log('\n🎯 HIGH-YIELD FIELDS:');
   console.log('  • buzzwords:', JSON.stringify(content.buzzwords));
   console.log('  • classic_triad:', JSON.stringify(content.classic_triad));
-  console.log('  • clinical_pearls:', JSON.stringify(content.clinical_pearls?.slice(0, 2)));
+  console.log('  • clinical_pearls:', JSON.stringify(Array.isArray(content.clinical_pearls) ? content.clinical_pearls.slice(0, 2) : content.clinical_pearls));
   console.log('  • gold_standard_dx:', content.gold_standard_dx);
   console.log('  • first_line_rx:', content.first_line_rx);
 
