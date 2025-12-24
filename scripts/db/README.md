@@ -45,6 +45,118 @@ npx ts-node scripts/db/fix-optional-nulls.ts
 └─────────────────┴─────────────┴──────────────┴───────────┘
 ```
 
+---
+
+### `revert-none-to-null.ts`
+**Purpose:** Unlock fields for AI regeneration by reverting `"NONE"` back to `null`.
+
+**Problem Solved:**
+- Some records were normalized to `"NONE"` but actually have discoverable content
+- Resetting to `null` allows generation scripts to process them again
+- Configurable field selection for selective unlocking
+
+**Affected Fields:**
+- `mnemonic` (String) → null
+- `guidelines` (String) → null
+- `classic_triad` (Json) → Prisma.DbNull
+
+**Usage:**
+```bash
+npx ts-node scripts/db/revert-none-to-null.ts
+```
+
+**Configuration:**
+Edit the `FIELDS_TO_UNLOCK` array in the script to control which fields get reset:
+```typescript
+const FIELDS_TO_UNLOCK: FieldConfig[] = [
+  { name: 'mnemonic', type: 'string' },      // ← Uncomment to unlock
+  // { name: 'guidelines', type: 'string' }, // ← Commented = skip
+  { name: 'classic_triad', type: 'json' },
+];
+```
+
+**Output Example:**
+```
+╔═══════════════════════════════════════════════════════════╗
+║   UNLOCK SUMMARY                                          ║
+╚═══════════════════════════════════════════════════════════╝
+
+┌───────────────────────────┬───────────────────────────┐
+│ Field                     │ Records Unlocked          │
+├───────────────────────────┼───────────────────────────┤
+│ mnemonic                  │                      1045 │
+│ guidelines                │                      1011 │
+│ classic_triad             │                         0 │
+├───────────────────────────┼───────────────────────────┤
+│ TOTAL                     │                      2056 │
+└───────────────────────────┴───────────────────────────┘
+
+💡 Next step: Run your generation script:
+   npm run generate:clinical
+```
+
+---
+
+### `normalize-formatting.ts`
+
+⚠️ **WARNING**: This script requires schema review before use. Current MedicalContent schema uses `String?` (JSON strings) for most fields, not Postgres arrays. Script needs alignment with actual schema structure.
+
+**Original Purpose:** Comprehensive data formatting cleanup for the entire MedicalContent table.
+
+**Problems It Was Designed to Fix:**
+1. **Postgres Array Syntax** → Converts `{""Item 1"", ""Item 2""}` to `["Item 1", "Item 2"]`
+2. **Escaped Newlines** → Converts literal `\\n` to actual newlines `\n`
+3. **Inconsistent Sentinels** → Normalizes `"none"`, `"N/A"`, `""` to `"NONE"` or `null`
+
+**Status:** ⚠️ Not production-ready - Schema mismatch detected
+
+**Next Steps:**
+1. Review MedicalContent schema field types
+2. Align array handling with actual `String[]` fields only (buzzwords, relatedSystems)
+3. Remove array conversion logic for JSON string fields
+4. Test on development data before production use
+
+**Affected Fields:**
+- **Arrays:** `symptoms`, `complications`, `riskFactors`, `buzzwords`, `relatedSystems`
+- **Text:** `overview`, `etiology`, `pathophysiology`, `diagnostics`, `treatment`, `clinical_pearls`
+- **Sentinels:** `classic_triad`, `mnemonic`, `guidelines`
+
+**Usage:**
+```bash
+npx ts-node scripts/db/normalize-formatting.ts
+```
+
+**Features:**
+- Batch processing (100 records at a time) to avoid memory issues
+- Only updates records that actually changed
+- Detailed logging of each fix applied
+- Progress indicators for large datasets
+- Safe error handling (continues on individual record errors)
+
+**Output Example:**
+```
+╔═══════════════════════════════════════════════════════════╗
+║   NORMALIZATION SUMMARY                                   ║
+╚═══════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────┬──────────────────────┐
+│ Metric                         │ Count                │
+├────────────────────────────────┼──────────────────────┤
+│ Total records processed        │                 1200 │
+│ Records updated                │                  345 │
+│ Postgres arrays fixed          │                   89 │
+│ Text/newlines normalized       │                  234 │
+│ Sentinels normalized           │                   67 │
+│ Errors encountered             │                    0 │
+└────────────────────────────────┴──────────────────────┘
+```
+
+**Technical Details:**
+- Uses regex parsing for Postgres array conversion
+- Preserves internal quotes and commas correctly
+- Try/catch blocks prevent script crashes on malformed data
+- Updates `updatedAt` timestamp for audit trail
+
 ## Best Practices
 
 1. **Always backup** before running database modification scripts
