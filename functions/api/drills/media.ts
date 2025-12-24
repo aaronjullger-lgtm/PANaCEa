@@ -18,6 +18,14 @@ import type { PagesFunction } from '@cloudflare/workers-types';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
 // ============================================================================
+// TYPES
+// ============================================================================
+
+interface Env {
+  DATABASE_URL: string;
+}
+
+// ============================================================================
 // TYPE DEFINITIONS (match use-photo-drill.ts interface)
 // ============================================================================
 
@@ -96,7 +104,7 @@ function generateDefaultExplanation(diagnosis: string, modality: string): string
 // MAIN HANDLER
 // ============================================================================
 
-export const onRequestGet: PagesFunction = async (context) => {
+export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     const { env, request } = context;
     const url = new URL(request.url);

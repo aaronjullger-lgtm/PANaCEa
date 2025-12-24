@@ -65,8 +65,8 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const stats = getDrillLandingStats('pharmacology_drill');
-  const categoryBreakdown = getCategoryBreakdown('pharmacology_drill');
+  const stats = getDrillLandingStats('pharmacology');
+  const categoryBreakdown = undefined; // Not applicable for pharmacology drill
 
   // Fetch question from API
   const fetchPharmQuestion = useCallback(async (drugClass?: string, difficulty?: string): Promise<Question> => {

@@ -105,8 +105,8 @@ function parseMarkdown(text: string, accentColor: string): React.ReactNode[] {
         }
 
         // Add the rendered element
-        const matchArray = Array.from(match) as [string, ...string[]];
-        elements.push(pattern.render(...matchArray));
+        const renderArgs = [match[0], ...match.slice(1)] as Parameters<typeof pattern.render>;
+        elements.push(pattern.render(...renderArgs));
 
         // Update remaining text
         remaining = remaining.substring(match.index + match[0].length);

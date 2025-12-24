@@ -7,6 +7,7 @@
  */
 
 export interface Question {
+  id?: string; // Unique identifier for SRS tracking
   question: string;
   options: string[];
   correctAnswerIndex: number;
