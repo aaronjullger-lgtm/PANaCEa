@@ -1,243 +1,151 @@
-/**
- * Database Normalization Script: Fix Formatting Issues
- * 
- * PURPOSE:
- * Comprehensively fixes data formatting issues in the MedicalContent table:
- * 1. Converts Postgres array syntax to proper JSON arrays
- * 2. Fixes escaped newlines (\\n → \n)
- * 3. Normalizes sentinel values ("NONE", "N/A", etc.)
- * 
- * USAGE:
- * npx ts-node scripts/db/normalize-formatting.ts
- * 
- * BATCH SIZE:
- * Processes records in batches to avoid memory issues with large datasets.
- */
-
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const BATCH_SIZE = 100; // Process 100 records at a time
+const BATCH_SIZE = 100;
 
-interface NormalizationStats {
-  totalProcessed: number;
-  totalUpdated: number;
-  postgresArraysFix: number;
-  newlinesFix: number;
-  sentinelsFix: number;
-  errors: number;
-}
+// Fields that contain Postgres Array strings "{...}" that need conversion to JSON arrays ["..."]
+const JSON_ARRAY_FIELDS = [
+  'symptoms',
+  'complications',
+  'riskFactors',
+  'diagnostics',
+  'treatment',
+  'clinical_pearls',
+  'relatedSystems',
+  'buzzwords'
+] as const;
+
+// Fields that are simple strings needing newline cleanup
+const STRING_FIELDS = [
+  'vignette',
+  'best_initial_test',
+  'gold_standard_dx',
+  'classic_patient',
+  'overview',
+  'pathophysiology',
+  'epidemiology',
+  'etiology',
+  'prognosis',
+  'physicalExam',
+  'patient_education',
+  'prevention',
+  'rx_mechanism',
+  'rx_side_effects',
+  'disposition',
+  'mnemonic',
+  'guidelines'
+] as const;
 
 /**
- * Fix Postgres array syntax and convert to proper JSON
- * Example: `{""Item 1"", ""Item 2""}` → `["Item 1", "Item 2"]`
+ * Converts a Postgres Array String "{ 'A', 'B' }" into a JavaScript Array ["A", "B"]
+ * Also handles JSON arrays that are already correctly formatted
  */
-function fixPostgresArray(value: any): any {
-  // If already a proper array/object, return as-is
-  if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
-    return value;
-  }
+function parsePostgresArray(raw: any): any[] | null {
+  if (typeof raw !== 'string') return raw;
 
-  // If not a string, return as-is
-  if (typeof value !== 'string') {
-    return value;
-  }
-
-  // Check if it looks like Postgres array syntax
-  if (value.startsWith('{') && value.endsWith('}')) {
+  const trimmed = raw.trim();
+  
+  // If it's already a JSON array string, parse it
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
     try {
-      // Remove outer braces and replace with brackets
-      let jsonString = value.slice(1, -1);
-      
-      // Handle empty arrays
-      if (jsonString.trim() === '') {
-        return [];
-      }
-
-      // Split by commas (but not commas inside quoted strings)
-      // This regex splits on commas not inside quotes
-      const items = jsonString.match(/(?:[^,"]+|"[^"]*")+/g) || [];
-      
-      // Clean up each item
-      const cleanedItems = items.map(item => {
-        item = item.trim();
-        // Remove surrounding quotes if present
-        if (item.startsWith('"') && item.endsWith('"')) {
-          item = item.slice(1, -1);
-        }
-        // Unescape internal quotes
-        item = item.replace(/""/g, '"');
-        return item;
-      }).filter(item => item.length > 0);
-
-      return cleanedItems;
-    } catch (error) {
-      console.warn(`Failed to parse Postgres array: ${value}`, error);
-      return value; // Return original on error
+      return JSON.parse(trimmed);
+    } catch {
+      return null;
     }
   }
 
-  return value;
-}
+  // If it is a Postgres Array "{ ... }"
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    // Remove braces
+    const content = trimmed.substring(1, trimmed.length - 1);
+    if (!content) return [];
 
-/**
- * Normalize text by fixing escaped newlines and carriage returns
- */
-function normalizeText(text: string | null | undefined): string | null {
-  if (!text || typeof text !== 'string') {
-    return text || null;
+    // Split by comma, but respect quoted strings
+    // This regex matches: "quoted string" OR unquoted_string
+    const matches = content.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+    
+    if (!matches) return [];
+
+    return matches.map(m => {
+      // Remove wrapping double quotes if present and unescape inner quotes
+      if (m.startsWith('"') && m.endsWith('"')) {
+        return m.slice(1, -1).replace(/""/g, '"');
+      }
+      return m;
+    });
   }
 
-  let normalized = text;
-
-  // Replace literal \\n with actual newlines
-  normalized = normalized.replace(/\\n/g, '\n');
-  
-  // Replace \r\n with \n
-  normalized = normalized.replace(/\r\n/g, '\n');
-  
-  // Remove multiple consecutive newlines (keep max 2)
-  normalized = normalized.replace(/\n{3,}/g, '\n\n');
-  
-  // Trim whitespace
-  normalized = normalized.trim();
-
-  return normalized;
+  return null; // Not a recognized array format
 }
 
 /**
- * Normalize sentinel values to consistent "NONE" or null
+ * Cleans text formatting: fixes newlines, trims whitespace
  */
-function normalizeSentinel(value: any, recordHasContent: boolean): string | null {
-  // If value is already null or undefined, keep it null
-  if (value === null || value === undefined) {
-    return null;
+function cleanText(text: any): string | null {
+  if (typeof text !== 'string') return text;
+  if (!text) return null;
+
+  let cleaned = text
+    .replace(/\\n/g, '\n')     // Fix literal escaped newlines
+    .replace(/\r\n/g, '\n')    // Fix Windows line endings
+    .trim();
+
+  // Fix common CSV import artifact: Double quotes around headers
+  // e.g., """### Header""" -> "### Header"
+  if (cleaned.startsWith('""') && cleaned.endsWith('""')) {
+    cleaned = cleaned.slice(2, -2);
   }
 
-  // Convert to string for comparison
-  const strValue = String(value).trim().toLowerCase();
-
-  // List of sentinel values to normalize
-  const sentinelValues = ['none', 'n/a', 'na', 'not applicable', ''];
-
-  if (sentinelValues.includes(strValue)) {
-    // If record has other content, use "NONE" sentinel
-    // Otherwise use null to allow regeneration
-    return recordHasContent ? "NONE" : null;
-  }
-
-  // If it's a meaningful value, return original (but trimmed if string)
-  return typeof value === 'string' ? value.trim() : value;
+  return cleaned;
 }
 
 /**
- * Check if a record has meaningful content (not empty)
+ * Process a single record and return normalized data
  */
-function recordHasContent(record: any): boolean {
-  // Check if any of these key fields have content
-  const keyFields = [
-    'overview',
-    'etiology',
-    'pathophysiology',
-    'symptoms',
-    'treatment',
-    'clinical_pearls',
-  ];
-
-  return keyFields.some(field => {
-    const value = record[field];
-    if (!value) return false;
-    if (typeof value === 'string' && value.trim().length > 0) return true;
-    if (Array.isArray(value) && value.length > 0) return true;
-    if (typeof value === 'object' && Object.keys(value).length > 0) return true;
-    return false;
-  });
-}
-
-/**
- * Normalize a single record
- */
-function normalizeRecord(record: any): { normalized: any; changed: boolean; fixes: string[] } {
+function normalizeRecord(record: any): { data: any; needsUpdate: boolean; fixes: string[] } {
+  const data: any = {};
+  let needsUpdate = false;
   const fixes: string[] = [];
-  let changed = false;
-  const hasContent = recordHasContent(record);
 
-  // Create normalized copy
-  const normalized = { ...record };
+  // 1. Process JSON Array Fields (Postgres -> JSON)
+  for (const field of JSON_ARRAY_FIELDS) {
+    const original = (record as any)[field];
+    if (!original) continue;
 
-  // Fields to check for Postgres array syntax
-  const arrayFields = ['symptoms', 'complications', 'riskFactors', 'buzzwords', 'relatedSystems'];
-  
-  arrayFields.forEach(field => {
-    if (record[field]) {
-      const fixed = fixPostgresArray(record[field]);
-      if (JSON.stringify(fixed) !== JSON.stringify(record[field])) {
-        normalized[field] = fixed;
-        fixes.push(`Fixed Postgres array in ${field}`);
-        changed = true;
+    // Try to parse if it looks like a string but should be an object/array
+    let cleaned = original;
+    if (typeof original === 'string') {
+      const parsed = parsePostgresArray(original);
+      if (parsed) {
+        // Convert to JSON string for storage (schema expects String, not Array)
+        cleaned = JSON.stringify(parsed);
+        fixes.push(`Converted Postgres array to JSON in ${field}`);
       }
     }
-  });
 
-  // Fields to normalize text (remove escaped newlines)
-  const textFields = ['overview', 'etiology', 'pathophysiology', 'symptoms', 'physicalExam',
-                      'diagnostics', 'treatment', 'prognosis', 'differentialDiagnosis'];
-  
-  textFields.forEach(field => {
-    if (record[field] && typeof record[field] === 'string') {
-      const fixed = normalizeText(record[field]);
-      if (fixed !== record[field]) {
-        normalized[field] = fixed;
-        fixes.push(`Normalized text in ${field}`);
-        changed = true;
-      }
-    }
-  });
-
-  // Handle clinical_pearls (might be array of strings)
-  if (record.clinical_pearls) {
-    if (Array.isArray(record.clinical_pearls)) {
-      const fixedPearls = record.clinical_pearls.map((pearl: any) => {
-        if (typeof pearl === 'string') {
-          return normalizeText(pearl);
-        }
-        return pearl;
-      });
-      if (JSON.stringify(fixedPearls) !== JSON.stringify(record.clinical_pearls)) {
-        normalized.clinical_pearls = fixedPearls;
-        fixes.push('Normalized text in clinical_pearls array');
-        changed = true;
-      }
-    } else if (typeof record.clinical_pearls === 'string') {
-      const fixed = normalizeText(record.clinical_pearls);
-      if (fixed !== record.clinical_pearls) {
-        normalized.clinical_pearls = fixed;
-        fixes.push('Normalized text in clinical_pearls');
-        changed = true;
-      }
+    // Compare (original vs cleaned strings)
+    if (cleaned !== original) {
+      data[field] = cleaned;
+      needsUpdate = true;
     }
   }
 
-  // Normalize sentinel fields
-  const sentinelFields = ['classic_triad', 'mnemonic', 'guidelines'];
-  
-  sentinelFields.forEach(field => {
-    if (record[field] !== undefined) {
-      const fixed = normalizeSentinel(record[field], hasContent);
-      const originalIsNull = record[field] === null || record[field] === Prisma.DbNull;
-      const fixedIsNull = fixed === null;
-      
-      // Only mark as changed if the semantic value changed
-      if (originalIsNull !== fixedIsNull || (!originalIsNull && fixed !== record[field])) {
-        normalized[field] = fixed === null ? Prisma.DbNull : fixed;
-        fixes.push(`Normalized sentinel in ${field}`);
-        changed = true;
-      }
-    }
-  });
+  // 2. Process String Fields (Newline cleanup)
+  for (const field of STRING_FIELDS) {
+    const original = (record as any)[field];
+    if (!original) continue;
 
-  return { normalized, changed, fixes };
+    const cleaned = cleanText(original);
+    
+    if (cleaned !== original) {
+      data[field] = cleaned;
+      fixes.push(`Cleaned text formatting in ${field}`);
+      needsUpdate = true;
+    }
+  }
+
+  return { data, needsUpdate, fixes };
 }
 
 /**
@@ -245,81 +153,87 @@ function normalizeRecord(record: any): { normalized: any; changed: boolean; fixe
  */
 async function normalizeFormatting() {
   console.log('\n╔═══════════════════════════════════════════════════════════╗');
-  console.log('║   Database Normalization: Fix Formatting Issues          ║');
+  console.log('║   Database Normalization: Fix CSV Import Issues          ║');
   console.log('╚═══════════════════════════════════════════════════════════╝\n');
+  console.log('🔍 Fixing:');
+  console.log('   • Postgres arrays {""A"", ""B""} → JSON arrays ["A", "B"]');
+  console.log('   • Literal \\n → actual newlines');
+  console.log('   • CSV quote artifacts ("""text""" → "text")');
+  console.log('');
 
   const startTime = Date.now();
-  const stats: NormalizationStats = {
-    totalProcessed: 0,
-    totalUpdated: 0,
-    postgresArraysFix: 0,
-    newlinesFix: 0,
-    sentinelsFix: 0,
-    errors: 0,
-  };
+  let totalProcessed = 0;
+  let totalUpdated = 0;
+  let arraysFix = 0;
+  let textFix = 0;
+  let errors = 0;
 
   try {
-    // Get total count
-    const totalRecords = await prisma.medicalContent.count();
-    console.log(`📊 Total records to process: ${totalRecords}`);
-    console.log(`📦 Batch size: ${BATCH_SIZE}\n`);
-
-    let offset = 0;
+    let hasMore = true;
+    let cursor: string | undefined;
     let batchNumber = 1;
 
-    while (offset < totalRecords) {
-      console.log(`\n🔄 Processing batch ${batchNumber} (${offset + 1}-${Math.min(offset + BATCH_SIZE, totalRecords)} of ${totalRecords})...`);
+    while (hasMore) {
+      console.log(`\n🔄 Processing batch ${batchNumber}...`);
 
-      // Fetch batch
-      const records = await prisma.medicalContent.findMany({
+      const batch = await prisma.medicalContent.findMany({
         take: BATCH_SIZE,
-        skip: offset,
+        skip: cursor ? 1 : 0,
+        cursor: cursor ? { id: cursor } : undefined,
+        orderBy: { id: 'asc' },
       });
 
-      // Process each record in batch
-      for (const record of records) {
-        stats.totalProcessed++;
+      if (batch.length === 0) {
+        hasMore = false;
+        break;
+      }
 
-        try {
-          const { normalized, changed, fixes } = normalizeRecord(record);
+      const updates = [];
 
-          if (changed) {
-            // Remove id and conditionId from normalized data to avoid validation error
-            const { id, conditionId, ...updateData } = normalized as any;
-            
-            // Update the record
-            await prisma.medicalContent.update({
+      for (const record of batch) {
+        const { data, needsUpdate, fixes } = normalizeRecord(record);
+
+        if (needsUpdate) {
+          updates.push(
+            prisma.medicalContent.update({
               where: { id: record.id },
               data: {
-                ...updateData,
+                ...data,
                 updatedAt: new Date(),
               },
-            });
+            })
+          );
+          
+          totalUpdated++;
+          
+          // Count fix types
+          if (fixes.some(f => f.includes('Postgres array'))) arraysFix++;
+          if (fixes.some(f => f.includes('text'))) textFix++;
+          
+          console.log(`   ✅ ${record.conditionId}: ${fixes.join(', ')}`);
+        }
 
-            stats.totalUpdated++;
+        cursor = record.id;
+      }
 
-            // Count specific fix types
-            if (fixes.some(f => f.includes('Postgres array'))) stats.postgresArraysFix++;
-            if (fixes.some(f => f.includes('text'))) stats.newlinesFix++;
-            if (fixes.some(f => f.includes('sentinel'))) stats.sentinelsFix++;
-
-            console.log(`   ✅ Updated ${record.conditionId}: ${fixes.join(', ')}`);
-          }
+      // Execute batch updates in transaction
+      if (updates.length > 0) {
+        try {
+          await prisma.$transaction(updates);
+          console.log(`   💾 Committed ${updates.length} updates to database`);
         } catch (error) {
-          stats.errors++;
-          console.error(`   ❌ Error processing ${record.conditionId}:`, error);
+          console.error(`   ❌ Transaction failed for batch ${batchNumber}:`, error);
+          errors += updates.length;
         }
       }
 
-      offset += BATCH_SIZE;
+      totalProcessed += batch.length;
       batchNumber++;
-
-      // Progress indicator
-      const progress = Math.min(100, (offset / totalRecords) * 100).toFixed(1);
-      console.log(`   Progress: ${progress}%`);
     }
 
-    // Summary report
+    // Print summary
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+
     console.log('\n╔═══════════════════════════════════════════════════════════╗');
     console.log('║   NORMALIZATION SUMMARY                                   ║');
     console.log('╚═══════════════════════════════════════════════════════════╝\n');
@@ -327,40 +241,40 @@ async function normalizeFormatting() {
     console.log('┌────────────────────────────────┬──────────────────────┐');
     console.log('│ Metric                         │ Count                │');
     console.log('├────────────────────────────────┼──────────────────────┤');
-    console.log(`│ Total records processed        │ ${String(stats.totalProcessed).padStart(20)} │`);
-    console.log(`│ Records updated                │ ${String(stats.totalUpdated).padStart(20)} │`);
-    console.log(`│ Postgres arrays fixed          │ ${String(stats.postgresArraysFix).padStart(20)} │`);
-    console.log(`│ Text/newlines normalized       │ ${String(stats.newlinesFix).padStart(20)} │`);
-    console.log(`│ Sentinels normalized           │ ${String(stats.sentinelsFix).padStart(20)} │`);
-    console.log(`│ Errors encountered             │ ${String(stats.errors).padStart(20)} │`);
+    console.log(`│ Total records scanned          │ ${totalProcessed.toString().padStart(20)} │`);
+    console.log(`│ Records updated                │ ${totalUpdated.toString().padStart(20)} │`);
+    console.log(`│ Postgres arrays fixed          │ ${arraysFix.toString().padStart(20)} │`);
+    console.log(`│ Text formatting cleaned        │ ${textFix.toString().padStart(20)} │`);
+    console.log(`│ Errors encountered             │ ${errors.toString().padStart(20)} │`);
     console.log('└────────────────────────────────┴──────────────────────┘');
 
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`\n⏱️  Completed in ${duration}s`);
+    console.log(`\n⏱️  Completed in ${elapsed}s\n`);
 
-    if (stats.totalUpdated > 0) {
-      console.log(`\n✅ Successfully normalized ${stats.totalUpdated} records`);
-      console.log('   Database formatting is now consistent and clean.');
+    if (totalUpdated === 0) {
+      console.log('✨ Database already normalized! No changes needed.\n');
     } else {
-      console.log('\n✨ Database already normalized! No changes needed.');
+      console.log(`🎉 Successfully normalized ${totalUpdated} records!\n`);
+      console.log('📋 Changes applied:');
+      console.log(`   • Converted ${arraysFix} Postgres arrays to JSON format`);
+      console.log(`   • Cleaned text formatting in ${textFix} fields`);
+      console.log('');
+      console.log('✅ Your frontend can now safely JSON.parse() these fields!\n');
     }
 
-    if (stats.errors > 0) {
-      console.log(`\n⚠️  ${stats.errors} errors encountered. Check logs above for details.`);
+    if (errors > 0) {
+      console.warn(`⚠️  ${errors} errors encountered. Check logs above for details.\n`);
     }
-
   } catch (error) {
-    console.error('\n❌ Fatal error during normalization:', error);
+    console.error('\n❌ Fatal error:', error);
     throw error;
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-// Execute script
+// Run the script
 normalizeFormatting()
   .catch((error) => {
-    console.error('Fatal error:', error);
+    console.error('Script failed:', error);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
   });
