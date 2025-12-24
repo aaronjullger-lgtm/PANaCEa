@@ -243,45 +243,6 @@ export interface VentilatorAttempt {
   timestamp: number;
 }
 
-// ===== TRIAGE TENT (MASS CASUALTY) =====
-
-export type TriageCategory = 'immediate' | 'delayed' | 'minor' | 'expectant';
-
-export interface TriageVictim {
-  id: string;
-  age: number;
-  sex: 'M' | 'F';
-  presentation: string;
-  vitalSigns: {
-    conscious: boolean;
-    breathing: boolean;
-    respiratoryRate?: number;
-    pulse?: number;
-    canFollowCommands?: boolean;
-  };
-  injuries: string[];
-  correctCategory: TriageCategory;
-  explanation: string;
-}
-
-export interface TriageSession {
-  scenarioId: string;
-  victims: TriageVictim[];
-  decisions: {
-    victimId: string;
-    assignedCategory: TriageCategory;
-    correct: boolean;
-    timeSpent: number; // milliseconds
-  }[];
-  startTime: number;
-  endTime?: number;
-  score?: {
-    accuracy: number;
-    speed: number;
-    overall: number;
-  };
-}
-
 // ===== POLYPHARMACY PUZZLE =====
 
 export interface Medication {

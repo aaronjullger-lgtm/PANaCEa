@@ -36,7 +36,8 @@ export type DrillType =
   | 'rapid_recall'
   | 'code_blue_speed'
   | 'ddx_compare'
-  | 'antibiotic_mode';
+  | 'antibiotic_mode'
+  | 'polypharmacy_puzzle';
 
 export interface DrillSession {
   /** Session ID */

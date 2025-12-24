@@ -13,18 +13,8 @@ import {
 //   getRandomVentilatorCase,
 //   VENTILATOR_CASES,
 // } from '../data/modes/ventilatorHeroData';
-// Note: These modes are planned for future database implementation
-// import {
-//   generateTriageSession,
-//   calculateTriageScore,
-//   getTriageFeedback,
-//   TRIAGE_VICTIMS,
-// } from '../data/modes/triageTentData';
-// import {
-//   evaluateDeprescribing,
-//   getRandomPolypharmacyCase,
-//   POLYPHARMACY_CASES,
-// } from '../data/modes/polypharmacyData';
+// Note: Polypharmacy mode is database-driven (not yet implemented)
+// Note: Radiology mode is planned for future database implementation
 // import {
 //   calculateRadiologyScore,
 //   getRandomRadiologySeries,
@@ -163,151 +153,10 @@ describe('Daily Rituals - Streak Freeze', () => {
 //   });
 // });
 
-// Triage Tent tests disabled - planned for future database implementation
-// describe('Triage Tent', () => {
-//   it('should have triage victims', () => {
-    expect(TRIAGE_VICTIMS.length).toBeGreaterThan(0);
-  });
+// Triage mode removed - not planned for implementation
 
-  it('should generate triage session', () => {
-    const session = generateTriageSession('bus-crash', 10);
-    
-    expect(session.scenarioId).toBe('bus-crash');
-    expect(session.victims.length).toBeLessThanOrEqual(10);
-    expect(session.startTime).toBeDefined();
-  });
+// Polypharmacy Puzzle - database-driven implementation (not yet active)
+// Tests will be added once database schema and API endpoints are created
 
-  it('should calculate triage score', () => {
-    const session = generateTriageSession('bus-crash', 5);
-    const sessionWithDecisions = {
-      ...session,
-      decisions: session.victims.map(victim => ({
-        victimId: victim.id,
-        assignedCategory: victim.correctCategory,
-        correct: true,
-        timeSpent: 20000,
-      })),
-      endTime: Date.now(),
-    };
-    
-    const score = calculateTriageScore(sessionWithDecisions);
-    
-    expect(score).toBeDefined();
-    expect(score.accuracy).toBe(100);
-    expect(score.speed).toBeGreaterThan(0);
-    expect(score.overall).toBeGreaterThan(0);
-  });
-
-  it('should provide feedback for triage decisions', () => {
-    const victim = TRIAGE_VICTIMS[0];
-    const feedback = getTriageFeedback(victim, victim.correctCategory);
-    
-    expect(feedback).toContain('✓');
-    expect(feedback).toContain(victim.explanation);
-  });
-
-  it('should have all triage categories represented', () => {
-    const categories = new Set(TRIAGE_VICTIMS.map(v => v.correctCategory));
-    
-    expect(categories.has('immediate')).toBe(true);
-    expect(categories.has('delayed')).toBe(true);
-//     expect(categories.has('minor')).toBe(true);
-//     expect(categories.has('expectant')).toBe(true);
-//   });
-// });
-
-// Polypharmacy Puzzle tests disabled - planned for future database implementation
-// describe('Polypharmacy Puzzle', () => {
-//   it('should have polypharmacy cases', () => {
-    expect(POLYPHARMACY_CASES.length).toBeGreaterThan(0);
-  });
-
-  it('should return random polypharmacy case', () => {
-    const pCase = getRandomPolypharmacyCase();
-    
-    expect(pCase).toBeDefined();
-    expect(pCase.medications.length).toBeGreaterThan(0);
-    expect(pCase.correctMedicationsToStop.length).toBeGreaterThan(0);
-  });
-
-  it('should evaluate perfect deprescribing', () => {
-    const testCase = POLYPHARMACY_CASES[0];
-    const result = evaluateDeprescribing(testCase, testCase.correctMedicationsToStop);
-    
-    expect(result.correct).toBe(true);
-    expect(result.partialCredit).toBe(100);
-    expect(result.feedback).toContain('✓');
-  });
-
-  it('should evaluate partial deprescribing', () => {
-    const testCase = POLYPHARMACY_CASES[0];
-    const partialSelection = [testCase.correctMedicationsToStop[0]];
-    
-    const result = evaluateDeprescribing(testCase, partialSelection);
-    
-    expect(result.correct).toBe(false);
-    expect(result.partialCredit).toBeLessThan(100);
-    expect(result.partialCredit).toBeGreaterThan(0);
-  });
-
-  it('should have deprescribing rationale for each medication to stop', () => {
-    POLYPHARMACY_CASES.forEach(pCase => {
-      pCase.correctMedicationsToStop.forEach(medId => {
-        expect(pCase.deprescribingRationale[medId]).toBeDefined();
-      });
-    });
-  });
-
-  it('should have teaching points for each case', () => {
-    POLYPHARMACY_CASES.forEach(pCase => {
-//       expect(pCase.teachingPoints.length).toBeGreaterThan(0);
-//     });
-//   });
-// });
-
-// Radiology Scroll tests disabled - planned for future database implementation
-// describe('Radiology Scroll', () => {
-//   it('should have radiology series', () => {
-    expect(RADIOLOGY_SERIES.length).toBeGreaterThan(0);
-  });
-
-  it('should return random radiology series', () => {
-    const series = getRandomRadiologySeries();
-    
-    expect(series).toBeDefined();
-    expect(series.slices.length).toBe(series.totalSlices);
-    expect(series.criticalSlices.length).toBeGreaterThan(0);
-  });
-
-  it('should calculate radiology score', () => {
-    const series = RADIOLOGY_SERIES[0];
-    const score = calculateRadiologyScore(
-      series,
-      series.findings,
-      series.diagnosis,
-      series.criticalSlices,
-      60000
-    );
-    
-    expect(score.findingsAccuracy).toBeGreaterThan(0);
-    expect(score.diagnosisCorrect).toBe(true);
-    expect(score.thoroughness).toBe(100);
-    expect(score.overall).toBeGreaterThan(0);
-  });
-
-  it('should have multiple modalities', () => {
-    const modalities = new Set(RADIOLOGY_SERIES.map(s => s.modality));
-    expect(modalities.size).toBeGreaterThan(1);
-  });
-
-  it('should have multiple body parts', () => {
-    const bodyParts = new Set(RADIOLOGY_SERIES.map(s => s.bodyPart));
-    expect(bodyParts.size).toBeGreaterThan(1);
-  });
-
-  it('should have teaching points for each case', () => {
-    RADIOLOGY_SERIES.forEach(series => {
-//       expect(series.teachingPoints.length).toBeGreaterThan(0);
-//     });
-//   });
-// });
+// Radiology Scroll - planned for future database implementation
+// Tests will be added once database schema and API endpoints are created

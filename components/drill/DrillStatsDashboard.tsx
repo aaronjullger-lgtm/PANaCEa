@@ -69,6 +69,7 @@ const DRILL_INFO: Record<DrillType, { label: string; icon: React.ElementType; co
   code_blue_speed: { label: 'Code Blue Speed', icon: Activity, color: 'red' },
   ddx_compare: { label: 'DDx Compare', icon: Target, color: 'purple' },
   antibiotic_mode: { label: 'Bug-Drug Match', icon: Beaker, color: 'teal' },
+  polypharmacy_puzzle: { label: 'Polypharmacy Puzzle', icon: Droplets, color: 'amber' },
 };
 
 const DrillStatsDashboard: React.FC<DrillStatsDashboardProps> = ({ onClose, onStartDrill }) => {
