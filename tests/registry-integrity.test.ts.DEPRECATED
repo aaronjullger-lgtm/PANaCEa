@@ -1,18 +1,16 @@
 /**
  * Registry Integrity Test Suite
  * 
- * Validates all medical content registries to catch issues before production:
- * - Duplicate entries
- * - Invalid system codes
- * - Missing required fields
- * - Broken media references
- * - Inconsistent naming
+ * NOTE: This test file is deprecated - conditionRegistry.ts was removed in favor of database-first architecture.
+ * Conditions are now stored in PostgreSQL and managed via Prisma.
+ * 
+ * TODO: Update tests to validate database content instead of static registries.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
 
-// Import registries
-import { CONDITION_REGISTRY_CV } from '../conditionRegistry';
+// DEPRECATED: conditionRegistry.ts no longer exists
+// import { CONDITION_REGISTRY_CV } from '../conditionRegistry';
 import type { SystemCode } from '../types';
 
 // Valid system codes from the type definition
@@ -23,7 +21,8 @@ const VALID_SYSTEM_CODES: SystemCode[] = [
 
 // Helper to dynamically import all registries
 async function loadAllConditionRegistries() {
-  const registry = await import('../conditionRegistry');
+  // DEPRECATED: conditionRegistry.ts removed - use Prisma database queries instead
+  // const registry = await import('../conditionRegistry');
   
   // Collect all exported arrays that match the pattern CONDITION_REGISTRY_*
   const allConditions: Array<{ system: string; condition: string; subcategory: string }> = [];

@@ -1,14 +1,15 @@
 /**
  * scripts/migrate-registry-to-db.ts
  * 
- * One-time migration script to move conditionRegistry.ts entries to the Condition table.
- * This enables dynamic content generation and CMS management.
+ * DEPRECATED: This migration was completed. conditionRegistry.ts has been removed.
+ * The project now uses database-first architecture with PostgreSQL + Prisma.
  * 
- * Usage: npx ts-node scripts/migrate-registry-to-db.ts
+ * For syncing registries to database, use: npm run sync:all
  */
 
 import { PrismaClient } from '@prisma/client';
-import { CONDITION_REGISTRY } from '../conditionRegistry.ts';
+// DEPRECATED: File removed - migration complete
+// import { CONDITION_REGISTRY } from '../conditionRegistry.ts';
 
 const prisma = new PrismaClient();
 

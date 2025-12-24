@@ -92,7 +92,7 @@ function generateConditionId(system: string, subcategory: string, name: string):
 }
 
 /**
- * Parse JSON from Gemini response, handling markdown code blocks
+ * Parse JSON from Gemini response, handling markdown code blocks and malformed JSON
  */
 function parseGeminiJson<T>(text: string): T | null {
   try {
@@ -101,9 +101,37 @@ function parseGeminiJson<T>(text: string): T | null {
       .replace(/```json\s*/gi, '')
       .replace(/```\s*/g, '')
       .trim();
-    return JSON.parse(cleaned);
+    
+    // Try standard parse first
+    try {
+      return JSON.parse(cleaned);
+    } catch (firstError) {
+      // Attempt to fix common JSON issues
+      
+      // Fix unescaped quotes in strings (but not in property names)
+      // This is a heuristic - look for patterns like: "text with "quotes" inside"
+      cleaned = cleaned.replace(/("(?:[^"\\]|\\.)*?")\s*:\s*"((?:[^"\\]|\\.)*)"/g, (match, key, value) => {
+        // Escape unescaped quotes in the value
+        const fixedValue = value.replace(/(?<!\\)"/g, '\\"');
+        return `${key}: "${fixedValue}"`;
+      });
+      
+      // Fix trailing commas
+      cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
+      
+      // Fix single quotes (should be double quotes)
+      cleaned = cleaned.replace(/'/g, '"');
+      
+      // Try parsing again
+      return JSON.parse(cleaned);
+    }
   } catch (error) {
     console.error('Failed to parse Gemini response:', error);
+    if (text.length < 1000) {
+      console.error('Response text:', text);
+    } else {
+      console.error('Response text (first 500 chars):', text.substring(0, 500));
+    }
     return null;
   }
 }
@@ -118,7 +146,42 @@ async function generateContentForCondition(
 ): Promise<void> {
   console.log(`\n📝 Generating content for: ${condition.name} (${condition.system})`);
 
-  const prompt = `You are an expert medical educator creating PANCE/PANRE study content for PA students.
+  const isPartial = missingFields && missingFields.length > 0;
+  
+  let prompt: string;
+  
+  if (isPartial) {
+    console.log(`  🔧 Partial update mode - regenerating ${missingFields.length} fields`);
+    console.log(`     Fields to generate: ${missingFields.slice(0, 10).join(', ')}${missingFields.length > 10 ? '...' : ''}`);
+    
+    // Create a minimal prompt that only asks for the missing fields
+    prompt = `You are an expert medical educator creating PANCE/PANRE study content for PA students.
+
+Generate ONLY the following missing fields for:
+CONDITION: ${condition.name}
+SYSTEM: ${SYSTEM_LABELS[condition.system] || condition.system}
+SUBCATEGORY: ${condition.subcategory || 'General'}
+
+Return ONLY a valid JSON object with ONLY these fields (no markdown, no code blocks, no explanation):
+{
+${missingFields.map(field => {
+  if (field === 'mnemonic') return '  "mnemonic": "Memory aid if one exists, else null"';
+  if (field === 'guidelines') return '  "guidelines": "Relevant guideline name and year, else null"';
+  if (field === 'classic_triad') return '  "classic_triad": ["Sign 1", "Sign 2", "Sign 3"]';
+  if (field === 'relatedSystems') return '  "relatedSystems": ["SYSTEM_CODE"]';
+  return `  "${field}": "..."`;
+}).join(',\n')}
+}
+
+CRITICAL RULES:
+- Return ONLY valid JSON (no markdown, no \`\`\`json blocks)
+- For mnemonic: provide a helpful memory aid OR null if none exists
+- For guidelines: provide guideline name and year (e.g., "2023 AHA Guidelines") OR null
+- For classic_triad: provide 2-4 key signs/symptoms as an array
+- For relatedSystems: only include if truly multi-system (use codes: ${SYSTEM_CODES.join(', ')})
+- All content must be medically accurate and PANCE-relevant`;
+  } else {
+    prompt = `You are an expert medical educator creating PANCE/PANRE study content for PA students.
 
 Generate comprehensive, high-yield medical content for:
 CONDITION: ${condition.name}
@@ -187,16 +250,10 @@ CRITICAL FORMATTING RULES:
 
 Valid system codes: ${SYSTEM_CODES.join(', ')}
 All content must be medically accurate and PANCE-relevant.`;
-
-  const isPartial = missingFields && missingFields.length > 0;
-  
-  if (isPartial) {
-    console.log(`  🔧 Partial update mode - regenerating ${missingFields.length} fields`);
-    console.log(`     Fields to generate: ${missingFields.slice(0, 10).join(', ')}${missingFields.length > 10 ? '...' : ''}`);
   }
 
   try {
-    await sleep(2000); // Rate limiting
+    await sleep(200); // Minimal delay for Flash model with concurrency
     const response = await callGeminiWithRetry(prompt);
     const content = parseGeminiJson<any>(response);
 
@@ -225,6 +282,17 @@ All content must be medically accurate and PANCE-relevant.`;
       return val.map((b: string) => b.replace(/[.,!?;:]$/g, '').trim());
     };
 
+    const parsePanceYield = (val: any): number | null => {
+      if (typeof val === 'number') return val;
+      if (typeof val === 'string') {
+        const lower = val.toLowerCase();
+        if (lower.includes('high') || lower.includes('3')) return 3;
+        if (lower.includes('mid') || lower.includes('medium') || lower.includes('2')) return 2;
+        if (lower.includes('low') || lower.includes('1')) return 1;
+      }
+      return null;
+    };
+
     // Build upsert data
     let upsertData: any = {};
 
@@ -249,6 +317,8 @@ All content must be medically accurate and PANCE-relevant.`;
           val = cleanBadge(val);
         } else if (field === 'buzzwords') {
           val = cleanBuzzwords(val);
+        } else if (field === 'pance_yield') {
+          val = parsePanceYield(val);
         } else if (field === 'relatedSystems') {
           val = (val && Array.isArray(val) && val.length > 0) ? val : [condition.system];
         }
@@ -287,7 +357,7 @@ All content must be medically accurate and PANCE-relevant.`;
         mnemonic: content.mnemonic || null,
         guidelines: content.guidelines || null,
         differentials: content.differentials || [],
-        pance_yield: content.pance_yield || null,
+        pance_yield: parsePanceYield(content.pance_yield),
         image_query: content.image_query || null,
         best_initial_test: cleanBadge(content.best_initial_test),
         rx_mechanism: content.rx_mechanism || null,
@@ -534,17 +604,13 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
     'differentialDiagnosis', 'treatment', 'complications', 'prognosis', 'buzzwords', 'clinical_pearls',
     'gold_standard_dx', 'first_line_rx', 'synonyms', 'classic_patient', 'differentials',
     'pance_yield', 'image_query', 'best_initial_test', 'rx_mechanism', 'rx_side_effects', 'age_demographic', 'gender_bias',
-    'patient_education', 'disposition', 'prevention'
+    'patient_education', 'disposition', 'prevention',
+    'mnemonic', 'classic_triad', 'guidelines', 'relatedSystems'
   ];
   
-  // OPTIONAL FIELDS - Not all conditions have these (mnemonic, triad, guidelines, etc.)
+  // OPTIONAL FIELDS - Not all conditions have these
   // Missing these should NOT trigger regeneration
-  const optionalFields = [
-    'mnemonic',         // Not all conditions have memorable mnemonics
-    'classic_triad',    // Not all conditions present as triads
-    'guidelines',       // Not all conditions have published guidelines
-    'relatedSystems'    // Most conditions are single-system
-  ];
+  const optionalFields: string[] = [];
   
   // MEDIA FIELDS - Fields that require manual upload/processing (NOT generated by AI)
   // These should NOT be checked for completeness to avoid infinite regeneration loops
@@ -597,34 +663,52 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
 
   let generated = 0;
   let errors = 0;
+  
+  // Process in concurrent batches for better performance
+  const CONCURRENT_BATCH_SIZE = 10; // Process 10 conditions concurrently
+  const BATCH_DELAY = 1000; // 1 second between batches
 
-  for (const condition of needsContent) {
-    try {
-      // Get existing content if present
-      const existingContent = contentMap.get(condition.id) || {};
-      // Determine which fields are missing (excluding media fields)
-      const missingFields = requiredFields.filter(field => {
-        return (
-          !(field in existingContent) ||
-          existingContent[field] === null ||
-          existingContent[field] === undefined ||
-          (Array.isArray(existingContent[field]) && existingContent[field].length === 0) ||
-          (typeof existingContent[field] === 'string' && existingContent[field].trim() === '')
-        );
-      });
-      
-      // Skip if no AI-generatable fields are missing
-      if (missingFields.length === 0) continue;
-      
-      // IMPROVED DEBUGGING: Show exactly which fields are missing
-      console.log(`  📋 Missing fields for ${condition.name}: ${missingFields.join(', ')}`);
+  for (let i = 0; i < needsContent.length; i += CONCURRENT_BATCH_SIZE) {
+    const batch = needsContent.slice(i, i + CONCURRENT_BATCH_SIZE);
+    console.log(`\n🔄 Processing batch ${Math.floor(i / CONCURRENT_BATCH_SIZE) + 1}/${Math.ceil(needsContent.length / CONCURRENT_BATCH_SIZE)} (${batch.length} conditions)...`);
+    
+    const promises = batch.map(async (condition) => {
+      try {
+        // Get existing content if present
+        const existingContent = contentMap.get(condition.id) || {};
+        // Determine which fields are missing (excluding media fields)
+        const missingFields = requiredFields.filter(field => {
+          return (
+            !(field in existingContent) ||
+            existingContent[field] === null ||
+            existingContent[field] === undefined ||
+            (Array.isArray(existingContent[field]) && existingContent[field].length === 0) ||
+            (typeof existingContent[field] === 'string' && existingContent[field].trim() === '')
+          );
+        });
+        
+        // Skip if no AI-generatable fields are missing
+        if (missingFields.length === 0) return { success: true, skipped: true };
+        
+        // IMPROVED DEBUGGING: Show exactly which fields are missing
+        console.log(`  📋 Missing fields for ${condition.name}: ${missingFields.join(', ')}`);
 
-      // Generate only the missing fields
-      await generateContentForCondition(condition, missingFields, existingContent);
-      generated++;
-    } catch (error) {
-      console.error(`  ❌ Error processing ${condition.name}:`, error);
-      errors++;
+        // Generate only the missing fields
+        await generateContentForCondition(condition, missingFields, existingContent);
+        return { success: true, skipped: false };
+      } catch (error) {
+        console.error(`  ❌ Error processing ${condition.name}:`, error);
+        return { success: false, skipped: false };
+      }
+    });
+    
+    const results = await Promise.all(promises);
+    generated += results.filter(r => r.success && !r.skipped).length;
+    errors += results.filter(r => !r.success).length;
+    
+    // Delay between batches to avoid rate limiting
+    if (i + CONCURRENT_BATCH_SIZE < needsContent.length) {
+      await sleep(BATCH_DELAY);
     }
   }
 

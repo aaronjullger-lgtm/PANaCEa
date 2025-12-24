@@ -20,6 +20,8 @@ Adaptive learning meets medical education excellence for Physician Assistant stu
 
 PANaCEa is a comprehensive medical education platform designed specifically for PA students preparing for their PANCE/PANRE board exams. It combines cutting-edge AI with proven spaced repetition algorithms (FSRS v5) to create a personalized learning experience.
 
+**📚 For comprehensive documentation, architecture details, and developer guides, see [MASTER_DOCUMENTATION.md](./MASTER_DOCUMENTATION.md)**
+
 ### ✨ Key Features
 
 - **🧠 AI-Generated Questions**: Clinical scenarios powered by Google Gemini API

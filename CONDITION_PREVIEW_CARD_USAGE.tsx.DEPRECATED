@@ -1,16 +1,16 @@
 /**
- * USAGE EXAMPLE: ConditionPreviewCard
- * 
- * Demonstrates how to integrate the new ConditionPreviewCard component
- * into your application for browsing conditions.
+ * DEPRECATED EXAMPLE FILE
+ * This file references conditionRegistry.ts which was removed in database-first architecture migration.
+ * For current usage examples, see: components/analytics/IntelligenceHub.tsx
  */
 
 import React, { useState } from 'react';
 import { ConditionPreviewCard } from './components/conditions/ConditionPreviewCard';
 import { ConditionPreviewGrid } from './components/conditions/ConditionPreviewGrid';
 import ConditionDetailModal from './components/ConditionDetailModal';
-import { CONDITION_REGISTRY_CV, CONDITION_REGISTRY_PULM } from './conditionRegistry';
-import type { ConditionMeta } from './conditionRegistry';
+// DEPRECATED: conditionRegistry.ts removed - use Prisma queries instead
+// import { CONDITION_REGISTRY_CV, CONDITION_REGISTRY_PULM } from './conditionRegistry';
+// import type { ConditionMeta } from './conditionRegistry';
 
 // ============================================================================
 // EXAMPLE 1: Single Card Usage

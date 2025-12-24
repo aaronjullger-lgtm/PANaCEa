@@ -84,42 +84,73 @@ export default defineConfig(({ mode }) => {
           ],
           output: {
             manualChunks: (id) => {
-              // Vendor chunks for better caching
+              // Vendor chunks for better caching and performance
               if (id.includes('node_modules')) {
-                // Don't manually chunk React to avoid initialization issues with React 19
-                // if (id.includes('react') || id.includes('react-dom')) {
-                //   return 'vendor-react';
-                // }
+                // Split React core (keep together to avoid module initialization issues)
+                if (id.includes('react') && !id.includes('react-router') && !id.includes('react-markdown')) {
+                  return 'vendor-react-core';
+                }
+                
+                // Split React Router separately
+                if (id.includes('react-router')) {
+                  return 'vendor-router';
+                }
+                
+                // Clerk authentication library
                 if (id.includes('@clerk')) {
                   return 'vendor-clerk';
                 }
+                
+                // Animation library (Framer Motion is large)
                 if (id.includes('framer-motion')) {
                   return 'vendor-animation';
                 }
-                // Keep lucide-react with vendor-common to avoid module initialization issues
-                // if (id.includes('lucide-react')) {
-                //   return 'vendor-icons';
-                // }
+                
+                // Icons library
+                if (id.includes('lucide-react')) {
+                  return 'vendor-icons';
+                }
+                
+                // Markdown rendering
                 if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype') || id.includes('unified')) {
                   return 'vendor-markdown';
                 }
+                
+                // Charts library (if used)
+                if (id.includes('recharts') || id.includes('chart')) {
+                  return 'vendor-charts';
+                }
+                
+                // UI components
+                if (id.includes('@radix-ui')) {
+                  return 'vendor-ui';
+                }
+                
+                // AI library
                 if (id.includes('@google/generative-ai')) {
                   return 'vendor-ai';
                 }
-                // Group other node_modules into a common vendor chunk
+                
+                // Group remaining node_modules
                 return 'vendor-common';
               }
               
-              // Split large data files into separate chunks for lazy loading
-              if (id.includes('conditionContent')) {
+              // Split large data registries into separate chunks
+              if (id.includes('conditionRegistry') || id.includes('conditionContent')) {
                 return 'data-conditions';
               }
+              if (id.includes('drugRegistry')) {
+                return 'data-drugs';
+              }
+              if (id.includes('labRegistry') || id.includes('imagingRegistry') || id.includes('findingRegistry')) {
+                return 'data-labs';
+              }
               
-              // Split drill mode components for better code splitting
-              if (id.includes('components/drill/')) {
-                const match = id.match(/components\/drill\/(\w+)/);
+              // Split drill mode components for lazy loading
+              if (id.includes('components/drill/') || id.includes('components/modes/')) {
+                const match = id.match(/components\/(drill|modes)\/(\w+)/);
                 if (match) {
-                  return `drill-${match[1].toLowerCase()}`;
+                  return `drill-${match[2].toLowerCase()}`;
                 }
               }
               
@@ -130,10 +161,15 @@ export default defineConfig(({ mode }) => {
               if (id.includes('components/admin/') || id.includes('pages/admin/')) {
                 return 'admin';
               }
+              
+              // Split integrations
+              if (id.includes('components/integrations/')) {
+                return 'integrations';
+              }
             }
           }
         },
-        chunkSizeWarningLimit: 1000,
+        chunkSizeWarningLimit: 500,
         // Conditionally enable source maps based on environment
         // In production, use 'hidden' to generate maps but not reference them in the bundle
         sourcemap: mode === 'production' ? 'hidden' : true,
