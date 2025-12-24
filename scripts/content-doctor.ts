@@ -60,6 +60,9 @@ const SYSTEM_LABELS: Record<string, string> = {
 let backoffMs = 2000;
 const MAX_BACKOFF_MS = 60000;
 const MAX_RETRIES = 3;
+const RATE_LIMIT_DELAY = 200; // 200ms between requests (Flash can handle higher throughput)
+const CONCURRENT_BATCH_SIZE = 10; // Process 10 conditions concurrently
+const BATCH_DELAY = 1000; // 1 second between batches
 
 async function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -665,9 +668,6 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
   let errors = 0;
   
   // Process in concurrent batches for better performance
-  const CONCURRENT_BATCH_SIZE = 10; // Process 10 conditions concurrently
-  const BATCH_DELAY = 1000; // 1 second between batches
-
   for (let i = 0; i < needsContent.length; i += CONCURRENT_BATCH_SIZE) {
     const batch = needsContent.slice(i, i + CONCURRENT_BATCH_SIZE);
     console.log(`\n🔄 Processing batch ${Math.floor(i / CONCURRENT_BATCH_SIZE) + 1}/${Math.ceil(needsContent.length / CONCURRENT_BATCH_SIZE)} (${batch.length} conditions)...`);
@@ -717,6 +717,121 @@ async function phase2ContentGeneration(targetSystem?: string): Promise<void> {
 }
 
 // ============================================================================
+// BUZZWORDS-ONLY REGENERATION
+// ============================================================================
+
+async function regenerateBuzzwords(targetSystem?: string) {
+  console.log('🔑 Starting buzzwords-only regeneration...\n');
+
+  // Find conditions with empty or missing buzzwords
+  const conditions = await prisma.medicalContent.findMany({
+    where: {
+      AND: [
+        targetSystem ? { system: targetSystem } : {},
+        {
+          OR: [
+            { buzzwords: { isEmpty: true } },
+            { buzzwords: { has: 'NONE' } }
+          ]
+        }
+      ]
+    },
+    select: {
+      id: true,
+      conditionId: true,
+      condition: true,
+      system: true,
+      overview: true,
+      symptoms: true,
+      physicalExam: true
+    }
+  });
+
+  console.log(`Found ${conditions.length} conditions needing buzzwords`);
+  
+  if (conditions.length === 0) {
+    console.log('✅ All conditions have buzzwords!');
+    return;
+  }
+
+  let generated = 0;
+  let errors = 0;
+
+  // Process in concurrent batches
+  for (let i = 0; i < conditions.length; i += CONCURRENT_BATCH_SIZE) {
+    const batch = conditions.slice(i, i + CONCURRENT_BATCH_SIZE);
+    console.log(`\n📦 Processing batch ${Math.floor(i / CONCURRENT_BATCH_SIZE) + 1}/${Math.ceil(conditions.length / CONCURRENT_BATCH_SIZE)} (${batch.length} conditions)...`);
+
+    const promises = batch.map(async (condition) => {
+      try {
+        const prompt = `You are a medical education expert creating high-yield PANCE exam preparation content.
+
+Generate ONLY the buzzwords field for this condition:
+
+Condition: ${condition.condition}
+System: ${condition.system}
+Overview: ${condition.overview || 'Not provided'}
+
+Return ONLY a JSON object with this exact structure:
+{
+  "buzzwords": ["buzzword1", "buzzword2", "buzzword3", ...]
+}
+
+Buzzwords should be:
+- Highly specific diagnostic clues or pathognomonic findings
+- What PA students MUST recognize on the PANCE
+- Classic presentations, lab values, imaging findings, or physical exam findings
+- 3-8 memorable items
+
+Examples of good buzzwords:
+- "Boot-shaped heart on CXR" (Tetralogy of Fallot)
+- "Soap bubble on x-ray" (GCT of bone)
+- "Target sign on imaging" (Intussusception)
+- "Strawberry tongue" (Scarlet fever, Kawasaki)
+
+Return ONLY valid JSON, no markdown, no explanation.`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        const data = parseGeminiJson<{ buzzwords: string[] }>(text);
+
+        if (!data || !data.buzzwords || !Array.isArray(data.buzzwords)) {
+          console.error(`  ⚠️  ${condition.conditionId}: Failed to parse buzzwords`);
+          return { success: false };
+        }
+
+        // Update only the buzzwords field
+        await prisma.medicalContent.update({
+          where: { id: condition.id },
+          data: {
+            buzzwords: data.buzzwords
+          }
+        });
+
+        console.log(`  ✅ ${condition.conditionId}: Added ${data.buzzwords.length} buzzwords`);
+        await sleep(RATE_LIMIT_DELAY);
+        return { success: true };
+
+      } catch (error) {
+        console.error(`  ❌ ${condition.conditionId}:`, error);
+        return { success: false };
+      }
+    });
+
+    const results = await Promise.all(promises);
+    generated += results.filter(r => r.success).length;
+    errors += results.filter(r => !r.success).length;
+
+    if (i + CONCURRENT_BATCH_SIZE < conditions.length) {
+      await sleep(BATCH_DELAY);
+    }
+  }
+
+  console.log('\n' + '─'.repeat(70));
+  console.log(`📈 Buzzwords Summary: Generated ${generated} buzzword sets, ${errors} errors`);
+}
+
+// ============================================================================
 // MAIN EXECUTION
 // ============================================================================
 
@@ -724,6 +839,7 @@ async function main() {
   const args = process.argv.slice(2);
   const runPhase1 = args.includes('--phase1');
   const runPhase2 = args.includes('--phase2');
+  const runBuzzwords = args.includes('--buzzwords');
   const systemArg = args.find(arg => arg.startsWith('--system='));
   const targetSystem = systemArg ? systemArg.split('=')[1] : undefined;
 
@@ -734,7 +850,9 @@ async function main() {
   }
 
   try {
-    if (runPhase1) {
+    if (runBuzzwords) {
+      await regenerateBuzzwords(targetSystem);
+    } else if (runPhase1) {
       await phase1GapAnalysis(targetSystem);
     } else if (runPhase2) {
       await phase2ContentGeneration(targetSystem);
