@@ -106,7 +106,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     // Score and rank results
     const results = conditions
       .map(condition => {
-        const aliases = synonymsMap.get(condition.id) || [];
+        const aliases = (synonymsMap.get(condition.id) || []) as string[];
         const score = calculateRelevanceScore(query, condition.name, aliases);
 
         return {

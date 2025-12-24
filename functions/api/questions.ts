@@ -18,7 +18,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     // Authenticate request
     const env = context.env as Env;
-    const authResult = await authenticateRequest(context.request, env);
+    const authResult = await authenticateRequest(context.request as any, env);
     if (!authResult) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,

@@ -151,7 +151,7 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
     if (sessionDataRef.current.questionsAttempted > 0) {
       const endTime = Date.now();
       recordDrillSession({
-        drillType: 'physiology_review',
+        drillType: 'physiology_drill',
         startTime: new Date(sessionStartRef.current).toISOString(),
         endTime: new Date(endTime).toISOString(),
         questionsAttempted: sessionDataRef.current.questionsAttempted,
@@ -196,7 +196,7 @@ export function usePhysiologyDrill(): UsePhysiologyDrillReturn {
     if (sessionDataRef.current.questionsAttempted > 0) {
       const endTime = Date.now();
       recordDrillSession({
-        drillType: 'physiology_review',
+        drillType: 'physiology_drill',
         startTime: new Date(sessionStartRef.current).toISOString(),
         endTime: new Date(endTime).toISOString(),
         questionsAttempted: sessionDataRef.current.questionsAttempted,
