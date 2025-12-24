@@ -7,6 +7,8 @@ import { QuestionSkeleton } from '../loading/SkeletonLoader';
 
 interface ConditionDrillSessionProps {
   onExit?: () => void;
+  initialSystem?: string;
+  initialSubcategory?: string;
 }
 
 /** Category cards for the lobby */

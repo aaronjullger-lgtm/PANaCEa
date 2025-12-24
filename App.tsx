@@ -41,6 +41,14 @@ const PharmDrillSession = lazy(() => import("./components/drill/PharmDrillSessio
 const FirstLineDrillSession = lazy(() => import("./components/drill/FirstLineDrillSession"));
 const ConditionDrillSession = lazy(() => import("./components/drill/ConditionDrillSession"));
 const GuidelineDrillSession = lazy(() => import("./components/drill/GuidelineDrillSession"));
+const SystemDrillSession = lazy(() => import("./components/drill/SystemDrillSession"));
+const SubcategoryDrillSession = lazy(() => import("./components/drill/SubcategoryDrillSession"));
+const VentilatorDrillSession = lazy(() => import("./components/drill/VentilatorDrillSession"));
+const PhysiologyDrillSession = lazy(() => import("./components/drill/PhysiologyDrillSession"));
+const AnatomyDrillSession = lazy(() => import("./components/drill/AnatomyDrillSession"));
+const ECGDrillSession = lazy(() => import("./components/drill/ECGDrillSession"));
+const DermDrillSession = lazy(() => import("./components/drill/DermDrillSession"));
+const ImagingDrillSession = lazy(() => import("./components/drill/ImagingDrillSession"));
 const FluidElectrolyteMode = lazy(() => import("./components/modes/FluidElectrolyteMode"));
 const AntibioticMode = lazy(() => import("./components/modes/AntibioticMode"));
 const PatientEncounterMode = lazy(() => import("./components/modes/PatientEncounterMode"));
@@ -86,8 +94,11 @@ const DRILL_MODE_CODE_BLUE: TrainingModeId = 'code_blue_speed';
 const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
 const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
 const DRILL_MODE_MEDICAL_WORDLE: TrainingModeId = 'medical_wordle';
+const DRILL_MODE_VENTILATOR: TrainingModeId = 'ventilator_hero';
+const DRILL_MODE_PHYSIOLOGY: TrainingModeId = 'physiology_drill';
+const DRILL_MODE_ANATOMY: TrainingModeId = 'anatomy_review';
 
-type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "training_menu" | "simulation_page" | "command_center_page";
+type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "system_drill" | "subcategory_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "ventilator_hero" | "physiology_drill" | "anatomy_review" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "training_menu" | "simulation_page" | "command_center_page";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -481,6 +492,12 @@ const App: React.FC = () => {
       setView('cram_mode');
     } else if (modeId === DRILL_MODE_MEDICAL_WORDLE) {
       setView('medical_wordle');
+    } else if (modeId === DRILL_MODE_VENTILATOR) {
+      setView('ventilator_hero');
+    } else if (modeId === DRILL_MODE_PHYSIOLOGY) {
+      setView('physiology_drill');
+    } else if (modeId === DRILL_MODE_ANATOMY) {
+      setView('anatomy_review');
     } else if (modeId === 'admin_media') {
       setView('admin_media');
     } else if (modeId === 'toolkit') {
@@ -726,19 +743,19 @@ const App: React.FC = () => {
           {/* ECG, Derm, and Imaging drills use the same PhotoDrillSession component with different filters */}
           {view === "ecg_drill" && (
             <Suspense fallback={<Loader />}>
-              <PhotoDrillSession onExit={() => setView("command_center")} filterType="ecg" />
+              <ECGDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "derm_drill" && (
             <Suspense fallback={<Loader />}>
-              <PhotoDrillSession onExit={() => setView("command_center")} filterType="derm" />
+              <DermDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
           {view === "imaging_drill" && (
             <Suspense fallback={<Loader />}>
-              <PhotoDrillSession onExit={() => setView("command_center")} filterType="imaging" />
+              <ImagingDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 
@@ -778,9 +795,39 @@ const App: React.FC = () => {
             </Suspense>
           )}
 
+          {view === "system_drill" && (
+            <Suspense fallback={<Loader />}>
+              <SystemDrillSession onExit={() => setView("command_center")} />
+            </Suspense>
+          )}
+
+          {view === "subcategory_drill" && (
+            <Suspense fallback={<Loader />}>
+              <SubcategoryDrillSession onExit={() => setView("command_center")} />
+            </Suspense>
+          )}
+
           {view === "guideline_drill" && (
             <Suspense fallback={<Loader />}>
               <GuidelineDrillSession onExit={() => setView("command_center")} />
+            </Suspense>
+          )}
+
+          {view === "ventilator_hero" && (
+            <Suspense fallback={<Loader />}>
+              <VentilatorDrillSession onExit={() => setView("command_center")} />
+            </Suspense>
+          )}
+
+          {view === "physiology_drill" && (
+            <Suspense fallback={<Loader />}>
+              <PhysiologyDrillSession onExit={() => setView("command_center")} />
+            </Suspense>
+          )}
+
+          {view === "anatomy_review" && (
+            <Suspense fallback={<Loader />}>
+              <AnatomyDrillSession onExit={() => setView("command_center")} />
             </Suspense>
           )}
 

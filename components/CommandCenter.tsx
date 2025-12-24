@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+import { useSRSItems } from '../hooks/useSRSItems';
 
 interface CommandCenterProps {
   performanceData: PerformanceRecord[];
@@ -81,10 +82,8 @@ const CommandCenter: React.FC<CommandCenterProps> = ({
     setGrandRoundsCompleted(!!grandRounds);
   }, [userId]);
 
-  // Calculate SRS-due count
-  // Calculate SRS due count
-  // TODO: Load SRS items separately - they're not in PerformanceRecord
-  const srsDueCount = 0; // Placeholder - needs SRS items from database
+  // Fetch SRS items from database
+  const { dueCount: srsDueCount, loading: srsLoading } = useSRSItems();
 
   // Calculate flagged count
   const flaggedCount = useMemo(() => {

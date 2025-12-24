@@ -111,7 +111,7 @@ export const VISUAL_DIAGNOSTICS_MODES: TrainingModeConfig[] = [
   {
     id: 'ecg_drill',
     label: 'ECG Interpretation',
-    description: 'Master rhythm strips and 12-lead ECG patterns',
+    description: 'Rhythm strips and 12-lead mastery',
     category: 'visual_diagnostics',
     iconName: 'Activity',
     theme: 'rose',
@@ -121,7 +121,7 @@ export const VISUAL_DIAGNOSTICS_MODES: TrainingModeConfig[] = [
   {
     id: 'derm_drill',
     label: 'Derm Recognition',
-    description: 'Identify skin lesions and dermatological findings',
+    description: 'Identify skin lesions and rashes',
     category: 'visual_diagnostics',
     iconName: 'Scan',
     theme: 'pink',
@@ -141,7 +141,7 @@ export const VISUAL_DIAGNOSTICS_MODES: TrainingModeConfig[] = [
 ];
 
 // ============================================================================
-// CLINICAL SIMULATION - Interactive patient scenarios (6 modes = 2 rows)
+// CLINICAL SIMULATION - Interactive patient scenarios (3 modes = 1 row)
 // ============================================================================
 export const CLINICAL_SIMULATION_MODES: TrainingModeConfig[] = [
   {
@@ -157,7 +157,7 @@ export const CLINICAL_SIMULATION_MODES: TrainingModeConfig[] = [
   {
     id: 'mini_lab',
     label: 'Lab Interpretation',
-    description: 'CBC, CMP, and specialty lab panels',
+    description: 'CBC, CMP, and specialty lab analysis',
     category: 'clinical_simulation',
     iconName: 'FlaskConical',
     theme: 'emerald',
@@ -165,75 +165,50 @@ export const CLINICAL_SIMULATION_MODES: TrainingModeConfig[] = [
     estimatedMinutes: 8,
   },
   {
-    id: 'ddx_compare',
-    label: 'DDx Compare',
-    description: 'Side-by-side differential diagnosis',
-    category: 'clinical_simulation',
-    iconName: 'GitCompare',
-    theme: 'blue',
-    route: 'ddx_compare',
-    estimatedMinutes: 10,
-  },
-  {
     id: 'ventilator_hero',
     label: 'Ventilator Management',
-    description: 'Adjust vent settings for ARDS, COPD, critical patients',
+    description: 'Adjust vent settings',
     category: 'clinical_simulation',
     iconName: 'Wind',
     theme: 'blue',
     route: 'ventilator_hero',
-    isComingSoon: true,
-    estimatedMinutes: 15,
-  },
-  {
-    id: 'polypharmacy_puzzle',
-    label: 'Polypharmacy Puzzle',
-    description: 'Geriatric deprescribing challenge',
-    category: 'clinical_simulation',
-    iconName: 'PillBottle',
-    theme: 'amber',
-    route: 'polypharmacy_puzzle',
-    isComingSoon: true,
-    panreOnly: true,
-    estimatedMinutes: 12,
-  },
-  {
-    id: 'radiology_scroll',
-    label: 'Radiology Scroll',
-    description: 'Interactive CT/MRI slice viewing',
-    category: 'clinical_simulation',
-    iconName: 'Layers',
-    theme: 'slate',
-    route: 'radiology_scroll',
-    isComingSoon: true,
     estimatedMinutes: 15,
   },
 ];
 
 // ============================================================================
-// QUESTION PRACTICE - Board-style Q&A (6 modes = 2 rows)
-// Includes: pharm, system drills, cram session
+// QUESTION PRACTICE - Board-style Q&A (7 modes)
 // ============================================================================
 export const QUESTION_PRACTICE_MODES: TrainingModeConfig[] = [
   {
-    id: 'cram_mode',
-    label: 'Cram Session',
-    description: '50 highest-yield PANCE questions',
-    category: 'question_practice',
-    iconName: 'Clock',
-    theme: 'orange',
-    route: 'cram_mode',
-    estimatedMinutes: 30,
-  },
-  {
     id: 'pharmacology',
     label: 'Pharmacology Quiz',
-    description: 'Drug mechanisms, side effects, and interactions',
+    description: 'Drug mechanisms, side effects',
     category: 'question_practice',
     iconName: 'Beaker',
     theme: 'purple',
     route: 'pharmacology',
     estimatedMinutes: 10,
+  },
+  {
+    id: 'physiology_drill',
+    label: 'Physiology Review',
+    description: 'Organ system physiology',
+    category: 'question_practice',
+    iconName: 'Heart',
+    theme: 'red',
+    route: 'physiology_drill',
+    estimatedMinutes: 12,
+  },
+  {
+    id: 'anatomy_review',
+    label: 'Anatomy Review',
+    description: 'Regional anatomy',
+    category: 'question_practice',
+    iconName: 'Bone',
+    theme: 'stone',
+    route: 'anatomy_review',
+    estimatedMinutes: 15,
   },
   {
     id: 'system_drill',
@@ -248,7 +223,7 @@ export const QUESTION_PRACTICE_MODES: TrainingModeConfig[] = [
   {
     id: 'subcategory_drill',
     label: 'Subcategory Drill',
-    description: 'Focus on specific disease categories',
+    description: 'Focus on specific disease groups',
     category: 'question_practice',
     iconName: 'FolderTree',
     theme: 'violet',
@@ -258,34 +233,12 @@ export const QUESTION_PRACTICE_MODES: TrainingModeConfig[] = [
   {
     id: 'condition_drill',
     label: 'Condition Deep Dive',
-    description: 'Master individual conditions in detail',
+    description: 'Master individual conditions',
     category: 'question_practice',
     iconName: 'Target',
     theme: 'teal',
     route: 'condition_drill',
     estimatedMinutes: 10,
-  },
-  {
-    id: 'physiology_drill',
-    label: 'Physiology Review',
-    description: 'Organ system physiology and pathophysiology',
-    category: 'question_practice',
-    iconName: 'Heart',
-    theme: 'red',
-    route: 'physiology_drill',
-    isComingSoon: true,
-    estimatedMinutes: 12,
-  },
-  {
-    id: 'anatomy_review',
-    label: 'Anatomy Review',
-    description: 'Regional anatomy and clinical correlations',
-    category: 'question_practice',
-    iconName: 'Bone',
-    theme: 'stone',
-    route: 'anatomy_review',
-    isComingSoon: true,
-    estimatedMinutes: 15,
   },
 ];
 
@@ -296,7 +249,7 @@ export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
   {
     id: 'rapid_recall',
     label: 'Rapid Recall',
-    description: 'High-yield buzzwords & flashcards',
+    description: 'High-yield buzzwords & associations',
     category: 'specialty_drills',
     iconName: 'Zap',
     theme: 'amber',
@@ -306,7 +259,7 @@ export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
   {
     id: 'antibiotic_mode',
     label: 'Bug-Drug Mastery',
-    description: 'Antibiotic selection by pathogen and resistance',
+    description: 'Antibiotic selection by organism',
     category: 'specialty_drills',
     iconName: 'Pill',
     theme: 'green',
@@ -316,7 +269,7 @@ export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
   {
     id: 'first_line_treatment',
     label: 'First-Line Treatments',
-    description: 'What is the go-to treatment?',
+    description: '"Go-to" treatment selection',
     category: 'specialty_drills',
     iconName: 'Pill',
     theme: 'cyan',
@@ -334,19 +287,19 @@ export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
     estimatedMinutes: 8,
   },
   {
-    id: 'medical_wordle',
-    label: 'Daily Term Challenge',
-    description: 'Medical word guessing game',
+    id: 'ddx_compare',
+    label: 'DDx Compare',
+    description: 'Side-by-side differential diagnosis builder',
     category: 'specialty_drills',
-    iconName: 'Hash',
-    theme: 'green',
-    route: 'medical_wordle',
-    estimatedMinutes: 3,
+    iconName: 'GitCompare',
+    theme: 'blue',
+    route: 'ddx_compare',
+    estimatedMinutes: 10,
   },
   {
     id: 'code_blue_speed',
     label: 'Code Blue Speed',
-    description: 'Timed ACLS/PALS rapid-fire',
+    description: 'Timed ACLS/PALS rapid-fire scenarios',
     category: 'specialty_drills',
     iconName: 'Siren',
     theme: 'red',

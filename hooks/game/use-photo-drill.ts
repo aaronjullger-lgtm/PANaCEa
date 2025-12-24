@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { submitDrillResult } from '@/services/drillService';
+import { recordDrillSession, getRecommendedDifficulty, type DrillType } from '@/services/drillStatsService';
 
 // ============================================================================
 // INTERFACES
@@ -549,6 +550,14 @@ export function usePhotoDrill(
   
   // Track recently used diagnoses to avoid repetition
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
+  
+  // Track session for drill statistics
+  const sessionStartRef = useRef<number>(Date.now());
+  const sessionDataRef = useRef({
+    questionsAttempted: 0,
+    correctAnswers: 0,
+    bestStreak: 0,
+  });
 
   // Use queue if we have a session, otherwise fall back to legacy cases
   const activeCases = queue.length > 0 ? queue : cases;
@@ -605,6 +614,14 @@ export function usePhotoDrill(
     setSelectedCategory(category);
     recentDiagnosesRef.current.clear(); // Clear history on new session
     
+    // Initialize session tracking
+    sessionStartRef.current = Date.now();
+    sessionDataRef.current = {
+      questionsAttempted: 0,
+      correctAnswers: 0,
+      bestStreak: 0,
+    };
+    
     // Generate initial queue
     const initialQueue: PhotoCase[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
@@ -612,19 +629,35 @@ export function usePhotoDrill(
     }
     
     setQueue(initialQueue);
-    setCurrentCaseIndex(0);
-    setScore(0);
-    setStreak(0);
-    setUserAnswer(null);
-    setIsCorrect(null);
-    setStatus('playing');
   }, [generateNewCase]);
 
   /**
    * Exit to the menu screen.
    */
   const exitToMenu = useCallback(() => {
-    setStatus('menu');
+    // Record session if any questions were attempted
+    if (sessionDataRef.current.questionsAttempted > 0 && selectedCategory) {
+      const endTime = Date.now();
+      const drillTypeMap: Record<string, DrillType> = {
+        'ecg': 'ecg_drill',
+        'derm': 'derm_drill',
+        'radiology': 'imaging_drill',
+      };
+      const drillType = drillTypeMap[selectedCategory as string] || 'imaging_drill';
+      
+      recordDrillSession({
+        drillType,
+        startTime: new Date(sessionStartRef.current).toISOString(),
+        endTime: new Date(endTime).toISOString(),
+        questionsAttempted: sessionDataRef.current.questionsAttempted,
+        correctAnswers: sessionDataRef.current.correctAnswers,
+        accuracy: (sessionDataRef.current.correctAnswers / sessionDataRef.current.questionsAttempted) * 100,
+        timeSpent: Math.round((endTime - sessionStartRef.current) / 1000),
+        bestStreak: sessionDataRef.current.bestStreak,
+        difficulty: getRecommendedDifficulty(drillType),
+      });
+    }
+    
     setSelectedCategory(null);
     setQueue([]);
     setCurrentCaseIndex(0);
@@ -632,7 +665,7 @@ export function usePhotoDrill(
     setStreak(0);
     setUserAnswer(null);
     setIsCorrect(null);
-  }, []);
+  }, [selectedCategory]);
 
   /**
    * Submit an answer for the current case.
