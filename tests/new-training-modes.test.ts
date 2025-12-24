@@ -14,12 +14,6 @@ import {
 //   VENTILATOR_CASES,
 // } from '../data/modes/ventilatorHeroData';
 // Note: Polypharmacy mode is database-driven (not yet implemented)
-// Note: Radiology mode is planned for future database implementation
-// import {
-//   calculateRadiologyScore,
-//   getRandomRadiologySeries,
-//   RADIOLOGY_SERIES,
-// } from '../data/modes/radiologyScrollData';
 
 describe('New Training Modes Configuration', () => {
   it('should have medical_wordle in MODE_REGISTRY', () => {
@@ -43,12 +37,6 @@ describe('New Training Modes Configuration', () => {
   it('should have polypharmacy_puzzle in MODE_REGISTRY', () => {
     const polyMode = MODE_REGISTRY.find(m => m.id === 'polypharmacy_puzzle');
     expect(polyMode).toBeDefined();
-  });
-
-  it('should have radiology_scroll in MODE_REGISTRY', () => {
-    const radMode = MODE_REGISTRY.find(m => m.id === 'radiology_scroll');
-    expect(radMode).toBeDefined();
-    expect(radMode?.category).toBe('clinical_simulation');
   });
 });
 
@@ -156,7 +144,4 @@ describe('Daily Rituals - Streak Freeze', () => {
 // Triage mode removed - not planned for implementation
 
 // Polypharmacy Puzzle - database-driven implementation (not yet active)
-// Tests will be added once database schema and API endpoints are created
-
-// Radiology Scroll - planned for future database implementation
 // Tests will be added once database schema and API endpoints are created

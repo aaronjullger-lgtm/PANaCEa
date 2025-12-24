@@ -275,37 +275,4 @@ export interface PolypharmacyAttempt {
   timestamp: number;
 }
 
-// ===== RADIOLOGY SCROLL (DICOM VIEWER) =====
 
-export interface RadiologySlice {
-  sliceNumber: number;
-  imageUrl?: string; // In real implementation, would be DICOM data
-  findings?: string[]; // What's visible on this slice
-}
-
-export interface RadiologySeries {
-  id: string;
-  modality: 'CT' | 'MRI' | 'PET';
-  bodyPart: 'head' | 'chest' | 'abdomen' | 'pelvis' | 'extremity';
-  slices: RadiologySlice[];
-  totalSlices: number;
-  clinicalQuestion: string;
-  findings: string[];
-  diagnosis: string;
-  criticalSlices: number[]; // Slice numbers where key findings are
-  teachingPoints: string[];
-}
-
-export interface RadiologyAttempt {
-  seriesId: string;
-  identifiedFindings: string[];
-  diagnosis: string;
-  criticalSlicesViewed: number[];
-  timeSpent: number;
-  score?: {
-    findingsAccuracy: number;
-    diagnosisCorrect: boolean;
-    thoroughness: number; // Based on slices viewed
-    overall: number;
-  };
-}

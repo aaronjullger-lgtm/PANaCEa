@@ -50,8 +50,21 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
         throw new Error(`Failed to fetch content: ${response.status}`);
       }
 
-      const data = await response.json();
-      setContent(data.content || []);
+      // Defensive JSON parsing to handle empty responses
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        console.warn('[ClinicalLibrary] Empty response from API, returning empty array');
+        setContent([]);
+        return;
+      }
+
+      try {
+        const data = JSON.parse(text);
+        setContent(data.content || []);
+      } catch (parseError) {
+        console.error('[ClinicalLibrary] JSON parse error for URL:', `/api/content/library?${params.toString()}`, parseError);
+        throw new Error('Invalid JSON response from server');
+      }
     } catch (err) {
       console.error('[ClinicalLibrary] Error fetching content:', err);
       setError(err instanceof Error ? err.message : 'Failed to load clinical data');
