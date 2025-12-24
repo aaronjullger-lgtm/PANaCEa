@@ -28,8 +28,9 @@ interface PerformanceData {
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   try {
     // Authenticate request
-    const authResult = await authenticateRequest(context);
-    if (!authResult.authenticated || !authResult.userId) {
+    const env = context.env as Env;
+    const authResult = await authenticateRequest(context.request, env);
+    if (!authResult || !authResult.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },

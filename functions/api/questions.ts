@@ -17,8 +17,9 @@ interface Env {
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     // Authenticate request
-    const authResult = await authenticateRequest(context);
-    if (!authResult.authenticated) {
+    const env = context.env as Env;
+    const authResult = await authenticateRequest(context.request, env);
+    if (!authResult) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
@@ -90,14 +91,6 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       JSON.stringify({
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
-};
       }),
       {
         status: 500,
