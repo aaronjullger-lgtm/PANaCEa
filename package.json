@@ -69,6 +69,7 @@
     "content-doctor:pearls": "tsx ./scripts/content-doctor.ts --pearls",
     "standardize:formatting": "tsx ./scripts/standardize-formatting.ts",
     "standardize:formatting:dry-run": "tsx ./scripts/standardize-formatting.ts --dry-run",
+    "standardize:formatting:regenerate": "tsx ./scripts/standardize-formatting.ts --regenerate",
     "assess:adequacy": "tsx ./scripts/assess-content-adequacy.ts",
     "assess:adequacy:regenerate": "tsx ./scripts/assess-content-adequacy.ts --regenerate",
     "pdf:batch-process": "tsx ./scripts/batchProcessPDFs.ts",
