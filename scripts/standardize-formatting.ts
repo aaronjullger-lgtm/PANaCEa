@@ -336,18 +336,34 @@ async function standardizeFormatting(dryRun: boolean = false, regenerate: boolea
   
   const whereClause = targetSystem ? { system: targetSystem } : {};
   
-  const allContent = await prisma.medicalContent.findMany({
+  // Get total count first
+  const totalCount = await prisma.medicalContent.count({
     where: whereClause,
   });
   
-  console.log(`📊 Processing ${allContent.length} conditions...\n`);
+  console.log(`📊 Processing ${totalCount} conditions in batches...\n`);
   
   let updatedCount = 0;
   let unchangedCount = 0;
   let regeneratedCount = 0;
   const changes: Array<{ conditionId: string; field: string; before: string; after: string }> = [];
   
-  for (const content of allContent) {
+  // Process in batches to avoid memory issues and Supabase 5MB response limit
+  const BATCH_SIZE = 50;
+  const totalBatches = Math.ceil(totalCount / BATCH_SIZE);
+  
+  for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+    const skip = batchIndex * BATCH_SIZE;
+    console.log(`\n📦 Batch ${batchIndex + 1}/${totalBatches} (conditions ${skip + 1}-${Math.min(skip + BATCH_SIZE, totalCount)})...`);
+    
+    const batchContent = await prisma.medicalContent.findMany({
+      where: whereClause,
+      skip,
+      take: BATCH_SIZE,
+      orderBy: { conditionId: 'asc' },
+    });
+    
+    for (const content of batchContent) {
     let hasChanges = false;
     const updates: any = {};
     
@@ -456,11 +472,14 @@ async function standardizeFormatting(dryRun: boolean = false, regenerate: boolea
     }
   }
   
+  console.log(`✅ Batch ${batchIndex + 1}/${totalBatches} complete`);
+}
+  
   console.log('\n' + '═'.repeat(70));
   console.log('║   STANDARDIZATION SUMMARY                                ║');
   console.log('═'.repeat(70));
   console.log(`\n📊 Results:`);
-  console.log(`   Total conditions: ${allContent.length}`);
+  console.log(`   Total conditions: ${totalCount}`);
   console.log(`   Updated: ${updatedCount}`);
   console.log(`   Unchanged: ${unchangedCount}`);
   

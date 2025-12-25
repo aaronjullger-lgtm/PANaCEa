@@ -220,15 +220,24 @@ Target specific PANCE systems for focused improvements:
 ### Issue: Structural validation too strict
 **Solution**: Adjust `STANDARD_STRUCTURE` constants in `standardize-formatting.ts`. Current thresholds are conservative.
 
+### Issue: "Response size exceeded 5MB" error
+**Solution**: Script now uses batch processing (50 conditions per batch). This error should no longer occur. If it does, reduce `BATCH_SIZE` constant in script.
+
 ---
 
 ## Performance Notes
+
+### Batch Processing
+- **Batch size**: 50 conditions per batch
+- **Memory-safe**: Avoids loading all 1,180 conditions at once
+- **Supabase limit**: Each batch stays well under 5MB response limit
+- **Progress tracking**: Shows batch X/Y progress during execution
 
 ### Timing Estimates
 - **Formatting only** (no regeneration): ~1-2 seconds per condition
 - **With AI regeneration**: ~1-2 seconds per field that needs regeneration (rate limited)
 - **Full database** (1,180 conditions):
-  - Formatting only: ~20-40 minutes
+  - Formatting only: ~20-40 minutes (24 batches)
   - With regeneration (estimated 50-100 conditions): ~2-3 hours
 
 ### Rate Limiting
