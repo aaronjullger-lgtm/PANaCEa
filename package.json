@@ -60,6 +60,8 @@
     "automation:hourly": "tsx ./scripts/automation/hourlyTasks.ts",
     "automation:daily": "tsx ./scripts/automation/dailyTasks.ts",
     "automation:weekly": "tsx ./scripts/automation/weeklyTasks.ts",
+    "maintenance:weekly": "tsx ./scripts/weekly-maintenance.ts",
+    "maintenance:weekly:dry-run": "tsx ./scripts/weekly-maintenance.ts --dry-run",
     "content-doctor:phase1": "tsx ./scripts/content-doctor.ts --phase1",
     "content-doctor:phase2": "tsx ./scripts/content-doctor.ts --phase2",
     "content-doctor:buzzwords": "tsx ./scripts/content-doctor.ts --buzzwords",

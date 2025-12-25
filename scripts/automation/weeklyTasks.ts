@@ -2,9 +2,10 @@
 /**
  * Weekly Automation Tasks
  * 
- * Runs weekly for comprehensive system audit and improvement suggestions:
+ * Runs weekly for comprehensive system audit and improvement:
+ * - Content quality and quantity maintenance (via weekly-maintenance.ts)
  * - Full database accuracy audit against latest medical guidelines
- * - Generate improvement suggestions report (features, tweaks, content updates)
+ * - Generate improvement suggestions report
  * - Check for outdated content based on guideline publication dates
  * - Generate weekly summary report (.txt format) for review
  * - Automated backup and archival
@@ -15,6 +16,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
+import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -23,11 +25,32 @@ config();
 
 const prisma = new PrismaClient();
 
+/**
+ * Run comprehensive weekly maintenance
+ */
+async function runWeeklyMaintenance() {
+  console.log('\n╔════════════════════════════════════════════════════════╗');
+  console.log('║   WEEKLY CONTENT MAINTENANCE                           ║');
+  console.log('╚════════════════════════════════════════════════════════╝\n');
+  
+  try {
+    console.log('🔧 Running comprehensive content maintenance...\n');
+    execSync('npm run maintenance:weekly', {
+      stdio: 'inherit',
+      cwd: process.cwd()
+    });
+    console.log('\n✅ Weekly maintenance complete\n');
+  } catch (error) {
+    console.error('❌ Weekly maintenance failed:', error);
+  }
+}
+
 interface WeeklyReport {
   timestamp: Date;
   weekNumber: number;
   year: number;
   sections: {
+    contentMaintenance: any;
     databaseAudit: any;
     contentAccuracy: any;
     outdatedContent: any;
@@ -43,6 +66,7 @@ const report: WeeklyReport = {
   weekNumber: getWeekNumber(new Date()),
   year: new Date().getFullYear(),
   sections: {
+    contentMaintenance: {},
     databaseAudit: {},
     contentAccuracy: {},
     outdatedContent: {},
@@ -444,6 +468,10 @@ async function main() {
   console.log('╚════════════════════════════════════════════════════════════╝\n');
 
   try {
+    // Run comprehensive content maintenance first
+    await runWeeklyMaintenance();
+    
+    // Then run other audit tasks
     await runDatabaseAudit();
     await checkContentAccuracy();
     await identifyOutdatedContent();
