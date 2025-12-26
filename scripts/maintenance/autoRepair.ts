@@ -6,8 +6,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const prisma = new PrismaClient();
 const MODEL_CANDIDATES = [
   process.env.GEMINI_PRO_MODEL || "gemini-2.5-pro",
-  "gemini-1.5-pro",
-  "gemini-2.0-flash",
+  "gemini-2.5-flash",
 ];
 
 async function generateWithFallback(apiKey: string, prompt: string) {

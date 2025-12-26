@@ -8,7 +8,7 @@ import {
   TASK_DECK,
   GEMINI_FLASH_MODEL,
   GEMINI_PRO_MODEL,
-} from "../constants";
+} from "../src/constants";
 import type {
   Question,
   SessionSettings,

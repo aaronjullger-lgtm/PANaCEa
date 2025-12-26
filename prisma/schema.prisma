@@ -23,7 +23,7 @@
 // or: npx prisma generate --no-engine
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
@@ -82,12 +82,12 @@ model User {
   streaks            DailyStreak[]
   /// User's question history
   questionHistory    UserQuestionHistory[]
-  
+
   /// User's saved pearls
-  userPearls         UserPearl[]
+  userPearls UserPearl[]
 
   /// Wordle daily game states
-  wordleStates       UserWordleState[]
+  wordleStates UserWordleState[]
 
   /// Active Patient Encounter Sessions
   patientEncounterSessions PatientEncounterSession[]
@@ -96,19 +96,19 @@ model User {
   // adminAuditLogs     AdminAuditLog[]
 
   /// Social
-  studyGroups        StudyGroupMember[]
+  studyGroups StudyGroupMember[]
 
   /// Cohort memberships (professional study groups)
-  cohorts            CohortMember[]
+  cohorts CohortMember[]
 
   /// Grand Rounds attempts
   grandRoundsAttempts GrandRoundsAttempt[]
 
   /// User-specific FSRS tuning config
-  srsConfig          UserSRSConfig?
-  
+  srsConfig UserSRSConfig?
+
   /// Peer statistics snapshots
-  peerStats          PeerStatistic[]
+  peerStats PeerStatistic[]
 
   @@index([clerkId])
   @@index([email])
@@ -120,11 +120,11 @@ model UserSRSConfig {
   id               String   @id @default(uuid())
   userId           String   @unique
   requestRetention Float    @default(0.9) // Target retention (0.8 - 0.95)
-  wWeights         Json     // Array of 19 FSRS parameters
+  wWeights         Json // Array of 19 FSRS parameters
   lastTuned        DateTime @default(now())
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -138,8 +138,58 @@ model LabTest {
   category            String
   commonAbnormalities String[]
   typicalUse          String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // ===== NEW: Reference Ranges =====
+  conventionalRange String? // Normal range in conventional units
+  siRange           String? // Normal range in SI units
+  units             String? // Conventional units
+  siUnits           String? // SI units
+  conversionFactor  Float? // Multiply conventional by this to get SI
+  referenceRanges   Json? // { adult: { male: { low, high }, female: { low, high } }, pediatric: {...}, geriatric: {...} }
+  criticalValues    Json? // { criticalLow, criticalHigh, action }
+
+  // ===== NEW: Clinical Interpretation =====
+  increaseIndicates  String[] @default([]) // Conditions causing elevation
+  decreaseIndicates  String[] @default([]) // Conditions causing decrease
+  falsePosNeg        String?  @db.Text // Causes of false results
+  interferingFactors String[] @default([]) // Factors affecting results
+
+  // ===== NEW: Sample & Testing =====
+  sampleType          String? // Serum, plasma, whole blood, urine, CSF
+  collectionTube      String? // Green top, purple top, etc.
+  fastingRequired     Boolean @default(false)
+  specialInstructions String? @db.Text
+  turnaroundTime      String? // Typical time to results
+  stability           String? // Sample stability requirements
+
+  // ===== NEW: Clinical Context =====
+  whenToOrder   String[] @default([]) // Indications for ordering
+  relatedTests  String[] @default([]) // Tests often ordered together
+  followUpTests String[] @default([]) // Tests to order if abnormal
+
+  // ===== NEW: Teaching Points =====
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  mnemonics        String[] @default([])
+  testQuestionTips String[] @default([])
+
+  // ===== NEW: Interpretation Guides =====
+  interpretationSteps String? @db.Text // Step-by-step interpretation
+  clinicalScenarios   Json? // [{ scenario, expectedResult, explanation }]
+
+  // ===== NEW: Relations =====
+  conditionLinks LabConditionLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([panceYield])
 }
 
 /// Represents a clinical case for lab interpretation training
@@ -147,7 +197,7 @@ model LabCase {
   id               String   @id @default(uuid())
   correctDiagnosis String
   clinicalVignette String
-  labs             Json     // Stores the lab results structure
+  labs             Json // Stores the lab results structure
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -193,9 +243,9 @@ model SRSItem {
   updatedAt      DateTime @updatedAt
 
   // FSRS v5 Specific Fields
-  fsrsStability  Float?   // Memory stability (S) in days
-  fsrsDifficulty Float?   // Difficulty (D) on 1-10 scale
-  fsrsState      Int      @default(0) // 0=New, 1=Learning, 2=Review, 3=Relearning
+  fsrsStability  Float? // Memory stability (S) in days
+  fsrsDifficulty Float? // Difficulty (D) on 1-10 scale
+  fsrsState      Int       @default(0) // 0=New, 1=Learning, 2=Review, 3=Relearning
   fsrsLastReview DateTime? // Timestamp of last FSRS review
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -235,34 +285,34 @@ model SavedQuestion {
 /// Conditions are the primary educational content unit.
 /// Enhanced with parent-child relationships and aliases for smart search
 model Condition {
-  id        String   @id @default(uuid())
-  name      String
-  system    String // Organ system (e.g., "CV", "PULM", "GI")
-  
+  id     String @id @default(uuid())
+  name   String
+  system String // Organ system (e.g., "CV", "PULM", "GI")
+
   /// Subcategory within system (e.g., "Arrhythmias", "Valvular")
   subcategory String?
-  
+
   /// Cross-system tagging for conditions that span multiple systems
   /// e.g., SLE appears in Rheumatology, Derm, Renal
   relatedSystems String[] @default([])
-  
+
   /// Status for visibility in UI
-  status    String   @default("published") // draft, published, archived
-  
+  status String @default("published") // draft, published, archived
+
   /// Parent-child relationships for condition variants
-  parentId  String?  // Reference to parent condition (null if this is a parent)
-  parent    Condition?  @relation("ConditionHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children  Condition[] @relation("ConditionHierarchy")
-  
+  parentId String? // Reference to parent condition (null if this is a parent)
+  parent   Condition?  @relation("ConditionHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Condition[] @relation("ConditionHierarchy")
+
   /// Clean display name (without parentheses or aliases)
   displayName String?
-  
+
   /// Alternative names and aliases for search
-  aliases   String[] @default([])
-  
+  aliases String[] @default([])
+
   /// Content sections (as JSONB) - for inline content
-  content   Json?    // Pathophysiology, Clinical Presentation, Diagnosis, Management, Pearls
-  
+  content Json? // Pathophysiology, Clinical Presentation, Diagnosis, Management, Pearls
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -275,6 +325,16 @@ model Condition {
   /// Associated special tests
   specialTests SpecialTest[]
 
+  // ===== NEW: Junction table relations =====
+  drugLinks       DrugConditionLink[]
+  labLinks        LabConditionLink[]
+  imagingLinks    ImagingConditionLink[]
+  findingLinks    FindingConditionLink[]
+  anatomyLinks    AnatomyConditionLink[]
+  physiologyLinks PhysiologyConditionLink[]
+  treatmentLinks  TreatmentConditionLink[]
+  procedureLinks  ProcedureConditionLink[]
+
   @@index([system])
   @@index([name])
   @@index([parentId])
@@ -285,53 +345,110 @@ model Condition {
 
 /// Represents an anatomical structure relevant to medical conditions
 model AnatomyStructure {
-  id          String   @id @default(uuid())
-  name        String   @unique // e.g. "Anterior Cruciate Ligament"
-  system      String   // e.g. "MSK"
-  region      String?  // e.g. "Knee"
-  type        String?  // e.g. "Ligament", "Muscle"
-  description String?  @db.Text
-  function    String?  @db.Text
-  innervation String?
-  bloodSupply String?
+  id                   String  @id @default(uuid())
+  name                 String  @unique // e.g. "Anterior Cruciate Ligament"
+  system               String // e.g. "MSK"
+  region               String? // e.g. "Knee"
+  type                 String? // e.g. "Ligament", "Muscle"
+  description          String? @db.Text
+  function             String? @db.Text
+  innervation          String?
+  bloodSupply          String?
   clinicalSignificance String? @db.Text
-  imageUrl    String?  // Diagram URL
-  
+  imageUrl             String? // Diagram URL
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // ===== NEW: Classification =====
+  aliases      String[] @default([]) // Alternative names
+  latinName    String? // Anatomical term
+  abbreviation String? // Common abbreviation
+
+  // ===== NEW: Detailed Anatomy =====
+  origin      String?  @db.Text // Muscle origin
+  insertion   String?  @db.Text // Muscle insertion
+  attachments String[] @default([]) // For ligaments/tendons
+  borders     String?  @db.Text // Anatomical borders
+  contents    String[] @default([]) // For spaces/compartments
+  relations   String?  @db.Text // Adjacent structures
+  layers      String[] @default([]) // For layered structures
+
+  // ===== NEW: Nerve/Vessel Details =====
+  nervePath         String?  @db.Text // Course of nerve
+  nerveRoots        String? // Spinal nerve roots
+  motorFunction     String?  @db.Text
+  sensoryFunction   String?  @db.Text
+  autonomicFunction String?  @db.Text
+  vesselPath        String?  @db.Text // Course of vessel
+  branches          String[] @default([])
+  tributaries       String[] @default([])
+  anastomoses       String[] @default([])
+
+  // ===== NEW: Clinical Correlations =====
+  injuryMechanism  String?  @db.Text // How it gets injured
+  commonPathology  String[] @default([])
+  examFindings     String[] @default([]) // PE findings for injury
+  imagingFindings  String[] @default([])
+  surgicalApproach String?  @db.Text
+
+  // ===== NEW: Landmarks & Surface Anatomy =====
+  surfaceLandmarks String[] @default([])
+  palpationTips    String?  @db.Text
+  dermatome        String?
+  myotome          String?
+
+  // ===== NEW: Teaching Points =====
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+
+  // ===== NEW: Media =====
+  diagramUrl String?
+  modelUrl   String? // 3D model URL
+  videoUrl   String? // Dissection video
+
   // Relations
-  conditions  Condition[] // Conditions affecting this structure
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  conditions     Condition[] // Conditions affecting this structure
+  conditionLinks AnatomyConditionLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([system])
   @@index([name])
+  @@index([region])
+  @@index([panceYield])
 }
 
 /// Represents a special physical exam test
 model SpecialTest {
-  id          String   @id @default(uuid())
-  name        String   @unique // e.g. "Lachman Test"
-  
+  id   String @id @default(uuid())
+  name String @unique // e.g. "Lachman Test"
+
   // Search and display
-  displayName String?  // Clean display name
+  displayName String? // Clean display name
   aliases     String[] @default([]) // Alternative names (e.g., "Anterior Drawer Test")
-  
-  system      String?  // e.g. "MSK"
-  region      String?  // e.g. "Knee"
-  description String?  @db.Text
-  sensitivity Float?   // 0-100
-  specificity Float?   // 0-100
-  technique   String?  @db.Text // How to perform
-  positiveTest String? @db.Text // What constitutes a positive result
+
+  system         String? // e.g. "MSK"
+  region         String? // e.g. "Knee"
+  description    String? @db.Text
+  sensitivity    Float? // 0-100
+  specificity    Float? // 0-100
+  technique      String? @db.Text // How to perform
+  positiveTest   String? @db.Text // What constitutes a positive result
   interpretation String? @db.Text // What a positive result means
-  imageUrl    String?
-  videoUrl    String?
+  imageUrl       String?
+  videoUrl       String?
 
   // Relations
-  conditions  Condition[] // Conditions this tests for
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  conditions Condition[] // Conditions this tests for
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([name])
   @@index([displayName])
@@ -413,52 +530,406 @@ model MediaAsset {
 
 /// Represents rapid-fire ACLS/PALS/BLS questions for Code Blue Speed Mode
 model ACLSQuestion {
-  id           String   @id @default(uuid())
-  question     String   @db.Text
-  options      Json     // Array of strings (answer choices)
-  correctIndex Int      // Index of the correct answer (0-based)
-  category     String   // "ACLS" | "PALS" | "BLS" | "Critical Care"
-  explanation  String   @db.Text
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id           String @id @default(uuid())
+  question     String @db.Text
+  options      Json // Array of strings (answer choices)
+  correctIndex Int // Index of the correct answer (0-based)
+  category     String // "ACLS" | "PALS" | "BLS" | "Critical Care"
+  explanation  String @db.Text
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // ===== NEW: Algorithm Context =====
+  algorithmName     String? // Name of ACLS algorithm (e.g., "VF/pVT", "Asystole/PEA")
+  algorithmStep     Int? // Which step in algorithm
+  relatedAlgorithms String[] @default([])
+
+  // ===== NEW: Clinical Scenario =====
+  rhythm            String? // VF, VT, Asystole, PEA, Brady, Tachy
+  rhythmDescription String?  @db.Text
+  ecgFindings       String[] @default([])
+  clinicalContext   String?  @db.Text
+  patientAge        String? // Adult, Pediatric, Neonatal
+
+  // ===== NEW: Intervention Details =====
+  correctIntervention String? @db.Text
+  drugDose            String? // e.g., "Epinephrine 1mg IV"
+  drugTiming          String? // e.g., "Every 3-5 minutes"
+  energyDose          String? // Defibrillation joules
+  cprGuidance         String? @db.Text
+
+  // ===== NEW: Common Errors =====
+  commonMistakes  String[] @default([])
+  criticalActions String[] @default([]) // Must-do actions
+
+  // ===== NEW: Teaching Points =====
+  clinicalPearls   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+  videoUrl         String? // Link to algorithm video
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([category])
+  @@index([algorithmName])
+  @@index([rhythm])
+  @@index([panceYield])
 }
 
 /// Represents fluid/electrolyte clinical cases for calculation drills
 model FluidCase {
-  id            String   @id @default(uuid())
-  title         String
-  scenario      String   @db.Text
-  labs          Json     // Complex lab data: { bmp: {...}, urineNa: 12, urineCr: 180 }
-  correctAnswer Float    // Numeric answer (e.g., 0.36 for FENa)
-  unit          String   // Unit of measurement (%, mEq/L, L, mL/hr)
-  marginOfError Float    // Acceptable deviation from correct answer
-  explanation   String   @db.Text
-  calculationHint String? @db.Text // Formula hint (e.g., "FENa = [(UNa × SCr) / (SNa × UCr)] × 100")
-  category      String   // "fena" | "anion_gap" | "free_water_deficit" | "maintenance_fluids"
-  difficulty    String   @default("medium") // "easy" | "medium" | "hard"
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(uuid())
+  title           String
+  scenario        String   @db.Text
+  labs            Json // Complex lab data: { bmp: {...}, urineNa: 12, urineCr: 180 }
+  correctAnswer   Float // Numeric answer (e.g., 0.36 for FENa)
+  unit            String // Unit of measurement (%, mEq/L, L, mL/hr)
+  marginOfError   Float // Acceptable deviation from correct answer
+  explanation     String   @db.Text
+  calculationHint String?  @db.Text // Formula hint (e.g., "FENa = [(UNa × SCr) / (SNa × UCr)] × 100")
+  category        String // "fena" | "anion_gap" | "free_water_deficit" | "maintenance_fluids"
+  difficulty      String   @default("medium") // "easy" | "medium" | "hard"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([category])
   @@index([difficulty])
 }
 
+// =============================================================================
+// NEW TABLES: Medical Procedures, History, ECG, Vital Signs
+// =============================================================================
+
+/// Represents a medical/surgical procedure
+model Procedure {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  displayName String?
+  aliases     String[] @default([])
+  category    String // Diagnostic, Therapeutic, Surgical, Bedside
+  type        String? // Minor, Major, Outpatient, Inpatient
+  system      String? // Body system
+  description String?  @db.Text
+
+  // PANCE Prioritization
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // Indications & Contraindications
+  indications               String[] @default([])
+  absoluteContraindications String[] @default([])
+  relativeContraindications String[] @default([])
+
+  // Technique
+  preparation       String?  @db.Text // Patient prep
+  equipment         String[] @default([])
+  anatomicLandmarks String[] @default([])
+  technique         String?  @db.Text // Step-by-step
+  positioning       String? // Patient position
+  anesthesia        String? // Local, regional, general
+  duration          String? // Typical procedure time
+
+  // Complications & Safety
+  complications       String[] @default([])
+  complicationRates   Json? // { complication: rate }
+  emergencyManagement String?  @db.Text
+  safetyChecklist     String[] @default([])
+
+  // Post-Procedure
+  postProcedureCare String?  @db.Text
+  expectedFindings  String?  @db.Text
+  abnormalFindings  String[] @default([])
+  followUp          String?  @db.Text
+  recovery          String? // Recovery time
+
+  // Consent & Documentation
+  consentPoints             String[] @default([]) // Key consent discussion points
+  documentationRequirements String[] @default([])
+
+  // Teaching Points
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+  videoUrl         String?
+
+  // Relations
+  conditionLinks ProcedureConditionLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([system])
+  @@index([panceYield])
+}
+
+/// Represents a history-taking component (HPI elements, ROS, PMH, etc.)
+model HistoryComponent {
+  id          String  @id @default(uuid())
+  name        String  @unique // e.g., "OLDCARTS", "Chest Pain History"
+  displayName String?
+  category    String // HPI, ROS, PMH, FH, SH, Medications, Allergies
+  system      String? // Body system if applicable
+  description String? @db.Text
+
+  // PANCE Prioritization
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // Component Details
+  elements         String[] @default([]) // Individual questions/elements
+  expandedElements Json? // [{ element, followUp questions, significance }]
+  requiredFor      String[] @default([]) // Presentations requiring this
+
+  // HPI Frameworks
+  frameworkName     String? // OLDCARTS, SOCRATES, OPQRST
+  frameworkElements Json? // [{ letter, meaning, exampleQuestions }]
+
+  // ROS Specifics
+  rosCategory        String? // Constitutional, Eyes, ENT, etc.
+  positiveIndicators String[] @default([]) // Symptoms suggesting pathology
+  negativeIndicators String[] @default([]) // Pertinent negatives
+
+  // Clinical Decision Making
+  redFlagResponses    String[] @default([]) // Answers that indicate urgency
+  reassuringResponses String[] @default([]) // Answers that indicate benign
+  diagnosticValue     Json? // { response: likelyConditions }
+
+  // Documentation
+  documentationTips String?  @db.Text
+  chartingExamples  String[] @default([])
+
+  // Teaching Points
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([system])
+  @@index([panceYield])
+}
+
+/// Represents an ECG pattern for rhythm recognition training
+model ECGPattern {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., "Atrial Fibrillation", "STEMI Anterior"
+  displayName String?
+  aliases     String[] @default([])
+  category    String // Arrhythmia, Ischemia, Conduction, Metabolic, Drug Effect
+  subcategory String? // e.g., "Supraventricular", "Ventricular"
+
+  // PANCE Prioritization
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+  isEmergency     Boolean  @default(false)
+
+  // ECG Characteristics
+  rate       String? // Normal, brady, tachy, irregular
+  rhythm     String? // Regular, irregular, regularly irregular
+  pWave      String? @db.Text // P wave description
+  prInterval String? // Normal, prolonged, shortened, variable
+  qrsComplex String? @db.Text // QRS description
+  qtInterval String? // Normal, prolonged, shortened
+  stSegment  String? @db.Text // ST changes
+  tWave      String? @db.Text // T wave description
+
+  // Diagnostic Criteria
+  diagnosticCriteria String[] @default([])
+  pathognomonic      String? // Pathognomonic finding if any
+
+  // Clinical Correlation
+  etiology             String[] @default([]) // Causes
+  symptoms             String[] @default([]) // Patient symptoms
+  hemodynamicEffect    String?  @db.Text
+  associatedConditions String[] @default([])
+
+  // Management
+  acuteManagement String?  @db.Text
+  medications     String[] @default([])
+  cardioversion   String? // When indicated
+  pacing          String? // When indicated
+  referral        String? // Cardiology referral criteria
+
+  // Differential
+  mimics                 String[] @default([]) // Patterns that look similar
+  distinguishingFeatures Json? // [{ pattern, howToDifferentiate }]
+
+  // Media
+  exampleEcgUrl   String?
+  annotatedEcgUrl String?
+
+  // Teaching Points
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([panceYield])
+  @@index([isEmergency])
+}
+
+/// Represents vital sign reference ranges and interpretations
+model VitalSignRange {
+  id          String  @id @default(uuid())
+  vitalSign   String  @unique // HR, BP, RR, Temp, O2Sat, BMI, etc.
+  displayName String?
+  category    String // Cardiovascular, Respiratory, Metabolic
+
+  // Reference Ranges
+  normalRange String? // Normal adult range
+  ranges      Json? // { adult: { low, high }, pediatric: { neonate, infant, child }, geriatric: {...} }
+  units       String? // bpm, mmHg, breaths/min, etc.
+
+  // Interpretations
+  elevation  Json? // { mild: {}, moderate: {}, severe: {}, causes: [], management: [] }
+  depression Json? // { mild: {}, moderate: {}, severe: {}, causes: [], management: [] }
+
+  // Clinical Significance
+  emergencyValues      Json? // { criticalHigh, criticalLow, immediateAction }
+  associatedConditions Json? // { elevated: [], decreased: [] }
+
+  // Teaching Points
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}
+
+/// Represents a scoring/clinical decision rule (Wells, CURB-65, etc.)
+model ScoringSystem {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g., "Wells DVT", "CURB-65"
+  displayName String?
+  aliases     String[] @default([])
+  category    String // Risk Stratification, Diagnostic, Prognostic, Screening
+  condition   String? // Primary condition it's used for
+
+  // PANCE Prioritization
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // Scoring Components
+  components Json // [{ criterion, points, description }]
+  maxScore   Int?
+  minScore   Int? @default(0)
+
+  // Interpretation
+  interpretation   Json // [{ scoreRange, riskLevel, recommendation }]
+  actionThresholds Json? // { lowRisk: action, highRisk: action }
+
+  // Validation
+  sensitivity       Float? // At recommended cutoff
+  specificity       Float?
+  validationStudies String[] @default([])
+  limitations       String[] @default([])
+
+  // Clinical Use
+  whenToUse       String?  @db.Text
+  whenNotToUse    String[] @default([])
+  clinicalContext String?  @db.Text
+
+  // Teaching Points
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+
+  // Calculator
+  calculatorUrl String? // Link to online calculator
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([condition])
+  @@index([panceYield])
+}
+
 /// Represents antibiotic-organism coverage guidelines for Bug-Drug drill
 model AntibioticGuideline {
-  id          String   @id @default(uuid())
-  organism    String   // Organism name (e.g., "Pseudomonas aeruginosa")
-  class       String   // Organism class (e.g., "Gram Negative", "Atypical")
-  effective   Json     // Array of effective antibiotics (e.g., ["Cefepime", "Meropenem"])
-  resistant   Json     // Array of resistant/ineffective antibiotics
-  notes       String?  @db.Text // Additional clinical notes
-  description String?  // Clinical context (e.g., "Most common cause of CAP")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String  @id @default(uuid())
+  organism    String // Organism name (e.g., "Pseudomonas aeruginosa")
+  class       String // Organism class (e.g., "Gram Negative", "Atypical")
+  effective   Json // Array of effective antibiotics (e.g., ["Cefepime", "Meropenem"])
+  resistant   Json // Array of resistant/ineffective antibiotics
+  notes       String? @db.Text // Additional clinical notes
+  description String? // Clinical context (e.g., "Most common cause of CAP")
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // ===== NEW: Organism Details =====
+  aliases          String[] @default([]) // Alternative names
+  gramStain        String? // Positive, Negative, Variable
+  morphology       String? // Cocci, Rod, Spirochete, etc.
+  arrangement      String? // Clusters, chains, pairs
+  growthConditions String? // Aerobic, anaerobic, facultative
+  virulenceFactors String[] @default([])
+  reservoirs       String[] @default([]) // Where organism lives
+  transmission     String[] @default([]) // How it spreads
+
+  // ===== NEW: Clinical Infections =====
+  commonInfections       String[] @default([]) // Infections this organism causes
+  classicPresentation    String?  @db.Text
+  diagnosticClues        String[] @default([])
+  cultureCharacteristics String?  @db.Text // Colony appearance, etc.
+
+  // ===== NEW: Treatment Details =====
+  firstLineAntibiotics   String[] @default([])
+  alternativeAntibiotics String[] @default([])
+  doseRecommendations    Json? // { antibiotic: dosing }
+  treatmentDuration      String?
+  deEscalationGuidance   String?  @db.Text
+
+  // ===== NEW: Resistance =====
+  resistanceMechanisms String[] @default([])
+  mrResistance         Boolean  @default(false) // Multi-drug resistant
+  esblProducer         Boolean  @default(false)
+  carbapenemResistant  Boolean  @default(false)
+  vancomycinResistant  Boolean  @default(false)
+  emergingResistance   String[] @default([])
+
+  // ===== NEW: Prevention =====
+  vaccines         String[] @default([])
+  prophylaxis      String?  @db.Text
+  infectionControl String[] @default([])
+
+  // ===== NEW: Teaching Points =====
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([organism])
   @@index([class])
+  @@index([panceYield])
+  @@index([gramStain])
 }
 
 /// Represents an achievement earned by a user
@@ -496,7 +967,7 @@ model DailyStreak {
 /// Represents a daily Grand Rounds challenge available to all users
 model GrandRoundsChallenge {
   id          String   @id @default(uuid())
-  date        DateTime @db.Date @unique // One challenge per calendar day
+  date        DateTime @unique @db.Date // One challenge per calendar day
   questionIds String[]
   createdAt   DateTime @default(now())
 
@@ -610,62 +1081,62 @@ model MedicalContent {
   // =========================================================================
   // DEEP DIVE CONTENT (Markdown text for prose rendering)
   // =========================================================================
-  overview              String?   @db.Text
-  etiology              String?   @db.Text
-  pathophysiology       String?   @db.Text
-  epidemiology          String?   @db.Text
-  symptoms              String?   @db.Text // Markdown list
-  physicalExam          String?   @db.Text // Markdown list
-  diagnostics           String?   @db.Text // Comprehensive diagnostic approach
-  treatment             String?   @db.Text // Markdown list
-  prognosis             String?   @db.Text
-  differentialDiagnosis String?   @db.Text // Markdown list
-  riskFactors           String?   @db.Text // Markdown list
-  complications         String?   @db.Text // Markdown list
+  overview              String? @db.Text
+  etiology              String? @db.Text
+  pathophysiology       String? @db.Text
+  epidemiology          String? @db.Text
+  symptoms              String? @db.Text // Markdown list
+  physicalExam          String? @db.Text // Markdown list
+  diagnostics           String? @db.Text // Comprehensive diagnostic approach
+  treatment             String? @db.Text // Markdown list
+  prognosis             String? @db.Text
+  differentialDiagnosis String? @db.Text // Markdown list
+  riskFactors           String? @db.Text // Markdown list
+  complications         String? @db.Text // Markdown list
 
   // =========================================================================
   // HIGH-YIELD METADATA (Badge-style quick reference)
   // =========================================================================
-  buzzwords             String[]  @default([])
-  classic_triad         Json?     // ["Fever", "Murmur", "Osler Nodes"]
-  clinical_pearls       Json?     // Full sentences with actionable advice
-  gold_standard_dx      String?   @db.Text // Concise badge (< 8 words)
-  first_line_rx         String?   @db.Text // Concise badge (< 8 words)
-  best_initial_test     String?   @db.Text // Screening test done FIRST
+  buzzwords         String[] @default([])
+  classic_triad     Json? // ["Fever", "Murmur", "Osler Nodes"]
+  clinical_pearls   Json? // Full sentences with actionable advice
+  gold_standard_dx  String?  @db.Text // Concise badge (< 8 words)
+  first_line_rx     String?  @db.Text // Concise badge (< 8 words)
+  best_initial_test String?  @db.Text // Screening test done FIRST
 
   // =========================================================================
   // PHARMACOLOGY CONTEXT (For the First-Line Rx)
   // =========================================================================
-  rx_mechanism          String?   @db.Text // MOA of first-line treatment
-  rx_side_effects       String?   @db.Text // Top testable side effects
+  rx_mechanism    String? @db.Text // MOA of first-line treatment
+  rx_side_effects String? @db.Text // Top testable side effects
 
   // =========================================================================
   // VIGNETTE & SEARCH (Board-style recognition)
   // =========================================================================
-  classic_patient       String?   @db.Text // "Fat, Forty, Female, Fertile"
-  synonyms              Json?     // ["GCA", "Temporal Arteritis", "Horton Disease"]
-  mnemonic              String?   @db.Text // "SAD for Aortic Stenosis"
+  classic_patient String? @db.Text // "Fat, Forty, Female, Fertile"
+  synonyms        Json? // ["GCA", "Temporal Arteritis", "Horton Disease"]
+  mnemonic        String? @db.Text // "SAD for Aortic Stenosis"
 
   // =========================================================================
   // STRUCTURED DIFFERENTIALS (For comparison tables)
   // =========================================================================
-  differentials         Json?     // [{ condition: "X", rule_out: "Y" }]
+  differentials Json? // [{ condition: "X", rule_out: "Y" }]
 
   // =========================================================================
   // CLINICAL MANAGEMENT & COUNSELING
   // =========================================================================
-  patient_education     String?   @db.Text // Key counseling points
-  disposition           String?   @db.Text // Admission criteria, referrals
-  prevention            String?   @db.Text // Screening guidelines (USPSTF)
-  guidelines            String?   @db.Text // "2023 ACR Guidelines"
+  patient_education String? @db.Text // Key counseling points
+  disposition       String? @db.Text // Admission criteria, referrals
+  prevention        String? @db.Text // Screening guidelines (USPSTF)
+  guidelines        String? @db.Text // "2023 ACR Guidelines"
 
   // =========================================================================
   // DEMOGRAPHICS & STUDY PRIORITIZATION
   // =========================================================================
-  age_demographic       Json?     // ["Child", "Adult", "Elderly"]
-  gender_bias           String?   // "Female > Male"
-  pance_yield           Int?      // 1=Low, 2=Medium, 3=High
-  image_query           String?   // Search term for clinical images
+  age_demographic Json? // ["Child", "Adult", "Elderly"]
+  gender_bias     String? // "Female > Male"
+  pance_yield     Int? // 1=Low, 2=Medium, 3=High
+  image_query     String? // Search term for clinical images
 
   // =========================================================================
   // WORKFLOW & METADATA
@@ -683,8 +1154,8 @@ model MedicalContent {
   approvedBy  String?
 
   /// Relations
-  versions       ContentVersion[]
-  auditLogs      ContentAuditLog[]
+  versions  ContentVersion[]
+  auditLogs ContentAuditLog[]
 
   @@index([conditionId])
   @@index([system])
@@ -696,17 +1167,17 @@ model MedicalContent {
 
 /// Represents a high-yield medical buzzword
 model Buzzword {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   buzzword    String
   condition   String
-  system      String   // SystemCode
+  system      String // SystemCode
   subcategory String?
   explanation String?
-  
-  dailyWords  DailyWordle[] // Used in daily Wordle game
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  dailyWords DailyWordle[] // Used in daily Wordle game
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([system])
   @@index([condition])
@@ -722,7 +1193,7 @@ enum WordleStatus {
 /// Daily global word selection so all users share the same target
 model DailyWordle {
   id     String   @id @default(uuid())
-  date   DateTime @db.Date @unique
+  date   DateTime @unique @db.Date
   wordId String
 
   word Buzzword @relation(fields: [wordId], references: [id], onDelete: Cascade)
@@ -866,20 +1337,20 @@ model ContentLock {
 
 /// Offline sync queue for resilience
 model SyncQueue {
-  id        String    @id @default(uuid())
-  userId    String
-  operation String // "save_progress", "submit_quiz", "update_settings"
-  data      Json // Operation data
-  status    String    @default("pending") // pending, synced, failed, dead_letter
-  attempts  Int       @default(0)
-  maxRetries Int      @default(5) // Maximum retry attempts before moving to DLQ
-  lastError String?   @db.Text
-  createdAt DateTime  @default(now())
-  syncedAt  DateTime?
-  error     String?   @db.Text
-  
+  id         String    @id @default(uuid())
+  userId     String
+  operation  String // "save_progress", "submit_quiz", "update_settings"
+  data       Json // Operation data
+  status     String    @default("pending") // pending, synced, failed, dead_letter
+  attempts   Int       @default(0)
+  maxRetries Int       @default(5) // Maximum retry attempts before moving to DLQ
+  lastError  String?   @db.Text
+  createdAt  DateTime  @default(now())
+  syncedAt   DateTime?
+  error      String?   @db.Text
+
   // Version tracking for conflict resolution
-  version   Int       @default(1)
+  version          Int     @default(1)
   conflictDetected Boolean @default(false)
 
   @@index([userId])
@@ -1088,25 +1559,25 @@ model BranchChange {
 /// Represents a vetted, high-quality question in the "Golden Repository"
 /// Task 110: The "Golden Repository"
 model Question {
-  id            String   @id @default(uuid())
-  vignette      String   @db.Text
-  question      String   @db.Text
-  options       Json     // Array of strings
+  id            String @id @default(uuid())
+  vignette      String @db.Text
+  question      String @db.Text
+  options       Json // Array of strings
   correctAnswer String
-  explanation   String   @db.Text
-  
+  explanation   String @db.Text
+
   // Metadata
-  system        String   // CV, PULM, etc.
-  tags          Json?    // Array of strings
-  difficulty    String   // easy, medium, hard
-  source        String   // "ai_generated", "manual", "hybrid"
-  
+  system     String // CV, PULM, etc.
+  tags       Json? // Array of strings
+  difficulty String // easy, medium, hard
+  source     String // "ai_generated", "manual", "hybrid"
+
   // Stats
-  timesSeen     Int      @default(0)
-  timesCorrect  Int      @default(0)
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  timesSeen    Int @default(0)
+  timesCorrect Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([system])
   @@index([difficulty])
@@ -1115,28 +1586,28 @@ model Question {
 /// Represents a generated question waiting for validation
 /// Task 108: The "Staging Lake" Architecture
 model StagingQuestion {
-  id            String   @id @default(uuid())
-  vignette      String   @db.Text
-  question      String   @db.Text
+  id            String @id @default(uuid())
+  vignette      String @db.Text
+  question      String @db.Text
   options       Json
   correctAnswer String
-  explanation   String   @db.Text
-  
+  explanation   String @db.Text
+
   // Metadata
-  system        String
-  tags          Json?
-  difficulty    String
-  
+  system     String
+  tags       Json?
+  difficulty String
+
   // AI Generation Metadata
   generationPrompt String? @db.Text
   aiModel          String?
-  
+
   // Grading/Validation
-  status        String   @default("pending") // pending, graded, approved, rejected
-  aiGrade       Json?    // { score: number, issues: string[] }
-  adminReview   String?  @db.Text
-  
-  createdAt     DateTime @default(now())
+  status      String  @default("pending") // pending, graded, approved, rejected
+  aiGrade     Json? // { score: number, issues: string[] }
+  adminReview String? @db.Text
+
+  createdAt DateTime @default(now())
 
   @@index([status])
   @@index([system])
@@ -1145,32 +1616,32 @@ model StagingQuestion {
 /// Tracks which questions a user has seen to prevent repeats
 /// Task 109: "Infinite" No-Repeat Logic
 model UserQuestionHistory {
-  id         String   @id @default(uuid())
+  id         String @id @default(uuid())
   userId     String
   questionId String
-  
+
   // Performance
-  isCorrect  Boolean
-  seenAt     DateTime @default(now())
+  isCorrect Boolean
+  seenAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, questionId])
   @@index([userId])
 }
 
 /// Tracks every attempt for audit trails and ranked vs sandbox separation
 model QuestionAttempt {
-  id               String   @id @default(uuid())
-  userId           String
-  questionId       String
-  questionType     String?
-  system           String?
-  conditionId      String?
-  mode             String?
-  wasCorrect       Boolean  @default(false)
-  isRankedAttempt  Boolean  @default(false)
-  createdAt        DateTime @default(now())
+  id              String   @id @default(uuid())
+  userId          String
+  questionId      String
+  questionType    String?
+  system          String?
+  conditionId     String?
+  mode            String?
+  wasCorrect      Boolean  @default(false)
+  isRankedAttempt Boolean  @default(false)
+  createdAt       DateTime @default(now())
 
   @@index([userId, createdAt])
   @@index([questionId])
@@ -1181,22 +1652,22 @@ model QuestionAttempt {
 /// Stores high-yield clinical pearls extracted from questions
 /// Task 112: The "Pearl" Harvester
 model ClinicalPearl {
-  id               String   @id @default(uuid())
-  pearlText        String   @db.Text
-  fullExplanation  String?  @db.Text
-  questionId       String?
-  system           String
-  category         String?
-  tags             String[]
-  usefulVotes      Int      @default(0)
-  viewCount        Int      @default(0)
-  extractedAt      DateTime @default(now())
-  
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  userPearls       UserPearl[]
-  
+  id              String   @id @default(uuid())
+  pearlText       String   @db.Text
+  fullExplanation String?  @db.Text
+  questionId      String?
+  system          String
+  category        String?
+  tags            String[]
+  usefulVotes     Int      @default(0)
+  viewCount       Int      @default(0)
+  extractedAt     DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userPearls UserPearl[]
+
   @@index([system])
   @@index([category])
   @@index([questionId])
@@ -1204,19 +1675,19 @@ model ClinicalPearl {
 
 /// Stores results from the Patient Encounter (OSCE) mode
 model EncounterResult {
-  id          String   @id @default(uuid())
-  userId      String
-  caseId      String
-  
+  id     String @id @default(uuid())
+  userId String
+  caseId String
+
   // Performance
-  score       Json     // { overall: number, history: number, physical: number, ... }
-  feedback    String   @db.Text
-  
+  score    Json // { overall: number, history: number, physical: number, ... }
+  feedback String @db.Text
+
   // Detailed Data
-  phasesData  Json     // Snapshot of the interaction (questions asked, tests ordered, etc.)
-  
-  createdAt   DateTime @default(now())
-  
+  phasesData Json // Snapshot of the interaction (questions asked, tests ordered, etc.)
+
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([caseId])
 }
@@ -1237,32 +1708,97 @@ model Drug {
   aliases           String[]
   tags              String[]
   isHighYield       Boolean  @default(false)
-  
+
   // Extended fields
-  clinicalNotes     String?
-  antidote          String?
-  metabolism        String?
-  elimination       String?
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  clinicalNotes String?
+  antidote      String?
+  metabolism    String?
+  elimination   String?
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High PANCE yield
+  isFirstLine     Boolean  @default(false) // First-line treatment for any condition
+  boardYieldFacts String[] @default([]) // High-yield facts for boards
+
+  // ===== NEW: Detailed Pharmacology =====
+  mechanismDetailed String? @db.Text // Full mechanism explanation
+  pharmacokinetics  Json? // { absorption, distribution, metabolism, elimination, halfLife, bioavailability }
+  absorption        String? // Oral absorption characteristics
+  distribution      String? // Vd, protein binding
+  metabolismDetail  String? // CYP enzymes, active metabolites
+  eliminationRoute  String? // Renal, hepatic, fecal
+  halfLife          String? // Terminal half-life
+  onsetOfAction     String? // Time to effect
+  peakEffect        String? // Time to peak
+  duration          String? // Duration of effect
+  bioavailability   String? // Oral bioavailability percentage
+
+  // ===== NEW: Special Populations =====
+  pregnancyCategory String? // A, B, C, D, X or new labeling
+  pregnancyNotes    String? @db.Text // Specific pregnancy considerations
+  lactationSafety   String? // Safe, Caution, Contraindicated
+  lactationNotes    String? @db.Text
+  pediatricDosing   String? @db.Text // Weight-based dosing, age restrictions
+  pediatricNotes    String? @db.Text
+  geriatricDosing   String? @db.Text // Adjusted dosing for elderly
+  geriatricNotes    String? @db.Text
+  renalDosing       String? @db.Text // CrCl-based adjustments
+  hepaticDosing     String? @db.Text // Child-Pugh adjustments
+
+  // ===== NEW: Safety & Monitoring =====
+  blackBoxWarnings String[] @default([]) // FDA black box warnings
+  riskStrategies   String[] @default([]) // REMS programs
+  monitoringParams String[] @default([]) // Required monitoring (labs, vitals)
+  reversalAgent    String? // Antidote/reversal agent
+  toxicity         String?  @db.Text // Overdose presentation and management
+  maxDailyDose     String? // Maximum safe daily dose
+
+  // ===== NEW: Clinical Pearls & Teaching =====
+  clinicalPearls   String[] @default([]) // Key clinical points
+  commonMistakes   String[] @default([]) // Common prescribing errors
+  mnemonics        String[] @default([]) // Memory aids
+  testQuestionTips String[] @default([]) // Board exam tips
+
+  // ===== NEW: Drug Interactions (Detailed) =====
+  majorInteractions Json? // [{ drug, severity, mechanism, clinicalEffect, management }]
+  cyp450Effects     Json? // { inhibits: [], induces: [], substrates: [] }
+  foodInteractions  String[] @default([]) // Food/beverage interactions
+
+  // ===== NEW: Administration =====
+  routesOfAdmin       String[] @default([]) // PO, IV, IM, SC, etc.
+  formulations        String[] @default([]) // Tablet, capsule, solution, etc.
+  administrationTips  String?  @db.Text // How to take/give properly
+  storageRequirements String? // Storage conditions
+
+  // ===== NEW: Cost & Access =====
+  genericAvailable Boolean @default(false)
+  typicalCost      String? // $, $$, $$$, $$$$
+  insuranceTier    Int? // Formulary tier 1-4
+
+  // ===== NEW: Relations =====
+  conditionLinks DrugConditionLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([genericName])
+  @@index([panceYield])
+  @@index([isFirstLine])
 }
 
 /// Represents a study group for social learning
 model StudyGroup {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
-  code        String   @unique // Join code
-  description String?  @db.Text
+  code        String  @unique // Join code
+  description String? @db.Text
   ownerId     String
-  isPublic    Boolean  @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isPublic    Boolean @default(false)
 
-  members     StudyGroupMember[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members StudyGroupMember[]
 
   @@index([code])
   @@index([ownerId])
@@ -1270,14 +1806,14 @@ model StudyGroup {
 
 /// Represents a member of a study group
 model StudyGroupMember {
-  id        String   @id @default(uuid())
-  userId    String
-  groupId   String
-  role      String   @default("member") // member, admin
-  joinedAt  DateTime @default(now())
+  id       String   @id @default(uuid())
+  userId   String
+  groupId  String
+  role     String   @default("member") // member, admin
+  joinedAt DateTime @default(now())
 
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group     StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([userId, groupId])
   @@index([groupId])
@@ -1285,18 +1821,18 @@ model StudyGroupMember {
 
 /// Represents a professional cohort (class, program, or study group)
 model Cohort {
-  id           String   @id @default(uuid())
-  name         String
-  code         String   @unique // Join code for invitations
-  description  String?  @db.Text
-  institution  String?
-  isPublic     Boolean  @default(false)
+  id          String  @id @default(uuid())
+  name        String
+  code        String  @unique // Join code for invitations
+  description String? @db.Text
+  institution String?
+  isPublic    Boolean @default(false)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  members      CohortMember[]
-  peerStats    PeerStatistic[]
+  members   CohortMember[]
+  peerStats PeerStatistic[]
 
   @@index([name])
   @@index([isPublic])
@@ -1304,14 +1840,14 @@ model Cohort {
 
 /// Links users to cohorts with roles
 model CohortMember {
-  id        String     @id @default(uuid())
-  userId    String
-  cohortId  String
-  role      CohortRole @default(MEMBER)
-  joinedAt  DateTime   @default(now())
+  id       String     @id @default(uuid())
+  userId   String
+  cohortId String
+  role     CohortRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
 
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cohort    Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
 
   @@unique([userId, cohortId])
   @@index([cohortId])
@@ -1328,8 +1864,8 @@ model PeerStatistic {
   percentile Float
   recordedAt DateTime
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cohort  Cohort? @relation(fields: [cohortId], references: [id])
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cohort Cohort? @relation(fields: [cohortId], references: [id])
 
   @@unique([userId, cohortId, system, recordedAt])
   @@index([userId, recordedAt])
@@ -1343,163 +1879,402 @@ enum CohortRole {
 
 /// Represents an active Patient Encounter / OSCE session
 model PatientEncounterSession {
-  id        String   @id @default(uuid())
+  id        String               @id @default(uuid())
   userId    String
   caseId    String
   case      PatientEncounterCase @relation(fields: [caseId], references: [id])
-  startTime DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  status    String   @default("active") // "active", "completed", "abandoned"
-  messages  Json     // Array of chat messages: { role: "user"|"model", content: "..." }[]
-  
+  startTime DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  status    String               @default("active") // "active", "completed", "abandoned"
+  messages  Json // Array of chat messages: { role: "user"|"model", content: "..." }[]
+
   // Clinical data collected during the session
   physicalFindings Json? // Array of findings
   diagnosticOrders Json? // Array of orders
   diagnosis        String?
   treatmentPlan    String?
-  
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([status])
 }
 
 /// Represents a clinical case for the Patient Encounter / OSCE mode
 model PatientEncounterCase {
-  id                    String   @id @default(uuid())
-  patientName           String
-  chiefComplaint        String
-  age                   Int
-  sex                   String   // "M", "F", "Other"
-  
+  id             String @id @default(uuid())
+  patientName    String
+  chiefComplaint String
+  age            Int
+  sex            String // "M", "F", "Other"
+
   // JSON fields for structured data
-  vitalSigns            Json     // { bp, hr, rr, temp, o2sat }
-  historyData           Json     // Key-value pairs of history info
-  physicalExamData      Json     // Key-value pairs of exam findings
-  labData               Json     // Key-value pairs of lab results
-  
+  vitalSigns       Json // { bp, hr, rr, temp, o2sat }
+  historyData      Json // Key-value pairs of history info
+  physicalExamData Json // Key-value pairs of exam findings
+  labData          Json // Key-value pairs of lab results
+
   // Evaluation criteria
-  essentialQuestions    String[]
-  helpfulQuestions      String[]
-  unnecessaryQuestions  String[]
-  
+  essentialQuestions   String[]
+  helpfulQuestions     String[]
+  unnecessaryQuestions String[]
+
   // Outcome data
   correctDiagnosis      String
   differentialDiagnoses String[]
   idealWorkup           String[]
   teachingPoints        String[]
-  
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  sessions              PatientEncounterSession[]
+  sessions PatientEncounterSession[]
 }
 
 /// Represents a clinical guideline for scoring drills (e.g., Wells, CURB-65)
 model ClinicalGuideline {
-  id              String   @id // e.g. "wells-dvt"
+  id              String  @id // e.g. "wells-dvt"
   name            String
   description     String
   clinicalContext String?
   maxScore        Int
-  
-  components      Json     // GuidelineComponent[]
-  scoringMap      Json?    // ScoreTier[]
-  vignettes       Json     // GuidelineCase[]
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+
+  components Json // GuidelineComponent[]
+  scoringMap Json? // ScoreTier[]
+  vignettes  Json // GuidelineCase[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 /// Represents an imaging study
 model ImagingStudy {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  modality      String
-  bodyRegion    String?
-  usesContrast  Boolean  @default(false)
-  usesRadiation Boolean  @default(false)
-  description   String?  @db.Text
-  indications   String[]
+  id                String   @id @default(uuid())
+  name              String   @unique
+  modality          String // XR, CT, MRI, US, Nuclear, Fluoroscopy
+  bodyRegion        String?
+  usesContrast      Boolean  @default(false)
+  usesRadiation     Boolean  @default(false)
+  description       String?  @db.Text
+  indications       String[]
   contraindications String[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // ===== NEW: Technical Details =====
+  protocol      String? @db.Text // Standard imaging protocol
+  preparation   String? @db.Text // Patient preparation
+  contrastType  String? // IV, oral, rectal, none
+  contrastAgent String? // Specific agent used
+  radiationDose String? // Typical radiation exposure
+  scanDuration  String? // Typical scan time
+
+  // ===== NEW: Clinical Decision Making =====
+  firstLineFor  String[] @default([]) // Conditions where this is first-line
+  alternativeTo String[] @default([]) // Alternative imaging options
+  advantages    String[] @default([])
+  limitations   String[] @default([])
+  whenToAvoid   String[] @default([]) // Specific situations
+
+  // ===== NEW: Findings & Interpretation =====
+  normalFindings String?  @db.Text
+  keyFindings    Json? // [{ finding, significance, associatedConditions }]
+  classicSigns   String[] @default([]) // Named radiologic signs
+  reportTemplate String?  @db.Text
+
+  // ===== NEW: Safety =====
+  pregnancySafety     String? // Safe, Caution, Contraindicated
+  renalConsiderations String? @db.Text // Contrast and renal function
+  allergyProtocol     String? @db.Text // Contrast allergy prevention
+
+  // ===== NEW: Teaching Points =====
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+
+  // ===== NEW: Relations =====
+  conditionLinks ImagingConditionLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([modality])
+  @@index([bodyRegion])
+  @@index([panceYield])
 }
 
 /// Represents a physical exam finding
 model PhysicalExamFinding {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  system        String
-  description   String?  @db.Text
+  id                   String  @id @default(uuid())
+  name                 String  @unique
+  system               String // CV, PULM, GI, NEURO, etc.
+  description          String? @db.Text
   clinicalSignificance String? @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // ===== NEW: Classification =====
+  category      String? // Inspection, Palpation, Percussion, Auscultation
+  findingType   String? // Sign, symptom, maneuver result
+  aliases       String[] @default([]) // Alternative names
+  eponymousName String? // Named after whom (e.g., "Chvostek sign")
+
+  // ===== NEW: Technique =====
+  howToElicit     String?  @db.Text // How to look for/produce this finding
+  equipmentNeeded String[] @default([])
+  patientPosition String? // Position required
+  videoUrl        String? // Link to demonstration video
+  imageUrl        String? // Link to image
+
+  // ===== NEW: Clinical Correlation =====
+  positiveIndicates  String[] @default([]) // Conditions if positive
+  negativeIndicates  String[] @default([]) // Conditions if negative
+  differentialFor    String[] @default([]) // What conditions to consider
+  associatedFindings String[] @default([]) // Other findings often present
+
+  // ===== NEW: Test Characteristics =====
+  sensitivity     Float? // 0-100
+  specificity     Float? // 0-100
+  positiveLR      Float? // Positive likelihood ratio
+  negativeLR      Float? // Negative likelihood ratio
+  evidenceQuality String? // Strong, moderate, limited, expert opinion
+
+  // ===== NEW: Documentation =====
+  howToDocument  String?  @db.Text // How to chart this finding
+  gradingScale   String? // How to grade severity
+  normalVariants String[] @default([])
+
+  // ===== NEW: Teaching Points =====
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+
+  // ===== NEW: Relations =====
+  conditionLinks FindingConditionLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([system])
+  @@index([category])
+  @@index([panceYield])
 }
 
 /// Represents a clinical practice guideline (e.g. USPSTF, AHA)
 model PracticeGuideline {
-  id            String   @id @default(uuid())
-  name          String   @unique
-  organization  String
-  category      String
-  year          Int?
-  summary       String?  @db.Text
+  id              String   @id @default(uuid())
+  name            String   @unique
+  organization    String
+  category        String
+  year            Int?
+  summary         String?  @db.Text
   recommendations String[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now())
 }
-
 
 /// Represents a physiology concept
 model PhysiologyConcept {
-  id                  String   @id @default(uuid())
-  name                String   @unique
-  displayName         String?
-  aliases             String[]
-  system              String?
-  category            String
-  description         String?
-  mechanism           String?  @db.Text
-  clinicalSignificance String? @db.Text
-  relatedConditions   String[]
-  relatedDrugs        String[]
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  name                 String   @unique
+  displayName          String?
+  aliases              String[]
+  system               String? // CV, PULM, RENAL, etc.
+  category             String // Cellular, Organ System, Regulatory, etc.
+  description          String?
+  mechanism            String?  @db.Text
+  clinicalSignificance String?  @db.Text
+  relatedConditions    String[]
+  relatedDrugs         String[]
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // ===== NEW: Detailed Mechanism =====
+  molecularBasis     String?  @db.Text // Molecular/cellular level
+  signalTransduction String?  @db.Text // Signaling pathways involved
+  regulatoryFactors  String[] @default([]) // What regulates this
+  feedbackLoops      String?  @db.Text // Positive/negative feedback
+  normalValues       String? // Normal physiologic values
+
+  // ===== NEW: Pathophysiology Links =====
+  pathophysiology        String?  @db.Text // What happens when it goes wrong
+  compensatoryMechanisms String[] @default([])
+  decompensationSigns    String[] @default([])
+
+  // ===== NEW: Drug Effects =====
+  drugTargets String[] @default([]) // Drugs that affect this
+  drugEffects Json? // [{ drug, effect, mechanism }]
+
+  // ===== NEW: Lab Correlates =====
+  associatedLabs String[] @default([]) // Labs that measure/reflect this
+  labChanges     Json? // [{ condition, labChanges }]
+
+  // ===== NEW: Graphs & Curves =====
+  curveType        String? // Frank-Starling, Oxygen-Hemoglobin, etc.
+  curveDescription String? @db.Text
+  curveShifts      Json? // [{ factor, direction, clinicalExample }]
+  graphUrl         String? // URL to physiologic graph
+
+  // ===== NEW: Equations =====
+  keyEquations Json? // [{ name, formula, variables, clinicalUse }]
+
+  // ===== NEW: Comparisons =====
+  compareContrast Json? // [{ concept, similarities, differences }]
+
+  // ===== NEW: Teaching Points =====
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+
+  // ===== NEW: Relations =====
+  conditionLinks PhysiologyConditionLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([system])
+  @@index([category])
+  @@index([panceYield])
 }
 
 /// Represents a treatment or intervention
 model Treatment {
-  id                  String   @id @default(uuid())
-  name                String   @unique
-  displayName         String?
-  aliases             String[]
-  category            String
-  type                String?
-  description         String?
-  mechanism           String?  @db.Text
-  dosing              String?  @db.Text
-  sideEffects         String[]
-  indications         String[]
-  contraindications   String[]
-  complications       String[]
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                String   @id @default(uuid())
+  name              String   @unique
+  displayName       String?
+  aliases           String[]
+  category          String // Medical, Surgical, Procedural, Physical Therapy, Lifestyle
+  type              String? // First-line, Second-line, Adjunct, Salvage
+  description       String?
+  mechanism         String?  @db.Text
+  dosing            String?  @db.Text
+  sideEffects       String[]
+  indications       String[]
+  contraindications String[]
+  complications     String[]
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  isFirstLine     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // ===== NEW: Evidence & Guidelines =====
+  evidenceLevel   String? // A, B, C, D or Grade I, II, III
+  guidelineSource String? // AHA, ACS, IDSA, etc.
+  guidelineYear   Int?
+  recommendation  String? @db.Text
+
+  // ===== NEW: Timing & Duration =====
+  timing       String? // Acute, chronic, maintenance
+  duration     String? // How long to treat
+  timeToEffect String? // When to expect improvement
+  followUp     String? @db.Text // Required follow-up
+
+  // ===== NEW: Comparison =====
+  alternativeTo       String[] @default([])
+  advantages          String[] @default([])
+  disadvantages       String[] @default([])
+  comparativeEfficacy String?  @db.Text
+
+  // ===== NEW: Special Populations =====
+  pregnancySafe     Boolean?
+  pregnancyNotes    String?  @db.Text
+  pediatricUse      String?  @db.Text
+  geriatricUse      String?  @db.Text
+  renalDoseAdjust   String?  @db.Text
+  hepaticDoseAdjust String?  @db.Text
+
+  // ===== NEW: Cost & Access =====
+  estimatedCost     String? // $, $$, $$$, $$$$
+  insuranceCoverage String?
+  genericAvailable  Boolean @default(false)
+
+  // ===== NEW: Teaching Points =====
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+
+  // ===== NEW: Relations =====
+  conditionLinks TreatmentConditionLink[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([type])
+  @@index([panceYield])
+  @@index([isFirstLine])
 }
 
 /// Represents a differential diagnosis entry
 model DifferentialDiagnosis {
   id                  String   @id @default(uuid())
-  presentingComplaint String   @unique
-  category            String
+  presentingComplaint String   @unique // e.g., "Chest Pain", "Dyspnea"
+  category            String // System category
   isEmergency         Boolean  @default(false)
   differentialList    String[]
   mustNotMiss         String[]
   workup              String?  @db.Text
   pearls              String?  @db.Text
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+
+  // ===== NEW: PANCE Prioritization =====
+  panceYield      Int? // 1=Low, 2=Medium, 3=High
+  isHighYield     Boolean  @default(false)
+  boardYieldFacts String[] @default([])
+
+  // ===== NEW: Clinical Presentation =====
+  aliases             String[] @default([]) // Other terms for same complaint
+  typicalPresentation String?  @db.Text
+  redFlags            String[] @default([]) // Alarming features
+  reassuringFeatures  String[] @default([]) // Benign indicators
+
+  // ===== NEW: Organized Differentials =====
+  mostCommon    String[] @default([]) // Most likely diagnoses
+  mostDangerous String[] @default([]) // Life-threatening
+  oftenMissed   String[] @default([]) // Frequently overlooked
+  byAge         Json? // { pediatric: [], adult: [], geriatric: [] }
+  byAcuity      Json? // { emergent: [], urgent: [], nonurgent: [] }
+
+  // ===== NEW: Diagnostic Approach =====
+  keyQuestions        String[] @default([]) // History questions to ask
+  keyExamFindings     String[] @default([]) // PE findings to look for
+  initialWorkup       String[] @default([]) // First-line tests
+  advancedWorkup      String[] @default([]) // Second-line tests
+  diagnosticAlgorithm String?  @db.Text
+
+  // ===== NEW: Distinguishing Features =====
+  distinguishingFeatures Json? // [{ condition, keyFeatures, helps differentiate from }]
+
+  // ===== NEW: Clinical Decision Rules =====
+  applicableRules     String[] @default([]) // e.g., Wells criteria, PERC rule
+  dispositionGuidance String?  @db.Text
+
+  // ===== NEW: Teaching Points =====
+  clinicalPearls   String[] @default([])
+  commonMistakes   String[] @default([])
+  testQuestionTips String[] @default([])
+  mnemonics        String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([panceYield])
+  @@index([isEmergency])
 }
 
 model FirstLineTreatment {
@@ -1513,7 +2288,7 @@ model FirstLineTreatment {
 
 /// Represents a seed for generating question variations
 model QuestionSeed {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   conditionId   String
   questionType  String
   system        String?
@@ -1525,10 +2300,10 @@ model QuestionSeed {
   explanation   String
   difficulty    String
   tags          String[]
-  usageCount    Int      @default(0)
+  usageCount    Int       @default(0)
   lastUsedAt    DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([conditionId])
   @@index([system])
@@ -1536,17 +2311,187 @@ model QuestionSeed {
 
 /// Tracks user interactions with clinical pearls
 model UserPearl {
-  id        String   @id @default(uuid())
-  userId    String
-  pearlId   String
-  isSaved   Boolean  @default(false)
-  savedAt   DateTime?
-  viewedAt  DateTime?
-  markedUseful Boolean @default(false)
-  notes     String?
-  
-  user      User     @relation(fields: [userId], references: [id])
-  pearl     ClinicalPearl @relation(fields: [pearlId], references: [id])
+  id           String    @id @default(uuid())
+  userId       String
+  pearlId      String
+  isSaved      Boolean   @default(false)
+  savedAt      DateTime?
+  viewedAt     DateTime?
+  markedUseful Boolean   @default(false)
+  notes        String?
+
+  user  User          @relation(fields: [userId], references: [id])
+  pearl ClinicalPearl @relation(fields: [pearlId], references: [id])
 
   @@unique([userId, pearlId])
+}
+
+// =============================================================================
+// JUNCTION TABLES: Content-Condition Relationships
+// =============================================================================
+
+/// Links Drugs to Conditions with relationship type
+model DrugConditionLink {
+  id               String  @id @default(uuid())
+  drugId           String
+  conditionId      String
+  relationshipType String // "first_line", "second_line", "adjunct", "contraindicated", "caution"
+  evidenceLevel    String? // A, B, C, D
+  notes            String? @db.Text
+  isFirstLine      Boolean @default(false)
+
+  drug      Drug      @relation(fields: [drugId], references: [id], onDelete: Cascade)
+  condition Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([drugId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+/// Links Labs to Conditions with diagnostic context
+model LabConditionLink {
+  id               String  @id @default(uuid())
+  labTestId        String
+  conditionId      String
+  relationshipType String // "diagnostic", "screening", "monitoring", "prognostic"
+  expectedResult   String? // "elevated", "decreased", "normal", "variable"
+  significance     String? @db.Text // Clinical significance of result
+  sensitivity      Float? // For this condition
+  specificity      Float? // For this condition
+
+  labTest   LabTest   @relation(fields: [labTestId], references: [id], onDelete: Cascade)
+  condition Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([labTestId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+/// Links Imaging to Conditions with findings
+model ImagingConditionLink {
+  id               String   @id @default(uuid())
+  imagingId        String
+  conditionId      String
+  relationshipType String // "first_line", "gold_standard", "adjunct", "follow_up"
+  expectedFindings String[] @default([]) // What you'd expect to see
+  classicFindings  String? // Pathognomonic finding
+  sensitivity      Float?
+  specificity      Float?
+
+  imaging   ImagingStudy @relation(fields: [imagingId], references: [id], onDelete: Cascade)
+  condition Condition    @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([imagingId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+/// Links Physical Exam Findings to Conditions
+model FindingConditionLink {
+  id               String  @id @default(uuid())
+  findingId        String
+  conditionId      String
+  relationshipType String // "pathognomonic", "common", "occasional", "rare"
+  clinicalContext  String? @db.Text
+  sensitivity      Float?
+  specificity      Float?
+
+  finding   PhysicalExamFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  condition Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([findingId, conditionId])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+/// Links Anatomy to Conditions
+model AnatomyConditionLink {
+  id               String  @id @default(uuid())
+  anatomyId        String
+  conditionId      String
+  relationshipType String // "affected", "injured", "involved", "preserved"
+  clinicalContext  String? @db.Text
+
+  anatomy   AnatomyStructure @relation(fields: [anatomyId], references: [id], onDelete: Cascade)
+  condition Condition        @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([anatomyId, conditionId])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+/// Links Physiology Concepts to Conditions
+model PhysiologyConditionLink {
+  id               String  @id @default(uuid())
+  physiologyId     String
+  conditionId      String
+  relationshipType String // "underlying", "compensatory", "impaired", "relevant"
+  explanation      String? @db.Text
+
+  physiology PhysiologyConcept @relation(fields: [physiologyId], references: [id], onDelete: Cascade)
+  condition  Condition         @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([physiologyId, conditionId])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+/// Links Treatments to Conditions
+model TreatmentConditionLink {
+  id               String  @id @default(uuid())
+  treatmentId      String
+  conditionId      String
+  relationshipType String // "first_line", "second_line", "adjunct", "salvage", "contraindicated"
+  evidenceLevel    String?
+  isFirstLine      Boolean @default(false)
+  notes            String? @db.Text
+
+  treatment Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+  condition Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([treatmentId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([relationshipType])
+  @@index([isFirstLine])
+}
+
+/// Links Procedures to Conditions
+model ProcedureConditionLink {
+  id               String  @id @default(uuid())
+  procedureId      String
+  conditionId      String
+  relationshipType String // "diagnostic", "therapeutic", "both"
+  indication       String? @db.Text
+  isFirstLine      Boolean @default(false)
+
+  procedure Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  condition Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([procedureId, conditionId])
+  @@index([conditionId])
+  @@index([relationshipType])
 }

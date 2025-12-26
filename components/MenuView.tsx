@@ -19,7 +19,7 @@ import TrainingMenu from "./dashboard/TrainingMenu";
 import ProgressRing from "./ProgressRing";
 import TopicHeatmap from "./TopicHeatmap";
 import SystemDrilldownModal from "./SystemDrilldownModal";
-import { ABBREVIATION_TO_TOPIC_MAP } from "../constants";
+import { ABBREVIATION_TO_TOPIC_MAP } from "../src/constants";
 import type { SystemDrilldownSelection } from "./SystemDrilldownModal";
 import type { ConditionMeta } from "../src/types/conditions";
 import ConditionDetailModal from "./ConditionDetailModal";

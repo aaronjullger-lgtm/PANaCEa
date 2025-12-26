@@ -6,9 +6,9 @@ import { searchConditions } from "./conditionSearch";
 import type { ConditionSearchResult } from "./conditionSearch";
 import { searchDrugs } from "./drugSearch";
 import type { DrugSearchResult } from "@/pharm/drugTypes";
-import { SPECIAL_TEST_REGISTRY, type SpecialTestMeta } from "../../specialTestRegistry";
-import { PHYSIOLOGY_CONCEPT_REGISTRY, type PhysiologyConceptMeta } from "../../physiologyRegistry";
-import { TREATMENT_REGISTRY, type TreatmentMeta } from "../../treatmentRegistry";
+import { SPECIAL_TEST_REGISTRY, type SpecialTestMeta } from "../registries/specialTestRegistry";
+import { PHYSIOLOGY_CONCEPT_REGISTRY, type PhysiologyConceptMeta } from "../registries/physiologyRegistry";
+import { TREATMENT_REGISTRY, type TreatmentMeta } from "../registries/treatmentRegistry";
 
 export type UnifiedSearchResultType = "condition" | "drug" | "special_test" | "physiology" | "treatment";
 

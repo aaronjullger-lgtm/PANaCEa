@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { v4 as uuidv4 } from 'uuid';
 import { ConditionData, GeneratedQuestion, QuestionType } from "../types/question";
 import { validateQuestion } from "./questionValidator";
-import { GEMINI_PRO_MODEL } from "../constants";
+import { GEMINI_PRO_MODEL } from "../src/constants";
 
 // Initialize Gemini (use pro model for heavy generation; allows env override via constants)
 const API_KEY = process.env.GEMINI_API_KEY;
