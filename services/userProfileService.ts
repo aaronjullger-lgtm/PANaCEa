@@ -5,7 +5,7 @@
 
 import type { UserProfile } from '@/types';
 
-const PROFILE_KEY = 'panacea_user_profile';
+const PROFILE_KEY = 'panceai_user_profile';
 
 /**
  * Load user profile from localStorage

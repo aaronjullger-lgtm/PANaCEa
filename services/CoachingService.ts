@@ -1,6 +1,6 @@
 import type { PerformanceRecord } from '@/types';
 import { callGeminiText } from './geminiService';
-import { GEMINI_FLASH_MODEL } from '../constants';
+import { GEMINI_FLASH_MODEL } from '@/src/constants';
 
 /**
  * Get a Socratic hint for an incorrect answer without revealing the solution

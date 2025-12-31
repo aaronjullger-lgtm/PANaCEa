@@ -5,9 +5,11 @@ const dataCache = new Map<string, any>();
 
 /**
  * Lazily load drug data when needed.
- * Uses database API endpoint with fallback to static registry.
+ * Database-First: PostgreSQL is the ONLY source of truth.
+ * No static fallbacks - errors propagate to UI for proper handling.
  * 
  * @returns Promise resolving to the drug data
+ * @throws Error if database is unavailable
  */
 export async function loadDrugData(): Promise<any> {
   const cacheKey = 'drugData';
@@ -17,44 +19,17 @@ export async function loadDrugData(): Promise<any> {
     return dataCache.get(cacheKey);
   }
   
-  try {
-    const apiUrl = getApiEndpoint(API_ENDPOINTS.DRUGS_ALL);
-    const response = await fetch(apiUrl);
-    
-    // Check if response is OK and is JSON before parsing
-    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-      const data = await response.json();
-      dataCache.set(cacheKey, data);
-      return data;
-    }
-  } catch (error) {
-    console.warn('Failed to load drug data from API, using static registry:', error);
+  const apiUrl = getApiEndpoint(API_ENDPOINTS.DRUGS_ALL);
+  const response = await fetch(apiUrl);
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `Failed to load drugs from database: ${response.status}`);
   }
   
-  // Fallback to static drug registry
-  try {
-    const { getAllDrugs } = await import('../../drugRegistry');
-    const drugMetas = getAllDrugs();
-    
-    // Convert to expected format
-    const drugs = drugMetas.map((meta) => ({
-      id: `drug_${meta.genericName.toLowerCase().replace(/\s+/g, '_')}`,
-      genericName: meta.genericName,
-      brandName: meta.brandName || null,
-      drugClass: meta.drugClass,
-      mechanismOfAction: meta.mechanismOfAction || null,
-      indications: meta.indications || [],
-      contraindications: meta.contraindications || [],
-      sideEffects: meta.commonSideEffects || [],
-      isHighYield: meta.isHighYield
-    }));
-    
-    dataCache.set(cacheKey, drugs);
-    return drugs;
-  } catch (fallbackError) {
-    console.error('Failed to load static drug registry:', fallbackError);
-    throw new Error('Unable to load drug data from any source.');
-  }
+  const data = await response.json();
+  dataCache.set(cacheKey, data);
+  return data;
 }
 
 /**

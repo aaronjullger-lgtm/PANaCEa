@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import type { SessionSettings } from '../types';
-import { InfoIcon } from './icons/InfoIcon';
 
 interface SessionSetupModalProps {
   onClose: () => void;
@@ -38,7 +37,8 @@ const ToggleButton = ({ children, onClick, isActive, disabled = false, title = "
 
 const SessionSetupModal: React.FC<SessionSetupModalProps> = ({ onClose, onStart, growthAreas, dueQuestionsCount, flaggedQuestionsCount }) => {
   const [focus, setFocus] = useState<Focus>('all');
-  const [difficulty, setDifficulty] = useState<Difficulty>('same');
+  // Difficulty is now fixed at PANCE-level ('same') for standardized practice
+  const difficulty: Difficulty = 'same';
 
   const canSelectGrowth = growthAreas.length > 0;
   const canSelectReview = dueQuestionsCount > 0;
@@ -87,29 +87,11 @@ const SessionSetupModal: React.FC<SessionSetupModalProps> = ({ onClose, onStart,
               </ToggleButton>
             </div>
           </div>
-          <div>
-            <div className="flex items-center space-x-2 mb-2">
-              <h3 className="font-semibold text-slate-700 dark:text-slate-300">Difficulty</h3>
-              <div className="relative group">
-                <InfoIcon className="w-5 h-5 text-slate-400 dark:text-slate-500"/>
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-slate-800 dark:bg-slate-700 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
-                  <strong className="font-semibold block text-sm">Difficulty Guide</strong>
-                  <span className="block mt-1"><strong className="font-semibold text-blue-400">Easier:</strong> Focuses on more common, foundational concepts.</span>
-                  <span className="block mt-1"><strong className="font-semibold text-blue-400">Harder:</strong> Generates more complex, multi-step questions requiring deeper knowledge.</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <ToggleButton isActive={difficulty === 'easier'} onClick={() => setDifficulty('easier')}>
-                Easier
-              </ToggleButton>
-              <ToggleButton isActive={difficulty === 'same'} onClick={() => setDifficulty('same')}>
-                PANCE-level
-              </ToggleButton>
-              <ToggleButton isActive={difficulty === 'harder'} onClick={() => setDifficulty('harder')}>
-                Harder
-              </ToggleButton>
-            </div>
+          {/* Difficulty is fixed at PANCE-level for standardized practice */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+            <p className="text-sm text-blue-700 dark:text-blue-300">
+              <strong>PANCE-Level Questions:</strong> All questions are calibrated to match real PANCE exam difficulty for optimal preparation.
+            </p>
           </div>
         </div>
 

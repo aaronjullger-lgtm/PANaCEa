@@ -1,0 +1,418 @@
+/**
+ * Database Analytics Dashboard
+ * 
+ * Displays comprehensive user statistics from the database.
+ * Shows overall performance, system breakdowns, trends, and study recommendations.
+ */
+
+import React, { useState } from 'react';
+import { 
+  Activity, 
+  TrendingUp, 
+  TrendingDown, 
+  Minus,
+  Target, 
+  Clock, 
+  Flame, 
+  BookOpen,
+  AlertCircle,
+  Award,
+  RefreshCw,
+  Calendar,
+  Stethoscope,
+  BarChart2
+} from 'lucide-react';
+import { useDatabaseStats, DatabaseStats } from '../../hooks/useDatabaseStats';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import ConditionPerformancePanel from './ConditionPerformancePanel';
+import PerformanceTrendChart from './PerformanceTrendChart';
+
+// Helper to format time in seconds
+function formatTime(ms: number | null): string {
+  if (!ms) return '--';
+  const seconds = Math.round(ms / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${minutes}m ${remainingSeconds}s`;
+}
+
+// Helper to get trend icon
+function TrendIcon({ trend }: { trend: 'improving' | 'declining' | 'neutral' | 'stable' | 'insufficient_data' }) {
+  switch (trend) {
+    case 'improving':
+      return <TrendingUp className="w-4 h-4 text-emerald-500" />;
+    case 'declining':
+      return <TrendingDown className="w-4 h-4 text-red-500" />;
+    default:
+      return <Minus className="w-4 h-4 text-slate-400" />;
+  }
+}
+
+// Helper to get trend color
+function getTrendColor(trend: 'improving' | 'declining' | 'neutral' | 'stable' | 'insufficient_data'): string {
+  switch (trend) {
+    case 'improving':
+      return 'text-emerald-500';
+    case 'declining':
+      return 'text-red-500';
+    default:
+      return 'text-slate-400';
+  }
+}
+
+// Loading skeleton
+function StatsSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800 h-24" />
+        ))}
+      </div>
+      <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800 h-48" />
+    </div>
+  );
+}
+
+// Stats card component
+function StatCard({ 
+  icon: Icon, 
+  label, 
+  value, 
+  subValue, 
+  trend 
+}: { 
+  icon: React.ElementType; 
+  label: string; 
+  value: string | number; 
+  subValue?: string;
+  trend?: 'improving' | 'declining' | 'neutral' | 'stable' | 'insufficient_data';
+}) {
+  return (
+    <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+      <div className="flex items-center justify-between mb-2">
+        <Icon className="w-5 h-5 text-[var(--color-text-muted)]" />
+        {trend && <TrendIcon trend={trend} />}
+      </div>
+      <div className="text-2xl font-bold text-[var(--color-text-primary)]">{value}</div>
+      <div className="text-sm text-[var(--color-text-muted)]">{label}</div>
+      {subValue && (
+        <div className="text-xs text-[var(--color-text-muted)] mt-1">{subValue}</div>
+      )}
+    </div>
+  );
+}
+
+// System row component
+function SystemRow({ 
+  system, 
+  stats 
+}: { 
+  system: string; 
+  stats: DatabaseStats['bySystems'][string];
+}) {
+  const fullName = ABBREVIATION_TO_TOPIC_MAP[system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || system;
+  const accuracyColor = stats.accuracy >= 80 
+    ? 'text-emerald-500' 
+    : stats.accuracy >= 60 
+      ? 'text-amber-500' 
+      : 'text-red-500';
+
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)] last:border-0">
+      <div className="flex items-center gap-3">
+        <span className="font-medium text-[var(--color-text-primary)] w-16">{system}</span>
+        <span className="text-sm text-[var(--color-text-muted)] hidden md:block">{fullName}</span>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="text-right">
+          <span className={`font-bold ${accuracyColor}`}>{stats.accuracy}%</span>
+          <span className="text-xs text-[var(--color-text-muted)] ml-1">
+            ({stats.correct}/{stats.total})
+          </span>
+        </div>
+        {stats.avgTimeMs && (
+          <div className="text-sm text-[var(--color-text-muted)] w-16 text-right hidden sm:block">
+            {formatTime(stats.avgTimeMs)}
+          </div>
+        )}
+        <TrendIcon trend={stats.trend} />
+      </div>
+    </div>
+  );
+}
+
+export const DatabaseAnalyticsDashboard: React.FC = () => {
+  const { stats, isLoading, error, refetch, lastFetched } = useDatabaseStats();
+  const [activeTab, setActiveTab] = useState<'overview' | 'systems' | 'conditions'>('overview');
+
+  if (isLoading && !stats) {
+    return <StatsSkeleton />;
+  }
+
+  if (error && !stats) {
+    return (
+      <div className="p-6 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
+        <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+          <AlertCircle className="w-5 h-5" />
+          <span className="font-medium">Unable to load analytics</span>
+        </div>
+        <p className="mt-2 text-sm text-red-500 dark:text-red-400">{error}</p>
+        <button 
+          onClick={() => refetch()}
+          className="mt-3 px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="p-6 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+        <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
+          <BookOpen className="w-5 h-5" />
+          <span>Sign in to see your analytics</span>
+        </div>
+      </div>
+    );
+  }
+
+  const systemsWithData = Object.entries(stats.bySystems)
+    .filter(([, s]) => s.total > 0)
+    .sort((a, b) => b[1].total - a[1].total);
+
+  return (
+    <div className="space-y-6">
+      {/* Header with refresh */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+          📊 Performance Analytics
+        </h2>
+        <button
+          onClick={() => refetch()}
+          disabled={isLoading}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          {lastFetched && (
+            <span className="hidden sm:inline">
+              Updated {new Date(lastFetched).toLocaleTimeString()}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-1 p-1 bg-[var(--color-bg-secondary)] rounded-lg">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'overview'
+              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+          }`}
+        >
+          <BarChart2 className="w-4 h-4" />
+          Overview
+        </button>
+        <button
+          onClick={() => setActiveTab('systems')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'systems'
+              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+          Systems
+        </button>
+        <button
+          onClick={() => setActiveTab('conditions')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'conditions'
+              ? 'bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]'
+          }`}
+        >
+          <Stethoscope className="w-4 h-4" />
+          Conditions
+        </button>
+      </div>
+
+      {/* Overview Tab Content */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Overview Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard
+              icon={Target}
+              label="Overall Accuracy"
+              value={`${stats.overall.accuracy}%`}
+              subValue={`${stats.overall.correctAttempts}/${stats.overall.totalAttempts} correct`}
+              trend={stats.recentPerformance.trend}
+            />
+            <StatCard
+              icon={BookOpen}
+              label="Questions Seen"
+              value={stats.overall.questionsSeenCount}
+              subValue={`${stats.overall.totalAttempts} total attempts`}
+            />
+            <StatCard
+              icon={Flame}
+              label="Current Streak"
+              value={`${stats.overall.currentStreak} days`}
+              subValue={`${stats.overall.totalStudyDays} total study days`}
+            />
+            <StatCard
+              icon={Clock}
+              label="Avg Time/Question"
+              value={formatTime(stats.overall.avgTimeMs)}
+              subValue={stats.overall.avgAnswerChanges 
+                ? `${stats.overall.avgAnswerChanges} avg answer changes` 
+                : undefined}
+            />
+          </div>
+
+          {/* Recent Performance Comparison */}
+          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+            <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-4">
+              <Calendar className="w-4 h-4" />
+              Recent Performance
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <div className="text-sm text-[var(--color-text-muted)] mb-1">Last 7 Days</div>
+                <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                  {stats.recentPerformance.last7Days.accuracy !== null 
+                    ? `${stats.recentPerformance.last7Days.accuracy}%` 
+                    : '--'}
+                </div>
+                <div className="text-sm text-[var(--color-text-muted)]">
+                  {stats.recentPerformance.last7Days.attempts} questions
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-[var(--color-text-muted)] mb-1">Previous 7 Days</div>
+                <div className="text-2xl font-bold text-[var(--color-text-primary)]">
+                  {stats.recentPerformance.previous7Days.accuracy !== null 
+                    ? `${stats.recentPerformance.previous7Days.accuracy}%` 
+                    : '--'}
+                </div>
+                <div className="text-sm text-[var(--color-text-muted)]">
+                  {stats.recentPerformance.previous7Days.attempts} questions
+                </div>
+              </div>
+            </div>
+            <div className={`mt-4 flex items-center gap-2 ${getTrendColor(stats.recentPerformance.trend)}`}>
+              <TrendIcon trend={stats.recentPerformance.trend} />
+              <span className="text-sm font-medium capitalize">
+                {stats.recentPerformance.trend.replace('_', ' ')}
+              </span>
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          {stats.recommendations.length > 0 && (
+            <div className="p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+              <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm mb-3">
+                <Target className="w-4 h-4" />
+                Study Recommendations
+              </div>
+              <ul className="space-y-2">
+                {stats.recommendations.map((rec, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]">
+                    <span className="text-blue-500">•</span>
+                    {rec}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Systems Tab Content */}
+      {activeTab === 'systems' && (
+        <>
+          {/* System Breakdown */}
+          {systemsWithData.length > 0 && (
+            <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm mb-4">
+                <Activity className="w-4 h-4" />
+                Performance by System
+              </div>
+              <div className="space-y-1">
+                {systemsWithData.map(([system, systemStats]) => (
+                  <SystemRow key={system} system={system} stats={systemStats} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Weak Areas */}
+          {stats.weakAreas.length > 0 && (
+            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800">
+              <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 text-sm mb-3">
+                <AlertCircle className="w-4 h-4" />
+                Focus Areas (Need Improvement)
+              </div>
+              <div className="space-y-2">
+                {stats.weakAreas.map((area) => (
+                  <div key={area.system} className="flex items-center justify-between">
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {ABBREVIATION_TO_TOPIC_MAP[area.system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || area.system}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-red-500 font-bold">{area.accuracy}%</span>
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        ({area.attempts} attempts)
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Strong Areas */}
+          {stats.strongAreas.length > 0 && (
+            <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800">
+              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm mb-3">
+                <Award className="w-4 h-4" />
+                Strong Areas
+              </div>
+              <div className="space-y-2">
+                {stats.strongAreas.slice(0, 5).map((area) => (
+                  <div key={area.system} className="flex items-center justify-between">
+                    <span className="font-medium text-[var(--color-text-primary)]">
+                      {ABBREVIATION_TO_TOPIC_MAP[area.system as keyof typeof ABBREVIATION_TO_TOPIC_MAP] || area.system}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-500 font-bold">{area.accuracy}%</span>
+                      <span className="text-xs text-[var(--color-text-muted)]">
+                        ({area.attempts} attempts)
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Conditions Tab Content */}
+      {activeTab === 'conditions' && (
+        <ConditionPerformancePanel
+          conditionStats={stats.byConditions || []}
+          weakConditions={stats.weakConditions || []}
+        />
+      )}
+    </div>
+  );
+};
+
+export default DatabaseAnalyticsDashboard;

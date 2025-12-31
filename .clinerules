@@ -1,0 +1,175 @@
+# PANaCEa Cline Rules
+
+## Project Overview
+PANaCEa is a PA (Physician Assistant) exam preparation application. It uses:
+- React 19 + TypeScript + Vite
+- Tailwind CSS + Framer Motion
+- Cloudflare Pages Functions (primary backend)
+- PostgreSQL/Supabase via Prisma
+- Clerk for authentication
+- Supabase Storage for media files
+
+## Architecture Principles
+
+### Database-First Architecture
+- ALL content comes from the PostgreSQL database - NEVER use static JSON files
+- Use Prisma for database operations
+- MedicalContent table stores condition data as JSONB
+- MediaAsset table stores references to images in Supabase Storage
+
+### API Pattern (Cloudflare Functions)
+```typescript
+// functions/api/example.ts
+import { createEdgePrismaClient } from './_shared/prisma-edge';
+import { authenticateRequest, createSuccessResponse, createErrorResponse } from './_shared/auth';
+
+export const onRequestGet = async (context) => {
+  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+  try {
+    const auth = await authenticateRequest(context.request, context.env);
+    // ... logic
+    return createSuccessResponse(data);
+  } catch (e) {
+    return createErrorResponse(e.message, 500);
+  } finally {
+    await prisma.$disconnect();
+  }
+};
+```
+
+### Service Pattern
+```typescript
+// services/exampleService.ts
+export async function getExample(id: string): Promise<Example> {
+  const response = await fetch(`/api/example/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch');
+  return response.json();
+}
+```
+
+## Media Storage
+
+### Supabase Storage Buckets
+- `medical-images` - ECG, X-ray, dermatology photos
+- Folder structure: `{category}/{filename}`
+- Categories: ecg, derm, radiology, labs, diagrams
+
+### MediaAsset Table Fields
+- `id` - UUID
+- `conditionId` - Links to Condition table
+- `imagingStudyId` - Links to ImagingStudy table
+- `type` - 'ecg' | 'derm' | 'radiology' | 'labs' | 'diagrams'
+- `originalUrl` - Full Supabase Storage URL
+- `thumbnailUrl` - Optimized thumbnail
+- `approvalStatus` - 'pending' | 'approved' | 'rejected'
+- `correctDiagnosis` - For drill questions
+- `distractors` - JSON array of wrong answers (need 3+)
+- `clinicalContext` - JSON with patient scenario
+
+### Image Upload Flow
+1. Upload to Supabase Storage via `mediaStorageService.ts`
+2. Create MediaAsset record with `approvalStatus: 'pending'`
+3. Auto-assess quality via `imageQualityService.ts`
+4. High-quality images auto-approved, others need manual review
+5. Only approved images appear in drills
+
+### Clinical Image Acquisition (ImageSorcery MCP)
+ImageSorcery is configured as an MCP server. Use its tools to search for clinical images.
+
+**Task file:** `scripts/images/CLINE_IMAGE_TASK.md` - Contains 100+ conditions with search terms
+
+**Upload helper commands:**
+```bash
+# Upload single image
+npm run images:upload "https://example.com/image.jpg" ecg "Atrial Fibrillation" "Atrial Flutter,MAT,Sinus Arrhythmia"
+
+# Batch upload from JSON
+npm run images:batch images-to-upload.json
+
+# Test Supabase connection
+npm run images:test
+```
+
+**Workflow:**
+1. Use ImageSorcery MCP to search for clinical images
+2. Download promising results to local temp or get direct URL
+3. Use upload-helper.ts to upload to Supabase and create MediaAsset records
+4. All images go to `approvalStatus: 'pending'` for admin review
+
+**Priority categories:** ECG > Dermatology > Chest X-ray > Fractures > CT Head > Physical Exam
+
+## Drill Modes Requiring Images
+
+### Photo Drill (`use-photo-drill.ts`)
+- Uses MediaAsset with `type` in ('ecg', 'derm', 'xray')
+- Requires: `correctDiagnosis`, `distractors[]`, `clinicalContext`
+- API: `/api/drills/media`
+
+### ECG Drill
+- Uses ECGPattern table with `exampleImageUrls[]`
+- Each pattern can have multiple example images
+- Images stored in Supabase under `ecg/` folder
+
+### Imaging Drill
+- Uses ImagingStudy table (no direct images yet)
+- NEEDS: Image examples added to ImagingStudy or linked via MediaAsset
+
+### Lab Drill
+- Uses LabCase table with lab panel images
+- Images stored under `labs/` folder
+
+## Key Files
+
+### Services
+- `services/mediaStorageService.ts` - Upload/retrieve from Supabase
+- `services/mediaApprovalService.ts` - Approval workflow
+- `services/imageQualityService.ts` - Quality assessment
+
+### APIs
+- `functions/api/drills/media.ts` - Get photo drill questions
+- `functions/api/admin/media/` - Media management endpoints
+
+### Components
+- `components/PhotoDrillSession.tsx` - Photo drill UI
+- `components/drill/ECGDrillSession.tsx` - ECG drill UI
+- `components/admin/MediaApprovalDashboard.tsx` - Admin UI (TODO)
+
+## Environment Variables
+```
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ... (server only)
+DATABASE_URL=postgresql://...
+```
+
+## Common Tasks
+
+### Add Images to a Condition
+1. Upload image via admin UI or API
+2. Link to condition via `conditionId` in MediaAsset
+3. Set `correctDiagnosis` and `distractors` for drill use
+4. Image appears in relevant drill mode after approval
+
+### Add ECG Pattern Images
+1. Upload to `ecg/` folder in Supabase Storage
+2. Update ECGPattern record with URL in `exampleImageUrls[]`
+
+### Add Imaging Study Examples
+1. Upload to `radiology/` folder
+2. Create MediaAsset linked to imaging study
+3. Or add `exampleImageUrl` field to ImagingStudy table
+
+## Code Style
+- Use TypeScript strict mode
+- Prefer async/await over .then()
+- Use Lucide icons
+- Clinical palette: slate text, blue accents
+- Mobile-first responsive design
+- All questions fixed at PANCE-level difficulty
+
+## DO NOT
+- Import static JSON for content (database-only)
+- Use Express server.ts patterns (legacy)
+- Prefix secrets with VITE_ (except Clerk publishable key)
+- Create files without proper TypeScript types
+- Skip error handling in API endpoints

@@ -7,7 +7,7 @@ import Loader from "./components/Loader";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import { LandingPage } from "./components/LandingPage";
 import { LoadingProgress } from "./components/LoadingProgress";
-import { prefetchQuestions } from "./services/geminiService";
+import { getQuestionBatch } from "./services/questionService";
 import { useUserStats } from "./hooks/useUserStats";
 import { preloadData } from "./lib/utils/dataLoader";
 import { useAccessibleTransition } from "./hooks/useReducedMotion";
@@ -71,6 +71,10 @@ const CommandCenterHub = lazy(() => import("./components/CommandCenterHub"));
 const TrainingMenu = lazy(() => import("./components/dashboard/TrainingMenu"));
 const SimulationPage = lazy(() => import("./pages/SimulationPage").then(m => ({ default: m.SimulationPage })));
 const CommandCenterPage = lazy(() => import("./pages/CommandCenterPage").then(m => ({ default: m.CommandCenterPage })));
+const ClinicalReferenceLibrary = lazy(() => import("./components/library/ClinicalReferenceLibrary"));
+
+// Non-lazy components that should always be available
+import { OfflineSyncIndicator } from "./components/OfflineSyncIndicator";
 
 const PERFORMANCE_KEY = "panceai_performance_v2";
 const MISSED_KEY = "panceai_missed_v2";
@@ -99,7 +103,7 @@ const DRILL_MODE_VENTILATOR: TrainingModeId = 'ventilator_hero';
 const DRILL_MODE_PHYSIOLOGY: TrainingModeId = 'physiology_drill';
 const DRILL_MODE_ANATOMY: TrainingModeId = 'anatomy_review';
 
-type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "system_drill" | "subcategory_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "ventilator_hero" | "physiology_drill" | "anatomy_review" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "training_menu" | "simulation_page" | "command_center_page";
+type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "system_drill" | "subcategory_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "ventilator_hero" | "physiology_drill" | "anatomy_review" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "training_menu" | "simulation_page" | "command_center_page" | "reference_library";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -383,10 +387,11 @@ const App: React.FC = () => {
         setQuestionQueue(flaggedQuestions);
         setView("quiz");
       } else {
-        const initialQuestions = await prefetchQuestions(
-          INITIAL_QUEUE_SIZE,
+        // Use questionService which tries database pool first, then Gemini
+        const initialQuestions = await getQuestionBatch(
           settings,
-          growthAreas
+          growthAreas,
+          INITIAL_QUEUE_SIZE
         );
         setQuestionQueue(initialQuestions);
         setView("quiz");
@@ -583,6 +588,8 @@ const App: React.FC = () => {
             </span>
           </motion.button>
           <div className="flex items-center gap-2">
+            {/* Offline Sync Status Indicator */}
+            <OfflineSyncIndicator />
             <motion.button
               onClick={() => setIsSettingsModalOpen(true)}
               className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
@@ -1039,7 +1046,25 @@ const App: React.FC = () => {
                   onNavigateToToolkit={() => setView("toolkit")}
                   onNavigateToGapAnalysis={() => setView("gap_analysis")}
                   onNavigateToIntegrations={() => setView("integrations")}
+                  onNavigateToReference={() => setView("reference_library")}
                   onBack={() => setView("command_center")}
+                />
+              </Suspense>
+            </motion.div>
+          )}
+
+          {view === "reference_library" && (
+            <motion.div
+              key="reference_library"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <Suspense fallback={<Loader />}>
+                <ClinicalReferenceLibrary 
+                  onExit={() => setView("command_center")}
                 />
               </Suspense>
             </motion.div>

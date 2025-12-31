@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
 import { Sparkles, Gauge, Clock, TrendingUp, Activity } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 
 interface AnalyticsDashboardProps {
   performanceData: PerformanceRecord[];

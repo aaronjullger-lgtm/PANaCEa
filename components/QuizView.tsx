@@ -9,10 +9,10 @@ import React, {
 import { motion, AnimatePresence } from "framer-motion";
 import { useShortcut } from "../src/context/ShortcutContext";
 import { useUser } from "@clerk/clerk-react";
-import {
-  fetchNewQuestion,
-  generateAlternateRationale,
-} from "../services/geminiService";
+import { generateAlternateRationale } from "../services/geminiService";
+import { getQuestion } from "../services/questionService";
+import { recordQuestionAttempt } from "../services/attemptService";
+import { FlagQuestionModal } from "./FlagQuestionModal";
 import type {
   Question,
   PerformanceRecord,
@@ -21,6 +21,7 @@ import type {
 } from "../types";
 import { CloseIcon } from "./icons/CloseIcon";
 import { FlagIcon } from "./icons/FlagIcon";
+import { AlertTriangle, BarChart3 } from "lucide-react";
 import { ArrowLeftIcon } from "./icons/ArrowLeftIcon";
 import { ClearHighlightIcon } from "./icons/ClearHighlightIcon";
 import AnswerChoice from "./quiz/AnswerChoice";
@@ -32,6 +33,34 @@ import { feedback } from "../services/feedbackService";
 import { updateReviewOutcome, type SRSScheduleResult } from "../lib/services/srsService";
 import { calculateParTime } from '../lib/utils/questionComplexity';
 import { SRSFeedbackBadge } from "./quiz/SRSFeedbackBadge";
+import { useAuth } from "../hooks/useAuth";
+// Sprint 4: Enhanced session components
+import { 
+  SessionStatsOverlay, 
+  AnswerFeedback, 
+  SessionEndSummary, 
+  useAnswerFeedback,
+  QuestionTimer,
+  DifficultyIndicator,
+  QuickStatsMiniBar,
+  SessionInsightsPanel,
+  MomentumBadge,
+  StreakBadge,
+  SmartPauseIndicator,
+  EncouragementToast,
+  CognitiveStateIndicator,
+} from "./quiz";
+import { recordQuestion, getSessionSummary, resetSessionDistribution } from "../services/panceDistributionService";
+import { 
+  inferConfidence, 
+  recordBehavioralConfidence,
+  type BehaviorSignals,
+} from "../services/behavioralConfidenceService";
+import { recordMomentumResult } from "../services/sessionMomentumService";
+import { recordAnswerPattern } from "../services/answerPatternService";
+import { updatePerformancePrediction, resetPrediction } from "../services/performancePredictionService";
+import { recordPauseResult, resetPauseTracking } from "../services/smartPauseService";
+import { useAdvancedAnalytics } from "../hooks/useAdvancedAnalytics";
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -213,8 +242,12 @@ const QuizView: React.FC<QuizViewProps> = ({
   removeFlaggedQuestion,
   updateQuestionNote,
 }) => {
-  // ---- CLERK USER ----
+  // ---- CLERK USER & AUTH ----
   const { user } = useUser();
+  const { getToken } = useAuth();
+  
+  // ---- ADVANCED ANALYTICS ----
+  const { recordQuestionResult, cognitiveState, recommendations } = useAdvancedAnalytics();
 
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
@@ -242,8 +275,15 @@ const QuizView: React.FC<QuizViewProps> = ({
   // Track eliminated answers (by index) for the current question
   const [eliminatedAnswers, setEliminatedAnswers] = useState<Set<number>>(new Set());
 
+  // Track answer changes for analytics
+  const [answerChangeCount, setAnswerChangeCount] = useState<number>(0);
+  const [firstSelectedAnswer, setFirstSelectedAnswer] = useState<number | null>(null);
+
   // Track if we're actively generating a question in the background
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+
+  // Report issue modal state
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // Wellness check state and constants
   const WELLNESS_CHECK_QUESTION_THRESHOLD = 30;
@@ -255,6 +295,14 @@ const QuizView: React.FC<QuizViewProps> = ({
   const [wellnessReason, setWellnessReason] = useState<'rapid_questions' | 'late_night' | 'manual'>('rapid_questions');
   const questionsAnsweredInSession = useRef(0);
   const sessionStartTime = useRef(Date.now());
+
+  // Sprint 4: Enhanced session state
+  const [showStatsOverlay, setShowStatsOverlay] = useState(false);
+  const [showSessionEndSummary, setShowSessionEndSummary] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [showTimer, setShowTimer] = useState(true);
+  const answerFeedback = useAnswerFeedback();
+  const [behavioralRefreshKey, setBehavioralRefreshKey] = useState(0);
 
   const noteUpdateTimeout = useRef<number | null>(null);
   const optionButtonsRef = useRef<(HTMLButtonElement | null)[]>([]);
@@ -285,6 +333,24 @@ const QuizView: React.FC<QuizViewProps> = ({
     sessionSettings.focus !== "review" &&
     sessionSettings.focus !== "reviewFlagged";
 
+  // Sprint 4: Handler to show session end summary before ending
+  const handleEndSession = useCallback(() => {
+    // For finite sessions (review mode), show the session end summary
+    if (!shouldEndlesslyReplenish || performanceData.length >= 5) {
+      setShowSessionEndSummary(true);
+    } else {
+      // For continuous sessions with few questions, just end directly
+      onEndSession();
+    }
+  }, [onEndSession, shouldEndlesslyReplenish, performanceData.length]);
+
+  // Sprint 4: Handler for stats overlay toggle with keyboard shortcut
+  useShortcut(
+    'TOGGLE_STATS',
+    () => setShowStatsOverlay(prev => !prev),
+    { enabled: true }
+  );
+
   // ---- REPLENISH QUEUE (ALL / GROWTH / TOPIC) ----
   const replenishQueue = useCallback(async () => {
   // Do NOT show the global loader here – this is background work
@@ -292,7 +358,8 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   setIsGeneratingQuestion(true);
   try {
-    const newQuestion = await fetchNewQuestion(sessionSettings, growthAreas);
+    // Use questionService which tries pool first, then falls back to Gemini
+    const newQuestion = await getQuestion(sessionSettings, growthAreas);
 
     // keep both queues in sync
     setParentQueue((prev) => [...prev, newQuestion]);
@@ -325,6 +392,8 @@ const QuizView: React.FC<QuizViewProps> = ({
     setEliminatedAnswers(new Set()); // Reset eliminated answers for new question
     setSrsResult(null); // Reset SRS result for new question
     setQuestionStartTime(Date.now()); // Track time for new question
+    setAnswerChangeCount(0); // Reset answer change tracking
+    setFirstSelectedAnswer(null); // Reset first selected answer
 
     setQueue((prev) => {
       if (prev.length === 0) return prev;
@@ -334,9 +403,9 @@ const QuizView: React.FC<QuizViewProps> = ({
 
       setParentQueue(newQueue);
 
-      // Finite sessions: REVIEW / REVIEW FLAGGED
+      // Finite sessions: REVIEW / REVIEW FLAGGED - show summary instead of direct end
       if (!shouldEndlesslyReplenish && newQueue.length === 0) {
-        onEndSession();
+        handleEndSession();
       }
 
       return newQueue;
@@ -350,7 +419,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     setParentQueue,
     shouldEndlesslyReplenish,
     replenishQueue,
-    onEndSession,
+    handleEndSession,
   ]);
 
   // Initialize from incoming queue once
@@ -383,12 +452,82 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     setIsAnswered(true);
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
+    const timeToAnswer = Date.now() - questionStartTime;
+    const parTime = calculateParTime(currentQuestion);
+
+    // Sprint 4: Record behavioral confidence (auto-inferred, no manual input)
+    const behaviorSignals: BehaviorSignals = {
+      timeSpentMs: timeToAnswer,
+      parTimeMs: parTime,
+      answerChangeCount,
+      eliminatedCount: eliminatedAnswers.size,
+      quickInitialSelection: firstSelectedAnswer !== null && 
+        (Date.now() - questionStartTime) < parTime * 0.5,
+    };
+    recordBehavioralConfidence(behaviorSignals, isCorrect);
+    
+    // Sprint 4: Record momentum data
+    recordMomentumResult(isCorrect, timeToAnswer, parTime);
+    
+    // Sprint 4: Record answer pattern for post-session analysis
+    recordAnswerPattern({
+      questionId: currentQuestion.id || `temp-${questionNumber}`,
+      firstAnswer: firstSelectedAnswer ?? selectedAnswerIndex,
+      finalAnswer: selectedAnswerIndex,
+      correctAnswer: currentQuestion.correctAnswerIndex,
+      timeSpentMs: timeToAnswer,
+      parTimeMs: parTime,
+      eliminatedCount: eliminatedAnswers.size,
+      answerChangeCount,
+      wasCorrect: isCorrect,
+    });
+    
+    // Sprint 4: Update performance prediction
+    updatePerformancePrediction({
+      correct: isCorrect,
+      timeSpentMs: timeToAnswer,
+      parTimeMs: parTime,
+      system: currentQuestion.system,
+      questionNumber,
+      inferredConfidence: inferConfidence(behaviorSignals),
+    });
+    
+    // Sprint 4: Record for smart pause detection
+    recordPauseResult({
+      correct: isCorrect,
+      timeSpentMs: timeToAnswer,
+      parTimeMs: parTime,
+    });
+    
+    // Advanced analytics: Record comprehensive question result
+    recordQuestionResult(
+      currentQuestion.id || `temp-${questionNumber}`,
+      isCorrect,
+      timeToAnswer,
+      parTime,
+      currentQuestion.system || 'Unknown',
+      currentQuestion.difficulty || 'medium',
+      inferConfidence(behaviorSignals)
+    );
+    
+    setBehavioralRefreshKey(k => k + 1);
 
     // Trigger sensory feedback (haptic + optional sound)
     if (isCorrect) {
       feedback.correct();
+      // Sprint 4: Trigger answer feedback animation and update streak
+      answerFeedback.triggerCorrect(currentStreak + 1);
+      setCurrentStreak(prev => prev + 1);
     } else {
       feedback.incorrect();
+      // Sprint 4: Trigger incorrect animation and reset streak
+      answerFeedback.triggerIncorrect();
+      setCurrentStreak(0);
+    }
+
+    // Sprint 4: Record question for PANCE distribution tracking
+    if (currentQuestion.system) {
+      recordQuestion(currentQuestion.system, isCorrect);
     }
 
     if (sessionSettings.focus === "review") {
@@ -407,6 +546,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Record detailed performance, including system/subcategory/condition
     const timestamp = Date.now();
+    
     addPerformanceRecord({
       timestamp,
       system: currentQuestion.system ?? null,
@@ -418,7 +558,25 @@ const QuizView: React.FC<QuizViewProps> = ({
       focus: sessionSettings.focus,
       difficulty: sessionSettings.difficulty,
       questionWordCount,
+      timeSpentMs: timeToAnswer,
     });
+
+    // Record attempt to database (non-blocking)
+    if (currentQuestion.id) {
+      getToken().then(token => {
+        recordQuestionAttempt({
+          questionId: currentQuestion.id!,
+          wasCorrect: isCorrect,
+          system: currentQuestion.system || currentQuestion.topic,
+          conditionId: currentQuestion.conditionId,
+          mode: 'session',
+          timeSpentMs: timeToAnswer,
+          answerChangedCount: answerChangeCount,
+        }, token).catch(err => {
+          console.warn('[QuizView] Failed to record attempt to database:', err);
+        });
+      });
+    }
 
     // Record circadian performance data
     recordCircadianPerformance({
@@ -429,8 +587,6 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     // Update SRS schedule (if user is authenticated)
     if (user?.id && currentQuestion.id) {
-      const timeToAnswer = Date.now() - questionStartTime;
-      
       // Calculate complexity-aware par time based on word count, images, and labs
       const baselineTime = calculateParTime(currentQuestion);
       const performanceRatio = timeToAnswer / baselineTime;
@@ -497,7 +653,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       setWellnessReason('late_night');
       setShowWellnessModal(true);
     }
-  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance, user, questionStartTime, performanceData]);
+  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance, user, questionStartTime, performanceData, getToken, answerFeedback, currentStreak, answerChangeCount, eliminatedAnswers, firstSelectedAnswer]);
 
   // Keyboard shortcuts using centralized shortcut context
   // FLIP_CARD: Toggle showing the explanation/rationale after answering
@@ -579,6 +735,15 @@ const QuizView: React.FC<QuizViewProps> = ({
   const handleOptionClick = (index: number) => {
     // Guard against selecting eliminated answers or already answered questions
     if (isAnswered || !currentQuestion || eliminatedAnswers.has(index)) return;
+
+    // Track answer changes
+    if (firstSelectedAnswer === null) {
+      // First selection
+      setFirstSelectedAnswer(index);
+    } else if (selectedAnswerIndex !== null && selectedAnswerIndex !== index) {
+      // Changed answer
+      setAnswerChangeCount(prev => prev + 1);
+    }
 
     // Just select the option, don't submit yet
     setSelectedAnswerIndex(index);
@@ -679,10 +844,10 @@ const QuizView: React.FC<QuizViewProps> = ({
             Back to Dashboard
           </button>
           <button
-            onClick={onEndSession}
+            onClick={handleEndSession}
             className="btn-secondary px-6 py-2"
           >
-            End Session
+            View Summary
           </button>
         </div>
       </div>
@@ -702,13 +867,55 @@ const QuizView: React.FC<QuizViewProps> = ({
             >
               <ArrowLeftIcon className="w-6 h-6 text-[var(--color-text-secondary)]" />
             </button>
-            <p className="text-sm font-medium text-[var(--color-text-muted)] truncate">
-              Question {questionNumber}
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="text-sm font-medium text-[var(--color-text-muted)] truncate">
+                Question {questionNumber}
+              </p>
+              {/* Sprint 4: Momentum Badge (compact) */}
+              {questionNumber > 3 && (
+                <MomentumBadge refreshKey={behavioralRefreshKey} />
+              )}
+              {/* Sprint 4: Streak Badge */}
+              {currentStreak >= 3 && (
+                <StreakBadge streak={currentStreak} />
+              )}
+              {/* Sprint 4: Question Timer */}
+              {currentQuestion && (
+                <QuestionTimer
+                  startTime={questionStartTime}
+                  parTimeMs={calculateParTime(currentQuestion)}
+                  isAnswered={isAnswered}
+                  isVisible={showTimer}
+                  compact
+                />
+              )}
+            </div>
           </div>
 
           <div className="flex items-center space-x-2 flex-shrink-0">
-            {/* Flag */}
+            {/* Sprint 4: Session Stats Toggle */}
+            <button
+              onClick={() => setShowStatsOverlay(prev => !prev)}
+              title="Toggle session stats (S)"
+              className={`p-1.5 rounded-full transition-colors border ${
+                showStatsOverlay
+                  ? "bg-blue-100 text-blue-700 border-blue-300"
+                  : "bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+              }`}
+            >
+              <BarChart3 className="w-5 h-5" />
+            </button>
+
+            {/* Report Issue - for reporting bad questions to admins */}
+            <button
+              onClick={() => setShowReportModal(true)}
+              title="Report an issue with this question"
+              className="p-1.5 rounded-full transition-colors border bg-[var(--color-card-bg)] text-slate-600 border-[var(--color-border)] hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+            >
+              <AlertTriangle className="w-5 h-5" />
+            </button>
+
+            {/* Flag for personal review */}
             <button
               onClick={toggleFlag}
               title={isFlagged ? "Unflag for review" : "Flag for review"}
@@ -769,7 +976,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
             {/* End session */}
             <button
-              onClick={onEndSession}
+              onClick={handleEndSession}
               title="End Session"
               className="p-1.5 rounded-full bg-[var(--color-card-bg)] border border-[var(--color-border)] text-slate-600 hover:bg-red-50 hover:border-red-400 hover:text-red-600 transition-colors"
             >
@@ -808,7 +1015,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
       {/* SUBMIT BUTTON - Only show when answer is selected but not yet submitted */}
       {!isAnswered && selectedAnswerIndex !== null && (
-        <div className="mt-6 text-center animate-fade-in">
+        <div className="mt-6 text-center animate-fade-in space-y-4">
           <button
             onClick={handleSubmitAnswer}
             className="btn-glass px-8 py-3"
@@ -957,11 +1164,107 @@ const QuizView: React.FC<QuizViewProps> = ({
         </div>
       )}
 
+      {/* Sprint 4: Quick Stats Mini-bar (when full overlay is closed) */}
+      {!showStatsOverlay && performanceData.length > 0 && (
+        <div className="mt-6">
+          <QuickStatsMiniBar
+            performanceData={performanceData}
+            currentQuestionNumber={questionNumber}
+            sessionStartTime={sessionStartTime.current}
+          />
+        </div>
+      )}
+
+      {/* Sprint 4: Session Insights Panel (behavioral analytics) */}
+      {performanceData.length >= 3 && (
+        <div className="mt-4">
+          <SessionInsightsPanel refreshKey={behavioralRefreshKey} />
+        </div>
+      )}
+      
+      {/* Sprint 4: Smart Pause Indicator */}
+      {performanceData.length >= 5 && (
+        <SmartPauseIndicator refreshKey={behavioralRefreshKey} />
+      )}
+      
+      {/* Advanced Analytics: Cognitive State Indicator */}
+      {performanceData.length >= 3 && cognitiveState && (
+        <div className="fixed bottom-4 right-4 z-40">
+          <CognitiveStateIndicator cognitiveState={cognitiveState} compact />
+        </div>
+      )}
+      
+      {/* Sprint 4: Encouragement Toast */}
+      <EncouragementToast refreshKey={behavioralRefreshKey} />
+
       {/* Wellness Check Modal */}
       <WellnessCheckModal
         isOpen={showWellnessModal}
         onClose={() => setShowWellnessModal(false)}
         reason={wellnessReason}
+      />
+
+      {/* Report Question Issue Modal */}
+      {currentQuestion && (
+        <FlagQuestionModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          questionId={currentQuestion.id || `temp-${Date.now()}`}
+          questionText={currentQuestion.question}
+          correctAnswer={currentQuestion.answers?.[currentQuestion.correctIndex]}
+          topic={currentQuestion.topic}
+          system={currentQuestion.system || undefined}
+          userId={user?.id || 'anonymous'}
+          userEmail={user?.primaryEmailAddress?.emailAddress}
+          userFirstName={user?.firstName || undefined}
+        />
+      )}
+
+      {/* Sprint 4: Answer Feedback Animation */}
+      <AnswerFeedback
+        isCorrect={answerFeedback.isCorrect}
+        showFeedback={answerFeedback.showFeedback}
+        streak={currentStreak}
+      />
+
+      {/* Sprint 4: Session Stats Overlay */}
+      <SessionStatsOverlay
+        isOpen={showStatsOverlay}
+        onToggle={() => setShowStatsOverlay(prev => !prev)}
+        performanceData={performanceData}
+        currentQuestionNumber={questionNumber}
+      />
+
+      {/* Sprint 4: Session End Summary */}
+      <SessionEndSummary
+        isOpen={showSessionEndSummary}
+        onClose={() => {
+          setShowSessionEndSummary(false);
+          resetSessionDistribution();
+          resetPrediction();
+          resetPauseTracking();
+          onEndSession();
+        }}
+        performanceData={performanceData}
+        sessionSummary={getSessionSummary()}
+        sessionStartTime={sessionStartTime.current}
+        sessionSettings={{
+          mode: sessionSettings.mode,
+          focus: sessionSettings.focus,
+          difficulty: sessionSettings.difficulty,
+        }}
+        onContinueStudying={() => {
+          setShowSessionEndSummary(false);
+          // Could restart session or stay on current screen
+        }}
+        onViewAnalytics={() => {
+          setShowSessionEndSummary(false);
+          resetSessionDistribution();
+          resetPrediction();
+          resetPauseTracking();
+          onEndSession();
+          // The analytics view would be shown by the parent component
+        }}
       />
     </div>
   );

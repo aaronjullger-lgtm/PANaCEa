@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import { labService } from '../../services/labService';
+import { useAuth } from '@clerk/clerk-react';
+import { fetchLabCases, getCachedDiagnoses } from '@/services/labCaseService';
 
 // ============================================================================
 // INTERFACES
@@ -79,134 +80,6 @@ export type LabCategory =
  * Game status states
  */
 export type MiniLabGameStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
-
-const SAMPLE_CASES: LabCase[] = [
-  {
-    id: 'sample-dka-001',
-    clinicalContext: 'An 18-year-old male with polyuria, polydipsia, abdominal pain, and vomiting.',
-    patientAge: 18,
-    patientSex: 'M',
-    panels: [
-      {
-        name: 'Basic Metabolic Panel',
-        values: [
-          { name: 'Glucose', value: '420', unit: 'mg/dL', referenceRange: '70-100', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Sodium', value: '130', unit: 'mEq/L', referenceRange: '136-145', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'Potassium', value: '5.6', unit: 'mEq/L', referenceRange: '3.5-5.0', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Chloride', value: '96', unit: 'mEq/L', referenceRange: '98-106', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'Bicarbonate', value: '10', unit: 'mEq/L', referenceRange: '22-28', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
-          { name: 'BUN', value: '28', unit: 'mg/dL', referenceRange: '7-20', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Creatinine', value: '1.6', unit: 'mg/dL', referenceRange: '0.7-1.3', isAbnormal: true, abnormalDirection: 'high' },
-        ],
-      },
-      {
-        name: 'Complete Blood Count',
-        values: [
-          { name: 'WBC', value: '14.2', unit: 'k/μL', referenceRange: '4.5-11.0', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Hemoglobin', value: '15.1', unit: 'g/dL', referenceRange: '12.0-16.0', isAbnormal: false },
-          { name: 'Platelets', value: '285', unit: 'k/μL', referenceRange: '150-400', isAbnormal: false },
-        ],
-      },
-      {
-        name: 'Liver Function Tests',
-        values: [
-          { name: 'AST', value: '28', unit: 'U/L', referenceRange: '10-40', isAbnormal: false },
-          { name: 'ALT', value: '32', unit: 'U/L', referenceRange: '7-56', isAbnormal: false },
-          { name: 'Alkaline Phosphatase', value: '78', unit: 'U/L', referenceRange: '44-147', isAbnormal: false },
-          { name: 'Total Bilirubin', value: '0.8', unit: 'mg/dL', referenceRange: '0.1-1.2', isAbnormal: false },
-          { name: 'Albumin', value: '4.2', unit: 'g/dL', referenceRange: '3.5-5.0', isAbnormal: false },
-        ],
-      },
-    ],
-    orderableTests: [
-      {
-        name: 'Arterial Blood Gas',
-        values: [
-          { name: 'pH', value: '7.18', unit: '', referenceRange: '7.35-7.45', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
-          { name: 'pCO2', value: '22', unit: 'mmHg', referenceRange: '35-45', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'HCO3', value: '8', unit: 'mEq/L', referenceRange: '22-26', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
-        ],
-      },
-      {
-        name: 'Ketones',
-        values: [
-          { name: 'Beta-hydroxybutyrate', value: '5.2', unit: 'mmol/L', referenceRange: '<0.6', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-          { name: 'Anion Gap', value: '24', unit: 'mEq/L', referenceRange: '8-12', isAbnormal: true, isCritical: true, abnormalDirection: 'high' },
-        ],
-      },
-      {
-        name: 'Urinalysis',
-        values: [
-          { name: 'Ketones in Urine', value: 'Large', unit: '', referenceRange: 'Negative', isAbnormal: true },
-          { name: 'Glucose in Urine', value: '1000', unit: 'mg/dL', referenceRange: 'Negative', isAbnormal: true, abnormalDirection: 'high' },
-        ],
-      },
-    ],
-    orderedTests: [],
-    correctDiagnosis: 'Diabetic Ketoacidosis',
-    keyFindings: [
-      'Hyperglycemia',
-      'High anion gap metabolic acidosis',
-      'Ketonemia/ketonuria',
-      'Dehydration/AKI pattern',
-    ],
-    explanation: 'Classic DKA: hyperglycemia + ketosis + metabolic acidosis. Initial hyperkalemia can occur despite total body potassium depletion.',
-    category: 'metabolic',
-  },
-  {
-    id: 'sample-ida-001',
-    clinicalContext: 'A 35-year-old woman with fatigue, pallor, and exertional dyspnea. Heavy menses.',
-    patientAge: 35,
-    patientSex: 'F',
-    panels: [
-      {
-        name: 'Complete Blood Count',
-        values: [
-          { name: 'Hemoglobin', value: '8.2', unit: 'g/dL', referenceRange: '12.0-16.0', isAbnormal: true, isCritical: true, abnormalDirection: 'low' },
-          { name: 'MCV', value: '68', unit: 'fL', referenceRange: '80-100', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'RDW', value: '18.5', unit: '%', referenceRange: '11.5-14.5', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Platelets', value: '420', unit: 'K/uL', referenceRange: '150-400', isAbnormal: true, abnormalDirection: 'high' },
-        ],
-      },
-      {
-        name: 'Basic Metabolic Panel',
-        values: [
-          { name: 'Sodium', value: '140', unit: 'mEq/L', referenceRange: '136-145', isAbnormal: false },
-          { name: 'Potassium', value: '4.2', unit: 'mEq/L', referenceRange: '3.5-5.0', isAbnormal: false },
-          { name: 'Creatinine', value: '0.9', unit: 'mg/dL', referenceRange: '0.7-1.3', isAbnormal: false },
-        ],
-      },
-      {
-        name: 'Liver Function Tests',
-        values: [
-          { name: 'AST', value: '22', unit: 'U/L', referenceRange: '10-40', isAbnormal: false },
-          { name: 'ALT', value: '18', unit: 'U/L', referenceRange: '7-56', isAbnormal: false },
-          { name: 'Albumin', value: '4.0', unit: 'g/dL', referenceRange: '3.5-5.0', isAbnormal: false },
-        ],
-      },
-    ],
-    orderableTests: [
-      {
-        name: 'Iron Studies',
-        values: [
-          { name: 'Serum Iron', value: '28', unit: 'µg/dL', referenceRange: '60-170', isAbnormal: true, abnormalDirection: 'low' },
-          { name: 'TIBC', value: '450', unit: 'µg/dL', referenceRange: '250-370', isAbnormal: true, abnormalDirection: 'high' },
-          { name: 'Ferritin', value: '6', unit: 'ng/mL', referenceRange: '12-150', isAbnormal: true, abnormalDirection: 'low' },
-        ],
-      },
-    ],
-    orderedTests: [],
-    correctDiagnosis: 'Iron Deficiency Anemia',
-    keyFindings: ['Microcytosis', 'High RDW', 'Low ferritin pattern'],
-    explanation: 'Microcytic anemia with low ferritin is diagnostic of iron deficiency anemia.',
-    category: 'hematology',
-  },
-];
-
-function getCasesByCategory(category: LabCategory): LabCase[] {
-  if (category === 'random') return SAMPLE_CASES;
-  return SAMPLE_CASES.filter(c => c.category === category);
-}
 
 // ============================================================================
 // MASTER DIAGNOSIS LIST FOR MINI LAB MODE
@@ -637,11 +510,6 @@ function mapDbCaseToUiCase(dbCase: any): LabCase {
   };
 }
 
-function getDiagnosesByCategory(category: LabCategory): string[] {
-  const cases = getCasesByCategory(category);
-  return [...new Set(cases.map(c => c.correctDiagnosis))];
-}
-
 // ============================================================================
 // RANDOM CASE GENERATOR
 // ============================================================================
@@ -682,20 +550,19 @@ function randomizePatient(originalAge: number, originalSex: 'M' | 'F'): { age: n
 }
 
 function generateRandomLabCase(sourceCases: LabCase[], category: LabCategory, recentDiagnoses?: Set<string>): LabCase {
+  // Filter by category if not random
   let availableCases = category === 'random' 
     ? sourceCases 
     : sourceCases.filter(c => c.category === category);
   
-  // Fallback to SAMPLE_CASES if no cases found (e.g. DB load failed or empty category)
+  // If no cases match the category, use all available cases
   if (availableCases.length === 0) {
-    availableCases = category === 'random' 
-      ? SAMPLE_CASES 
-      : SAMPLE_CASES.filter(c => c.category === category);
+    availableCases = sourceCases;
   }
   
-  // Ultimate fallback
+  // Must have at least one case
   if (availableCases.length === 0) {
-    availableCases = SAMPLE_CASES;
+    throw new Error('No lab cases available');
   }
   
   // Try to find a case with a diagnosis we haven't seen recently
@@ -752,6 +619,10 @@ export interface UseMiniLabDrillReturn {
   selectedCategory: LabCategory;
   /** Valid diagnoses for type-ahead search */
   validDiagnoses: string[];
+  /** Whether data is loading */
+  isLoading: boolean;
+  /** Error message if load failed */
+  loadError: string | null;
   /** Submit an answer */
   submitAnswer: (answer: string) => void;
   /** Move to next case */
@@ -774,10 +645,13 @@ const INITIAL_QUEUE_SIZE = 3;
 const MAX_RECENT_DIAGNOSES = 10; // Track last 10 diagnoses to avoid repetition
 
 export function useMiniLabDrill(): UseMiniLabDrillReturn {
+  const { getToken } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<LabCategory>('random');
   const [queue, setQueue] = useState<LabCase[]>([]);
   const [dbCases, setDbCases] = useState<LabCase[]>([]);
+  const [dbDiagnoses, setDbDiagnoses] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -788,27 +662,36 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   // Track recently used diagnoses to avoid repetition
   const recentDiagnosesRef = useRef<Set<string>>(new Set());
 
-  // Fetch cases on mount
+  // Fetch cases and diagnoses on mount - DATABASE FIRST, no static fallback
   useEffect(() => {
     const fetchCases = async () => {
       setIsLoading(true);
+      setLoadError(null);
       try {
-        const cases = await labService.getAllCases();
-        const mappedCases = cases.map(mapDbCaseToUiCase);
-        if (mappedCases.length > 0) {
-          setDbCases(mappedCases);
+        const token = await getToken();
+        
+        // Fetch cases from the database API
+        const cases = await fetchLabCases('random', 50, token);
+        if (cases.length > 0) {
+          setDbCases(cases);
         } else {
-          setDbCases(SAMPLE_CASES); // Fallback
+          setLoadError('No lab cases found in database. Please contact admin.');
+        }
+        
+        // Fetch diagnoses for autocomplete
+        const diagnoses = await getCachedDiagnoses(token);
+        if (diagnoses.length > 0) {
+          setDbDiagnoses(diagnoses);
         }
       } catch (error) {
-        console.error("Failed to fetch lab cases", error);
-        setDbCases(SAMPLE_CASES); // Fallback
+        console.error("Failed to fetch lab cases from database", error);
+        setLoadError(error instanceof Error ? error.message : 'Failed to load lab cases');
       } finally {
         setIsLoading(false);
       }
     };
     fetchCases();
-  }, []);
+  }, [getToken]);
 
   const currentCase = queue[currentIndex] ?? null;
   
@@ -822,15 +705,22 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   }, [currentCase]);
 
   const validDiagnoses = useMemo(() => {
-    if (selectedCategory === 'random') {
-      return MINI_LAB_DIAGNOSES;
+    // Use database diagnoses if available, otherwise fall back to cases' diagnoses
+    if (dbDiagnoses.length > 0) {
+      return dbDiagnoses;
     }
-    return getDiagnosesByCategory(selectedCategory);
-  }, [selectedCategory]);
+    // Extract unique diagnoses from loaded cases
+    return [...new Set(dbCases.map(c => c.correctDiagnosis))].sort();
+  }, [dbDiagnoses, dbCases]);
 
-  const generateNewCase = useCallback((category: LabCategory): LabCase => {
-    const source = dbCases.length > 0 ? dbCases : SAMPLE_CASES;
-    const labCase = generateRandomLabCase(source, category, recentDiagnosesRef.current);
+  const generateNewCase = useCallback((category: LabCategory): LabCase | null => {
+    // Database-first: only use database cases
+    if (dbCases.length === 0) {
+      console.warn('No lab cases available from database');
+      return null;
+    }
+    
+    const labCase = generateRandomLabCase(dbCases, category, recentDiagnosesRef.current);
     
     // Add to recent diagnoses and maintain max size
     recentDiagnosesRef.current.add(labCase.correctDiagnosis);
@@ -843,12 +733,25 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   }, [dbCases]);
 
   const startSession = useCallback((category: LabCategory) => {
+    if (dbCases.length === 0) {
+      setLoadError('Cannot start session: No lab cases available');
+      return;
+    }
+    
     setSelectedCategory(category);
     recentDiagnosesRef.current.clear(); // Clear history on new session
     
     const initialQueue: LabCase[] = [];
     for (let i = 0; i < INITIAL_QUEUE_SIZE; i++) {
-      initialQueue.push(generateNewCase(category));
+      const newCase = generateNewCase(category);
+      if (newCase) {
+        initialQueue.push(newCase);
+      }
+    }
+    
+    if (initialQueue.length === 0) {
+      setLoadError('Failed to generate lab cases');
+      return;
     }
     
     setQueue(initialQueue);
@@ -858,7 +761,7 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     setUserAnswer(null);
     setIsCorrect(null);
     setStatus('playing');
-  }, [generateNewCase]);
+  }, [generateNewCase, dbCases.length]);
 
   const showCategoryMenu = useCallback(() => {
     setStatus('menu');
@@ -894,7 +797,9 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
 
   const nextCase = useCallback(() => {
     const newCase = generateNewCase(selectedCategory);
-    setQueue(prev => [...prev, newCase]);
+    if (newCase) {
+      setQueue(prev => [...prev, newCase]);
+    }
     setCurrentIndex(prev => prev + 1);
     setUserAnswer(null);
     setIsCorrect(null);
@@ -957,6 +862,8 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     status,
     selectedCategory,
     validDiagnoses,
+    isLoading,
+    loadError,
     submitAnswer,
     nextCase,
     reset,

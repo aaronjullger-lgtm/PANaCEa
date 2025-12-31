@@ -3,18 +3,21 @@
  * 
  * Focuses exclusively on ECG rhythm strips and 12-lead interpretation.
  * Uses PhotoDrill infrastructure with ECG-only filtering.
+ * Enhanced with database-linked reference material in feedback.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoDrill } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
+import { EnhancedFeedbackPanel } from '@/components/drill/EnhancedFeedbackPanel';
 import { Activity, X, ArrowRight, RotateCcw, Heart, TrendingUp, Zap } from 'lucide-react';
 
 interface ECGDrillSessionProps {
   onExit?: () => void;
+  onNavigateToReference?: (type: string, id: string) => void;
 }
 
 /**
@@ -22,7 +25,10 @@ interface ECGDrillSessionProps {
  * 
  * Dedicated ECG interpretation training with rhythm recognition and 12-lead analysis
  */
-const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit }) => {
+const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ 
+  onExit,
+  onNavigateToReference,
+}) => {
   const {
     currentCase,
     score,
@@ -37,6 +43,15 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit }) => {
     exitToMenu,
     validDiagnoses,
   } = usePhotoDrill();
+  
+  const [useEnhancedFeedback, setUseEnhancedFeedback] = useState(true);
+  
+  // Handler for deep dive into reference material
+  const handleDeepDive = useCallback((type: string, id: string) => {
+    if (onNavigateToReference) {
+      onNavigateToReference(type, id);
+    }
+  }, [onNavigateToReference]);
 
   // Auto-start ECG-only mode
   useEffect(() => {
@@ -132,65 +147,18 @@ const ECGDrillSession: React.FC<ECGDrillSessionProps> = ({ onExit }) => {
         )}
 
         {status === 'feedback' && currentCase && (
-          <motion.div
-            key="feedback-controls"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className={`p-4 ${
-              isCorrect
-                ? 'bg-emerald-100 dark:bg-emerald-950/50 border-t-2 border-emerald-500'
-                : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'
-            }`}
-          >
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div
-                    className={`text-lg font-bold ${
-                      isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'
-                    }`}
-                  >
-                    {isCorrect ? 'Correct!' : 'Incorrect'}
-                  </div>
-                  {!isCorrect && (
-                    <div className="text-sm text-[var(--color-text-secondary)] mt-1">
-                      Correct answer:{' '}
-                      <span className="font-semibold text-[var(--color-text-primary)]">
-                        {currentCase.correctDiagnosis}
-                      </span>
-                    </div>
-                  )}
-                  {userAnswer && !isCorrect && (
-                    <div className="text-sm text-[var(--color-text-muted)] mt-0.5">
-                      Your answer: {userAnswer}
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={nextCase}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
-                    isCorrect
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                      : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  Next ECG
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              {currentCase.explanation && (
-                <div className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] rounded-lg p-3">
-                  <span className="font-medium text-[var(--color-text-primary)]">
-                    Explanation:{' '}
-                  </span>
-                  {currentCase.explanation}
-                </div>
-              )}
-            </div>
-          </motion.div>
+          <EnhancedFeedbackPanel
+            isCorrect={isCorrect || false}
+            correctAnswer={currentCase.correctDiagnosis}
+            userAnswer={userAnswer}
+            explanation={currentCase.explanation || 'Review the ECG features carefully.'}
+            onNext={nextCase}
+            nextLabel="Next ECG"
+            category="ecg"
+            tags={[currentCase.correctDiagnosis, currentCase.category || 'cardiovascular']}
+            relatedConceptId={currentCase.correctDiagnosis}
+            onDeepDive={handleDeepDive}
+          />
         )}
       </AnimatePresence>
     );

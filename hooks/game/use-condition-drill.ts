@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { type ConditionQuestionType } from '@/data/conditionDrillData';
+import { type ConditionQuestionType } from '@/types/drill-modes';
 import type { QuestionDTO } from '@/lib/services/questionBankService';
 
 export type ConditionDrillStatus = 'landing' | 'menu' | 'playing' | 'coaching' | 'feedback' | 'summary';

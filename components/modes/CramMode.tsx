@@ -4,6 +4,8 @@
  * High-yield rapid review mode featuring the 50 most important PANCE conditions.
  * Generates PANCE-style clinical vignette questions using AI.
  * Optimized for last-minute review and quick knowledge reinforcement.
+ * 
+ * Database-First: Fetches high-yield conditions from PostgreSQL via /api/conditions/high-yield
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -21,10 +23,20 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { TOP_50_HIGH_YIELD_CONDITIONS, getRandomHighYield, type HighYieldCondition } from '../../data/highYieldConditions';
 import { callGeminiText } from '../../services/geminiService';
-import { GEMINI_FLASH_MODEL } from '../../constants';
-import type { SystemCode } from '../../types';
+import { GEMINI_FLASH_MODEL } from '@/src/constants';
+
+/**
+ * HighYieldCondition interface - matches database API response
+ * Source: /api/conditions/high-yield
+ */
+export interface HighYieldCondition {
+  condition: string;
+  system: string;
+  pearl: string;
+  buzzwords: string[];
+  importance: 'critical' | 'very_high' | 'high';
+}
 
 interface CramModeProps {
   onExit: () => void;
@@ -38,7 +50,7 @@ interface CramQuestion {
   correctIndex: number;
   explanation: string;
   condition: string;
-  system: SystemCode;
+  system: string;
   pearl: string;
 }
 
@@ -172,7 +184,22 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
     const loadData = async () => {
       try {
         setLoadError(null);
-        const selectedConditions = getRandomHighYield(50);
+        
+        // Database-First: Fetch high-yield conditions from API
+        const response = await fetch('/api/conditions/high-yield?limit=50&random=true');
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to fetch conditions: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.conditions || data.conditions.length === 0) {
+          throw new Error('No high-yield conditions found in database');
+        }
+        
+        const selectedConditions: HighYieldCondition[] = data.conditions;
         
         const generatedQuestions = await generateQuestionBatch(
           selectedConditions,
@@ -185,7 +212,7 @@ export const CramMode: React.FC<CramModeProps> = ({ onExit }) => {
         setQuestions(shuffled);
       } catch (error) {
         console.error("Failed to generate questions:", error);
-        setLoadError("Failed to generate questions. Please try again.");
+        setLoadError(error instanceof Error ? error.message : "Failed to generate questions. Please try again.");
       } finally {
         setIsLoading(false);
       }

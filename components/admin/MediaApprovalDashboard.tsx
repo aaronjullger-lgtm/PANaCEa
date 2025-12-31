@@ -5,8 +5,9 @@
  * Implements the "no-use to use folder" workflow
  */
 
-import React, { useState, useEffect } from 'react';
-import { X, Check, ThumbsDown, Eye, AlertCircle, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@clerk/clerk-react';
+import { X, Check, ThumbsDown, Eye, AlertCircle, TrendingUp, Upload, RefreshCw } from 'lucide-react';
 
 interface MediaAsset {
   id: string;
@@ -20,6 +21,8 @@ interface MediaAsset {
   isClinical: boolean;
   uploadedAt: string;
   uploadedBy?: string;
+  correctDiagnosis?: string;
+  distractors?: string[];
   aiMetadata?: {
     assessment?: {
       issues: string[];
@@ -31,10 +34,8 @@ interface MediaAsset {
       };
     };
   };
-  condition?: {
-    id: string;
+  Condition?: {
     name: string;
-    system: string;
   };
 }
 
@@ -47,6 +48,7 @@ interface ApprovalStats {
 }
 
 export function MediaApprovalDashboard() {
+  const { getToken } = useAuth();
   const [pendingMedia, setPendingMedia] = useState<MediaAsset[]>([]);
   const [stats, setStats] = useState<ApprovalStats | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<MediaAsset | null>(null);
@@ -54,89 +56,130 @@ export function MediaApprovalDashboard() {
   const [filter, setFilter] = useState<string>('all');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectionModal, setShowRejectionModal] = useState(false);
-  
-  // TODO: Replace with actual auth context
-  // import { useUser } from '@clerk/clerk-react';
-  // const { user } = useUser();
-  const currentUserId = 'current-user'; // Placeholder - MUST be replaced with actual user ID
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    loadPendingMedia();
-  }, [filter]);
-
-  const loadPendingMedia = async () => {
+  const loadPendingMedia = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      const token = await getToken();
+      if (!token) {
+        setError('Authentication required');
+        return;
+      }
+
       const params = new URLSearchParams({
-        includeStats: 'true',
+        status: 'pending',
       });
       
       if (filter !== 'all') {
         params.append('category', filter);
       }
 
-      const response = await fetch(`/api/media/pending?${params}`);
+      const response = await fetch(`/api/admin/media/upload?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
       const data = await response.json();
 
       if (data.success) {
-        setPendingMedia(data.media);
-        setStats(data.stats);
+        setPendingMedia(data.media || []);
+        // Calculate stats from response
+        if (data.total !== undefined) {
+          const pending = data.media?.length || 0;
+          // Fetch approved/rejected counts separately if needed
+          setStats({
+            pending,
+            approved: 0,
+            rejected: 0,
+            total: data.total,
+            approvalRate: 0,
+          });
+        }
+      } else {
+        setError(data.error || 'Failed to load media');
       }
-    } catch (error) {
-      console.error('Error loading pending media:', error);
+    } catch (err) {
+      console.error('Error loading pending media:', err);
+      setError('Failed to load media');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, getToken]);
+
+  useEffect(() => {
+    loadPendingMedia();
+  }, [loadPendingMedia]);
 
   const handleApprove = async (mediaId: string) => {
     try {
-      const response = await fetch('/api/media/approve', {
+      setActionLoading(true);
+      const token = await getToken();
+      
+      const response = await fetch('/api/admin/media/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
           action: 'approve',
           mediaId,
-          approvedBy: currentUserId,
         }),
       });
 
       if (response.ok) {
-        // Remove from pending list
         setPendingMedia(prev => prev.filter(m => m.id !== mediaId));
-        // Reload stats
-        loadPendingMedia();
         setSelectedMedia(null);
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Failed to approve');
       }
-    } catch (error) {
-      console.error('Error approving media:', error);
+    } catch (err) {
+      console.error('Error approving media:', err);
+      setError('Failed to approve media');
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleReject = async (mediaId: string, reason: string) => {
     try {
-      const response = await fetch('/api/media/approve', {
+      setActionLoading(true);
+      const token = await getToken();
+      
+      const response = await fetch('/api/admin/media/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
           action: 'reject',
           mediaId,
-          approvedBy: currentUserId,
-          rejectionReason: reason,
+          reason,
         }),
       });
 
       if (response.ok) {
-        // Remove from pending list
         setPendingMedia(prev => prev.filter(m => m.id !== mediaId));
-        // Reload stats
-        loadPendingMedia();
         setSelectedMedia(null);
         setShowRejectionModal(false);
         setRejectionReason('');
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Failed to reject');
       }
-    } catch (error) {
-      console.error('Error rejecting media:', error);
+    } catch (err) {
+      console.error('Error rejecting media:', err);
+      setError('Failed to reject media');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -160,14 +203,53 @@ export function MediaApprovalDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0F1419] p-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="max-w-7xl mx-auto mb-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+              <AlertCircle className="w-5 h-5" />
+              <span>{error}</span>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Media Approval Dashboard
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          Review and approve uploaded medical images for educational use
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Media Approval Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Review and approve uploaded medical images for educational use
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={loadPendingMedia}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#1F283A] text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-[#364154] transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+              Upload Media
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Stats */}
@@ -278,9 +360,9 @@ export function MediaApprovalDashboard() {
                     {media.filename}
                   </h3>
 
-                  {media.condition && (
+                  {media.Condition && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      {media.condition.name}
+                      {media.Condition.name}
                     </p>
                   )}
 
@@ -470,15 +552,263 @@ export function MediaApprovalDashboard() {
               </button>
               <button
                 onClick={() => handleReject(selectedMedia.id, rejectionReason)}
-                disabled={!rejectionReason.trim()}
+                disabled={!rejectionReason.trim() || actionLoading}
                 className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
               >
-                Confirm Rejection
+                {actionLoading ? 'Processing...' : 'Confirm Rejection'}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <MediaUploadModal
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={() => {
+            setShowUploadModal(false);
+            loadPendingMedia();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Media Upload Modal Component
+ */
+function MediaUploadModal({ 
+  onClose, 
+  onSuccess 
+}: { 
+  onClose: () => void; 
+  onSuccess: () => void;
+}) {
+  const { getToken } = useAuth();
+  const [file, setFile] = useState<File | null>(null);
+  const [category, setCategory] = useState<string>('derm');
+  const [correctDiagnosis, setCorrectDiagnosis] = useState('');
+  const [distractors, setDistractors] = useState('');
+  const [description, setDescription] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const droppedFile = e.dataTransfer.files[0];
+    if (droppedFile && droppedFile.type.startsWith('image/')) {
+      setFile(droppedFile);
+    } else {
+      setError('Please drop an image file');
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      setError('Please select a file');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      setError(null);
+
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('category', category);
+      
+      if (correctDiagnosis) {
+        formData.append('correctDiagnosis', correctDiagnosis);
+      }
+      
+      if (distractors) {
+        // Parse comma-separated distractors into JSON array
+        const distractorArray = distractors.split(',').map(d => d.trim()).filter(Boolean);
+        formData.append('distractors', JSON.stringify(distractorArray));
+      }
+      
+      if (description) {
+        formData.append('description', description);
+      }
+
+      const response = await fetch('/api/admin/media/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        onSuccess();
+      } else {
+        setError(data.error || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      setError('Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-[#1F283A] rounded-lg max-w-lg w-full p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            Upload Medical Image
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* File Drop Zone */}
+        <div
+          onDrop={handleDrop}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          className={`border-2 border-dashed rounded-lg p-8 text-center mb-4 transition-colors ${
+            dragOver 
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+              : 'border-gray-300 dark:border-gray-600'
+          }`}
+        >
+          {file ? (
+            <div className="flex items-center justify-center gap-3">
+              <img
+                src={URL.createObjectURL(file)}
+                alt="Preview"
+                className="w-20 h-20 object-cover rounded"
+              />
+              <div className="text-left">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {file.name}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+                <button
+                  onClick={() => setFile(null)}
+                  className="text-xs text-red-500 hover:text-red-700 mt-1"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Drag & drop an image here, or
+              </p>
+              <label className="cursor-pointer text-blue-600 hover:text-blue-700">
+                browse files
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                />
+              </label>
+            </>
+          )}
+        </div>
+
+        {/* Category */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Category
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white"
+          >
+            <option value="ecg">ECG</option>
+            <option value="derm">Dermatology</option>
+            <option value="radiology">Radiology</option>
+            <option value="labs">Labs</option>
+            <option value="diagrams">Diagrams</option>
+          </select>
+        </div>
+
+        {/* Correct Diagnosis (for drill questions) */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Correct Diagnosis (for drill questions)
+          </label>
+          <input
+            type="text"
+            value={correctDiagnosis}
+            onChange={(e) => setCorrectDiagnosis(e.target.value)}
+            placeholder="e.g., Atrial Fibrillation"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white"
+          />
+        </div>
+
+        {/* Distractors */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Wrong Answers (comma-separated)
+          </label>
+          <input
+            type="text"
+            value={distractors}
+            onChange={(e) => setDistractors(e.target.value)}
+            placeholder="e.g., Sinus Tachycardia, Atrial Flutter, SVT"
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white"
+          />
+        </div>
+
+        {/* Description */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Description
+          </label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Brief description of the image..."
+            rows={2}
+            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0F1419] text-gray-900 dark:text-white"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleUpload}
+            disabled={!file || uploading}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            {uploading ? 'Uploading...' : 'Upload'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

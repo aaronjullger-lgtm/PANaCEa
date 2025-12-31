@@ -6,7 +6,7 @@
  */
 
 import type { PerformanceRecord, SystemCode } from '../types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '../constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { calculateAccuracy } from './dashboardUtils';
 
 // ============================================================================

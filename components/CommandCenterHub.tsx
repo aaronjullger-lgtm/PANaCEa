@@ -44,9 +44,14 @@ import {
   Headphones,
   FolderTree,
   LucideIcon,
+  User,
 } from 'lucide-react';
 import type { PerformanceRecord, Question, SessionSettings } from '../types';
 import { AnalyticsDashboard } from './analytics/AnalyticsDashboard';
+import { DatabaseAnalyticsDashboard } from './analytics/DatabaseAnalyticsDashboard';
+import { LearningProfileDashboard } from './analytics/LearningProfileDashboard';
+import { AdvancedLearningProfileDashboard } from './analytics/AdvancedLearningProfileDashboard';
+import { UserFriendlyStatsDisplay } from './analytics/UserFriendlyStatsDisplay';
 import { ClinicalLibrary } from './toolkit/ClinicalLibrary';
 import {
   VISUAL_DIAGNOSTICS_MODES,
@@ -80,6 +85,7 @@ interface CommandCenterHubProps {
   onNavigateToGapAnalysis: () => void;
   onNavigateToIntegrations?: () => void;
   onNavigateToSimulation?: () => void;
+  onNavigateToReference?: () => void;
 }
 
 // Icon mapping
@@ -416,10 +422,12 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToGapAnalysis,
   onNavigateToIntegrations,
   onNavigateToSimulation,
+  onNavigateToReference,
 }) => {
   const { user } = useUser();
   const { showPANREContent } = useUserContext();
   const [activeTab, setActiveTab] = useState<'training' | 'resources' | 'analytics'>('training');
+  const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
 
   // Calculate stats for the dashboard
   const stats = useMemo(() => {
@@ -718,6 +726,47 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 }} />
               </div>
             </section>
+
+            {/* Clinical Reference Library */}
+            {onNavigateToReference && (
+              <section>
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                  <Stethoscope className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  Clinical Reference
+                </h3>
+                <button
+                  onClick={onNavigateToReference}
+                  className="w-full text-left p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-lg transition-all group"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                      <BookOpen className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">Clinical Reference Library</h4>
+                      <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                        Browse Anatomy, Labs, Drugs, ECG Patterns, Procedures, Physiology & more
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                          300+ Anatomy
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                          200+ Labs
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
+                          1000+ Drugs
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300">
+                          50+ ECG
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </button>
+              </section>
+            )}
           </motion.div>
         )}
 
@@ -729,14 +778,54 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             exit={{ opacity: 0, x: 20 }}
             className="space-y-6"
           >
+            {/* Research-Backed User-Friendly Stats */}
+            <section>
+              <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-blue-500" />
+                Your Learning Analytics
+              </h3>
+              <UserFriendlyStatsDisplay />
+            </section>
+
+            {/* Learning Profile - Comprehensive User Analytics */}
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                  <User className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  Detailed Learning Profile
+                </h3>
+                <button
+                  onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                    showAdvancedAnalytics
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                  }`}
+                >
+                  {showAdvancedAnalytics ? '✦ Advanced View' : 'Switch to Advanced'}
+                </button>
+              </div>
+              {showAdvancedAnalytics ? (
+                <AdvancedLearningProfileDashboard />
+              ) : (
+                <LearningProfileDashboard />
+              )}
+            </section>
+
             <section>
               <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-[var(--color-text-muted)]" />
                 Performance Analysis
               </h3>
               
-              {/* Integrated Analytics Dashboard with radar chart, readiness score, and trends */}
-              <AnalyticsDashboard performanceData={performanceData} />
+              {/* Database-backed analytics (authenticated users) */}
+              <DatabaseAnalyticsDashboard />
+              
+              {/* Session-based analytics (local data) */}
+              <div className="mt-6">
+                <h4 className="text-sm font-medium text-[var(--color-text-muted)] mb-3">Session Performance</h4>
+                <AnalyticsDashboard performanceData={performanceData} />
+              </div>
               
               {/* Additional navigation to detailed views */}
               <div className="grid md:grid-cols-2 gap-4 mt-6">

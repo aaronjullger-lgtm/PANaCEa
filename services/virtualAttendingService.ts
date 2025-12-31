@@ -1,5 +1,5 @@
 import { callGeminiText } from './geminiService';
-import { GEMINI_FLASH_MODEL } from '../constants';
+import { GEMINI_FLASH_MODEL } from '@/src/constants';
 
 /**
  * Virtual Attending Personas Service

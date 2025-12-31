@@ -1,39 +1,29 @@
 import type { PatientEncounterCase, PatientPersona, PatientPersonality } from '@/types/drill-modes';
 import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
-import { GEMINI_FLASH_MODEL } from '../constants';
+import { GEMINI_FLASH_MODEL } from '@/src/constants';
 import { callGeminiText } from './geminiService';
 
 // Lazy load condition content to improve initial bundle size
 let conditionContentCache: Record<string, unknown> | null = null;
 
+/**
+ * Load condition content from the database API.
+ * Database-First: No static file fallbacks.
+ */
 async function getConditionContent(): Promise<Record<string, unknown>> {
   if (conditionContentCache) {
     return conditionContentCache;
   }
   
-  try {
-    // Try to fetch from database API first
-    const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
-    const response = await fetch(apiUrl);
-    
-    if (response.ok) {
-      conditionContentCache = await response.json();
-      return conditionContentCache;
-    }
-  } catch (error) {
-    console.warn('Failed to load condition content from API:', error);
+  const apiUrl = getApiEndpoint(API_ENDPOINTS.CONTENT_ALL);
+  const response = await fetch(apiUrl);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to load condition content from database: ${response.status} ${response.statusText}`);
   }
   
-  // Try static file as fallback
-  try {
-    const module = await import('../src/conditionContent.generated.json');
-    conditionContentCache = module.default || {};
-    return conditionContentCache;
-  } catch (error) {
-    console.warn('Failed to load condition content from file:', error);
-  }
-  
-  return {};
+  conditionContentCache = await response.json();
+  return conditionContentCache;
 }
 
 interface ConditionData {
@@ -516,14 +506,12 @@ export async function generatePatientEncounterFromCondition(): Promise<PatientEn
 }
 
 /**
- * Get a fresh patient encounter (either from static data or generated)
+ * Get a fresh patient encounter from the database.
+ * Database-First: Always generates from database content.
+ * 
+ * @param useGenerated - Whether to force fresh AI generation (default: false)
  */
 export async function getFreshPatientEncounter(useGenerated: boolean = false): Promise<PatientEncounterCase> {
-  if (useGenerated) {
-    return await generatePatientEncounterFromCondition();
-  }
-  
-  // Import and use static cases as fallback
-  // This will be implemented in the data file
+  // Always generate from database content
   return await generatePatientEncounterFromCondition();
 }

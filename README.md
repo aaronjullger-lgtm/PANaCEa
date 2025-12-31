@@ -249,7 +249,7 @@ npm run db:studio  # Opens Prisma Studio - if this works, DB is accessible
 
 ### Database-First Architecture
 
-PANaCEa uses a **database-first architecture** where all medical content is stored in and retrieved from the database via API endpoints. The application **requires** a properly configured database to function.
+PANaCEa uses a **strict database-first architecture** where PostgreSQL is the ONLY source of truth for all medical content. No static JSON/TS arrays are used for clinical data.
 
 **Required Setup:**
 - Backend server must be running (`npm run dev:server` or deployed)
@@ -258,8 +258,9 @@ PANaCEa uses a **database-first architecture** where all medical content is stor
 
 **What happens without database:**
 - Condition content will be empty
-- Drug data uses the static registry as fallback
-- Lab cases return empty arrays gracefully
+- Drug data will show error state (no static fallback)
+- Lab cases will show error state with retry option
+- Cram Mode will show error state
 
 For full functionality (AI question generation, user authentication, condition content, database features), both frontend and backend servers with database access are required.
 

@@ -29,7 +29,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import type { SystemCode } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 
 interface ToolkitHubProps {
   onNavigateToItem?: (mode: string) => void;

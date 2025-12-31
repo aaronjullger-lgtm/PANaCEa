@@ -23,6 +23,7 @@ interface CommandCenterPageProps {
   onNavigateToToolkit?: () => void;
   onNavigateToGapAnalysis?: () => void;
   onNavigateToIntegrations?: () => void;
+  onNavigateToReference?: () => void;
   onBack: () => void;
 }
 
@@ -38,6 +39,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
   onNavigateToToolkit,
   onNavigateToGapAnalysis,
   onNavigateToIntegrations,
+  onNavigateToReference,
   onBack,
 }) => {
   return (
@@ -83,6 +85,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
             onNavigateToToolkit={onNavigateToToolkit}
             onNavigateToGapAnalysis={onNavigateToGapAnalysis}
             onNavigateToIntegrations={onNavigateToIntegrations}
+            onNavigateToReference={onNavigateToReference}
           />
         </motion.div>
       </div>

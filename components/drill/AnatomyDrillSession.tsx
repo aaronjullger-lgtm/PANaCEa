@@ -2,22 +2,37 @@
  * AnatomyDrillSession - Regional anatomy review drill
  * 
  * Multiple-choice questions covering anatomical structures and clinical correlates.
+ * Enhanced with database-linked reference material in feedback panels.
  */
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Bone } from 'lucide-react';
-import MiniDrillLayout, { QuestionCard, AnswerOption, FeedbackPanel } from './MiniDrillLayout';
+import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
+import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
 import { useAnatomyDrill } from '@/hooks/game/use-anatomy-drill';
 import { getDrillLandingStats } from '@/services/drillStatsService';
 
 interface AnatomyDrillSessionProps {
   onExit?: () => void;
+  onNavigateToReference?: (type: string, id: string) => void;
 }
 
-const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({ onExit }) => {
+const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({ 
+  onExit,
+  onNavigateToReference,
+}) => {
   const drill = useAnatomyDrill();
   const stats = getDrillLandingStats('anatomy_review');
+  
+  // Handler for deep dive into reference material
+  const handleDeepDive = useCallback((type: string, id: string) => {
+    if (onNavigateToReference) {
+      onNavigateToReference(type, id);
+    } else {
+      console.log('Deep dive requested:', type, id);
+    }
+  }, [onNavigateToReference]);
 
   // Landing page
   if (drill.status === 'landing') {
@@ -61,12 +76,16 @@ const AnatomyDrillSession: React.FC<AnatomyDrillSessionProps> = ({ onExit }) => 
       onReset={drill.reset}
       footer={
         isFeedback && drill.currentQuestion ? (
-          <FeedbackPanel
+          <EnhancedFeedbackPanel
             isCorrect={drill.isCorrect!}
             correctAnswer={drill.currentQuestion.options[drill.currentQuestion.correctIndex]}
             explanation={drill.currentQuestion.explanation}
             userAnswer={drill.userAnswerIndex !== null ? drill.currentQuestion.options[drill.userAnswerIndex] : null}
             onNext={drill.nextQuestion}
+            category="anatomy"
+            tags={drill.currentQuestion.tags || []}
+            relatedConceptId={drill.currentQuestion.region}
+            onDeepDive={handleDeepDive}
           />
         ) : undefined
       }

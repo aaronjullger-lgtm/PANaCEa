@@ -81,7 +81,8 @@ export function DrillSetup({
   const [error, setError] = useState<string | null>(null);
   
   const [selectedSystem, setSelectedSystem] = useState<SystemCode | undefined>(undefined);
-  const [difficulty, setDifficulty] = useState<'easier' | 'same' | 'harder'>(defaultDifficulty);
+  // Difficulty is fixed at PANCE-level for standardized practice
+  const difficulty: 'easier' | 'same' | 'harder' = 'same';
   const [questionCount, setQuestionCount] = useState(defaultQuestionCount);
   const [isStarting, setIsStarting] = useState(false);
 
@@ -256,47 +257,15 @@ export function DrillSetup({
             </div>
           )}
 
-          {/* Difficulty Selection */}
-          <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-[var(--color-accent)]" />
-              <label className="text-lg font-bold text-[var(--color-text-primary)]">
-                Difficulty Level
-              </label>
+          {/* Difficulty fixed at PANCE-level for standardized practice */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="w-5 h-5 text-blue-500" />
+              <span className="font-bold text-blue-700 dark:text-blue-300">PANCE-Level Questions</span>
             </div>
-            
-            <div className="grid grid-cols-3 gap-3">
-              <button
-                onClick={() => setDifficulty('easier')}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  difficulty === 'easier'
-                    ? 'bg-green-500 text-white'
-                    : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)]'
-                }`}
-              >
-                Easier
-              </button>
-              <button
-                onClick={() => setDifficulty('same')}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  difficulty === 'same'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)]'
-                }`}
-              >
-                PANCE-Level
-              </button>
-              <button
-                onClick={() => setDifficulty('harder')}
-                className={`px-4 py-3 rounded-lg font-medium transition-all ${
-                  difficulty === 'harder'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] hover:bg-[var(--color-bg-primary)]'
-                }`}
-              >
-                Harder
-              </button>
-            </div>
+            <p className="text-sm text-blue-600 dark:text-blue-400">
+              All questions are calibrated to match real PANCE exam difficulty for optimal preparation.
+            </p>
           </div>
 
           {/* Question Count */}

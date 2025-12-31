@@ -25,15 +25,20 @@ import {
   AlertCircle,
   Settings,
   BarChart3,
+  Flag,
+  ArrowLeft,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { isAdmin, canManageRoles, getRoleDisplayName, type UserRole } from '../../lib/auth/rbac';
+import { FlaggedQuestionsDashboard } from '../../components/admin/FlaggedQuestionsDashboard';
+import { QuestionPerformanceDashboard } from '../../components/admin/QuestionPerformanceDashboard';
 
 interface AdminStats {
   totalUsers: number;
   activeUsers: number;
   totalQuestions: number;
   avgAccuracy: number;
+  pendingFlags: number;
 }
 
 interface AdminDashboardProps {
@@ -45,11 +50,13 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const userId = user?.id;
   const [userRole, setUserRole] = useState<UserRole>('user');
   const [hasAccess, setHasAccess] = useState(false);
+  const [activePanel, setActivePanel] = useState<'dashboard' | 'flags' | 'performance'>('dashboard');
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     activeUsers: 0,
     totalQuestions: 0,
     avgAccuracy: 0,
+    pendingFlags: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -90,6 +97,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 activeUsers: data.activeUsersToday || 0,
                 totalQuestions: data.totalStudySessions || 0,
                 avgAccuracy: data.averageAccuracy || 0,
+                pendingFlags: data.pendingFlags || 0,
               });
             } else {
               // Fallback to placeholder stats
@@ -98,6 +106,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 activeUsers: 78,
                 totalQuestions: 45230,
                 avgAccuracy: 76.5,
+                pendingFlags: 0,
               });
             }
           } catch (statsError) {
@@ -108,6 +117,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
               activeUsers: 78,
               totalQuestions: 45230,
               avgAccuracy: 76.5,
+              pendingFlags: 0,
             });
           }
         } else {
@@ -174,17 +184,45 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         {/* Header */}
         <div className="bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] p-6">
           <div className="flex items-start justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-[var(--color-text-primary)] flex items-center gap-3">
-                <Shield className="w-7 h-7 text-[var(--color-accent)]" />
-                Admin Dashboard
-              </h2>
-              <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                Platform management and analytics
-                <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
-                  {getRoleDisplayName(userRole)}
-                </span>
-              </p>
+            <div className="flex items-center gap-3">
+              {activePanel !== 'dashboard' && (
+                <button
+                  onClick={() => setActivePanel('dashboard')}
+                  className="p-2 rounded-lg hover:bg-[var(--color-bg-tertiary)] transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-[var(--color-text-muted)]" />
+                </button>
+              )}
+              <div>
+                <h2 className="text-2xl font-bold text-[var(--color-text-primary)] flex items-center gap-3">
+                  {activePanel === 'flags' ? (
+                    <>
+                      <Flag className="w-7 h-7 text-red-500" />
+                      Flagged Questions
+                    </>
+                  ) : activePanel === 'performance' ? (
+                    <>
+                      <BarChart3 className="w-7 h-7 text-purple-500" />
+                      Question Performance
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="w-7 h-7 text-[var(--color-accent)]" />
+                      Admin Dashboard
+                    </>
+                  )}
+                </h2>
+                <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                  {activePanel === 'flags' 
+                    ? 'Review and resolve user-reported issues' 
+                    : activePanel === 'performance'
+                    ? 'Identify and improve low-performing questions'
+                    : 'Platform management and analytics'}
+                  <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
+                    {getRoleDisplayName(userRole)}
+                  </span>
+                </p>
+              </div>
             </div>
             {onClose && (
               <button
@@ -199,9 +237,20 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
           </div>
         </div>
 
+        {/* Panel Content */}
+        {activePanel === 'flags' ? (
+          <div className="p-6">
+            <FlaggedQuestionsDashboard />
+          </div>
+        ) : activePanel === 'performance' ? (
+          <div className="p-6">
+            <QuestionPerformanceDashboard />
+          </div>
+        ) : (
+        <>
         {/* Stats Grid */}
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             {/* Total Users */}
             <div className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)]">
               <div className="flex items-center justify-between mb-4">
@@ -265,6 +314,29 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 Platform Average
               </div>
             </div>
+
+            {/* Pending Flags */}
+            <button
+              onClick={() => setActivePanel('flags')}
+              className="bg-[var(--color-bg-secondary)] rounded-lg p-6 border border-[var(--color-border)] hover:border-red-500/50 transition-colors text-left"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 bg-red-500/20 rounded-lg">
+                  <Flag className="w-6 h-6 text-red-500" />
+                </div>
+                {stats.pendingFlags > 0 && (
+                  <span className="px-2 py-1 text-xs font-medium bg-red-500 text-white rounded-full">
+                    Action Needed
+                  </span>
+                )}
+              </div>
+              <div className="text-3xl font-bold text-[var(--color-text-primary)] mb-1">
+                {stats.pendingFlags}
+              </div>
+              <div className="text-sm text-[var(--color-text-muted)]">
+                Pending Flags
+              </div>
+            </button>
           </div>
 
           {/* Admin Actions */}
@@ -316,14 +388,32 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                 </button>
               )}
 
-              <button className="flex items-center gap-3 p-4 bg-[var(--color-bg-tertiary)] rounded-lg hover:bg-[var(--color-bg-tertiary)]/80 transition-colors text-left">
-                <BarChart3 className="w-5 h-5 text-[var(--color-accent)]" />
+              <button 
+                onClick={() => setActivePanel('performance')}
+                className="flex items-center gap-3 p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg hover:bg-purple-500/20 transition-colors text-left"
+              >
+                <BarChart3 className="w-5 h-5 text-purple-500" />
                 <div>
                   <div className="font-medium text-[var(--color-text-primary)]">
-                    Analytics
+                    Question Performance
                   </div>
                   <div className="text-xs text-[var(--color-text-muted)]">
-                    Platform usage analytics
+                    Identify low-performing questions
+                  </div>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => setActivePanel('flags')}
+                className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors text-left"
+              >
+                <Flag className="w-5 h-5 text-red-500" />
+                <div>
+                  <div className="font-medium text-[var(--color-text-primary)]">
+                    Flagged Questions
+                  </div>
+                  <div className="text-xs text-[var(--color-text-muted)]">
+                    Review user-reported issues
                   </div>
                 </div>
               </button>
@@ -354,6 +444,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
             </div>
           </div>
         </div>
+        </>
+        )}
       </motion.div>
     </div>
   );

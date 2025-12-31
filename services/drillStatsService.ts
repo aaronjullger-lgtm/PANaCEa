@@ -36,6 +36,9 @@ export type DrillType =
   | 'rapid_recall'
   | 'code_blue_speed'
   | 'ddx_compare'
+  | 'ddx_drill'
+  | 'procedure_drill'
+  | 'history_drill'
   | 'antibiotic_mode'
   | 'polypharmacy_puzzle';
 
@@ -121,7 +124,7 @@ export interface DrillProgress {
 // STORAGE
 // ============================================================================
 
-const STORAGE_KEY = 'panacea_drill_stats_v1';
+const STORAGE_KEY = 'panceai_drill_stats_v1';
 const CACHE_TTL = 5000; // 5 seconds
 
 let cachedStats: Record<DrillType, DrillStatistics> | null = null;

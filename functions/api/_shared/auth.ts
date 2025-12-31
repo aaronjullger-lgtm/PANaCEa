@@ -4,13 +4,13 @@
 
 import { verifyToken } from '@clerk/backend';
 import { authLogger } from '../../../lib/logging/structuredLogger';
+import { CloudflareEnv } from './types';
 
-export interface Env {
-  DATABASE_URL?: string;
-  CLERK_SECRET_KEY?: string;
-  GEMINI_API_KEY?: string;
-  GOOGLE_API_KEY?: string;
-}
+/**
+ * Re-export CloudflareEnv as Env for backward compatibility
+ * New code should import CloudflareEnv from './types'
+ */
+export type Env = CloudflareEnv;
 
 export interface AuthContext {
   userId: string;

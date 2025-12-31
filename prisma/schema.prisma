@@ -1,27 +1,3 @@
-// This is the Prisma schema file for the PANaCEa medical learning platform.
-// It defines the database models for managing conditions and their associated media assets.
-//
-// Learn more about Prisma at: https://www.prisma.io/docs
-//
-// Supabase Setup:
-// 1. Create a Supabase project at https://supabase.com
-// 2. Get your connection string from Project Settings > Database
-// 3. For connection pooling (recommended for serverless):
-//    - Use the "Transaction" mode connection string
-//    - Add ?pgbouncer=true to the connection string
-// 4. Set DATABASE_URL in your .env file
-//
-// To apply migrations:
-// 1. Run: npx prisma migrate dev --name init_schema
-// 2. Run: npx prisma generate --accelerate
-//
-// To push schema to Supabase (for initial setup):
-// Run: npx prisma db push
-//
-// For Prisma Accelerate (Edge runtime):
-// Generate with: npx prisma generate --accelerate
-// or: npx prisma generate --no-engine
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -30,2265 +6,1501 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL") // Optional: For migrations, bypass pooler
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
-enum UserRole {
-  USER
-  VIEWER
-  EDITOR
-  APPROVER
-  ADMIN
-  SUPERADMIN
-}
-
-/// Represents a user in the learning platform, linked to Clerk authentication
-model User {
-  id        String   @id @default(uuid())
-  clerkId   String   @unique // Clerk user ID from authentication provider
-  email     String   @unique
-  firstName String?
-  lastName  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  /// Authentication fields
-  emailVerified     DateTime? // Email verification timestamp
-  role              UserRole  @default(USER)
-  isAnonymous       Boolean   @default(false) // Hide identity in peer comparisons
-  resetToken        String? // Password reset token (hashed)
-  resetTokenExpiry  DateTime? // Reset token expiration
-  verifyToken       String? // Email verification token (hashed)
-  verifyTokenExpiry DateTime? // Verification token expiration
-
-  /// Onboarding fields
-  hasCompletedBaseline   Boolean   @default(false) // Has completed baseline assessment
-  hasCompletedOnboarding Boolean   @default(false) // Has completed initial onboarding
-  examDate               DateTime? // Target PANCE/PANRE exam date
-  graduationDate         DateTime? // Expected/actual graduation date from PA school
-  school                 String? // PA school/program name
-  currentRotation        String? // Current clinical rotation (e.g., "Emergency Medicine", "Surgery")
-  yearInProgram          String? // "Didactic Year 1", "Clinical Year", "Graduated", "Post-Graduate"
-
-  /// User's performance records
-  performanceRecords PerformanceRecord[]
-  /// User's SRS (Spaced Repetition System) items
-  srsItems           SRSItem[]
-  /// User's saved questions (flagged/missed)
-  savedQuestions     SavedQuestion[]
-  /// User's achievements
-  achievements       UserAchievement[]
-  /// User's daily streaks
-  streaks            DailyStreak[]
-  /// User's question history
-  questionHistory    UserQuestionHistory[]
-
-  /// User's saved pearls
-  userPearls UserPearl[]
-
-  /// Wordle daily game states
-  wordleStates UserWordleState[]
-
-  /// Active Patient Encounter Sessions
-  patientEncounterSessions PatientEncounterSession[]
-
-  /// Admin audit logs (for admin users)
-  // adminAuditLogs     AdminAuditLog[]
-
-  /// Social
-  studyGroups StudyGroupMember[]
-
-  /// Cohort memberships (professional study groups)
-  cohorts CohortMember[]
-
-  /// Grand Rounds attempts
-  grandRoundsAttempts GrandRoundsAttempt[]
-
-  /// User-specific FSRS tuning config
-  srsConfig UserSRSConfig?
-
-  /// Peer statistics snapshots
-  peerStats PeerStatistic[]
-
-  @@index([clerkId])
-  @@index([email])
-  @@index([role])
-}
-
-/// Stores user-specific FSRS algorithm parameters (the 'w' weights) for personalized spaced repetition
-model UserSRSConfig {
-  id               String   @id @default(uuid())
-  userId           String   @unique
-  requestRetention Float    @default(0.9) // Target retention (0.8 - 0.95)
-  wWeights         Json // Array of 19 FSRS parameters
-  lastTuned        DateTime @default(now())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([lastTuned])
-}
-
-/// Represents a laboratory test definition
-model LabTest {
-  id                  String   @id @default(uuid())
-  name                String   @unique
+model ACLSAlgorithm {
+  id                  String   @id(map: "ACLSQuestion_pkey")
+  algorithm           String
+  correctIndex        Int
   category            String
-  commonAbnormalities String[]
-  typicalUse          String?
+  explanation         String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime
+  algorithmName       String?
+  algorithmStep       Int?
+  boardYieldFacts     String[] @default([])
+  clinicalContext     String?
+  clinicalPearls      String[] @default([])
+  commonMistakes      String[] @default([])
+  correctIntervention String?
+  cprGuidance         String?
+  criticalActions     String[] @default([])
+  drugDose            String?
+  drugTiming          String?
+  ecgFindings         String[] @default([])
+  energyDose          String?
+  isHighYield         Boolean  @default(false)
+  mnemonics           String[] @default([])
+  panceYield          Int?
+  patientAge          String?
+  relatedAlgorithms   String[] @default([])
+  rhythm              String?
+  rhythmDescription   String?
+  testQuestionTips    String[] @default([])
+  videoUrl            String?
 
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // ===== NEW: Reference Ranges =====
-  conventionalRange String? // Normal range in conventional units
-  siRange           String? // Normal range in SI units
-  units             String? // Conventional units
-  siUnits           String? // SI units
-  conversionFactor  Float? // Multiply conventional by this to get SI
-  referenceRanges   Json? // { adult: { male: { low, high }, female: { low, high } }, pediatric: {...}, geriatric: {...} }
-  criticalValues    Json? // { criticalLow, criticalHigh, action }
-
-  // ===== NEW: Clinical Interpretation =====
-  increaseIndicates  String[] @default([]) // Conditions causing elevation
-  decreaseIndicates  String[] @default([]) // Conditions causing decrease
-  falsePosNeg        String?  @db.Text // Causes of false results
-  interferingFactors String[] @default([]) // Factors affecting results
-
-  // ===== NEW: Sample & Testing =====
-  sampleType          String? // Serum, plasma, whole blood, urine, CSF
-  collectionTube      String? // Green top, purple top, etc.
-  fastingRequired     Boolean @default(false)
-  specialInstructions String? @db.Text
-  turnaroundTime      String? // Typical time to results
-  stability           String? // Sample stability requirements
-
-  // ===== NEW: Clinical Context =====
-  whenToOrder   String[] @default([]) // Indications for ordering
-  relatedTests  String[] @default([]) // Tests often ordered together
-  followUpTests String[] @default([]) // Tests to order if abnormal
-
-  // ===== NEW: Teaching Points =====
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  mnemonics        String[] @default([])
-  testQuestionTips String[] @default([])
-
-  // ===== NEW: Interpretation Guides =====
-  interpretationSteps String? @db.Text // Step-by-step interpretation
-  clinicalScenarios   Json? // [{ scenario, expectedResult, explanation }]
-
-  // ===== NEW: Relations =====
-  conditionLinks LabConditionLink[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([category])
-  @@index([panceYield])
+  @@index([algorithmName], map: "ACLSQuestion_algorithmName_idx")
+  @@index([category], map: "ACLSQuestion_category_idx")
+  @@index([panceYield], map: "ACLSQuestion_panceYield_idx")
+  @@index([rhythm], map: "ACLSQuestion_rhythm_idx")
 }
 
-/// Represents a clinical case for lab interpretation training
-model LabCase {
-  id               String   @id @default(uuid())
-  correctDiagnosis String
-  clinicalVignette String
-  labs             Json // Stores the lab results structure
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+model AnatomyConditionLink {
+  id               String           @id
+  anatomyId        String
+  conditionId      String
+  relationshipType String
+  clinicalContext  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime
+  AnatomyStructure AnatomyStructure @relation(fields: [anatomyId], references: [id], onDelete: Cascade)
+  Condition        Condition        @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  @@unique([anatomyId, conditionId])
+  @@index([conditionId])
+  @@index([relationshipType])
 }
 
-/// Represents a single performance record from a quiz session
-model PerformanceRecord {
-  id                String   @id @default(uuid())
-  userId            String
-  topic             String
-  system            String? // System code (CV, PULM, GI, etc.)
-  focus             String // "all" | "topic" | "growth" | "review" | "reviewFlagged"
-  difficulty        String // "same" | "adaptive"
-  isCorrect         Boolean
-  timestamp         BigInt // Unix timestamp in milliseconds
-  questionWordCount Int?
-  errorTag          String? // "knowledge_gap" | "misread_question" | "guessing" | etc.
-  subcategoryName   String?
-  conditionName     String?
-  createdAt         DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([userId, timestamp])
-  @@index([topic])
-  @@index([system])
-}
-
-/// Represents a Spaced Repetition System item for a user
-model SRSItem {
-  id             String   @id @default(uuid())
-  userId         String
-  questionId     String // Unique identifier for the question content
-  interval       Int // Days until next review
-  repetition     Int // Number of successful reviews
-  easiness       Float // Easiness Factor (EF), minimum 1.3
-  dueDate        DateTime
-  lastReviewed   DateTime
-  quality        Int // Last quality response (0-5)
-  difficulty     Float // Normalized 0-1 difficulty
-  stabilityScore Float // Research variable for forgetting curve
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  // FSRS v5 Specific Fields
-  fsrsStability  Float? // Memory stability (S) in days
-  fsrsDifficulty Float? // Difficulty (D) on 1-10 scale
-  fsrsState      Int       @default(0) // 0=New, 1=Learning, 2=Review, 3=Relearning
-  fsrsLastReview DateTime? // Timestamp of last FSRS review
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, questionId])
-  @@index([userId])
-  @@index([userId, dueDate])
-  @@index([questionId])
-}
-
-/// Represents a saved question (flagged or missed) for review
-model SavedQuestion {
-  id              String   @id @default(uuid())
-  userId          String
-  questionId      String // Unique identifier for the question content
-  questionText    String   @db.Text
-  correctAnswer   String
-  explanation     String   @db.Text
-  topic           String
-  system          String?
-  type            String // "missed" | "flagged"
-  userNote        String?  @db.Text
-  repetitionLevel Int      @default(1)
-  nextReviewDate  String? // ISO date string (YYYY-MM-DD)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, questionId, type])
-  @@index([userId])
-  @@index([userId, type])
-  @@index([questionId])
-}
-
-/// Represents a medical condition in the learning platform.
-/// Conditions are the primary educational content unit.
-/// Enhanced with parent-child relationships and aliases for smart search
-model Condition {
-  id     String @id @default(uuid())
-  name   String
-  system String // Organ system (e.g., "CV", "PULM", "GI")
-
-  /// Subcategory within system (e.g., "Arrhythmias", "Valvular")
-  subcategory String?
-
-  /// Cross-system tagging for conditions that span multiple systems
-  /// e.g., SLE appears in Rheumatology, Derm, Renal
-  relatedSystems String[] @default([])
-
-  /// Status for visibility in UI
-  status String @default("published") // draft, published, archived
-
-  /// Parent-child relationships for condition variants
-  parentId String? // Reference to parent condition (null if this is a parent)
-  parent   Condition?  @relation("ConditionHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children Condition[] @relation("ConditionHierarchy")
-
-  /// Clean display name (without parentheses or aliases)
-  displayName String?
-
-  /// Alternative names and aliases for search
-  aliases String[] @default([])
-
-  /// Content sections (as JSONB) - for inline content
-  content Json? // Pathophysiology, Clinical Presentation, Diagnosis, Management, Pearls
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  /// Associated media assets for this condition
-  media MediaAsset[]
-
-  /// Associated anatomy
-  anatomyStructures AnatomyStructure[]
-
-  /// Associated special tests
-  specialTests SpecialTest[]
-
-  // ===== NEW: Junction table relations =====
-  drugLinks       DrugConditionLink[]
-  labLinks        LabConditionLink[]
-  imagingLinks    ImagingConditionLink[]
-  findingLinks    FindingConditionLink[]
-  anatomyLinks    AnatomyConditionLink[]
-  physiologyLinks PhysiologyConditionLink[]
-  treatmentLinks  TreatmentConditionLink[]
-  procedureLinks  ProcedureConditionLink[]
-
-  @@index([system])
-  @@index([name])
-  @@index([parentId])
-  @@index([displayName])
-  @@index([status])
-  @@index([subcategory])
-}
-
-/// Represents an anatomical structure relevant to medical conditions
 model AnatomyStructure {
-  id                   String  @id @default(uuid())
-  name                 String  @unique // e.g. "Anterior Cruciate Ligament"
-  system               String // e.g. "MSK"
-  region               String? // e.g. "Knee"
-  type                 String? // e.g. "Ligament", "Muscle"
-  description          String? @db.Text
-  function             String? @db.Text
+  id                   String                 @id
+  name                 String                 @unique
+  system               String
+  region               String?
+  type                 String?
+  description          String?
+  function             String?
   innervation          String?
   bloodSupply          String?
-  clinicalSignificance String? @db.Text
-  imageUrl             String? // Diagram URL
+  clinicalSignificance String?
+  imageUrl             String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime
+  abbreviation         String?
+  aliases              String[]               @default([])
+  anastomoses          String[]               @default([])
+  attachments          String[]               @default([])
+  autonomicFunction    String?
+  boardYieldFacts      String[]               @default([])
+  borders              String?
+  branches             String[]               @default([])
+  clinicalPearls       String[]               @default([])
+  commonMistakes       String[]               @default([])
+  commonPathology      String[]               @default([])
+  contents             String[]               @default([])
+  dermatome            String?
+  diagramUrl           String?
+  examFindings         String[]               @default([])
+  imagingFindings      String[]               @default([])
+  injuryMechanism      String?
+  insertion            String?
+  isHighYield          Boolean                @default(false)
+  latinName            String?
+  layers               String[]               @default([])
+  mnemonics            String[]               @default([])
+  modelUrl             String?
+  motorFunction        String?
+  myotome              String?
+  nervePath            String?
+  nerveRoots           String?
+  origin               String?
+  palpationTips        String?
+  panceYield           Int?
+  relations            String?
+  sensoryFunction      String?
+  surfaceLandmarks     String[]               @default([])
+  surgicalApproach     String?
+  testQuestionTips     String[]               @default([])
+  tributaries          String[]               @default([])
+  vesselPath           String?
+  videoUrl             String?
+  AnatomyConditionLink AnatomyConditionLink[]
+  Condition            Condition[]
 
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // ===== NEW: Classification =====
-  aliases      String[] @default([]) // Alternative names
-  latinName    String? // Anatomical term
-  abbreviation String? // Common abbreviation
-
-  // ===== NEW: Detailed Anatomy =====
-  origin      String?  @db.Text // Muscle origin
-  insertion   String?  @db.Text // Muscle insertion
-  attachments String[] @default([]) // For ligaments/tendons
-  borders     String?  @db.Text // Anatomical borders
-  contents    String[] @default([]) // For spaces/compartments
-  relations   String?  @db.Text // Adjacent structures
-  layers      String[] @default([]) // For layered structures
-
-  // ===== NEW: Nerve/Vessel Details =====
-  nervePath         String?  @db.Text // Course of nerve
-  nerveRoots        String? // Spinal nerve roots
-  motorFunction     String?  @db.Text
-  sensoryFunction   String?  @db.Text
-  autonomicFunction String?  @db.Text
-  vesselPath        String?  @db.Text // Course of vessel
-  branches          String[] @default([])
-  tributaries       String[] @default([])
-  anastomoses       String[] @default([])
-
-  // ===== NEW: Clinical Correlations =====
-  injuryMechanism  String?  @db.Text // How it gets injured
-  commonPathology  String[] @default([])
-  examFindings     String[] @default([]) // PE findings for injury
-  imagingFindings  String[] @default([])
-  surgicalApproach String?  @db.Text
-
-  // ===== NEW: Landmarks & Surface Anatomy =====
-  surfaceLandmarks String[] @default([])
-  palpationTips    String?  @db.Text
-  dermatome        String?
-  myotome          String?
-
-  // ===== NEW: Teaching Points =====
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-
-  // ===== NEW: Media =====
-  diagramUrl String?
-  modelUrl   String? // 3D model URL
-  videoUrl   String? // Dissection video
-
-  // Relations
-  conditions     Condition[] // Conditions affecting this structure
-  conditionLinks AnatomyConditionLink[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([system])
   @@index([name])
+  @@index([panceYield])
   @@index([region])
-  @@index([panceYield])
-}
-
-/// Represents a special physical exam test
-model SpecialTest {
-  id   String @id @default(uuid())
-  name String @unique // e.g. "Lachman Test"
-
-  // Search and display
-  displayName String? // Clean display name
-  aliases     String[] @default([]) // Alternative names (e.g., "Anterior Drawer Test")
-
-  system         String? // e.g. "MSK"
-  region         String? // e.g. "Knee"
-  description    String? @db.Text
-  sensitivity    Float? // 0-100
-  specificity    Float? // 0-100
-  technique      String? @db.Text // How to perform
-  positiveTest   String? @db.Text // What constitutes a positive result
-  interpretation String? @db.Text // What a positive result means
-  imageUrl       String?
-  videoUrl       String?
-
-  // Relations
-  conditions Condition[] // Conditions this tests for
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([name])
-  @@index([displayName])
-}
-
-/// Represents a media asset (EKG, imaging, lab table, diagram, etc.)
-/// linked to a medical condition. Enhanced for centralized media library.
-model MediaAsset {
-  id          String  @id @default(uuid())
-  conditionId String?
-  type        String // "ekg" | "imaging" | "labs" | "diagram" | "photo" | "other"
-  filename    String
-
-  /// Object storage URLs
-  originalUrl  String? // Full-resolution URL (S3/R2)
-  thumbnailUrl String? // Lower-res thumbnail for UI
-
-  /// Metadata and tagging
-  tags        String[] // Keywords: "X-Ray", "Chest", "Pneumonia", etc.
-  description String?  @db.Text
-  altText     String?  @db.Text // Accessibility
-  mimeType    String? // image/jpeg, image/png, etc.
-  fileSize    Int? // Bytes
-  dimensions  Json? // { width: 1920, height: 1080 }
-
-  /// AI matching and quality
-  confidence Float @default(0) // AI matching confidence score (0-1)
-  aiMetadata Json? // Additional AI analysis data
-
-  /// Approval workflow for quality control
-  approvalStatus  String    @default("pending") // "pending" | "approved" | "rejected"
-  status          String    @default("pending_review") // "pending_review" | "approved" | "rejected" | "flagged"
-  approvedBy      String? // User ID who approved/rejected
-  approvedAt      DateTime? // When approval decision was made
-  rejectionReason String?   @db.Text // Why rejected (if applicable)
-  qualityScore    Float? // 0-100 quality assessment score (AI-assigned, 1-10 scale can be 10-100)
-  isClinical      Boolean   @default(false) // Is this a clinical image (vs diagram/illustration)?
-
-  /// Organization and folder structure
-  folder String @default("inbox") // "inbox" (no-use), "clinical_verified" (use), "archive"
-
-  /// Textbook/Lecture Support
-  mediaType   String  @default("image") // "image" | "pdf" | "video" | "audio"
-  textContent String? @db.Text // OCR text extracted from textbooks for search
-  pageCount   Int? // For PDFs
-  duration    Int? // For Video/Audio (seconds)
-
-  /// Source Tracking
-  sourceUrl String? // Where it came from (if scraped)
-  citation  String? // "Harrison's Principles of Internal Medicine, 21st Ed."
-
-  /// Drill/Quiz fields for Photo/ECG/Derm drills
-  correctDiagnosis String? // The correct diagnosis for this image (used in drills)
-  distractors      Json? // Array of incorrect diagnoses for multiple choice
-  clinicalContext  Json? // Patient demographics, vitals, chief complaint (ClinicalContext interface)
-
-  /// Upload tracking
-  uploadedBy String? // User ID
-  uploadedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  /// Relations
-  condition Condition? @relation(fields: [conditionId], references: [id])
-  // processingJob ImageProcessingJob? // One-to-one with processing job
-  // annotations ImageAnnotation[]
-
-  @@index([conditionId])
-  @@index([type])
-  @@index([filename])
-  @@index([tags])
-  @@index([uploadedBy])
-  @@index([approvalStatus])
-  @@index([status])
-  @@index([folder])
-  @@index([mediaType])
-  @@index([approvedAt])
-}
-
-/// Represents rapid-fire ACLS/PALS/BLS questions for Code Blue Speed Mode
-model ACLSQuestion {
-  id           String @id @default(uuid())
-  question     String @db.Text
-  options      Json // Array of strings (answer choices)
-  correctIndex Int // Index of the correct answer (0-based)
-  category     String // "ACLS" | "PALS" | "BLS" | "Critical Care"
-  explanation  String @db.Text
-
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // ===== NEW: Algorithm Context =====
-  algorithmName     String? // Name of ACLS algorithm (e.g., "VF/pVT", "Asystole/PEA")
-  algorithmStep     Int? // Which step in algorithm
-  relatedAlgorithms String[] @default([])
-
-  // ===== NEW: Clinical Scenario =====
-  rhythm            String? // VF, VT, Asystole, PEA, Brady, Tachy
-  rhythmDescription String?  @db.Text
-  ecgFindings       String[] @default([])
-  clinicalContext   String?  @db.Text
-  patientAge        String? // Adult, Pediatric, Neonatal
-
-  // ===== NEW: Intervention Details =====
-  correctIntervention String? @db.Text
-  drugDose            String? // e.g., "Epinephrine 1mg IV"
-  drugTiming          String? // e.g., "Every 3-5 minutes"
-  energyDose          String? // Defibrillation joules
-  cprGuidance         String? @db.Text
-
-  // ===== NEW: Common Errors =====
-  commonMistakes  String[] @default([])
-  criticalActions String[] @default([]) // Must-do actions
-
-  // ===== NEW: Teaching Points =====
-  clinicalPearls   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-  videoUrl         String? // Link to algorithm video
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([category])
-  @@index([algorithmName])
-  @@index([rhythm])
-  @@index([panceYield])
-}
-
-/// Represents fluid/electrolyte clinical cases for calculation drills
-model FluidCase {
-  id              String   @id @default(uuid())
-  title           String
-  scenario        String   @db.Text
-  labs            Json // Complex lab data: { bmp: {...}, urineNa: 12, urineCr: 180 }
-  correctAnswer   Float // Numeric answer (e.g., 0.36 for FENa)
-  unit            String // Unit of measurement (%, mEq/L, L, mL/hr)
-  marginOfError   Float // Acceptable deviation from correct answer
-  explanation     String   @db.Text
-  calculationHint String?  @db.Text // Formula hint (e.g., "FENa = [(UNa × SCr) / (SNa × UCr)] × 100")
-  category        String // "fena" | "anion_gap" | "free_water_deficit" | "maintenance_fluids"
-  difficulty      String   @default("medium") // "easy" | "medium" | "hard"
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([category])
-  @@index([difficulty])
-}
-
-// =============================================================================
-// NEW TABLES: Medical Procedures, History, ECG, Vital Signs
-// =============================================================================
-
-/// Represents a medical/surgical procedure
-model Procedure {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  displayName String?
-  aliases     String[] @default([])
-  category    String // Diagnostic, Therapeutic, Surgical, Bedside
-  type        String? // Minor, Major, Outpatient, Inpatient
-  system      String? // Body system
-  description String?  @db.Text
-
-  // PANCE Prioritization
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // Indications & Contraindications
-  indications               String[] @default([])
-  absoluteContraindications String[] @default([])
-  relativeContraindications String[] @default([])
-
-  // Technique
-  preparation       String?  @db.Text // Patient prep
-  equipment         String[] @default([])
-  anatomicLandmarks String[] @default([])
-  technique         String?  @db.Text // Step-by-step
-  positioning       String? // Patient position
-  anesthesia        String? // Local, regional, general
-  duration          String? // Typical procedure time
-
-  // Complications & Safety
-  complications       String[] @default([])
-  complicationRates   Json? // { complication: rate }
-  emergencyManagement String?  @db.Text
-  safetyChecklist     String[] @default([])
-
-  // Post-Procedure
-  postProcedureCare String?  @db.Text
-  expectedFindings  String?  @db.Text
-  abnormalFindings  String[] @default([])
-  followUp          String?  @db.Text
-  recovery          String? // Recovery time
-
-  // Consent & Documentation
-  consentPoints             String[] @default([]) // Key consent discussion points
-  documentationRequirements String[] @default([])
-
-  // Teaching Points
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-  videoUrl         String?
-
-  // Relations
-  conditionLinks ProcedureConditionLink[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([category])
   @@index([system])
-  @@index([panceYield])
 }
 
-/// Represents a history-taking component (HPI elements, ROS, PMH, etc.)
-model HistoryComponent {
-  id          String  @id @default(uuid())
-  name        String  @unique // e.g., "OLDCARTS", "Chest Pain History"
-  displayName String?
-  category    String // HPI, ROS, PMH, FH, SH, Medications, Allergies
-  system      String? // Body system if applicable
-  description String? @db.Text
-
-  // PANCE Prioritization
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // Component Details
-  elements         String[] @default([]) // Individual questions/elements
-  expandedElements Json? // [{ element, followUp questions, significance }]
-  requiredFor      String[] @default([]) // Presentations requiring this
-
-  // HPI Frameworks
-  frameworkName     String? // OLDCARTS, SOCRATES, OPQRST
-  frameworkElements Json? // [{ letter, meaning, exampleQuestions }]
-
-  // ROS Specifics
-  rosCategory        String? // Constitutional, Eyes, ENT, etc.
-  positiveIndicators String[] @default([]) // Symptoms suggesting pathology
-  negativeIndicators String[] @default([]) // Pertinent negatives
-
-  // Clinical Decision Making
-  redFlagResponses    String[] @default([]) // Answers that indicate urgency
-  reassuringResponses String[] @default([]) // Answers that indicate benign
-  diagnosticValue     Json? // { response: likelyConditions }
-
-  // Documentation
-  documentationTips String?  @db.Text
-  chartingExamples  String[] @default([])
-
-  // Teaching Points
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([category])
-  @@index([system])
-  @@index([panceYield])
-}
-
-/// Represents an ECG pattern for rhythm recognition training
-model ECGPattern {
-  id          String   @id @default(uuid())
-  name        String   @unique // e.g., "Atrial Fibrillation", "STEMI Anterior"
-  displayName String?
-  aliases     String[] @default([])
-  category    String // Arrhythmia, Ischemia, Conduction, Metabolic, Drug Effect
-  subcategory String? // e.g., "Supraventricular", "Ventricular"
-
-  // PANCE Prioritization
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-  isEmergency     Boolean  @default(false)
-
-  // ECG Characteristics
-  rate       String? // Normal, brady, tachy, irregular
-  rhythm     String? // Regular, irregular, regularly irregular
-  pWave      String? @db.Text // P wave description
-  prInterval String? // Normal, prolonged, shortened, variable
-  qrsComplex String? @db.Text // QRS description
-  qtInterval String? // Normal, prolonged, shortened
-  stSegment  String? @db.Text // ST changes
-  tWave      String? @db.Text // T wave description
-
-  // Diagnostic Criteria
-  diagnosticCriteria String[] @default([])
-  pathognomonic      String? // Pathognomonic finding if any
-
-  // Clinical Correlation
-  etiology             String[] @default([]) // Causes
-  symptoms             String[] @default([]) // Patient symptoms
-  hemodynamicEffect    String?  @db.Text
-  associatedConditions String[] @default([])
-
-  // Management
-  acuteManagement String?  @db.Text
-  medications     String[] @default([])
-  cardioversion   String? // When indicated
-  pacing          String? // When indicated
-  referral        String? // Cardiology referral criteria
-
-  // Differential
-  mimics                 String[] @default([]) // Patterns that look similar
-  distinguishingFeatures Json? // [{ pattern, howToDifferentiate }]
-
-  // Media
-  exampleEcgUrl   String?
-  annotatedEcgUrl String?
-
-  // Teaching Points
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([category])
-  @@index([panceYield])
-  @@index([isEmergency])
-}
-
-/// Represents vital sign reference ranges and interpretations
-model VitalSignRange {
-  id          String  @id @default(uuid())
-  vitalSign   String  @unique // HR, BP, RR, Temp, O2Sat, BMI, etc.
-  displayName String?
-  category    String // Cardiovascular, Respiratory, Metabolic
-
-  // Reference Ranges
-  normalRange String? // Normal adult range
-  ranges      Json? // { adult: { low, high }, pediatric: { neonate, infant, child }, geriatric: {...} }
-  units       String? // bpm, mmHg, breaths/min, etc.
-
-  // Interpretations
-  elevation  Json? // { mild: {}, moderate: {}, severe: {}, causes: [], management: [] }
-  depression Json? // { mild: {}, moderate: {}, severe: {}, causes: [], management: [] }
-
-  // Clinical Significance
-  emergencyValues      Json? // { criticalHigh, criticalLow, immediateAction }
-  associatedConditions Json? // { elevated: [], decreased: [] }
-
-  // Teaching Points
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([category])
-}
-
-/// Represents a scoring/clinical decision rule (Wells, CURB-65, etc.)
-model ScoringSystem {
-  id          String   @id @default(uuid())
-  name        String   @unique // e.g., "Wells DVT", "CURB-65"
-  displayName String?
-  aliases     String[] @default([])
-  category    String // Risk Stratification, Diagnostic, Prognostic, Screening
-  condition   String? // Primary condition it's used for
-
-  // PANCE Prioritization
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // Scoring Components
-  components Json // [{ criterion, points, description }]
-  maxScore   Int?
-  minScore   Int? @default(0)
-
-  // Interpretation
-  interpretation   Json // [{ scoreRange, riskLevel, recommendation }]
-  actionThresholds Json? // { lowRisk: action, highRisk: action }
-
-  // Validation
-  sensitivity       Float? // At recommended cutoff
-  specificity       Float?
-  validationStudies String[] @default([])
-  limitations       String[] @default([])
-
-  // Clinical Use
-  whenToUse       String?  @db.Text
-  whenNotToUse    String[] @default([])
-  clinicalContext String?  @db.Text
-
-  // Teaching Points
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-
-  // Calculator
-  calculatorUrl String? // Link to online calculator
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([category])
-  @@index([condition])
-  @@index([panceYield])
-}
-
-/// Represents antibiotic-organism coverage guidelines for Bug-Drug drill
 model AntibioticGuideline {
-  id          String  @id @default(uuid())
-  organism    String // Organism name (e.g., "Pseudomonas aeruginosa")
-  class       String // Organism class (e.g., "Gram Negative", "Atypical")
-  effective   Json // Array of effective antibiotics (e.g., ["Cefepime", "Meropenem"])
-  resistant   Json // Array of resistant/ineffective antibiotics
-  notes       String? @db.Text // Additional clinical notes
-  description String? // Clinical context (e.g., "Most common cause of CAP")
-
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // ===== NEW: Organism Details =====
-  aliases          String[] @default([]) // Alternative names
-  gramStain        String? // Positive, Negative, Variable
-  morphology       String? // Cocci, Rod, Spirochete, etc.
-  arrangement      String? // Clusters, chains, pairs
-  growthConditions String? // Aerobic, anaerobic, facultative
-  virulenceFactors String[] @default([])
-  reservoirs       String[] @default([]) // Where organism lives
-  transmission     String[] @default([]) // How it spreads
-
-  // ===== NEW: Clinical Infections =====
-  commonInfections       String[] @default([]) // Infections this organism causes
-  classicPresentation    String?  @db.Text
-  diagnosticClues        String[] @default([])
-  cultureCharacteristics String?  @db.Text // Colony appearance, etc.
-
-  // ===== NEW: Treatment Details =====
-  firstLineAntibiotics   String[] @default([])
+  id                     String   @id
+  organism               String
+  class                  String
+  effective              Json
+  resistant              Json
+  notes                  String?
+  description            String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime
+  aliases                String[] @default([])
   alternativeAntibiotics String[] @default([])
-  doseRecommendations    Json? // { antibiotic: dosing }
+  arrangement            String?
+  boardYieldFacts        String[] @default([])
+  carbapenemResistant    Boolean  @default(false)
+  classicPresentation    String?
+  clinicalPearls         String[] @default([])
+  commonInfections       String[] @default([])
+  commonMistakes         String[] @default([])
+  cultureCharacteristics String?
+  deEscalationGuidance   String?
+  diagnosticClues        String[] @default([])
+  doseRecommendations    Json?
+  emergingResistance     String[] @default([])
+  esblProducer           Boolean  @default(false)
+  firstLineAntibiotics   String[] @default([])
+  gramStain              String?
+  growthConditions       String?
+  infectionControl       String[] @default([])
+  isHighYield            Boolean  @default(false)
+  mnemonics              String[] @default([])
+  morphology             String?
+  mrResistance           Boolean  @default(false)
+  panceYield             Int?
+  prophylaxis            String?
+  reservoirs             String[] @default([])
+  resistanceMechanisms   String[] @default([])
+  testQuestionTips       String[] @default([])
+  transmission           String[] @default([])
   treatmentDuration      String?
-  deEscalationGuidance   String?  @db.Text
+  vaccines               String[] @default([])
+  vancomycinResistant    Boolean  @default(false)
+  virulenceFactors       String[] @default([])
 
-  // ===== NEW: Resistance =====
-  resistanceMechanisms String[] @default([])
-  mrResistance         Boolean  @default(false) // Multi-drug resistant
-  esblProducer         Boolean  @default(false)
-  carbapenemResistant  Boolean  @default(false)
-  vancomycinResistant  Boolean  @default(false)
-  emergingResistance   String[] @default([])
-
-  // ===== NEW: Prevention =====
-  vaccines         String[] @default([])
-  prophylaxis      String?  @db.Text
-  infectionControl String[] @default([])
-
-  // ===== NEW: Teaching Points =====
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([organism])
   @@index([class])
-  @@index([panceYield])
   @@index([gramStain])
+  @@index([organism])
+  @@index([panceYield])
 }
 
-/// Represents an achievement earned by a user
-model UserAchievement {
-  id            String   @id @default(uuid())
-  userId        String
-  achievementId String // Achievement identifier from definitions
-  unlockedAt    DateTime @default(now())
-  progress      Int      @default(100) // 0-100, for progressive achievements
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, achievementId])
-  @@index([userId])
-  @@index([achievementId])
-}
-
-/// Represents daily activity streaks for gamification
-model DailyStreak {
-  id                String   @id @default(uuid())
-  userId            String
-  date              DateTime @db.Date // Date of activity (YYYY-MM-DD)
-  questionsAnswered Int      @default(0) // Questions answered on this day
-  accuracyPercent   Float // Accuracy for the day
-  studyMinutes      Int      @default(0) // Minutes studied
-  createdAt         DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, date])
-  @@index([userId])
-  @@index([date])
-}
-
-/// Represents a daily Grand Rounds challenge available to all users
-model GrandRoundsChallenge {
-  id          String   @id @default(uuid())
-  date        DateTime @unique @db.Date // One challenge per calendar day
-  questionIds String[]
-  createdAt   DateTime @default(now())
-
-  attempts GrandRoundsAttempt[]
-}
-
-/// Represents a user's attempt at the daily Grand Rounds challenge
-model GrandRoundsAttempt {
-  id          String   @id @default(uuid())
-  userId      String
-  challengeId String
-  score       Int
-  timeSpentMs Int
-  completedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-
-  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  challenge GrandRoundsChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, challengeId])
-  @@index([challengeId])
-}
-
-/// Represents confusion pairs tracked for DDx analysis
-model ConfusionPair {
-  id             String   @id @default(uuid())
-  userId         String? // Null for global stats, set for user-specific
-  realCondition  String // The correct condition
-  mistakenFor    String // What user incorrectly chose
-  count          Int      @default(1) // How many times this happened
-  lastOccurrence DateTime @default(now())
-  createdAt      DateTime @default(now())
-
-  @@unique([userId, realCondition, mistakenFor])
-  @@index([userId])
-  @@index([userId, realCondition])
-  @@index([realCondition])
-}
-
-/// Represents mastery tier progress for conditions/topics
-model MasteryProgress {
-  id            String   @id @default(uuid())
-  userId        String
-  conditionName String? // Specific condition, or null for system-level
-  systemCode    String? // CV, PULM, GI, etc.
-  subcategory   String?
-  masteryTier   String   @default("bronze") // bronze, silver, gold, platinum
-  accuracy      Float // Current accuracy percentage
-  attempts      Int      @default(0)
-  lastAttempt   DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@unique([userId, conditionName, systemCode, subcategory])
-  @@index([userId])
-  @@index([systemCode])
-}
-
-/// Represents baseline assessment results
-model BaselineAssessment {
-  id               String   @id @default(uuid())
-  userId           String   @unique
-  completedAt      DateTime @default(now())
-  totalQuestions   Int
-  correctAnswers   Int
-  accuracy         Float
-  systemBreakdown  Json // System-level performance breakdown
-  weakestSystems   String[] // Top 3 weakest systems
-  strongestSystems String[] // Top 3 strongest systems
-
-  @@index([userId])
-}
-
-/// Represents user feedback on explanation helpfulness
-model ExplanationReaction {
-  id         String   @id @default(uuid())
-  userId     String? // Null for anonymous feedback
-  questionId String // Question identifier
-  reaction   String // "helpful" | "not_helpful"
-  timestamp  DateTime @default(now())
-
-  @@index([questionId])
-  @@index([userId, questionId])
-}
-
-/// Represents user weakness patterns for adaptive learning
-model WeaknessPattern {
-  id               String   @id @default(uuid())
-  userId           String
-  conditionId      String
-  wasCorrect       Boolean
-  timestamp        DateTime @default(now())
-  consecutiveWrong Int      @default(0) // Track consecutive wrong answers
-
-  @@index([userId])
-  @@index([userId, conditionId])
-  @@index([conditionId])
-}
-
-/// Represents medical content for the CMS with full version control
-model MedicalContent {
-  id          String @id @default(uuid())
-  conditionId String @unique // e.g., "CV__ecg__atrial_fibrillation"
-  system      String // Primary system code (CV, PULM, GI, etc.)
-  subcategory String
-  condition   String
-
-  /// Cross-system tagging (e.g., ["DERM", "HEENT"])
-  relatedSystems String[] @default([])
-
-  // =========================================================================
-  // DEEP DIVE CONTENT (Markdown text for prose rendering)
-  // =========================================================================
-  overview              String? @db.Text
-  etiology              String? @db.Text
-  pathophysiology       String? @db.Text
-  epidemiology          String? @db.Text
-  symptoms              String? @db.Text // Markdown list
-  physicalExam          String? @db.Text // Markdown list
-  diagnostics           String? @db.Text // Comprehensive diagnostic approach
-  treatment             String? @db.Text // Markdown list
-  prognosis             String? @db.Text
-  differentialDiagnosis String? @db.Text // Markdown list
-  riskFactors           String? @db.Text // Markdown list
-  complications         String? @db.Text // Markdown list
-
-  // =========================================================================
-  // HIGH-YIELD METADATA (Badge-style quick reference)
-  // =========================================================================
-  buzzwords         String[] @default([])
-  classic_triad     Json? // ["Fever", "Murmur", "Osler Nodes"]
-  clinical_pearls   Json? // Full sentences with actionable advice
-  gold_standard_dx  String?  @db.Text // Concise badge (< 8 words)
-  first_line_rx     String?  @db.Text // Concise badge (< 8 words)
-  best_initial_test String?  @db.Text // Screening test done FIRST
-
-  // =========================================================================
-  // PHARMACOLOGY CONTEXT (For the First-Line Rx)
-  // =========================================================================
-  rx_mechanism    String? @db.Text // MOA of first-line treatment
-  rx_side_effects String? @db.Text // Top testable side effects
-
-  // =========================================================================
-  // VIGNETTE & SEARCH (Board-style recognition)
-  // =========================================================================
-  classic_patient String? @db.Text // "Fat, Forty, Female, Fertile"
-  synonyms        Json? // ["GCA", "Temporal Arteritis", "Horton Disease"]
-  mnemonic        String? @db.Text // "SAD for Aortic Stenosis"
-
-  // =========================================================================
-  // STRUCTURED DIFFERENTIALS (For comparison tables)
-  // =========================================================================
-  differentials Json? // [{ condition: "X", rule_out: "Y" }]
-
-  // =========================================================================
-  // CLINICAL MANAGEMENT & COUNSELING
-  // =========================================================================
-  patient_education String? @db.Text // Key counseling points
-  disposition       String? @db.Text // Admission criteria, referrals
-  prevention        String? @db.Text // Screening guidelines (USPSTF)
-  guidelines        String? @db.Text // "2023 ACR Guidelines"
-
-  // =========================================================================
-  // DEMOGRAPHICS & STUDY PRIORITIZATION
-  // =========================================================================
-  age_demographic Json? // ["Child", "Adult", "Elderly"]
-  gender_bias     String? // "Female > Male"
-  pance_yield     Int? // 1=Low, 2=Medium, 3=High
-  image_query     String? // Search term for clinical images
-
-  // =========================================================================
-  // WORKFLOW & METADATA
-  // =========================================================================
-  status  String @default("draft") // draft, pending_review, approved, published, archived
-  version Int    @default(1)
-
-  createdAt   DateTime  @default(now())
-  createdBy   String // User ID
-  updatedAt   DateTime  @updatedAt
-  updatedBy   String // User ID
-  publishedAt DateTime?
-  publishedBy String?
-  approvedAt  DateTime?
-  approvedBy  String?
-
-  /// Relations
-  versions  ContentVersion[]
-  auditLogs ContentAuditLog[]
-
-  @@index([conditionId])
-  @@index([system])
-  @@index([relatedSystems])
-  @@index([status])
-  @@index([createdBy])
-  @@index([updatedAt])
-}
-
-/// Represents a high-yield medical buzzword
-model Buzzword {
-  id          String  @id @default(uuid())
-  buzzword    String
-  condition   String
-  system      String // SystemCode
-  subcategory String?
-  explanation String?
-
-  dailyWords DailyWordle[] // Used in daily Wordle game
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([system])
-  @@index([condition])
-}
-
-/// Status for Wordle game
-enum WordleStatus {
-  playing
-  won
-  lost
-}
-
-/// Daily global word selection so all users share the same target
-model DailyWordle {
-  id     String   @id @default(uuid())
-  date   DateTime @unique @db.Date
-  wordId String
-
-  word Buzzword @relation(fields: [wordId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([wordId])
-}
-
-/// Per-user Wordle progress for a given date
-model UserWordleState {
-  id        String       @id @default(uuid())
-  userId    String
-  date      DateTime     @db.Date
-  guesses   String[]     @default([])
-  status    WordleStatus @default(playing)
-  updatedAt DateTime     @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, date])
-  @@index([userId])
-  @@index([date])
-}
-
-/// Represents a historical version of content
-model ContentVersion {
-  id                String   @id @default(uuid())
-  contentId         String
-  version           Int
-  content           Json // Snapshot of content at this version
-  changeType        String // create, update, delete, publish, unpublish, approve, reject
-  changeDescription String?  @db.Text
-  changedBy         String // User ID
-  changedAt         DateTime @default(now())
-
-  medicalContent MedicalContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
-
-  @@unique([contentId, version])
-  @@index([contentId])
-  @@index([changedBy])
-  @@index([changedAt])
-}
-
-/// Audit log for all content changes (immutable)
-model ContentAuditLog {
-  id                String   @id @default(uuid())
-  contentId         String
-  conditionId       String
-  version           Int
-  changeType        String // create, update, delete, publish, unpublish, approve, reject
-  changeDescription String?  @db.Text
-  changedFields     String[] // Array of field names that changed
-  oldValues         Json? // Previous values (for updates)
-  newValues         Json? // New values (for updates)
-  changedBy         String // User ID
-  changedByRole     String // admin, superadmin
-  changedAt         DateTime @default(now())
-  ipAddress         String?
-  userAgent         String?  @db.Text
-
-  medicalContent MedicalContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
-
-  @@index([contentId])
-  @@index([conditionId])
-  @@index([changedBy])
-  @@index([changedAt])
-  @@index([changeType])
-}
-
-/// Content health report from nightly audits
-model ContentHealthReport {
-  id                  String   @id @default(uuid())
-  timestamp           DateTime @default(now())
-  totalContent        Int
-  missingExplanations Int      @default(0)
-  brokenMediaLinks    Int      @default(0)
-  invalidFields       Int      @default(0)
-  outdatedContent     Int      @default(0)
-  reportData          Json // Full report details
-
-  @@index([timestamp])
-}
-
-/// Pre-generated AI questions for instant delivery
-model PreGeneratedQuestion {
-  id           String    @id @default(uuid())
-  questionType String // "vignette", "mcq", "clinical"
-  system       String? // System code
-  conditionId  String? // Related condition
-  difficulty   String // "easy", "medium", "hard"
-  questionData Json // Full question structure
-  generatedAt  DateTime  @default(now())
-  usedAt       DateTime?
-  usedBy       String? // User ID who received this question
-  quality      Int? // AI quality score 1-10
-
-  @@index([questionType])
-  @@index([system])
-  @@index([difficulty])
-  @@index([usedAt])
-  @@index([generatedAt])
-}
-
-/// Background job queue for async processing
 model BackgroundJob {
-  id           String    @id @default(uuid())
-  jobType      String // "generate_questions", "health_check", "media_processing"
-  status       String    @default("pending") // pending, processing, completed, failed
-  priority     Int       @default(5) // 1-10, higher = more important
-  payload      Json // Job-specific data
-  result       Json? // Job result data
-  error        String?   @db.Text
+  id           String    @id
+  jobType      String
+  status       String    @default("pending")
+  priority     Int       @default(5)
+  payload      Json
+  result       Json?
+  error        String?
   attempts     Int       @default(0)
   maxAttempts  Int       @default(3)
   scheduledFor DateTime  @default(now())
   startedAt    DateTime?
   completedAt  DateTime?
   createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  updatedAt    DateTime
 
   @@index([jobType])
-  @@index([status])
-  @@index([scheduledFor])
   @@index([priority, status])
+  @@index([scheduledFor])
+  @@index([status])
 }
 
-/// Real-time collaboration tracking
-model ContentLock {
-  id        String   @id @default(uuid())
-  contentId String   @unique
-  lockedBy  String // User ID
-  lockedAt  DateTime @default(now())
-  expiresAt DateTime // Auto-release after timeout
-
-  @@index([contentId])
-  @@index([lockedBy])
-  @@index([expiresAt])
-}
-
-/// Offline sync queue for resilience
-model SyncQueue {
-  id         String    @id @default(uuid())
-  userId     String
-  operation  String // "save_progress", "submit_quiz", "update_settings"
-  data       Json // Operation data
-  status     String    @default("pending") // pending, synced, failed, dead_letter
-  attempts   Int       @default(0)
-  maxRetries Int       @default(5) // Maximum retry attempts before moving to DLQ
-  lastError  String?   @db.Text
-  createdAt  DateTime  @default(now())
-  syncedAt   DateTime?
-  error      String?   @db.Text
-
-  // Version tracking for conflict resolution
-  version          Int     @default(1)
-  conflictDetected Boolean @default(false)
+model BaselineAssessment {
+  id               String   @id
+  userId           String   @unique
+  completedAt      DateTime @default(now())
+  totalQuestions   Int
+  correctAnswers   Int
+  accuracy         Float
+  systemBreakdown  Json
+  weakestSystems   String[]
+  strongestSystems String[]
 
   @@index([userId])
-  @@index([status])
-  @@index([createdAt])
-  @@index([attempts])
 }
 
-/// Represents educational resources (textbooks, lectures, PDFs)
-model EducationalResource {
-  id               String  @id @default(uuid())
-  title            String
-  resourceType     String // "textbook" | "lecture" | "pdf" | "video" | "slides"
-  fileUrl          String? // Storage URL for the resource
-  originalFilename String? // Original file name when uploaded
-
-  /// Content extraction
-  extractedText String?  @db.Text // Full text extracted from resource
-  summary       String?  @db.Text // AI-generated summary
-  keyTopics     String[] // Extracted medical topics/conditions
-
-  /// Metadata
-  author     String?
-  source     String? // Textbook name, lecture series, etc.
-  pageNumber Int? // For textbook excerpts
-  duration   Int? // For videos/lectures (in seconds)
-  mimeType   String?
-  fileSize   Int?
-
-  /// Linkage to conditions
-  conditionIds String[] // Array of related condition IDs
-  systemCodes  String[] // CV, PULM, GI, etc.
-
-  /// Approval workflow
-  approvalStatus  String    @default("pending") // "pending" | "approved" | "rejected"
-  approvedBy      String?
-  approvedAt      DateTime?
-  rejectionReason String?   @db.Text
-  qualityScore    Float? // 0-100 quality/relevance score
-
-  /// Tracking
-  uploadedBy String?
-  uploadedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  /// Usage analytics
-  viewCount      Int       @default(0)
-  lastAccessedAt DateTime?
-
-  @@index([resourceType])
-  @@index([approvalStatus])
-  @@index([keyTopics])
-  @@index([systemCodes])
-  @@index([uploadedBy])
-  @@index([approvedAt])
-}
-
-/// Represents a flagged question reported by a user
-model QuestionFlag {
-  id            String  @id @default(uuid())
-  userId        String // User who flagged the question
-  userEmail     String? // Email for notification
-  userFirstName String? // User's first name for personalized emails
-  questionId    String // Unique identifier for the question
-  questionText  String  @db.Text
-  correctAnswer String?
-  topic         String?
-  system        String?
-  flagType      String // "typo", "incorrect_answer", "unclear", "outdated", "other"
-  description   String  @db.Text // User's description of the issue
-  status        String  @default("pending") // pending, under_review, fixed, wont_fix, duplicate
-  priority      String  @default("medium") // low, medium, high, critical
-
-  /// Admin tracking
-  assignedTo     String? // Admin user ID
-  reviewedBy     String? // Admin who reviewed/fixed
-  reviewedAt     DateTime?
-  resolutionNote String?   @db.Text // Admin's note about the fix
-
-  /// Notification tracking
-  notificationSent Boolean   @default(false)
-  notifiedAt       DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([questionId])
-  @@index([status])
-  @@index([priority])
-  @@index([createdAt])
-  @@index([status, priority]) // For admin queue sorting
-}
-
-/// Semantic cache for AI-generated questions
-model SemanticCache {
-  id             String   @id @default(uuid())
-  queryText      String   @db.Text // Original query/prompt
-  queryEmbedding String?  @db.Text // Vector embedding as JSON
-  questionType   String // "vignette", "mcq", "clinical"
-  system         String?
-  difficulty     String?
-  cachedQuestion Json // The generated question data
-  generatedAt    DateTime @default(now())
-  lastUsedAt     DateTime @default(now())
-  useCount       Int      @default(1)
-  qualityScore   Float    @default(0) // User feedback quality
-
-  @@index([queryText(ops: raw("gin_trgm_ops"))], type: Gin) // PostgreSQL trigram for similarity
-  @@index([questionType])
-  @@index([system])
-  @@index([lastUsedAt])
-}
-
-/// Question version history for time travel
-model QuestionHistory {
-  id           String    @id @default(uuid())
-  questionId   String // The question identifier
-  version      Int // Version number
-  questionData Json // Complete question snapshot
-  changedBy    String? // User/system that made the change
-  changeReason String?   @db.Text
-  validFrom    DateTime  @default(now())
-  validTo      DateTime? // Null for current version
-
-  @@unique([questionId, version])
-  @@index([questionId])
-  @@index([validFrom])
-  @@index([questionId, validFrom]) // For time-travel queries
-}
-
-/// Content branches for Git-like version control
-model ContentBranch {
-  id          String  @id @default(uuid())
-  name        String // "main", "2026-guideline-update", etc.
-  description String? @db.Text
-  baseBranch  String? // Parent branch name
-  status      String  @default("active") // active, merged, archived
-
-  /// Branch metadata
-  createdBy     String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  mergedAt      DateTime?
-  mergedBy      String?
-  mergeCommitId String?
-
-  /// Statistics
-  contentCount Int @default(0)
-  changeCount  Int @default(0)
-
-  /// Relations
-  changes BranchChange[]
-
-  @@unique([name])
-  @@index([status])
-  @@index([createdBy])
-  @@index([createdAt])
-}
-
-/// Individual changes within a content branch
 model BranchChange {
-  id           String @id @default(uuid())
-  branchId     String
-  contentId    String // Reference to MedicalContent
-  conditionId  String
-  changeType   String // create, update, delete
-  contentData  Json // The changed content
-  previousData Json? // For updates/deletes
-
-  createdBy String
-  createdAt DateTime @default(now())
-
-  branch ContentBranch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  id            String        @id
+  branchId      String
+  contentId     String
+  conditionId   String
+  changeType    String
+  contentData   Json
+  previousData  Json?
+  createdBy     String
+  createdAt     DateTime      @default(now())
+  ContentBranch ContentBranch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
   @@index([branchId])
-  @@index([contentId])
   @@index([conditionId])
+  @@index([contentId])
   @@index([createdAt])
 }
 
-// ============================================================================
-// DEPRECATED: Leaderboard models replaced by GrandRoundsHistory
-// Kept commented for reference - can be deleted after migration
-// ============================================================================
+model Buzzword {
+  id          String        @id
+  buzzword    String
+  condition   String
+  system      String
+  subcategory String?
+  explanation String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime
+  DailyWordle DailyWordle[]
 
-// /// Represents an entry in a leaderboard
-// model LeaderboardEntry {
-//   id            String   @id @default(uuid())
-//   leaderboardId String
-//   userId        String
-//   score         Int      @default(0)
-//   rank          Int?     // Cached rank
-//   updatedAt     DateTime @updatedAt
-// 
-//   leaderboard   Leaderboard @relation(fields: [leaderboardId], references: [id], onDelete: Cascade)
-//   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-// 
-//   @@unique([leaderboardId, userId])
-//   @@index([leaderboardId])
-//   @@index([userId])
-//   @@index([score])
-// }
-
-/// Represents a vetted, high-quality question in the "Golden Repository"
-/// Task 110: The "Golden Repository"
-model Question {
-  id            String @id @default(uuid())
-  vignette      String @db.Text
-  question      String @db.Text
-  options       Json // Array of strings
-  correctAnswer String
-  explanation   String @db.Text
-
-  // Metadata
-  system     String // CV, PULM, etc.
-  tags       Json? // Array of strings
-  difficulty String // easy, medium, hard
-  source     String // "ai_generated", "manual", "hybrid"
-
-  // Stats
-  timesSeen    Int @default(0)
-  timesCorrect Int @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([system])
-  @@index([difficulty])
-}
-
-/// Represents a generated question waiting for validation
-/// Task 108: The "Staging Lake" Architecture
-model StagingQuestion {
-  id            String @id @default(uuid())
-  vignette      String @db.Text
-  question      String @db.Text
-  options       Json
-  correctAnswer String
-  explanation   String @db.Text
-
-  // Metadata
-  system     String
-  tags       Json?
-  difficulty String
-
-  // AI Generation Metadata
-  generationPrompt String? @db.Text
-  aiModel          String?
-
-  // Grading/Validation
-  status      String  @default("pending") // pending, graded, approved, rejected
-  aiGrade     Json? // { score: number, issues: string[] }
-  adminReview String? @db.Text
-
-  createdAt DateTime @default(now())
-
-  @@index([status])
+  @@index([condition])
   @@index([system])
 }
 
-/// Tracks which questions a user has seen to prevent repeats
-/// Task 109: "Infinite" No-Repeat Logic
-model UserQuestionHistory {
-  id         String @id @default(uuid())
-  userId     String
-  questionId String
-
-  // Performance
-  isCorrect Boolean
-  seenAt    DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, questionId])
-  @@index([userId])
-}
-
-/// Tracks every attempt for audit trails and ranked vs sandbox separation
-model QuestionAttempt {
-  id              String   @id @default(uuid())
-  userId          String
-  questionId      String
-  questionType    String?
-  system          String?
-  conditionId     String?
-  mode            String?
-  wasCorrect      Boolean  @default(false)
-  isRankedAttempt Boolean  @default(false)
+model ClinicalGuideline {
+  id              String   @id
+  name            String
+  description     String
+  clinicalContext String?
+  maxScore        Int
+  components      Json
+  scoringMap      Json?
+  vignettes       Json
   createdAt       DateTime @default(now())
-
-  @@index([userId, createdAt])
-  @@index([questionId])
-  @@index([mode])
-  @@index([isRankedAttempt])
+  updatedAt       DateTime
 }
 
-/// Stores high-yield clinical pearls extracted from questions
-/// Task 112: The "Pearl" Harvester
 model ClinicalPearl {
-  id              String   @id @default(uuid())
-  pearlText       String   @db.Text
-  fullExplanation String?  @db.Text
-  questionId      String?
+  id              String      @id
   system          String
+  createdAt       DateTime    @default(now())
   category        String?
+  extractedAt     DateTime    @default(now())
+  fullExplanation String?
+  pearlText       String
+  questionId      String?
+  updatedAt       DateTime
+  usefulVotes     Int         @default(0)
+  viewCount       Int         @default(0)
   tags            String[]
-  usefulVotes     Int      @default(0)
-  viewCount       Int      @default(0)
-  extractedAt     DateTime @default(now())
+  UserPearl       UserPearl[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  userPearls UserPearl[]
-
-  @@index([system])
   @@index([category])
   @@index([questionId])
+  @@index([system])
 }
 
-/// Stores results from the Patient Encounter (OSCE) mode
-model EncounterResult {
-  id     String @id @default(uuid())
-  userId String
-  caseId String
-
-  // Performance
-  score    Json // { overall: number, history: number, physical: number, ... }
-  feedback String @db.Text
-
-  // Detailed Data
-  phasesData Json // Snapshot of the interaction (questions asked, tests ordered, etc.)
-
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([caseId])
-}
-
-/// Represents a pharmacological drug
-model Drug {
-  id                String   @id @default(uuid())
-  genericName       String   @unique
-  brandName         String?
-  drugClass         String[]
-  mechanismOfAction String?
-  indications       String[]
-  contraindications String[]
-  sideEffects       String[]
-  interactions      String[]
-  dosing            String?
-  displayName       String?
-  aliases           String[]
-  tags              String[]
-  isHighYield       Boolean  @default(false)
-
-  // Extended fields
-  clinicalNotes String?
-  antidote      String?
-  metabolism    String?
-  elimination   String?
-
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High PANCE yield
-  isFirstLine     Boolean  @default(false) // First-line treatment for any condition
-  boardYieldFacts String[] @default([]) // High-yield facts for boards
-
-  // ===== NEW: Detailed Pharmacology =====
-  mechanismDetailed String? @db.Text // Full mechanism explanation
-  pharmacokinetics  Json? // { absorption, distribution, metabolism, elimination, halfLife, bioavailability }
-  absorption        String? // Oral absorption characteristics
-  distribution      String? // Vd, protein binding
-  metabolismDetail  String? // CYP enzymes, active metabolites
-  eliminationRoute  String? // Renal, hepatic, fecal
-  halfLife          String? // Terminal half-life
-  onsetOfAction     String? // Time to effect
-  peakEffect        String? // Time to peak
-  duration          String? // Duration of effect
-  bioavailability   String? // Oral bioavailability percentage
-
-  // ===== NEW: Special Populations =====
-  pregnancyCategory String? // A, B, C, D, X or new labeling
-  pregnancyNotes    String? @db.Text // Specific pregnancy considerations
-  lactationSafety   String? // Safe, Caution, Contraindicated
-  lactationNotes    String? @db.Text
-  pediatricDosing   String? @db.Text // Weight-based dosing, age restrictions
-  pediatricNotes    String? @db.Text
-  geriatricDosing   String? @db.Text // Adjusted dosing for elderly
-  geriatricNotes    String? @db.Text
-  renalDosing       String? @db.Text // CrCl-based adjustments
-  hepaticDosing     String? @db.Text // Child-Pugh adjustments
-
-  // ===== NEW: Safety & Monitoring =====
-  blackBoxWarnings String[] @default([]) // FDA black box warnings
-  riskStrategies   String[] @default([]) // REMS programs
-  monitoringParams String[] @default([]) // Required monitoring (labs, vitals)
-  reversalAgent    String? // Antidote/reversal agent
-  toxicity         String?  @db.Text // Overdose presentation and management
-  maxDailyDose     String? // Maximum safe daily dose
-
-  // ===== NEW: Clinical Pearls & Teaching =====
-  clinicalPearls   String[] @default([]) // Key clinical points
-  commonMistakes   String[] @default([]) // Common prescribing errors
-  mnemonics        String[] @default([]) // Memory aids
-  testQuestionTips String[] @default([]) // Board exam tips
-
-  // ===== NEW: Drug Interactions (Detailed) =====
-  majorInteractions Json? // [{ drug, severity, mechanism, clinicalEffect, management }]
-  cyp450Effects     Json? // { inhibits: [], induces: [], substrates: [] }
-  foodInteractions  String[] @default([]) // Food/beverage interactions
-
-  // ===== NEW: Administration =====
-  routesOfAdmin       String[] @default([]) // PO, IV, IM, SC, etc.
-  formulations        String[] @default([]) // Tablet, capsule, solution, etc.
-  administrationTips  String?  @db.Text // How to take/give properly
-  storageRequirements String? // Storage conditions
-
-  // ===== NEW: Cost & Access =====
-  genericAvailable Boolean @default(false)
-  typicalCost      String? // $, $$, $$$, $$$$
-  insuranceTier    Int? // Formulary tier 1-4
-
-  // ===== NEW: Relations =====
-  conditionLinks DrugConditionLink[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([genericName])
-  @@index([panceYield])
-  @@index([isFirstLine])
-}
-
-/// Represents a study group for social learning
-model StudyGroup {
-  id          String  @id @default(uuid())
-  name        String
-  code        String  @unique // Join code
-  description String? @db.Text
-  ownerId     String
-  isPublic    Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  members StudyGroupMember[]
-
-  @@index([code])
-  @@index([ownerId])
-}
-
-/// Represents a member of a study group
-model StudyGroupMember {
-  id       String   @id @default(uuid())
-  userId   String
-  groupId  String
-  role     String   @default("member") // member, admin
-  joinedAt DateTime @default(now())
-
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, groupId])
-  @@index([groupId])
-}
-
-/// Represents a professional cohort (class, program, or study group)
 model Cohort {
-  id          String  @id @default(uuid())
-  name        String
-  code        String  @unique // Join code for invitations
-  description String? @db.Text
-  institution String?
-  isPublic    Boolean @default(false)
+  id            String          @id
+  name          String
+  code          String          @unique
+  description   String?
+  institution   String?
+  isPublic      Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime
+  CohortMember  CohortMember[]
+  PeerStatistic PeerStatistic[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  members   CohortMember[]
-  peerStats PeerStatistic[]
-
-  @@index([name])
   @@index([isPublic])
+  @@index([name])
 }
 
-/// Links users to cohorts with roles
 model CohortMember {
-  id       String     @id @default(uuid())
+  id       String     @id
   userId   String
   cohortId String
   role     CohortRole @default(MEMBER)
   joinedAt DateTime   @default(now())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cohort Cohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  Cohort   Cohort     @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  User     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, cohortId])
   @@index([cohortId])
   @@index([userId])
 }
 
-/// Cached peer statistics for percentile calculations
+model Condition {
+  id                      String                    @id
+  name                    String
+  system                  String
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  aliases                 String[]                  @default([])
+  content                 Json?
+  displayName             String?
+  parentId                String?
+  relatedSystems          String[]                  @default([])
+  status                  String                    @default("published")
+  subcategory             String?
+  AnatomyConditionLink    AnatomyConditionLink[]
+  Condition               Condition?                @relation("ConditionToCondition", fields: [parentId], references: [id], onDelete: Cascade)
+  other_Condition         Condition[]               @relation("ConditionToCondition")
+  DrugConditionLink       DrugConditionLink[]
+  ECGConditionLink        ECGConditionLink[]
+  FindingConditionLink    FindingConditionLink[]
+  ImagingConditionLink    ImagingConditionLink[]
+  LabConditionLink        LabConditionLink[]
+  MediaAsset              MediaAsset[]
+  PhysiologyConditionLink PhysiologyConditionLink[]
+  ProcedureConditionLink  ProcedureConditionLink[]
+  TreatmentConditionLink  TreatmentConditionLink[]
+  AnatomyStructure        AnatomyStructure[]
+  SpecialTest             SpecialTest[]
+
+  @@index([displayName])
+  @@index([name])
+  @@index([parentId])
+  @@index([status])
+  @@index([subcategory])
+  @@index([system])
+}
+
+model ConfusionPair {
+  id             String   @id
+  userId         String?
+  realCondition  String
+  mistakenFor    String
+  count          Int      @default(1)
+  lastOccurrence DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, realCondition, mistakenFor])
+  @@index([realCondition])
+  @@index([userId])
+  @@index([userId, realCondition])
+}
+
+model ContentAuditLog {
+  id                String         @id
+  contentId         String
+  conditionId       String
+  version           Int
+  changeType        String
+  changeDescription String?
+  changedFields     String[]
+  oldValues         Json?
+  newValues         Json?
+  changedBy         String
+  changedByRole     String
+  changedAt         DateTime       @default(now())
+  ipAddress         String?
+  userAgent         String?
+  MedicalContent    MedicalContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([changeType])
+  @@index([changedAt])
+  @@index([changedBy])
+  @@index([conditionId])
+  @@index([contentId])
+}
+
+model ContentBranch {
+  id            String         @id
+  name          String         @unique
+  description   String?
+  baseBranch    String?
+  status        String         @default("active")
+  createdBy     String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime
+  mergedAt      DateTime?
+  mergedBy      String?
+  mergeCommitId String?
+  contentCount  Int            @default(0)
+  changeCount   Int            @default(0)
+  BranchChange  BranchChange[]
+
+  @@index([createdAt])
+  @@index([createdBy])
+  @@index([status])
+}
+
+model ContentHealthReport {
+  id                  String   @id
+  timestamp           DateTime @default(now())
+  totalContent        Int
+  missingExplanations Int      @default(0)
+  brokenMediaLinks    Int      @default(0)
+  invalidFields       Int      @default(0)
+  outdatedContent     Int      @default(0)
+  reportData          Json
+
+  @@index([timestamp])
+}
+
+model ContentLock {
+  id        String   @id
+  contentId String   @unique
+  lockedBy  String
+  lockedAt  DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([contentId])
+  @@index([expiresAt])
+  @@index([lockedBy])
+}
+
+model ContentVersion {
+  id                String         @id
+  contentId         String
+  version           Int
+  content           Json
+  changeType        String
+  changeDescription String?
+  changedBy         String
+  changedAt         DateTime       @default(now())
+  MedicalContent    MedicalContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([contentId, version])
+  @@index([changedAt])
+  @@index([changedBy])
+  @@index([contentId])
+}
+
+model DailyStreak {
+  id                String   @id
+  userId            String
+  date              DateTime @db.Date
+  questionsAnswered Int      @default(0)
+  accuracyPercent   Float
+  studyMinutes      Int      @default(0)
+  createdAt         DateTime @default(now())
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
+  @@index([userId])
+}
+
+model DailyWordle {
+  id        String   @id
+  date      DateTime @unique @db.Date
+  wordId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Buzzword  Buzzword @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  @@index([wordId])
+}
+
+model DifferentialDiagnosis {
+  id                     String   @id
+  presentingComplaint    String   @unique
+  category               String
+  isEmergency            Boolean  @default(false)
+  differentialList       String[]
+  mustNotMiss            String[]
+  workup                 String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime
+  byAcuity               Json?
+  byAge                  Json?
+  clinicalPearls         String[] @default([])
+  commonMistakes         String[] @default([])
+  diagnosticAlgorithm    String?
+  dispositionGuidance    String?
+  distinguishingFeatures Json?
+  initialWorkup          String[] @default([])
+  isHighYield            Boolean  @default(false)
+  keyExamFindings        String[] @default([])
+  keyQuestions           String[] @default([])
+  mnemonics              String[] @default([])
+  mostCommon             String[] @default([])
+  mostDangerous          String[] @default([])
+  oftenMissed            String[] @default([])
+  panceYield             Int?
+  reassuringFeatures     String[] @default([])
+  redFlags               String[] @default([])
+  typicalPresentation    String?
+
+  @@index([category])
+  @@index([isEmergency])
+  @@index([panceYield])
+}
+
+model Drug {
+  id                  String              @id
+  genericName         String              @unique
+  brandName           String?
+  drugClass           String[]
+  mechanismOfAction   String?
+  indications         String[]
+  contraindications   String[]
+  dosing              String?
+  tags                String[]
+  isHighYield         Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime
+  aliases             String[]
+  antidote            String?
+  clinicalNotes       String?
+  displayName         String?
+  elimination         String?
+  metabolism          String?
+  sideEffects         String[]
+  interactions        String[]
+  absorption          String?
+  administrationTips  String?
+  bioavailability     String?
+  blackBoxWarnings    String[]            @default([])
+  boardYieldFacts     String[]            @default([])
+  clinicalPearls      String[]            @default([])
+  commonMistakes      String[]            @default([])
+  cyp450Effects       Json?
+  distribution        String?
+  duration            String?
+  eliminationRoute    String?
+  foodInteractions    String[]            @default([])
+  formulations        String[]            @default([])
+  genericAvailable    Boolean             @default(false)
+  geriatricDosing     String?
+  geriatricNotes      String?
+  halfLife            String?
+  hepaticDosing       String?
+  insuranceTier       Int?
+  isFirstLine         Boolean             @default(false)
+  lactationNotes      String?
+  lactationSafety     String?
+  majorInteractions   Json?
+  maxDailyDose        String?
+  mechanismDetailed   String?
+  metabolismDetail    String?
+  mnemonics           String[]            @default([])
+  monitoringParams    String[]            @default([])
+  onsetOfAction       String?
+  panceYield          Int?
+  peakEffect          String?
+  pediatricDosing     String?
+  pediatricNotes      String?
+  pharmacokinetics    Json?
+  pregnancyCategory   String?
+  pregnancyNotes      String?
+  renalDosing         String?
+  reversalAgent       String?
+  riskStrategies      String[]            @default([])
+  routesOfAdmin       String[]            @default([])
+  storageRequirements String?
+  testQuestionTips    String[]            @default([])
+  toxicity            String?
+  typicalCost         String?
+  DrugConditionLink   DrugConditionLink[]
+
+  @@index([genericName])
+  @@index([isFirstLine])
+  @@index([panceYield])
+}
+
+model DrugConditionLink {
+  id               String    @id
+  drugId           String
+  conditionId      String
+  relationshipType String
+  evidenceLevel    String?
+  notes            String?
+  isFirstLine      Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  Condition        Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  Drug             Drug      @relation(fields: [drugId], references: [id], onDelete: Cascade)
+
+  @@unique([drugId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+model ECGConditionLink {
+  id                 String     @id
+  ecgPatternId       String
+  conditionId        String
+  relationshipType   String
+  findingDescription String?
+  exampleImageUrls   String[]   @default([])
+  annotatedImageUrls String[]   @default([])
+  isFirstLine        Boolean?   @default(false)
+  panceYield         Int?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @default(now())
+  Condition          Condition  @relation(fields: [conditionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  ECGPattern         ECGPattern @relation(fields: [ecgPatternId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([ecgPatternId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([ecgPatternId])
+  @@index([relationshipType])
+}
+
+model ECGPattern {
+  id                     String             @id
+  name                   String             @unique
+  displayName            String?
+  aliases                String[]           @default([])
+  category               String
+  subcategory            String?
+  panceYield             Int?
+  isHighYield            Boolean            @default(false)
+  boardYieldFacts        String[]           @default([])
+  isEmergency            Boolean            @default(false)
+  rate                   String?
+  rhythm                 String?
+  pWave                  String?
+  prInterval             String?
+  qrsComplex             String?
+  qtInterval             String?
+  stSegment              String?
+  tWave                  String?
+  diagnosticCriteria     String[]           @default([])
+  pathognomonic          String?
+  etiology               String[]           @default([])
+  symptoms               String[]           @default([])
+  hemodynamicEffect      String?
+  associatedConditions   String[]           @default([])
+  acuteManagement        String?
+  medications            String[]           @default([])
+  cardioversion          String?
+  pacing                 String?
+  referral               String?
+  mimics                 String[]           @default([])
+  distinguishingFeatures Json?
+  exampleEcgUrl          String?
+  annotatedEcgUrl        String?
+  clinicalPearls         String[]           @default([])
+  commonMistakes         String[]           @default([])
+  testQuestionTips       String[]           @default([])
+  mnemonics              String[]           @default([])
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime
+  exampleImageUrls       String[]           @default([])
+  annotatedImageUrls     String[]           @default([])
+  ECGConditionLink       ECGConditionLink[]
+
+  @@index([category])
+  @@index([isEmergency])
+  @@index([panceYield])
+}
+
+model EducationalResource {
+  id               String    @id
+  title            String
+  resourceType     String
+  fileUrl          String?
+  originalFilename String?
+  extractedText    String?
+  summary          String?
+  keyTopics        String[]
+  author           String?
+  source           String?
+  pageNumber       Int?
+  duration         Int?
+  mimeType         String?
+  fileSize         Int?
+  conditionIds     String[]
+  systemCodes      String[]
+  approvalStatus   String    @default("pending")
+  approvedBy       String?
+  approvedAt       DateTime?
+  rejectionReason  String?
+  qualityScore     Float?
+  uploadedBy       String?
+  uploadedAt       DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  viewCount        Int       @default(0)
+  lastAccessedAt   DateTime?
+
+  @@index([approvalStatus])
+  @@index([approvedAt])
+  @@index([keyTopics])
+  @@index([resourceType])
+  @@index([systemCodes])
+  @@index([uploadedBy])
+}
+
+model EncounterResult {
+  id         String   @id
+  userId     String
+  caseId     String
+  score      Json
+  feedback   String
+  phasesData Json
+  createdAt  DateTime @default(now())
+
+  @@index([caseId])
+  @@index([userId])
+}
+
+model ExplanationReaction {
+  id         String   @id
+  userId     String?
+  questionId String
+  reaction   String
+  timestamp  DateTime @default(now())
+
+  @@index([questionId])
+  @@index([userId, questionId])
+}
+
+model FindingConditionLink {
+  id                  String              @id
+  findingId           String
+  conditionId         String
+  relationshipType    String
+  clinicalContext     String?
+  sensitivity         Float?
+  specificity         Float?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime
+  Condition           Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  PhysicalExamFinding PhysicalExamFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+
+  @@unique([findingId, conditionId])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+model FirstLineTreatment {
+  id        String   @id
+  condition String
+  treatment String
+  category  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model FluidCase {
+  id              String   @id
+  title           String
+  scenario        String
+  labs            Json
+  correctAnswer   Float
+  unit            String
+  marginOfError   Float
+  explanation     String
+  calculationHint String?
+  category        String
+  difficulty      String   @default("medium")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+
+  @@index([category])
+  @@index([difficulty])
+}
+
+model GrandRoundsAttempt {
+  id                   String               @id
+  userId               String
+  challengeId          String
+  score                Int
+  timeSpentMs          Int
+  completedAt          DateTime             @default(now())
+  createdAt            DateTime             @default(now())
+  GrandRoundsChallenge GrandRoundsChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@index([challengeId])
+}
+
+model GrandRoundsChallenge {
+  id                 String               @id
+  date               DateTime             @unique @db.Date
+  questionIds        String[]
+  createdAt          DateTime             @default(now())
+  GrandRoundsAttempt GrandRoundsAttempt[]
+}
+
+model HistoryComponent {
+  id                  String   @id
+  name                String   @unique
+  displayName         String?
+  category            String
+  system              String?
+  description         String?
+  panceYield          Int?
+  isHighYield         Boolean  @default(false)
+  boardYieldFacts     String[] @default([])
+  elements            String[] @default([])
+  expandedElements    Json?
+  requiredFor         String[] @default([])
+  frameworkName       String?
+  frameworkElements   Json?
+  rosCategory         String?
+  positiveIndicators  String[] @default([])
+  negativeIndicators  String[] @default([])
+  redFlagResponses    String[] @default([])
+  reassuringResponses String[] @default([])
+  diagnosticValue     Json?
+  documentationTips   String?
+  chartingExamples    String[] @default([])
+  clinicalPearls      String[] @default([])
+  commonMistakes      String[] @default([])
+  testQuestionTips    String[] @default([])
+  mnemonics           String[] @default([])
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime
+
+  @@index([category])
+  @@index([panceYield])
+  @@index([system])
+}
+
+model ImagingConditionLink {
+  id                 String       @id
+  imagingId          String
+  conditionId        String
+  relationshipType   String
+  expectedFindings   String[]     @default([])
+  classicFindings    String?
+  sensitivity        Float?
+  specificity        Float?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime
+  exampleImageUrls   String[]     @default([])
+  annotatedImageUrls String[]     @default([])
+  normalImageUrls    String[]     @default([])
+  findingDescription String?
+  isFirstLine        Boolean?     @default(false)
+  panceYield         Int?
+  Condition          Condition    @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  ImagingStudy       ImagingStudy @relation(fields: [imagingId], references: [id], onDelete: Cascade)
+
+  @@unique([imagingId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+model ImagingStudy {
+  id                   String                 @id
+  name                 String                 @unique
+  modality             String
+  bodyRegion           String?
+  usesContrast         Boolean                @default(false)
+  usesRadiation        Boolean                @default(false)
+  description          String?
+  indications          String[]
+  contraindications    String[]
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime
+  advantages           String[]               @default([])
+  allergyProtocol      String?
+  alternativeTo        String[]               @default([])
+  boardYieldFacts      String[]               @default([])
+  classicSigns         String[]               @default([])
+  clinicalPearls       String[]               @default([])
+  commonMistakes       String[]               @default([])
+  contrastAgent        String?
+  contrastType         String?
+  firstLineFor         String[]               @default([])
+  isHighYield          Boolean                @default(false)
+  keyFindings          Json?
+  limitations          String[]               @default([])
+  normalFindings       String?
+  panceYield           Int?
+  pregnancySafety      String?
+  preparation          String?
+  protocol             String?
+  radiationDose        String?
+  renalConsiderations  String?
+  reportTemplate       String?
+  scanDuration         String?
+  testQuestionTips     String[]               @default([])
+  whenToAvoid          String[]               @default([])
+  // Image fields for visual learning
+  exampleImageUrls     String[]               @default([])
+  annotatedImageUrls   String[]               @default([])
+  thumbnailUrl         String?
+  ImagingConditionLink ImagingConditionLink[]
+  MediaAsset           MediaAsset[]
+
+  @@index([bodyRegion])
+  @@index([modality])
+  @@index([panceYield])
+}
+
+model LabCase {
+  id               String   @id
+  correctDiagnosis String
+  clinicalVignette String
+  labs             Json
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+}
+
+model LabConditionLink {
+  id               String    @id
+  labTestId        String
+  conditionId      String
+  relationshipType String
+  expectedResult   String?
+  significance     String?
+  sensitivity      Float?
+  specificity      Float?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  Condition        Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  LabTest          LabTest   @relation(fields: [labTestId], references: [id], onDelete: Cascade)
+
+  @@unique([labTestId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
+model LabTest {
+  id                  String             @id
+  name                String             @unique
+  category            String
+  commonAbnormalities String[]
+  typicalUse          String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime
+  boardYieldFacts     String[]           @default([])
+  clinicalPearls      String[]           @default([])
+  clinicalScenarios   Json?
+  collectionTube      String?
+  commonMistakes      String[]           @default([])
+  conventionalRange   String?
+  conversionFactor    Float?
+  criticalValues      Json?
+  decreaseIndicates   String[]           @default([])
+  falsePosNeg         String?
+  fastingRequired     Boolean            @default(false)
+  followUpTests       String[]           @default([])
+  increaseIndicates   String[]           @default([])
+  interferingFactors  String[]           @default([])
+  interpretationSteps String?
+  isHighYield         Boolean            @default(false)
+  mnemonics           String[]           @default([])
+  panceYield          Int?
+  referenceRanges     Json?
+  relatedTests        String[]           @default([])
+  sampleType          String?
+  siRange             String?
+  siUnits             String?
+  specialInstructions String?
+  stability           String?
+  testQuestionTips    String[]           @default([])
+  turnaroundTime      String?
+  units               String?
+  whenToOrder         String[]           @default([])
+  LabConditionLink    LabConditionLink[]
+
+  @@index([category])
+  @@index([panceYield])
+}
+
+model MasteryProgress {
+  id            String   @id
+  userId        String
+  conditionName String?
+  systemCode    String?
+  subcategory   String?
+  masteryTier   String   @default("bronze")
+  accuracy      Float
+  attempts      Int      @default(0)
+  lastAttempt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+
+  @@unique([userId, conditionName, systemCode, subcategory])
+  @@index([systemCode])
+  @@index([userId])
+}
+
+model MediaAsset {
+  id                  String                @id
+  conditionId         String?
+  imagingStudyId      String?
+  type                String
+  filename            String
+  originalUrl         String?
+  thumbnailUrl        String?
+  tags                String[]
+  description         String?
+  altText             String?
+  mimeType            String?
+  fileSize            Int?
+  dimensions          Json?
+  confidence          Float                 @default(0)
+  aiMetadata          Json?
+  approvalStatus      String                @default("pending")
+  status              String                @default("pending_review")
+  approvedBy          String?
+  approvedAt          DateTime?
+  rejectionReason     String?
+  qualityScore        Float?
+  isClinical          Boolean               @default(false)
+  folder              String                @default("inbox")
+  mediaType           String                @default("image")
+  textContent         String?
+  pageCount           Int?
+  duration            Int?
+  sourceUrl           String?
+  citation            String?
+  uploadedBy          String?
+  uploadedAt          DateTime              @default(now())
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  clinicalContext     Json?
+  correctDiagnosis    String?
+  distractors         Json?
+  // Photo Drill fields
+  difficulty          String                @default("medium") /// easy, medium, hard
+  sourceQuality       String                @default("high") /// low, medium, high
+  modality            String?               /// Normalized: ecg, derm, radiology
+  explanation         String?               /// Explanation shown after answering
+  Condition           Condition?            @relation(fields: [conditionId], references: [id])
+  ImagingStudy        ImagingStudy?         @relation(fields: [imagingStudyId], references: [id])
+  MedicalContentMedia MedicalContentMedia[]
+
+  @@index([approvalStatus])
+  @@index([approvedAt])
+  @@index([conditionId])
+  @@index([difficulty])
+  @@index([filename])
+  @@index([folder])
+  @@index([imagingStudyId])
+  @@index([mediaType])
+  @@index([modality])
+  @@index([status])
+  @@index([tags])
+  @@index([type])
+  @@index([uploadedBy])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model MedicalContent {
+  id                    String            @id
+  conditionId           String            @unique
+  system                String
+  subcategory           String
+  condition             String
+  status                String            @default("draft")
+  version               Int               @default(1)
+  createdAt             DateTime          @default(now())
+  createdBy             String
+  updatedAt             DateTime
+  updatedBy             String
+  publishedAt           DateTime?
+  publishedBy           String?
+  approvedAt            DateTime?
+  approvedBy            String?
+  relatedSystems        String[]          @default([])
+  buzzwords             String[]          @default([])
+  complications         String?
+  diagnostics           String?
+  differentialDiagnosis String?
+  epidemiology          String?
+  etiology              String?
+  overview              String?
+  pathophysiology       String?
+  physicalExam          String?
+  prognosis             String?
+  riskFactors           String?
+  symptoms              String?
+  treatment             String?
+  classic_triad         Json?
+  clinical_pearls       Json?
+  first_line_rx         String?
+  gold_standard_dx      String?
+  age_demographic       Json?
+  best_initial_test     String?
+  classic_patient       String?
+  differentials         Json?
+  disposition           String?
+  gender_bias           String?
+  guidelines            String?
+  image_query           String?
+  mnemonic              String?
+  pance_yield           Int?
+  patient_education     String?
+  prevention            String?
+  rx_mechanism          String?
+  rx_side_effects       String?
+  synonyms              Json?
+  ContentAuditLog       ContentAuditLog[]
+  ContentVersion        ContentVersion[]
+  MedicalContentMedia   MedicalContentMedia[]
+
+  @@index([conditionId])
+  @@index([createdBy])
+  @@index([relatedSystems])
+  @@index([status])
+  @@index([system])
+  @@index([updatedAt])
+}
+
+/// Junction table linking MedicalContent to MediaAsset
+model MedicalContentMedia {
+  id               String         @id
+  medicalContentId String
+  mediaAssetId     String
+  relationship     String         @default("illustration") // illustration, diagram, clinical_image, reference
+  displayOrder     Int            @default(0)
+  caption          String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now())
+  MedicalContent   MedicalContent @relation(fields: [medicalContentId], references: [id], onDelete: Cascade)
+  MediaAsset       MediaAsset     @relation(fields: [mediaAssetId], references: [id], onDelete: Cascade)
+
+  @@unique([medicalContentId, mediaAssetId])
+  @@index([medicalContentId])
+  @@index([mediaAssetId])
+}
+
+model PatientEncounterCase {
+  id                      String                    @id
+  patientName             String
+  chiefComplaint          String
+  age                     Int
+  sex                     String
+  vitalSigns              Json
+  historyData             Json
+  physicalExamData        Json
+  labData                 Json
+  essentialQuestions      String[]
+  helpfulQuestions        String[]
+  unnecessaryQuestions    String[]
+  correctDiagnosis        String
+  differentialDiagnoses   String[]
+  idealWorkup             String[]
+  teachingPoints          String[]
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  PatientEncounterSession PatientEncounterSession[]
+}
+
+model PatientEncounterSession {
+  id                   String               @id
+  userId               String
+  caseId               String
+  startTime            DateTime             @default(now())
+  updatedAt            DateTime
+  status               String               @default("active")
+  messages             Json
+  physicalFindings     Json?
+  diagnosticOrders     Json?
+  diagnosis            String?
+  treatmentPlan        String?
+  PatientEncounterCase PatientEncounterCase @relation(fields: [caseId], references: [id])
+  User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+}
+
 model PeerStatistic {
-  id         String   @id @default(uuid())
+  id         String   @id
   userId     String
   cohortId   String?
   system     String
   accuracy   Float
   percentile Float
   recordedAt DateTime
-
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  cohort Cohort? @relation(fields: [cohortId], references: [id])
+  Cohort     Cohort?  @relation(fields: [cohortId], references: [id])
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, cohortId, system, recordedAt])
-  @@index([userId, recordedAt])
   @@index([cohortId, recordedAt])
+  @@index([userId, recordedAt])
 }
 
-enum CohortRole {
-  ADMIN
-  MEMBER
-}
-
-/// Represents an active Patient Encounter / OSCE session
-model PatientEncounterSession {
-  id        String               @id @default(uuid())
-  userId    String
-  caseId    String
-  case      PatientEncounterCase @relation(fields: [caseId], references: [id])
-  startTime DateTime             @default(now())
-  updatedAt DateTime             @updatedAt
-  status    String               @default("active") // "active", "completed", "abandoned"
-  messages  Json // Array of chat messages: { role: "user"|"model", content: "..." }[]
-
-  // Clinical data collected during the session
-  physicalFindings Json? // Array of findings
-  diagnosticOrders Json? // Array of orders
-  diagnosis        String?
-  treatmentPlan    String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([status])
-}
-
-/// Represents a clinical case for the Patient Encounter / OSCE mode
-model PatientEncounterCase {
-  id             String @id @default(uuid())
-  patientName    String
-  chiefComplaint String
-  age            Int
-  sex            String // "M", "F", "Other"
-
-  // JSON fields for structured data
-  vitalSigns       Json // { bp, hr, rr, temp, o2sat }
-  historyData      Json // Key-value pairs of history info
-  physicalExamData Json // Key-value pairs of exam findings
-  labData          Json // Key-value pairs of lab results
-
-  // Evaluation criteria
-  essentialQuestions   String[]
-  helpfulQuestions     String[]
-  unnecessaryQuestions String[]
-
-  // Outcome data
-  correctDiagnosis      String
-  differentialDiagnoses String[]
-  idealWorkup           String[]
-  teachingPoints        String[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  sessions PatientEncounterSession[]
-}
-
-/// Represents a clinical guideline for scoring drills (e.g., Wells, CURB-65)
-model ClinicalGuideline {
-  id              String  @id // e.g. "wells-dvt"
-  name            String
-  description     String
-  clinicalContext String?
-  maxScore        Int
-
-  components Json // GuidelineComponent[]
-  scoringMap Json? // ScoreTier[]
-  vignettes  Json // GuidelineCase[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-/// Represents an imaging study
-model ImagingStudy {
-  id                String   @id @default(uuid())
-  name              String   @unique
-  modality          String // XR, CT, MRI, US, Nuclear, Fluoroscopy
-  bodyRegion        String?
-  usesContrast      Boolean  @default(false)
-  usesRadiation     Boolean  @default(false)
-  description       String?  @db.Text
-  indications       String[]
-  contraindications String[]
-
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // ===== NEW: Technical Details =====
-  protocol      String? @db.Text // Standard imaging protocol
-  preparation   String? @db.Text // Patient preparation
-  contrastType  String? // IV, oral, rectal, none
-  contrastAgent String? // Specific agent used
-  radiationDose String? // Typical radiation exposure
-  scanDuration  String? // Typical scan time
-
-  // ===== NEW: Clinical Decision Making =====
-  firstLineFor  String[] @default([]) // Conditions where this is first-line
-  alternativeTo String[] @default([]) // Alternative imaging options
-  advantages    String[] @default([])
-  limitations   String[] @default([])
-  whenToAvoid   String[] @default([]) // Specific situations
-
-  // ===== NEW: Findings & Interpretation =====
-  normalFindings String?  @db.Text
-  keyFindings    Json? // [{ finding, significance, associatedConditions }]
-  classicSigns   String[] @default([]) // Named radiologic signs
-  reportTemplate String?  @db.Text
-
-  // ===== NEW: Safety =====
-  pregnancySafety     String? // Safe, Caution, Contraindicated
-  renalConsiderations String? @db.Text // Contrast and renal function
-  allergyProtocol     String? @db.Text // Contrast allergy prevention
-
-  // ===== NEW: Teaching Points =====
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-
-  // ===== NEW: Relations =====
-  conditionLinks ImagingConditionLink[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([modality])
-  @@index([bodyRegion])
-  @@index([panceYield])
-}
-
-/// Represents a physical exam finding
-model PhysicalExamFinding {
-  id                   String  @id @default(uuid())
-  name                 String  @unique
-  system               String // CV, PULM, GI, NEURO, etc.
-  description          String? @db.Text
-  clinicalSignificance String? @db.Text
-
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // ===== NEW: Classification =====
-  category      String? // Inspection, Palpation, Percussion, Auscultation
-  findingType   String? // Sign, symptom, maneuver result
-  aliases       String[] @default([]) // Alternative names
-  eponymousName String? // Named after whom (e.g., "Chvostek sign")
-
-  // ===== NEW: Technique =====
-  howToElicit     String?  @db.Text // How to look for/produce this finding
-  equipmentNeeded String[] @default([])
-  patientPosition String? // Position required
-  videoUrl        String? // Link to demonstration video
-  imageUrl        String? // Link to image
-
-  // ===== NEW: Clinical Correlation =====
-  positiveIndicates  String[] @default([]) // Conditions if positive
-  negativeIndicates  String[] @default([]) // Conditions if negative
-  differentialFor    String[] @default([]) // What conditions to consider
-  associatedFindings String[] @default([]) // Other findings often present
-
-  // ===== NEW: Test Characteristics =====
-  sensitivity     Float? // 0-100
-  specificity     Float? // 0-100
-  positiveLR      Float? // Positive likelihood ratio
-  negativeLR      Float? // Negative likelihood ratio
-  evidenceQuality String? // Strong, moderate, limited, expert opinion
-
-  // ===== NEW: Documentation =====
-  howToDocument  String?  @db.Text // How to chart this finding
-  gradingScale   String? // How to grade severity
-  normalVariants String[] @default([])
-
-  // ===== NEW: Teaching Points =====
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-
-  // ===== NEW: Relations =====
-  conditionLinks FindingConditionLink[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model PerformanceRecord {
+  id                String   @id
+  userId            String
+  topic             String
+  system            String?
+  focus             String
+  difficulty        String
+  isCorrect         Boolean
+  timestamp         BigInt
+  questionWordCount Int?
+  errorTag          String?
+  subcategoryName   String?
+  conditionName     String?
+  createdAt         DateTime @default(now())
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([system])
-  @@index([category])
-  @@index([panceYield])
+  @@index([topic])
+  @@index([userId])
+  @@index([userId, timestamp])
 }
 
-/// Represents a clinical practice guideline (e.g. USPSTF, AHA)
+model PhysicalExamFinding {
+  id                   String                 @id
+  name                 String                 @unique
+  system               String
+  description          String?
+  clinicalSignificance String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime
+  aliases              String[]               @default([])
+  associatedFindings   String[]               @default([])
+  boardYieldFacts      String[]               @default([])
+  category             String?
+  clinicalPearls       String[]               @default([])
+  commonMistakes       String[]               @default([])
+  differentialFor      String[]               @default([])
+  eponymousName        String?
+  equipmentNeeded      String[]               @default([])
+  evidenceQuality      String?
+  findingType          String?
+  gradingScale         String?
+  howToDocument        String?
+  howToElicit          String?
+  imageUrl             String?
+  isHighYield          Boolean                @default(false)
+  mnemonics            String[]               @default([])
+  negativeIndicates    String[]               @default([])
+  negativeLR           Float?
+  normalVariants       String[]               @default([])
+  panceYield           Int?
+  patientPosition      String?
+  positiveIndicates    String[]               @default([])
+  positiveLR           Float?
+  sensitivity          Float?
+  specificity          Float?
+  testQuestionTips     String[]               @default([])
+  videoUrl             String?
+  FindingConditionLink FindingConditionLink[]
+
+  @@index([category])
+  @@index([panceYield])
+  @@index([system])
+}
+
+model PhysiologyConcept {
+  id                      String                    @id
+  name                    String                    @unique
+  displayName             String?
+  aliases                 String[]
+  system                  String?
+  category                String
+  description             String?
+  mechanism               String?
+  clinicalSignificance    String?
+  relatedConditions       String[]
+  relatedDrugs            String[]
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  associatedLabs          String[]                  @default([])
+  boardYieldFacts         String[]                  @default([])
+  clinicalPearls          String[]                  @default([])
+  commonMistakes          String[]                  @default([])
+  compareContrast         Json?
+  compensatoryMechanisms  String[]                  @default([])
+  curveDescription        String?
+  curveShifts             Json?
+  curveType               String?
+  decompensationSigns     String[]                  @default([])
+  drugEffects             Json?
+  drugTargets             String[]                  @default([])
+  feedbackLoops           String?
+  graphUrl                String?
+  isHighYield             Boolean                   @default(false)
+  keyEquations            Json?
+  labChanges              Json?
+  mnemonics               String[]                  @default([])
+  molecularBasis          String?
+  normalValues            String?
+  panceYield              Int?
+  pathophysiology         String?
+  regulatoryFactors       String[]                  @default([])
+  signalTransduction      String?
+  testQuestionTips        String[]                  @default([])
+  PhysiologyConditionLink PhysiologyConditionLink[]
+
+  @@index([category])
+  @@index([panceYield])
+  @@index([system])
+}
+
+model PhysiologyConditionLink {
+  id                String            @id
+  physiologyId      String
+  conditionId       String
+  relationshipType  String
+  explanation       String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime
+  Condition         Condition         @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  PhysiologyConcept PhysiologyConcept @relation(fields: [physiologyId], references: [id], onDelete: Cascade)
+
+  @@unique([physiologyId, conditionId])
+  @@index([conditionId])
+  @@index([relationshipType])
+}
+
 model PracticeGuideline {
-  id              String   @id @default(uuid())
+  id              String   @id
   name            String   @unique
   organization    String
   category        String
   year            Int?
-  summary         String?  @db.Text
+  summary         String?
   recommendations String[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now())
 }
 
-/// Represents a physiology concept
-model PhysiologyConcept {
-  id                   String   @id @default(uuid())
-  name                 String   @unique
-  displayName          String?
-  aliases              String[]
-  system               String? // CV, PULM, RENAL, etc.
-  category             String // Cellular, Organ System, Regulatory, etc.
-  description          String?
-  mechanism            String?  @db.Text
-  clinicalSignificance String?  @db.Text
-  relatedConditions    String[]
-  relatedDrugs         String[]
+model PreGeneratedQuestion {
+  id           String    @id
+  questionType String
+  system       String?
+  conditionId  String?
+  difficulty   String
+  questionData Json
+  generatedAt  DateTime  @default(now())
+  usedAt       DateTime?
+  usedBy       String?
+  quality      Int?
 
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // ===== NEW: Detailed Mechanism =====
-  molecularBasis     String?  @db.Text // Molecular/cellular level
-  signalTransduction String?  @db.Text // Signaling pathways involved
-  regulatoryFactors  String[] @default([]) // What regulates this
-  feedbackLoops      String?  @db.Text // Positive/negative feedback
-  normalValues       String? // Normal physiologic values
-
-  // ===== NEW: Pathophysiology Links =====
-  pathophysiology        String?  @db.Text // What happens when it goes wrong
-  compensatoryMechanisms String[] @default([])
-  decompensationSigns    String[] @default([])
-
-  // ===== NEW: Drug Effects =====
-  drugTargets String[] @default([]) // Drugs that affect this
-  drugEffects Json? // [{ drug, effect, mechanism }]
-
-  // ===== NEW: Lab Correlates =====
-  associatedLabs String[] @default([]) // Labs that measure/reflect this
-  labChanges     Json? // [{ condition, labChanges }]
-
-  // ===== NEW: Graphs & Curves =====
-  curveType        String? // Frank-Starling, Oxygen-Hemoglobin, etc.
-  curveDescription String? @db.Text
-  curveShifts      Json? // [{ factor, direction, clinicalExample }]
-  graphUrl         String? // URL to physiologic graph
-
-  // ===== NEW: Equations =====
-  keyEquations Json? // [{ name, formula, variables, clinicalUse }]
-
-  // ===== NEW: Comparisons =====
-  compareContrast Json? // [{ concept, similarities, differences }]
-
-  // ===== NEW: Teaching Points =====
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-
-  // ===== NEW: Relations =====
-  conditionLinks PhysiologyConditionLink[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  @@index([difficulty])
+  @@index([generatedAt])
+  @@index([questionType])
   @@index([system])
-  @@index([category])
-  @@index([panceYield])
+  @@index([usedAt])
 }
 
-/// Represents a treatment or intervention
-model Treatment {
-  id                String   @id @default(uuid())
-  name              String   @unique
-  displayName       String?
-  aliases           String[]
-  category          String // Medical, Surgical, Procedural, Physical Therapy, Lifestyle
-  type              String? // First-line, Second-line, Adjunct, Salvage
-  description       String?
-  mechanism         String?  @db.Text
-  dosing            String?  @db.Text
-  sideEffects       String[]
-  indications       String[]
-  contraindications String[]
-  complications     String[]
-
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  isFirstLine     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // ===== NEW: Evidence & Guidelines =====
-  evidenceLevel   String? // A, B, C, D or Grade I, II, III
-  guidelineSource String? // AHA, ACS, IDSA, etc.
-  guidelineYear   Int?
-  recommendation  String? @db.Text
-
-  // ===== NEW: Timing & Duration =====
-  timing       String? // Acute, chronic, maintenance
-  duration     String? // How long to treat
-  timeToEffect String? // When to expect improvement
-  followUp     String? @db.Text // Required follow-up
-
-  // ===== NEW: Comparison =====
-  alternativeTo       String[] @default([])
-  advantages          String[] @default([])
-  disadvantages       String[] @default([])
-  comparativeEfficacy String?  @db.Text
-
-  // ===== NEW: Special Populations =====
-  pregnancySafe     Boolean?
-  pregnancyNotes    String?  @db.Text
-  pediatricUse      String?  @db.Text
-  geriatricUse      String?  @db.Text
-  renalDoseAdjust   String?  @db.Text
-  hepaticDoseAdjust String?  @db.Text
-
-  // ===== NEW: Cost & Access =====
-  estimatedCost     String? // $, $$, $$$, $$$$
-  insuranceCoverage String?
-  genericAvailable  Boolean @default(false)
-
-  // ===== NEW: Teaching Points =====
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-
-  // ===== NEW: Relations =====
-  conditionLinks TreatmentConditionLink[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([category])
-  @@index([type])
-  @@index([panceYield])
-  @@index([isFirstLine])
-}
-
-/// Represents a differential diagnosis entry
-model DifferentialDiagnosis {
-  id                  String   @id @default(uuid())
-  presentingComplaint String   @unique // e.g., "Chest Pain", "Dyspnea"
-  category            String // System category
-  isEmergency         Boolean  @default(false)
-  differentialList    String[]
-  mustNotMiss         String[]
-  workup              String?  @db.Text
-  pearls              String?  @db.Text
-
-  // ===== NEW: PANCE Prioritization =====
-  panceYield      Int? // 1=Low, 2=Medium, 3=High
-  isHighYield     Boolean  @default(false)
-  boardYieldFacts String[] @default([])
-
-  // ===== NEW: Clinical Presentation =====
-  aliases             String[] @default([]) // Other terms for same complaint
-  typicalPresentation String?  @db.Text
-  redFlags            String[] @default([]) // Alarming features
-  reassuringFeatures  String[] @default([]) // Benign indicators
-
-  // ===== NEW: Organized Differentials =====
-  mostCommon    String[] @default([]) // Most likely diagnoses
-  mostDangerous String[] @default([]) // Life-threatening
-  oftenMissed   String[] @default([]) // Frequently overlooked
-  byAge         Json? // { pediatric: [], adult: [], geriatric: [] }
-  byAcuity      Json? // { emergent: [], urgent: [], nonurgent: [] }
-
-  // ===== NEW: Diagnostic Approach =====
-  keyQuestions        String[] @default([]) // History questions to ask
-  keyExamFindings     String[] @default([]) // PE findings to look for
-  initialWorkup       String[] @default([]) // First-line tests
-  advancedWorkup      String[] @default([]) // Second-line tests
-  diagnosticAlgorithm String?  @db.Text
-
-  // ===== NEW: Distinguishing Features =====
-  distinguishingFeatures Json? // [{ condition, keyFeatures, helps differentiate from }]
-
-  // ===== NEW: Clinical Decision Rules =====
-  applicableRules     String[] @default([]) // e.g., Wells criteria, PERC rule
-  dispositionGuidance String?  @db.Text
-
-  // ===== NEW: Teaching Points =====
-  clinicalPearls   String[] @default([])
-  commonMistakes   String[] @default([])
-  testQuestionTips String[] @default([])
-  mnemonics        String[] @default([])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Procedure {
+  id                        String                   @id
+  name                      String                   @unique
+  displayName               String?
+  aliases                   String[]                 @default([])
+  category                  String
+  type                      String?
+  system                    String?
+  description               String?
+  panceYield                Int?
+  isHighYield               Boolean                  @default(false)
+  boardYieldFacts           String[]                 @default([])
+  indications               String[]                 @default([])
+  absoluteContraindications String[]                 @default([])
+  relativeContraindications String[]                 @default([])
+  preparation               String?
+  equipment                 String[]                 @default([])
+  anatomicLandmarks         String[]                 @default([])
+  technique                 String?
+  positioning               String?
+  anesthesia                String?
+  duration                  String?
+  complications             String[]                 @default([])
+  complicationRates         Json?
+  emergencyManagement       String?
+  safetyChecklist           String[]                 @default([])
+  postProcedureCare         String?
+  expectedFindings          String?
+  abnormalFindings          String[]                 @default([])
+  followUp                  String?
+  recovery                  String?
+  consentPoints             String[]                 @default([])
+  documentationRequirements String[]                 @default([])
+  clinicalPearls            String[]                 @default([])
+  commonMistakes            String[]                 @default([])
+  testQuestionTips          String[]                 @default([])
+  mnemonics                 String[]                 @default([])
+  videoUrl                  String?
+  createdAt                 DateTime                 @default(now())
+  updatedAt                 DateTime
+  ProcedureConditionLink    ProcedureConditionLink[]
 
   @@index([category])
   @@index([panceYield])
-  @@index([isEmergency])
+  @@index([system])
 }
 
-model FirstLineTreatment {
-  id        String   @id @default(uuid())
-  condition String
-  treatment String
-  category  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model ProcedureConditionLink {
+  id               String    @id
+  procedureId      String
+  conditionId      String
+  relationshipType String
+  indication       String?
+  isFirstLine      Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  Condition        Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  Procedure        Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+
+  @@unique([procedureId, conditionId])
+  @@index([conditionId])
+  @@index([relationshipType])
 }
 
-/// Represents a seed for generating question variations
+model Question {
+  id            String   @id
+  vignette      String
+  question      String
+  options       Json
+  correctAnswer String
+  explanation   String
+  system        String
+  tags          Json?
+  difficulty    String
+  source        String
+  timesSeen     Int      @default(0)
+  timesCorrect  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+
+  @@index([difficulty])
+  @@index([system])
+}
+
+model QuestionAttempt {
+  id                   String   @id
+  userId               String
+  questionId           String
+  questionType         String?
+  system               String?
+  conditionId          String?
+  mode                 String?
+  wasCorrect           Boolean  @default(false)
+  isRankedAttempt      Boolean  @default(false)
+  timeSpentMs          Int?     // Time spent on question in milliseconds
+  answerChangedCount   Int?     // Number of times answer was changed before submission
+  createdAt            DateTime @default(now())
+
+  @@index([isRankedAttempt])
+  @@index([mode])
+  @@index([questionId])
+  @@index([userId, createdAt])
+  @@index([system])
+}
+
+model QuestionFlag {
+  id               String    @id
+  userId           String
+  userEmail        String?
+  userFirstName    String?
+  questionId       String
+  questionText     String
+  correctAnswer    String?
+  topic            String?
+  system           String?
+  flagType         String
+  description      String
+  status           String    @default("pending")
+  priority         String    @default("medium")
+  assignedTo       String?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  resolutionNote   String?
+  notificationSent Boolean   @default(false)
+  notifiedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+
+  @@index([createdAt])
+  @@index([priority])
+  @@index([questionId])
+  @@index([status])
+  @@index([status, priority])
+  @@index([userId])
+}
+
+model QuestionHistory {
+  id           String    @id
+  questionId   String
+  version      Int
+  questionData Json
+  changedBy    String?
+  changeReason String?
+  validFrom    DateTime  @default(now())
+  validTo      DateTime?
+
+  @@unique([questionId, version])
+  @@index([questionId])
+  @@index([questionId, validFrom])
+  @@index([validFrom])
+}
+
 model QuestionSeed {
-  id            String    @id @default(uuid())
+  id            String    @id
   conditionId   String
   questionType  String
   system        String?
@@ -2303,195 +1515,562 @@ model QuestionSeed {
   usageCount    Int       @default(0)
   lastUsedAt    DateTime?
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  updatedAt     DateTime
 
   @@index([conditionId])
   @@index([system])
 }
 
-/// Tracks user interactions with clinical pearls
-model UserPearl {
-  id           String    @id @default(uuid())
-  userId       String
-  pearlId      String
-  isSaved      Boolean   @default(false)
-  savedAt      DateTime?
-  viewedAt     DateTime?
-  markedUseful Boolean   @default(false)
-  notes        String?
+model SRSItem {
+  id             String    @id
+  userId         String
+  questionId     String
+  interval       Int
+  repetition     Int
+  easiness       Float
+  dueDate        DateTime
+  lastReviewed   DateTime
+  quality        Int
+  difficulty     Float
+  stabilityScore Float
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+  fsrsDifficulty Float?
+  fsrsLastReview DateTime?
+  fsrsStability  Float?
+  fsrsState      Int       @default(0)
+  User           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user  User          @relation(fields: [userId], references: [id])
-  pearl ClinicalPearl @relation(fields: [pearlId], references: [id])
+  @@unique([userId, questionId])
+  @@index([questionId])
+  @@index([userId, dueDate])
+  @@index([userId])
+}
+
+model SavedQuestion {
+  id              String   @id
+  userId          String
+  questionId      String
+  questionText    String
+  correctAnswer   String
+  explanation     String
+  topic           String
+  system          String?
+  type            String
+  userNote        String?
+  repetitionLevel Int      @default(1)
+  nextReviewDate  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId, type])
+  @@index([questionId])
+  @@index([userId])
+  @@index([userId, type])
+}
+
+model ScoringSystem {
+  id                String   @id
+  name              String   @unique
+  displayName       String?
+  aliases           String[] @default([])
+  category          String
+  condition         String?
+  panceYield        Int?
+  isHighYield       Boolean  @default(false)
+  boardYieldFacts   String[] @default([])
+  components        Json
+  maxScore          Int?
+  minScore          Int?     @default(0)
+  interpretation    Json
+  actionThresholds  Json?
+  sensitivity       Float?
+  specificity       Float?
+  validationStudies String[] @default([])
+  limitations       String[] @default([])
+  whenToUse         String?
+  whenNotToUse      String[] @default([])
+  clinicalContext   String?
+  clinicalPearls    String[] @default([])
+  commonMistakes    String[] @default([])
+  testQuestionTips  String[] @default([])
+  mnemonics         String[] @default([])
+  calculatorUrl     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+
+  @@index([category])
+  @@index([condition])
+  @@index([panceYield])
+}
+
+model SemanticCache {
+  id             String   @id
+  queryText      String
+  queryEmbedding String?
+  questionType   String
+  system         String?
+  difficulty     String?
+  cachedQuestion Json
+  generatedAt    DateTime @default(now())
+  lastUsedAt     DateTime @default(now())
+  useCount       Int      @default(1)
+  qualityScore   Float    @default(0)
+
+  @@index([lastUsedAt])
+  @@index([queryText(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@index([questionType])
+  @@index([system])
+}
+
+model SpecialTest {
+  id             String      @id
+  name           String      @unique
+  displayName    String?
+  aliases        String[]    @default([])
+  system         String?
+  region         String?
+  description    String?
+  sensitivity    Float?
+  specificity    Float?
+  technique      String?
+  positiveTest   String?
+  interpretation String?
+  imageUrl       String?
+  videoUrl       String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime
+  Condition      Condition[]
+
+  @@index([displayName])
+  @@index([name])
+}
+
+model StagingQuestion {
+  id               String   @id
+  system           String
+  difficulty       String
+  status           String   @default("pending")
+  adminReview      String?
+  aiGrade          Json?
+  aiModel          String?
+  correctAnswer    String
+  createdAt        DateTime @default(now())
+  explanation      String
+  generationPrompt String?
+  options          Json
+  question         String
+  tags             Json?
+  vignette         String
+
+  @@index([status])
+  @@index([system])
+}
+
+model StudyGroup {
+  id               String             @id
+  name             String
+  code             String             @unique
+  description      String?
+  ownerId          String
+  isPublic         Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  StudyGroupMember StudyGroupMember[]
+
+  @@index([code])
+  @@index([ownerId])
+}
+
+model StudyGroupMember {
+  id         String     @id
+  userId     String
+  groupId    String
+  role       String     @default("member")
+  joinedAt   DateTime   @default(now())
+  StudyGroup StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  User       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([groupId])
+}
+
+model SyncQueue {
+  id               String    @id
+  userId           String
+  operation        String
+  data             Json
+  status           String    @default("pending")
+  attempts         Int       @default(0)
+  createdAt        DateTime  @default(now())
+  syncedAt         DateTime?
+  error            String?
+  conflictDetected Boolean   @default(false)
+  lastError        String?
+  maxRetries       Int       @default(5)
+  version          Int       @default(1)
+
+  @@index([attempts])
+  @@index([createdAt])
+  @@index([status])
+  @@index([userId])
+}
+
+model Treatment {
+  id                     String                   @id
+  name                   String                   @unique
+  displayName            String?
+  category               String
+  type                   String?
+  description            String?
+  indications            String[]
+  contraindications      String[]
+  complications          String[]
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  advantages             String[]                 @default([])
+  alternativeTo          String[]                 @default([])
+  boardYieldFacts        String[]                 @default([])
+  clinicalPearls         String[]                 @default([])
+  commonMistakes         String[]                 @default([])
+  disadvantages          String[]                 @default([])
+  duration               String?
+  evidenceLevel          String?
+  followUp               String?
+  guidelineSource        String?
+  guidelineYear          Int?
+  isFirstLine            Boolean                  @default(false)
+  isHighYield            Boolean                  @default(false)
+  panceYield             Int?
+  recommendation         String?
+  timeToEffect           String?
+  timing                 String?
+  TreatmentConditionLink TreatmentConditionLink[]
+
+  @@index([category])
+  @@index([isFirstLine])
+  @@index([panceYield])
+  @@index([type])
+}
+
+model TreatmentConditionLink {
+  id               String    @id
+  treatmentId      String
+  conditionId      String
+  relationshipType String
+  evidenceLevel    String?
+  isFirstLine      Boolean   @default(false)
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime
+  Condition        Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  Treatment        Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+
+  @@unique([treatmentId, conditionId, relationshipType])
+  @@index([conditionId])
+  @@index([isFirstLine])
+  @@index([relationshipType])
+}
+
+model User {
+  id                      String                    @id
+  clerkId                 String                    @unique
+  email                   String                    @unique
+  firstName               String?
+  lastName                String?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  emailVerified           DateTime?
+  resetToken              String?
+  resetTokenExpiry        DateTime?
+  verifyToken             String?
+  verifyTokenExpiry       DateTime?
+  hasCompletedBaseline    Boolean                   @default(false)
+  hasCompletedOnboarding  Boolean                   @default(false)
+  examDate                DateTime?
+  graduationDate          DateTime?
+  school                  String?
+  currentRotation         String?
+  yearInProgram           String?
+  isAnonymous             Boolean                   @default(false)
+  role                    UserRole                  @default(USER)
+  CohortMember            CohortMember[]
+  DailyStreak             DailyStreak[]
+  GrandRoundsAttempt      GrandRoundsAttempt[]
+  PatientEncounterSession PatientEncounterSession[]
+  PeerStatistic           PeerStatistic[]
+  PerformanceRecord       PerformanceRecord[]
+  SRSItem                 SRSItem[]
+  SavedQuestion           SavedQuestion[]
+  StudyGroupMember        StudyGroupMember[]
+  UserAchievement         UserAchievement[]
+  UserPearl               UserPearl[]
+  UserQuestionHistory     UserQuestionHistory[]
+  UserSRSConfig           UserSRSConfig?
+  UserWordleState         UserWordleState[]
+
+  @@index([clerkId])
+  @@index([email])
+  @@index([role])
+}
+
+model UserAchievement {
+  id            String   @id
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+  progress      Int      @default(100)
+  User          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([achievementId])
+  @@index([userId])
+}
+
+model UserPearl {
+  id            String        @id
+  userId        String
+  pearlId       String
+  isSaved       Boolean       @default(false)
+  savedAt       DateTime?
+  viewedAt      DateTime?
+  markedUseful  Boolean       @default(false)
+  notes         String?
+  ClinicalPearl ClinicalPearl @relation(fields: [pearlId], references: [id])
+  User          User          @relation(fields: [userId], references: [id])
 
   @@unique([userId, pearlId])
 }
 
-// =============================================================================
-// JUNCTION TABLES: Content-Condition Relationships
-// =============================================================================
+model UserQuestionHistory {
+  id         String   @id
+  userId     String
+  questionId String
+  seenAt     DateTime @default(now())
+  isCorrect  Boolean
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-/// Links Drugs to Conditions with relationship type
-model DrugConditionLink {
-  id               String  @id @default(uuid())
-  drugId           String
-  conditionId      String
-  relationshipType String // "first_line", "second_line", "adjunct", "contraindicated", "caution"
-  evidenceLevel    String? // A, B, C, D
-  notes            String? @db.Text
-  isFirstLine      Boolean @default(false)
-
-  drug      Drug      @relation(fields: [drugId], references: [id], onDelete: Cascade)
-  condition Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([drugId, conditionId, relationshipType])
-  @@index([conditionId])
-  @@index([relationshipType])
+  @@unique([userId, questionId])
+  @@index([userId])
 }
 
-/// Links Labs to Conditions with diagnostic context
-model LabConditionLink {
-  id               String  @id @default(uuid())
-  labTestId        String
-  conditionId      String
-  relationshipType String // "diagnostic", "screening", "monitoring", "prognostic"
-  expectedResult   String? // "elevated", "decreased", "normal", "variable"
-  significance     String? @db.Text // Clinical significance of result
-  sensitivity      Float? // For this condition
-  specificity      Float? // For this condition
+model UserSRSConfig {
+  id               String   @id
+  userId           String   @unique
+  requestRetention Float    @default(0.9)
+  wWeights         Json
+  lastTuned        DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+  User             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  labTest   LabTest   @relation(fields: [labTestId], references: [id], onDelete: Cascade)
-  condition Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([labTestId, conditionId, relationshipType])
-  @@index([conditionId])
-  @@index([relationshipType])
+  @@index([lastTuned])
+  @@index([userId])
 }
 
-/// Links Imaging to Conditions with findings
-model ImagingConditionLink {
-  id               String   @id @default(uuid())
-  imagingId        String
-  conditionId      String
-  relationshipType String // "first_line", "gold_standard", "adjunct", "follow_up"
-  expectedFindings String[] @default([]) // What you'd expect to see
-  classicFindings  String? // Pathognomonic finding
-  sensitivity      Float?
-  specificity      Float?
+model UserWordleState {
+  id        String       @id
+  userId    String
+  date      DateTime     @db.Date
+  guesses   String[]     @default([])
+  status    WordleStatus @default(playing)
+  updatedAt DateTime
+  User      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  imaging   ImagingStudy @relation(fields: [imagingId], references: [id], onDelete: Cascade)
-  condition Condition    @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([imagingId, conditionId, relationshipType])
-  @@index([conditionId])
-  @@index([relationshipType])
+  @@unique([userId, date])
+  @@index([date])
+  @@index([userId])
 }
 
-/// Links Physical Exam Findings to Conditions
-model FindingConditionLink {
-  id               String  @id @default(uuid())
-  findingId        String
-  conditionId      String
-  relationshipType String // "pathognomonic", "common", "occasional", "rare"
-  clinicalContext  String? @db.Text
-  sensitivity      Float?
-  specificity      Float?
+model VitalSignRange {
+  id                   String   @id
+  vitalSign            String   @unique
+  displayName          String?
+  category             String
+  normalRange          String?
+  ranges               Json?
+  units                String?
+  elevation            Json?
+  depression           Json?
+  emergencyValues      Json?
+  associatedConditions Json?
+  clinicalPearls       String[] @default([])
+  commonMistakes       String[] @default([])
+  testQuestionTips     String[] @default([])
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime
 
-  finding   PhysicalExamFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
-  condition Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([findingId, conditionId])
-  @@index([conditionId])
-  @@index([relationshipType])
+  @@index([category])
 }
 
-/// Links Anatomy to Conditions
-model AnatomyConditionLink {
-  id               String  @id @default(uuid())
-  anatomyId        String
+model WeaknessPattern {
+  id               String   @id
+  userId           String
   conditionId      String
-  relationshipType String // "affected", "injured", "involved", "preserved"
-  clinicalContext  String? @db.Text
+  wasCorrect       Boolean
+  timestamp        DateTime @default(now())
+  consecutiveWrong Int      @default(0)
 
-  anatomy   AnatomyStructure @relation(fields: [anatomyId], references: [id], onDelete: Cascade)
-  condition Condition        @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([anatomyId, conditionId])
   @@index([conditionId])
-  @@index([relationshipType])
+  @@index([userId, conditionId])
+  @@index([userId])
 }
 
-/// Links Physiology Concepts to Conditions
-model PhysiologyConditionLink {
-  id               String  @id @default(uuid())
-  physiologyId     String
-  conditionId      String
-  relationshipType String // "underlying", "compensatory", "impaired", "relevant"
-  explanation      String? @db.Text
-
-  physiology PhysiologyConcept @relation(fields: [physiologyId], references: [id], onDelete: Cascade)
-  condition  Condition         @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([physiologyId, conditionId])
-  @@index([conditionId])
-  @@index([relationshipType])
+enum CohortRole {
+  ADMIN
+  MEMBER
 }
 
-/// Links Treatments to Conditions
-model TreatmentConditionLink {
-  id               String  @id @default(uuid())
-  treatmentId      String
-  conditionId      String
-  relationshipType String // "first_line", "second_line", "adjunct", "salvage", "contraindicated"
-  evidenceLevel    String?
-  isFirstLine      Boolean @default(false)
-  notes            String? @db.Text
-
-  treatment Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
-  condition Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([treatmentId, conditionId, relationshipType])
-  @@index([conditionId])
-  @@index([relationshipType])
-  @@index([isFirstLine])
+enum UserRole {
+  USER
+  VIEWER
+  EDITOR
+  APPROVER
+  ADMIN
+  SUPERADMIN
 }
 
-/// Links Procedures to Conditions
-model ProcedureConditionLink {
-  id               String  @id @default(uuid())
-  procedureId      String
-  conditionId      String
-  relationshipType String // "diagnostic", "therapeutic", "both"
-  indication       String? @db.Text
-  isFirstLine      Boolean @default(false)
+enum WordleStatus {
+  playing
+  won
+  lost
+}
 
-  procedure Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
-  condition Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+// ============================================================================
+// Sprint 4: Enhanced Session Analytics
+// ============================================================================
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model StudySession {
+  id                    String   @id
+  userId                String
+  startedAt             DateTime @default(now())
+  endedAt               DateTime?
+  
+  // Core metrics
+  totalQuestions        Int      @default(0)
+  correctAnswers        Int      @default(0)
+  accuracy              Float    @default(0)
+  totalTimeMs           Int      @default(0)
+  avgTimePerQuestion    Int?
+  
+  // Streak data
+  bestStreak            Int      @default(0)
+  finalStreak           Int      @default(0)
+  avgStreak             Float?
+  errorClusters         Int      @default(0)  // Count of 3+ errors in 5 questions
+  
+  // Momentum metrics
+  peakMomentum          Float?   // Highest momentum reached (0-100)
+  avgMomentum           Float?
+  momentumTrend         String?  // 'peaked' | 'rising' | 'steady' | 'cooling' | 'cold'
+  
+  // Behavioral signals
+  totalAnswerChanges    Int      @default(0)
+  helpfulChanges        Int      @default(0)  // Changed to correct
+  harmfulChanges        Int      @default(0)  // Changed to wrong
+  firstInstinctAccuracy Float?   // Accuracy if never changed answers
+  
+  // Confidence calibration
+  avgInferredConfidence Float?   // Average behavioral confidence
+  highConfidenceAccuracy Float?  // Accuracy when high confidence
+  lowConfidenceAccuracy  Float?  // Accuracy when low confidence
+  calibrationScore      Float?   // How well confidence matches accuracy
+  
+  // Time pressure analysis
+  questionsUnderPar     Int      @default(0)
+  questionsOverPar      Int      @default(0)
+  rushingAccuracy       Float?   // Accuracy when under 60% of par time
+  deliberateAccuracy    Float?   // Accuracy when over par time
+  
+  // Fatigue indicators
+  early10Accuracy       Float?   // First 10 questions accuracy
+  late10Accuracy        Float?   // Last 10 questions accuracy
+  staminaFade           Float?   // Difference (negative = fatigue)
+  
+  // PANCE distribution
+  distributionScore     Float?   // How closely session matched PANCE blueprint
+  systemsCovered        String[] @default([])  // Systems practiced
+  
+  // Predicted score
+  predictedScore        Int?     // Estimated PANCE score (200-800)
+  scoreConfidence       String?  // 'low' | 'medium' | 'high'
+  passLikelihood        Float?   // 0-100%
+  
+  // Session settings
+  mode                  String?  // 'drill' | 'review' | 'exam'
+  focus                 String?  // 'new' | 'review' | 'missed'
+  difficulty            String?  // 'easy' | 'medium' | 'hard' | 'random'
+  
+  // Metadata
+  deviceType            String?  // 'mobile' | 'tablet' | 'desktop'
+  browserName           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  @@unique([procedureId, conditionId])
-  @@index([conditionId])
-  @@index([relationshipType])
+  @@index([userId])
+  @@index([userId, startedAt])
+  @@index([startedAt])
+}
+
+model UserLearningProfile {
+  id                      String   @id
+  userId                  String   @unique
+  
+  // Cumulative performance
+  lifetimeQuestions       Int      @default(0)
+  lifetimeCorrect         Int      @default(0)
+  lifetimeAccuracy        Float    @default(0)
+  lifetimeStudyTimeMs     BigInt   @default(0)
+  
+  // Streak records
+  bestEverStreak          Int      @default(0)
+  currentStreak           Int      @default(0)  // Consecutive days studied
+  longestDailyStreak      Int      @default(0)
+  
+  // Test-taking patterns (aggregated)
+  avgAnswerChanges        Float?
+  changeHelpfulRatio      Float?   // Ratio of helpful to total changes
+  firstInstinctTrustScore Float?   // Should they trust first instinct?
+  
+  // Confidence calibration (lifetime)
+  overallCalibrationScore Float?
+  overconfidenceIndex     Float?   // How often high confidence = wrong
+  underconfidenceIndex    Float?   // How often low confidence = right
+  
+  // Time patterns
+  avgTimePerQuestion      Int?
+  optimalTimeRange        String?  // e.g., "45-75 seconds"
+  rushingTendency         Float?   // 0-1, higher = tends to rush
+  
+  // Stamina profile
+  avgSessionLength        Int?     // Questions per session
+  fatigueOnsetQuestion    Int?     // When accuracy typically drops
+  optimalSessionLength    Int?     // Recommended questions per session
+  
+  // System strengths/weaknesses
+  strongestSystems        String[] @default([])
+  weakestSystems          String[] @default([])
+  mostImprovedSystem      String?
+  
+  // PANCE readiness
+  estimatedScore          Int?     // Rolling PANCE estimate
+  scoreHistory            Json?    // Array of {date, score, confidence}
+  readinessLevel          String?  // 'not_ready' | 'progressing' | 'almost_ready' | 'ready'
+  targetExamDate          DateTime?
+  
+  // Learning style insights
+  learningInsights        String[] @default([])  // AI-generated insights
+  recommendations         String[] @default([])  // Personalized recommendations
+  
+  // Circadian patterns
+  bestStudyHour           Int?     // 0-23, best performance hour
+  worstStudyHour          Int?     // 0-23, worst performance hour
+  weekendVsWeekday        Float?   // Performance difference
+  
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([userId])
+  @@index([estimatedScore])
 }

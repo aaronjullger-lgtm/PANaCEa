@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -8,11 +8,14 @@ import {
   XCircle,
   ArrowRight,
   Award,
-  BookOpen
+  BookOpen,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useGuidelineDrill } from '@/hooks/game/use-guideline-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
+import { useAuth } from '@clerk/clerk-react';
 
 interface GuidelineDrillSessionProps {
   onExit?: () => void;
@@ -49,6 +52,13 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
   const [selectedCriteria, setSelectedCriteria] = useState<Set<string>>(new Set());
   const [hasStarted, setHasStarted] = useState(false);
   const [totalAttempts, setTotalAttempts] = useState(0);
+  const [showDeepDive, setShowDeepDive] = useState(false);
+  const { getToken } = useAuth();
+
+  const handleDeepDive = useCallback((topic: string) => {
+    console.log('Deep dive into:', topic);
+    // Could open a modal, navigate to reference library, etc.
+  }, []);
 
   const handleExit = () => {
     exitToMenu();
@@ -446,6 +456,46 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
                   ) : null;
                 })}
               </div>
+            </div>
+
+            {/* Deep Dive Section */}
+            <div className="mt-4">
+              <button
+                onClick={() => setShowDeepDive(!showDeepDive)}
+                className="w-full flex items-center justify-between p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] transition-colors text-sm"
+              >
+                <span className="flex items-center gap-2 text-[var(--color-text-primary)] font-medium">
+                  <BookOpen className="w-4 h-4 text-blue-500" />
+                  Deep Dive - Related Reference Material
+                </span>
+                {showDeepDive ? (
+                  <ChevronUp className="w-4 h-4 text-[var(--color-text-muted)]" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+                )}
+              </button>
+              
+              <AnimatePresence>
+                {showDeepDive && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-3 text-sm text-[var(--color-text-secondary)]">
+                      <p>Related guidelines and criteria scoring tools can be found in the Clinical Reference Library.</p>
+                      <button
+                        onClick={() => handleDeepDive(currentGuideline.name)}
+                        className="mt-2 text-blue-500 hover:text-blue-400 underline"
+                      >
+                        View {currentGuideline.name} in Reference Library →
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </div>

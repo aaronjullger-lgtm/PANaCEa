@@ -46,6 +46,7 @@ export const ShortcutSettings: React.FC<ShortcutSettingsProps> = ({
     'NEXT_QUESTION',
     'PREV_QUESTION',
     'PLAY_AUDIO',
+    'TOGGLE_STATS',
   ];
 
   // Handle key capture when listening
@@ -260,6 +261,7 @@ function getActionDescription(action: ShortcutAction): string {
     NEXT_QUESTION: 'Navigate to the next question',
     PREV_QUESTION: 'Navigate to the previous question',
     PLAY_AUDIO: 'Play audio pronunciation or explanation',
+    TOGGLE_STATS: 'Show/hide session statistics overlay',
   };
 
   return descriptions[action];
@@ -286,6 +288,7 @@ export const ShortcutSettingsCompact: React.FC<ShortcutSettingsProps> = ({
     'NEXT_QUESTION',
     'PREV_QUESTION',
     'PLAY_AUDIO',
+    'TOGGLE_STATS',
   ];
 
   useEffect(() => {

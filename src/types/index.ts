@@ -13,6 +13,8 @@
 // ============================================================================
 
 export interface Question {
+  /** Unique identifier for tracking */
+  id?: string;
   question: string;
   options: string[];
   correctAnswerIndex: number;
@@ -37,6 +39,8 @@ export interface Question {
   /** Optional tags for organization */
   tags?: string[];
   lastReviewedAt?: string; // ISO timestamp
+  /** Source of the question (pool, main table, generated) */
+  source?: string;
 }
 
 /** Error taxonomy for meta-cognition - helps users understand why they miss questions */

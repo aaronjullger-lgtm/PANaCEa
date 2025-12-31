@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { TopicStats } from '../types';
-import { PANCE_TOPIC_ABBREVIATIONS, ABBREVIATION_TO_TOPIC_MAP } from '../constants';
+import { PANCE_TOPIC_ABBREVIATIONS, ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 
 interface TopicHeatmapProps {
   topicScores: TopicStats[];

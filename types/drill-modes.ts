@@ -275,4 +275,31 @@ export interface PolypharmacyAttempt {
   timestamp: number;
 }
 
+// ===== CONDITION DRILL =====
+
+/**
+ * Question types for the Condition Drill mode.
+ * Used to categorize questions by clinical focus.
+ */
+export type ConditionQuestionType = 
+  | 'presentation'
+  | 'diagnosis'
+  | 'treatment'
+  | 'etiology'
+  | 'complication';
+
+/**
+ * Structure for condition drill questions fetched from the database.
+ */
+export interface ConditionQuestion {
+  id: string;
+  type: ConditionQuestionType;
+  question: string;
+  options: string[];
+  correctAnswerIndex: number;
+  explanation: string;
+  conditionName: string;
+  system: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+}
 

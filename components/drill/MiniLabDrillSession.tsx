@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMiniLabDrill, type LabCategory, type LabPanel, type LabValue } from '@/hooks/game/use-mini-lab-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
+import { EnhancedFeedbackPanel } from '@/components/drill/EnhancedFeedbackPanel';
 import { X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity as ActivityIcon, Shuffle, AlertTriangle, Plus } from 'lucide-react';
 
 interface MiniLabDrillSessionProps {
   onExit?: () => void;
+  onNavigateToReference?: (type: string, id: string) => void;
 }
 
 /** Category card data for the lobby */
@@ -155,10 +157,12 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     validDiagnoses,
     orderTest,
     availableTests,
+    isLoading: isDataLoading,
+    loadError,
   } = useMiniLabDrill();
   
   const [showOrderTestMenu, setShowOrderTestMenu] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isStarting, setIsStarting] = React.useState(false);
   const [totalAttempts, setTotalAttempts] = React.useState(0);
 
   const handleExit = () => {
@@ -174,10 +178,10 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   };
 
   const handleStart = () => {
-    setIsLoading(true);
+    setIsStarting(true);
     setTimeout(() => {
       showCategoryMenu();
-      setIsLoading(false);
+      setIsStarting(false);
     }, 500);
   };
 
@@ -194,6 +198,11 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     orderTest(testName);
     setShowOrderTestMenu(false);
   };
+
+  const handleDeepDive = useCallback((topic: string) => {
+    console.log('Deep dive into:', topic);
+    // Could open a modal, navigate to reference library, etc.
+  }, []);
 
   // Animation variants
   const cardVariants = {
@@ -213,6 +222,37 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
   // LANDING PAGE - Welcome screen with mode description
   // =========================================================================
   if (status === 'landing') {
+    // Show loading state while fetching database content
+    if (isDataLoading) {
+      return (
+        <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-[var(--color-text-secondary)]">Loading lab cases from database...</p>
+          </div>
+        </div>
+      );
+    }
+    
+    // Show error if database load failed
+    if (loadError) {
+      return (
+        <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-6">
+          <div className="text-center max-w-md">
+            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Database Error</h2>
+            <p className="text-[var(--color-text-secondary)] mb-6">{loadError}</p>
+            <button
+              onClick={onExit}
+              className="px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-medium transition-colors"
+            >
+              Return to Menu
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <DrillLandingPage
         title="Mini Lab Mode"
@@ -220,7 +260,7 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
         icon={FlaskConical}
         accentColor="green"
         onStart={handleStart}
-        isLoading={isLoading}
+        isLoading={isStarting}
         instructions={[
           'Realistic clinical vignettes with patient demographics',
           'Multiple lab panels (CBC, CMP, specific panels)',
@@ -347,77 +387,18 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
         )}
 
         {status === 'feedback' && currentCase && (
-          <motion.div
-            key="feedback-controls"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className={`p-4 ${
-              isCorrect
-                ? 'bg-emerald-100 dark:bg-emerald-950/50 border-t-2 border-emerald-500'
-                : 'bg-red-100 dark:bg-red-950/50 border-t-2 border-red-500'
-            }`}
-          >
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div
-                    className={`text-lg font-bold ${
-                      isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'
-                    }`}
-                  >
-                    {isCorrect ? 'Correct!' : 'Incorrect'}
-                  </div>
-                  {!isCorrect && (
-                    <div className="text-sm text-[var(--color-text-secondary)] mt-1">
-                      Correct answer:{' '}
-                      <span className="font-semibold text-[var(--color-text-primary)]">
-                        {currentCase.correctDiagnosis}
-                      </span>
-                    </div>
-                  )}
-                  {userAnswer && !isCorrect && (
-                    <div className="text-sm text-[var(--color-text-muted)] mt-0.5">
-                      Your answer: {userAnswer}
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={nextCase}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-colors ${
-                    isCorrect
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                      : 'bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] text-[var(--color-text-primary)]'
-                  }`}
-                >
-                  Next Case
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Key Findings */}
-              <div className="text-sm bg-[var(--color-bg-secondary)] rounded-lg p-4 mb-3">
-                <h4 className="font-semibold text-[var(--color-text-primary)] mb-2">Key Findings:</h4>
-                <ul className="space-y-1">
-                  {currentCase.keyFindings.map((finding, idx) => (
-                    <li key={idx} className="text-[var(--color-text-secondary)] flex items-start gap-2">
-                      <span className="text-emerald-500 mt-1">•</span>
-                      <span>{finding}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Explanation */}
-              <div className="text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-secondary)] rounded-lg p-3">
-                <span className="font-medium text-[var(--color-text-primary)]">
-                  Explanation:{' '}
-                </span>
-                {currentCase.explanation}
-              </div>
-            </div>
-          </motion.div>
+          <EnhancedFeedbackPanel
+            isCorrect={isCorrect!}
+            correctAnswer={currentCase.correctDiagnosis}
+            userAnswer={userAnswer}
+            explanation={currentCase.explanation}
+            keyFindings={currentCase.keyFindings}
+            onNext={nextCase}
+            nextLabel="Next Case"
+            category="lab"
+            tags={['lab', currentCase.category, currentCase.correctDiagnosis]}
+            onDeepDive={handleDeepDive}
+          />
         )}
       </AnimatePresence>
     );

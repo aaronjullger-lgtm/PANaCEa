@@ -22,7 +22,8 @@ export type ShortcutAction =
   | 'MARK_WRONG'
   | 'NEXT_QUESTION'
   | 'PREV_QUESTION'
-  | 'PLAY_AUDIO';
+  | 'PLAY_AUDIO'
+  | 'TOGGLE_STATS';
 
 export type ShortcutMap = Record<ShortcutAction, string>;
 
@@ -37,6 +38,7 @@ export const DEFAULT_SHORTCUTS: ShortcutMap = {
   NEXT_QUESTION: 'ArrowRight',
   PREV_QUESTION: 'ArrowLeft',
   PLAY_AUDIO: 'p',
+  TOGGLE_STATS: 's',       // S for stats
 };
 
 // ============================================================================
@@ -53,7 +55,7 @@ interface ShortcutContextValue {
 
 const ShortcutContext = createContext<ShortcutContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'panacea_shortcuts';
+const STORAGE_KEY = 'panceai_shortcuts';
 
 // ============================================================================
 // PROVIDER
@@ -288,6 +290,7 @@ export function getActionDisplayName(action: ShortcutAction): string {
     NEXT_QUESTION: 'Next Question',
     PREV_QUESTION: 'Previous Question',
     PLAY_AUDIO: 'Play Audio',
+    TOGGLE_STATS: 'Toggle Stats Overlay',
   };
 
   return displayNames[action];

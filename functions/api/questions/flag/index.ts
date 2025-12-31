@@ -91,6 +91,60 @@ export const onRequestPost = async (context) => {
       },
     });
 
+    // Check for auto-demotion: if question has >= 3 pending flags, demote it
+    const pendingFlagCount = await prisma.questionFlag.count({
+      where: {
+        questionId,
+        status: 'pending',
+      },
+    });
+
+    let demoted = false;
+    if (pendingFlagCount >= 3) {
+      // Try to demote from PreGeneratedQuestion to StagingQuestion
+      try {
+        const preGenQuestion = await prisma.preGeneratedQuestion.findFirst({
+          where: { id: questionId },
+        });
+
+        if (preGenQuestion) {
+          // Create staging question for review
+          await prisma.stagingQuestion.create({
+            data: {
+              id: `staging-${questionId}`,
+              questionText: preGenQuestion.questionText,
+              answers: preGenQuestion.answers as string[],
+              correctIndex: preGenQuestion.correctIndex,
+              explanation: preGenQuestion.explanation,
+              system: preGenQuestion.system,
+              conditionId: preGenQuestion.conditionId,
+              difficulty: preGenQuestion.difficulty,
+              tags: preGenQuestion.tags as string[],
+              status: 'flagged_for_review',
+              rejectionReason: `Auto-demoted: ${pendingFlagCount} user flags received`,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+
+          // Mark the pre-generated question as demoted (set usedAt to prevent serving)
+          await prisma.preGeneratedQuestion.update({
+            where: { id: questionId },
+            data: { 
+              usedAt: new Date(),
+              // Add a note in metadata or use a flag field if available
+            },
+          });
+
+          demoted = true;
+          console.log(`[AutoDemotion] Question ${questionId} demoted after ${pendingFlagCount} flags`);
+        }
+      } catch (demotionError) {
+        console.error('[AutoDemotion] Failed to demote question:', demotionError);
+        // Don't fail the flag creation if demotion fails
+      }
+    }
+
     // Send notification to admin (if configured)
     // Note: env vars in Pages Functions are accessed via env object
     const adminEmail = env.ADMIN_EMAIL;
@@ -109,7 +163,11 @@ export const onRequestPost = async (context) => {
     return new Response(JSON.stringify({ 
       success: true, 
       flagId: flag.id,
-      message: 'Question flagged successfully. We will review it soon!' 
+      demoted,
+      pendingFlagCount,
+      message: demoted 
+        ? 'Question flagged and automatically removed from pool for review. Thank you for your feedback!'
+        : 'Question flagged successfully. We will review it soon!' 
     }), {
       headers: { 
         'Content-Type': 'application/json',

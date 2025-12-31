@@ -9,7 +9,7 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { PerformanceRecord, SystemCode } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import DayCellPopover, { DayActivityData } from './DayCellPopover';
 import { getTodayUTC, DAY_NAMES } from '@/lib/utils/timeUtils';
 

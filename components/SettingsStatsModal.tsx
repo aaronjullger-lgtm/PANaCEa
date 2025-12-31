@@ -34,7 +34,7 @@ import {
   Building2,
 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode, UserProfile, ClinicalRotation, YearInProgram } from '@/types';
-import { ABBREVIATION_TO_TOPIC_MAP } from '@/constants';
+import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { YEAR_IN_PROGRAM_OPTIONS } from '@/types';
 import { loadUserProfile, updateUserProfile } from '@/services/userProfileService';
 import { RotationSelector } from './onboarding/RotationSelector';

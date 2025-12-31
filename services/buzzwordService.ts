@@ -1,48 +1,47 @@
-import { BuzzwordEntry } from '../src/types';
+/**
+ * Buzzword Service - Database-First Implementation
+ * 
+ * PostgreSQL is the ONLY source of truth for buzzword data.
+ * Errors propagate to UI for proper handling.
+ */
+
+import { BuzzwordEntry } from '@/types';
 
 let buzzwordCache: BuzzwordEntry[] | null = null;
 
 export const buzzwordService = {
   /**
-   * Fetch all buzzwords from the API
+   * Fetch all buzzwords from the database API
+   * @throws Error if database is unavailable
    */
   getAllBuzzwords: async (): Promise<BuzzwordEntry[]> => {
     if (buzzwordCache) return buzzwordCache;
 
-    try {
-      const response = await fetch('/api/buzzwords');
-      
-      // Check if response is OK and is JSON before parsing
-      if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-        const data = await response.json();
-        buzzwordCache = data;
-        return data;
-      }
-      
-      console.warn('Buzzwords API unavailable');
-    } catch (error) {
-      console.warn('Error fetching buzzwords:', error);
+    const response = await fetch('/api/buzzwords');
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to fetch buzzwords: ${response.status}`);
     }
-    return [];
+    
+    const data = await response.json();
+    buzzwordCache = data;
+    return data;
   },
 
   /**
-   * Get a random set of buzzwords
+   * Get a random set of buzzwords from database
+   * @throws Error if database is unavailable
    */
   getRandomBuzzwords: async (count: number = 10): Promise<BuzzwordEntry[]> => {
-    try {
-      const response = await fetch(`/api/buzzwords/random?count=${count}`);
-      
-      // Check if response is OK and is JSON before parsing
-      if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
-        return await response.json();
-      }
-      
-      console.warn('Random buzzwords API unavailable');
-    } catch (error) {
-      console.warn('Error fetching random buzzwords:', error);
+    const response = await fetch(`/api/buzzwords/random?count=${count}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to fetch random buzzwords: ${response.status}`);
     }
-    return [];
+    
+    return await response.json();
   },
 
   /**

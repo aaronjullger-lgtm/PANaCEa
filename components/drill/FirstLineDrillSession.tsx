@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X, Heart, Wind, Bug, Activity as ActivityIcon, Utensils, Brain, Bone, Shuffle, Pill } from 'lucide-react';
 import { useFirstLineDrill, type FirstLineCategory } from '@/hooks/game/use-first-line-drill';
-import MiniDrillLayout, { QuestionCard, AnswerOption, FeedbackPanel, CategoryCard } from './MiniDrillLayout';
+import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './MiniDrillLayout';
+import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 
 interface FirstLineDrillSessionProps {
   onExit?: () => void;
@@ -112,6 +113,11 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
     }
   };
 
+  const handleDeepDive = useCallback((topic: string) => {
+    console.log('Deep dive into:', topic);
+    // Could open a modal, navigate to reference library, etc.
+  }, []);
+
   // =========================================================================
   // MENU VIEW
   // =========================================================================
@@ -187,12 +193,16 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
         onReset={reset}
         footer={
           status === 'feedback' && currentQuestion ? (
-            <FeedbackPanel
+            <EnhancedFeedbackPanel
               isCorrect={isCorrect ?? false}
               correctAnswer={currentQuestion.options[currentQuestion.correctAnswerIndex]}
               explanation={currentQuestion.explanation}
               pearl={currentQuestion.pearl}
               onNext={nextQuestion}
+              nextLabel="Next Question"
+              category="procedure"
+              tags={['treatment', 'first-line', currentQuestion.category, currentQuestion.condition]}
+              onDeepDive={handleDeepDive}
             />
           ) : undefined
         }

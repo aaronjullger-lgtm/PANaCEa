@@ -2,22 +2,38 @@
  * PhysiologyDrillSession - Organ system physiology review drill
  * 
  * Multiple-choice questions covering physiology concepts across organ systems.
+ * Enhanced with database-linked reference material in feedback panels.
  */
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Activity } from 'lucide-react';
-import MiniDrillLayout, { QuestionCard, AnswerOption, FeedbackPanel } from './MiniDrillLayout';
+import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
+import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
 import { usePhysiologyDrill } from '@/hooks/game/use-physiology-drill';
 import { getDrillLandingStats } from '@/services/drillStatsService';
 
 interface PhysiologyDrillSessionProps {
   onExit?: () => void;
+  onNavigateToReference?: (type: string, id: string) => void;
 }
 
-const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({ onExit }) => {
+const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({ 
+  onExit,
+  onNavigateToReference,
+}) => {
   const drill = usePhysiologyDrill();
   const stats = getDrillLandingStats('physiology_drill');
+  
+  // Handler for deep dive into reference material
+  const handleDeepDive = useCallback((type: string, id: string) => {
+    if (onNavigateToReference) {
+      onNavigateToReference(type, id);
+    } else {
+      // Fallback: log for debugging
+      console.log('Deep dive requested:', type, id);
+    }
+  }, [onNavigateToReference]);
 
   // Landing page
   if (drill.status === 'landing') {
@@ -61,12 +77,16 @@ const PhysiologyDrillSession: React.FC<PhysiologyDrillSessionProps> = ({ onExit 
       onReset={drill.reset}
       footer={
         isFeedback && drill.currentQuestion ? (
-          <FeedbackPanel
+          <EnhancedFeedbackPanel
             isCorrect={drill.isCorrect!}
             correctAnswer={drill.currentQuestion.options[drill.currentQuestion.correctIndex]}
             explanation={drill.currentQuestion.explanation}
             userAnswer={drill.userAnswerIndex !== null ? drill.currentQuestion.options[drill.userAnswerIndex] : null}
             onNext={drill.nextQuestion}
+            category="physiology"
+            tags={drill.currentQuestion.tags || []}
+            relatedConceptId={drill.currentQuestion.system}
+            onDeepDive={handleDeepDive}
           />
         ) : undefined
       }

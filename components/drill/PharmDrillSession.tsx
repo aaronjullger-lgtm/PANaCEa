@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { X, Beaker, Pill, AlertTriangle, FileQuestion, Syringe, Shuffle, Activity as ActivityIcon } from 'lucide-react';
 import { usePharmDrill, type PharmCategory } from '@/hooks/game/use-pharm-drill';
-import MiniDrillLayout, { QuestionCard, AnswerOption, FeedbackPanel, CategoryCard } from './MiniDrillLayout';
+import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './MiniDrillLayout';
+import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 
 interface PharmDrillSessionProps {
@@ -102,6 +103,11 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
     exitToMenu();
     onExit?.();
   };
+
+  const handleDeepDive = useCallback((topic: string) => {
+    console.log('Deep dive into:', topic);
+    // Could open a modal, navigate to reference library, etc.
+  }, []);
 
   if (isDataLoading) {
     return (
@@ -226,11 +232,21 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
         onReset={reset}
         footer={
           status === 'feedback' && currentQuestion ? (
-            <FeedbackPanel
+            <EnhancedFeedbackPanel
               isCorrect={isCorrect ?? false}
               correctAnswer={currentQuestion.options[currentQuestion.correctAnswerIndex]}
               explanation={currentQuestion.explanation}
               onNext={nextQuestion}
+              nextLabel="Next Question"
+              category="procedure"
+              tags={[
+                'pharmacology',
+                currentQuestion.type,
+                ...(Array.isArray(currentQuestion.drugClass) 
+                  ? currentQuestion.drugClass 
+                  : [currentQuestion.drugClass])
+              ]}
+              onDeepDive={handleDeepDive}
             />
           ) : undefined
         }
