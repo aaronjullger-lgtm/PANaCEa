@@ -46,6 +46,9 @@ export default defineConfig(({ mode }) => {
           workbox: {
             maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // 35MB to accommodate large condition data
             globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+            // Force SW update - increment this to bust cache
+            skipWaiting: true,
+            clientsClaim: true,
             // Use runtime caching for large data chunks instead of precaching
             runtimeCaching: [
               {
@@ -71,10 +74,6 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
-      },
-      optimizeDeps: {
-        // Pre-bundle lucide-react to avoid tree-shaking initialization issues
-        include: ['lucide-react'],
       },
       build: {
         rollupOptions: {
