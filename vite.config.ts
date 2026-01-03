@@ -86,8 +86,13 @@ export default defineConfig(({ mode }) => {
             manualChunks: (id) => {
               // Vendor chunks for better caching and performance
               if (id.includes('node_modules')) {
-                // Split React core (keep together to avoid module initialization issues)
+                // Split React core + lucide (lucide must load with React to avoid initialization issues)
                 if (id.includes('react') && !id.includes('react-router') && !id.includes('react-markdown')) {
+                  return 'vendor-react-core';
+                }
+                
+                // Icons must be in react-core chunk to avoid "Cannot set properties of undefined"
+                if (id.includes('lucide-react')) {
                   return 'vendor-react-core';
                 }
                 
@@ -104,11 +109,6 @@ export default defineConfig(({ mode }) => {
                 // Animation library (Framer Motion is large)
                 if (id.includes('framer-motion')) {
                   return 'vendor-animation';
-                }
-                
-                // Icons library
-                if (id.includes('lucide-react')) {
-                  return 'vendor-icons';
                 }
                 
                 // Markdown rendering
