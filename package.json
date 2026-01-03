@@ -91,6 +91,11 @@
     "images:list": "tsx ./scripts/images/image-acquisition-workflow.ts list",
     "images:plan": "tsx ./scripts/images/image-acquisition-workflow.ts plan",
     "images:plan-system": "tsx ./scripts/images/image-acquisition-workflow.ts plan-system",
+    "images:bulk": "tsx ./scripts/images/bulk-image-fetcher.ts fetch",
+    "images:bulk-one": "tsx ./scripts/images/bulk-image-fetcher.ts fetch-one",
+    "images:preview": "tsx ./scripts/images/bulk-image-fetcher.ts preview",
+    "images:curated": "tsx ./scripts/images/fetch-curated-images.ts",
+    "images:local": "tsx ./scripts/images/process-local-images.ts",
     "build": "vite build",
     "build:server": "tsc server.ts --outDir dist-server --module commonjs --target es2022",
     "preview": "vite preview",
@@ -154,6 +159,8 @@
     "@types/uuid": "^9.0.8",
     "concurrently": "^9.1.2",
     "jsdom": "^27.2.0",
+    "pg": "^8.16.3",
+    "sharp": "^0.34.5",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
     "typescript": "~5.8.2",
@@ -163,7 +170,7 @@
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.9.5",
     "@rollup/rollup-linux-x64-musl": "^4.9.5",
-    "sharp": "^0.33.2"
+    "sharp": "^0.33.5"
   },
   "engines": {
     "node": ">=18.0.0"

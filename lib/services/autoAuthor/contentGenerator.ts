@@ -16,10 +16,10 @@ import type {
   ContentGenerationResult,
 } from "./types";
 
+// Only use Gemini 2.5 models - these are the only ones that work with the API key
 const MODEL_CANDIDATES = [
-  process.env.GEMINI_PRO_MODEL || "gemini-2.5-pro",
-  "gemini-2.0-flash",
-  "gemini-1.5-pro",
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
 ];
 const DEFAULT_TEMPERATURE = 0.7;
 const MAX_RETRIES = 2;

@@ -11,6 +11,14 @@ import { useShortcut } from "../src/context/ShortcutContext";
 import { useUser } from "@clerk/clerk-react";
 import { generateAlternateRationale } from "../services/geminiService";
 import { getQuestion } from "../services/questionService";
+import { 
+  fetchSessionQuestions, 
+  recordSessionAnswer,
+  initializeSession,
+  getPoolStatus,
+  checkAndReplenishPool,
+  getSessionSummary as getMainSessionSummary,
+} from "../services/mainSessionService";
 import { recordQuestionAttempt } from "../services/attemptService";
 import { FlagQuestionModal } from "./FlagQuestionModal";
 import type {
@@ -358,12 +366,15 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   setIsGeneratingQuestion(true);
   try {
-    // Use questionService which tries pool first, then falls back to Gemini
+    // Use questionService for single question fetch (pool + Gemini fallback)
+    // The mainSessionService is used for batch fetches and analytics
     const newQuestion = await getQuestion(sessionSettings, growthAreas);
 
-    // keep both queues in sync
-    setParentQueue((prev) => [...prev, newQuestion]);
-    setQueue((prev) => [...prev, newQuestion]);
+    if (newQuestion) {
+      // keep both queues in sync
+      setParentQueue((prev) => [...prev, newQuestion]);
+      setQueue((prev) => [...prev, newQuestion]);
+    }
   } catch (err: unknown) {
     console.error("Failed to replenish queue:", err);
     // soft-fail: show a user-friendly error but don't kill the session
@@ -577,6 +588,14 @@ const QuizView: React.FC<QuizViewProps> = ({
         });
       });
     }
+
+    // Track answer in session analytics (local state for session summary)
+    recordSessionAnswer(
+      currentQuestion.id || `temp-${questionNumber}`,
+      isCorrect,
+      currentQuestion.system || 'Unknown',
+      timeToAnswer
+    );
 
     // Record circadian performance data
     recordCircadianPerformance({

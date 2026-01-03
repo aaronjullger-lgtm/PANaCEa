@@ -50,15 +50,18 @@ model AnatomyConditionLink {
   id               String           @id
   anatomyId        String
   conditionId      String
+  medicalContentId String?
   relationshipType String
   clinicalContext  String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime
   AnatomyStructure AnatomyStructure @relation(fields: [anatomyId], references: [id], onDelete: Cascade)
   Condition        Condition        @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent?  @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@unique([anatomyId, conditionId])
   @@index([conditionId])
+  @@index([medicalContentId])
   @@index([relationshipType])
 }
 
@@ -116,6 +119,7 @@ model AnatomyStructure {
   videoUrl             String?
   AnatomyConditionLink AnatomyConditionLink[]
   Condition            Condition[]
+  MediaAsset           MediaAsset[]
 
   @@index([name])
   @@index([panceYield])
@@ -124,48 +128,50 @@ model AnatomyStructure {
 }
 
 model AntibioticGuideline {
-  id                     String   @id
-  organism               String
-  class                  String
-  effective              Json
-  resistant              Json
-  notes                  String?
-  description            String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime
-  aliases                String[] @default([])
-  alternativeAntibiotics String[] @default([])
-  arrangement            String?
-  boardYieldFacts        String[] @default([])
-  carbapenemResistant    Boolean  @default(false)
-  classicPresentation    String?
-  clinicalPearls         String[] @default([])
-  commonInfections       String[] @default([])
-  commonMistakes         String[] @default([])
-  cultureCharacteristics String?
-  deEscalationGuidance   String?
-  diagnosticClues        String[] @default([])
-  doseRecommendations    Json?
-  emergingResistance     String[] @default([])
-  esblProducer           Boolean  @default(false)
-  firstLineAntibiotics   String[] @default([])
-  gramStain              String?
-  growthConditions       String?
-  infectionControl       String[] @default([])
-  isHighYield            Boolean  @default(false)
-  mnemonics              String[] @default([])
-  morphology             String?
-  mrResistance           Boolean  @default(false)
-  panceYield             Int?
-  prophylaxis            String?
-  reservoirs             String[] @default([])
-  resistanceMechanisms   String[] @default([])
-  testQuestionTips       String[] @default([])
-  transmission           String[] @default([])
-  treatmentDuration      String?
-  vaccines               String[] @default([])
-  vancomycinResistant    Boolean  @default(false)
-  virulenceFactors       String[] @default([])
+  id                      String                    @id
+  organism                String
+  class                   String
+  effective               Json
+  resistant               Json
+  notes                   String?
+  description             String?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  aliases                 String[]                  @default([])
+  alternativeAntibiotics  String[]                  @default([])
+  arrangement             String?
+  boardYieldFacts         String[]                  @default([])
+  carbapenemResistant     Boolean                   @default(false)
+  classicPresentation     String?
+  clinicalPearls          String[]                  @default([])
+  commonInfections        String[]                  @default([])
+  commonMistakes          String[]                  @default([])
+  cultureCharacteristics  String?
+  deEscalationGuidance    String?
+  diagnosticClues         String[]                  @default([])
+  doseRecommendations     Json?
+  emergingResistance      String[]                  @default([])
+  esblProducer            Boolean                   @default(false)
+  firstLineAntibiotics    String[]                  @default([])
+  gramStain               String?
+  growthConditions        String?
+  infectionControl        String[]                  @default([])
+  isHighYield             Boolean                   @default(false)
+  mnemonics               String[]                  @default([])
+  morphology              String?
+  mrResistance            Boolean                   @default(false)
+  panceYield              Int?
+  prophylaxis             String?
+  reservoirs              String[]                  @default([])
+  resistanceMechanisms    String[]                  @default([])
+  testQuestionTips        String[]                  @default([])
+  transmission            String[]                  @default([])
+  treatmentDuration       String?
+  vaccines                String[]                  @default([])
+  vancomycinResistant     Boolean                   @default(false)
+  virulenceFactors        String[]                  @default([])
+  // New deep relations
+  AntibioticConditionLink AntibioticConditionLink[]
 
   @@index([class])
   @@index([gramStain])
@@ -256,21 +262,29 @@ model ClinicalGuideline {
 }
 
 model ClinicalPearl {
-  id              String      @id
-  system          String
-  createdAt       DateTime    @default(now())
-  category        String?
-  extractedAt     DateTime    @default(now())
-  fullExplanation String?
-  pearlText       String
-  questionId      String?
-  updatedAt       DateTime
-  usefulVotes     Int         @default(0)
-  viewCount       Int         @default(0)
-  tags            String[]
-  UserPearl       UserPearl[]
+  id                 String              @id
+  system             String
+  createdAt          DateTime            @default(now())
+  category           String?
+  extractedAt        DateTime            @default(now())
+  fullExplanation    String?
+  pearlText          String
+  questionId         String?
+  updatedAt          DateTime
+  usefulVotes        Int                 @default(0)
+  viewCount          Int                 @default(0)
+  tags               String[]
+  // New FK for deep relations
+  conditionId        String?
+  medicalContentId   String?
+  Condition          Condition?          @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  MedicalContent     MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  UserPearl          UserPearl[]
+  PearlConditionLink PearlConditionLink[]
 
   @@index([category])
+  @@index([conditionId])
+  @@index([medicalContentId])
   @@index([questionId])
   @@index([system])
 }
@@ -306,32 +320,50 @@ model CohortMember {
 }
 
 model Condition {
-  id                      String                    @id
-  name                    String
-  system                  String
-  createdAt               DateTime                  @default(now())
-  updatedAt               DateTime
-  aliases                 String[]                  @default([])
-  content                 Json?
-  displayName             String?
-  parentId                String?
-  relatedSystems          String[]                  @default([])
-  status                  String                    @default("published")
-  subcategory             String?
-  AnatomyConditionLink    AnatomyConditionLink[]
-  Condition               Condition?                @relation("ConditionToCondition", fields: [parentId], references: [id], onDelete: Cascade)
-  other_Condition         Condition[]               @relation("ConditionToCondition")
-  DrugConditionLink       DrugConditionLink[]
-  ECGConditionLink        ECGConditionLink[]
-  FindingConditionLink    FindingConditionLink[]
-  ImagingConditionLink    ImagingConditionLink[]
-  LabConditionLink        LabConditionLink[]
-  MediaAsset              MediaAsset[]
-  PhysiologyConditionLink PhysiologyConditionLink[]
-  ProcedureConditionLink  ProcedureConditionLink[]
-  TreatmentConditionLink  TreatmentConditionLink[]
-  AnatomyStructure        AnatomyStructure[]
-  SpecialTest             SpecialTest[]
+  id                        String                      @id
+  name                      String
+  system                    String
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime
+  aliases                   String[]                    @default([])
+  content                   Json?
+  displayName               String?
+  parentId                  String?
+  relatedSystems            String[]                    @default([])
+  status                    String                      @default("published")
+  subcategory               String?
+  AnatomyConditionLink      AnatomyConditionLink[]
+  Condition                 Condition?                  @relation("ConditionToCondition", fields: [parentId], references: [id], onDelete: Cascade)
+  other_Condition           Condition[]                 @relation("ConditionToCondition")
+  DrugConditionLink         DrugConditionLink[]
+  ECGConditionLink          ECGConditionLink[]
+  FindingConditionLink      FindingConditionLink[]
+  ImagingConditionLink      ImagingConditionLink[]
+  LabConditionLink          LabConditionLink[]
+  MediaAsset                MediaAsset[]
+  PhysiologyConditionLink   PhysiologyConditionLink[]
+  ProcedureConditionLink    ProcedureConditionLink[]
+  TreatmentConditionLink    TreatmentConditionLink[]
+  AnatomyStructure          AnatomyStructure[]
+  SpecialTest               SpecialTest[]
+  // New deep relations
+  DifferentialConditionLink DifferentialConditionLink[]
+  AntibioticConditionLink   AntibioticConditionLink[]
+  VitalSignConditionLink    VitalSignConditionLink[]
+  ScoringSystemConditionLink ScoringSystemConditionLink[]
+  PearlConditionLink        PearlConditionLink[]
+  ConditionRelation1        ConditionRelation[]         @relation("ConditionRelation1")
+  ConditionRelation2        ConditionRelation[]         @relation("ConditionRelation2")
+  Question                  Question[]
+  ClinicalPearl             ClinicalPearl[]
+  ScoringSystem             ScoringSystem[]
+  ConfusionPairReal         ConfusionPair[]             @relation("ConfusionPairReal")
+  ConfusionPairMistaken     ConfusionPair[]             @relation("ConfusionPairMistaken")
+  WeaknessPattern           WeaknessPattern[]
+  DifferentialDiagnosis     DifferentialDiagnosis[]
+  PreGeneratedQuestion      PreGeneratedQuestion[]
+  QuestionSeed              QuestionSeed[]
+  SavedQuestion             SavedQuestion[]
 
   @@index([displayName])
   @@index([name])
@@ -342,16 +374,24 @@ model Condition {
 }
 
 model ConfusionPair {
-  id             String   @id
-  userId         String?
-  realCondition  String
-  mistakenFor    String
-  count          Int      @default(1)
-  lastOccurrence DateTime @default(now())
-  createdAt      DateTime @default(now())
+  id               String     @id
+  userId           String?
+  realCondition    String
+  mistakenFor      String
+  count            Int        @default(1)
+  lastOccurrence   DateTime   @default(now())
+  createdAt        DateTime   @default(now())
+  // New FKs for deep relations
+  realConditionId  String?
+  mistakenForId    String?
+  RealCondition    Condition? @relation("ConfusionPairReal", fields: [realConditionId], references: [id], onDelete: SetNull)
+  MistakenCondition Condition? @relation("ConfusionPairMistaken", fields: [mistakenForId], references: [id], onDelete: SetNull)
+  User             User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@unique([userId, realCondition, mistakenFor])
+  @@index([mistakenForId])
   @@index([realCondition])
+  @@index([realConditionId])
   @@index([userId])
   @@index([userId, realCondition])
 }
@@ -470,38 +510,43 @@ model DailyWordle {
 }
 
 model DifferentialDiagnosis {
-  id                     String   @id
-  presentingComplaint    String   @unique
-  category               String
-  isEmergency            Boolean  @default(false)
-  differentialList       String[]
-  mustNotMiss            String[]
-  workup                 String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime
-  byAcuity               Json?
-  byAge                  Json?
-  clinicalPearls         String[] @default([])
-  commonMistakes         String[] @default([])
-  diagnosticAlgorithm    String?
-  dispositionGuidance    String?
-  distinguishingFeatures Json?
-  initialWorkup          String[] @default([])
-  isHighYield            Boolean  @default(false)
-  keyExamFindings        String[] @default([])
-  keyQuestions           String[] @default([])
-  mnemonics              String[] @default([])
-  mostCommon             String[] @default([])
-  mostDangerous          String[] @default([])
-  oftenMissed            String[] @default([])
-  panceYield             Int?
-  reassuringFeatures     String[] @default([])
-  redFlags               String[] @default([])
-  typicalPresentation    String?
+  id                        String                      @id
+  presentingComplaint       String                      @unique
+  category                  String
+  isEmergency               Boolean                     @default(false)
+  differentialList          String[]
+  mustNotMiss               String[]
+  workup                    String?
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime
+  byAcuity                  Json?
+  byAge                     Json?
+  clinicalPearls            String[]                    @default([])
+  commonMistakes            String[]                    @default([])
+  diagnosticAlgorithm       String?
+  dispositionGuidance       String?
+  distinguishingFeatures    Json?
+  initialWorkup             String[]                    @default([])
+  isHighYield               Boolean                     @default(false)
+  keyExamFindings           String[]                    @default([])
+  keyQuestions              String[]                    @default([])
+  mnemonics                 String[]                    @default([])
+  mostCommon                String[]                    @default([])
+  mostDangerous             String[]                    @default([])
+  oftenMissed               String[]                    @default([])
+  panceYield                Int?
+  reassuringFeatures        String[]                    @default([])
+  redFlags                  String[]                    @default([])
+  typicalPresentation       String?
+  // New FK for deep relations
+  primaryConditionId        String?
+  PrimaryCondition          Condition?                  @relation(fields: [primaryConditionId], references: [id], onDelete: SetNull)
+  DifferentialConditionLink DifferentialConditionLink[]
 
   @@index([category])
   @@index([isEmergency])
   @@index([panceYield])
+  @@index([primaryConditionId])
 }
 
 model Drug {
@@ -570,6 +615,10 @@ model Drug {
   toxicity            String?
   typicalCost         String?
   DrugConditionLink   DrugConditionLink[]
+  MediaAsset          MediaAsset[]
+  // New deep relations
+  DrugInteraction1    DrugInteraction[]   @relation("DrugInteraction1")
+  DrugInteraction2    DrugInteraction[]   @relation("DrugInteraction2")
 
   @@index([genericName])
   @@index([isFirstLine])
@@ -577,41 +626,47 @@ model Drug {
 }
 
 model DrugConditionLink {
-  id               String    @id
+  id               String          @id
   drugId           String
   conditionId      String
+  medicalContentId String?
   relationshipType String
   evidenceLevel    String?
   notes            String?
-  isFirstLine      Boolean   @default(false)
-  createdAt        DateTime  @default(now())
+  isFirstLine      Boolean         @default(false)
+  createdAt        DateTime        @default(now())
   updatedAt        DateTime
-  Condition        Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  Drug             Drug      @relation(fields: [drugId], references: [id], onDelete: Cascade)
+  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  Drug             Drug            @relation(fields: [drugId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@unique([drugId, conditionId, relationshipType])
   @@index([conditionId])
+  @@index([medicalContentId])
   @@index([relationshipType])
 }
 
 model ECGConditionLink {
-  id                 String     @id
+  id                 String          @id
   ecgPatternId       String
   conditionId        String
+  medicalContentId   String?
   relationshipType   String
   findingDescription String?
-  exampleImageUrls   String[]   @default([])
-  annotatedImageUrls String[]   @default([])
-  isFirstLine        Boolean?   @default(false)
+  exampleImageUrls   String[]        @default([])
+  annotatedImageUrls String[]        @default([])
+  isFirstLine        Boolean?        @default(false)
   panceYield         Int?
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @default(now())
-  Condition          Condition  @relation(fields: [conditionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  ECGPattern         ECGPattern @relation(fields: [ecgPatternId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @default(now())
+  Condition          Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  ECGPattern         ECGPattern      @relation(fields: [ecgPatternId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@unique([ecgPatternId, conditionId, relationshipType])
   @@index([conditionId])
   @@index([ecgPatternId])
+  @@index([medicalContentId])
   @@index([relationshipType])
 }
 
@@ -729,6 +784,7 @@ model FindingConditionLink {
   id                  String              @id
   findingId           String
   conditionId         String
+  medicalContentId    String?
   relationshipType    String
   clinicalContext     String?
   sensitivity         Float?
@@ -737,9 +793,11 @@ model FindingConditionLink {
   updatedAt           DateTime
   Condition           Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   PhysicalExamFinding PhysicalExamFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  MedicalContent      MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@unique([findingId, conditionId])
   @@index([conditionId])
+  @@index([medicalContentId])
   @@index([relationshipType])
 }
 
@@ -830,72 +888,76 @@ model HistoryComponent {
 }
 
 model ImagingConditionLink {
-  id                 String       @id
+  id                 String          @id
   imagingId          String
   conditionId        String
+  medicalContentId   String?
   relationshipType   String
-  expectedFindings   String[]     @default([])
+  expectedFindings   String[]        @default([])
   classicFindings    String?
   sensitivity        Float?
   specificity        Float?
-  createdAt          DateTime     @default(now())
+  createdAt          DateTime        @default(now())
   updatedAt          DateTime
-  exampleImageUrls   String[]     @default([])
-  annotatedImageUrls String[]     @default([])
-  normalImageUrls    String[]     @default([])
+  exampleImageUrls   String[]        @default([])
+  annotatedImageUrls String[]        @default([])
+  normalImageUrls    String[]        @default([])
   findingDescription String?
-  isFirstLine        Boolean?     @default(false)
+  isFirstLine        Boolean?        @default(false)
   panceYield         Int?
-  Condition          Condition    @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  ImagingStudy       ImagingStudy @relation(fields: [imagingId], references: [id], onDelete: Cascade)
+  Condition          Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  ImagingStudy       ImagingStudy    @relation(fields: [imagingId], references: [id], onDelete: Cascade)
+  MedicalContent     MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@unique([imagingId, conditionId, relationshipType])
   @@index([conditionId])
+  @@index([medicalContentId])
   @@index([relationshipType])
 }
 
 model ImagingStudy {
-  id                   String                 @id
-  name                 String                 @unique
-  modality             String
-  bodyRegion           String?
-  usesContrast         Boolean                @default(false)
-  usesRadiation        Boolean                @default(false)
-  description          String?
-  indications          String[]
-  contraindications    String[]
-  createdAt            DateTime               @default(now())
-  updatedAt            DateTime
-  advantages           String[]               @default([])
-  allergyProtocol      String?
-  alternativeTo        String[]               @default([])
-  boardYieldFacts      String[]               @default([])
-  classicSigns         String[]               @default([])
-  clinicalPearls       String[]               @default([])
-  commonMistakes       String[]               @default([])
-  contrastAgent        String?
-  contrastType         String?
-  firstLineFor         String[]               @default([])
-  isHighYield          Boolean                @default(false)
-  keyFindings          Json?
-  limitations          String[]               @default([])
-  normalFindings       String?
-  panceYield           Int?
-  pregnancySafety      String?
-  preparation          String?
-  protocol             String?
-  radiationDose        String?
-  renalConsiderations  String?
-  reportTemplate       String?
-  scanDuration         String?
-  testQuestionTips     String[]               @default([])
-  whenToAvoid          String[]               @default([])
+  id                     String                   @id
+  name                   String                   @unique
+  modality               String
+  bodyRegion             String?
+  usesContrast           Boolean                  @default(false)
+  usesRadiation          Boolean                  @default(false)
+  description            String?
+  indications            String[]
+  contraindications      String[]
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  advantages             String[]                 @default([])
+  allergyProtocol        String?
+  alternativeTo          String[]                 @default([])
+  boardYieldFacts        String[]                 @default([])
+  classicSigns           String[]                 @default([])
+  clinicalPearls         String[]                 @default([])
+  commonMistakes         String[]                 @default([])
+  contrastAgent          String?
+  contrastType           String?
+  firstLineFor           String[]                 @default([])
+  isHighYield            Boolean                  @default(false)
+  keyFindings            Json?
+  limitations            String[]                 @default([])
+  normalFindings         String?
+  panceYield             Int?
+  pregnancySafety        String?
+  preparation            String?
+  protocol               String?
+  radiationDose          String?
+  renalConsiderations    String?
+  reportTemplate         String?
+  scanDuration           String?
+  testQuestionTips       String[]                 @default([])
+  whenToAvoid            String[]                 @default([])
   // Image fields for visual learning
-  exampleImageUrls     String[]               @default([])
-  annotatedImageUrls   String[]               @default([])
-  thumbnailUrl         String?
-  ImagingConditionLink ImagingConditionLink[]
-  MediaAsset           MediaAsset[]
+  exampleImageUrls       String[]                 @default([])
+  annotatedImageUrls     String[]                 @default([])
+  thumbnailUrl           String?
+  ImagingConditionLink   ImagingConditionLink[]
+  MediaAsset             MediaAsset[]
+  NormalImagingFinding   NormalImagingFinding[]
 
   @@index([bodyRegion])
   @@index([modality])
@@ -912,21 +974,24 @@ model LabCase {
 }
 
 model LabConditionLink {
-  id               String    @id
+  id               String          @id
   labTestId        String
   conditionId      String
+  medicalContentId String?
   relationshipType String
   expectedResult   String?
   significance     String?
   sensitivity      Float?
   specificity      Float?
-  createdAt        DateTime  @default(now())
+  createdAt        DateTime        @default(now())
   updatedAt        DateTime
-  Condition        Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  LabTest          LabTest   @relation(fields: [labTestId], references: [id], onDelete: Cascade)
+  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  LabTest          LabTest         @relation(fields: [labTestId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@unique([labTestId, conditionId, relationshipType])
   @@index([conditionId])
+  @@index([medicalContentId])
   @@index([relationshipType])
 }
 
@@ -968,6 +1033,8 @@ model LabTest {
   units               String?
   whenToOrder         String[]           @default([])
   LabConditionLink    LabConditionLink[]
+  NormalLabValue      NormalLabValue[]
+  MediaAsset          MediaAsset[]
 
   @@index([category])
   @@index([panceYield])
@@ -995,6 +1062,13 @@ model MediaAsset {
   id                  String                @id
   conditionId         String?
   imagingStudyId      String?
+  medicalContentId    String?
+  // New FK fields for deeper linking
+  drugId              String?
+  procedureId         String?
+  findingId           String?
+  anatomyId           String?
+  labTestId           String?
   type                String
   filename            String
   originalUrl         String?
@@ -1033,8 +1107,18 @@ model MediaAsset {
   sourceQuality       String                @default("high") /// low, medium, high
   modality            String?               /// Normalized: ecg, derm, radiology
   explanation         String?               /// Explanation shown after answering
+  // Annotation tracking for quiz vs reference images
+  isAnnotated         Boolean               @default(false) /// Has arrows/labels that give away diagnosis
+  usageType           String                @default("quiz") /// quiz = clean image, reference = annotated, both = either
+  // Relations
   Condition           Condition?            @relation(fields: [conditionId], references: [id])
   ImagingStudy        ImagingStudy?         @relation(fields: [imagingStudyId], references: [id])
+  MedicalContent      MedicalContent?       @relation(fields: [medicalContentId], references: [id])
+  Drug                Drug?                 @relation(fields: [drugId], references: [id])
+  Procedure           Procedure?            @relation(fields: [procedureId], references: [id])
+  PhysicalExamFinding PhysicalExamFinding?  @relation(fields: [findingId], references: [id])
+  AnatomyStructure    AnatomyStructure?     @relation(fields: [anatomyId], references: [id])
+  LabTest             LabTest?              @relation(fields: [labTestId], references: [id])
   MedicalContentMedia MedicalContentMedia[]
 
   @@index([approvalStatus])
@@ -1044,6 +1128,12 @@ model MediaAsset {
   @@index([filename])
   @@index([folder])
   @@index([imagingStudyId])
+  @@index([medicalContentId])
+  @@index([drugId])
+  @@index([procedureId])
+  @@index([findingId])
+  @@index([anatomyId])
+  @@index([labTestId])
   @@index([mediaType])
   @@index([modality])
   @@index([status])
@@ -1102,9 +1192,32 @@ model MedicalContent {
   rx_mechanism          String?
   rx_side_effects       String?
   synonyms              Json?
-  ContentAuditLog       ContentAuditLog[]
-  ContentVersion        ContentVersion[]
-  MedicalContentMedia   MedicalContentMedia[]
+  // Inverse relations from junction tables with medicalContentId
+  ContentAuditLog              ContentAuditLog[]
+  ContentVersion               ContentVersion[]
+  MedicalContentMedia          MedicalContentMedia[]
+  AnatomyConditionLinks        AnatomyConditionLink[]
+  DrugConditionLinks           DrugConditionLink[]
+  ECGConditionLinks            ECGConditionLink[]
+  FindingConditionLinks        FindingConditionLink[]
+  ImagingConditionLinks        ImagingConditionLink[]
+  LabConditionLinks            LabConditionLink[]
+  PhysiologyConditionLinks     PhysiologyConditionLink[]
+  ProcedureConditionLinks      ProcedureConditionLink[]
+  TreatmentConditionLinks      TreatmentConditionLink[]
+  DifferentialConditionLinks   DifferentialConditionLink[]
+  AntibioticConditionLinks     AntibioticConditionLink[]
+  VitalSignConditionLinks      VitalSignConditionLink[]
+  ScoringSystemConditionLinks  ScoringSystemConditionLink[]
+  PearlConditionLinks          PearlConditionLink[]
+  // Inverse relations from direct entity models with medicalContentId
+  ClinicalPearls               ClinicalPearl[]
+  MediaAssets                  MediaAsset[]
+  Questions                    Question[]
+  PreGeneratedQuestions        PreGeneratedQuestion[]
+  QuestionSeeds                QuestionSeed[]
+  SavedQuestions               SavedQuestion[]
+  WeaknessPatterns             WeaknessPattern[]
 
   @@index([conditionId])
   @@index([createdBy])
@@ -1248,6 +1361,7 @@ model PhysicalExamFinding {
   testQuestionTips     String[]               @default([])
   videoUrl             String?
   FindingConditionLink FindingConditionLink[]
+  MediaAsset           MediaAsset[]
 
   @@index([category])
   @@index([panceYield])
@@ -1304,15 +1418,18 @@ model PhysiologyConditionLink {
   id                String            @id
   physiologyId      String
   conditionId       String
+  medicalContentId  String?
   relationshipType  String
   explanation       String?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime
   Condition         Condition         @relation(fields: [conditionId], references: [id], onDelete: Cascade)
   PhysiologyConcept PhysiologyConcept @relation(fields: [physiologyId], references: [id], onDelete: Cascade)
+  MedicalContent    MedicalContent?   @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@unique([physiologyId, conditionId])
   @@index([conditionId])
+  @@index([medicalContentId])
   @@index([relationshipType])
 }
 
@@ -1329,17 +1446,23 @@ model PracticeGuideline {
 }
 
 model PreGeneratedQuestion {
-  id           String    @id
-  questionType String
-  system       String?
-  conditionId  String?
-  difficulty   String
-  questionData Json
-  generatedAt  DateTime  @default(now())
-  usedAt       DateTime?
-  usedBy       String?
-  quality      Int?
+  id               String          @id
+  questionType     String
+  system           String?
+  conditionId      String?
+  medicalContentId String?
+  difficulty       String
+  questionData     Json
+  generatedAt      DateTime        @default(now())
+  usedAt           DateTime?
+  usedBy           String?
+  quality          Int?
+  // FK relations
+  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
+  @@index([conditionId])
+  @@index([medicalContentId])
   @@index([difficulty])
   @@index([generatedAt])
   @@index([questionType])
@@ -1388,6 +1511,7 @@ model Procedure {
   createdAt                 DateTime                 @default(now())
   updatedAt                 DateTime
   ProcedureConditionLink    ProcedureConditionLink[]
+  MediaAsset                MediaAsset[]
 
   @@index([category])
   @@index([panceYield])
@@ -1395,38 +1519,48 @@ model Procedure {
 }
 
 model ProcedureConditionLink {
-  id               String    @id
+  id               String          @id
   procedureId      String
   conditionId      String
+  medicalContentId String?
   relationshipType String
   indication       String?
-  isFirstLine      Boolean   @default(false)
-  createdAt        DateTime  @default(now())
+  isFirstLine      Boolean         @default(false)
+  createdAt        DateTime        @default(now())
   updatedAt        DateTime
-  Condition        Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  Procedure        Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  Procedure        Procedure       @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@unique([procedureId, conditionId])
   @@index([conditionId])
+  @@index([medicalContentId])
   @@index([relationshipType])
 }
 
 model Question {
-  id            String   @id
-  vignette      String
-  question      String
-  options       Json
-  correctAnswer String
-  explanation   String
-  system        String
-  tags          Json?
-  difficulty    String
-  source        String
-  timesSeen     Int      @default(0)
-  timesCorrect  Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime
+  id               String          @id
+  vignette         String
+  question         String
+  options          Json
+  correctAnswer    String
+  explanation      String
+  system           String
+  tags             Json?
+  difficulty       String
+  source           String
+  timesSeen        Int             @default(0)
+  timesCorrect     Int             @default(0)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime
+  // New FK for deep relations
+  conditionId      String?
+  medicalContentId String?
+  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
+  @@index([conditionId])
+  @@index([medicalContentId])
   @@index([difficulty])
   @@index([system])
 }
@@ -1500,24 +1634,29 @@ model QuestionHistory {
 }
 
 model QuestionSeed {
-  id            String    @id
-  conditionId   String
-  questionType  String
-  system        String?
-  corePathology String
-  variables     Json
-  template      String
-  correctAnswer String
-  distractors   String[]
-  explanation   String
-  difficulty    String
-  tags          String[]
-  usageCount    Int       @default(0)
-  lastUsedAt    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime
+  id               String          @id
+  conditionId      String
+  medicalContentId String?
+  questionType     String
+  system           String?
+  corePathology    String
+  variables        Json
+  template         String
+  correctAnswer    String
+  distractors      String[]
+  explanation      String
+  difficulty       String
+  tags             String[]
+  usageCount       Int             @default(0)
+  lastUsedAt       DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime
+  // FK relations
+  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@index([conditionId])
+  @@index([medicalContentId])
   @@index([system])
 }
 
@@ -1548,60 +1687,72 @@ model SRSItem {
 }
 
 model SavedQuestion {
-  id              String   @id
-  userId          String
-  questionId      String
-  questionText    String
-  correctAnswer   String
-  explanation     String
-  topic           String
-  system          String?
-  type            String
-  userNote        String?
-  repetitionLevel Int      @default(1)
-  nextReviewDate  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime
-  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String          @id
+  userId           String
+  questionId       String
+  questionText     String
+  correctAnswer    String
+  explanation      String
+  topic            String
+  system           String?
+  type             String
+  userNote         String?
+  repetitionLevel  Int             @default(1)
+  nextReviewDate   String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime
+  // New FK for deep relations
+  conditionId      String?
+  medicalContentId String?
+  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+  User             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, questionId, type])
+  @@index([conditionId])
+  @@index([medicalContentId])
   @@index([questionId])
   @@index([userId])
   @@index([userId, type])
 }
 
 model ScoringSystem {
-  id                String   @id
-  name              String   @unique
-  displayName       String?
-  aliases           String[] @default([])
-  category          String
-  condition         String?
-  panceYield        Int?
-  isHighYield       Boolean  @default(false)
-  boardYieldFacts   String[] @default([])
-  components        Json
-  maxScore          Int?
-  minScore          Int?     @default(0)
-  interpretation    Json
-  actionThresholds  Json?
-  sensitivity       Float?
-  specificity       Float?
-  validationStudies String[] @default([])
-  limitations       String[] @default([])
-  whenToUse         String?
-  whenNotToUse      String[] @default([])
-  clinicalContext   String?
-  clinicalPearls    String[] @default([])
-  commonMistakes    String[] @default([])
-  testQuestionTips  String[] @default([])
-  mnemonics         String[] @default([])
-  calculatorUrl     String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime
+  id                         String                       @id
+  name                       String                       @unique
+  displayName                String?
+  aliases                    String[]                     @default([])
+  category                   String
+  condition                  String?
+  panceYield                 Int?
+  isHighYield                Boolean                      @default(false)
+  boardYieldFacts            String[]                     @default([])
+  components                 Json
+  maxScore                   Int?
+  minScore                   Int?                         @default(0)
+  interpretation             Json
+  actionThresholds           Json?
+  sensitivity                Float?
+  specificity                Float?
+  validationStudies          String[]                     @default([])
+  limitations                String[]                     @default([])
+  whenToUse                  String?
+  whenNotToUse               String[]                     @default([])
+  clinicalContext            String?
+  clinicalPearls             String[]                     @default([])
+  commonMistakes             String[]                     @default([])
+  testQuestionTips           String[]                     @default([])
+  mnemonics                  String[]                     @default([])
+  calculatorUrl              String?
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime
+  // New FK for deep relations
+  conditionId                String?
+  Condition                  Condition?                   @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+  ScoringSystemConditionLink ScoringSystemConditionLink[]
 
   @@index([category])
   @@index([condition])
+  @@index([conditionId])
   @@index([panceYield])
 }
 
@@ -1755,21 +1906,24 @@ model Treatment {
 }
 
 model TreatmentConditionLink {
-  id               String    @id
+  id               String          @id
   treatmentId      String
   conditionId      String
+  medicalContentId String?
   relationshipType String
   evidenceLevel    String?
-  isFirstLine      Boolean   @default(false)
+  isFirstLine      Boolean         @default(false)
   notes            String?
-  createdAt        DateTime  @default(now())
+  createdAt        DateTime        @default(now())
   updatedAt        DateTime
-  Condition        Condition @relation(fields: [conditionId], references: [id], onDelete: Cascade)
-  Treatment        Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+  Condition        Condition       @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  Treatment        Treatment       @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@unique([treatmentId, conditionId, relationshipType])
   @@index([conditionId])
   @@index([isFirstLine])
+  @@index([medicalContentId])
   @@index([relationshipType])
 }
 
@@ -1809,6 +1963,11 @@ model User {
   UserQuestionHistory     UserQuestionHistory[]
   UserSRSConfig           UserSRSConfig?
   UserWordleState         UserWordleState[]
+  // New deep relations
+  ConfusionPair           ConfusionPair[]
+  WeaknessPattern         WeaknessPattern[]
+  StudySession            StudySession[]
+  UserLearningProfile     UserLearningProfile?
 
   @@index([clerkId])
   @@index([email])
@@ -1884,37 +2043,194 @@ model UserWordleState {
 }
 
 model VitalSignRange {
-  id                   String   @id
-  vitalSign            String   @unique
-  displayName          String?
-  category             String
-  normalRange          String?
-  ranges               Json?
-  units                String?
-  elevation            Json?
-  depression           Json?
-  emergencyValues      Json?
-  associatedConditions Json?
-  clinicalPearls       String[] @default([])
-  commonMistakes       String[] @default([])
-  testQuestionTips     String[] @default([])
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime
+  id                     String                   @id
+  vitalSign              String                   @unique
+  displayName            String?
+  category               String
+  normalRange            String?
+  ranges                 Json?
+  units                  String?
+  elevation              Json?
+  depression             Json?
+  emergencyValues        Json?
+  associatedConditions   Json?
+  clinicalPearls         String[]                 @default([])
+  commonMistakes         String[]                 @default([])
+  testQuestionTips       String[]                 @default([])
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  // New deep relations
+  VitalSignConditionLink VitalSignConditionLink[]
 
   @@index([category])
 }
 
 model WeaknessPattern {
-  id               String   @id
+  id               String          @id
   userId           String
   conditionId      String
+  medicalContentId String?
   wasCorrect       Boolean
-  timestamp        DateTime @default(now())
-  consecutiveWrong Int      @default(0)
+  timestamp        DateTime        @default(now())
+  consecutiveWrong Int             @default(0)
+  // New FKs for deep relations
+  User             User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
 
   @@index([conditionId])
+  @@index([medicalContentId])
   @@index([userId, conditionId])
   @@index([userId])
+}
+
+// =============================================================================
+// NEW JUNCTION TABLES FOR DEEP FOREIGN KEY RELATIONSHIPS
+// =============================================================================
+
+/// Links DifferentialDiagnosis to multiple conditions
+model DifferentialConditionLink {
+  id                     String                @id
+  differentialId         String
+  conditionId            String
+  medicalContentId       String?
+  rankOrder              Int                   @default(0)
+  likelihood             String?               // 'common', 'less_common', 'rare', 'must_not_miss'
+  distinguishingFeatures String?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @default(now())
+  DifferentialDiagnosis  DifferentialDiagnosis @relation(fields: [differentialId], references: [id], onDelete: Cascade)
+  Condition              Condition             @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent         MedicalContent?       @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+
+  @@unique([differentialId, conditionId])
+  @@index([differentialId])
+  @@index([conditionId])
+  @@index([medicalContentId])
+  @@index([likelihood])
+}
+
+/// Links antibiotics to conditions they treat
+model AntibioticConditionLink {
+  id                  String              @id
+  antibioticId        String
+  conditionId         String
+  medicalContentId    String?
+  isFirstLine         Boolean             @default(false)
+  evidenceLevel       String?
+  dosing              String?
+  duration            String?
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @default(now())
+  AntibioticGuideline AntibioticGuideline @relation(fields: [antibioticId], references: [id], onDelete: Cascade)
+  Condition           Condition           @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent      MedicalContent?     @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+
+  @@unique([antibioticId, conditionId])
+  @@index([antibioticId])
+  @@index([conditionId])
+  @@index([medicalContentId])
+  @@index([isFirstLine])
+}
+
+/// Links vital signs to conditions that affect them
+model VitalSignConditionLink {
+  id                   String          @id
+  vitalSignId          String
+  conditionId          String
+  medicalContentId     String?
+  expectedChange       String?        // 'elevated', 'decreased', 'variable'
+  typicalRange         String?
+  clinicalSignificance String?
+  isEmergency          Boolean        @default(false)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @default(now())
+  VitalSignRange       VitalSignRange @relation(fields: [vitalSignId], references: [id], onDelete: Cascade)
+  Condition            Condition      @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent       MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+
+  @@unique([vitalSignId, conditionId])
+  @@index([vitalSignId])
+  @@index([conditionId])
+  @@index([medicalContentId])
+  @@index([isEmergency])
+}
+
+/// Links scoring systems to conditions they evaluate
+model ScoringSystemConditionLink {
+  id               String          @id
+  scoringSystemId  String
+  conditionId      String
+  medicalContentId String?
+  usageContext     String?       // 'diagnosis', 'prognosis', 'risk_stratification'
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @default(now())
+  ScoringSystem    ScoringSystem @relation(fields: [scoringSystemId], references: [id], onDelete: Cascade)
+  Condition        Condition     @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+
+  @@unique([scoringSystemId, conditionId])
+  @@index([scoringSystemId])
+  @@index([conditionId])
+  @@index([medicalContentId])
+}
+
+/// Links clinical pearls to conditions
+model PearlConditionLink {
+  id               String          @id
+  pearlId          String
+  conditionId      String
+  medicalContentId String?
+  relevance        String?       // 'primary', 'secondary', 'differential'
+  createdAt        DateTime      @default(now())
+  ClinicalPearl    ClinicalPearl @relation(fields: [pearlId], references: [id], onDelete: Cascade)
+  Condition        Condition     @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+  MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
+
+  @@unique([pearlId, conditionId])
+  @@index([pearlId])
+  @@index([conditionId])
+  @@index([medicalContentId])
+}
+
+/// Drug-drug interactions (self-referential many-to-many)
+model DrugInteraction {
+  id               String   @id
+  drugId1          String
+  drugId2          String
+  severity         String   // 'major', 'moderate', 'minor'
+  mechanism        String?
+  clinicalEffect   String?
+  management       String?
+  isContraindicated Boolean @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now())
+  Drug1            Drug     @relation("DrugInteraction1", fields: [drugId1], references: [id], onDelete: Cascade)
+  Drug2            Drug     @relation("DrugInteraction2", fields: [drugId2], references: [id], onDelete: Cascade)
+
+  @@unique([drugId1, drugId2])
+  @@index([drugId1])
+  @@index([drugId2])
+  @@index([severity])
+}
+
+/// Condition-to-condition relationships (differentials, complications, etc.)
+model ConditionRelation {
+  id              String    @id
+  conditionId1    String
+  conditionId2    String
+  relationType    String    // 'differential', 'complication', 'precursor', 'associated'
+  bidirectional   Boolean   @default(true)
+  clinicalContext String?
+  createdAt       DateTime  @default(now())
+  Condition1      Condition @relation("ConditionRelation1", fields: [conditionId1], references: [id], onDelete: Cascade)
+  Condition2      Condition @relation("ConditionRelation2", fields: [conditionId2], references: [id], onDelete: Cascade)
+
+  @@unique([conditionId1, conditionId2, relationType])
+  @@index([conditionId1])
+  @@index([conditionId2])
+  @@index([relationType])
 }
 
 enum CohortRole {
@@ -1942,23 +2258,23 @@ enum WordleStatus {
 // ============================================================================
 
 model StudySession {
-  id                    String   @id
+  id                    String    @id
   userId                String
-  startedAt             DateTime @default(now())
+  startedAt             DateTime  @default(now())
   endedAt               DateTime?
   
   // Core metrics
-  totalQuestions        Int      @default(0)
-  correctAnswers        Int      @default(0)
-  accuracy              Float    @default(0)
-  totalTimeMs           Int      @default(0)
+  totalQuestions        Int       @default(0)
+  correctAnswers        Int       @default(0)
+  accuracy              Float     @default(0)
+  totalTimeMs           Int       @default(0)
   avgTimePerQuestion    Int?
   
   // Streak data
-  bestStreak            Int      @default(0)
-  finalStreak           Int      @default(0)
+  bestStreak            Int       @default(0)
+  finalStreak           Int       @default(0)
   avgStreak             Float?
-  errorClusters         Int      @default(0)  // Count of 3+ errors in 5 questions
+  errorClusters         Int       @default(0)  // Count of 3+ errors in 5 questions
   
   // Momentum metrics
   peakMomentum          Float?   // Highest momentum reached (0-100)
@@ -1966,9 +2282,9 @@ model StudySession {
   momentumTrend         String?  // 'peaked' | 'rising' | 'steady' | 'cooling' | 'cold'
   
   // Behavioral signals
-  totalAnswerChanges    Int      @default(0)
-  helpfulChanges        Int      @default(0)  // Changed to correct
-  harmfulChanges        Int      @default(0)  // Changed to wrong
+  totalAnswerChanges    Int       @default(0)
+  helpfulChanges        Int       @default(0)  // Changed to correct
+  harmfulChanges        Int       @default(0)  // Changed to wrong
   firstInstinctAccuracy Float?   // Accuracy if never changed answers
   
   // Confidence calibration
@@ -1978,8 +2294,8 @@ model StudySession {
   calibrationScore      Float?   // How well confidence matches accuracy
   
   // Time pressure analysis
-  questionsUnderPar     Int      @default(0)
-  questionsOverPar      Int      @default(0)
+  questionsUnderPar     Int       @default(0)
+  questionsOverPar      Int       @default(0)
   rushingAccuracy       Float?   // Accuracy when under 60% of par time
   deliberateAccuracy    Float?   // Accuracy when over par time
   
@@ -2007,6 +2323,9 @@ model StudySession {
   browserName           String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  
+  // New FK for deep relations
+  User                  User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, startedAt])
@@ -2014,19 +2333,19 @@ model StudySession {
 }
 
 model UserLearningProfile {
-  id                      String   @id
-  userId                  String   @unique
+  id                      String    @id
+  userId                  String    @unique
   
   // Cumulative performance
-  lifetimeQuestions       Int      @default(0)
-  lifetimeCorrect         Int      @default(0)
-  lifetimeAccuracy        Float    @default(0)
-  lifetimeStudyTimeMs     BigInt   @default(0)
+  lifetimeQuestions       Int       @default(0)
+  lifetimeCorrect         Int       @default(0)
+  lifetimeAccuracy        Float     @default(0)
+  lifetimeStudyTimeMs     BigInt    @default(0)
   
   // Streak records
-  bestEverStreak          Int      @default(0)
-  currentStreak           Int      @default(0)  // Consecutive days studied
-  longestDailyStreak      Int      @default(0)
+  bestEverStreak          Int       @default(0)
+  currentStreak           Int       @default(0)  // Consecutive days studied
+  longestDailyStreak      Int       @default(0)
   
   // Test-taking patterns (aggregated)
   avgAnswerChanges        Float?
@@ -2070,7 +2389,161 @@ model UserLearningProfile {
   
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
+  
+  // New FK for deep relations
+  User                    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([estimatedScore])
+}
+
+// =============================================================================
+// NORMAL REFERENCE VALUES
+// Stores normal lab values and imaging findings for case generation
+// =============================================================================
+
+model NormalLabValue {
+  id                  String   @id @default(cuid())
+  labTestId           String?
+  labTestName         String   // e.g., "Hemoglobin", "BUN", "Sodium"
+  category            String   // e.g., "CBC", "BMP", "LFT", "Lipid Panel", "Cardiac Markers"
+  
+  // Normal ranges
+  normalRangeLow      Float?
+  normalRangeHigh     Float?
+  normalRangeText     String?  // For qualitative results like "Negative"
+  units               String?  // e.g., "g/dL", "mg/dL", "mEq/L"
+  
+  // SI Units conversion
+  siUnits             String?
+  siRangeLow          Float?
+  siRangeHigh         Float?
+  conversionFactor    Float?
+  
+  // Demographics for different ranges
+  sex                 String?  // 'male', 'female', 'all'
+  ageGroup            String?  // 'neonate', 'infant', 'child', 'adult', 'elderly'
+  ageRangeLow         Int?     // Age in years
+  ageRangeHigh        Int?     // Age in years
+  
+  // Critical values (panic values)
+  criticalLow         Float?
+  criticalHigh        Float?
+  
+  // Clinical context
+  clinicalNotes       String?
+  commonCauses        String[] @default([]) // Causes of abnormal results
+  
+  // Metadata
+  source              String?  // e.g., "UpToDate", "Harrison's"
+  lastVerified        DateTime?
+  isHighYield         Boolean  @default(false)
+  panceRelevance      Int?     // 1-5 relevance score
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  LabTest             LabTest? @relation(fields: [labTestId], references: [id])
+  
+  @@unique([labTestName, sex, ageGroup])
+  @@index([category])
+  @@index([labTestId])
+  @@index([labTestName])
+  @@index([isHighYield])
+}
+
+model NormalImagingFinding {
+  id                  String        @id @default(cuid())
+  imagingStudyId      String?
+  imagingStudyName    String        // e.g., "Chest X-ray", "CT Head", "Echocardiogram"
+  modality            String        // e.g., "X-ray", "CT", "MRI", "Ultrasound", "Echo"
+  bodyRegion          String        // e.g., "Chest", "Abdomen", "Head", "Spine"
+  
+  // Normal finding description
+  findingName         String        // e.g., "Cardiac silhouette", "Lung fields", "Mediastinum"
+  normalAppearance    String        // Description of normal appearance
+  normalMeasurement   String?       // e.g., "CTR < 0.5", "Aortic root < 4.0 cm"
+  measurementUnit     String?       // e.g., "cm", "mm", "ratio"
+  measurementLow      Float?
+  measurementHigh     Float?
+  
+  // View/Protocol specific
+  view                String?       // e.g., "PA", "Lateral", "AP", "Axial"
+  protocol            String?       // e.g., "With contrast", "Without contrast"
+  
+  // Clinical context
+  significance        String?       // Why this finding matters
+  abnormalIndicates   String[]  @default([]) // What abnormal suggests
+  clinicalPearls      String[]  @default([])
+  
+  // Metadata
+  source              String?
+  lastVerified        DateTime?
+  isHighYield         Boolean   @default(false)
+  panceRelevance      Int?
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  ImagingStudy        ImagingStudy? @relation(fields: [imagingStudyId], references: [id])
+  
+  @@unique([imagingStudyName, findingName, view])
+  @@index([bodyRegion])
+  @@index([imagingStudyId])
+  @@index([modality])
+  @@index([isHighYield])
+}
+
+model NormalVitalSign {
+  id                  String   @id @default(cuid())
+  vitalName           String   // e.g., "Heart Rate", "Blood Pressure", "Temperature"
+  
+  // Normal ranges
+  normalRangeLow      Float?
+  normalRangeHigh     Float?
+  units               String   // e.g., "bpm", "mmHg", "°F", "breaths/min"
+  
+  // Demographics
+  sex                 String?  // 'male', 'female', 'all'
+  ageGroup            String?  // 'neonate', 'infant', 'child', 'adult', 'elderly'
+  ageRangeLow         Int?
+  ageRangeHigh        Int?
+  
+  // Context-specific variations
+  context             String?  // e.g., "at rest", "sleeping", "exercising", "pregnant"
+  
+  // Clinical notes
+  clinicalNotes       String?
+  abnormalIndicates   String[] @default([])
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@unique([vitalName, sex, ageGroup, context])
+  @@index([vitalName])
+  @@index([ageGroup])
+}
+
+model NormalPhysicalExamFinding {
+  id                  String   @id @default(cuid())
+  system              String   // e.g., "Cardiovascular", "Respiratory", "Neurological"
+  examComponent       String   // e.g., "Heart Sounds", "Breath Sounds", "Pupils"
+  
+  // Normal finding
+  normalFinding       String   // e.g., "S1, S2 regular without murmurs"
+  technique           String?  // How to examine
+  
+  // Demographics
+  ageGroup            String?
+  
+  // Clinical context
+  abnormalVariations  String[] @default([]) // What abnormal looks like
+  clinicalPearls      String[] @default([])
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@unique([system, examComponent, ageGroup])
+  @@index([system])
+  @@index([examComponent])
 }

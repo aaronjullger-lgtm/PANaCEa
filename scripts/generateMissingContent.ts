@@ -125,7 +125,7 @@ async function processConditions(
     where: {
       OR: [
         { overview: null },
-        { symptoms: { isEmpty: true } },
+        { symptoms: null },
         { treatment: null },
       ],
     },
@@ -176,24 +176,28 @@ async function processConditions(
         validation.issues.forEach((issue) => console.log(`      - ${issue}`));
       } else {
         try {
-          // Note: MedicalContent schema stores diagnostics and treatment as JSON
-          // The generated content provides diagnosis and treatment as text strings
-          // We'll store them in a simple JSON structure
+          // Note: MedicalContent schema stores most fields as TEXT, not arrays
+          // Convert arrays to bullet-point text format for storage
+          const arrayToText = (arr: string[] | undefined): string | null => {
+            if (!arr || arr.length === 0) return null;
+            return arr.map(item => `• ${item}`).join('\n');
+          };
+          
           await prisma.medicalContent.update({
             where: { id: condition.id },
             data: {
               overview: result.content.overview,
-              symptoms: result.content.symptoms,
-              riskFactors: result.content.riskFactors,
-              diagnostics: { text: result.content.diagnosis },
-              treatment: { text: result.content.treatment },
-              buzzwords: result.content.clinicalPearls,
+              symptoms: arrayToText(result.content.symptoms),
+              riskFactors: arrayToText(result.content.riskFactors),
+              diagnostics: result.content.diagnosis,
+              treatment: result.content.treatment,
+              buzzwords: result.content.clinicalPearls || [], // buzzwords is an array
               etiology: result.content.etiologyPathophysiology,
               epidemiology: result.content.epidemiology,
-              physicalExam: result.content.examFindings || [],
-              complications: result.content.complications || [],
+              physicalExam: arrayToText(result.content.examFindings),
+              complications: arrayToText(result.content.complications),
               prognosis: result.content.prognosis,
-              differentialDiagnosis: result.content.differentialDiagnosis || [],
+              differentialDiagnosis: arrayToText(result.content.differentialDiagnosis),
             },
           });
           stats.generated++;

@@ -1,0 +1,122 @@
+⚠️ Sharp not installed - cropping disabled. Run: npm install sharp
+🖼️ AI-Enhanced Local Image Processor
+
+============================================================
+⏭️ AI analysis disabled
+
+📊 Fetching conditions from database...
+Found 1251 conditions in database
+🔍 Loading existing image hashes...
+Loaded 1877 existing image hashes
+
+📁 Scanning image folders...
+  curated_images/ECG: 21 images
+  curated_images/DERM: 377 images
+  curated_images/RAD: 124 images
+  MISC/good/ECG: 18 images
+  MISC/good/DERM: 377 images
+  MISC/good/Radiology: 171 images
+  MISC/good/Clinical: 293 images
+  MISC/output/sorted_images/RAD: 1819 images
+  MISC/output/sorted_images/ECG: 1077 images
+  MISC/output/sorted_images/DERM: 1311 images
+  MISC/output/sorted_images/OTHER: 2510 images
+  ALL IMAGES: 890 images
+
+📷 Total images found: 8988
+   Duplicates removed: 1331
+   Unique images: 7657
+
+🔗 Matching images to conditions...
+Matched: 7563 images to 240 conditions
+Unmapped condition names: 6
+
+🤖 Processing images with AI analysis...
+
+  [1/240] Processing CV__ischemic_heart_disease__stemi (need 945 more images)...
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Acute_Coronary [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  Systemic_Lupus_Erythematosus_Nephritis [N/A]... ✅
+  [3/240] Processing CV__ecg__atrial_fibrillation (need 868 more images)...
+  Atrial_Fibrillation [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation_Cardiomyopathy [N/A]... ✅
+  Atrial_Fibrillation [N/A]... ✅
+  Atrial_Fibrillation [N/A]... ✅
+  Atrial_Fibrillation [N/A]... ✅
+  Atrial_Fibrillation [N/A]... ✅
+  Atrial_Fibrillation [N/A]... ✅
+  Atrial_Fibrillation [N/A]... ✅
+  Atrial_Fibrillation [N/A]... ✅
+  Atrial_Fibrillation [N/A]... 

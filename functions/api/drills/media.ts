@@ -134,6 +134,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     
     try {
       // Build query filters
+      // CRITICAL: For quiz mode, we only use CLEAN un-annotated images
+      // Annotated images would give away the answer
       const whereClause: any = {
         AND: [
           { status: 'approved' }, // Only approved media
@@ -145,6 +147,22 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
               { thumbnailUrl: { not: null } },
             ]
           }, // Has at least one URL
+          // IMPORTANT: Only use clean images without annotations for quiz mode
+          // Images with arrows/labels would give away the diagnosis
+          {
+            OR: [
+              { isAnnotated: false }, // Explicitly marked as clean
+              { isAnnotated: null }, // Assume clean if not specified (legacy data)
+            ]
+          },
+          // Filter by usageType - only quiz or both
+          {
+            OR: [
+              { usageType: 'quiz' },
+              { usageType: 'both' },
+              { usageType: null }, // Assume quiz-suitable if not specified (legacy)
+            ]
+          },
         ],
       };
       

@@ -46,6 +46,68 @@ interface ConditionImagePlan {
 }
 
 // ============================================================================
+// SYSTEM NAME MAPPING
+// ============================================================================
+
+const SYSTEM_NAME_MAP: Record<string, string> = {
+  // Natural names -> DB abbreviations
+  'cardiology': 'CV',
+  'cardiovascular': 'CV',
+  'cardiac': 'CV',
+  'heart': 'CV',
+  'pulmonology': 'PULM',
+  'pulmonary': 'PULM',
+  'respiratory': 'PULM',
+  'lung': 'PULM',
+  'dermatology': 'DERM',
+  'skin': 'DERM',
+  'musculoskeletal': 'MSK',
+  'orthopedics': 'MSK',
+  'ortho': 'MSK',
+  'neurology': 'NEURO',
+  'neuro': 'NEURO',
+  'brain': 'NEURO',
+  'gastroenterology': 'GI',
+  'gastrointestinal': 'GI',
+  'gi': 'GI',
+  'ent': 'HEENT',
+  'heent': 'HEENT',
+  'eyes': 'HEENT',
+  'ears': 'HEENT',
+  'infectious': 'ID',
+  'infectious-disease': 'ID',
+  'id': 'ID',
+  'hematology': 'HEME',
+  'heme': 'HEME',
+  'blood': 'HEME',
+  'endocrinology': 'ENDO',
+  'endocrine': 'ENDO',
+  'endo': 'ENDO',
+  'nephrology': 'RENAL',
+  'renal': 'RENAL',
+  'kidney': 'RENAL',
+  'reproductive': 'REPRO',
+  'repro': 'REPRO',
+  'obgyn': 'REPRO',
+  'psychiatry': 'PSYCH',
+  'psych': 'PSYCH',
+  'mental': 'PSYCH',
+  'urology': 'GU',
+  'gu': 'GU',
+  // DB abbreviations map to themselves
+  'cv': 'CV',
+  'pulm': 'PULM',
+  'derm': 'DERM',
+  'msk': 'MSK',
+  'other': 'OTHER',
+};
+
+function normalizeSystemName(system: string): string {
+  const lower = system.toLowerCase();
+  return SYSTEM_NAME_MAP[lower] || system.toUpperCase();
+}
+
+// ============================================================================
 // IMAGE REQUIREMENT EXTRACTION
 // ============================================================================
 
@@ -322,11 +384,12 @@ async function planCondition(conditionId: string): Promise<void> {
 }
 
 async function planSystem(system: string, limit = 10): Promise<void> {
+  const normalizedSystem = normalizeSystemName(system);
+  
   // Get conditions that need more images
   const conditions = await prisma.medicalContent.findMany({
     where: { 
-      system,
-      image_query: { not: null },
+      system: normalizedSystem,
     },
     select: { conditionId: true, condition: true },
     take: limit * 2, // Get extra in case some have enough images
@@ -463,11 +526,9 @@ async function getStatus(): Promise<void> {
 }
 
 async function listConditions(systemFilter?: string, limit = 20): Promise<void> {
-  const whereClause: any = {
-    image_query: { not: null },
-  };
+  const whereClause: any = {};
   if (systemFilter) {
-    whereClause.system = systemFilter;
+    whereClause.system = normalizeSystemName(systemFilter);
   }
   
   const conditions = await prisma.medicalContent.findMany({

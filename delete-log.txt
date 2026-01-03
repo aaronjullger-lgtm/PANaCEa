@@ -1,0 +1,5 @@
+prisma:warn In production, we recommend using `prisma generate --no-engine` (See: `prisma generate --help`)
+🗑️ Deleting unreviewed images (no AI analysis)...
+
+Found 1681 unreviewed images to delete
+

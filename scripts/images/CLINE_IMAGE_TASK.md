@@ -31,12 +31,40 @@ This queries the database and generates a comprehensive plan showing ALL images 
 ```
 
 ### Step 2: Search for Each Image
-For each requirement in the plan, search using the provided query. Use medical image databases:
-- Radiopaedia.org
-- OpenI (NIH)
-- MedPix
-- Wikimedia Commons Medical
-- Dermatology databases (for skin conditions)
+
+⚠️ **CRITICAL: DO NOT use Google Image thumbnails** (`encrypted-tbn0.gstatic.com`) - these are low-quality thumbnails that will fail or look terrible.
+
+**Required image sources (in order of preference):**
+
+1. **Radiopaedia.org** - Best for radiology (CT, MRI, X-ray)
+   - Navigate to the case page, find the full-resolution image
+   - URL pattern: `https://radiopaedia.org/cases/...`
+   
+2. **Wikimedia Commons** - CC0/public domain medical images
+   - Go to the file page, click "Full resolution"
+   - URL pattern: `https://upload.wikimedia.org/wikipedia/commons/...`
+   
+3. **LITFL ECG Library** - High-quality ECGs
+   - URL: `https://litfl.com/ecg-library/`
+   - Download the image directly, upload from file
+   
+4. **DermNet NZ** - Dermatology images
+   - URL: `https://dermnetnz.org`
+   
+5. **OpenI NIH** - Open access medical images
+   - URL: `https://openi.nlm.nih.gov`
+
+**Minimum quality requirements:**
+- Resolution: At least **800x600 pixels** (ideally 1200+)
+- Format: PNG or high-quality JPG
+- Must show the actual diagnostic finding clearly
+
+**Workflow:**
+1. Go to the source website directly (not Google Images)
+2. Search for the condition/finding
+3. Find a case with clear, labeled images
+4. Right-click → "Copy image address" on the FULL image (not thumbnail)
+5. Verify the URL doesn't contain "thumb" or "thumbnail"
 
 ### Step 3: Upload Each Image
 ```bash
