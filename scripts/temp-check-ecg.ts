@@ -29,12 +29,11 @@ async function checkECGConditions() {
       console.log('\nMedicalContent fields:');
       console.log('  overview:', mc.overview ? (mc.overview.substring(0, 80) + '...') : 'EMPTY');
       console.log('  pathophysiology:', mc.pathophysiology ? 'HAS DATA' : 'EMPTY');
-      console.log('  clinicalPresentation:', mc.clinicalPresentation ? 'HAS DATA' : 'EMPTY');
-      console.log('  diagnosticWorkup:', mc.diagnosticWorkup ? 'HAS DATA' : 'EMPTY');
-      console.log('  management:', mc.management ? 'HAS DATA' : 'EMPTY');
-      console.log('  differentialDiagnosis:', Array.isArray(mc.differentialDiagnosis) ? (mc.differentialDiagnosis as any[]).length + ' items' : 'EMPTY');
-      console.log('  clinicalPearls:', Array.isArray(mc.clinicalPearls) ? (mc.clinicalPearls as any[]).length + ' items' : 'EMPTY');
-      console.log('  boardYieldFacts:', Array.isArray(mc.boardYieldFacts) ? (mc.boardYieldFacts as any[]).length + ' items' : 'EMPTY');
+      console.log('  symptoms:', mc.symptoms ? 'HAS DATA' : 'EMPTY');
+      console.log('  diagnostics:', mc.diagnostics ? 'HAS DATA' : 'EMPTY');
+      console.log('  treatment:', mc.treatment ? 'HAS DATA' : 'EMPTY');
+      console.log('  differentials:', mc.differentials ? 'HAS DATA' : 'EMPTY');
+      console.log('  clinical_pearls:', mc.clinical_pearls ? 'HAS DATA' : 'EMPTY');
     } else {
       console.log('  NO MedicalContent record!');
     }
@@ -54,7 +53,7 @@ async function checkECGConditions() {
     if (!mc) { noContent++; continue; }
     if (!mc.overview || mc.overview === '') emptyOverview++;
     if (!mc.pathophysiology) emptyPathophys++;
-    if (!mc.clinicalPearls || (mc.clinicalPearls as any[]).length === 0) emptyPearls++;
+    if (!mc.clinical_pearls) emptyPearls++;
   }
   
   console.log('  Total ECG conditions: ' + ecgConditions.length);

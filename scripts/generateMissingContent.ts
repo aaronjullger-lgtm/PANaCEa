@@ -441,8 +441,8 @@ async function processTreatments(
     where: {
       OR: [
         { description: null },
-        { mechanism: null },
         { indications: { isEmpty: true } },
+        { clinicalPearls: { isEmpty: true } },
       ],
     },
     select: {
@@ -490,9 +490,9 @@ async function processTreatments(
             where: { id: treatment.id },
             data: {
               description: result.content.description,
-              mechanism: result.content.mechanismOfAction,
               indications: result.content.commonIndications,
-              sideEffects: result.content.seriousSideEffects,
+              clinicalPearls: result.content.seriousSideEffects,
+              boardYieldFacts: result.content.mechanismOfAction ? [result.content.mechanismOfAction] : [],
             },
           });
           stats.generated++;

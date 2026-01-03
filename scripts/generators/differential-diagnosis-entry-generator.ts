@@ -244,9 +244,9 @@ async function main() {
   try {
     // Get existing entries
     const existing = await prisma.differentialDiagnosis.findMany({
-      select: { name: true },
+      select: { presentingComplaint: true },
     });
-    const existingNames = new Set(existing.map((d) => d.name.toLowerCase()));
+    const existingNames = new Set(existing.map((d) => d.presentingComplaint.toLowerCase()));
 
     // Filter out entries that already exist
     const toCreate = PANCE_DIFFERENTIAL_DIAGNOSES.filter(
@@ -275,20 +275,20 @@ async function main() {
         await prisma.differentialDiagnosis.create({
           data: {
             id: randomUUID(),
-            name: ddx.name,
+            presentingComplaint: ddx.name,
             category: ddx.category,
-            description: ensureString(data.description),
-            commonCauses: ensureArray(data.commonCauses),
-            emergentCauses: ensureArray(data.emergentCauses),
-            lifeThreatening: ensureArray(data.lifeThreatening),
-            keyHistoryQuestions: ensureArray(data.keyHistoryQuestions),
-            physicalExamFindings: ensureArray(data.physicalExamFindings),
+            typicalPresentation: ensureString(data.description),
+            mostCommon: ensureArray(data.commonCauses),
+            mustNotMiss: ensureArray(data.emergentCauses),
+            mostDangerous: ensureArray(data.lifeThreatening),
+            keyQuestions: ensureArray(data.keyHistoryQuestions),
+            keyExamFindings: ensureArray(data.physicalExamFindings),
             initialWorkup: ensureArray(data.initialWorkup),
             redFlags: ensureArray(data.redFlags),
-            diagnosticApproach: ensureString(data.diagnosticApproach),
+            diagnosticAlgorithm: ensureString(data.diagnosticApproach),
             clinicalPearls: ensureArray(data.clinicalPearls),
-            boardYieldFacts: ensureArray(data.boardYieldFacts),
             mnemonics: ensureArray(data.mnemonics),
+            differentialList: ensureArray(data.commonCauses),
             updatedAt: new Date(),
           },
         });

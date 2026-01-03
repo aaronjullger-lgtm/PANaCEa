@@ -47,106 +47,82 @@ async function checkTableNulls() {
     console.log(`  Missing gold_standard_dx: ${mcNoGoldStandardDx}`);
     console.log(`  Missing best_initial_test: ${mcNoBestInitialTest}`);
 
-    // ConditionECGFinding links
-    console.log('\n📊 ConditionECGFinding Links:');
-    const conditions = await prisma.medicalContent.count();
-    const ecgFindings = await prisma.eCGFinding.count();
-    const conditionECGLinks = await prisma.conditionECGFinding.count();
+    // ECGConditionLink
+    console.log('\n📊 ECG Links:');
+    const conditions = await prisma.condition.count();
+    const ecgPatterns = await prisma.eCGPattern.count();
+    const ecgConditionLinks = await prisma.eCGConditionLink.count();
     console.log(`  Conditions: ${conditions}`);
-    console.log(`  ECG Findings: ${ecgFindings}`);
-    console.log(`  Condition-ECG Links: ${conditionECGLinks}`);
-    console.log(`  Potential missing links: Many conditions likely missing ECG associations`);
+    console.log(`  ECG Patterns: ${ecgPatterns}`);
+    console.log(`  ECG-Condition Links: ${ecgConditionLinks}`);
 
-    // ConditionLabTest links
-    console.log('\n🧪 ConditionLabTest Links:');
+    // LabConditionLink
+    console.log('\n🧪 Lab Links:');
     const labTests = await prisma.labTest.count();
-    const conditionLabLinks = await prisma.conditionLabTest.count();
+    const labConditionLinks = await prisma.labConditionLink.count();
     console.log(`  Lab Tests: ${labTests}`);
-    console.log(`  Condition-Lab Links: ${conditionLabLinks}`);
-    console.log(`  Potential missing links: Many conditions likely missing lab test associations`);
+    console.log(`  Lab-Condition Links: ${labConditionLinks}`);
 
-    // ConditionImagingFinding links
-    console.log('\n🔬 ConditionImagingFinding Links:');
-    const imagingFindings = await prisma.imagingFinding.count();
-    const conditionImagingLinks = await prisma.conditionImagingFinding.count();
-    console.log(`  Imaging Findings: ${imagingFindings}`);
-    console.log(`  Condition-Imaging Links: ${conditionImagingLinks}`);
+    // ImagingConditionLink
+    console.log('\n🔬 Imaging Links:');
+    const imagingStudies = await prisma.imagingStudy.count();
+    const imagingConditionLinks = await prisma.imagingConditionLink.count();
+    console.log(`  Imaging Studies: ${imagingStudies}`);
+    console.log(`  Imaging-Condition Links: ${imagingConditionLinks}`);
 
-    // ConditionPhysicalExam links
-    console.log('\n👨‍⚕️ ConditionPhysicalExam Links:');
-    const peFindings = await prisma.physicalExamFinding.count();
-    const conditionPELinks = await prisma.conditionPhysicalExam.count();
-    console.log(`  PE Findings: ${peFindings}`);
-    console.log(`  Condition-PE Links: ${conditionPELinks}`);
-
-    // PharmacologyAgent
-    console.log('\n💊 PharmacologyAgent:');
-    const pharma = await prisma.pharmacologyAgent.findMany({
+    // Drug
+    console.log('\n💊 Drug:');
+    const drugs = await prisma.drug.findMany({
       select: {
         id: true,
         clinicalPearls: true,
         boardYieldFacts: true,
-        mnemonic: true,
+        mnemonics: true,
       },
     });
-    const pharmaStats = {
-      total: pharma.length,
-      noClinicalPearls: pharma.filter(p => !p.clinicalPearls || p.clinicalPearls.length === 0).length,
-      noBoardFacts: pharma.filter(p => !p.boardYieldFacts || p.boardYieldFacts.length === 0).length,
-      noMnemonic: pharma.filter(p => !p.mnemonic || p.mnemonic.trim() === '').length,
+    const drugStats = {
+      total: drugs.length,
+      noClinicalPearls: drugs.filter(p => !p.clinicalPearls || p.clinicalPearls.length === 0).length,
+      noBoardFacts: drugs.filter(p => !p.boardYieldFacts || p.boardYieldFacts.length === 0).length,
+      noMnemonics: drugs.filter(p => !p.mnemonics || p.mnemonics.length === 0).length,
     };
-    console.log(`  Total: ${pharmaStats.total}`);
-    console.log(`  Missing clinicalPearls: ${pharmaStats.noClinicalPearls}`);
-    console.log(`  Missing boardYieldFacts: ${pharmaStats.noBoardFacts}`);
-    console.log(`  Missing mnemonic: ${pharmaStats.noMnemonic}`);
+    console.log(`  Total: ${drugStats.total}`);
+    console.log(`  Missing clinicalPearls: ${drugStats.noClinicalPearls}`);
+    console.log(`  Missing boardYieldFacts: ${drugStats.noBoardFacts}`);
+    console.log(`  Missing mnemonics: ${drugStats.noMnemonics}`);
 
-    // ECGFinding
-    console.log('\n📈 ECGFinding:');
-    const ecg = await prisma.eCGFinding.findMany({
+    // ECGPattern
+    console.log('\n📈 ECGPattern:');
+    const ecg = await prisma.eCGPattern.findMany({
       select: {
         id: true,
         clinicalPearls: true,
         boardYieldFacts: true,
-        sensitivity: true,
-        specificity: true,
       },
     });
     const ecgStats = {
       total: ecg.length,
       noClinicalPearls: ecg.filter(e => !e.clinicalPearls || e.clinicalPearls.length === 0).length,
       noBoardFacts: ecg.filter(e => !e.boardYieldFacts || e.boardYieldFacts.length === 0).length,
-      noSensitivity: ecg.filter(e => e.sensitivity === null).length,
-      noSpecificity: ecg.filter(e => e.specificity === null).length,
     };
     console.log(`  Total: ${ecgStats.total}`);
     console.log(`  Missing clinicalPearls: ${ecgStats.noClinicalPearls}`);
     console.log(`  Missing boardYieldFacts: ${ecgStats.noBoardFacts}`);
-    console.log(`  Missing sensitivity: ${ecgStats.noSensitivity}`);
-    console.log(`  Missing specificity: ${ecgStats.noSpecificity}`);
 
-    // ImagingFinding
-    console.log('\n🔬 ImagingFinding:');
-    const imaging = await prisma.imagingFinding.findMany({
+    // ImagingStudy
+    console.log('\n🔬 ImagingStudy:');
+    const imaging = await prisma.imagingStudy.findMany({
       select: {
         id: true,
         clinicalPearls: true,
-        boardYieldFacts: true,
-        sensitivity: true,
-        specificity: true,
       },
     });
     const imagingStats = {
       total: imaging.length,
       noClinicalPearls: imaging.filter(i => !i.clinicalPearls || i.clinicalPearls.length === 0).length,
-      noBoardFacts: imaging.filter(i => !i.boardYieldFacts || i.boardYieldFacts.length === 0).length,
-      noSensitivity: imaging.filter(i => i.sensitivity === null).length,
-      noSpecificity: imaging.filter(i => i.specificity === null).length,
     };
     console.log(`  Total: ${imagingStats.total}`);
     console.log(`  Missing clinicalPearls: ${imagingStats.noClinicalPearls}`);
-    console.log(`  Missing boardYieldFacts: ${imagingStats.noBoardFacts}`);
-    console.log(`  Missing sensitivity: ${imagingStats.noSensitivity}`);
-    console.log(`  Missing specificity: ${imagingStats.noSpecificity}`);
 
     // DifferentialDiagnosis
     console.log('\n🩺 DifferentialDiagnosis:');
@@ -154,17 +130,17 @@ async function checkTableNulls() {
       select: {
         id: true,
         clinicalPearls: true,
-        boardYieldFacts: true,
+        mnemonics: true,
       },
     });
     const ddxStats = {
       total: ddx.length,
       noClinicalPearls: ddx.filter(d => !d.clinicalPearls || d.clinicalPearls.length === 0).length,
-      noBoardFacts: ddx.filter(d => !d.boardYieldFacts || d.boardYieldFacts.length === 0).length,
+      noMnemonics: ddx.filter(d => !d.mnemonics || d.mnemonics.length === 0).length,
     };
     console.log(`  Total: ${ddxStats.total}`);
     console.log(`  Missing clinicalPearls: ${ddxStats.noClinicalPearls}`);
-    console.log(`  Missing boardYieldFacts: ${ddxStats.noBoardFacts}`);
+    console.log(`  Missing mnemonics: ${ddxStats.noMnemonics}`);
 
     // Procedure
     console.log('\n🔧 Procedure:');
@@ -172,17 +148,17 @@ async function checkTableNulls() {
       select: {
         id: true,
         clinicalPearls: true,
-        mnemonic: true,
+        mnemonics: true,
       },
     });
     const procStats = {
       total: procedures.length,
       noClinicalPearls: procedures.filter(p => !p.clinicalPearls || p.clinicalPearls.length === 0).length,
-      noMnemonic: procedures.filter(p => !p.mnemonic || p.mnemonic.trim() === '').length,
+      noMnemonics: procedures.filter(p => !p.mnemonics || p.mnemonics.length === 0).length,
     };
     console.log(`  Total: ${procStats.total}`);
     console.log(`  Missing clinicalPearls: ${procStats.noClinicalPearls}`);
-    console.log(`  Missing mnemonic: ${procStats.noMnemonic}`);
+    console.log(`  Missing mnemonics: ${procStats.noMnemonics}`);
 
     console.log('\n' + '='.repeat(80));
     console.log('\n✅ Analysis Complete\n');

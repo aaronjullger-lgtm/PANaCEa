@@ -5,9 +5,9 @@
  * Analyzes historical data to generate personalized recommendations.
  */
 
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import type { CloudflareContext } from '../_shared/types';
 
 interface Env {
   DATABASE_URL: string;
@@ -17,7 +17,7 @@ interface Env {
 /**
  * GET: Retrieve user's learning profile with computed insights
  */
-export const onRequestGet: PagesFunction<Env> = async (context) => {
+export const onRequestGet = async (context: CloudflareContext<Env>) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   
   try {
@@ -94,7 +94,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 /**
  * POST: Trigger profile recomputation from historical data
  */
-export const onRequestPost: PagesFunction<Env> = async (context) => {
+export const onRequestPost = async (context: CloudflareContext<Env>) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   
   try {

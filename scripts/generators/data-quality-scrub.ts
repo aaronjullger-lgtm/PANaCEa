@@ -243,16 +243,16 @@ async function checkBuzzwords() {
   // Check for duplicates
   const seenPhrases = new Map<string, string>();
   for (const b of buzzwords) {
-    if (!b.phrase) continue; // Skip null phrases
-    const key = b.phrase.toLowerCase().trim();
+    if (!b.buzzword) continue; // Skip null buzzwords
+    const key = b.buzzword.toLowerCase().trim();
     if (seenPhrases.has(key)) {
       issues.push({
         table: 'Buzzword',
         id: b.id,
-        field: 'phrase',
+        field: 'buzzword',
         issue: `Duplicate of ${seenPhrases.get(key)}`,
         severity: 'high',
-        currentValue: b.phrase
+        currentValue: b.buzzword
       });
       dupCount++;
     } else {
@@ -357,15 +357,15 @@ async function checkConditions() {
       emptyCount++;
     }
     
-    // Check description
-    if (c.description) {
-      const spellingIssues = checkSpelling(c.description);
+    // Check displayName for spelling issues
+    if (c.displayName) {
+      const spellingIssues = checkSpelling(c.displayName);
       spellingCount += spellingIssues.length;
       for (const sp of spellingIssues) {
         issues.push({
           table: 'Condition',
           id: c.id,
-          field: 'description',
+          field: 'displayName',
           issue: `Spelling: "${sp.misspelling}" → "${sp.correction}"`,
           severity: 'low',
           suggestedFix: sp.correction
@@ -398,16 +398,16 @@ async function checkDifferentials() {
   
   const seenComplaints = new Map<string, string>();
   for (const d of ddx) {
-    if (!d.chiefComplaint) continue; // Skip null complaints
-    const key = d.chiefComplaint.toLowerCase().trim();
+    if (!d.presentingComplaint) continue; // Skip null complaints
+    const key = d.presentingComplaint.toLowerCase().trim();
     if (seenComplaints.has(key)) {
       issues.push({
         table: 'DifferentialDiagnosis',
         id: d.id,
-        field: 'chiefComplaint',
+        field: 'presentingComplaint',
         issue: `Duplicate of ${seenComplaints.get(key)}`,
         severity: 'high',
-        currentValue: d.chiefComplaint
+        currentValue: d.presentingComplaint
       });
       dupCount++;
     } else {
@@ -426,12 +426,12 @@ async function checkDifferentials() {
       emptyCount++;
     }
     
-    if (!d.common || d.common.length === 0) {
+    if (!d.mostCommon || d.mostCommon.length === 0) {
       issues.push({
         table: 'DifferentialDiagnosis',
         id: d.id,
-        field: 'common',
-        issue: 'Empty common diagnoses array',
+        field: 'mostCommon',
+        issue: 'Empty mostCommon diagnoses array',
         severity: 'medium'
       });
       emptyCount++;
@@ -481,24 +481,26 @@ async function checkPatientCases() {
       seenCases.set(key, c.id);
     }
     
-    // Check for empty critical fields
-    if (!c.hpiNarrative || c.hpiNarrative.length < 50) {
+    // Check for empty critical fields (historyData is Json, check if present)
+    const hasHistory = c.historyData && Object.keys(c.historyData as object).length > 0;
+    if (!hasHistory) {
       issues.push({
         table: 'PatientEncounterCase',
         id: c.id,
-        field: 'hpiNarrative',
-        issue: 'HPI narrative too short or empty',
+        field: 'historyData',
+        issue: 'History data empty or missing',
         severity: 'high'
       });
       emptyCount++;
     }
     
-    // Check HPI content quality
-    if (c.hpiNarrative) {
-      const spellingIssues = checkSpelling(c.hpiNarrative);
+    // Check historyData content quality
+    if (c.historyData) {
+      const historyStr = JSON.stringify(c.historyData);
+      const spellingIssues = checkSpelling(historyStr);
       spellingCount += spellingIssues.length;
       
-      const formatIssues = checkFormatting(c.hpiNarrative);
+      const formatIssues = checkFormatting(historyStr);
       formatCount += formatIssues.length;
     }
     
@@ -558,12 +560,13 @@ async function checkProcedures() {
       emptyCount++;
     }
     
-    if (!p.steps || p.steps.length === 0) {
+    // Note: steps field no longer exists on Procedure - check technique instead
+    if (!p.technique) {
       issues.push({
         table: 'Procedure',
         id: p.id,
-        field: 'steps',
-        issue: 'No procedure steps listed',
+        field: 'technique',
+        issue: 'No procedure technique listed',
         severity: 'high'
       });
       emptyCount++;
@@ -613,13 +616,13 @@ async function checkECGPatterns() {
       seenNames.set(key, p.id);
     }
     
-    // ECG patterns need good descriptions
-    if (!p.description || p.description.length < 30) {
+    // ECG patterns need good pathognomonic clues
+    if (!p.pathognomonic) {
       issues.push({
         table: 'ECGPattern',
         id: p.id,
-        field: 'description',
-        issue: 'Description too short',
+        field: 'pathognomonic',
+        issue: 'Missing pathognomonic finding',
         severity: 'medium'
       });
       emptyCount++;
@@ -669,13 +672,13 @@ async function checkLabTests() {
       seenNames.set(key, l.id);
     }
     
-    // Labs need normal ranges
-    if (!l.normalRange) {
+    // Labs need clinical pearls
+    if (!l.clinicalPearls || l.clinicalPearls.length === 0) {
       issues.push({
         table: 'LabTest',
         id: l.id,
-        field: 'normalRange',
-        issue: 'Missing normal range',
+        field: 'clinicalPearls',
+        issue: 'Missing clinical pearls',
         severity: 'high'
       });
       emptyCount++;

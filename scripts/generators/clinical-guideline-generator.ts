@@ -626,9 +626,9 @@ async function gapAnalysis() {
             description: data.description,
             clinicalContext: data.clinicalContext,
             maxScore: data.maxScore,
-            components: data.components,
-            scoringMap: data.scoringMap,
-            vignettes: data.vignettes,
+            components: data.components as any,
+            scoringMap: data.scoringMap as any,
+            vignettes: data.vignettes as any,
             updatedAt: new Date()
           }
         });
@@ -709,9 +709,9 @@ async function main() {
           description: data.description,
           clinicalContext: data.clinicalContext,
           maxScore: data.maxScore,
-          components: data.components,
-          scoringMap: data.scoringMap,
-          vignettes: data.vignettes,
+          components: data.components as any,
+          scoringMap: data.scoringMap as any,
+          vignettes: data.vignettes as any,
           updatedAt: new Date()
         }
       });

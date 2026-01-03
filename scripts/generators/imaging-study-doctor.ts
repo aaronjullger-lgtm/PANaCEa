@@ -21,6 +21,7 @@
 import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -802,6 +803,8 @@ async function insertStudy(study: KnownStudy): Promise<boolean> {
     await prisma.imagingStudy.upsert({
       where: { name: study.name },
       create: {
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
         name: study.name,
         modality: study.modality,
         bodyRegion: study.bodyRegion || null,

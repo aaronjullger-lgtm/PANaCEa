@@ -12,6 +12,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import * as dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -144,7 +145,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
       try {
         await prisma.imagingStudy.upsert({
           where: { name: withoutContrastName },
-          create: withoutContrastData,
+          create: { id: crypto.randomUUID(), updatedAt: new Date(), ...withoutContrastData },
           update: withoutContrastData
         });
         console.log(`    ✅ Created: ${withoutContrastName}`);
@@ -157,7 +158,7 @@ async function splitCombinedStudies(isDryRun: boolean) {
       try {
         await prisma.imagingStudy.upsert({
           where: { name: withContrastName },
-          create: withContrastData,
+          create: { id: crypto.randomUUID(), updatedAt: new Date(), ...withContrastData },
           update: withContrastData
         });
         console.log(`    ✅ Created: ${withContrastName}`);
@@ -258,7 +259,7 @@ async function addMissingContrastVariants(isDryRun: boolean) {
         created++;
       } else {
         try {
-          await prisma.imagingStudy.create({ data });
+          await prisma.imagingStudy.create({ data: { id: crypto.randomUUID(), updatedAt: new Date(), ...data } });
           console.log(`  ✅ Created: ${withoutName}`);
           created++;
         } catch (e: any) {
@@ -298,7 +299,7 @@ async function addMissingContrastVariants(isDryRun: boolean) {
         created++;
       } else {
         try {
-          await prisma.imagingStudy.create({ data });
+          await prisma.imagingStudy.create({ data: { id: crypto.randomUUID(), updatedAt: new Date(), ...data } });
           console.log(`  ✅ Created: ${withName}`);
           created++;
         } catch (e: any) {

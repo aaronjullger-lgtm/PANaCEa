@@ -5,9 +5,9 @@
  * Shows availability by system and overall health
  */
 
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import type { CloudflareContext } from '../_shared/types';
 
 interface Env {
   DATABASE_URL: string;
@@ -17,7 +17,7 @@ interface Env {
 const POOL_LOW_THRESHOLD = 20;
 const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
+export const onRequestGet = async (context: CloudflareContext<Env>) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   
   try {

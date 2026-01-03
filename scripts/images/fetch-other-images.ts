@@ -50,7 +50,10 @@ const RATE_LIMIT = {
   BACKOFF_DELAY_MS: 30000,
   NORMAL_DELAY_MS: 1500,
   SEARCH_DELAY_MS: 1000,
-  MAX_IMAGE_SIZE: 4 * 1024 * 1024 // 4MB
+  MAX_IMAGE_SIZE: 4 * 1024 * 1024, // 4MB
+  rateLimitBackoffMs: 30000,
+  maxDelayMs: 3000,
+  minDelayMs: 1500
 };
 
 const MAX_IMAGE_SIZE = 4 * 1024 * 1024; // 4MB limit for Gemini

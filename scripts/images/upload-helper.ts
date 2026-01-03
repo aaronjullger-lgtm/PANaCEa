@@ -1295,4 +1295,5 @@ async function main() {
 main().catch(console.error);
 
 // Export for programmatic use
-export { uploadSingleImage, uploadBatch, BatchItem, UploadResult };
+export { uploadSingleImage, uploadBatch };
+export type { BatchItem, UploadResult };

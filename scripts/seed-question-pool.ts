@@ -7,7 +7,7 @@
  * Usage: npx tsx scripts/seed-question-pool.ts
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -193,7 +193,7 @@ async function seedPool() {
             questionType: 'general',
             system,
             difficulty,
-            questionData: q,
+            questionData: q as unknown as Prisma.InputJsonValue,
             generatedAt: new Date(),
           }));
 

@@ -19,6 +19,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -810,6 +811,8 @@ async function addNewConditions(dryRun: boolean): Promise<number> {
       try {
         await prisma.medicalContent.create({
           data: {
+            id: crypto.randomUUID(),
+            updatedAt: new Date(),
             conditionId,
             system: condition.system,
             subcategory: condition.subcategory,
@@ -849,6 +852,8 @@ async function addNewConditions(dryRun: boolean): Promise<number> {
       try {
         await prisma.condition.create({
           data: {
+            id: crypto.randomUUID(),
+            updatedAt: new Date(),
             name: condition.condition,
             system: condition.system,
             subcategory: condition.subcategory,
@@ -1316,6 +1321,7 @@ async function syncConditionTables(dryRun: boolean): Promise<{ created: number; 
           await prisma.condition.create({
             data: {
               id: mc.conditionId,
+              updatedAt: new Date(),
               name: mc.condition,
               system: mc.system,
               subcategory: mc.subcategory || 'General',

@@ -130,7 +130,7 @@ const FILENAME_TO_CONDITION_MAP: Record<string, string> = {
   'Melanoma': 'DERM__oncology__melanoma',
   'Nummular_dermatitis': 'DERM__dermatitis__eczema__nummular_dermatitis',
   'Onychomycosis': 'DERM__nail_disorders__onychomycosis',
-  'Oral_Herpes_simplex': 'DERM__infectious_viral__herpes_simplex',
+  'Oral_Herpes_simplex_2': 'DERM__infectious_viral__herpes_simplex',
   'Paronychia': 'DERM__nail_disorders__paronychia',
   'Pemphigus_Vulgaris': 'DERM__bullous__pemphigus_vulgaris',
   'Perioral_dermatitis': 'DERM__dermatitis__eczema__perioral_dermatitis',
@@ -161,7 +161,7 @@ const FILENAME_TO_CONDITION_MAP: Record<string, string> = {
   'Diverticulitis': 'GI__colon__diverticulitis',
   'Epidural_Hematoma': 'NEURO__trauma__epidural_hematoma',
   'Epiglottitis': 'PULM__upper_airway_emergency__acute_epiglottitis',
-  'Hemorrhagic_Stroke': 'NEURO__vascular__hemorrhagic_stroke',
+  'Hemorrhagic_Stroke_v2': 'NEURO__vascular__hemorrhagic_stroke',
   'Hodgkin_Lymphoma': 'HEME__lymphoma__hodgkin_lymphoma',
   'Jones_Fracture': 'MSK__traumafracture__jones_fracture',
   'Mastoiditis': 'HEENT__ear__middle__mastoiditis',
@@ -175,7 +175,7 @@ const FILENAME_TO_CONDITION_MAP: Record<string, string> = {
   'Radial_Head_Fracture': 'MSK__traumafracture__radial_head_fracture',
   'Retinal_Detachment': 'HEENT__eye__retina__retinal_detachment',
   'Rheumatoid_Arthritis': 'MSK__arthritis__rheumatoid_arthritis',
-  'Salter_Harris_Fractures': 'MSK__pediatric__salter_harris_fractures',
+  'Salter_Harris_Fractures_v2': 'MSK__pediatric__salter_harris_fractures',
   'Sarcoidosis': 'PULM__interstitial__sarcoidosis',
   'Sigmoid_Volvulus': 'GI__obstruction__sigmoid_volvulus',
   'Small_Bowel_Obstruction': 'GI__small_bowel__small_bowel_obstruction',
@@ -232,21 +232,21 @@ const FILENAME_TO_CONDITION_MAP: Record<string, string> = {
   'AnteriorShoulderDislocation': 'MSK__trauma__shoulder_dislocation',
   'AorticDissection': 'CV__vascular_disease__aortic_dissection',
   'AvascularNecrosis': 'MSK__arthritis__avascular_necrosis',
-  'BoxersFracture': 'MSK__trauma__fractures__boxers_fracture',
+  'BoxersFracture_v2': 'MSK__trauma__fractures__boxers_fracture',
   'CollesFracture': 'MSK__traumafracture__colles_fracture',
   'ColonCutoffSign': 'GI__pancreas__acute_pancreatitis',
-  'Croup': 'HEENT__larynx__upper_airway__croup_laryngotracheobronchitis',
+  'Croup_v2': 'HEENT__larynx__upper_airway__croup_laryngotracheobronchitis',
   'Developmental_Hip_Dysplasia': 'MSK__pediatric__developmental_dysplasia_hip',
   'EpiduralHematoma': 'NEURO__trauma__epidural_hematoma',
   'ForeignBodyBattery': 'GI__esophagus__foreign_body_ingestion',
   'GaleazziFracture': 'MSK__trauma__fractures__galeazzi_fracture',
-  'Genu_Valgum': 'MSK__pediatric__genu_valgum',
-  'Genu_Varum': 'MSK__pediatric__genu_varum',
+  'Genu_Valgum_v2': 'MSK__pediatric__genu_valgum',
+  'Genu_Varum_v2': 'MSK__pediatric__genu_varum',
   'HiatalHernia': 'GI__esophagus__hiatal_hernia',
   'HipDislocationPosterior': 'MSK__trauma__hip_dislocation',
-  'HipFracture': 'MSK__trauma__fractures__hip_fracture',
+  'HipFracture_v2': 'MSK__trauma__fractures__hip_fracture',
   'HorseshoeKidney': 'RENAL__congenital__horseshoe_kidney',
-  'Hydrocephalus': 'NEURO__pediatric__hydrocephalus',
+  'Hydrocephalus_v2': 'NEURO__pediatric__hydrocephalus',
   'JonesFracture': 'MSK__traumafracture__jones_fracture',
   'Legg-Calve-Perthes': 'MSK__pediatric__legg_calve_perthes',
   'LisfracFracture': 'MSK__trauma__fractures__lisfranc_injury',
@@ -257,7 +257,7 @@ const FILENAME_TO_CONDITION_MAP: Record<string, string> = {
   'OpenBookPelvis': 'MSK__trauma__fractures__pelvic_fracture',
   'PancostTumor': 'PULM__oncology__lung_cancer',
   'PeritonsillarAbscess': 'HEENT__pharynx_tonsil__peritonsillar_abscess',
-  'PleuralEffusion': 'PULM__pleural__pleural_effusion',
+  'PleuralEffusion_v2': 'PULM__pleural__pleural_effusion',
   'PosteriorShoulderDislocation': 'MSK__trauma__shoulder_dislocation',
   'RadialHeadSubluxation': 'MSK__pediatric__nursemaid_elbow',
   'RetropharyngealAbscess': 'HEENT__pharynx_tonsil__retropharyngeal_abscess',
@@ -303,17 +303,17 @@ const FILENAME_TO_CONDITION_MAP: Record<string, string> = {
   'Herpes_Zoster': 'DERM__infectious_viral__herpes_zoster_shingles',
   'Systemic_Lupus': 'DERM__connective_tissue__systemic_lupus_erythematosus',
   'Multiple_Sclerosis': 'NEURO__demyelinating__multiple_sclerosis',
-  'Impetigo': 'DERM__infectious_bacterial__impetigo',
-  'Hypothermia': 'CV__environmental__hypothermia',
+  'Impetigo_v2': 'DERM__infectious_bacterial__impetigo',
+  'Hypothermia_v2': 'CV__environmental__hypothermia',
   'Hyperkalemia': 'ENDO__electrolyte__hyperkalemia',
   'Second_Degree': 'CV__conduction_disorders__second_degree_av_block_mobitz_i',
   'Third_Degree': 'CV__conduction_disorders__third_degree_av_block',
   'Acute_Coronary': 'CV__ischemic_heart_disease__stemi',
   'Acute_Angle': 'HEENT__eye__glaucoma__acute_angleclosure_glaucoma',
-  'Epidural_Hematoma': 'NEURO__trauma__epidural_hematoma',
-  'Hodgkin_Lymphoma': 'HEME__lymphoma__hodgkin_lymphoma',
+  'Epidural_Hematoma_v2': 'NEURO__trauma__epidural_hematoma',
+  'Hodgkin_Lymphoma_v2': 'HEME__lymphoma__hodgkin_lymphoma',
   'Testicular_Torsion': 'GU__testicular__testicular_torsion',
-  'Hyphema': 'HEENT__eye__orbit__hyphema',
+  'Hyphema_v2': 'HEENT__eye__orbit__hyphema',
   
   // === EXPANDED MAPPINGS FROM ALL IMAGES FOLDER ===
   // Ophthalmology
@@ -395,7 +395,7 @@ const FILENAME_TO_CONDITION_MAP: Record<string, string> = {
   'MyastheniaGravis': 'NEURO__neuromuscular__myasthenia_gravis',
   'CNIIIPalsy': 'NEURO__cranial_nerve__cn_iii_palsy',
   'BasilarSkullFracture': 'NEURO__trauma__basilar_skull_fracture',
-  'Epidural_Hematoma': 'NEURO__trauma__epidural_hematoma',
+  'Epidural_Hematoma_v3': 'NEURO__trauma__epidural_hematoma',
   
   // GI
   'AnalFissure': 'GI__anorectal__anal_fissure',
@@ -433,7 +433,7 @@ const FILENAME_TO_CONDITION_MAP: Record<string, string> = {
   
   // GU
   'InguinalHernia': 'GU__male__inguinal_hernia',
-  'Testicular_Torsion': 'GU__male__testicular_torsion',
+  'Testicular_Torsion_v2': 'GU__male__testicular_torsion',
   
   // Vertigo
   'Vertigo': 'HEENT__vertigo__benign_paroxysmal_positional_vertigo',
@@ -447,105 +447,105 @@ const FILENAME_TO_CONDITION_MAP: Record<string, string> = {
   
   // === ADDITIONAL UNMAPPED CONDITIONS ===
   // Dermatology/Vascular
-  'PortWineStain': 'DERM__benign_lesions__portwine_stain',
-  'StrawberryHemangioma': 'DERM__benign_lesions__strawberry_hemangioma_infantile_hemangioma',
-  'Felon': 'DERM__infectious_bacterial__felon',
-  'HerpeticWhitlow': 'DERM__infectious_bacterial__herpetic_whitlow',
-  'BeausLines': 'DERM__pigmentary__beaus_lines',
-  'MongolianSpot': 'DERM__pigmentary__mongolian_spot',
+  'PortWineStain_v2': 'DERM__benign_lesions__portwine_stain',
+  'StrawberryHemangioma_v2': 'DERM__benign_lesions__strawberry_hemangioma_infantile_hemangioma',
+  'Felon_v2': 'DERM__infectious_bacterial__felon',
+  'HerpeticWhitlow_v2': 'DERM__infectious_bacterial__herpetic_whitlow',
+  'BeausLines_v2': 'DERM__pigmentary__beaus_lines',
+  'MongolianSpot_v2': 'DERM__pigmentary__mongolian_spot',
   
   // HEENT/Oral
-  'GeographicTongue': 'HEENT__oral__geographic_tongue',
-  'BlackHairyTongue': 'HEENT__oral__black_hairy_tongue',
-  'OralHairyLeukoplakia': 'HEENT__oral__oral_hairy_leukoplakia',
-  'TorusPalatinus': 'HEENT__oral__torus_palatinus',
-  'HollenhorstPlaque': 'HEENT__eye__retina__hollenhorst_plaque',
+  'GeographicTongue_v2': 'HEENT__oral__geographic_tongue',
+  'BlackHairyTongue_v2': 'HEENT__oral__black_hairy_tongue',
+  'OralHairyLeukoplakia_v2': 'HEENT__oral__oral_hairy_leukoplakia',
+  'TorusPalatinus_v2': 'HEENT__oral__torus_palatinus',
+  'HollenhorstPlaque_v2': 'HEENT__eye__retina__hollenhorst_plaque',
   
   // Nutritional
-  'BitotsSpots': 'ENDO__nutritional__bitot_spots',
-  'Pellagra': 'ENDO__nutritional__pellagra',
+  'BitotsSpots_v2': 'ENDO__nutritional__bitot_spots',
+  'Pellagra_v2': 'ENDO__nutritional__pellagra',
   
   // MSK Hand
-  'DupuytrensContracture': 'MSK__hand__dupuytrens_contracture',
-  'TriggerFinger': 'MSK__hand__trigger_finger',
+  'DupuytrensContracture_v2': 'MSK__hand__dupuytrens_contracture',
+  'TriggerFinger_v2': 'MSK__hand__trigger_finger',
   
   // MSK Oncology
-  'Ewing_Sarcoma': 'MSK__oncology__ewing_sarcoma',
+  'Ewing_Sarcoma_v2': 'MSK__oncology__ewing_sarcoma',
   
   // Scaphoid and other fractures
-  'ScaphoidFracture': 'MSK__trauma__fractures__scaphoid_fracture',
-  'SmithFracture': 'MSK__traumafracture__smith_fracture',
-  'GaleazziFracture': 'MSK__trauma__fractures__galeazzi_fracture',
-  'Galeazzi_Fracture': 'MSK__trauma__fractures__galeazzi_fracture',
-  'TripodFracture': 'MSK__trauma__fractures__tripod_fracture',
-  'SupracondylarFracture': 'MSK__pediatric__supracondylar_fracture',
+  'ScaphoidFracture_v2': 'MSK__trauma__fractures__scaphoid_fracture',
+  'SmithFracture_v2': 'MSK__traumafracture__smith_fracture',
+  'GaleazziFracture_v2': 'MSK__trauma__fractures__galeazzi_fracture',
+  'Galeazzi_Fracture_v2': 'MSK__trauma__fractures__galeazzi_fracture',
+  'TripodFracture_v2': 'MSK__trauma__fractures__tripod_fracture',
+  'SupracondylarFracture_v2': 'MSK__pediatric__supracondylar_fracture',
   'OrbitalBlowoutFracture': 'HEENT__eye__orbit__blunt_ocular_trauma__globe_injury',
   
   // Additional clinical signs
   'BrudzinskisSign': 'NEURO__infectious__bacterial_meningitis',
-  'RaynaudsPhenomenon': 'DERM__vascular__raynauds',
-  'DependentRubor': 'CV__vascular_disease__peripheral_arterial_disease_pad',
-  'InfectiousTenosynovitis': 'DERM__infectious_bacterial__infectious_tenosynovitis',
+  'RaynaudsPhenomenon_v2': 'DERM__vascular__raynauds',
+  'DependentRubor_v2': 'CV__vascular_disease__peripheral_arterial_disease_pad',
+  'InfectiousTenosynovitis_v2': 'DERM__infectious_bacterial__infectious_tenosynovitis',
   
   // Pediatric conditions
   'OsgoodSchlatter': 'MSK__pediatric__osgood_schlatter',
-  'Osgood-Schlatter': 'MSK__pediatric__osgood_schlatter',
-  'SCFE': 'MSK__pediatric__slipped_capital_femoral_epiphysis',
-  'Legg-Calve-Perthes': 'MSK__pediatric__legg_calve_perthes',
+  'Osgood-Schlatter_v2': 'MSK__pediatric__osgood_schlatter',
+  'SCFE_v2': 'MSK__pediatric__slipped_capital_femoral_epiphysis',
+  'Legg-Calve-Perthes_v2': 'MSK__pediatric__legg_calve_perthes',
   
   // GI conditions
-  'CecalVolvulus': 'GI__obstruction__cecal_volvulus',
-  'PorcelainGallbladder': 'GI__gallbladder__porcelain_gallbladder',
-  'HiatalHernia': 'GI__esophagus__hiatal_hernia',
-  'PyloricStenosis': 'GI__stomach__pyloric_stenosis',
+  'CecalVolvulus_v2': 'GI__obstruction__cecal_volvulus',
+  'PorcelainGallbladder_v2': 'GI__gallbladder__porcelain_gallbladder',
+  'HiatalHernia_v2': 'GI__esophagus__hiatal_hernia',
+  'PyloricStenosis_v2': 'GI__stomach__pyloric_stenosis',
   'MalloryWeiss': 'GI__esophagus__mallory_weiss_tear',
-  'ColonCutoffSign': 'GI__pancreas__acute_pancreatitis',
+  'ColonCutoffSign_v2': 'GI__pancreas__acute_pancreatitis',
   
   // Pulmonary
-  'PneumocystisPneumonia': 'PULM__infectious__pneumocystis_pneumonia',
-  'Pneumonia': 'PULM__infectious__community_acquired_pneumonia',
-  'PleuralEffusion': 'PULM__pleural__pleural_effusion',
+  'PneumocystisPneumonia_v2': 'PULM__infectious__pneumocystis_pneumonia',
+  'Pneumonia_v2': 'PULM__infectious__community_acquired_pneumonia',
+  'PleuralEffusion_v3': 'PULM__pleural__pleural_effusion',
   
   // Cardiac/Vascular
-  'WaterBottleHeart': 'CV__pericardial_disease__pericardial_effusion',
+  'WaterBottleHeart_v2': 'CV__pericardial_disease__pericardial_effusion',
   
   // Neuro
-  'SubduralHematoma': 'NEURO__trauma__subdural_hematoma',
-  'MultipleSclerosis': 'NEURO__demyelinating__multiple_sclerosis',
-  'Tetanus': 'NEURO__infectious__tetanus',
-  'Hydrocephalus': 'NEURO__pediatric__hydrocephalus',
+  'SubduralHematoma_v2': 'NEURO__trauma__subdural_hematoma',
+  'MultipleSclerosis_v2': 'NEURO__demyelinating__multiple_sclerosis',
+  'Tetanus_v2': 'NEURO__infectious__tetanus',
+  'Hydrocephalus_v3': 'NEURO__pediatric__hydrocephalus',
   
   // Infectious
-  'Cryptococcus': 'ID__fungal__cryptococcosis',
+  'Cryptococcus_v2': 'ID__fungal__cryptococcosis',
   
   // Endocrine
-  'CushingsSyndrome': 'ENDO__adrenal__cushing_syndrome',
-  'CongenitalHypothyroidism': 'ENDO__thyroid__congenital_hypothyroidism',
+  'CushingsSyndrome_v2': 'ENDO__adrenal__cushing_syndrome',
+  'CongenitalHypothyroidism_v2': 'ENDO__thyroid__congenital_hypothyroidism',
   
   // Peds
-  'CaputSuccedaneum': 'PEDS__newborn__caput_succedaneum',
-  'TurnerSyndrome': 'PEDS__genetic__turner_syndrome',
-  'FetalAlcoholSyndrome': 'PEDS__congenital__fetal_alcohol_syndrome',
-  'WilmsTumor': 'PEDS__oncology__wilms_tumor',
-  'Neuroblastoma': 'PEDS__oncology__neuroblastoma',
-  'TranspositionofGreatArteries': 'PEDS__cardiac__transposition_great_arteries',
+  'CaputSuccedaneum_v2': 'PEDS__newborn__caput_succedaneum',
+  'TurnerSyndrome_v2': 'PEDS__genetic__turner_syndrome',
+  'FetalAlcoholSyndrome_v2': 'PEDS__congenital__fetal_alcohol_syndrome',
+  'WilmsTumor_v2': 'PEDS__oncology__wilms_tumor',
+  'Neuroblastoma_v2': 'PEDS__oncology__neuroblastoma',
+  'TranspositionofGreatArteries_v2': 'PEDS__cardiac__transposition_great_arteries',
   
   // Eye additional
-  'SubconjunctivalHemorrhage': 'HEENT__eye__conjunctiva__subconjunctival_hemorrhage',
+  'SubconjunctivalHemorrhage_v2': 'HEENT__eye__conjunctiva__subconjunctival_hemorrhage',
   
   // Bursitis
-  'OlecranonBursitis': 'MSK__trauma__olecranon_bursitis',
-  'PrepatellarBursitis': 'MSK__trauma__prepatellar_bursitis',
-  'BakersCyst': 'MSK__trauma__bakers_cyst',
+  'OlecranonBursitis_v2': 'MSK__trauma__olecranon_bursitis',
+  'PrepatellarBursitis_v2': 'MSK__trauma__prepatellar_bursitis',
+  'BakersCyst_v2': 'MSK__trauma__bakers_cyst',
   
   // Ear
-  'OtitisMedia': 'HEENT__ear__middle__acute_otitis_media',
-  'AuricularHematoma': 'HEENT__ear__auricular_hematoma',
-  'SeptalHematoma': 'HEENT__nose__septal_hematoma',
+  'OtitisMedia_v2': 'HEENT__ear__middle__acute_otitis_media',
+  'AuricularHematoma_v2': 'HEENT__ear__auricular_hematoma',
+  'SeptalHematoma_v2': 'HEENT__nose__septal_hematoma',
   
   // GU
-  'Testicular_Torsion': 'GU__testicular__testicular_torsion',
-  'InguinalHernia': 'GU__male__inguinal_hernia',
+  'Testicular_Torsion_v3': 'GU__testicular__testicular_torsion',
+  'InguinalHernia_v2': 'GU__male__inguinal_hernia',
   
   // Placental
   'PlacentalAbruption': 'OB__placental__placental_abruption',

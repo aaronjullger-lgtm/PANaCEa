@@ -14,8 +14,8 @@
  * GET /api/drills/media?modality=ecg&count=10
  */
 
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import type { CloudflareContext } from '../_shared/types';
 
 // ============================================================================
 // TYPES
@@ -104,7 +104,7 @@ function generateDefaultExplanation(diagnosis: string, modality: string): string
 // MAIN HANDLER
 // ============================================================================
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
+export const onRequestGet = async (context: CloudflareContext<Env>) => {
   try {
     const { env, request } = context;
     const url = new URL(request.url);

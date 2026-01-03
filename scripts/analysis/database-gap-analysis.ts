@@ -193,6 +193,8 @@ async function analyzeQuestion() {
   return { table: 'Question', total, issues };
 }
 
+// OSCEStation model no longer exists - function disabled
+/*
 async function analyzeOsceStation() {
   console.log('\n' + '='.repeat(60));
   console.log('📊 OSCEStation Table Analysis');
@@ -234,6 +236,7 @@ async function analyzeOsceStation() {
   
   return { table: 'OSCEStation', total, issues };
 }
+*/
 
 async function analyzePhysicalExamFinding() {
   console.log('\n' + '='.repeat(60));
@@ -334,7 +337,7 @@ async function main() {
     results.push(await analyzeCondition());
     results.push(await analyzeDrug());
     results.push(await analyzeQuestion());
-    results.push(await analyzeOsceStation());
+    // analyzeOsceStation removed - model does not exist
     results.push(await analyzePhysicalExamFinding());
     
     // Summary

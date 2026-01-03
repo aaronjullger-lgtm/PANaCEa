@@ -92,10 +92,9 @@ async function fillDDxFields(): Promise<void> {
   const records = await prisma.differentialDiagnosis.findMany();
   
   const needsUpdate = records.filter(r => 
-    !r.mnemonic || 
-    !(r.differentials as any[])?.length ||
-    !r.physicalExamFindings ||
-    !(r.relatedConditions as any[])?.length
+    !r.mnemonics?.length || 
+    !(r.differentialList as any[])?.length ||
+    !r.keyExamFindings?.length
   );
   
   console.log(`Found ${needsUpdate.length}/${records.length} records needing updates\n`);
@@ -114,13 +113,22 @@ async function fillDDxFields(): Promise<void> {
     }
     
     try {
+      // Convert differentials to string array (just diagnosis names)
+      const differentialStrings = content.differentials?.map(d => d.diagnosis) || [];
+      // Convert exam findings to string array (flatten the object)
+      const examFindings: string[] = [];
+      if (content.physicalExamFindings) {
+        for (const [category, findings] of Object.entries(content.physicalExamFindings)) {
+          findings.forEach((f: string) => examFindings.push(`${category}: ${f}`));
+        }
+      }
+      
       await prisma.differentialDiagnosis.update({
         where: { id: record.id },
         data: {
-          mnemonic: content.mnemonic || record.mnemonic,
-          differentials: content.differentials?.length ? content.differentials : record.differentials,
-          physicalExamFindings: content.physicalExamFindings || record.physicalExamFindings,
-          relatedConditions: content.relatedConditions?.length ? content.relatedConditions : record.relatedConditions,
+          mnemonics: content.mnemonic ? [content.mnemonic, ...(record.mnemonics || [])] : record.mnemonics,
+          differentialList: differentialStrings.length > 0 ? differentialStrings : record.differentialList,
+          keyExamFindings: examFindings.length > 0 ? examFindings : record.keyExamFindings,
           updatedAt: new Date()
         }
       });

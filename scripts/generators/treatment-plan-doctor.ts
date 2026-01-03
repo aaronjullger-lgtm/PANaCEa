@@ -30,6 +30,7 @@
 import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -654,6 +655,8 @@ async function insertTreatmentProtocol(protocol: TreatmentProtocol): Promise<boo
     await prisma.treatment.upsert({
       where: { name: protocol.name },
       create: {
+        id: crypto.randomUUID(),
+        updatedAt: new Date(),
         name: protocol.name,
         displayName: protocol.displayName || protocol.name,
         category: protocol.category,

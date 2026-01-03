@@ -20,6 +20,7 @@
 import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -875,14 +876,14 @@ async function analyzeState() {
   
   const samples = await prisma.specialTest.findMany({
     take: 10,
-    include: { conditions: { select: { name: true } } },
+    include: { Condition: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
   });
   
   if (samples.length > 0) {
     console.log('\n  Sample Tests:');
     for (const s of samples) {
-      const condNames = s.conditions.map(c => c.name).join(', ');
+      const condNames = s.Condition.map(c => c.name).join(', ');
       console.log(`    ${s.name} → ${condNames || 'No conditions linked'}`);
     }
   }
@@ -915,7 +916,7 @@ async function insertKnownTests(dryRun: boolean) {
           await prisma.specialTest.update({
             where: { id },
             data: {
-              conditions: { connect: conditions.map(c => ({ id: c.id })) },
+              Condition: { connect: conditions.map(c => ({ id: c.id })) },
             },
           });
           console.log(`  🔄 Updated links for: ${test.name}`);
@@ -942,6 +943,8 @@ async function insertKnownTests(dryRun: boolean) {
     } else {
       await prisma.specialTest.create({
         data: {
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
           name: test.name,
           displayName: test.displayName || test.name,
           aliases: test.aliases,
@@ -953,7 +956,7 @@ async function insertKnownTests(dryRun: boolean) {
           technique: test.technique,
           positiveTest: test.positiveTest,
           interpretation: test.interpretation,
-          conditions: conditions.length > 0 ? { connect: conditions.map(c => ({ id: c.id })) } : undefined,
+          Condition: conditions.length > 0 ? { connect: conditions.map(c => ({ id: c.id })) } : undefined,
         },
       });
       console.log(`  ✅ ${test.name} (→ ${conditions.length} conditions linked)`);
@@ -1021,6 +1024,8 @@ async function generateAITests(dryRun: boolean, batchSize: number) {
         } else {
           await prisma.specialTest.create({
             data: {
+              id: crypto.randomUUID(),
+              updatedAt: new Date(),
               name: candidate.name,
               displayName: candidate.name,
               aliases: candidate.aliases,
@@ -1032,7 +1037,7 @@ async function generateAITests(dryRun: boolean, batchSize: number) {
               technique: candidate.technique,
               positiveTest: candidate.positiveTest,
               interpretation: candidate.interpretation,
-              conditions: condition ? { connect: [{ id: condition.id }] } : undefined,
+              Condition: condition ? { connect: [{ id: condition.id }] } : undefined,
             },
           });
           console.log(`    ✅ ${candidate.name}`);

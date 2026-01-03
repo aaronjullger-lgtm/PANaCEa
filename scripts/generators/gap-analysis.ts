@@ -152,12 +152,12 @@ async function analyzeDifferentialDiagnosis(): Promise<void> {
     });
   
   // Check mnemonic quality
-  const withMnemonic = records.filter(r => r.mnemonic && r.mnemonic.trim().length > 0);
+  const withMnemonic = records.filter(r => r.mnemonics && r.mnemonics.length > 0);
   console.log(`\nMnemonics: ${withMnemonic.length}/${records.length} have mnemonics`);
   
   // Check differential counts
   const diffCounts = records.map(r => {
-    const diffs = r.differentials as any[];
+    const diffs = r.differentialList as any[];
     return { name: r.presentingComplaint, count: diffs?.length || 0 };
   });
   

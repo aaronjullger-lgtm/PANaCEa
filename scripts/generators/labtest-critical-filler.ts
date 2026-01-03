@@ -105,7 +105,7 @@ async function main() {
   const labsWithGaps = allLabs.filter(lab => {
     const scenarios = lab.clinicalScenarios;
     const hasClinicalScenariosGap = !scenarios || (typeof scenarios === 'string' && scenarios.trim() === '');
-    const hasCriticalValuesGap = !lab.criticalValues || lab.criticalValues.length === 0;
+    const hasCriticalValuesGap = !lab.criticalValues || (Array.isArray(lab.criticalValues) && lab.criticalValues.length === 0);
     const hasReferenceRangesGap = !lab.referenceRanges;
     const hasIncreaseGap = !lab.increaseIndicates || lab.increaseIndicates.length === 0;
     const hasDecreaseGap = !lab.decreaseIndicates || lab.decreaseIndicates.length === 0;
@@ -136,7 +136,7 @@ async function main() {
     if (!scenarios || (typeof scenarios === 'string' && scenarios.trim() === '')) {
       updateData.clinicalScenarios = content.clinicalScenarios || '';
     }
-    if (!lab.criticalValues || lab.criticalValues.length === 0) {
+    if (!lab.criticalValues || (Array.isArray(lab.criticalValues) && lab.criticalValues.length === 0)) {
       updateData.criticalValues = ensureArray(content.criticalValues);
     }
     if (!lab.referenceRanges) {

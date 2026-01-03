@@ -4,7 +4,7 @@
  * Fixed to match Prisma schema exactly (uses presentingComplaint as unique key)
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { randomUUID } from 'crypto';
 
@@ -208,9 +208,9 @@ function ensureBool(val: unknown): boolean {
   return false;
 }
 
-function ensureJson(val: unknown): unknown {
+function ensureJson(val: unknown): Prisma.InputJsonValue | null {
   if (val === undefined || val === null) return null;
-  if (typeof val === 'object') return val;
+  if (typeof val === 'object') return val as Prisma.InputJsonValue;
   return null;
 }
 

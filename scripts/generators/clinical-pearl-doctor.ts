@@ -21,6 +21,7 @@
 import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -494,6 +495,8 @@ async function insertKnownPearls(dryRun: boolean) {
     } else {
       await prisma.clinicalPearl.create({
         data: {
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
           pearlText: candidate.pearlText,
           fullExplanation: candidate.fullExplanation,
           system: candidate.system,
@@ -565,6 +568,8 @@ async function generateAIPearlsForConditions(dryRun: boolean, batchSize: number)
         } else {
           await prisma.clinicalPearl.create({
             data: {
+              id: crypto.randomUUID(),
+              updatedAt: new Date(),
               pearlText: candidate.pearlText,
               fullExplanation: candidate.fullExplanation,
               system: candidate.system,

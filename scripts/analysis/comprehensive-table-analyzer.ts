@@ -133,24 +133,21 @@ async function analyzeLabTest(): Promise<TableStats> {
   const total = await prisma.labTest.count();
   const stats: TableStats = { totalRecords: total, emptyFields: {}, recordsWithIssues: 0 };
   
-  stats.emptyFields.normalRange = await prisma.labTest.count({ where: { OR: [{ normalRange: null }, { normalRange: '' }] } });
+  // Check valid fields that exist on LabTest model
+  stats.emptyFields.typicalUse = await prisma.labTest.count({ where: { OR: [{ typicalUse: null }, { typicalUse: '' }] } });
   stats.emptyFields.units = await prisma.labTest.count({ where: { OR: [{ units: null }, { units: '' }] } });
-  stats.emptyFields.interpretation = await prisma.labTest.count({ where: { OR: [{ interpretation: null }, { interpretation: '' }] } });
-  stats.emptyFields.clinicalSignificance = await prisma.labTest.count({ where: { OR: [{ clinicalSignificance: null }, { clinicalSignificance: '' }] } });
-  stats.emptyFields.increasedIn = await prisma.labTest.count({ where: { increasedIn: { isEmpty: true } } });
-  stats.emptyFields.decreasedIn = await prisma.labTest.count({ where: { decreasedIn: { isEmpty: true } } });
   stats.emptyFields.clinicalPearls = await prisma.labTest.count({ where: { clinicalPearls: { isEmpty: true } } });
   stats.emptyFields.boardYieldFacts = await prisma.labTest.count({ where: { boardYieldFacts: { isEmpty: true } } });
   stats.emptyFields.testQuestionTips = await prisma.labTest.count({ where: { testQuestionTips: { isEmpty: true } } });
   stats.emptyFields.commonMistakes = await prisma.labTest.count({ where: { commonMistakes: { isEmpty: true } } });
+  stats.emptyFields.increaseIndicates = await prisma.labTest.count({ where: { increaseIndicates: { isEmpty: true } } });
+  stats.emptyFields.decreaseIndicates = await prisma.labTest.count({ where: { decreaseIndicates: { isEmpty: true } } });
   
   stats.recordsWithIssues = await prisma.labTest.count({
     where: {
       OR: [
-        { normalRange: null },
-        { normalRange: '' },
-        { interpretation: null },
-        { interpretation: '' },
+        { typicalUse: null },
+        { typicalUse: '' },
         { clinicalPearls: { isEmpty: true } },
         { boardYieldFacts: { isEmpty: true } }
       ]
@@ -166,14 +163,14 @@ async function analyzeTreatment(): Promise<TableStats> {
   const total = await prisma.treatment.count();
   const stats: TableStats = { totalRecords: total, emptyFields: {}, recordsWithIssues: 0 };
   
+  // Check valid fields that exist on Treatment model
   stats.emptyFields.description = await prisma.treatment.count({ where: { OR: [{ description: null }, { description: '' }] } });
-  stats.emptyFields.mechanism = await prisma.treatment.count({ where: { OR: [{ mechanism: null }, { mechanism: '' }] } });
-  stats.emptyFields.dosing = await prisma.treatment.count({ where: { OR: [{ dosing: null }, { dosing: '' }] } });
+  stats.emptyFields.recommendation = await prisma.treatment.count({ where: { OR: [{ recommendation: null }, { recommendation: '' }] } });
+  stats.emptyFields.duration = await prisma.treatment.count({ where: { OR: [{ duration: null }, { duration: '' }] } });
   stats.emptyFields.contraindications = await prisma.treatment.count({ where: { contraindications: { isEmpty: true } } });
-  stats.emptyFields.sideEffects = await prisma.treatment.count({ where: { sideEffects: { isEmpty: true } } });
+  stats.emptyFields.complications = await prisma.treatment.count({ where: { complications: { isEmpty: true } } });
   stats.emptyFields.clinicalPearls = await prisma.treatment.count({ where: { clinicalPearls: { isEmpty: true } } });
   stats.emptyFields.boardYieldFacts = await prisma.treatment.count({ where: { boardYieldFacts: { isEmpty: true } } });
-  stats.emptyFields.testQuestionTips = await prisma.treatment.count({ where: { testQuestionTips: { isEmpty: true } } });
   stats.emptyFields.commonMistakes = await prisma.treatment.count({ where: { commonMistakes: { isEmpty: true } } });
   
   stats.recordsWithIssues = await prisma.treatment.count({
@@ -181,8 +178,6 @@ async function analyzeTreatment(): Promise<TableStats> {
       OR: [
         { description: null },
         { description: '' },
-        { mechanism: null },
-        { mechanism: '' },
         { clinicalPearls: { isEmpty: true } },
         { boardYieldFacts: { isEmpty: true } }
       ]
@@ -209,9 +204,9 @@ async function analyzeMedicalContent(): Promise<TableStats> {
   stats.emptyFields.complications = await prisma.medicalContent.count({ where: { OR: [{ complications: null }, { complications: '' }] } });
   stats.emptyFields.prognosis = await prisma.medicalContent.count({ where: { OR: [{ prognosis: null }, { prognosis: '' }] } });
   stats.emptyFields.mnemonic = await prisma.medicalContent.count({ where: { OR: [{ mnemonic: null }, { mnemonic: '' }] } });
-  stats.emptyFields.clinical_pearls = await prisma.medicalContent.count({ where: { OR: [{ clinical_pearls: null }, { clinical_pearls: '' }] } });
-  stats.emptyFields.differentials = await prisma.medicalContent.count({ where: { differentials: { isEmpty: true } } });
-  stats.emptyFields.classic_triad = await prisma.medicalContent.count({ where: { OR: [{ classic_triad: null }, { classic_triad: '' }] } });
+  stats.emptyFields.clinical_pearls = await prisma.medicalContent.count({ where: { clinical_pearls: { equals: null } } });
+  stats.emptyFields.differentials = await prisma.medicalContent.count({ where: { differentials: { equals: null } } });
+  stats.emptyFields.classic_triad = await prisma.medicalContent.count({ where: { classic_triad: { equals: null } } });
   stats.emptyFields.first_line_rx = await prisma.medicalContent.count({ where: { OR: [{ first_line_rx: null }, { first_line_rx: '' }] } });
   stats.emptyFields.gold_standard_dx = await prisma.medicalContent.count({ where: { OR: [{ gold_standard_dx: null }, { gold_standard_dx: '' }] } });
   stats.emptyFields.best_initial_test = await prisma.medicalContent.count({ where: { OR: [{ best_initial_test: null }, { best_initial_test: '' }] } });
@@ -240,20 +235,20 @@ async function analyzeSpecialTest(): Promise<TableStats> {
   const total = await prisma.specialTest.count();
   const stats: TableStats = { totalRecords: total, emptyFields: {}, recordsWithIssues: 0 };
   
+  // Check valid fields that exist on SpecialTest model  
   stats.emptyFields.description = await prisma.specialTest.count({ where: { OR: [{ description: null }, { description: '' }] } });
-  stats.emptyFields.procedure = await prisma.specialTest.count({ where: { OR: [{ procedure: null }, { procedure: '' }] } });
+  stats.emptyFields.technique = await prisma.specialTest.count({ where: { OR: [{ technique: null }, { technique: '' }] } });
   stats.emptyFields.interpretation = await prisma.specialTest.count({ where: { OR: [{ interpretation: null }, { interpretation: '' }] } });
-  stats.emptyFields.sensitivity = await prisma.specialTest.count({ where: { OR: [{ sensitivity: null }, { sensitivity: '' }] } });
-  stats.emptyFields.specificity = await prisma.specialTest.count({ where: { OR: [{ specificity: null }, { specificity: '' }] } });
-  stats.emptyFields.clinicalPearls = await prisma.specialTest.count({ where: { clinicalPearls: { isEmpty: true } } });
+  stats.emptyFields.sensitivity = await prisma.specialTest.count({ where: { sensitivity: null } });
+  stats.emptyFields.specificity = await prisma.specialTest.count({ where: { specificity: null } });
   
   stats.recordsWithIssues = await prisma.specialTest.count({
     where: {
       OR: [
         { description: null },
         { description: '' },
-        { procedure: null },
-        { procedure: '' },
+        { technique: null },
+        { technique: '' },
         { interpretation: null },
         { interpretation: '' }
       ]

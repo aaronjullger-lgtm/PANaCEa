@@ -18,6 +18,7 @@
 import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -364,6 +365,8 @@ async function insertKnownBuzzwords(dryRun: boolean) {
     } else {
       await prisma.buzzword.create({
         data: {
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
           buzzword: candidate.buzzword,
           condition: candidate.conditionName,
           system: candidate.system,
@@ -450,6 +453,8 @@ async function generateAIBuzzwords(dryRun: boolean, batchSize: number) {
         } else {
           await prisma.buzzword.create({
             data: {
+              id: crypto.randomUUID(),
+              updatedAt: new Date(),
               buzzword: candidate.buzzword,
               condition: candidate.conditionName,
               system: candidate.system,

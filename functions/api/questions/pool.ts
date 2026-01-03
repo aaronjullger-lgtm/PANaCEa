@@ -6,9 +6,9 @@
  * Triggers background generation when pool runs low
  */
 
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import type { CloudflareContext } from '../_shared/types';
 
 interface Env {
   DATABASE_URL: string;
@@ -20,7 +20,7 @@ interface Env {
 const POOL_LOW_THRESHOLD = 20;
 const DEFAULT_FETCH_COUNT = 10;
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
+export const onRequestGet = async (context: CloudflareContext<Env>) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   
   try {
@@ -48,7 +48,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       where: { userId },
       select: { questionId: true },
     });
-    const seenIds = new Set(seenQuestionIds.map(q => q.questionId));
+    const seenIds = new Set<string>(seenQuestionIds.map(q => q.questionId));
 
     // Try pre-generated pool first
     const poolQuestions = await getFromPreGeneratedPool(prisma, userId, seenIds, {
@@ -58,7 +58,19 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       difficulty,
     });
 
-    let questions = poolQuestions.questions;
+    let questions: Array<{
+      id: string;
+      vignette?: string;
+      question: string;
+      options: string[];
+      correctAnswer: string;
+      explanation: string;
+      system: string;
+      difficulty: string;
+      tags?: string[];
+      conditionId?: string;
+      source: 'pool' | 'main';
+    }> = poolQuestions.questions;
     const poolAvailable = poolQuestions.remaining;
 
     // If pool insufficient, supplement from main Question table

@@ -54,7 +54,7 @@ class TokenBucket {
 
 const rateLimiter = new TokenBucket(5, 0.5);
 
-type TableName = 'DifferentialDiagnosis' | 'AnatomyStructure' | 'PhysicalExamFinding' | 'MedicalContent' | 'PhysiologyConcept';
+type TableName = 'DifferentialDiagnosis' | 'AnatomyStructure' | 'PhysicalExamFinding' | 'MedicalContent' | 'PhysiologyConcept' | 'Procedure';
 
 interface MnemonicResult {
   mnemonics: string[];
@@ -360,17 +360,17 @@ async function processMedicalContent(batchSize: number, dryRun: boolean): Promis
       const mnemonic = mnemonics.join('\n\n');
       
       if (dryRun) {
-        console.log(`  [DRY RUN] ${record.name}: ${mnemonics.length} mnemonics`);
+        console.log(`  [DRY RUN] ${record.condition}: ${mnemonics.length} mnemonics`);
       } else {
         await prisma.medicalContent.update({
           where: { id: record.id },
           data: { mnemonic }
         });
-        console.log(`  ✅ ${record.name}`);
+        console.log(`  ✅ ${record.condition}`);
       }
       success++;
     } catch (e) {
-      console.log(`  ❌ ${record.name}: ${e}`);
+      console.log(`  ❌ ${record.condition}: ${e}`);
       failed++;
     }
     

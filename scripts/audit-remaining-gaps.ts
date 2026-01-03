@@ -9,16 +9,14 @@ async function auditRemainingGaps() {
   const medicalContent = await prisma.medicalContent.findMany();
   const medNullStats = medicalContent.reduce((acc, item) => {
     if (!item.mnemonic) acc.noMnemonic++;
-    if (!item.boardYieldFacts || item.boardYieldFacts.length === 0) acc.noBoardFacts++;
-    if (!item.clinicalPearls || item.clinicalPearls.length === 0) acc.noClinicalPearls++;
-    if (!item.differentialDiagnosis || item.differentialDiagnosis.length === 0) acc.noDDx++;
+    if (!item.clinical_pearls) acc.noClinicalPearls++;
+    if (!item.differentialDiagnosis) acc.noDDx++;
     return acc;
-  }, { noMnemonic: 0, noBoardFacts: 0, noClinicalPearls: 0, noDDx: 0 });
+  }, { noMnemonic: 0, noClinicalPearls: 0, noDDx: 0 });
   
   console.log(`✨ MedicalContent: ${medicalContent.length} records`);
   console.log(`   Missing mnemonic: ${medNullStats.noMnemonic}`);
-  console.log(`   Missing boardYieldFacts: ${medNullStats.noBoardFacts}`);
-  console.log(`   Missing clinicalPearls: ${medNullStats.noClinicalPearls}`);
+  console.log(`   Missing clinical_pearls: ${medNullStats.noClinicalPearls}`);
   console.log(`   Missing differentialDiagnosis: ${medNullStats.noDDx}\n`);
 
   // Drug
@@ -56,14 +54,12 @@ async function auditRemainingGaps() {
   const histNulls = history.reduce((acc, h) => {
     if (!h.boardYieldFacts || h.boardYieldFacts.length === 0) acc.noBoardFacts++;
     if (!h.description) acc.noDescription++;
-    if (!h.clinicalSignificance || h.clinicalSignificance.length === 0) acc.noSignificance++;
     return acc;
-  }, { noBoardFacts: 0, noDescription: 0, noSignificance: 0 });
+  }, { noBoardFacts: 0, noDescription: 0 });
   
   console.log(`📋 HistoryComponent: ${history.length} records`);
   console.log(`   Missing boardYieldFacts: ${histNulls.noBoardFacts}`);
-  console.log(`   Missing description: ${histNulls.noDescription}`);
-  console.log(`   Missing clinicalSignificance: ${histNulls.noSignificance}\n`);
+  console.log(`   Missing description: ${histNulls.noDescription}\n`);
 
   // Cases - should be generated
   console.log(`📚 Case Tables (Need Generation):`);
@@ -74,20 +70,19 @@ async function auditRemainingGaps() {
   // Treatment tables
   console.log(`💉 Treatment Tables:`);
   const flt = await prisma.firstLineTreatment.findMany();
-  const fltEmpty = flt.filter(t => !t.clinicalPearls || t.clinicalPearls.length === 0).length;
-  console.log(`   FirstLineTreatment: ${flt.length} (${fltEmpty} missing clinicalPearls)`);
+  console.log(`   FirstLineTreatment: ${flt.length}`);
   
   console.log(`   AntibioticGuideline: ${await prisma.antibioticGuideline.count()}`);
   console.log(`   ClinicalGuideline: ${await prisma.clinicalGuideline.count()}\n`);
 
   // Imaging & ECG
-  const imaging = await prisma.imaging.findMany();
-  const imgNulls = imaging.filter(i => !i.boardYieldFacts || i.boardYieldFacts.length === 0).length;
-  console.log(`🏥 Imaging: ${imaging.length} records (${imgNulls} missing boardYieldFacts)`);
+  const imagingStudies = await prisma.imagingStudy.findMany();
+  const imgNulls = imagingStudies.filter(i => !i.clinicalPearls || i.clinicalPearls.length === 0).length;
+  console.log(`🏥 ImagingStudy: ${imagingStudies.length} records (${imgNulls} missing clinicalPearls)`);
   
-  const ecg = await prisma.eCGFinding.findMany();
+  const ecg = await prisma.eCGPattern.findMany();
   const ecgNulls = ecg.filter(e => !e.boardYieldFacts || e.boardYieldFacts.length === 0).length;
-  console.log(`⚡ ECGFinding: ${ecg.length} records (${ecgNulls} missing boardYieldFacts)\n`);
+  console.log(`⚡ ECGPattern: ${ecg.length} records (${ecgNulls} missing boardYieldFacts)\n`);
 
   await prisma.$disconnect();
 }

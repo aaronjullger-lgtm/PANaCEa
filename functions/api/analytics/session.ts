@@ -5,9 +5,9 @@
  * This endpoint receives all behavioral data collected during a study session.
  */
 
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import type { CloudflareContext } from '../_shared/types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Env {
@@ -81,7 +81,7 @@ interface SessionAnalyticsData {
   browserName?: string;
 }
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
+export const onRequestPost = async (context: CloudflareContext<Env>) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   
   try {
@@ -313,7 +313,7 @@ async function updateUserLearningProfile(
 /**
  * GET: Retrieve user's session history and learning profile
  */
-export const onRequestGet: PagesFunction<Env> = async (context) => {
+export const onRequestGet = async (context: CloudflareContext<Env>) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   
   try {
