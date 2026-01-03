@@ -90,10 +90,9 @@ export default defineConfig(({ mode }) => {
             manualChunks: (id) => {
               // Vendor chunks for better caching and performance
               if (id.includes('node_modules')) {
-                // IMPORTANT: Check lucide-react FIRST because it contains 'react' in its name
-                // Icons must be bundled with React to avoid "Cannot set properties of undefined"
+                // IMPORTANT: lucide-react needs its own chunk to avoid initialization issues
                 if (id.includes('lucide-react')) {
-                  return 'vendor-react-core';
+                  return 'vendor-icons';
                 }
                 
                 // Split React core (excluding react-router and react-markdown)
