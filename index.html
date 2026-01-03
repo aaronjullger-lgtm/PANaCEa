@@ -42,6 +42,39 @@
         globalThis.module = { exports: globalThis.exports };
       }
     </script>
+    <script>
+      // Early chunk load error handler - runs before any modules load
+      // This catches errors when cached index.html references old chunk hashes
+      (function() {
+        var hasReloaded = sessionStorage.getItem('panacea_chunk_reload');
+        window.addEventListener('error', function(e) {
+          var msg = String(e.message || e.error || '');
+          if ((msg.indexOf('Loading chunk') > -1 || 
+               msg.indexOf('Failed to fetch dynamically imported module') > -1 ||
+               msg.indexOf('vendor-') > -1 ||
+               msg.indexOf('Unexpected token') > -1) && !hasReloaded) {
+            sessionStorage.setItem('panacea_chunk_reload', '1');
+            e.preventDefault();
+            // Clear caches
+            if ('caches' in window) {
+              caches.keys().then(function(names) {
+                names.forEach(function(name) { caches.delete(name); });
+              });
+            }
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function(regs) {
+                regs.forEach(function(r) { r.unregister(); });
+              });
+            }
+            setTimeout(function() { location.reload(true); }, 100);
+          }
+        }, true);
+        // Clear the reload flag after successful load
+        window.addEventListener('load', function() {
+          sessionStorage.removeItem('panacea_chunk_reload');
+        });
+      })();
+    </script>
     <style>
       /* CSS Custom Properties for theming - Deep Navy & Soft Whites */
       :root {
