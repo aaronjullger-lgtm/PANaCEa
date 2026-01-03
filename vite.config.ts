@@ -3,7 +3,7 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// Build cache buster: 2026-01-03-v2
+// Build cache buster: 2026-01-03-v3-force-sw-update
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
@@ -50,8 +50,23 @@ export default defineConfig(({ mode }) => {
             // Force SW update - increment this to bust cache
             skipWaiting: true,
             clientsClaim: true,
-            // Use runtime caching for large data chunks instead of precaching
+            // Clean old caches on activation
+            cleanupOutdatedCaches: true,
+            // Use network-first for JS chunks to avoid stale cache issues
             runtimeCaching: [
+              {
+                // Vendor chunks should use network-first to avoid stale cache
+                urlPattern: /^.*\/assets\/vendor-.*\.js$/,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'vendor-cache',
+                  expiration: {
+                    maxEntries: 20,
+                    maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                  },
+                  networkTimeoutSeconds: 10,
+                },
+              },
               {
                 urlPattern: /^.*\/(data-conditions|data-drugs|data-labs)-.*\.js$/,
                 handler: 'CacheFirst',
