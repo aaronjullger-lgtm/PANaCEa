@@ -439,6 +439,31 @@ async function searchAllSources(searchTerm: string, limit: number = 15): Promise
   return results.slice(0, limit);
 }
 
+// ============================================================================
+// PRE-FILTERING - Skip obviously irrelevant images before AI analysis
+// ============================================================================
+
+const MRI_EXCLUSION_KEYWORDS = [
+  'room', 'equipment', 'machine', 'scanner', 'hospital', 'building',
+  'doctor', 'patient photo', 'nurse', 'portrait', 'photograph of',
+  'diagram', 'illustration', 'drawing', 'cartoon', 'icon', 'logo',
+  'x-ray', 'xray', 'radiograph', 'ct scan', 'ecg', 'ekg', 'ultrasound'
+];
+
+function preFilterMRIResult(result: any, condition: { type: string }): { pass: boolean; reason?: string } {
+  const title = (result.title || '').toLowerCase();
+  const description = (result.description || '').toLowerCase();
+  const combined = `${title} ${description}`;
+  
+  for (const keyword of MRI_EXCLUSION_KEYWORDS) {
+    if (combined.includes(keyword)) {
+      return { pass: false, reason: `Contains "${keyword}"` };
+    }
+  }
+  
+  return { pass: true };
+}
+
 interface MRIAnalysis {
   isValidMRI: boolean;
   isActualMRIImage: boolean;
@@ -633,6 +658,13 @@ async function processCondition(condition: MRICondition, dryRun: boolean): Promi
         if (stats.saved >= targetCount || !result.url) break;
         if (await checkDuplicate(condition.id, result.originalUrl || result.url)) {
           console.log(`    ⏭️ Duplicate: ${result.title?.substring(0, 30)}...`);
+          continue;
+        }
+        
+        // Pre-filter based on title/description before expensive AI call
+        const preFilter = preFilterMRIResult(result, condition);
+        if (!preFilter.pass) {
+          console.log(`    ⏭️ Pre-filtered: ${preFilter.reason} - ${result.title?.substring(0, 30)}`);
           continue;
         }
         

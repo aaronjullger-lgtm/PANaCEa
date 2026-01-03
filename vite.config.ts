@@ -72,6 +72,10 @@ export default defineConfig(({ mode }) => {
           '@': path.resolve(__dirname, '.'),
         }
       },
+      optimizeDeps: {
+        // Pre-bundle lucide-react to avoid tree-shaking initialization issues
+        include: ['lucide-react'],
+      },
       build: {
         rollupOptions: {
           external: [
@@ -86,13 +90,14 @@ export default defineConfig(({ mode }) => {
             manualChunks: (id) => {
               // Vendor chunks for better caching and performance
               if (id.includes('node_modules')) {
-                // Split React core + lucide (lucide must load with React to avoid initialization issues)
-                if (id.includes('react') && !id.includes('react-router') && !id.includes('react-markdown')) {
+                // IMPORTANT: Check lucide-react FIRST because it contains 'react' in its name
+                // Icons must be bundled with React to avoid "Cannot set properties of undefined"
+                if (id.includes('lucide-react')) {
                   return 'vendor-react-core';
                 }
                 
-                // Icons must be in react-core chunk to avoid "Cannot set properties of undefined"
-                if (id.includes('lucide-react')) {
+                // Split React core (excluding react-router and react-markdown)
+                if (id.includes('react') && !id.includes('react-router') && !id.includes('react-markdown')) {
                   return 'vendor-react-core';
                 }
                 

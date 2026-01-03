@@ -409,6 +409,40 @@ async function searchAllSources(searchTerm: string, limit: number = 10): Promise
   });
 }
 
+// ============================================================================
+// PRE-FILTERING - Skip obviously irrelevant images before AI analysis
+// ============================================================================
+
+const DERM_EXCLUSION_KEYWORDS = [
+  'room', 'equipment', 'machine', 'hospital', 'clinic', 'building',
+  'doctor', 'nurse', 'technician', 'portrait', 'headshot',
+  'diagram', 'illustration', 'drawing', 'cartoon', 'icon', 'logo',
+  'infographic', 'chart', 'graph', 'table', 'microscop', 'histolog',
+  'cell', 'biopsy', 'pathology slide', 'hematoxylin', 'eosin',
+  'x-ray', 'xray', 'radiograph', 'ct scan', 'mri', 'ultrasound'
+];
+
+const DERM_INCLUSION_KEYWORDS = [
+  'skin', 'lesion', 'rash', 'dermat', 'cutaneous', 'eruption',
+  'vesicle', 'papule', 'plaque', 'nodule', 'macule', 'pustule',
+  'erythema', 'scaling', 'crusting', 'clinical', 'patient'
+];
+
+function preFilterDermResult(result: any): { pass: boolean; reason?: string } {
+  const title = (result.title || '').toLowerCase();
+  const description = (result.description || '').toLowerCase();
+  const combined = `${title} ${description}`;
+  
+  // Check exclusion keywords
+  for (const keyword of DERM_EXCLUSION_KEYWORDS) {
+    if (combined.includes(keyword)) {
+      return { pass: false, reason: `Contains "${keyword}"` };
+    }
+  }
+  
+  return { pass: true };
+}
+
 interface DermAnalysis {
   isValidClinicalPhoto: boolean;
   isActualPhoto: boolean;
@@ -635,6 +669,13 @@ async function processCondition(condition: DermCondition, dryRun: boolean): Prom
         
         if (await checkDuplicate(condition.conditionId, result.originalUrl || result.url)) {
           console.log(`    ⏭️ Duplicate: ${result.title?.substring(0, 40)}`);
+          continue;
+        }
+        
+        // Pre-filter based on title/description before expensive AI call
+        const preFilter = preFilterDermResult(result);
+        if (!preFilter.pass) {
+          console.log(`    ⏭️ Pre-filtered: ${preFilter.reason} - ${result.title?.substring(0, 35)}`);
           continue;
         }
         

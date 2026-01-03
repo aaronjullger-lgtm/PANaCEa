@@ -485,6 +485,42 @@ async function searchAllSources(searchTerm: string, limit: number = 10): Promise
 }
 
 // ============================================================================
+// PRE-FILTERING - Skip obviously irrelevant images before AI analysis
+// ============================================================================
+
+const CT_EXCLUSION_KEYWORDS = [
+  'room', 'equipment', 'machine', 'scanner', 'hospital', 'building',
+  'doctor', 'patient photo', 'nurse', 'technician', 'portrait',
+  'diagram', 'illustration', 'drawing', 'cartoon', 'icon', 'logo',
+  'infographic', 'chart', 'x-ray room', 'mri room', 'ecg', 'ekg',
+  'photograph of', 'picture of machine'
+];
+
+function preFilterCTResult(result: any, condition: { type: string }): { pass: boolean; reason?: string } {
+  const title = (result.title || '').toLowerCase();
+  const description = (result.description || '').toLowerCase();
+  const combined = `${title} ${description}`;
+  
+  for (const keyword of CT_EXCLUSION_KEYWORDS) {
+    if (combined.includes(keyword)) {
+      return { pass: false, reason: `Contains "${keyword}"` };
+    }
+  }
+  
+  // For head CT, reject if clearly abdominal/chest
+  if (condition.type === 'head') {
+    const otherTypes = ['abdomen', 'pelvis', 'liver', 'kidney', 'bowel', 'chest ct', 'lung ct'];
+    for (const kw of otherTypes) {
+      if (combined.includes(kw) && !combined.includes('head') && !combined.includes('brain')) {
+        return { pass: false, reason: `Non-head CT (${kw})` };
+      }
+    }
+  }
+  
+  return { pass: true };
+}
+
+// ============================================================================
 // AI VERIFICATION - CT SPECIFIC
 // ============================================================================
 
@@ -754,6 +790,13 @@ async function processCondition(condition: CTCondition, dryRun: boolean): Promis
         
         if (await checkDuplicate(condition.conditionId, result.originalUrl || result.url)) {
           console.log(`    ⏭️ Duplicate: ${result.title?.substring(0, 40)}`);
+          continue;
+        }
+        
+        // Pre-filter based on title/description before expensive AI call
+        const preFilter = preFilterCTResult(result, condition);
+        if (!preFilter.pass) {
+          console.log(`    ⏭️ Pre-filtered: ${preFilter.reason} - ${result.title?.substring(0, 35)}`);
           continue;
         }
         

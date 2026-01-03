@@ -575,6 +575,68 @@ async function searchAllSources(searchTerm: string, limit: number = 10): Promise
 }
 
 // ============================================================================
+// PRE-FILTERING - Skip obviously irrelevant images before AI analysis
+// ============================================================================
+
+// Keywords that indicate image is NOT what we want (for X-rays)
+const XRAY_EXCLUSION_KEYWORDS = [
+  'room', 'equipment', 'machine', 'scanner', 'hospital', 'clinic',
+  'doctor', 'patient', 'nurse', 'technician', 'portrait', 'photo of',
+  'building', 'exterior', 'interior', 'diagram', 'illustration', 'drawing',
+  'cartoon', 'icon', 'logo', 'symbol', 'badge', 'poster', 'infographic',
+  'certificate', 'diploma', 'award', 'medal', 'trophy'
+];
+
+// Keywords that suggest image IS an actual radiograph
+const XRAY_INCLUSION_KEYWORDS = [
+  'radiograph', 'x-ray', 'xray', 'chest', 'thorax', 'lung', 'pneumo',
+  'fracture', 'bone', 'joint', 'spine', 'vertebra', 'pelvis', 'hip',
+  'skull', 'abdomen', 'film', 'lateral', 'ap view', 'pa view', 'oblique'
+];
+
+function preFilterXRayResult(result: any, condition: { type: string; name: string }): { pass: boolean; reason?: string } {
+  const title = (result.title || '').toLowerCase();
+  const description = (result.description || '').toLowerCase();
+  const combined = `${title} ${description}`;
+  
+  // Check exclusion keywords
+  for (const keyword of XRAY_EXCLUSION_KEYWORDS) {
+    if (combined.includes(keyword)) {
+      return { pass: false, reason: `Contains "${keyword}"` };
+    }
+  }
+  
+  // For chest X-rays, reject if clearly MSK
+  if (condition.type === 'chest') {
+    const mskKeywords = ['hand', 'wrist', 'finger', 'knee', 'ankle', 'foot', 'tibia', 'fibula', 'femur', 'humerus', 'radius', 'ulna', 'metacarpal', 'phalanx'];
+    for (const kw of mskKeywords) {
+      if (combined.includes(kw) && !combined.includes('chest') && !combined.includes('thorax') && !combined.includes('lung')) {
+        return { pass: false, reason: `MSK image (${kw}) for chest condition` };
+      }
+    }
+  }
+  
+  // For MSK X-rays, reject if clearly chest
+  if (condition.type === 'msk') {
+    const chestKeywords = ['pneumonia', 'pleural', 'pulmonary', 'lung', 'thorax', 'mediastin'];
+    for (const kw of chestKeywords) {
+      if (combined.includes(kw) && !combined.includes('fracture') && !combined.includes('bone')) {
+        return { pass: false, reason: `Chest image (${kw}) for MSK condition` };
+      }
+    }
+  }
+  
+  // Bonus: check for inclusion keywords
+  const hasInclusionKeyword = XRAY_INCLUSION_KEYWORDS.some(kw => combined.includes(kw));
+  if (!hasInclusionKeyword && combined.length > 20) {
+    // If no radiograph-related keywords and has a real description, might be irrelevant
+    // But don't reject - just note it
+  }
+  
+  return { pass: true };
+}
+
+// ============================================================================
 // AI VERIFICATION - X-RAY SPECIFIC
 // ============================================================================
 
@@ -859,6 +921,13 @@ async function processCondition(condition: XRayCondition, dryRun: boolean): Prom
         
         if (await checkDuplicate(condition.conditionId, result.originalUrl || result.url)) {
           console.log(`    ⏭️ Duplicate: ${result.title?.substring(0, 40)}`);
+          continue;
+        }
+        
+        // Pre-filter based on title/description before expensive AI call
+        const preFilter = preFilterXRayResult(result, condition);
+        if (!preFilter.pass) {
+          console.log(`    ⏭️ Pre-filtered: ${preFilter.reason} - ${result.title?.substring(0, 35)}`);
           continue;
         }
         
