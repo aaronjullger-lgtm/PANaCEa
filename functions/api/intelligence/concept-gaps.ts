@@ -130,8 +130,6 @@ const GAP_TYPES: Record<string, GapTypeValue> = {
 // ============================================================================
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 

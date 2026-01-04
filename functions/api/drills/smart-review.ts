@@ -8,8 +8,6 @@ export const onRequestOptions = handleCorsOptions;
  * Fetch SRS items due for review with context
  */
 export const onRequestGet = async (context) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
 

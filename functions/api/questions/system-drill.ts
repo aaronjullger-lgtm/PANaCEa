@@ -11,9 +11,6 @@ import { handleCorsOptions, authenticateRequest } from '../_shared/auth';
 export const onRequestOptions = handleCorsOptions;
 
 export const onRequestPost = async (context: any) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
-
   // Authenticate user
   const env = context.env as any;
   const authResult = await authenticateRequest(context.request, env);

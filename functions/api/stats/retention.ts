@@ -22,8 +22,6 @@ export const onRequestOptions = handleCorsOptions;
  * GET /api/stats/retention
  */
 export const onRequestGet = async (context: PagesContext): Promise<Response> => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;

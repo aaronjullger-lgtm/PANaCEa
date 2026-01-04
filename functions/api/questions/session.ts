@@ -60,8 +60,6 @@ interface SessionAnalytics {
  * Fetch questions for a study session
  */
 export async function onRequestGet(context: { request: Request; env: Env }) {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
@@ -99,8 +97,6 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
  * Fetch questions with more complex filtering
  */
 export async function onRequestPost(context: { request: Request; env: Env }) {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 

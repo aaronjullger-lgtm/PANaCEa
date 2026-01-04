@@ -6,8 +6,13 @@ export const onRequestOptions = handleCorsOptions;
 export async function onRequestGet(context: any) {
   const { request, env } = context;
   const url = new URL(request.url);
-  const limit = url.searchParams.get('limit');
-  const take = limit ? Number(limit) : undefined;
+  const limitParam = url.searchParams.get('limit');
+  const offsetParam = url.searchParams.get('offset');
+  const search = url.searchParams.get('search');
+  
+  // Default to reasonable batch size to avoid 5MB limit
+  const limit = limitParam ? Math.min(Number(limitParam), 100) : 50;
+  const offset = offsetParam ? Number(offsetParam) : 0;
 
   if (!env.DATABASE_URL) {
     return new Response(JSON.stringify({ error: 'Database not configured' }), { 
@@ -22,15 +27,50 @@ export async function onRequestGet(context: any) {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   
   try {
-    const drugs = await prisma.drug.findMany({
-      take,
-      orderBy: { genericName: 'asc' }
-    });
+    // Build where clause for search
+    const where = search ? {
+      OR: [
+        { genericName: { contains: search, mode: 'insensitive' as const } },
+        { brandNames: { has: search } },
+        { drugClass: { contains: search, mode: 'insensitive' as const } },
+      ]
+    } : {};
+
+    // Fetch paginated results with limited fields to reduce response size
+    const [drugs, total] = await Promise.all([
+      prisma.drug.findMany({
+        where,
+        select: {
+          id: true,
+          genericName: true,
+          brandNames: true,
+          drugClass: true,
+          mechanism: true,
+          indications: true,
+          sideEffects: true,
+          contraindications: true,
+          // Exclude large text fields from list view
+        },
+        orderBy: { genericName: 'asc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.drug.count({ where }),
+    ]);
     
-    return new Response(JSON.stringify(drugs), {
+    return new Response(JSON.stringify({
+      drugs,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + drugs.length < total,
+      }
+    }), {
       headers: { 
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
       }
     });
   } catch (error: any) {

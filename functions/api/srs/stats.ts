@@ -8,8 +8,6 @@ export const onRequestOptions = handleCorsOptions;
  * Fetch SRS statistics for dashboard widget
  */
 export const onRequestGet = async (context) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
 

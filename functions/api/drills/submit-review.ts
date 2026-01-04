@@ -6,8 +6,6 @@ import { updateReviewOutcome } from '../../../lib/services/srsService';
 export const onRequestOptions = handleCorsOptions;
 
 export const onRequestPost = async (context) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;

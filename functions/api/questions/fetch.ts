@@ -5,8 +5,6 @@ import type { CloudflareContext } from '../_shared/types';
 export const onRequestOptions = handleCorsOptions;
 
 export const onRequestPost = async (context: CloudflareContext<Env>) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
 

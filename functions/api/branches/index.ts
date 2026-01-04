@@ -6,8 +6,6 @@ import { createBranch, listBranches } from '../_shared/content-branching';
 export const onRequestOptions = handleCorsOptions;
 
 export const onRequestGet = async (context) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
 
@@ -64,8 +62,6 @@ export const onRequestGet = async (context) => {
 };
 
 export const onRequestPost = async (context) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
 

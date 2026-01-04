@@ -8,8 +8,6 @@ import { generateSingleQuestion } from '../_shared/question-generator';
 export const onRequestOptions = handleCorsOptions;
 
 export const onRequestPost = async (context) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;

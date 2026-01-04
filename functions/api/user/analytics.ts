@@ -70,8 +70,6 @@ interface UserAnalytics {
  * GET /api/user/analytics
  */
 export async function onRequestGet(context: { request: Request; env: Env }) {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 

@@ -545,8 +545,6 @@ function jsonResponse(data: unknown, status = 200) {
 // ============================================================================
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 

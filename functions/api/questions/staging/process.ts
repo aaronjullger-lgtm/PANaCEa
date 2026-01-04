@@ -5,8 +5,6 @@ import { processStagingQueue } from '../../_shared/staging-questions';
 export const onRequestOptions = handleCorsOptions;
 
 export const onRequestPost = async (context) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
 

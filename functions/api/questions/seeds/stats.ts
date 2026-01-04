@@ -5,8 +5,6 @@ import { getSeedStats } from '../../_shared/question-seeds';
 export const onRequestOptions = handleCorsOptions;
 
 export const onRequestGet = async (context) => {
-  const corsResponse = await handleCorsOptions(context);
-  if (corsResponse) return corsResponse;
 
   const { request, env } = context;
 
