@@ -9,6 +9,7 @@
  */
 
 import type { Question, SessionSettings } from '../types';
+import { getQuestionBatch } from './questionService';
 
 // Session analytics from API
 interface SessionAnalytics {
@@ -177,8 +178,7 @@ async function fallbackQuestionFetch(
   count: number
 ): Promise<SessionResponse> {
   try {
-    // Import the existing question service as fallback
-    const { getQuestionBatch } = await import('./questionService');
+    // Use statically imported question service as fallback
     const questions = await getQuestionBatch(settings, [], count);
 
     return {
