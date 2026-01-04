@@ -105,15 +105,25 @@ export default defineConfig(({ mode }) => {
             manualChunks: (id) => {
               // Vendor chunks for better caching and performance
               if (id.includes('node_modules')) {
-                // React ecosystem should be in one chunk to avoid initialization issues
-                // This includes react, react-dom, scheduler, and related packages
-                if (id.includes('react') || id.includes('scheduler')) {
-                  return 'vendor-react';
+                // IMPORTANT: Check specific packages BEFORE generic 'react' match
+                // lucide-react must be separate from React core to avoid initialization conflicts
+                if (id.includes('lucide-react')) {
+                  return 'vendor-icons';
                 }
                 
-                // Clerk authentication library
+                // Markdown rendering (check before generic 'react' since react-markdown contains 'react')
+                if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype') || id.includes('unified')) {
+                  return 'vendor-markdown';
+                }
+                
+                // Clerk authentication library (contains 'clerk-react', check before 'react')
                 if (id.includes('@clerk')) {
                   return 'vendor-clerk';
+                }
+                
+                // Charts library - recharts contains 'react', check before generic react
+                if (id.includes('recharts') || id.includes('d3-')) {
+                  return 'vendor-charts';
                 }
                 
                 // Animation library (Framer Motion is large)
@@ -121,14 +131,12 @@ export default defineConfig(({ mode }) => {
                   return 'vendor-animation';
                 }
                 
-                // Markdown rendering
-                if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype') || id.includes('unified')) {
-                  return 'vendor-markdown';
-                }
-                
-                // Charts library (if used)
-                if (id.includes('recharts') || id.includes('chart')) {
-                  return 'vendor-charts';
+                // React core ecosystem - AFTER all react-* package checks above
+                // This includes react, react-dom, react-router, scheduler
+                if (id.includes('/react@') || id.includes('/react-dom@') || 
+                    id.includes('/react-router') || id.includes('/scheduler@') ||
+                    id.includes('react-is')) {
+                  return 'vendor-react';
                 }
                 
                 // AI library
@@ -136,7 +144,7 @@ export default defineConfig(({ mode }) => {
                   return 'vendor-ai';
                 }
                 
-                // Group remaining node_modules (includes lucide, radix, etc.)
+                // Group remaining node_modules (includes radix, etc.)
                 return 'vendor';
               }
               
