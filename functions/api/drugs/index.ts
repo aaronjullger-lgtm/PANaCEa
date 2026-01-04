@@ -31,8 +31,8 @@ export async function onRequestGet(context: any) {
     const where = search ? {
       OR: [
         { genericName: { contains: search, mode: 'insensitive' as const } },
-        { brandNames: { has: search } },
-        { drugClass: { contains: search, mode: 'insensitive' as const } },
+        { brandName: { contains: search, mode: 'insensitive' as const } },
+        { drugClass: { hasSome: [search] } },
       ]
     } : {};
 
@@ -43,12 +43,13 @@ export async function onRequestGet(context: any) {
         select: {
           id: true,
           genericName: true,
-          brandNames: true,
+          brandName: true,
           drugClass: true,
-          mechanism: true,
+          mechanismOfAction: true,
           indications: true,
           sideEffects: true,
           contraindications: true,
+          isHighYield: true,
           // Exclude large text fields from list view
         },
         orderBy: { genericName: 'asc' },
