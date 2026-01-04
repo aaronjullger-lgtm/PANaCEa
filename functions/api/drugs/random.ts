@@ -18,8 +18,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
     // Use raw SQL for random selection for better performance
     const drugs = await prisma.$queryRaw`SELECT * FROM "Drug" ORDER BY RANDOM() LIMIT ${count}`;
     
@@ -38,5 +39,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

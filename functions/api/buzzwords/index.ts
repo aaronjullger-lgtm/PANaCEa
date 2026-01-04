@@ -16,8 +16,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
     const buzzwords = await prisma.buzzword.findMany({
       orderBy: { buzzword: 'asc' }
     });
@@ -37,5 +38,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

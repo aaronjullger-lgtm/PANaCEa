@@ -8,6 +8,7 @@ export const onRequestGet = async (context) => {
   if (corsResponse) return corsResponse;
 
   const { request, env } = context;
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
     // Verify auth
@@ -69,5 +70,9 @@ export const onRequestGet = async (context) => {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect().catch(() => {});
+    }
   }
 };

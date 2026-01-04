@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { submitDrillResult } from '@/services/drillService';
 import { recordDrillSession, getRecommendedDifficulty, type DrillType } from '@/services/drillStatsService';
 
@@ -243,6 +244,7 @@ const MAX_RECENT_DIAGNOSES = 15; // Track last 15 diagnoses to avoid repetition
  * @returns Game state and actions
  */
 export function usePhotoDrill(): UsePhotoDrillReturn {
+  const { getToken } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>(null);
   const [queue, setQueue] = useState<PhotoCase[]>([]);
   const [currentCaseIndex, setCurrentCaseIndex] = useState(0);
@@ -420,12 +422,13 @@ export function usePhotoDrill(): UsePhotoDrillReturn {
         drillType,
         currentCase.id,
         correct,
-        { title: currentCase.correctDiagnosis, category: currentCase.modality }
+        { title: currentCase.correctDiagnosis, category: currentCase.modality },
+        getToken
       );
 
       setStatus('feedback');
     },
-    [currentCase, status]
+    [currentCase, status, getToken]
   );
 
   /**

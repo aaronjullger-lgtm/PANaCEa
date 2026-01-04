@@ -32,9 +32,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     const results = await prisma.imagingStudy.findMany({
       where: modality ? { modality } : undefined,
       orderBy: { name: 'asc' }
@@ -55,5 +55,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

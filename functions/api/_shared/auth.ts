@@ -191,16 +191,22 @@ export function createErrorResponse(
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
   });
 }
 
 /**
  * Create a standardized success response
+ * @param data - Response payload
+ * @param status - HTTP status code (default: 200)
+ * @param cacheSeconds - Cache duration in seconds (default: 0, no cache)
  */
 export function createSuccessResponse<T = unknown>(
   data: T,
-  status: number = 200
+  status: number = 200,
+  cacheSeconds: number = 0
 ): Response {
   const response = {
     success: true,
@@ -208,12 +214,23 @@ export function createSuccessResponse<T = unknown>(
     timestamp: new Date().toISOString()
   };
   
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
+  // Add cache headers if specified
+  if (cacheSeconds > 0) {
+    headers['Cache-Control'] = `public, max-age=${cacheSeconds}, stale-while-revalidate=${Math.floor(cacheSeconds / 2)}`;
+  } else {
+    headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+  }
+  
   return new Response(JSON.stringify(response), {
     status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
+    headers,
   });
 }
 
@@ -225,8 +242,9 @@ export function handleCorsOptions(context?: any): Response {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400', // Cache preflight for 24 hours
     },
   });
 }
@@ -257,9 +275,11 @@ export async function authenticateRequest(
 
   const isTestEnv = secretKey.startsWith('sk_test_');
 
-  // Phase 1.3: Log masked key for verification (first/last 5 characters only)
-  console.log('[AUTH] Secret key verified (masked):', maskSecretKey(secretKey));
-  console.log('[AUTH] Secret key environment:', isTestEnv ? 'test' : 'live');
+  // Phase 1.3: Log masked key for verification (test environments only)
+  if (isTestEnv) {
+    console.log('[AUTH] Secret key verified (masked):', maskSecretKey(secretKey));
+    console.log('[AUTH] Secret key environment:', isTestEnv ? 'test' : 'live');
+  }
 
   const authHeader = request.headers.get('Authorization');
   const userId = await verifyAuthToken(authHeader, secretKey);
@@ -270,7 +290,9 @@ export async function authenticateRequest(
   }
 
   authLogger.success(userId, 'request_authentication');
-  console.log('[AUTH] Authentication successful for user:', userId);
+  if (isTestEnv) {
+    console.log('[AUTH] Authentication successful for user:', userId);
+  }
   return {
     userId,
     clerkId: userId,

@@ -31,9 +31,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     // 1. Try direct ID match (UUID)
     let condition = await prisma.condition.findUnique({
       where: { id: identifier },
@@ -141,5 +141,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

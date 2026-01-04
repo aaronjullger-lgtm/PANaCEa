@@ -37,6 +37,8 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     return createErrorResponse('Database not configured', 500);
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
     const body = await request.json() as { items: SRSItemData[] };
     
@@ -44,7 +46,6 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       return createErrorResponse('Invalid request body', 400);
     }
 
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
     const now = new Date();
 
     let synced = 0;
@@ -117,8 +118,6 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       }
     }
 
-    await prisma.$disconnect();
-
     return new Response(
       JSON.stringify({
         success: true,
@@ -135,5 +134,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   } catch (error) {
     console.error('[SRS Sync] Error:', error);
     return createErrorResponse('Sync failed', 500);
+  } finally {
+    await prisma.$disconnect();
   }
 }

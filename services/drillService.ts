@@ -8,18 +8,24 @@ const isTestEnv = typeof process !== 'undefined' && (process.env.VITEST || proce
  * Maps drill-specific data to the generic PerformanceRecord format.
  */
 export async function submitDrillResult(
-  drillType: 'fluid' | 'antibiotic' | 'radiology' | 'ecg' | 'derm' | 'grand_rounds',
+  drillType: 'fluid' | 'antibiotic' | 'radiology' | 'ecg' | 'derm' | 'grand_rounds' | 'condition' | 'pharm' | 'first_line' | 'system' | 'subcategory',
   caseId: string,
   isCorrect: boolean,
-  details: { title?: string; category?: string }
+  details: { title?: string; category?: string },
+  getToken?: () => Promise<string | null>
 ) {
   const systemMap: Record<string, any> = {
     'fluid': 'RENAL',
     'antibiotic': 'ID',
-    'radiology': null, // Depends on body part, but null is safe
+    'radiology': null,
     'ecg': 'CV',
     'derm': 'DERM',
-    'grand_rounds': null // Varies per question
+    'grand_rounds': null,
+    'condition': null,
+    'pharm': null,
+    'first_line': null,
+    'system': details.category || null,
+    'subcategory': details.category || null,
   };
 
   const record: PerformanceRecord = {
@@ -53,13 +59,20 @@ export async function submitDrillResult(
       return;
     }
 
+    // Get auth token if provided
+    const token = getToken ? await getToken() : null;
+    
+    // Build headers with auth if available
+    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     // Use the sync endpoint to save the record
-    // We wrap it in an array as the endpoint expects a batch
-    // Note: The backend handles deduplication based on timestamp
     const response = await fetch(getApiEndpoint(API_ENDPOINTS.SYNC), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ performanceRecords: [record] }) // Fixed key name
+      headers,
+      body: JSON.stringify({ performanceRecords: [record] })
     });
 
     if (!response.ok) {

@@ -26,6 +26,7 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
   if (corsResponse) return corsResponse;
 
   const { request, env } = context;
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
     const userId = await verifyAuthToken(request, env);
@@ -49,7 +50,7 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
       });
     }
 
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
     const now = new Date();
 
     // Get all SRS items for this user
@@ -135,5 +136,9 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
         },
       }
     );
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect().catch(() => {});
+    }
   }
 };

@@ -31,9 +31,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     const result = await prisma.anatomyStructure.findUnique({
       where: { id },
       include: { conditions: { select: { id: true, name: true } } }
@@ -64,5 +64,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

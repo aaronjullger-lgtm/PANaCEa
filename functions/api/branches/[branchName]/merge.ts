@@ -12,6 +12,22 @@ export const onRequestPost = async (context) => {
   const { request, env, params } = context;
   const { branchName } = params;
 
+  // Early return if no database configured
+  if (!env.DATABASE_URL) {
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: 'Database not configured' 
+    }), {
+      status: 503,
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+  }
+
+  const prisma = createEdgePrismaClient(env);
+
   try {
     const authResult = await verifyAuthToken(request, env);
     if (!authResult) {
@@ -41,20 +57,6 @@ export const onRequestPost = async (context) => {
 
     const { mergedBy, targetBranch } = body;
 
-    if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Database not configured' 
-      }), {
-        status: 503,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    const prisma = createEdgePrismaClient(env);
     const result = await mergeBranch(prisma, branchName as string, mergedBy, targetBranch);
 
     return new Response(JSON.stringify({ success: result.success, ...result }), {
@@ -76,5 +78,7 @@ export const onRequestPost = async (context) => {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 };

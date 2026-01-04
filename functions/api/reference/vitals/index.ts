@@ -36,12 +36,12 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     const results = await prisma.vitalSignRange.findMany({
       where: ageGroup ? { ageGroup } : undefined,
-      orderBy: { name: 'asc' }
+      orderBy: { vitalSign: 'asc' }
     });
     
     return new Response(JSON.stringify({ success: true, data: results }), {
@@ -59,5 +59,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

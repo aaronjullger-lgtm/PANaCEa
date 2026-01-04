@@ -84,5 +84,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
   } catch (error) {
     console.error('Achievement unlock error:', error);
     return createErrorResponse('Internal server error', 500);
+  } finally {
+    await prisma.$disconnect();
   }
 }

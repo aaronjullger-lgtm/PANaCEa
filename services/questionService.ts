@@ -80,7 +80,8 @@ async function fetchFromPool(
   count: number,
   system?: string,
   category?: string,
-  difficulty?: string
+  difficulty?: string,
+  token?: string | null
 ): Promise<{ questions: Question[]; poolStatus: PoolStatus }> {
   const params = new URLSearchParams();
   params.set('count', count.toString());
@@ -88,7 +89,12 @@ async function fetchFromPool(
   if (category) params.set('category', category);
   if (difficulty) params.set('difficulty', difficulty);
 
-  const response = await fetch(`/api/questions/pool?${params}`);
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`/api/questions/pool?${params}`, { headers });
   
   if (!response.ok) {
     throw new Error(`Pool API error: ${response.status}`);
@@ -172,7 +178,8 @@ async function checkAndReplenishPool(
  */
 export async function getQuestion(
   settings: SessionSettings,
-  growthAreas: string[]
+  growthAreas: string[],
+  getToken?: () => Promise<string | null>
 ): Promise<Question> {
   const { focus, difficulty } = settings;
 
@@ -198,12 +205,16 @@ export async function getQuestion(
   const poolDifficulty = 'medium';
 
   try {
+    // Get auth token if available
+    const token = getToken ? await getToken() : null;
+    
     // Try to get from pool first
     const { questions, poolStatus } = await fetchFromPool(
       1,
       system,
       undefined, // category
-      poolDifficulty
+      poolDifficulty,
+      token
     );
 
     // Update cached status and trigger generation if needed
@@ -237,7 +248,8 @@ export async function getQuestion(
 export async function getQuestionBatch(
   settings: SessionSettings,
   growthAreas: string[],
-  count: number
+  count: number,
+  getToken?: () => Promise<string | null>
 ): Promise<Question[]> {
   const { focus, difficulty } = settings;
 
@@ -262,11 +274,15 @@ export async function getQuestionBatch(
   const poolDifficulty = 'medium';
 
   try {
+    // Get auth token if available
+    const token = getToken ? await getToken() : null;
+    
     const { questions, poolStatus } = await fetchFromPool(
       count,
       system,
       undefined,
-      poolDifficulty
+      poolDifficulty,
+      token
     );
 
     cachedPoolStatus = poolStatus;

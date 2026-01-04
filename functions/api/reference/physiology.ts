@@ -32,12 +32,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
-    // Note: Assuming 'PhysiologyConcept' model exists based on server.ts usage
-    // If it doesn't exist in Prisma schema, this will fail at runtime.
-    // But since server.ts uses it, it should be there.
     const results = await prisma.physiologyConcept.findMany({
       where: category ? { category } : undefined,
       orderBy: { name: 'asc' }
@@ -58,5 +55,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

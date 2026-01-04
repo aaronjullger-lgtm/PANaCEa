@@ -147,10 +147,6 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
         };
       });
       
-      // Log for monitoring
-      console.log(`[Code Blue API] Returned ${codeBlueQuestions.length} questions` + 
-                  (categoryParam ? ` (category: ${categoryParam})` : ''));
-      
       return new Response(
         JSON.stringify(codeBlueQuestions),
         { 

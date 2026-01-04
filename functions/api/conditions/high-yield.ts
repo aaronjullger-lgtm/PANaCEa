@@ -137,8 +137,6 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
         .slice(0, limit);
     }
 
-    await prisma.$disconnect();
-
     return new Response(
       JSON.stringify({
         conditions: results,
@@ -155,7 +153,6 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     );
   } catch (error) {
     console.error('[High-Yield API] Error:', error);
-    await prisma.$disconnect();
     return new Response(
       JSON.stringify({ 
         error: 'Failed to fetch high-yield conditions',
@@ -163,5 +160,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }

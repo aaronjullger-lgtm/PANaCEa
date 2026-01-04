@@ -13,31 +13,32 @@ export const onRequestGet = async (context) => {
 
   const { request, env } = context;
 
+  const authResult = await verifyAuthToken(request, env);
+  if (!authResult) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
+
+  const userId = authResult;
+
+  if (!env.DATABASE_URL) {
+    return new Response(JSON.stringify({ error: 'Database not configured' }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
+
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-
-    const userId = authResult;
-
-    if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ error: 'Database not configured' }), {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
     const now = new Date();
 
     // Count due items
@@ -59,26 +60,28 @@ export const onRequestGet = async (context) => {
     const recentAttempts = await prisma.questionAttempt.findMany({
       where: {
         userId,
-        isRankedAttempt: true,
-        createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }, // Last 30 days
+        createdAt: {
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+        },
       },
-      select: { wasCorrect: true },
+      select: { isCorrect: true },
     });
 
     const retentionRate =
       recentAttempts.length > 0
-        ? Math.round((recentAttempts.filter((a) => a.wasCorrect).length / recentAttempts.length) * 100)
-        : 90; // Default if no data
+        ? Math.round(
+            (recentAttempts.filter((a) => a.isCorrect).length /
+              recentAttempts.length) *
+              100
+          )
+        : 0;
 
     return new Response(
       JSON.stringify({
-        success: true,
-        stats: {
-          dueCount,
-          totalCards,
-          retentionRate,
-          matureCards,
-        },
+        dueCount,
+        totalCards,
+        retentionRate,
+        matureCards,
       }),
       {
         headers: {
@@ -99,5 +102,7 @@ export const onRequestGet = async (context) => {
         },
       }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 };

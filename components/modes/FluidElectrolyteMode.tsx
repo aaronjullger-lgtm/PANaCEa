@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@clerk/clerk-react';
 import { X, CheckCircle, XCircle, Droplets, ArrowRight, RotateCcw, Play, FlaskConical, BarChart2, Droplet, Calculator, AlertCircle } from 'lucide-react';
 import type { FluidElectrolyteCase } from '@/types/drill-modes';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
@@ -92,6 +93,7 @@ const fetchFluidCase = async (): Promise<FluidElectrolyteCase | null> => {
 };
 
 const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) => {
+  const { getToken } = useAuth();
   const [theme] = useTheme();
   const [viewState, setViewState] = useState<ViewState>('landing');
   const [currentCase, setCurrentCase] = useState<FluidElectrolyteCase | null>(null);
@@ -164,7 +166,8 @@ const FluidElectrolyteMode: React.FC<FluidElectrolyteModeProps> = ({ onExit }) =
       'fluid',
       currentCase.id,
       validation.isCorrect,
-      { title: currentCase.title, category: currentCase.category }
+      { title: currentCase.title, category: currentCase.category },
+      getToken
     );
   };
 

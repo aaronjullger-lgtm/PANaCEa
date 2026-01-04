@@ -5,6 +5,7 @@ import App from './App';
 import './index.css';
 import { AuthProvider } from './components/AuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ShortcutProvider } from './src/context/ShortcutContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -16,9 +17,11 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <ShortcutProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ShortcutProvider>
       </AuthProvider>
     </ErrorBoundary>
   </React.StrictMode>

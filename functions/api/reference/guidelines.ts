@@ -26,22 +26,30 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     const results = await prisma.clinicalGuideline.findMany({
       where: category ? { category } : undefined,
       orderBy: { name: 'asc' }
     });
     
     return new Response(JSON.stringify({ success: true, data: results }), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   } catch (error: any) {
     console.error('Error fetching guidelines:', error);
     return new Response(JSON.stringify({ success: false, error: 'Failed to fetch guidelines', details: error.message }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

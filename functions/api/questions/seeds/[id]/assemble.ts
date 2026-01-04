@@ -58,5 +58,7 @@ export const onRequestGet = async (context) => {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    if (prisma) await prisma.$disconnect();
   }
 };

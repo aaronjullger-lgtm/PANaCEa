@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Keyboard, X } from "lucide-react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import Loader from "./components/Loader";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import { LandingPage } from "./components/LandingPage";
@@ -133,6 +133,7 @@ function scheduleNextReview(level: number): string {
 const App: React.FC = () => {
   // Check authentication status
   const { isSignedIn, isLoaded: authLoaded } = useUser();
+  const { getToken } = useAuth();
 
   const [view, setView] = useState<View>("command_center");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -391,7 +392,8 @@ const App: React.FC = () => {
         const initialQuestions = await getQuestionBatch(
           settings,
           growthAreas,
-          INITIAL_QUEUE_SIZE
+          INITIAL_QUEUE_SIZE,
+          getToken
         );
         setQuestionQueue(initialQuestions);
         setView("quiz");

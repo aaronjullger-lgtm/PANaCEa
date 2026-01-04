@@ -159,5 +159,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   } catch (error) {
     console.error('Error submitting Grand Rounds completion:', error);
     return createErrorResponse('Failed to submit completion', 500);
+  } finally {
+    await prisma.$disconnect();
   }
 }

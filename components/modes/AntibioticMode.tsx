@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@clerk/clerk-react';
 import { X, CheckCircle, XCircle, Pill, ArrowRight, RotateCcw, Shuffle, Play, Bug, Zap, AlertTriangle, Target, AlertCircle } from 'lucide-react';
 import type { AntibioticDrillQuestion, OrganismInfection, AntibioticDrug } from '@/types/drill-modes';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
@@ -269,6 +270,7 @@ const generateAntibioticDrill = (guidelines: AntibioticGuideline[]): AntibioticD
 };
 
 const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
+  const { getToken } = useAuth();
   const [viewState, setViewState] = useState<ViewState>('landing');
   const [currentDrill, setCurrentDrill] = useState<AntibioticDrillQuestion | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -370,7 +372,8 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
       'antibiotic',
       currentDrill.id,
       correct,
-      { title: getDrillTypeLabel(), category: currentDrill.type }
+      { title: getDrillTypeLabel(), category: currentDrill.type },
+      getToken
     );
   };
 

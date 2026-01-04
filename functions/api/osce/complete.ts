@@ -42,5 +42,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   } catch (error: any) {
     console.error('Error completing OSCE session:', error);
     return createErrorResponse('Internal server error', 500);
+  } finally {
+    await prisma.$disconnect().catch(() => {});
   }
 }

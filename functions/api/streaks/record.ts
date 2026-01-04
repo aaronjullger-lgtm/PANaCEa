@@ -102,5 +102,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
   } catch (error) {
     console.error('Streak record error:', error);
     return createErrorResponse('Internal server error', 500);
+  } finally {
+    await prisma.$disconnect();
   }
 }

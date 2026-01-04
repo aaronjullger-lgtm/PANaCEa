@@ -10,6 +10,7 @@ export const onRequestPost = async (context) => {
   if (corsResponse) return corsResponse;
 
   const { request, env } = context;
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
     const authResult = await verifyAuthToken(request, env);
@@ -49,7 +50,7 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
     const question = await prisma.preGeneratedQuestion.findUnique({ where: { id: questionId } });
 
     if (!question) {
@@ -129,5 +130,9 @@ export const onRequestPost = async (context) => {
         'Access-Control-Allow-Origin': '*',
       },
     });
+  } finally {
+    if (prisma) {
+      await prisma.$disconnect().catch(() => {});
+    }
   }
 };

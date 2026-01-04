@@ -109,7 +109,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
         params.append('category', filter);
       }
 
-      const response = await fetch(`/api/media/pending?${params}`);
+      const response = await fetch(`/api/admin/media/pending?${params}`);
       const data = await response.json();
 
       if (data.success) {
@@ -125,13 +125,12 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
   const handleApprove = async (mediaId: string) => {
     try {
-      const response = await fetch('/api/media/approve', {
+      const response = await fetch('/api/admin/media/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'approve',
           mediaId,
-          approvedBy: currentUserId,
+          action: 'approve',
         }),
       });
 
@@ -152,14 +151,13 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
   const handleReject = async (mediaId: string, reason: string) => {
     try {
-      const response = await fetch('/api/media/approve', {
+      const response = await fetch('/api/admin/media/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'reject',
           mediaId,
-          approvedBy: currentUserId,
-          rejectionReason: reason,
+          action: 'reject',
+          reason,
         }),
       });
 

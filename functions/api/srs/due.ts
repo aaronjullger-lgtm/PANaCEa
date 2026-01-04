@@ -21,8 +21,9 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     return createErrorResponse('Database not configured', 500);
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
     const now = new Date();
 
     // Fetch all SRS items due for review (dueDate <= now)
@@ -64,8 +65,6 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       };
     });
 
-    await prisma.$disconnect();
-
     return new Response(
       JSON.stringify({
         items: enrichedItems,
@@ -80,5 +79,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
   } catch (error) {
     console.error('[SRS Due] Error fetching due items:', error);
     return createErrorResponse('Failed to fetch due items', 500);
+  } finally {
+    await prisma.$disconnect();
   }
 }

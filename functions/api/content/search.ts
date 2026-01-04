@@ -68,10 +68,9 @@ export async function onRequestGet(context: any) {
     }
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    // Create Prisma client for edge runtime
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     // Use the enhanced search service
     const results = await searchContent(prisma, query, limit, includeTypes);
     
@@ -102,5 +101,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

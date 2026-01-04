@@ -60,9 +60,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     // Fetch in chunks to avoid 5MB limit (Prisma Accelerate limitation)
     // Increased batch size to reduce number of round trips (connection overhead)
     const BATCH_SIZE = 50; 
@@ -71,7 +71,6 @@ export async function onRequestGet(context: any) {
     let hasMore = true;
 
     while (hasMore) {
-      console.log(`Fetching batch at skip: ${skip}`);
       const batch = await prisma.medicalContent.findMany({
         where: { status: 'published' },
         skip,
@@ -157,5 +156,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

@@ -6,7 +6,7 @@ export const onRequestOptions = handleCorsOptions;
 export async function onRequestGet(context: any) {
   const { env } = context;
   
-    if (!env.DATABASE_URL) {
+  if (!env.DATABASE_URL) {
     return new Response(JSON.stringify({ error: 'Database not configured' }), { 
       status: 500,
       headers: { 
@@ -16,8 +16,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
     const cases = await prisma.labCase.findMany();
     
     return new Response(JSON.stringify(cases), {
@@ -35,5 +36,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*'
       }
     });
+  } finally {
+    await prisma.$disconnect();
   }
 }

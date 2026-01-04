@@ -120,5 +120,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
   } catch (error: any) {
     console.error('Streak GET error:', error);
     return createErrorResponse('Internal server error', 500);
+  } finally {
+    await prisma.$disconnect();
   }
 }
