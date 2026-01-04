@@ -56,7 +56,7 @@ export default defineConfig(({ mode }) => {
             runtimeCaching: [
               {
                 // Vendor chunks should use network-first to avoid stale cache
-                urlPattern: /^.*\/assets\/vendor-.*\.js$/,
+                urlPattern: /^.*\/assets\/vendor.*\.js$/,
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: 'vendor-cache',
@@ -105,19 +105,10 @@ export default defineConfig(({ mode }) => {
             manualChunks: (id) => {
               // Vendor chunks for better caching and performance
               if (id.includes('node_modules')) {
-                // IMPORTANT: lucide-react needs its own chunk to avoid initialization issues
-                if (id.includes('lucide-react')) {
-                  return 'vendor-icons';
-                }
-                
-                // Split React core (excluding react-router and react-markdown)
-                if (id.includes('react') && !id.includes('react-router') && !id.includes('react-markdown')) {
-                  return 'vendor-react-core';
-                }
-                
-                // Split React Router separately
-                if (id.includes('react-router')) {
-                  return 'vendor-router';
+                // React ecosystem should be in one chunk to avoid initialization issues
+                // This includes react, react-dom, scheduler, and related packages
+                if (id.includes('react') || id.includes('scheduler')) {
+                  return 'vendor-react';
                 }
                 
                 // Clerk authentication library
@@ -140,18 +131,13 @@ export default defineConfig(({ mode }) => {
                   return 'vendor-charts';
                 }
                 
-                // UI components
-                if (id.includes('@radix-ui')) {
-                  return 'vendor-ui';
-                }
-                
                 // AI library
                 if (id.includes('@google/generative-ai')) {
                   return 'vendor-ai';
                 }
                 
-                // Group remaining node_modules
-                return 'vendor-common';
+                // Group remaining node_modules (includes lucide, radix, etc.)
+                return 'vendor';
               }
               
               // Split large data registries into separate chunks
