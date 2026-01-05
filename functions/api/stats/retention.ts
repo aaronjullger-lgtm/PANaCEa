@@ -27,8 +27,8 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const userId = await verifyAuthToken(request, env);
-    if (!userId) {
+    const clerkId = await verifyAuthToken(request, env);
+    if (!clerkId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: {
@@ -49,6 +49,27 @@ export const onRequestGet = async (context: PagesContext): Promise<Response> => 
     }
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
+    
+    // Look up user by clerkId to get internal database ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return new Response(JSON.stringify({ 
+        error: 'User not found',
+        message: 'Your user account has not been synced yet. Please refresh and try again.',
+      }), {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+
+    const userId = user.id;
     const now = new Date();
 
     // Get all SRS items for this user

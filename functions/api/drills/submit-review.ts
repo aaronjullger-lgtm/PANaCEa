@@ -11,8 +11,8 @@ export const onRequestPost = async (context) => {
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
+    const clerkId = await verifyAuthToken(request, env);
+    if (!clerkId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: {
@@ -20,22 +20,6 @@ export const onRequestPost = async (context) => {
           'Access-Control-Allow-Origin': '*',
         },
       });
-    }
-
-    const body = await request.json();
-    const { userId, questionId, selectedAnswer, timeSpentMs } = body || {};
-
-    if (!userId || !questionId || typeof selectedAnswer === 'undefined') {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: userId, questionId, selectedAnswer' }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
     }
 
     if (!env.DATABASE_URL) {
@@ -49,6 +33,43 @@ export const onRequestPost = async (context) => {
     }
 
     prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    // Look up user by clerkId to get internal database ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return new Response(JSON.stringify({ 
+        error: 'User not found',
+        message: 'Your user account has not been synced yet.',
+      }), {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+
+    const userId = user.id;
+    const body = await request.json();
+    const { questionId, selectedAnswer, timeSpentMs } = body || {};
+
+    if (!questionId || typeof selectedAnswer === 'undefined') {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: questionId, selectedAnswer' }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
+
     const question = await prisma.preGeneratedQuestion.findUnique({ where: { id: questionId } });
 
     if (!question) {

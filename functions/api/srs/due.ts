@@ -15,8 +15,6 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     return createErrorResponse('Unauthorized', 401);
   }
 
-  const { userId } = authContext;
-
   if (!env.DATABASE_URL) {
     return createErrorResponse('Database not configured', 500);
   }
@@ -24,6 +22,17 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
+    // Look up user by clerkId to get internal database ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId: authContext.userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return createErrorResponse('User not found. Please refresh and try again.', 404);
+    }
+
+    const userId = user.id;
     const now = new Date();
 
     // Fetch all SRS items due for review (dueDate <= now)

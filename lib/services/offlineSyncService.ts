@@ -4,6 +4,9 @@
  * Critical for hospitals with poor connectivity (lead-lined walls, etc.)
  */
 
+// Debug logging - set to true to re-enable verbose logs
+const DEBUG_OFFLINE_SYNC = false;
+
 interface SyncOperation {
   id: string;
   type: 'performance' | 'srs' | 'savedQuestion' | 'achievement' | 'streak';
@@ -68,7 +71,7 @@ export function queueSyncOperation(
     pending.push(op);
     savePendingOperations(pending);
     
-    console.log(`[OfflineSync] Queued ${operation} ${type} operation`);
+    if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Queued ${operation} ${type} operation`);
   } catch (error) {
     console.error('[OfflineSync] Failed to queue operation:', error);
   }
@@ -150,18 +153,18 @@ export async function syncPendingOperations(
   
   try {
     if (!isOnline()) {
-      console.log('[OfflineSync] Cannot sync - device is offline');
+      if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Cannot sync - device is offline');
       return { ...result, success: false };
     }
     
     const pending = getPendingOperations();
     
     if (pending.length === 0) {
-      console.log('[OfflineSync] No pending operations to sync');
+      if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] No pending operations to sync');
       return result;
     }
     
-    console.log(`[OfflineSync] Syncing ${pending.length} pending operations...`);
+    if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Syncing ${pending.length} pending operations...`);
     
     // Process in batches
     const batches = chunkArray(pending, BATCH_SIZE);
@@ -204,7 +207,7 @@ export async function syncPendingOperations(
     // Update last sync time
     localStorage.setItem(STORAGE_KEYS.LAST_SYNC, Date.now().toString());
     
-    console.log(`[OfflineSync] Sync complete - ${result.synced} synced, ${result.failed} failed, ${remaining.length} remaining`);
+    if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Sync complete - ${result.synced} synced, ${result.failed} failed, ${remaining.length} remaining`);
     
     return result;
   } catch (error) {
@@ -370,7 +373,7 @@ export function getSyncStatus(): {
 export function clearPendingOperations(): void {
   try {
     localStorage.removeItem(STORAGE_KEYS.PENDING_OPS);
-    console.log('[OfflineSync] Cleared all pending operations');
+    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Cleared all pending operations');
   } catch (error) {
     console.error('[OfflineSync] Failed to clear pending operations:', error);
   }
@@ -382,7 +385,7 @@ export function clearPendingOperations(): void {
  */
 export function setupAutoSync(getToken?: () => Promise<string | null>): () => void {
   const handleOnline = async () => {
-    console.log('[OfflineSync] Connection restored, syncing...');
+    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Connection restored, syncing...');
     setOfflineMode(false);
     
     // Get fresh token if function provided
@@ -400,7 +403,7 @@ export function setupAutoSync(getToken?: () => Promise<string | null>): () => vo
   };
   
   const handleOffline = () => {
-    console.log('[OfflineSync] Connection lost, entering offline mode');
+    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Connection lost, entering offline mode');
     setOfflineMode(true);
   };
   
@@ -434,7 +437,7 @@ export function importPendingOperations(data: string): void {
   try {
     const operations = JSON.parse(data);
     savePendingOperations(operations);
-    console.log(`[OfflineSync] Imported ${operations.length} operations`);
+    if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Imported ${operations.length} operations`);
   } catch (error) {
     console.error('[OfflineSync] Failed to import operations:', error);
   }

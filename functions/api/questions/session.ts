@@ -69,6 +69,19 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       return jsonResponse({ error: 'Unauthorized' }, 401);
     }
 
+    // Look up user by clerkId to get internal database ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId: authResult.userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return jsonResponse({ 
+        error: 'User not found',
+        message: 'Your user account has not been synced yet. Please refresh and try again.',
+      }, 404);
+    }
+
     const url = new URL(context.request.url);
     const count = parseInt(url.searchParams.get('count') || '10', 10);
     const system = url.searchParams.get('system');
@@ -76,7 +89,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     const mode = url.searchParams.get('mode') || 'standard';
 
     const result = await fetchSessionQuestions(prisma, context.env, {
-      userId: authResult.userId,
+      userId: user.id,
       count: Math.min(count, 50),
       system: system || undefined,
       difficulty: difficulty || undefined,
@@ -106,10 +119,23 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       return jsonResponse({ error: 'Unauthorized' }, 401);
     }
 
+    // Look up user by clerkId to get internal database ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId: authResult.userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return jsonResponse({ 
+        error: 'User not found',
+        message: 'Your user account has not been synced yet. Please refresh and try again.',
+      }, 404);
+    }
+
     const body = await context.request.json() as SessionQuestionRequest;
     const result = await fetchSessionQuestions(prisma, context.env, {
       ...body,
-      userId: authResult.userId,
+      userId: user.id,
       count: Math.min(body.count || 10, 50),
     });
 

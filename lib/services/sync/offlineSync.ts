@@ -9,6 +9,9 @@
 
 import { getApiEndpoint, API_ENDPOINTS } from '../../utils/apiConfig';
 
+// Debug logging - set to true to re-enable verbose logs
+const DEBUG_OFFLINE_SYNC = false;
+
 export interface SyncOperation {
   id: string;
   operation: 'save_progress' | 'submit_quiz' | 'update_settings' | 'flag_question';
@@ -109,7 +112,7 @@ export function queueOperation(
   queue.push(op);
   saveQueue(queue);
 
-  console.log(`[OfflineSync] Queued operation: ${operation} (${id})`);
+  if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Queued operation: ${operation} (${id})`);
   
   // Try to sync immediately if online
   if (navigator.onLine) {
@@ -125,7 +128,7 @@ export function queueOperation(
  */
 export async function processQueue(token?: string): Promise<void> {
   if (!navigator.onLine) {
-    console.log('[OfflineSync] Offline - skipping queue processing');
+    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Offline - skipping queue processing');
     return;
   }
 
@@ -136,13 +139,13 @@ export async function processQueue(token?: string): Promise<void> {
     return;
   }
 
-  console.log(`[OfflineSync] Processing ${pending.length} pending operations`);
+  if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] Processing ${pending.length} pending operations`);
 
   for (const op of pending) {
     try {
       await syncOperation(op, token);
       op.status = 'synced';
-      console.log(`[OfflineSync] ✓ Synced: ${op.operation} (${op.id})`);
+      if (DEBUG_OFFLINE_SYNC) console.log(`[OfflineSync] ✓ Synced: ${op.operation} (${op.id})`);
     } catch (error: any) {
       op.attempts++;
       if (op.attempts >= MAX_ATTEMPTS) {

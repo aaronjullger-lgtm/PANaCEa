@@ -33,7 +33,23 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
       });
     }
 
-    const userId = authResult.userId;
+    // Look up user by clerkId to get internal database ID
+    const user = await prisma.user.findUnique({
+      where: { clerkId: authResult.userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return new Response(JSON.stringify({ 
+        error: 'User not found',
+        message: 'Your user account has not been synced yet. Please refresh and try again.',
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const userId = user.id;
 
     // Parse query parameters
     const url = new URL(context.request.url);

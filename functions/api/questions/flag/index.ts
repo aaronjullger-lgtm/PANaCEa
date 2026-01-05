@@ -12,8 +12,8 @@ export const onRequestPost = async (context) => {
 
   try {
     // Verify auth
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
+    const clerkId = await verifyAuthToken(request, env);
+    if (!clerkId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 
@@ -25,8 +25,8 @@ export const onRequestPost = async (context) => {
 
     const body = await request.json();
     
-    // Validation
-    const requiredFields = ['userId', 'questionId', 'flagType', 'description'];
+    // Validation - no longer require userId since we get it from auth
+    const requiredFields = ['questionId', 'flagType', 'description'];
     const missing = validateRequired(body, requiredFields);
     if (missing.length > 0) {
       return new Response(JSON.stringify({ 
@@ -55,8 +55,10 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const { userId, userEmail, userFirstName, questionId, questionText, correctAnswer, 
+    // Use clerkId as userId (QuestionFlag doesn't have FK to User)
+    const { userEmail, userFirstName, questionId, questionText, correctAnswer, 
             topic, system, flagType, description, priority } = body;
+    const userId = clerkId;
 
     if (!env.DATABASE_URL) {
       return new Response(JSON.stringify({ 
