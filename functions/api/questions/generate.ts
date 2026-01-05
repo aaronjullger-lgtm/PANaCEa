@@ -4,6 +4,7 @@ import { validateRequired } from '../_shared/validation';
 import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
 import { loadConditionData } from '../_shared/condition-loader';
 import { generateSingleQuestion } from '../_shared/question-generator';
+import { createRateLimiter, getRateLimitIdentifier } from '../_shared/rateLimiter';
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -40,6 +41,21 @@ export const onRequestPost = async (context) => {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
+      });
+    }
+
+    // Rate limiting for Gemini API calls (expensive)
+    const identifier = getRateLimitIdentifier(request, authResult.userId);
+    const limiter = createRateLimiter(env);
+    const rateLimitCheck = await limiter.checkAndRespond(identifier, 'gemini');
+    
+    if (!rateLimitCheck.allowed) {
+      const response = rateLimitCheck.response;
+      const newHeaders = new Headers(response.headers);
+      newHeaders.set('Access-Control-Allow-Origin', '*');
+      return new Response(response.body, {
+        status: response.status,
+        headers: newHeaders
       });
     }
 

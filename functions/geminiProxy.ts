@@ -1,11 +1,19 @@
 // functions/geminiProxy.ts
 // Cloudflare Pages Function for Gemini API proxy
 
+import { 
+  createRateLimiter, 
+  getRateLimitIdentifier, 
+  createRateLimitHeaders,
+  type RateLimitType 
+} from './api/_shared/rateLimiter';
+
 // 1. Define Types
 interface Env {
   GEMINI_API_KEY?: string;
   VITE_GEMINI_API_KEY?: string;
   GOOGLE_API_KEY?: string;
+  RATE_LIMIT_KV?: KVNamespace;
 }
 
 interface PagesContext {
@@ -94,6 +102,24 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
   const { request, env } = context;
   
   try {
+    // Rate limiting - use IP since this endpoint may not have auth
+    const identifier = getRateLimitIdentifier(request);
+    const limiter = createRateLimiter(env);
+    const rateLimitResult = await limiter.checkAndRespond(identifier, 'gemini');
+    
+    if (!rateLimitResult.allowed) {
+      // Add CORS headers to rate limit response
+      const response = rateLimitResult.response;
+      const newHeaders = new Headers(response.headers);
+      newHeaders.set('Access-Control-Allow-Origin', '*');
+      return new Response(response.body, {
+        status: response.status,
+        headers: newHeaders
+      });
+    }
+    
+    const rateLimitHeaders = rateLimitResult.headers;
+    
     // Get API key from environment (try multiple names)
     const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || env.GOOGLE_API_KEY;
     
@@ -195,7 +221,8 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       status: 200,
       headers: { 
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*" 
+        "Access-Control-Allow-Origin": "*",
+        ...rateLimitHeaders
       },
     });
 

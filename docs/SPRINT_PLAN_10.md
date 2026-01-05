@@ -29,22 +29,22 @@ Fix all known production bugs and stabilize core study experience.
 ### Tasks
 
 #### 1.1 Fix Remaining API Issues
-- [ ] **1.1.1** Audit all FK constraint errors - verify clerkId→userId lookup pattern everywhere
-- [ ] **1.1.2** Fix any remaining 401/500 errors in question pool/session endpoints
-- [ ] **1.1.3** Ensure generate-batch works without authentication (scheduled job)
+- [x] **1.1.1** Audit all FK constraint errors - verify clerkId→userId lookup pattern everywhere
+- [x] **1.1.2** Fix any remaining 401/500 errors in question pool/session endpoints
+- [x] **1.1.3** Ensure generate-batch works without authentication (scheduled job) - Added CRON_SECRET support
 
 #### 1.2 Console & Debug Cleanup
-- [ ] **1.2.1** Audit ALL console.log statements - gate behind DEBUG flags
-- [ ] **1.2.2** Remove development-only logging from production builds
-- [ ] **1.2.3** Add structured logging with levels (error, warn, info, debug)
+- [x] **1.2.1** Audit ALL console.log statements - gate behind DEBUG flags
+- [x] **1.2.2** Remove development-only logging from production builds
+- [x] **1.2.3** Add structured logging with levels (error, warn, info, debug) - Created lib/logger.ts
 
 #### 1.3 UI/UX Bug Fixes
 - [ ] **1.3.1** Fix difficulty selector options display
 - [ ] **1.3.2** Fix loading state not clearing on API failures
-- [ ] **1.3.3** Fix question answer options not displaying (options/answers/choices normalization)
+- [x] **1.3.3** Fix question answer options not displaying (options/answers/choices normalization)
 
 #### 1.4 Performance Quick Wins
-- [ ] **1.4.1** ✅ Split vendor chunk (already done)
+- [x] **1.4.1** Split vendor chunk (already done)
 - [ ] **1.4.2** Audit lazy loading - ensure large components load on demand
 - [ ] **1.4.3** Add suspense boundaries to prevent cascading loading states
 
@@ -63,19 +63,20 @@ Get admin dashboard fully functional with proper security via Supabase RLS.
 ### Tasks
 
 #### 2.1 Admin Dashboard Completion
-- [ ] **2.1.1** Wire up all admin stats endpoints:
+- [x] **2.1.1** Wire up all admin stats endpoints:
   ```typescript
   // functions/api/admin/stats.ts
-  - totalUsers, activeUsersToday
+  - totalUsers, activeUsersToday ✅
   - totalStudySessions, averageAccuracy
   - pendingFlags, contentGaps
   ```
-- [ ] **2.1.2** Complete FlaggedQuestionsDashboard - review & resolve workflow
-- [ ] **2.1.3** Add QuestionPerformanceDashboard - identify low-performing questions
-- [ ] **2.1.4** Add ContentManagement panel - CRUD for MedicalContent
+- [x] **2.1.2** Created admin check-access endpoint (functions/api/admin/check-access.ts)
+- [ ] **2.1.3** Complete FlaggedQuestionsDashboard - review & resolve workflow
+- [ ] **2.1.4** Add QuestionPerformanceDashboard - identify low-performing questions
+- [ ] **2.1.5** Add ContentManagement panel - CRUD for MedicalContent
 
 #### 2.2 Supabase RLS Implementation
-- [ ] **2.2.1** Enable RLS on all user tables:
+- [x] **2.2.1** Enable RLS on all user tables:
   ```sql
   ALTER TABLE "User" ENABLE ROW LEVEL SECURITY;
   ALTER TABLE "UserQuestionHistory" ENABLE ROW LEVEL SECURITY;
@@ -540,38 +541,35 @@ Prevent budget blowout and graceful degradation on failures.
 ### Tasks
 
 #### 10.1 Tiered Rate Limiting
-- [ ] **10.1.1** Implement per-user rate limits:
+- [x] **10.1.1** Implement per-user rate limits:
   ```typescript
-  // functions/api/_shared/rateLimiter.ts
+  // functions/api/_shared/rateLimiter.ts ✅ CREATED
   const RATE_LIMITS = {
-    geminiGeneration: { requests: 50, windowMinutes: 60 },
-    questionPool: { requests: 200, windowMinutes: 60 },
-    general: { requests: 500, windowMinutes: 60 }
+    gemini: { maxRequests: 20, windowSeconds: 3600 },
+    questions: { maxRequests: 100, windowSeconds: 3600 },
+    standard: { maxRequests: 300, windowSeconds: 3600 },
+    auth: { maxRequests: 10, windowSeconds: 300 },
+    admin: { maxRequests: 50, windowSeconds: 3600 }
   };
-  
-  export async function checkRateLimit(
-    userId: string, 
-    limitType: keyof typeof RATE_LIMITS,
-    env: Env
-  ): Promise<{ allowed: boolean; remaining: number }> {
-    // Use Cloudflare KV for distributed rate limiting
-  }
   ```
-- [ ] **10.1.2** Add rate limit headers to responses
-- [ ] **10.1.3** Create "budget exceeded" graceful UI
+- [x] **10.1.2** Add rate limit headers to responses - X-RateLimit-Limit/Remaining/Reset
+- [x] **10.1.3** Applied rate limiting to geminiProxy.ts
+- [x] **10.1.4** Applied rate limiting to questions/generate.ts
+- [ ] **10.1.5** Create "budget exceeded" graceful UI
+- [ ] **10.1.6** Configure Cloudflare KV for distributed rate limiting
 
 #### 10.2 Error Boundaries
-- [ ] **10.2.1** Add error boundaries around all major components:
+- [x] **10.2.1** Add error boundaries around all major components:
   ```typescript
-  // components/error/DrillErrorBoundary.tsx
+  // components/error/DrillErrorBoundary.tsx ✅ CREATED
   <DrillErrorBoundary fallback={<DrillOfflineFallback />}>
     <ConditionDrillSession />
   </DrillErrorBoundary>
   ```
-- [ ] **10.2.2** Create fallback UIs:
-  - Offline mode fallback
-  - API error fallback (retry button)
-  - Budget exceeded fallback
+- [x] **10.2.2** Create fallback UIs:
+  - Offline mode fallback ✅
+  - API error fallback (retry button) ✅
+  - Budget exceeded fallback ✅
 - [ ] **10.2.3** Add error recovery actions
 
 #### 10.3 Graceful Degradation
@@ -583,7 +581,7 @@ Prevent budget blowout and graceful degradation on failures.
     return { queued: true, retryAfter: rateLimitCheck.retryAfter };
   }
   ```
-- [ ] **10.3.2** Use cached questions when generation fails
+- [x] **10.3.2** Use cached questions when generation fails - DrillErrorBoundary has useCachedQuestions
 - [ ] **10.3.3** Show degraded mode indicator
 
 #### 10.4 Monitoring & Alerts
