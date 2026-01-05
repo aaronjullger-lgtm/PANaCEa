@@ -3,7 +3,7 @@ import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestGet = async (context) => {
+export const onRequestGet = async (context: { request: Request; env: { DATABASE_URL?: string; CLERK_SECRET_KEY: string } }) => {
 
   const { request, env } = context;
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
@@ -36,7 +36,7 @@ export const onRequestGet = async (context) => {
       });
     }
 
-    const prisma = createEdgePrismaClient(env);
+    prisma = createEdgePrismaClient(env);
 
     const flags = await prisma.questionFlag.findMany({
       where: {

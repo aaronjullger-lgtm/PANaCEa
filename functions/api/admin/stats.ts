@@ -54,9 +54,14 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     const prisma = createEdgePrismaClient(env);
 
     try {
+      // Calculate today's start for active users
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
       // Fetch real stats from database
       const [
         totalUsers,
+        activeUsersToday,
         totalAttempts,
         correctAttempts,
         pendingFlags,
@@ -64,6 +69,14 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       ] = await Promise.all([
         // Total users
         prisma.user.count(),
+        
+        // Active users today (distinct users with attempts today)
+        prisma.questionAttempt.groupBy({
+          by: ['userId'],
+          where: {
+            attemptedAt: { gte: todayStart }
+          }
+        }).then(results => results.length),
         
         // Total question attempts
         prisma.questionAttempt.count(),
@@ -104,7 +117,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
         success: true,
         data: {
           totalUsers,
-          activeUsersToday: 0, // TODO: Calculate based on session activity
+          activeUsersToday,
           totalStudySessions: totalAttempts,
           averageAccuracy,
           popularSystems,
