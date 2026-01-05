@@ -1,13 +1,19 @@
 /**
- * Seed Question Pool Script
+ * Seed Question Pool Script - V2
  * 
- * Generates initial questions using Gemini API and seeds them into the PreGeneratedQuestion table.
- * Run this script to populate the pool before users start sessions.
+ * Generates PANCE-style questions using Gemini API and seeds them into the PreGeneratedQuestion table.
+ * Now properly links to existing Condition and MedicalContent records in the database.
+ * 
+ * Flow:
+ * 1. Fetch conditions from MedicalContent table by system
+ * 2. Generate questions for actual conditions
+ * 3. Store with proper conditionId and medicalContentId links
  * 
  * Usage: npx tsx scripts/seed-question-pool.ts
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';
+import * as crypto from 'crypto';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -15,61 +21,100 @@ dotenv.config();
 const prisma = new PrismaClient();
 
 const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
-const QUESTIONS_PER_SYSTEM = 10; // All questions are PANCE-level difficulty
+const QUESTIONS_PER_CONDITION = 2; // Questions per condition
+const MIN_QUESTIONS_PER_SYSTEM = 10;
+
+interface ConditionInfo {
+  conditionId: string;
+  medicalContentId: string;
+  name: string;
+  system: string;
+  subcategory: string;
+  overview?: string;
+  symptoms?: string;
+  treatment?: string;
+}
 
 interface GeneratedQuestion {
-  vignette?: string;
+  vignette: string;
   question: string;
   options: string[];
   correctAnswer: string;
   explanation: string;
-  tags?: string[];
+  conditionName: string;
 }
 
-async function generateQuestionsWithGemini(
+/**
+ * Fetch conditions from database for a given system
+ */
+async function getConditionsForSystem(system: string): Promise<ConditionInfo[]> {
+  const medicalContent = await prisma.medicalContent.findMany({
+    where: {
+      system,
+      status: 'published',
+    },
+    select: {
+      id: true,
+      conditionId: true,
+      condition: true,
+      system: true,
+      subcategory: true,
+      overview: true,
+      symptoms: true,
+      treatment: true,
+    },
+    take: 20, // Limit per system to keep seeding manageable
+  });
+
+  return medicalContent.map(mc => ({
+    conditionId: mc.conditionId,
+    medicalContentId: mc.id,
+    name: mc.condition,
+    system: mc.system,
+    subcategory: mc.subcategory,
+    overview: mc.overview || undefined,
+    symptoms: mc.symptoms || undefined,
+    treatment: mc.treatment || undefined,
+  }));
+}
+
+/**
+ * Generate questions for a specific condition using Gemini
+ */
+async function generateQuestionsForCondition(
   apiKey: string,
-  system: string,
+  condition: ConditionInfo,
   count: number
 ): Promise<GeneratedQuestion[]> {
-  const systemDescriptions: Record<string, string> = {
-    CV: 'Cardiovascular system - heart, blood vessels, circulation',
-    PULM: 'Pulmonary/Respiratory system - lungs, airways, breathing',
-    GI: 'Gastrointestinal system - digestive tract, liver, pancreas',
-    NEURO: 'Neurological system - brain, spinal cord, peripheral nerves',
-    MSK: 'Musculoskeletal system - bones, joints, muscles',
-    DERM: 'Dermatology - skin, hair, nails',
-    HEME: 'Hematology/Oncology - blood, lymph, malignancies',
-    ENDO: 'Endocrine system - hormones, thyroid, adrenal, diabetes',
-    HEENT: 'Head, Eyes, Ears, Nose, Throat',
-    RENAL: 'Renal/Genitourinary - kidneys, bladder, electrolytes',
-    REPRO: 'Reproductive system - male and female reproductive health',
-    PSYCH: 'Psychiatry - mental health, behavioral conditions',
-    ID: 'Infectious Disease - bacterial, viral, fungal, parasitic',
-    GU: 'Genitourinary - urinary tract, reproductive system',
-  };
+  const contextInfo = [
+    condition.overview ? `Overview: ${condition.overview.slice(0, 500)}` : '',
+    condition.symptoms ? `Key Symptoms: ${condition.symptoms.slice(0, 300)}` : '',
+    condition.treatment ? `Treatment: ${condition.treatment.slice(0, 300)}` : '',
+  ].filter(Boolean).join('\n\n');
 
-  const prompt = `Generate ${count} unique PANCE-style medical multiple choice questions for the ${system} (${systemDescriptions[system] || system}) system.
+  const prompt = `Generate ${count} unique PANCE-style medical multiple choice questions specifically about "${condition.name}" (${condition.system} system - ${condition.subcategory}).
 
-Category: general
-Difficulty: PANCE-level - typical board exam difficulty, moderate complexity, clinically relevant
+Condition Context:
+${contextInfo || 'General knowledge about this condition.'}
 
 Requirements:
-1. Each question should have a brief clinical vignette (2-4 sentences) presenting a realistic patient scenario
-2. The question stem should be clear and test clinical decision-making
-3. Provide exactly 4 answer options (A, B, C, D)
-4. Include one correct answer and three plausible distractors
-5. The explanation should be educational and explain why the correct answer is right and why others are wrong
-6. Questions should be appropriate for PA certification exam preparation
+1. Each question MUST be specifically about ${condition.name}
+2. Include a brief clinical vignette (2-4 sentences) presenting a realistic patient scenario
+3. The question stem should test clinical decision-making (diagnosis, treatment, next step)
+4. Provide exactly 4 answer options (A, B, C, D)
+5. Include one correct answer and three plausible distractors
+6. The explanation should be educational and reference specific features of ${condition.name}
+7. Questions should be appropriate for PA certification exam preparation (PANCE-level)
 
 Return ONLY a JSON array with this exact structure (no markdown, no code blocks):
 [
   {
-    "vignette": "Brief clinical scenario...",
+    "vignette": "Brief clinical scenario specific to ${condition.name}...",
     "question": "What is the most appropriate next step?",
     "options": ["A. Option 1", "B. Option 2", "C. Option 3", "D. Option 4"],
     "correctAnswer": "A",
-    "explanation": "Detailed explanation...",
-    "tags": ["${system}", "general"]
+    "explanation": "Detailed explanation referencing ${condition.name}...",
+    "conditionName": "${condition.name}"
   }
 ]`;
 
@@ -90,7 +135,7 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
     );
 
     if (!response.ok) {
-      console.error('Gemini API error:', response.status);
+      console.error(`Gemini API error: ${response.status}`);
       return [];
     }
 
@@ -133,11 +178,22 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
       q.options.length === 4 &&
       q.correctAnswer &&
       q.explanation
-    );
+    ).map(q => ({
+      ...q,
+      conditionName: condition.name, // Ensure condition name is set
+    }));
   } catch (error) {
     console.error('Error generating questions with Gemini:', error);
     return [];
   }
+}
+
+/**
+ * Generate a unique question ID
+ */
+function generateQuestionId(system: string): string {
+  const uuid = crypto.randomUUID();
+  return `q-${system.toLowerCase()}-${uuid}`;
 }
 
 async function seedPool() {
@@ -148,7 +204,7 @@ async function seedPool() {
     process.exit(1);
   }
 
-  console.log('🌱 Starting question pool seeding...\n');
+  console.log('🌱 Starting question pool seeding (V2 - with condition linking)...\n');
 
   // Check current pool status
   const currentCount = await prisma.preGeneratedQuestion.count({ where: { usedAt: null } });
@@ -156,9 +212,23 @@ async function seedPool() {
 
   let totalGenerated = 0;
   let totalFailed = 0;
+  let totalConditions = 0;
 
   for (const system of SYSTEMS) {
-    // Check if we already have enough for this system
+    console.log(`\n📋 Processing ${system} system...`);
+
+    // Get conditions from database
+    const conditions = await getConditionsForSystem(system);
+    
+    if (conditions.length === 0) {
+      console.log(`   ⚠ No published conditions found for ${system}, skipping`);
+      continue;
+    }
+
+    console.log(`   Found ${conditions.length} conditions`);
+    totalConditions += conditions.length;
+
+    // Check existing questions for this system
     const existing = await prisma.preGeneratedQuestion.count({
       where: {
         system,
@@ -166,54 +236,91 @@ async function seedPool() {
       },
     });
 
-    if (existing >= QUESTIONS_PER_SYSTEM) {
-      console.log(`✅ ${system}: Already has ${existing} questions, skipping`);
+    if (existing >= MIN_QUESTIONS_PER_SYSTEM) {
+      console.log(`   ✅ Already has ${existing} questions, skipping`);
       continue;
     }
 
-    const needed = QUESTIONS_PER_SYSTEM - existing;
-    console.log(`⏳ ${system}: Generating ${needed} questions...`);
+    // Generate questions for each condition
+    for (const condition of conditions) {
+      // Check if we already have questions for this condition
+      const conditionQuestions = await prisma.preGeneratedQuestion.count({
+        where: {
+          conditionId: condition.conditionId,
+          usedAt: null,
+        },
+      });
 
-    try {
-      const questions = await generateQuestionsWithGemini(apiKey, system, needed);
-
-      if (questions.length > 0) {
-        const records = questions.map((q, idx) => ({
-          id: `pregen-${system}-pance-${Date.now()}-${idx}`,
-          questionType: 'general',
-          system,
-          difficulty: 'medium', // Store as 'medium' for PANCE-level
-          questionData: q as unknown as Prisma.InputJsonValue,
-          generatedAt: new Date(),
-        }));
-
-        const result = await prisma.preGeneratedQuestion.createMany({
-          data: records,
-          skipDuplicates: true,
-        });
-
-        console.log(`   ✓ Generated ${result.count} questions`);
-        totalGenerated += result.count;
-      } else {
-        console.log(`   ⚠ No questions generated`);
-        totalFailed += needed;
+      if (conditionQuestions >= QUESTIONS_PER_CONDITION) {
+        console.log(`   ⏭ ${condition.name}: Already has ${conditionQuestions} questions`);
+        continue;
       }
 
-      // Rate limiting - wait between API calls
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    } catch (error) {
-      console.error(`   ❌ Error: ${error}`);
-      totalFailed += needed;
+      const needed = QUESTIONS_PER_CONDITION - conditionQuestions;
+      console.log(`   ⏳ ${condition.name}: Generating ${needed} questions...`);
+
+      try {
+        const questions = await generateQuestionsForCondition(apiKey, condition, needed);
+
+        if (questions.length > 0) {
+          const records = questions.map((q) => ({
+            id: generateQuestionId(system),
+            questionType: 'general',
+            system,
+            conditionId: condition.conditionId,
+            medicalContentId: condition.medicalContentId,
+            difficulty: 'medium', // PANCE-level
+            questionData: {
+              vignette: q.vignette,
+              question: q.question,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              explanation: q.explanation,
+              conditionName: condition.name,
+              system: system,
+              subcategory: condition.subcategory,
+              tags: [system, condition.subcategory, condition.name].filter(Boolean),
+            } as unknown as Prisma.InputJsonValue,
+            generatedAt: new Date(),
+          }));
+
+          const result = await prisma.preGeneratedQuestion.createMany({
+            data: records,
+            skipDuplicates: true,
+          });
+
+          console.log(`      ✓ Created ${result.count} questions (linked to ${condition.name})`);
+          totalGenerated += result.count;
+        } else {
+          console.log(`      ⚠ No questions generated`);
+          totalFailed += needed;
+        }
+
+        // Rate limiting - wait between API calls
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      } catch (error) {
+        console.error(`      ❌ Error: ${error}`);
+        totalFailed += needed;
+      }
     }
   }
 
   // Final stats
   const finalCount = await prisma.preGeneratedQuestion.count({ where: { usedAt: null } });
+  const linkedCount = await prisma.preGeneratedQuestion.count({ 
+    where: { 
+      usedAt: null,
+      conditionId: { not: null },
+    } 
+  });
   
-  console.log('\n📊 Seeding Complete:');
-  console.log(`   Total generated: ${totalGenerated}`);
+  console.log('\n' + '═'.repeat(60));
+  console.log('📊 Seeding Complete:');
+  console.log(`   Conditions processed: ${totalConditions}`);
+  console.log(`   Questions generated: ${totalGenerated}`);
   console.log(`   Failed: ${totalFailed}`);
   console.log(`   Final pool size: ${finalCount} unused questions`);
+  console.log(`   Questions with condition links: ${linkedCount}`);
 }
 
 // Run the seeding
