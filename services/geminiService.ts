@@ -38,8 +38,8 @@ import {
  * Replaces the old buildConditionDefinition from conditionRegistry
  */
 function buildConditionId(meta: ConditionMeta): string {
-  const norm = (s: string) =>
-    s
+  const norm = (s: string | null | undefined) =>
+    (s || 'unknown')
       .toLowerCase()
       .replace(/\s+/g, "_")
       .replace(/[^a-z0-9_]/g, "");
@@ -69,7 +69,7 @@ async function findConditionMeta(conditionName: string): Promise<ConditionMeta |
 
     return {
       system: conditionData.system as SystemCode,
-      subcategory: conditionData.subcategory,
+      subcategory: conditionData.subcategory || 'General',
       condition: conditionData.name,
       aliases: [],
     };
@@ -259,10 +259,9 @@ export async function callGeminiText(
 const stripHtmlTags = (text: string): string =>
   typeof text === "string" ? text.replace(/<\/?[^>]+(>|$)/g, "") : text;
 
-const slugify = (value: string): string =>
-  value
-    .toLowerCase()
-    .replace(/\s+/g, "_")
+const slugify = (value: string | null | undefined): string =>
+  (value || '')\n    .toLowerCase()
+    .replace(/\\s+/g, "_")
     .replace(/[^a-z0-9_]/g, "");
 
 function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
