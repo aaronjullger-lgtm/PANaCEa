@@ -185,11 +185,15 @@ async function getFromPreGeneratedPool(
     if (seenIds.has(q.id)) continue;
 
     const data = q.questionData as Record<string, unknown>;
+    // Handle different option field names (options, answers, choices)
+    const optionsData = data.options || data.answers || data.choices;
+    const options = Array.isArray(optionsData) ? (optionsData as string[]) : [];
+    
     questions.push({
       id: q.id,
       vignette: data.vignette as string | undefined,
       question: data.question as string,
-      options: (data.options as string[]) || [],
+      options,
       correctAnswer: data.correctAnswer as string,
       explanation: data.explanation as string,
       system: q.system || 'General',

@@ -287,11 +287,15 @@ async function fetchFromPool(
     if (seenIds.has(q.id)) continue;
 
     const data = q.questionData as Record<string, unknown>;
+    // Handle different option field names (options, answers, choices)
+    const optionsData = data.options || data.answers || data.choices;
+    const options = Array.isArray(optionsData) ? (optionsData as string[]) : [];
+    
     questions.push({
       id: q.id,
       question: (data.question || data.vignette || '') as string,
       vignette: data.vignette as string | undefined,
-      options: (data.options || []) as string[],
+      options,
       correctAnswerIndex: (data.correctAnswerIndex ?? 0) as number,
       rationale: (data.rationale || data.explanation || '') as string,
       system: q.system || 'General',

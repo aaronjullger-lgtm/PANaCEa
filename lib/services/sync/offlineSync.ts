@@ -319,7 +319,7 @@ export function flushPendingToLocalStorage(): void {
         };
         queue.push(op);
         saveQueue(queue);
-        console.log('[OfflineSync] Flushed pending data to queue on beforeunload');
+        if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Flushed pending data to queue on beforeunload');
       }
     }
   } catch (error) {
@@ -335,7 +335,7 @@ export function flushPendingToLocalStorage(): void {
  */
 export function clearQueue(): void {
   localStorage.removeItem(STORAGE_KEY);
-  console.log('[OfflineSync] Queue cleared');
+  if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Queue cleared');
 }
 
 /**
@@ -377,13 +377,13 @@ async function retrieveToken(getToken?: () => Promise<string | null>): Promise<s
  */
 export function setupAutoSync(getToken?: () => Promise<string | null>): () => void {
   const handleOnline = async () => {
-    console.log('[OfflineSync] Connection restored - processing queue');
+    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Connection restored - processing queue');
     const token = await retrieveToken(getToken);
     await processQueue(token);
   };
 
   const handleOffline = () => {
-    console.log('[OfflineSync] Connection lost - operations will be queued');
+    if (DEBUG_OFFLINE_SYNC) console.log('[OfflineSync] Connection lost - operations will be queued');
   };
 
   window.addEventListener('online', handleOnline);
