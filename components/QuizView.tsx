@@ -250,6 +250,31 @@ const QuizView: React.FC<QuizViewProps> = ({
   removeFlaggedQuestion,
   updateQuestionNote,
 }) => {
+  // Validate required callback props at runtime
+  useEffect(() => {
+    const requiredCallbacks = {
+      setParentQueue,
+      addPerformanceRecord,
+      addMissedQuestion,
+      updateReviewQuestion,
+      updateLastPerformanceErrorTag,
+      setIsLoading,
+      setError,
+      onEndSession,
+      onShowMenu,
+      setFontSizeAdjustment,
+      addFlaggedQuestion,
+      removeFlaggedQuestion,
+      updateQuestionNote,
+    };
+    
+    for (const [name, callback] of Object.entries(requiredCallbacks)) {
+      if (typeof callback !== 'function') {
+        console.error(`QuizView: Required callback prop "${name}" is not a function:`, typeof callback);
+      }
+    }
+  }, []);
+  
   // ---- CLERK USER & AUTH ----
   const { user } = useUser();
   const { getToken } = useAuth();
@@ -394,43 +419,49 @@ const QuizView: React.FC<QuizViewProps> = ({
 
   // ---- ADVANCE TO NEXT QUESTION ----
   const showNextQuestion = useCallback(() => {
-    setIsAnswered(false);
-    setSelectedAnswerIndex(null);
-    setShowRationale(false);
-    setAlternateRationale(null);
-    setIsExplainerLoading(false);
-    setQuestionNumber((prev) => prev + 1);
-    setEliminatedAnswers(new Set()); // Reset eliminated answers for new question
-    setSrsResult(null); // Reset SRS result for new question
-    setQuestionStartTime(Date.now()); // Track time for new question
-    setAnswerChangeCount(0); // Reset answer change tracking
-    setFirstSelectedAnswer(null); // Reset first selected answer
+    try {
+      setIsAnswered(false);
+      setSelectedAnswerIndex(null);
+      setShowRationale(false);
+      setAlternateRationale(null);
+      setIsExplainerLoading(false);
+      setQuestionNumber((prev) => prev + 1);
+      setEliminatedAnswers(new Set()); // Reset eliminated answers for new question
+      setSrsResult(null); // Reset SRS result for new question
+      setQuestionStartTime(Date.now()); // Track time for new question
+      setAnswerChangeCount(0); // Reset answer change tracking
+      setFirstSelectedAnswer(null); // Reset first selected answer
 
-    setQueue((prev) => {
-      if (prev.length === 0) return prev;
+      setQueue((prev) => {
+        if (prev.length === 0) return prev;
 
-      const [, ...rest] = prev;
-      const newQueue = rest;
+        const [, ...rest] = prev;
+        const newQueue = rest;
 
-      setParentQueue(newQueue);
+        setParentQueue(newQueue);
 
-      // Finite sessions: REVIEW / REVIEW FLAGGED - show summary instead of direct end
-      if (!shouldEndlesslyReplenish && newQueue.length === 0) {
-        handleEndSession();
+        // Finite sessions: REVIEW / REVIEW FLAGGED - show summary instead of direct end
+        if (!shouldEndlesslyReplenish && newQueue.length === 0) {
+          handleEndSession();
+        }
+
+        return newQueue;
+      });
+
+      // Endless sessions: ALL + SAME, ALL + other difficulties, topic, growth
+      if (shouldEndlesslyReplenish) {
+        void replenishQueue();
       }
-
-      return newQueue;
-    });
-
-    // Endless sessions: ALL + SAME, ALL + other difficulties, topic, growth
-    if (shouldEndlesslyReplenish) {
-      void replenishQueue();
+    } catch (error) {
+      console.error('Error advancing to next question:', error);
+      setError('Failed to load next question. Please try again.');
     }
   }, [
     setParentQueue,
     shouldEndlesslyReplenish,
     replenishQueue,
     handleEndSession,
+    setError,
   ]);
 
   // Initialize from incoming queue once
@@ -1175,7 +1206,14 @@ const QuizView: React.FC<QuizViewProps> = ({
         <div className="mt-4 text-center">
           <button
             ref={nextButtonRef}
-            onClick={showNextQuestion}
+            onClick={() => {
+              try {
+                showNextQuestion();
+              } catch (error) {
+                console.error('Error in Next Question button click:', error);
+                setError('Failed to proceed to next question. Please refresh the page.');
+              }
+            }}
             className="px-8 py-3 btn-glass font-bold rounded-lg"
           >
             Next Question
