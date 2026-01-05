@@ -1,0 +1,5 @@
+# Playwright authentication state (contains session tokens)
+user.json
+
+# Don't commit saved auth state to version control
+*.json
