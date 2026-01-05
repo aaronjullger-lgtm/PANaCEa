@@ -57,6 +57,21 @@ interface SubmissionResult {
 
 const TOTAL_TIME_MS = 20 * 60 * 1000; // 20 minutes total
 
+// Helper function to calculate time until next challenge (moved outside component for hook initialization)
+const getTimeUntilNextChallenge = () => {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  tomorrow.setUTCHours(0, 0, 0, 0);
+  const diff = tomorrow.getTime() - now.getTime();
+  
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  
+  return `${hours}h ${minutes}m ${seconds}s`;
+};
+
 const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const { user } = useUser();
   const userId = user?.id || 'demo-user';
@@ -73,6 +88,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const [timeElapsedMs, setTimeElapsedMs] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Next challenge countdown (must be at top level to follow Rules of Hooks)
+  const [nextChallengeCountdown, setNextChallengeCountdown] = useState(getTimeUntilNextChallenge());
 
   // Fetch today's challenge on mount
   useEffect(() => {
@@ -130,6 +148,16 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
     fetchChallenge();
   }, []);
+
+  // Timer for next challenge countdown (only active when completed)
+  useEffect(() => {
+    if (viewState !== 'completed') return;
+    
+    const interval = setInterval(() => {
+      setNextChallengeCountdown(getTimeUntilNextChallenge());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [viewState]);
 
   // Timer for active quiz
   useEffect(() => {
@@ -254,19 +282,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     return Math.max(0, TOTAL_TIME_MS - timeElapsedMs);
   };
 
-  const getTimeUntilNextChallenge = () => {
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-    tomorrow.setUTCHours(0, 0, 0, 0);
-    const diff = tomorrow.getTime() - now.getTime();
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    return `${hours}h ${minutes}m ${seconds}s`;
-  };
+  // Note: getTimeUntilNextChallenge moved outside component for useState initialization
 
   // Error state
   if (viewState === 'error') {
@@ -303,14 +319,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
   // Completed state (already finished today)
   if (viewState === 'completed' && completedStats) {
-    const [nextChallengeCountdown, setNextChallengeCountdown] = useState(getTimeUntilNextChallenge());
-
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setNextChallengeCountdown(getTimeUntilNextChallenge());
-      }, 1000);
-      return () => clearInterval(interval);
-    }, []);
+    // Note: nextChallengeCountdown state and useEffect moved to top level to follow Rules of Hooks
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
