@@ -61,7 +61,7 @@ export interface PerformanceRecord {
 
   // Meta (so we can filter to PANCE-level ALL sessions)
   focus: SessionSettings["focus"];         // 'all' | 'growth' | ...
-  difficulty: SessionSettings["difficulty"]; // 'easier' | 'same' | 'harder'
+  // Difficulty is always PANCE-level ('same')
 
   // Deep Insight metrics (optional for backward compatibility)
   timeSpentMs?: number;            // Time spent on question in milliseconds
@@ -83,7 +83,7 @@ export interface TopicStats {
 
 export interface SessionSettings {
   focus: "all" | "growth" | "review" | "topic" | "reviewFlagged";
-  difficulty: "easier" | "same" | "harder";
+  difficulty: "same"; // Always PANCE-level, no easy/hard modes
   topic?: string;
 
   /** Optional: when present, Gemini should target this specific condition */

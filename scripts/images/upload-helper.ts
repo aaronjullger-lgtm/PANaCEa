@@ -870,7 +870,7 @@ async function uploadSingleImage(
     description?: string;
     tags?: string[];
     sourceAttribution?: string;
-    difficulty?: "easy" | "medium" | "hard";
+    // Difficulty is always PANCE-level (stored as 'medium')
     explanation?: string;
     clinicalContext?: Partial<ClinicalContext>;
   } = {}
@@ -994,7 +994,7 @@ async function uploadSingleImage(
         distractors,
         explanation,
         clinicalContext: JSON.parse(JSON.stringify(clinicalContext)),
-        difficulty: options.difficulty || "medium",
+        difficulty: "medium", // All questions are PANCE-level
         sourceQuality: "high",
         qualityScore: 0.85,
         confidence: 0.9,
@@ -1050,7 +1050,7 @@ async function uploadBatch(items: BatchItem[]): Promise<void> {
         description: item.description,
         tags: item.tags,
         sourceAttribution: item.sourceAttribution,
-        difficulty: item.difficulty,
+        difficulty: 'medium', // All questions are PANCE-level
         explanation: item.explanation,
         clinicalContext: item.clinicalContext,
       }

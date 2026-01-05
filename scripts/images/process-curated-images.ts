@@ -49,7 +49,7 @@ interface ImageAnalysis {
   quizReason: string;
   hasProblematicAnnotations: boolean;
   suggestedConditionId: string | null;
-  difficulty: 'easy' | 'medium' | 'hard';
+  // Difficulty is always PANCE-level (stored as 'medium')
 }
 
 /**
@@ -85,7 +85,7 @@ Return ONLY valid JSON (no markdown):
   "quizReason": "why this rating",
   "hasProblematicAnnotations": true/false (has labels that give away diagnosis?),
   "suggestedConditionId": "SYSTEM__category__condition_name format or null",
-  "difficulty": "easy|medium|hard"
+  "difficulty": "medium" // PANCE-level only
 }
 
 CONDITION ID FORMAT EXAMPLES:

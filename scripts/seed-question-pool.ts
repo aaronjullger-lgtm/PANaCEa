@@ -15,8 +15,7 @@ dotenv.config();
 const prisma = new PrismaClient();
 
 const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
-const DIFFICULTIES = ['easy', 'medium', 'hard'];
-const QUESTIONS_PER_SYSTEM_DIFFICULTY = 10;
+const QUESTIONS_PER_SYSTEM = 10; // All questions are PANCE-level difficulty
 
 interface GeneratedQuestion {
   vignette?: string;
@@ -30,7 +29,6 @@ interface GeneratedQuestion {
 async function generateQuestionsWithGemini(
   apiKey: string,
   system: string,
-  difficulty: string,
   count: number
 ): Promise<GeneratedQuestion[]> {
   const systemDescriptions: Record<string, string> = {
@@ -50,16 +48,10 @@ async function generateQuestionsWithGemini(
     GU: 'Genitourinary - urinary tract, reproductive system',
   };
 
-  const difficultyDescriptions: Record<string, string> = {
-    easy: 'straightforward concepts, clear presentations, common conditions',
-    medium: 'moderate complexity, some nuance required, typical PANCE-style',
-    hard: 'complex cases, atypical presentations, differential diagnosis challenges',
-  };
-
   const prompt = `Generate ${count} unique PANCE-style medical multiple choice questions for the ${system} (${systemDescriptions[system] || system}) system.
 
 Category: general
-Difficulty: ${difficulty} - ${difficultyDescriptions[difficulty] || difficulty}
+Difficulty: PANCE-level - typical board exam difficulty, moderate complexity, clinically relevant
 
 Requirements:
 1. Each question should have a brief clinical vignette (2-4 sentences) presenting a realistic patient scenario
@@ -166,55 +158,52 @@ async function seedPool() {
   let totalFailed = 0;
 
   for (const system of SYSTEMS) {
-    for (const difficulty of DIFFICULTIES) {
-      // Check if we already have enough for this combination
-      const existing = await prisma.preGeneratedQuestion.count({
-        where: {
+    // Check if we already have enough for this system
+    const existing = await prisma.preGeneratedQuestion.count({
+      where: {
+        system,
+        usedAt: null,
+      },
+    });
+
+    if (existing >= QUESTIONS_PER_SYSTEM) {
+      console.log(`✅ ${system}: Already has ${existing} questions, skipping`);
+      continue;
+    }
+
+    const needed = QUESTIONS_PER_SYSTEM - existing;
+    console.log(`⏳ ${system}: Generating ${needed} questions...`);
+
+    try {
+      const questions = await generateQuestionsWithGemini(apiKey, system, needed);
+
+      if (questions.length > 0) {
+        const records = questions.map((q, idx) => ({
+          id: `pregen-${system}-pance-${Date.now()}-${idx}`,
+          questionType: 'general',
           system,
-          difficulty,
-          usedAt: null,
-        },
-      });
+          difficulty: 'medium', // Store as 'medium' for PANCE-level
+          questionData: q as unknown as Prisma.InputJsonValue,
+          generatedAt: new Date(),
+        }));
 
-      if (existing >= QUESTIONS_PER_SYSTEM_DIFFICULTY) {
-        console.log(`✅ ${system}/${difficulty}: Already has ${existing} questions, skipping`);
-        continue;
-      }
+        const result = await prisma.preGeneratedQuestion.createMany({
+          data: records,
+          skipDuplicates: true,
+        });
 
-      const needed = QUESTIONS_PER_SYSTEM_DIFFICULTY - existing;
-      console.log(`⏳ ${system}/${difficulty}: Generating ${needed} questions...`);
-
-      try {
-        const questions = await generateQuestionsWithGemini(apiKey, system, difficulty, needed);
-
-        if (questions.length > 0) {
-          const records = questions.map((q, idx) => ({
-            id: `pregen-${system}-${difficulty}-${Date.now()}-${idx}`,
-            questionType: 'general',
-            system,
-            difficulty,
-            questionData: q as unknown as Prisma.InputJsonValue,
-            generatedAt: new Date(),
-          }));
-
-          const result = await prisma.preGeneratedQuestion.createMany({
-            data: records,
-            skipDuplicates: true,
-          });
-
-          console.log(`   ✓ Generated ${result.count} questions`);
-          totalGenerated += result.count;
-        } else {
-          console.log(`   ⚠ No questions generated`);
-          totalFailed += needed;
-        }
-
-        // Rate limiting - wait between API calls
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (error) {
-        console.error(`   ❌ Error: ${error}`);
+        console.log(`   ✓ Generated ${result.count} questions`);
+        totalGenerated += result.count;
+      } else {
+        console.log(`   ⚠ No questions generated`);
         totalFailed += needed;
       }
+
+      // Rate limiting - wait between API calls
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error(`   ❌ Error: ${error}`);
+      totalFailed += needed;
     }
   }
 

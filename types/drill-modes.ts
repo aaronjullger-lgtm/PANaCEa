@@ -300,6 +300,6 @@ export interface ConditionQuestion {
   explanation: string;
   conditionName: string;
   system: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: 'medium'; // Always PANCE-level
 }
 

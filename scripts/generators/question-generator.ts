@@ -18,7 +18,6 @@ interface QuestionData {
   explanation: string;
   system: string;
   tags: string[];
-  difficulty: string;
 }
 
 // PANCE Blueprint Systems with topic weights
@@ -42,7 +41,7 @@ const PROMPT_TEMPLATE = `You are an expert medical educator creating PANCE-style
 
 Create a multiple choice question about: {{TOPIC}}
 Body System: {{SYSTEM}}
-Difficulty: {{DIFFICULTY}}
+Difficulty: PANCE-level - typical board exam difficulty, moderate complexity, clinically relevant
 
 Requirements:
 1. Write a realistic clinical vignette (2-4 sentences) with patient demographics, history, and findings
@@ -66,8 +65,7 @@ Return valid JSON:
   "correctAnswer": "B",
   "explanation": "The correct answer is B because... Option A is incorrect because... Option C is incorrect because...",
   "system": "{{SYSTEM}}",
-  "tags": ["{{TOPIC}}", "diagnosis", "high-yield"],
-  "difficulty": "{{DIFFICULTY}}"
+  "tags": ["{{TOPIC}}", "diagnosis", "high-yield"]
 }
 
 CRITICAL RULES:
@@ -77,13 +75,12 @@ CRITICAL RULES:
 - NO special characters like ≥ ≤ × → 
 - All answer options must be distinct and medically plausible`;
 
-async function generateQuestion(system: string, topic: string, difficulty: string, retryCount = 0): Promise<QuestionData | null> {
+async function generateQuestion(system: string, topic: string, retryCount = 0): Promise<QuestionData | null> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   
   const prompt = PROMPT_TEMPLATE
     .replace(/{{TOPIC}}/g, topic)
-    .replace(/{{SYSTEM}}/g, system)
-    .replace(/{{DIFFICULTY}}/g, difficulty);
+    .replace(/{{SYSTEM}}/g, system);
   
   try {
     const result = await model.generateContent(prompt);
@@ -110,14 +107,13 @@ async function generateQuestion(system: string, topic: string, difficulty: strin
     
     return {
       ...parsed,
-      system,
-      difficulty
+      system
     };
   } catch (error) {
     console.error(`    ⚠️  Parse error: ${error}`);
     if (retryCount < 2) {
       await new Promise(r => setTimeout(r, 1000));
-      return generateQuestion(system, topic, difficulty, retryCount + 1);
+      return generateQuestion(system, topic, retryCount + 1);
     }
     return null;
   }
@@ -150,7 +146,6 @@ async function main() {
   
   let created = 0;
   let failed = 0;
-  const difficulties = ['easy', 'medium', 'hard'];
   
   // Weight-based distribution
   const totalWeight = PANCE_SYSTEMS.reduce((sum, s) => sum + s.weight, 0);
@@ -166,11 +161,10 @@ async function main() {
     
     for (let i = 0; i < count && created < toGenerate; i++) {
       const topic = sys.topics[i % sys.topics.length];
-      const difficulty = difficulties[i % difficulties.length];
       
-      console.log(`  🔄 [${created + 1}/${toGenerate}] ${topic} (${difficulty})...`);
+      console.log(`  🔄 [${created + 1}/${toGenerate}] ${topic}...`);
       
-      const data = await generateQuestion(sys.system, topic, difficulty);
+      const data = await generateQuestion(sys.system, topic);
       
       if (!data) {
         failed++;
@@ -195,7 +189,7 @@ async function main() {
             explanation: data.explanation,
             system: data.system,
             tags: data.tags,
-            difficulty: data.difficulty,
+            difficulty: 'medium', // All questions are PANCE-level
             source: 'ai-generated',
             updatedAt: new Date()
           }

@@ -57,7 +57,7 @@ interface SessionEndSummaryProps {
   sessionSettings?: {
     mode?: string;
     focus?: string;
-    difficulty?: string;
+    // difficulty is always 'same' (PANCE-level)
   };
 }
 
@@ -219,7 +219,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           finalStreak,
           sessionSettings?.mode,
           sessionSettings?.focus,
-          sessionSettings?.difficulty
+          'same' // All sessions are PANCE-level
         );
         
         // Sync to database

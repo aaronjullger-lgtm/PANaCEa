@@ -84,7 +84,7 @@ export interface AdminAuthResponse {
  */
 export interface QuestionGenerationRequest {
   system?: string;
-  difficulty?: 'easier' | 'same' | 'harder';
+  // Difficulty is fixed at PANCE-level ('same')
   conditionId?: string;
   focus?: 'all' | 'growth' | 'topic';
   count?: number;
@@ -135,7 +135,7 @@ export interface PerformanceRecordRequest {
   topic: string;
   isCorrect: boolean;
   focus: string;
-  difficulty: string;
+  // Difficulty is fixed at PANCE-level
   timeSpentMs?: number;
   answerChangedCount?: number;
   finalAnswerWasChanged?: boolean;

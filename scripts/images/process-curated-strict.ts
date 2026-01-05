@@ -355,8 +355,7 @@ async function saveImage(
                   analysis.imageType === 'xray' || analysis.imageType === 'ct' ? 'radiology' :
                   analysis.imageType === 'clinical_photo' || analysis.imageType === 'dermoscopy' ? 'derm' : null,
         explanation: analysis.explanation,
-        difficulty: analysis.panreRelevance === 'high' ? 'medium' : 
-                    analysis.panreRelevance === 'medium' ? 'easy' : 'hard',
+        difficulty: 'medium', // All questions are PANCE-level
         updatedAt: new Date()
       }
     });

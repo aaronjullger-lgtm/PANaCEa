@@ -49,7 +49,6 @@ import {
   SessionEndSummary, 
   useAnswerFeedback,
   QuestionTimer,
-  DifficultyIndicator,
   QuickStatsMiniBar,
   SessionInsightsPanel,
   MomentumBadge,
