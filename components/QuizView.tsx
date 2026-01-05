@@ -393,7 +393,7 @@ const QuizView: React.FC<QuizViewProps> = ({
   try {
     // Use questionService for single question fetch (pool + Gemini fallback)
     // The mainSessionService is used for batch fetches and analytics
-    const newQuestion = await getQuestion(sessionSettings, growthAreas);
+    const newQuestion = await getQuestion(sessionSettings, growthAreas, getToken);
 
     if (newQuestion) {
       // keep both queues in sync

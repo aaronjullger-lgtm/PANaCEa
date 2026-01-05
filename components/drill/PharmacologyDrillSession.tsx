@@ -8,6 +8,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Pill, X, Heart, Shield, Brain, Zap, Droplets, Activity, Syringe, ArrowRight, BarChart3, Loader2 } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { getDrillLandingStats, getCategoryBreakdown } from '@/services/drillStatsService';
 import QuizView from '../QuizView';
@@ -64,15 +65,23 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
   const [queue, setQueue] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
 
   const stats = getDrillLandingStats('pharmacology');
   const categoryBreakdown = getCategoryBreakdown('pharmacology'); // Get actual category breakdown
 
   // Fetch question from API
   const fetchPharmQuestion = useCallback(async (drugClass?: string, difficulty?: string): Promise<Question> => {
+    const token = await getToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch('/api/questions/pharmacology-drill', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ drugClass, difficulty }),
     });
 
@@ -84,7 +93,7 @@ const PharmacologyDrillSession: React.FC<PharmacologyDrillSessionProps> = ({
     }
 
     return response.json();
-  }, []);
+  }, [getToken]);
 
   // Load initial questions when drug class is selected (or on "All Drug Classes")
   useEffect(() => {

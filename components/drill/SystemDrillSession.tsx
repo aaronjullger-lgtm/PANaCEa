@@ -8,6 +8,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, X, Heart, Brain, Activity, Droplets, Bone, Eye, Ear, Scissors, Baby, Users, Stethoscope, Shield, ArrowRight, BarChart3, Loader2 } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { getDrillLandingStats, getCategoryBreakdown } from '@/services/drillStatsService';
 import QuizView from '../QuizView';
@@ -63,15 +64,23 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   const [queue, setQueue] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
 
   const stats = getDrillLandingStats('system_drill');
   const categoryBreakdown = getCategoryBreakdown('system_drill');
 
   // Fetch question from API
   const fetchSystemQuestion = useCallback(async (system: string, difficulty?: string): Promise<Question> => {
+    const token = await getToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await fetch('/api/questions/system-drill', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ system, difficulty }),
     });
 
@@ -83,7 +92,7 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
     }
 
     return response.json();
-  }, []);
+  }, [getToken]);
 
   // Load initial questions when system is selected
   useEffect(() => {
