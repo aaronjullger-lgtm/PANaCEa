@@ -1008,7 +1008,7 @@ const QuizView: React.FC<QuizViewProps> = ({
 
       {/* ANSWER OPTIONS */}
       <div className="space-y-3 mt-6">
-        {currentQuestion.options.map((option, index) => {
+        {(currentQuestion.options || []).map((option, index) => {
           const isCorrect = index === currentQuestion.correctAnswerIndex;
           const isSelected = index === selectedAnswerIndex;
 

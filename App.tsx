@@ -461,79 +461,59 @@ const App: React.FC = () => {
   };
 
   // Handler for navigating to drill modes with dedicated routes
-  const handleNavigateToDrillMode = (modeId: string) => {
-    if (modeId === DRILL_MODE_PHOTO) {
-      setView('photo_drill');
-    } else if (modeId === DRILL_MODE_ECG) {
-      setView('ecg_drill');
-    } else if (modeId === DRILL_MODE_DERM) {
-      setView('derm_drill');
-    } else if (modeId === DRILL_MODE_IMAGING) {
-      setView('imaging_drill');
-    } else if (modeId === DRILL_MODE_RAPID_RECALL) {
-      setView('rapid_recall');
-    } else if (modeId === DRILL_MODE_DDX_COMPARE) {
-      setView('ddx_compare');
-    } else if (modeId === DRILL_MODE_MINI_LAB) {
-      setView('mini_lab');
-    } else if (modeId === DRILL_MODE_PHARMACOLOGY) {
-      setView('pharmacology');
-    } else if (modeId === DRILL_MODE_FIRST_LINE) {
-      setView('first_line_treatment');
-    } else if (modeId === DRILL_MODE_CONDITION) {
-      setView('condition_drill');
-    } else if (modeId === DRILL_MODE_GUIDELINE) {
-      setView('guideline_drill');
-    } else if (modeId === DRILL_MODE_FLUID_ELECTROLYTE) {
-      setView('fluid_electrolyte');
-    } else if (modeId === DRILL_MODE_ANTIBIOTIC) {
-      setView('antibiotic_mode');
-    } else if (modeId === DRILL_MODE_PATIENT_ENCOUNTER) {
-      setView('patient_encounter');
-    } else if (modeId === DRILL_MODE_CODE_BLUE) {
-      setView('code_blue_speed');
-    } else if (modeId === DRILL_MODE_GRAND_ROUNDS) {
-      setView('grand_rounds');
-    } else if (modeId === 'panre_la') {
-      setView('panre_la');
-    } else if (modeId === DRILL_MODE_CRAM) {
-      setView('cram_mode');
-    } else if (modeId === DRILL_MODE_MEDICAL_WORDLE) {
-      setView('medical_wordle');
-    } else if (modeId === DRILL_MODE_VENTILATOR) {
-      setView('ventilator_hero');
-    } else if (modeId === DRILL_MODE_PHYSIOLOGY) {
-      setView('physiology_drill');
-    } else if (modeId === DRILL_MODE_ANATOMY) {
-      setView('anatomy_review');
-    } else if (modeId === 'admin_media') {
-      setView('admin_media');
-    } else if (modeId === 'toolkit') {
-      setView('toolkit');
-    }
-  };
+  // Memoized to prevent unnecessary child re-renders
+  const handleNavigateToDrillMode = useCallback((modeId: string) => {
+    const modeViewMap: Record<string, View> = {
+      [DRILL_MODE_PHOTO]: 'photo_drill',
+      [DRILL_MODE_ECG]: 'ecg_drill',
+      [DRILL_MODE_DERM]: 'derm_drill',
+      [DRILL_MODE_IMAGING]: 'imaging_drill',
+      [DRILL_MODE_RAPID_RECALL]: 'rapid_recall',
+      [DRILL_MODE_DDX_COMPARE]: 'ddx_compare',
+      [DRILL_MODE_MINI_LAB]: 'mini_lab',
+      [DRILL_MODE_PHARMACOLOGY]: 'pharmacology',
+      [DRILL_MODE_FIRST_LINE]: 'first_line_treatment',
+      [DRILL_MODE_CONDITION]: 'condition_drill',
+      [DRILL_MODE_GUIDELINE]: 'guideline_drill',
+      [DRILL_MODE_FLUID_ELECTROLYTE]: 'fluid_electrolyte',
+      [DRILL_MODE_ANTIBIOTIC]: 'antibiotic_mode',
+      [DRILL_MODE_PATIENT_ENCOUNTER]: 'patient_encounter',
+      [DRILL_MODE_CODE_BLUE]: 'code_blue_speed',
+      [DRILL_MODE_GRAND_ROUNDS]: 'grand_rounds',
+      'panre_la': 'panre_la',
+      [DRILL_MODE_CRAM]: 'cram_mode',
+      [DRILL_MODE_MEDICAL_WORDLE]: 'medical_wordle',
+      [DRILL_MODE_VENTILATOR]: 'ventilator_hero',
+      [DRILL_MODE_PHYSIOLOGY]: 'physiology_drill',
+      [DRILL_MODE_ANATOMY]: 'anatomy_review',
+      'admin_media': 'admin_media',
+      'toolkit': 'toolkit',
+    };
+    const targetView = modeViewMap[modeId];
+    if (targetView) setView(targetView);
+  }, []);
 
-  // Navigate to simulation page
-  const handleNavigateToSimulation = () => {
+  // Navigate to simulation page - memoized
+  const handleNavigateToSimulation = useCallback(() => {
     setView('simulation_page');
-  };
+  }, []);
 
-  // Navigate to command center page
-  const handleNavigateToCommandCenter = () => {
+  // Navigate to command center page - memoized
+  const handleNavigateToCommandCenter = useCallback(() => {
     setView('command_center_page');
-  };
+  }, []);
 
   // Animation variants for page transitions
-  // Elegant page transition animations - smooth and fluid, respects reduced motion preference
+  // Optimized for faster navigation with reduced motion preference support
   const pageVariants = {
-    initial: { opacity: 0, y: 15, scale: 0.98 },
-    animate: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, y: -15, scale: 0.98 }
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0 }
   };
 
   const pageTransition = useAccessibleTransition({
-    duration: 0.35,
-    ease: [0.4, 0, 0.2, 1] // Custom cubic-bezier for smooth feel
+    duration: 0.2, // Reduced from 0.35 for snappier navigation
+    ease: [0.4, 0, 0.2, 1]
   }) as any;
 
   // Show loading state while checking auth
@@ -643,7 +623,8 @@ const App: React.FC = () => {
           </motion.div>
         )}
 
-        <AnimatePresence mode="wait">
+        {/* Removed mode="wait" to allow overlapping transitions for faster perceived navigation */}
+        <AnimatePresence>
           {view === "command_center" && (
             <motion.div
               key="command_center"
