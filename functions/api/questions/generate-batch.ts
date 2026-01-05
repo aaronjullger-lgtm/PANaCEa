@@ -13,6 +13,7 @@ interface Env {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
   GEMINI_API_KEY: string;
+  CRON_SECRET?: string; // For scheduled job authentication
 }
 
 const DEFAULT_BATCH_SIZE = 10;
@@ -21,17 +22,40 @@ const MAX_BATCH_SIZE = 50;
 // Systems for question generation
 const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
 
+/**
+ * Check if request is from a scheduled job using CRON_SECRET
+ */
+function isScheduledJob(request: Request, env: Env): boolean {
+  const cronSecret = env.CRON_SECRET;
+  if (!cronSecret) return false;
+  
+  // Check X-Cron-Secret header
+  const headerSecret = request.headers.get('X-Cron-Secret');
+  if (headerSecret === cronSecret) return true;
+  
+  // Check Authorization header for cron bearer
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer cron_') && authHeader.slice(12) === cronSecret) return true;
+  
+  return false;
+}
+
 export const onRequestPost = async (context: CloudflareContext<Env>) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   
   try {
-    // Authenticate - only allow authenticated users or internal calls
-    const authResult = await authenticateRequest(context.request as any, context.env);
-    if (!authResult) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    // Allow scheduled jobs without user authentication
+    const isFromScheduler = isScheduledJob(context.request, context.env);
+    
+    if (!isFromScheduler) {
+      // Authenticate regular user requests
+      const authResult = await authenticateRequest(context.request as any, context.env);
+      if (!authResult) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     // Parse request body
