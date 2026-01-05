@@ -1,6 +1,7 @@
 /**
- * Question Generator
- * Generates PANCE-style practice questions across all body systems
+ * Question Generator V2
+ * Generates PANCE-style practice questions from database conditions
+ * Links questions to MedicalContent and Condition tables
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -20,28 +21,86 @@ interface QuestionData {
   tags: string[];
 }
 
-// PANCE Blueprint Systems with topic weights
-const PANCE_SYSTEMS = [
-  { system: 'Cardiovascular', topics: ['Heart Failure', 'Arrhythmias', 'Coronary Artery Disease', 'Hypertension', 'Valvular Disease', 'Peripheral Vascular Disease', 'Cardiomyopathy', 'Pericarditis', 'Endocarditis', 'Aortic Aneurysm'], weight: 16 },
-  { system: 'Pulmonary', topics: ['COPD', 'Asthma', 'Pneumonia', 'Pulmonary Embolism', 'Lung Cancer', 'Pleural Effusion', 'Tuberculosis', 'Pneumothorax', 'Interstitial Lung Disease', 'Sleep Apnea'], weight: 12 },
-  { system: 'Gastrointestinal', topics: ['GERD', 'Peptic Ulcer Disease', 'Inflammatory Bowel Disease', 'Liver Cirrhosis', 'Pancreatitis', 'Cholecystitis', 'Appendicitis', 'Bowel Obstruction', 'Diverticulitis', 'Colorectal Cancer'], weight: 10 },
-  { system: 'Musculoskeletal', topics: ['Osteoarthritis', 'Rheumatoid Arthritis', 'Fractures', 'Low Back Pain', 'Gout', 'Osteoporosis', 'Rotator Cuff Injury', 'Carpal Tunnel', 'Fibromyalgia', 'Osteomyelitis'], weight: 10 },
-  { system: 'EENT', topics: ['Otitis Media', 'Sinusitis', 'Conjunctivitis', 'Glaucoma', 'Macular Degeneration', 'Pharyngitis', 'Epistaxis', 'Tinnitus', 'Cataracts', 'Hearing Loss'], weight: 9 },
-  { system: 'Neurologic', topics: ['Stroke', 'Seizures', 'Headache', 'Meningitis', 'Parkinson Disease', 'Multiple Sclerosis', 'Dementia', 'Peripheral Neuropathy', 'Bell Palsy', 'Vertigo'], weight: 6 },
-  { system: 'Psychiatry', topics: ['Depression', 'Anxiety Disorders', 'Bipolar Disorder', 'Schizophrenia', 'PTSD', 'Substance Use Disorder', 'ADHD', 'Eating Disorders', 'Personality Disorders', 'Delirium'], weight: 6 },
-  { system: 'Renal', topics: ['Acute Kidney Injury', 'Chronic Kidney Disease', 'Urinary Tract Infection', 'Nephrolithiasis', 'Glomerulonephritis', 'Polycystic Kidney Disease', 'Electrolyte Disorders', 'Nephrotic Syndrome', 'Renal Cell Carcinoma', 'Pyelonephritis'], weight: 6 },
-  { system: 'Reproductive', topics: ['Pregnancy', 'Contraception', 'STIs', 'Menstrual Disorders', 'Breast Cancer', 'Prostate Disease', 'Testicular Cancer', 'Ovarian Cysts', 'Ectopic Pregnancy', 'Endometriosis'], weight: 8 },
-  { system: 'Endocrine', topics: ['Diabetes Mellitus', 'Thyroid Disorders', 'Adrenal Disorders', 'Pituitary Disorders', 'Metabolic Syndrome', 'PCOS', 'Osteoporosis', 'Hyperlipidemia', 'Calcium Disorders', 'Obesity'], weight: 6 },
-  { system: 'Dermatology', topics: ['Psoriasis', 'Eczema', 'Skin Cancer', 'Acne', 'Cellulitis', 'Herpes Zoster', 'Contact Dermatitis', 'Urticaria', 'Fungal Infections', 'Pressure Ulcers'], weight: 5 },
-  { system: 'Hematology', topics: ['Anemia', 'Leukemia', 'Lymphoma', 'DVT', 'Coagulation Disorders', 'Thrombocytopenia', 'Sickle Cell Disease', 'Polycythemia', 'Multiple Myeloma', 'Transfusion Medicine'], weight: 3 },
-  { system: 'Infectious Disease', topics: ['Sepsis', 'HIV/AIDS', 'Hepatitis', 'Influenza', 'COVID-19', 'Lyme Disease', 'Cellulitis', 'Osteomyelitis', 'Endocarditis', 'Meningitis'], weight: 3 }
-];
+interface ConditionWithContent {
+  conditionId: string;
+  medicalContentId: string;
+  name: string;
+  system: string;
+  overview?: string;
+  symptoms?: string[];
+  treatment?: string;
+}
 
-const PROMPT_TEMPLATE = `You are an expert medical educator creating PANCE-style board exam questions.
+// PANCE Blueprint System weights for distribution
+const SYSTEM_WEIGHTS: Record<string, number> = {
+  'cardiovascular': 16,
+  'pulmonary': 12,
+  'gastrointestinal': 10,
+  'musculoskeletal': 10,
+  'eent': 9,
+  'neurologic': 6,
+  'psychiatric': 6,
+  'psychiatry': 6,
+  'renal': 6,
+  'reproductive': 8,
+  'endocrine': 6,
+  'dermatology': 5,
+  'hematology': 3,
+  'infectious disease': 3
+};
 
-Create a multiple choice question about: {{TOPIC}}
-Body System: {{SYSTEM}}
+/**
+ * Fetch conditions from MedicalContent (database-first approach)
+ */
+async function fetchConditionsFromDatabase(): Promise<ConditionWithContent[]> {
+  const medicalContent = await prisma.medicalContent.findMany({
+    where: {
+      status: 'published'
+    },
+    select: {
+      id: true,
+      conditionId: true,
+      condition: true,    // This is the condition name string
+      system: true,
+      overview: true,
+      symptoms: true,
+      treatment: true,
+    }
+  });
+
+  return medicalContent.map(mc => ({
+    conditionId: mc.conditionId,
+    medicalContentId: mc.id,
+    name: mc.condition,        // condition field is the name string
+    system: mc.system,
+    overview: mc.overview ?? undefined,
+    symptoms: mc.symptoms ? mc.symptoms.split(',').map(s => s.trim()) : undefined,
+    treatment: mc.treatment ?? undefined,
+  }));
+}
+
+/**
+ * Build a contextual prompt using condition data from database
+ */
+function buildPrompt(condition: ConditionWithContent): string {
+  let conditionContext = '';
+  
+  if (condition.overview) {
+    conditionContext += `\nCondition Overview: ${condition.overview.substring(0, 500)}`;
+  }
+  if (condition.symptoms && condition.symptoms.length > 0) {
+    conditionContext += `\nKey Symptoms: ${condition.symptoms.slice(0, 8).join(', ')}`;
+  }
+  if (condition.treatment) {
+    conditionContext += `\nTreatment Notes: ${condition.treatment.substring(0, 300)}`;
+  }
+
+  return `You are an expert medical educator creating PANCE-style board exam questions.
+
+Create a multiple choice question about: ${condition.name}
+Body System: ${condition.system}
 Difficulty: PANCE-level - typical board exam difficulty, moderate complexity, clinically relevant
+${conditionContext}
 
 Requirements:
 1. Write a realistic clinical vignette (2-4 sentences) with patient demographics, history, and findings
@@ -64,8 +123,8 @@ Return valid JSON:
   },
   "correctAnswer": "B",
   "explanation": "The correct answer is B because... Option A is incorrect because... Option C is incorrect because...",
-  "system": "{{SYSTEM}}",
-  "tags": ["{{TOPIC}}", "diagnosis", "high-yield"]
+  "system": "${condition.system}",
+  "tags": ["${condition.name}", "diagnosis", "high-yield"]
 }
 
 CRITICAL RULES:
@@ -74,13 +133,12 @@ CRITICAL RULES:
 - Write "greater than" not ">" 
 - NO special characters like ≥ ≤ × → 
 - All answer options must be distinct and medically plausible`;
+}
 
-async function generateQuestion(system: string, topic: string, retryCount = 0): Promise<QuestionData | null> {
+async function generateQuestion(condition: ConditionWithContent, retryCount = 0): Promise<QuestionData | null> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   
-  const prompt = PROMPT_TEMPLATE
-    .replace(/{{TOPIC}}/g, topic)
-    .replace(/{{SYSTEM}}/g, system);
+  const prompt = buildPrompt(condition);
   
   try {
     const result = await model.generateContent(prompt);
@@ -107,24 +165,91 @@ async function generateQuestion(system: string, topic: string, retryCount = 0): 
     
     return {
       ...parsed,
-      system
+      system: condition.system
     };
   } catch (error) {
     console.error(`    ⚠️  Parse error: ${error}`);
     if (retryCount < 2) {
       await new Promise(r => setTimeout(r, 1000));
-      return generateQuestion(system, topic, retryCount + 1);
+      return generateQuestion(condition, retryCount + 1);
     }
     return null;
   }
 }
 
+/**
+ * Get weight for a system (case-insensitive lookup)
+ */
+function getSystemWeight(system: string): number {
+  const normalizedSystem = system.toLowerCase();
+  return SYSTEM_WEIGHTS[normalizedSystem] ?? 3; // Default weight of 3
+}
+
+/**
+ * Select conditions based on PANCE blueprint weights
+ */
+function selectConditionsWeighted(conditions: ConditionWithContent[], count: number): ConditionWithContent[] {
+  // Group conditions by system
+  const bySystem: Record<string, ConditionWithContent[]> = {};
+  for (const c of conditions) {
+    const system = c.system.toLowerCase();
+    if (!bySystem[system]) bySystem[system] = [];
+    bySystem[system].push(c);
+  }
+
+  // Calculate total weight for systems we have conditions for
+  let totalWeight = 0;
+  for (const system of Object.keys(bySystem)) {
+    totalWeight += getSystemWeight(system);
+  }
+
+  // Distribute count across systems by weight
+  const selected: ConditionWithContent[] = [];
+  
+  for (const [system, systemConditions] of Object.entries(bySystem)) {
+    const weight = getSystemWeight(system);
+    const systemCount = Math.max(1, Math.round((weight / totalWeight) * count));
+    
+    // Shuffle conditions in this system
+    const shuffled = [...systemConditions].sort(() => Math.random() - 0.5);
+    
+    // Take up to systemCount conditions
+    selected.push(...shuffled.slice(0, Math.min(systemCount, shuffled.length)));
+  }
+
+  // Shuffle final selection and trim to exact count
+  return selected.sort(() => Math.random() - 0.5).slice(0, count);
+}
+
 async function main() {
-  console.log('📝 Question Generator');
+  console.log('📝 Question Generator V2 (Database-Linked)');
   console.log('═'.repeat(60));
   
+  // Fetch conditions from MedicalContent
+  console.log('\n📊 Fetching conditions from MedicalContent...');
+  const conditions = await fetchConditionsFromDatabase();
+  console.log(`   Found ${conditions.length} conditions with published content`);
+  
+  if (conditions.length === 0) {
+    console.log('❌ No published conditions found in MedicalContent!');
+    console.log('   Run content seeding scripts first.');
+    await prisma.$disconnect();
+    return;
+  }
+
+  // Log system distribution
+  const systemCounts: Record<string, number> = {};
+  for (const c of conditions) {
+    const system = c.system.toLowerCase();
+    systemCounts[system] = (systemCounts[system] || 0) + 1;
+  }
+  console.log('\n   System distribution:');
+  for (const [system, count] of Object.entries(systemCounts).sort((a, b) => b[1] - a[1])) {
+    console.log(`     ${system}: ${count} conditions`);
+  }
+
   const existing = await prisma.question.count();
-  console.log(`Current questions: ${existing}`);
+  console.log(`\nCurrent questions: ${existing}`);
   
   const TARGET = 500;
   const toGenerate = Math.max(0, TARGET - existing);
@@ -144,68 +269,61 @@ async function main() {
     existingQuestions.map(q => `${q.vignette.substring(0, 50)}-${q.question}`.toLowerCase())
   );
   
+  // Select conditions weighted by PANCE blueprint
+  const selectedConditions = selectConditionsWeighted(conditions, toGenerate);
+  console.log(`\n📋 Selected ${selectedConditions.length} conditions for question generation`);
+  
   let created = 0;
   let failed = 0;
-  
-  // Weight-based distribution
-  const totalWeight = PANCE_SYSTEMS.reduce((sum, s) => sum + s.weight, 0);
-  const systemCounts: { [key: string]: number } = {};
-  
-  for (const sys of PANCE_SYSTEMS) {
-    systemCounts[sys.system] = Math.round((sys.weight / totalWeight) * toGenerate);
-  }
-  
-  for (const sys of PANCE_SYSTEMS) {
-    const count = systemCounts[sys.system];
-    console.log(`\n📋 ${sys.system} (generating ${count} questions)`);
+
+  for (let i = 0; i < selectedConditions.length && created < toGenerate; i++) {
+    const condition = selectedConditions[i];
     
-    for (let i = 0; i < count && created < toGenerate; i++) {
-      const topic = sys.topics[i % sys.topics.length];
-      
-      console.log(`  🔄 [${created + 1}/${toGenerate}] ${topic}...`);
-      
-      const data = await generateQuestion(sys.system, topic);
-      
-      if (!data) {
-        failed++;
-        continue;
-      }
-      
-      // Check for duplicate
-      const hash = `${data.vignette.substring(0, 50)}-${data.question}`.toLowerCase();
-      if (existingHashes.has(hash)) {
-        console.log(`    ⏭️  Duplicate, skipping`);
-        continue;
-      }
-      
-      try {
-        await prisma.question.create({
-          data: {
-            id: crypto.randomUUID(),
-            vignette: data.vignette,
-            question: data.question,
-            options: data.options,
-            correctAnswer: data.correctAnswer,
-            explanation: data.explanation,
-            system: data.system,
-            tags: data.tags,
-            difficulty: 'medium', // All questions are PANCE-level
-            source: 'ai-generated',
-            updatedAt: new Date()
-          }
-        });
-        
-        existingHashes.add(hash);
-        created++;
-        console.log(`    ✅ Created`);
-      } catch (error) {
-        console.error(`    ❌ Save failed: ${error}`);
-        failed++;
-      }
-      
-      // Rate limiting
-      await new Promise(r => setTimeout(r, 600));
+    console.log(`\n  🔄 [${created + 1}/${toGenerate}] ${condition.name} (${condition.system})...`);
+    
+    const data = await generateQuestion(condition);
+    
+    if (!data) {
+      failed++;
+      continue;
     }
+    
+    // Check for duplicate
+    const hash = `${data.vignette.substring(0, 50)}-${data.question}`.toLowerCase();
+    if (existingHashes.has(hash)) {
+      console.log(`    ⏭️  Duplicate, skipping`);
+      continue;
+    }
+    
+    try {
+      await prisma.question.create({
+        data: {
+          id: crypto.randomUUID(),
+          vignette: data.vignette,
+          question: data.question,
+          options: data.options,
+          correctAnswer: data.correctAnswer,
+          explanation: data.explanation,
+          system: data.system,
+          tags: data.tags,
+          difficulty: 'medium', // All questions are PANCE-level
+          source: 'ai-generated',
+          conditionId: condition.conditionId,      // Link to Condition
+          medicalContentId: condition.medicalContentId, // Link to MedicalContent
+          updatedAt: new Date()
+        }
+      });
+      
+      existingHashes.add(hash);
+      created++;
+      console.log(`    ✅ Created (linked to condition: ${condition.conditionId})`);
+    } catch (error) {
+      console.error(`    ❌ Save failed: ${error}`);
+      failed++;
+    }
+    
+    // Rate limiting
+    await new Promise(r => setTimeout(r, 600));
   }
   
   console.log('\n' + '═'.repeat(60));
