@@ -83,16 +83,25 @@ async function fetchFromPool(
   difficulty?: string,
   token?: string | null
 ): Promise<{ questions: Question[]; poolStatus: PoolStatus }> {
+  // Validate token is available
+  if (!token) {
+    console.warn('[QuestionService] No auth token provided to fetchFromPool');
+    // Return empty result instead of throwing - allows graceful fallback to Gemini
+    return {
+      questions: [],
+      poolStatus: { available: 0, needsGeneration: false, threshold: 50 }
+    };
+  }
+
   const params = new URLSearchParams();
   params.set('count', count.toString());
   if (system) params.set('system', system);
   if (category) params.set('category', category);
   if (difficulty) params.set('difficulty', difficulty);
 
-  const headers: HeadersInit = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
+  const headers: HeadersInit = {
+    'Authorization': `Bearer ${token}`
+  };
 
   const response = await fetch(`/api/questions/pool?${params}`, { headers });
   
@@ -138,7 +147,8 @@ async function triggerBackgroundGeneration(
 async function checkAndReplenishPool(
   system?: string,
   category?: string,
-  difficulty?: string
+  difficulty?: string,
+  token?: string | null
 ): Promise<void> {
   const now = Date.now();
   
@@ -153,8 +163,17 @@ async function checkAndReplenishPool(
 
   lastPoolCheck = now;
 
+  // Skip status check if no token available
+  if (!token) {
+    console.warn('[QuestionService] No auth token for pool status check');
+    return;
+  }
+
   try {
-    const response = await fetch('/api/questions/pool-status');
+    const headers: HeadersInit = {
+      'Authorization': `Bearer ${token}`
+    };
+    const response = await fetch('/api/questions/pool-status', { headers });
     if (response.ok) {
       const data = await response.json() as { health: { needsGeneration: boolean; threshold: number }; pool: { available: number } };
       cachedPoolStatus = {
@@ -401,9 +420,10 @@ export function getPoolStatus(): PoolStatus | null {
 /**
  * Force refresh pool status
  */
-export async function refreshPoolStatus(): Promise<PoolStatus | null> {
+export async function refreshPoolStatus(getToken?: () => Promise<string | null>): Promise<PoolStatus | null> {
   lastPoolCheck = 0;
-  await checkAndReplenishPool();
+  const token = getToken ? await getToken() : null;
+  await checkAndReplenishPool(undefined, undefined, undefined, token);
   return cachedPoolStatus;
 }
 
