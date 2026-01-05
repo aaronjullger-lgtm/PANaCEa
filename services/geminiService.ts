@@ -436,11 +436,10 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
       chosenConditionMeta = meta;
       chosenConditionDef = buildConditionDefinition(meta);
       
-      // NEW: Load database content for specifically requested condition
+      // Load database content via API (browser-safe)
       try {
-        const { loadConditionData } = await import('../services/conditionDataLoader');
-        const { hasCompleteContent, buildDatabaseContext } = await import('../lib/contentHelpers');
-        const dbContent = await loadConditionData(settings.conditionName);
+        const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } = await import('./conditionContentService');
+        const dbContent = await fetchConditionContent(settings.conditionName);
         
         if (dbContent && hasCompleteContent(dbContent)) {
           conditionRegistryNotes = buildDatabaseContext(dbContent);
@@ -487,11 +486,10 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
         chosenConditionMeta = selectedConditionMeta;
         chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
         
-        // NEW: Load database content first
+        // Load database content via API (browser-safe)
         try {
-          const { loadConditionData } = await import('../services/conditionDataLoader');
-          const { hasCompleteContent, buildDatabaseContext } = await import('../lib/contentHelpers');
-          const dbContent = await loadConditionData(selectedConditionMeta.condition);
+          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } = await import('./conditionContentService');
+          const dbContent = await fetchConditionContent(selectedConditionMeta.condition);
           
           if (dbContent && hasCompleteContent(dbContent)) {
             conditionRegistryNotes = buildDatabaseContext(dbContent);
@@ -621,11 +619,10 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
 
       // If we have the meta, get the context to ensure accuracy
       if (chosenConditionMeta && !conditionRegistryNotes) {
-        // Try database first, fallback to registry
+        // Fetch database content via API (browser-safe)
         try {
-          const { loadConditionData } = await import('../services/conditionDataLoader');
-          const { hasCompleteContent, buildDatabaseContext } = await import('../lib/contentHelpers');
-          const dbContent = await loadConditionData(chosenConditionMeta.condition);
+          const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } = await import('./conditionContentService');
+          const dbContent = await fetchConditionContent(chosenConditionMeta.condition);
           
           if (dbContent && hasCompleteContent(dbContent)) {
             conditionRegistryNotes = buildDatabaseContext(dbContent);

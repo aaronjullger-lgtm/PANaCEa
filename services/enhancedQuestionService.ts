@@ -6,7 +6,6 @@
  */
 
 import type { Question, SessionSettings } from '../types';
-import { loadConditionData } from './conditionDataLoader';
 import { 
   getWeightedRandomSystem, 
   getWeightedRandomTask, 
