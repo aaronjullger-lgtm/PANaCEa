@@ -84,7 +84,7 @@ async function generateECGContent(pattern: any): Promise<ECGFillContent> {
   
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ 
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.1,
       responseMimeType: 'application/json'

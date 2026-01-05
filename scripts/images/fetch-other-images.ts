@@ -41,7 +41,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.replace(/^["']|["']$/g, '').t
 // Initialize Gemini SDK
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 const geminiModel = genAI?.getGenerativeModel({ 
-  model: 'gemini-2.5-flash',
+  model: 'gemini-2.5-pro',
   generationConfig: { temperature: 0.2, maxOutputTokens: 1024, responseMimeType: 'application/json' }
 });
 

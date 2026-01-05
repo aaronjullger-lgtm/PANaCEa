@@ -7,6 +7,15 @@
 
 import type { ConditionMeta } from '../src/types/conditions';
 import type { SystemCode } from '../types';
+import { get, set, del } from 'idb-keyval';
+
+const CACHE_PREFIX = 'panceai_content_';
+const CACHE_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+interface CacheEntry {
+  timestamp: number;
+  data: LoadedConditionData;
+}
 
 const VALID_SYSTEMS: SystemCode[] = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'ENDO', 'HEME', 'ID', 'RENAL', 'REPRO', 'DERM', 'GU', 'HEENT', 'PSYCH', 'PRO'];
 
@@ -98,8 +107,26 @@ async function findConditionMeta(conditionId: string): Promise<ConditionMeta | n
  * @returns The loaded condition data or null if not found
  */
 export async function loadConditionData(conditionId: string): Promise<LoadedConditionData | null> {
-  // This function is intended for server/edge usage.
-  // In tests we run in jsdom, so allow calls when NODE_ENV === 'test'.
+  const cacheKey = `${CACHE_PREFIX}${conditionId}`;
+
+  // 1. Check cache first
+  try {
+    const cached = await get<CacheEntry>(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_EXPIRATION_MS)) {
+      console.log(`[Cache] HIT for ${conditionId}`);
+      return cached.data;
+    }
+    if (cached) {
+      // Cache is stale, delete it
+      await del(cacheKey);
+    }
+  } catch (e) {
+    console.warn('Could not access IndexedDB for caching.', e);
+  }
+
+  console.log(`[Cache] MISS for ${conditionId}. Fetching from DB.`);
+  
+  // Server-side only - use Prisma to query database
   if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'test') {
     console.error('loadConditionData should not be called in browser environment');
     return null;
@@ -195,7 +222,7 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
       basicScienceLinks: Array.isArray(jsonContent?.basicScienceLinks) ? jsonContent.basicScienceLinks : undefined,
     };
 
-    return {
+    const loadedData: LoadedConditionData = {
       conditionId: record.conditionId,
       name: meta.condition,
       system: meta.system,
@@ -204,8 +231,21 @@ export async function loadConditionData(conditionId: string): Promise<LoadedCond
       content,
       relatedSystems,
     };
+
+    // 3. Store result in cache before returning
+    try {
+      const entry: CacheEntry = {
+        timestamp: Date.now(),
+        data: loadedData,
+      };
+      await set(cacheKey, entry);
+    } catch (e) {
+      console.warn('Could not write to IndexedDB for caching.', e);
+    }
+
+    return loadedData;
   } catch (error) {
-    console.error(`Error loading condition data for ${conditionId} from DB:`, error);
+    console.error(`Error loading condition data for "${conditionId}":`, error);
     return null;
   }
 }

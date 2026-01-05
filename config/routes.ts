@@ -29,6 +29,7 @@ export const ROUTES = {
   HOME: '/',
   SETTINGS: '/settings',
   PROFILE: '/profile',
+  ADMIN_CURATION: '/admin/curation',
 } as const;
 
 // Type for route values

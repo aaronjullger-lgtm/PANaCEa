@@ -17,9 +17,9 @@ import type {
 } from "./types";
 
 // Only use Gemini 2.5 models - these are the only ones that work with the API key
-const MODEL_CANDIDATES = [
-  "gemini-2.5-flash",
+const GEMINI_MODEL_NAMES = [
   "gemini-2.5-pro",
+  "gemini-2.5-flash",
 ];
 const DEFAULT_TEMPERATURE = 0.7;
 const MAX_RETRIES = 2;

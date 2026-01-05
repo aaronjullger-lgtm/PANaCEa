@@ -24,7 +24,7 @@ import crypto from 'crypto';
 const prisma = new PrismaClient();
 
 // ==================== Configuration ====================
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = 'gemini-2.5-pro';
 const apiKey = process.env.GEMINI_API_KEY || '';
 
 let model: any = null;

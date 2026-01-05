@@ -149,7 +149,7 @@ async function generateECGPatternData(name: string, category: string): Promise<E
   await rateLimiter.acquire();
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-pro",
     generationConfig: {
       temperature: 0.3,
       responseMimeType: "application/json",

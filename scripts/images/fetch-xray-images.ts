@@ -724,7 +724,7 @@ Respond ONLY with valid JSON.`;
 
     // Use SDK with gemini-2.5-flash (like ECG script)
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-pro',
       generationConfig: { temperature: 0.2 }
     });
 

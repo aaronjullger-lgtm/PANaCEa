@@ -122,7 +122,7 @@ Return ONLY the JSON object, no markdown code fences or explanations. Ensure all
 async function generateECGContent(record: any): Promise<ECGContent | null> {
   await rateLimiter.acquire();
   
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const prompt = PROMPT_TEMPLATE
     .replace(/\{PATTERN_NAME\}/g, record.name)

@@ -16,7 +16,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const prisma = new PrismaClient();
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = 'gemini-2.5-pro';
 
 // Rate limiting
 const RATE_LIMIT = {

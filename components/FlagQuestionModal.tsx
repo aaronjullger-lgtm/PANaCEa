@@ -20,7 +20,7 @@ interface FlagQuestionModalProps {
   userFirstName?: string;
 }
 
-type FlagType = 'typo' | 'incorrect_answer' | 'unclear' | 'outdated' | 'other';
+type FlagType = 'incorrect_fact' | 'typo' | 'confusing_options' | 'image_unclear' | 'other';
 
 export function FlagQuestionModal({
   isOpen,
@@ -34,36 +34,36 @@ export function FlagQuestionModal({
   userEmail,
   userFirstName,
 }: FlagQuestionModalProps) {
-  const [flagType, setFlagType] = useState<FlagType>('incorrect_answer');
+  const [flagType, setFlagType] = useState<FlagType>('incorrect_fact');
   const [description, setDescription] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const { flagQuestion, loading, error } = useQuestionFlag();
 
   const flagTypes: Array<{ value: FlagType; label: string; description: string }> = [
     {
+      value: 'incorrect_fact',
+      label: 'Incorrect Fact',
+      description: 'The question or rationale contains a factual error.',
+    },
+    {
       value: 'typo',
       label: 'Typo or Grammar Issue',
-      description: 'Spelling mistake, grammatical error, or formatting issue',
+      description: 'Spelling mistake, grammatical error, or formatting issue.',
     },
     {
-      value: 'incorrect_answer',
-      label: 'Incorrect Answer',
-      description: 'The marked correct answer appears to be wrong',
+      value: 'confusing_options',
+      label: 'Confusing Options',
+      description: 'Answer choices are ambiguous, too similar, or poorly worded.',
     },
     {
-      value: 'unclear',
-      label: 'Unclear Question',
-      description: 'Question is confusing, ambiguous, or poorly worded',
-    },
-    {
-      value: 'outdated',
-      label: 'Outdated Information',
-      description: 'Information is no longer current per latest guidelines',
+      value: 'image_unclear',
+      label: 'Image is Unclear',
+      description: 'The attached image is low quality, confusing, or irrelevant.',
     },
     {
       value: 'other',
       label: 'Other Issue',
-      description: 'Something else that needs attention',
+      description: 'Something else that needs attention.',
     },
   ];
 
@@ -85,7 +85,7 @@ export function FlagQuestionModal({
       system,
       flagType,
       description: description.trim(),
-      priority: flagType === 'incorrect_answer' ? 'high' : 'medium',
+      priority: flagType === 'incorrect_fact' ? 'high' : 'medium',
     });
 
     if (result.success) {
@@ -93,7 +93,7 @@ export function FlagQuestionModal({
       setTimeout(() => {
         onClose();
         // Reset form
-        setFlagType('incorrect_answer');
+        setFlagType('incorrect_fact');
         setDescription('');
         setSubmitted(false);
       }, 2000);

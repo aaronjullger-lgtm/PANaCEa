@@ -56,7 +56,7 @@ Generate the following fields in valid JSON format:
 Return ONLY the JSON object, no markdown or explanations.`;
 
 async function generateDDxContent(record: any): Promise<DDxContent | null> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const prompt = PROMPT_TEMPLATE
     .replace('{COMPLAINT}', record.presentingComplaint)

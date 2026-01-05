@@ -81,6 +81,27 @@ async function getConditionsForSystem(system: string): Promise<ConditionInfo[]> 
 }
 
 /**
+ * A robust JSON parser that handles trailing commas and provides detailed error logging.
+ * @param jsonString The raw string from the Gemini API.
+ * @returns The parsed JSON object or array, or null if parsing fails.
+ */
+function robustJsonParse(jsonString: string) {
+  // 1. Remove trailing commas from arrays and objects
+  const cleanedString = jsonString.replace(/,(?=\s*?([\]}]))/g, '$1');
+
+  try {
+    // 2. Attempt to parse the cleaned JSON
+    return JSON.parse(cleanedString);
+  } catch (error) {
+    // 3. If parsing fails, log the error and the problematic raw text
+    console.error(" robustJsonParse: Failed to parse JSON.");
+    console.error("  - Error:", error.message);
+    console.error("  - Raw Text (first 500 chars):", cleanedString.substring(0, 500));
+    return null; // Return null to indicate failure
+  }
+}
+
+/**
  * Generate questions for a specific condition using Gemini
  */
 async function generateQuestionsForCondition(
@@ -106,6 +127,7 @@ Requirements:
 5. Include one correct answer and three plausible distractors
 6. The explanation should be educational and reference specific features of ${condition.name}
 7. Questions should be appropriate for PA certification exam preparation (PANCE-level)
+8. Return valid JSON. Do NOT use trailing commas.
 
 Return ONLY a JSON array with this exact structure (no markdown, no code blocks):
 [
@@ -120,7 +142,7 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
 ]`;
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
     const result = await model.generateContent(prompt);
     const text = result.response.text();
 
@@ -141,10 +163,10 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
     }
     jsonText = jsonText.trim();
 
-    const questions = JSON.parse(jsonText);
+    const questions = robustJsonParse(jsonText);
     
-    if (!Array.isArray(questions)) {
-      console.error('Invalid questions format - not an array');
+    if (!questions || !Array.isArray(questions)) {
+      console.error('Invalid questions format - not an array or failed to parse.');
       return [];
     }
 

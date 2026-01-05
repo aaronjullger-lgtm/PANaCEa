@@ -94,7 +94,7 @@ async function generateECGLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<ECGConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const conditionsList = conditions.slice(0, 50).map(c => `${c.name} (${c.system})`).join(', ');
   
@@ -204,7 +204,7 @@ async function generateImagingLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<ImagingConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const conditionsList = conditions.slice(0, 50).map(c => `${c.name} (${c.system})`).join(', ');
   

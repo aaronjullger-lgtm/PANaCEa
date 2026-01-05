@@ -3,6 +3,13 @@
  * 
  * Get the status of the pre-generated question pool
  * Shows availability by system and overall health
+ * 
+ * MULTI-TENANT ARCHITECTURE:
+ * Questions are permanent assets in the pool - they're never "consumed" globally.
+ * Each user has their own history via UserQuestionHistory.
+ * This endpoint shows:
+ * - Total questions in pool (permanent library)
+ * - Per-user: how many they've seen vs. fresh questions available
  */
 
 import { authenticateRequest } from '../_shared/auth';
@@ -30,44 +37,84 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
       });
     }
 
-    // Get counts by system
-    const systemCounts: Record<string, { available: number; used: number; total: number }> = {};
+    // Get user ID for personal stats
+    const user = await prisma.user.findUnique({
+      where: { clerkId: authResult.userId },
+      select: { id: true },
+    });
+
+    // Get counts by system (total in pool - multi-tenant: all questions are available)
+    const systemCounts: Record<string, { total: number; userSeen: number; userFresh: number }> = {};
     
     for (const system of SYSTEMS) {
-      const [available, used] = await Promise.all([
-        prisma.preGeneratedQuestion.count({
-          where: { system, usedAt: null },
-        }),
-        prisma.preGeneratedQuestion.count({
-          where: { system, usedAt: { not: null } },
-        }),
-      ]);
+      const total = await prisma.preGeneratedQuestion.count({
+        where: { system },
+      });
+      
+      // Get user-specific counts if authenticated
+      let userSeen = 0;
+      if (user) {
+        const seenQuestions = await prisma.userQuestionHistory.findMany({
+          where: { userId: user.id },
+          select: { questionId: true },
+        });
+        const seenIds = seenQuestions.map(h => h.questionId);
+        
+        if (seenIds.length > 0) {
+          userSeen = await prisma.preGeneratedQuestion.count({
+            where: { 
+              system,
+              id: { in: seenIds },
+            },
+          });
+        }
+      }
       
       systemCounts[system] = {
-        available,
-        used,
-        total: available + used,
+        total,
+        userSeen,
+        userFresh: total - userSeen,
       };
     }
 
-    // Get overall counts
-    const [totalAvailable, totalUsed] = await Promise.all([
-      prisma.preGeneratedQuestion.count({ where: { usedAt: null } }),
-      prisma.preGeneratedQuestion.count({ where: { usedAt: { not: null } } }),
-    ]);
+    // Get overall pool count
+    const totalInPool = await prisma.preGeneratedQuestion.count();
+
+    // Get user's seen count across all systems
+    let totalUserSeen = 0;
+    if (user) {
+      const allSeenHistory = await prisma.userQuestionHistory.findMany({
+        where: { userId: user.id },
+        select: { questionId: true },
+      });
+      const allSeenIds = allSeenHistory.map(h => h.questionId);
+      
+      if (allSeenIds.length > 0) {
+        totalUserSeen = await prisma.preGeneratedQuestion.count({
+          where: { id: { in: allSeenIds } },
+        });
+      }
+    }
 
     // Get main Question table count
     const mainQuestionCount = await prisma.question.count();
 
-    // Identify systems that need questions
-    const lowSystems = SYSTEMS.filter(s => systemCounts[s].available < POOL_LOW_THRESHOLD);
+    // Identify systems that need more questions in the pool
+    const lowSystems = SYSTEMS.filter(s => systemCounts[s].total < POOL_LOW_THRESHOLD);
 
     return new Response(JSON.stringify({
       pool: {
-        available: totalAvailable,
-        used: totalUsed,
-        total: totalAvailable + totalUsed,
+        total: totalInPool,
+        // Multi-tenant: all questions remain available
+        available: totalInPool,
       },
+      user: user ? {
+        seen: totalUserSeen,
+        fresh: totalInPool - totalUserSeen,
+        percentExplored: totalInPool > 0 
+          ? Math.round((totalUserSeen / totalInPool) * 100) 
+          : 0,
+      } : null,
       mainTable: {
         total: mainQuestionCount,
       },
@@ -75,8 +122,8 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
       health: {
         threshold: POOL_LOW_THRESHOLD,
         lowSystems,
-        overallHealthy: totalAvailable >= POOL_LOW_THRESHOLD,
-        needsGeneration: lowSystems.length > 0 || totalAvailable < POOL_LOW_THRESHOLD,
+        overallHealthy: totalInPool >= POOL_LOW_THRESHOLD,
+        needsGeneration: lowSystems.length > 0 || totalInPool < POOL_LOW_THRESHOLD,
       },
     }), {
       status: 200,

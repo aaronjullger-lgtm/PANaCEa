@@ -101,9 +101,9 @@ async function getFromPreGeneratedPool(
   const seenIds = new Set(seenQuestionIds.map(q => q.questionId));
 
   // Build where clause for pre-generated questions
-  const where: any = {
-    usedAt: null, // Only get unused questions
-  };
+  // Do NOT filter by usedAt - questions remain available to all users
+  // Per-user filtering happens via seenIds from UserQuestionHistory
+  const where: any = {};
 
   if (system) {
     where.system = system;
@@ -150,14 +150,9 @@ async function getFromPreGeneratedPool(
     toMarkUsed.push(q.id);
   }
 
-  // Mark questions as used (but don't delete - keep for analytics)
+  // Record in user history ONLY - do NOT mark questions as globally used
+  // This enables multi-tenant pooling where each user gets fresh questions
   if (toMarkUsed.length > 0) {
-    await prisma.preGeneratedQuestion.updateMany({
-      where: { id: { in: toMarkUsed } },
-      data: { usedAt: new Date(), usedBy: userId },
-    });
-
-    // Record in user history
     await prisma.userQuestionHistory.createMany({
       data: toMarkUsed.map(questionId => ({
         id: `${userId}-${questionId}`,
@@ -268,12 +263,14 @@ async function getFromMainTable(
 
 /**
  * Check pool status and trigger background generation if needed
+ * Now counts ALL questions (not just unused) since questions are no longer "consumed"
  */
 async function checkAndTriggerGeneration(
   system?: string,
   category?: string
 ): Promise<void> {
-  const where: any = { usedAt: null };
+  // Count all questions (not filtered by usedAt since we no longer mark questions as used)
+  const where: any = {};
   if (system) where.system = system;
   if (category) where.questionType = category;
 

@@ -143,7 +143,7 @@ interface ScoringSystemData {
 async function generateScoringSystemData(name: string, category: string, condition: string): Promise<ScoringSystemData | null> {
   await rateLimiter.acquire();
   
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const prompt = `You are a PA/NP educator creating PANCE exam prep content. Generate comprehensive data for the clinical scoring system "${name}" used for "${condition}".
 

@@ -612,7 +612,7 @@ async function generateAITreatments(
 ): Promise<TreatmentCandidate[]> {
   const ai = getAI();
   const model = ai.getGenerativeModel({ 
-    model: 'gemini-2.5-flash',
+    model: 'gemini-2.5-pro',
     generationConfig: {
       temperature: 0.1,
       responseMimeType: 'application/json',

@@ -143,7 +143,7 @@ SUITABLE: Real medical images (ECG, X-ray, CT, clinical photos) showing the cond
 NOT SUITABLE: Diagrams with labels, stock photos, unrelated conditions, poor quality`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

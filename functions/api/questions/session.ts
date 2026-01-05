@@ -268,7 +268,9 @@ async function fetchFromPool(
 ): Promise<{ questions: EnrichedQuestion[] }> {
   const { count, system, conditionId, difficulty } = options;
 
-  const where: Record<string, unknown> = { usedAt: null };
+  // Do NOT filter by usedAt - questions remain available to all users
+  // Per-user filtering happens via seenIds from UserQuestionHistory
+  const where: Record<string, unknown> = {};
   if (system) where.system = system;
   if (conditionId) where.conditionId = conditionId;
   if (difficulty) where.difficulty = difficulty;
@@ -312,13 +314,9 @@ async function fetchFromPool(
     seenIds.add(q.id);
   }
 
-  // Mark as used
-  if (toMarkUsed.length > 0) {
-    await prisma.preGeneratedQuestion.updateMany({
-      where: { id: { in: toMarkUsed } },
-      data: { usedAt: new Date(), usedBy: userId },
-    });
-  }
+  // Record in user's history - do NOT mark globally as used
+  // This enables multi-tenant pooling
+  // Note: The actual history record happens in the parent function
 
   return { questions };
 }

@@ -517,7 +517,7 @@ Respond ONLY with valid JSON.`;
 
     // Use SDK with gemini-2.5-flash
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-pro',
       generationConfig: { temperature: 0.2 }
     });
 

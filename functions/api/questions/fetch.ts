@@ -65,9 +65,9 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
       const seenQuestionIds = history.map((h) => h.questionId);
 
       // 2. Build query for live questions
-      const where: any = {
-        usedAt: null, // Prefer unused questions first
-      };
+      // Do NOT filter by usedAt - questions remain available to all users
+      // Per-user filtering happens via notIn seenQuestionIds
+      const where: any = {};
 
       if (system) where.system = system;
       if (difficulty) where.difficulty = difficulty;
@@ -84,30 +84,12 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
         },
         take: limit,
         orderBy: [
-          { usedAt: "asc" }, // Prioritize never-used questions
-          { generatedAt: "desc" }, // Then newer questions
+          { generatedAt: "asc" }, // Use oldest first for fairness
         ],
       });
 
-      // 4. Fallback: If not enough questions, try used questions that user hasn't seen
-      if (questions.length < limit) {
-          // Remove usedAt: null constraint
-          const fallbackWhere = { ...where };
-          delete fallbackWhere.usedAt;
-
-          const additionalQuestions = await prisma.preGeneratedQuestion.findMany({
-              where: {
-                  ...fallbackWhere,
-                  id: {
-                      notIn: [...seenQuestionIds, ...questions.map(q => q.id)],
-                  },
-              },
-              take: limit - questions.length,
-              orderBy: { generatedAt: "desc" },
-          });
-          
-          questions = [...questions, ...additionalQuestions];
-      }
+      // 4. If not enough questions, all questions for this user are exhausted
+      // The pool remains available for other users
 
       // 5. Return results
       return new Response(JSON.stringify({

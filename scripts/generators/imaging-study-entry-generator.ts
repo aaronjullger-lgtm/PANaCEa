@@ -168,7 +168,7 @@ async function generateImagingStudyData(name: string, category: string, indicati
   await rateLimiter.acquire();
 
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.5-pro",
     generationConfig: {
       temperature: 0.3,
       responseMimeType: "application/json",

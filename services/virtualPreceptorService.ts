@@ -6,7 +6,6 @@
  * evaluation based on the chat transcript and case data.
  */
 
-import { GEMINI_PRO_MODEL } from '@/src/constants';
 import { callGeminiText, type ChatMessage } from './geminiService';
 import type { PatientEncounterCase } from '../types/drill-modes';
 
@@ -208,7 +207,7 @@ Return ONLY the JSON object. Do NOT include \`\`\`json markers or any other text
 
   try {
     // Call Gemini Pro for detailed evaluation (higher temperature for nuanced feedback)
-    const rawResponse = await callGeminiText(GEMINI_PRO_MODEL, prompt, 0.7);
+    const rawResponse = await callGeminiText("gemini-2.5-pro", prompt, 0.7);
     
     // Clean and parse the response
     const cleanedResponse = cleanJsonResponse(rawResponse);

@@ -195,7 +195,7 @@ IMPORTANT:
 - For categorical tools, describe the categories clearly in the range field`;
 
 async function generateGuideline(guideline: typeof GUIDELINES_TO_GENERATE[0], retryCount = 0): Promise<GuidelineData | null> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   let prompt = PROMPT_TEMPLATE
     .replace('{NAME}', guideline.name)

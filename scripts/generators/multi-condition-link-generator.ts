@@ -143,7 +143,7 @@ async function generateLabLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<LabConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const conditionsList = conditions.slice(0, 50).map(c => `${c.name} (${c.system})`).join(', ');
   
@@ -246,7 +246,7 @@ async function generateFindingLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<FindingConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const conditionsList = conditions.slice(0, 50).map(c => `${c.name} (${c.system})`).join(', ');
   
@@ -345,7 +345,7 @@ async function generateProcedureLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<ProcedureConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const conditionsList = conditions.slice(0, 50).map(c => `${c.name} (${c.system})`).join(', ');
   
@@ -442,7 +442,7 @@ async function generatePhysiologyLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<PhysiologyConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const conditionsList = conditions.slice(0, 50).map(c => `${c.name} (${c.system})`).join(', ');
   
@@ -535,7 +535,7 @@ async function generateAnatomyLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<AnatomyConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const conditionsList = conditions.slice(0, 50).map(c => `${c.name} (${c.system})`).join(', ');
   
@@ -628,7 +628,7 @@ async function generateDrugLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<DrugConditionLinkData[]> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const conditionsList = conditions.slice(0, 50).map(c => `${c.name} (${c.system})`).join(', ');
   
@@ -737,7 +737,7 @@ async function generateTreatmentLinks(
   conditions: Array<{ id: string; name: string; system: string }>,
   retryCount = 0
 ): Promise<Array<{ treatmentId: string; conditionId: string; relationshipType: string; evidenceLevel: string; notes: string; isFirstLine: boolean }>> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const conditionsList = conditions.slice(0, 50).map(c => `${c.name} (${c.system})`).join(', ');
   

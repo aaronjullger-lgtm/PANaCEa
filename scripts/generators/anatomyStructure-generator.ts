@@ -134,7 +134,7 @@ CRITICAL JSON RULES:
 Return the JSON now:`;
 
 async function generateAnatomyStructure(item: { name: string; category: string }, retryCount = 0): Promise<AnatomyStructureData | null> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   let prompt = PROMPT_TEMPLATE
     .replace('{{ITEM_NAME}}', item.name)

@@ -148,8 +148,9 @@ async function getFromPreGeneratedPool(
 ) {
   const { count, system, category, difficulty } = options;
 
-  // Build where clause
-  const where: Record<string, unknown> = { usedAt: null };
+  // Build where clause - do NOT filter by usedAt
+  // Questions remain available to all users; per-user filtering happens via seenIds
+  const where: Record<string, unknown> = {};
   if (system) where.system = system;
   if (difficulty) where.difficulty = difficulty;
   if (category) where.questionType = category;
@@ -205,13 +206,9 @@ async function getFromPreGeneratedPool(
     toMarkUsed.push(q.id);
   }
 
-  // Mark as used and record in history
+  // Record in user history ONLY - do NOT mark questions as globally used
+  // This enables multi-tenant pooling where each user gets fresh questions
   if (toMarkUsed.length > 0) {
-    await prisma.preGeneratedQuestion.updateMany({
-      where: { id: { in: toMarkUsed } },
-      data: { usedAt: new Date(), usedBy: userId },
-    });
-
     await prisma.userQuestionHistory.createMany({
       data: toMarkUsed.map(questionId => ({
         id: `${userId}-${questionId}`,
@@ -224,7 +221,7 @@ async function getFromPreGeneratedPool(
     });
   }
 
-  return { questions, remaining: remaining - toMarkUsed.length };
+  return { questions, remaining };
 }
 
 /**

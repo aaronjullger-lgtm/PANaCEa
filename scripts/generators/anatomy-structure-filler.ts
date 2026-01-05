@@ -66,7 +66,7 @@ async function generateContent(structure: any): Promise<AnatomyContent | null> {
   await rateLimiter.consume();
 
   const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-2.5-pro',
     generationConfig: {
       responseMimeType: 'application/json',
       temperature: 0.3,

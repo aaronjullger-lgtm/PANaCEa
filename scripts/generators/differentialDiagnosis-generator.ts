@@ -302,7 +302,7 @@ Return valid JSON:
 Return ONLY valid JSON, no markdown. panceYield is 1-10 scale.`;
 
 async function generateDDx(complaint: { complaint: string; category: string; emergency: boolean }): Promise<DDxData | null> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const prompt = PROMPT_TEMPLATE
     .replace(/{{COMPLAINT}}/g, complaint.complaint)

@@ -89,7 +89,7 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(context.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
 
     // Build the generation prompt
     const taskInstruction = TASK_INSTRUCTIONS[task] || TASK_INSTRUCTIONS['Formulating Diagnosis'];

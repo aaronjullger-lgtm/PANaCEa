@@ -210,7 +210,7 @@ function getRetryInfo(status: number): { retryable: boolean; retryAfterMs: numbe
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function callGeminiText(
-  modelName: string = GEMINI_FLASH_MODEL,
+  modelName: string = "gemini-2.5-flash",
   prompt: string,
   temperature: number = 0.8,
   options: { maxRetries?: number } = {}

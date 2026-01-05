@@ -98,7 +98,7 @@ async function analyzeImageWithAI(
   reason: string;
 }> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
     
     // Fetch the image
     const response = await fetch(imageUrl);

@@ -103,10 +103,23 @@ export default defineConfig(({ mode }) => {
             '.prisma/client/edge',
             '@prisma/extension-accelerate',
           ],
-          // Let Vite handle code splitting automatically
-          // Removed manualChunks to fix lucide-react circular dependency issue
+          output: {
+            manualChunks: (id) => {
+              // Group heavy libraries into a vendor chunk
+              if (id.includes('node_modules')) {
+                if (id.includes('@clerk')) return 'vendor-clerk';
+                if (id.includes('framer-motion') || id.includes('recharts')) return 'vendor-animation-charts';
+                if (id.includes('lucide-react')) return 'vendor-icons';
+                return 'vendor';
+              }
+              // Group components into logical chunks
+              if (id.includes('/components/admin/')) return 'chunk-admin';
+              if (id.includes('/components/modes/')) return 'chunk-modes';
+              if (id.includes('/components/analytics/')) return 'chunk-analytics';
+            },
+          },
         },
-        chunkSizeWarningLimit: 500,
+        chunkSizeWarningLimit: 700, // Increased limit for larger vendor chunks
         // Conditionally enable source maps based on environment
         // In production, use 'hidden' to generate maps but not reference them in the bundle
         sourcemap: mode === 'production' ? 'hidden' : true,

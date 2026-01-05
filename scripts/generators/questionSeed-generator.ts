@@ -131,7 +131,7 @@ CRITICAL:
 }
 
 async function generateSeed(condition: ConditionWithContent, questionType: string): Promise<QuestionSeedData | null> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   const prompt = buildPrompt(condition, questionType);
   

@@ -1,6 +1,5 @@
 import type { PatientEncounterCase, PatientPersona, PatientPersonality } from '@/types/drill-modes';
 import { getApiEndpoint, API_ENDPOINTS } from '../lib/utils/apiConfig';
-import { GEMINI_FLASH_MODEL } from '@/src/constants';
 import { callGeminiText } from './geminiService';
 
 // Lazy load condition content to improve initial bundle size

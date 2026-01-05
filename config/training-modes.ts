@@ -99,15 +99,90 @@ export const CATEGORY_INFO: Record<TrainingCategory, {
   },
   specialty_drills: {
     label: 'Specialty Drills',
-    description: 'Focused high-yield practice',
+    description: 'High-yield focused drills for specific areas',
     iconName: 'Target',
   },
 };
 
-// ============================================================================
-// VISUAL DIAGNOSTICS - Pattern recognition with images/media (3 modes = 1 row)
-// ============================================================================
-export const VISUAL_DIAGNOSTICS_MODES: TrainingModeConfig[] = [
+export interface StudyPreset {
+  id: string;
+  label: string;
+  description: string;
+  iconName: string;
+  settings: {
+    count: number;
+    difficulty: 'same' | 'easier' | 'harder';
+    focus: 'all' | 'unseen' | 'incorrect' | 'bookmarked';
+    systems?: string[];
+    durationMinutes: number;
+  };
+}
+
+export const STUDY_PRESETS: StudyPreset[] = [
+  {
+    id: 'quick_review',
+    label: 'Quick 10-Min Review',
+    description: 'A fast-paced review of 10 questions from your weak areas.',
+    iconName: 'Zap',
+    settings: {
+      count: 10,
+      difficulty: 'same',
+      focus: 'incorrect',
+      durationMinutes: 10,
+    },
+  },
+  {
+    id: 'cardiology_deep_dive',
+    label: 'Cardiology Deep Dive',
+    description: 'A focused 30-minute session on cardiovascular topics.',
+    iconName: 'HeartPulse',
+    settings: {
+      count: 25,
+      difficulty: 'same',
+      focus: 'all',
+      systems: ['Cardiovascular'],
+      durationMinutes: 30,
+    },
+  },
+  {
+    id: 'weakest_topics_drill',
+    label: 'Weakest Topics Drill',
+    description: 'Tackle 20 questions from topics you struggle with the most.',
+    iconName: 'TrendingDown',
+    settings: {
+      count: 20,
+      difficulty: 'harder',
+      focus: 'incorrect',
+      durationMinutes: 25,
+    },
+  },
+  {
+    id: 'unseen_marathon',
+    label: 'Unseen Marathon',
+    description: 'A comprehensive block of 50 new questions.',
+    iconName: 'Sparkles',
+    settings: {
+      count: 50,
+      difficulty: 'same',
+      focus: 'unseen',
+      durationMinutes: 60,
+    },
+  },
+];
+
+export const TRAINING_MODES: TrainingModeConfig[] = [
+  // --- CORE ADAPTIVE (MAIN EVENT) ---
+  {
+    id: 'core_adaptive',
+    label: 'Adaptive Questions',
+    description: 'AI-powered adaptive board-style exam practice',
+    category: 'question_practice',
+    iconName: 'Brain',
+    theme: 'slate',
+    route: 'core_adaptive',
+    estimatedMinutes: 30,
+  },
+  // --- VISUAL DIAGNOSTICS ---
   {
     id: 'ecg_drill',
     label: 'ECG Interpretation',
@@ -138,12 +213,7 @@ export const VISUAL_DIAGNOSTICS_MODES: TrainingModeConfig[] = [
     route: 'imaging_drill',
     estimatedMinutes: 10,
   },
-];
-
-// ============================================================================
-// CLINICAL SIMULATION - Interactive patient scenarios (3 modes = 1 row)
-// ============================================================================
-export const CLINICAL_SIMULATION_MODES: TrainingModeConfig[] = [
+  // --- CLINICAL SIMULATION ---
   {
     id: 'fluid_electrolyte',
     label: 'Fluids & Electrolytes',
@@ -174,12 +244,7 @@ export const CLINICAL_SIMULATION_MODES: TrainingModeConfig[] = [
     route: 'ventilator_hero',
     estimatedMinutes: 15,
   },
-];
-
-// ============================================================================
-// QUESTION PRACTICE - Board-style Q&A (7 modes)
-// ============================================================================
-export const QUESTION_PRACTICE_MODES: TrainingModeConfig[] = [
+  // --- QUESTION PRACTICE ---
   {
     id: 'pharmacology',
     label: 'Pharmacology Quiz',
@@ -240,12 +305,7 @@ export const QUESTION_PRACTICE_MODES: TrainingModeConfig[] = [
     route: 'condition_drill',
     estimatedMinutes: 10,
   },
-];
-
-// ============================================================================
-// SPECIALTY DRILLS - High-yield focused practice (6 modes = 2 rows)
-// ============================================================================
-export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
+  // --- SPECIALTY DRILLS ---
   {
     id: 'rapid_recall',
     label: 'Rapid Recall',
@@ -306,56 +366,39 @@ export const SPECIALTY_DRILL_MODES: TrainingModeConfig[] = [
     route: 'code_blue_speed',
     estimatedMinutes: 5,
   },
+  // --- STANDALONE MODES ---
+  {
+    id: 'patient_encounter',
+    label: 'Virtual OSCE',
+    description: 'Full interactive patient encounters with AI scoring',
+    category: 'clinical_simulation',
+    iconName: 'MessageSquare',
+    theme: 'teal',
+    route: 'patient_encounter',
+    estimatedMinutes: 20,
+  },
+  {
+    id: 'grand_rounds',
+    label: 'Grand Rounds',
+    description: 'Daily challenge - same questions for everyone',
+    category: 'specialty_drills',
+    iconName: 'Trophy',
+    theme: 'amber',
+    route: 'grand_rounds',
+    estimatedMinutes: 15,
+  },
+  {
+    id: 'panre_la',
+    label: 'PANRE-LA Simulator',
+    description: 'Longitudinal assessment format for recertification',
+    category: 'question_practice',
+    iconName: 'GraduationCap',
+    theme: 'indigo',
+    route: 'panre_la',
+    panreOnly: true,
+    estimatedMinutes: 25,
+  },
 ];
-
-// ============================================================================
-// STANDALONE MODES
-// ============================================================================
-
-export const CORE_ADAPTIVE_MODE: TrainingModeConfig = {
-  id: 'core_adaptive',
-  label: 'Adaptive Questions',
-  description: 'AI-powered adaptive board-style exam practice',
-  category: 'question_practice',
-  iconName: 'Brain',
-  theme: 'slate',
-  route: 'core_adaptive',
-  estimatedMinutes: 30,
-};
-
-export const OSCE_MODE: TrainingModeConfig = {
-  id: 'patient_encounter',
-  label: 'Virtual OSCE',
-  description: 'Full interactive patient encounters with AI scoring',
-  category: 'clinical_simulation',
-  iconName: 'MessageSquare',
-  theme: 'teal',
-  route: 'patient_encounter',
-  estimatedMinutes: 20,
-};
-
-export const GRAND_ROUNDS_MODE: TrainingModeConfig = {
-  id: 'grand_rounds',
-  label: 'Grand Rounds',
-  description: 'Daily challenge - same questions for everyone',
-  category: 'specialty_drills',
-  iconName: 'Trophy',
-  theme: 'amber',
-  route: 'grand_rounds',
-  estimatedMinutes: 15,
-};
-
-export const PANRE_LA_MODE: TrainingModeConfig = {
-  id: 'panre_la',
-  label: 'PANRE-LA Simulator',
-  description: 'Longitudinal assessment format for recertification',
-  category: 'question_practice',
-  iconName: 'GraduationCap',
-  theme: 'indigo',
-  route: 'panre_la',
-  panreOnly: true,
-  estimatedMinutes: 25,
-};
 
 // ============================================================================
 // Combined registries

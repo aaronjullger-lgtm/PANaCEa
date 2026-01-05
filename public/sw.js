@@ -21,6 +21,10 @@ const STATIC_ASSETS = [
 const MAX_DYNAMIC_CACHE_SIZE = 50;
 const MAX_API_CACHE_SIZE = 20;
 
+// Paths that should bypass the Service Worker entirely
+// These routes may involve authentication redirects that the browser must handle natively
+const EXCLUDED_PATHS = ['/admin', '/api', '/sign-in', '/sign-up', '/sso-callback'];
+
 /**
  * Limit cache size to prevent storage issues
  */
@@ -98,43 +102,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // API requests - network first, cache fallback
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/geminiProxy')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Clone response to cache it
-          const responseClone = response.clone();
-          
-          caches.open(API_CACHE).then((cache) => {
-            cache.put(request, responseClone);
-            limitCacheSize(API_CACHE, MAX_API_CACHE_SIZE);
-          });
-          
-          return response;
-        })
-        .catch(() => {
-          // Network failed, try cache
-          return caches.match(request)
-            .then((cached) => {
-              if (cached) {
-                console.log('[Service Worker] Serving from API cache:', request.url);
-                return cached;
-              }
-              
-              // Return offline page or error
-              return new Response(
-                JSON.stringify({ error: 'Offline - cached data not available' }),
-                {
-                  status: 503,
-                  statusText: 'Service Unavailable',
-                  headers: { 'Content-Type': 'application/json' },
-                }
-              );
-            });
-        })
-    );
-    return;
+  // IMPORTANT: Skip excluded paths to let browser handle authentication redirects natively
+  // This prevents "redirected response was used for a request whose redirect mode is not 'follow'" errors
+  const isExcludedPath = EXCLUDED_PATHS.some(path => url.pathname.startsWith(path));
+  if (isExcludedPath) {
+    return; // Let browser handle this request (including any redirects)
   }
   
   // Static assets - cache first, network fallback
@@ -173,7 +145,7 @@ self.addEventListener('fetch', (event) => {
   }
   
   // HTML pages - network first, cache fallback
-  if (request.headers.get('Accept').includes('text/html')) {
+  if (request.headers.get('Accept')?.includes('text/html')) {
     event.respondWith(
       fetch(request)
         .then((response) => {
