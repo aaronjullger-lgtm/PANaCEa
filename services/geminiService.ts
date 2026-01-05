@@ -34,19 +34,41 @@ import {
 // ============================================================================
 
 /**
+ * Safely convert any value to a string for toLowerCase operations
+ * Prevents "Cannot read properties of null (reading 'toLowerCase')" errors
+ */
+function safeString(value: unknown, fallback = ''): string {
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return String(value);
+}
+
+/**
+ * Normalize a string for ID generation (handles null/undefined gracefully)
+ */
+function normalizeId(value: unknown): string {
+  const str = safeString(value, 'unknown');
+  return str
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+}
+
+/**
  * Build a standardized condition ID from metadata
  * Replaces the old buildConditionDefinition from conditionRegistry
  */
 function buildConditionId(meta: ConditionMeta): string {
-  const norm = (s: string | null | undefined) =>
-    (s || 'unknown')
-      .toLowerCase()
-      .replace(/\s+/g, "_")
-      .replace(/[^a-z0-9_]/g, "");
-
-  // Ensure meta.system is also handled safely
-  const safeSystem = meta.system || 'UNKNOWN';
-  return `${safeSystem}__${norm(meta.subcategory)}__${norm(meta.condition)}`;
+  // Use normalizeId for all fields to ensure safety
+  const safeSystem = safeString(meta.system, 'UNKNOWN');
+  const safeSubcategory = normalizeId(meta.subcategory);
+  const safeCondition = normalizeId(meta.condition);
+  
+  return `${safeSystem}__${safeSubcategory}__${safeCondition}`;
 }
 
 /**
@@ -59,6 +81,16 @@ function buildConditionDefinition(meta: ConditionMeta): ConditionDefinition {
     subcategory: meta.subcategory,
     condition: meta.condition,
   };
+}
+
+/**
+ * Validate that a ConditionMeta object has all required fields
+ */
+function isValidConditionMeta(meta: ConditionMeta | null | undefined): meta is ConditionMeta {
+  if (!meta) return false;
+  if (!meta.system || typeof meta.system !== 'string') return false;
+  if (!meta.condition || typeof meta.condition !== 'string') return false;
+  return true;
 }
 
 /**
@@ -270,14 +302,13 @@ export async function callGeminiText(
 
 // --- Helper: strip any HTML tags from a string (for options/condition) ---
 
-const stripHtmlTags = (text: string): string =>
-  typeof text === "string" ? text.replace(/<\/?[^>]+(>|$)/g, "") : text;
+const stripHtmlTags = (text: string | null | undefined): string => {
+  const safe = safeString(text);
+  return safe.replace(/<\/?[^>]+(>|$)/g, "");
+};
 
 const slugify = (value: string | null | undefined): string =>
-  (value || '')
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9_]/g, "");
+  normalizeId(value);
 
 function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
   const id = buildConditionDefinition(meta).id;
@@ -499,24 +530,24 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
         console.error(`Error fetching random condition for ${systemCode}:`, error);
       }
       
-      if (selectedConditionMeta) {
+      if (selectedConditionMeta && isValidConditionMeta(selectedConditionMeta)) {
         chosenConditionMeta = selectedConditionMeta;
         chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
         
         // Load database content via API (browser-safe)
         try {
           const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } = await import('./conditionContentService');
-          const dbContent = await fetchConditionContent(selectedConditionMeta.condition);
+          const dbContent = await fetchConditionContent(safeString(selectedConditionMeta.condition));
           
           if (dbContent && hasCompleteContent(dbContent)) {
             conditionRegistryNotes = buildDatabaseContext(dbContent);
-            console.log(`✓ Using database content for ${selectedConditionMeta.condition}`);
+            console.log(`✓ Using database content for ${safeString(selectedConditionMeta.condition)}`);
           } else {
-            console.warn(`⚠ Incomplete database content for ${selectedConditionMeta.condition}, using registry/API knowledge`);
+            console.warn(`⚠ Incomplete database content for ${safeString(selectedConditionMeta.condition)}, using registry/API knowledge`);
             conditionRegistryNotes = getConditionRegistryContext(selectedConditionMeta);
           }
         } catch (error) {
-          console.error(`Error loading database content for ${selectedConditionMeta.condition}:`, error);
+          console.error(`Error loading database content for ${safeString(selectedConditionMeta.condition)}:`, error);
           conditionRegistryNotes = getConditionRegistryContext(selectedConditionMeta);
         }
       }
@@ -565,8 +596,9 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
         ? `\n\nCondition registry summary (use this to stay accurate without re-deriving facts):\n${conditionRegistryNotes}`
         : "";
 
-      const conditionContext = selectedConditionMeta
-        ? `You are targeting the subcategory "${selectedConditionMeta.subcategory}" in the "${fullContentTopicName}" system. Where clinically appropriate, focus the vignette on the specific condition "${selectedConditionMeta.condition}". However, if a very closely related variant would make for a better, more realistic PANCE-style question, you may use it instead – just ensure the "condition" field in your JSON exactly matches the condition you used.${registryInstruction}`
+      // Validate selectedConditionMeta before using in string template
+      const conditionContext = selectedConditionMeta && isValidConditionMeta(selectedConditionMeta)
+        ? `You are targeting the subcategory "${safeString(selectedConditionMeta.subcategory, 'General')}" in the "${fullContentTopicName}" system. Where clinically appropriate, focus the vignette on the specific condition "${safeString(selectedConditionMeta.condition)}". However, if a very closely related variant would make for a better, more realistic PANCE-style question, you may use it instead – just ensure the "condition" field in your JSON exactly matches the condition you used.${registryInstruction}`
         : `You are targeting the "${fullContentTopicName}" system.`;
 
       const topicFieldInstruction = `The "topic" field in the JSON output MUST be exactly "${fullContentTopicName}".`;
@@ -635,15 +667,15 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
         chosenConditionDef.system;
 
       // If we have the meta, get the context to ensure accuracy
-      if (chosenConditionMeta && !conditionRegistryNotes) {
+      if (chosenConditionMeta && isValidConditionMeta(chosenConditionMeta) && !conditionRegistryNotes) {
         // Fetch database content via API (browser-safe)
         try {
           const { fetchConditionContent, hasCompleteContent, buildDatabaseContext } = await import('./conditionContentService');
-          const dbContent = await fetchConditionContent(chosenConditionMeta.condition);
+          const dbContent = await fetchConditionContent(safeString(chosenConditionMeta.condition));
           
           if (dbContent && hasCompleteContent(dbContent)) {
             conditionRegistryNotes = buildDatabaseContext(dbContent);
-            console.log(`✓ Using database content for ${chosenConditionMeta.condition}`);
+            console.log(`✓ Using database content for ${safeString(chosenConditionMeta.condition)}`);
           } else {
             conditionRegistryNotes = getConditionRegistryContext(chosenConditionMeta);
           }
@@ -657,7 +689,9 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
         ? `\n\nCondition registry summary (use this to stay accurate without re-deriving facts):\n${conditionRegistryNotes}`
         : "";
 
-       conditionInstruction = `- Condition targeting: The question's PRIMARY condition MUST be "${chosenConditionDef.condition}" within the "${chosenConditionDef.subcategory}" subcategory of the "${fullTopicName}" system. The "condition" field in the JSON MUST be exactly "${chosenConditionDef.condition}".${registryInstruction}`;
+       conditionInstruction = chosenConditionDef 
+         ? `- Condition targeting: The question's PRIMARY condition MUST be "${safeString(chosenConditionDef.condition)}" within the "${safeString(chosenConditionDef.subcategory, 'General')}" subcategory of the "${fullTopicName}" system. The "condition" field in the JSON MUST be exactly "${safeString(chosenConditionDef.condition)}".${registryInstruction}`
+         : "";
   }
     
     prompt = `You are generating a structured JSON object for a PANCE practice question.
