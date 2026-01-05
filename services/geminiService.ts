@@ -980,9 +980,10 @@ Return ONLY raw JSON (no markdown formatting) with this structure:
   } catch (error) {
     console.error("Error evaluating diagnosis:", error);
     // Fallback to simple string match if AI fails
-    const normalizedUser = userDiagnosis.toLowerCase();
-    const normalizedCorrect = correctDiagnosis.toLowerCase();
-    const isCorrect = normalizedUser.includes(normalizedCorrect) || normalizedCorrect.includes(normalizedUser);
+    const normalizedUser = (userDiagnosis || '').toLowerCase();
+    const normalizedCorrect = (correctDiagnosis || '').toLowerCase();
+    const isCorrect = normalizedUser && normalizedCorrect && 
+      (normalizedUser.includes(normalizedCorrect) || normalizedCorrect.includes(normalizedUser));
     return {
       isCorrect,
       score: isCorrect ? 100 : 0,
@@ -1240,7 +1241,7 @@ export async function validateSemanticMatch(
 
   try {
     const responseText = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.1);
-    return responseText.toLowerCase().includes("true");
+    return (responseText || '').toLowerCase().includes("true");
   } catch (error) {
     console.error("Semantic validation error:", error);
     return false; // Fallback to strict

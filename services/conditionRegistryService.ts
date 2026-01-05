@@ -79,6 +79,11 @@ export async function getAvailableSystems(): Promise<SystemCode[]> {
  * Get conditions filtered by system
  */
 export async function getConditionsBySystem(system: SystemCode): Promise<ConditionMetadata[]> {
+  // Safety check: if system is null/undefined, return empty array
+  if (!system) {
+    console.warn('getConditionsBySystem called with null/undefined system');
+    return [];
+  }
   const conditions = await fetchConditions();
   return conditions.filter(c => c.system === system);
 }
@@ -88,6 +93,11 @@ export async function getConditionsBySystem(system: SystemCode): Promise<Conditi
  * Replaces the static getRandomConditionForSystem from conditionRegistry
  */
 export async function getRandomConditionForSystem(system: SystemCode): Promise<ConditionMetadata | null> {
+  // Safety check: if system is null/undefined, return null gracefully
+  if (!system) {
+    console.warn('getRandomConditionForSystem called with null/undefined system');
+    return null;
+  }
   const conditions = await getConditionsBySystem(system);
   
   if (conditions.length === 0) {
@@ -116,15 +126,20 @@ export async function getRandomCondition(): Promise<ConditionMetadata | null> {
  * Find a condition by name (case-insensitive partial match)
  */
 export async function findConditionByName(name: string): Promise<ConditionMetadata | null> {
+  // Safety check: if name is null/undefined/empty, return null gracefully
+  if (!name) {
+    console.warn('findConditionByName called with null/undefined/empty name');
+    return null;
+  }
   const conditions = await fetchConditions();
   const searchTerm = name.toLowerCase();
   
-  // Exact match first
-  let match = conditions.find(c => c.name.toLowerCase() === searchTerm);
+  // Exact match first (with null safety for c.name)
+  let match = conditions.find(c => c.name?.toLowerCase() === searchTerm);
   if (match) return match;
   
-  // Partial match
-  match = conditions.find(c => c.name.toLowerCase().includes(searchTerm));
+  // Partial match (with null safety for c.name)
+  match = conditions.find(c => c.name?.toLowerCase().includes(searchTerm));
   return match || null;
 }
 
