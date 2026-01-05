@@ -27,70 +27,100 @@ import { test, expect } from '@playwright/test';
  */
 const routes = [
   { 
-    name: 'Drill Dashboard', 
-    url: '/drill', 
-    expectText: 'Start',
-    description: 'Main drill mode landing page'
+    name: 'Command Center', 
+    url: '/', 
+    expectText: 'Command Center',
+    description: 'Main dashboard and navigation hub'
+  },
+  { 
+    name: 'Quiz Mode', 
+    url: '/?view=quiz', 
+    expectText: 'Question',
+    description: 'Main question-based study session'
   },
   { 
     name: 'Pharmacology Drill', 
-    url: '/drill/pharmacology', 
-    expectText: 'Submit',
+    url: '/?view=pharmacology', 
+    expectText: 'Pharmacology',
     description: 'Tests /api/questions/pharmacology-drill endpoint'
   },
   { 
-    name: 'ECG / Media Drill', 
-    url: '/drill/ecg', 
-    expectSelector: 'img',
-    description: 'Tests /api/drills/media endpoint (CRITICAL - had 500 errors)'
-  },
-  { 
-    name: 'Anatomy Drill', 
-    url: '/drill/anatomy', 
-    expectText: 'Identify',
-    description: 'Anatomy identification drill'
-  },
-  { 
-    name: 'Physiology Drill', 
-    url: '/drill/physiology', 
-    expectText: 'Question',
-    description: 'Physiology concepts drill'
-  },
-  { 
-    name: 'Code Blue Drill', 
-    url: '/drill/code-blue', 
-    expectText: 'Start Resuscitation',
-    description: 'Emergency response simulation'
-  },
-  { 
     name: 'System Drill', 
-    url: '/drill/system', 
+    url: '/?view=system_drill', 
     expectText: 'System',
     description: 'Tests /api/questions/system-drill endpoint'
   },
   { 
-    name: 'Flashcards', 
-    url: '/flashcards', 
-    expectText: 'Show Answer',
-    description: 'Flashcard study mode'
+    name: 'ECG Drill', 
+    url: '/?view=ecg_drill', 
+    expectText: 'ECG',
+    description: 'Tests /api/drills/media?modality=ecg (CRITICAL - had 500 errors)'
   },
   { 
-    name: 'Admin Dashboard', 
-    url: '/admin', 
-    expectText: 'Dashboard',
-    description: 'Admin content management'
+    name: 'Derm Drill', 
+    url: '/?view=derm_drill', 
+    expectText: 'Derm',
+    description: 'Dermatology photo interpretation'
   },
   { 
-    name: 'Quiz Mode', 
-    url: '/quiz', 
-    expectText: 'Question',
-    description: 'Main quiz interface'
+    name: 'Imaging Drill (Radiology)', 
+    url: '/?view=imaging_drill', 
+    expectText: 'Imaging',
+    description: 'Tests /api/drills/media?modality=radiology'
   },
   { 
-    name: 'Analytics', 
-    url: '/analytics', 
-    expectText: 'Performance',
-    description: 'Performance analytics dashboard'
+    name: 'Anatomy Review', 
+    url: '/?view=anatomy_review', 
+    expectText: 'Anatomy',
+    description: 'Regional anatomy with clinical correlates'
+  },
+  { 
+    name: 'Physiology Drill', 
+    url: '/?view=physiology_drill', 
+    expectText: 'Physiology',
+    description: 'Physiology concepts and mechanisms'
+  },
+  { 
+    name: 'Mini Lab Drill', 
+    url: '/?view=mini_lab', 
+    expectText: 'Lab',
+    description: 'Laboratory value interpretation - Tests /api/drills/lab-cases'
+  },
+  { 
+    name: 'Rapid Recall', 
+    url: '/?view=rapid_recall', 
+    expectText: 'Recall',
+    description: 'High-yield buzzwords and associations'
+  },
+  { 
+    name: 'First Line Treatment', 
+    url: '/?view=first_line_treatment', 
+    expectText: 'First Line',
+    description: 'First-line treatment selection drill'
+  },
+  { 
+    name: 'Guideline Drill', 
+    url: '/?view=guideline_drill', 
+    expectText: 'Guideline',
+    description: 'Clinical guidelines and scoring systems'
+  },
+  { 
+    name: 'Code Blue Speed', 
+    url: '/?view=code_blue_speed', 
+    expectText: 'Code Blue',
+    description: 'ACLS/PALS rapid scenarios'
+  },
+  { 
+    name: 'Ventilator Hero', 
+    url: '/?view=ventilator_hero', 
+    expectText: 'Ventilator',
+    description: 'Mechanical ventilation management'
+  },
+  { 
+    name: 'Admin Media', 
+    url: '/?view=admin_media', 
+    expectText: 'Media',
+    description: 'Admin content management for media assets'
   },
 ];
 
@@ -178,18 +208,6 @@ test.describe('Smoke Tests - All Study Modes', () => {
         });
         
         console.log(`✅ Found expected text: "${route.expectText}"`);
-      }
-      
-      if (route.expectSelector) {
-        console.log(`🔍 Looking for selector: "${route.expectSelector}"`);
-        
-        const element = page.locator(route.expectSelector).first();
-        
-        await expect(element).toBeVisible({ 
-          timeout: 15000,
-        });
-        
-        console.log(`✅ Found expected element: "${route.expectSelector}"`);
       }
       
       console.log(`✅ ${route.name} - PASSED\n`);

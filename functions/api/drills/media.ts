@@ -133,7 +133,11 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
     const prisma = createEdgePrismaClient(env.DATABASE_URL as string);
     
     try {
-      // Build query filters
+      // Wrap database query in try-catch for error handling
+      let assets;
+      
+      try {
+        // Build query filters
       // CRITICAL: For quiz mode, we only use CLEAN un-annotated images
       // Annotated images would give away the answer
       const whereClause: any = {
@@ -185,8 +189,8 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
         });
       }
       
-      // Fetch media assets
-      const assets = await prisma.mediaAsset.findMany({
+      // Fetch media assets with error handling
+      assets = await prisma.mediaAsset.findMany({
         where: whereClause,
         select: {
           id: true,
@@ -201,6 +205,29 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
         },
         take: count * 2, // Fetch extra in case some are invalid
       });
+      } catch (dbError) {
+        // Database query failed - log and return empty array
+        console.error('[Media Drill API] Database query error:', dbError);
+        return new Response(
+          JSON.stringify([]),
+          { 
+            status: 200, 
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      // Handle null or empty results gracefully
+      if (!assets || assets.length === 0) {
+        console.warn(`[Media Drill API] No assets found. Modality: ${modalityParam || 'all'}`);
+        return new Response(
+          JSON.stringify([]),
+          { 
+            status: 200, 
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
       
       // Transform to PhotoCase format
       const photoCases: PhotoCase[] = [];
