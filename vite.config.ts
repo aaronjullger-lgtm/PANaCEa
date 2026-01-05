@@ -144,8 +144,47 @@ export default defineConfig(({ mode }) => {
                   return 'vendor-ai';
                 }
                 
-                // Group remaining node_modules (includes radix, etc.)
-                return 'vendor';
+                // Radix UI components (can be large)
+                if (id.includes('@radix-ui')) {
+                  return 'vendor-radix';
+                }
+                
+                // Date/time utilities
+                if (id.includes('date-fns') || id.includes('dayjs') || id.includes('moment')) {
+                  return 'vendor-date';
+                }
+                
+                // Form validation
+                if (id.includes('zod') || id.includes('react-hook-form') || id.includes('@hookform')) {
+                  return 'vendor-forms';
+                }
+                
+                // State management
+                if (id.includes('zustand') || id.includes('immer') || id.includes('jotai')) {
+                  return 'vendor-state';
+                }
+                
+                // Utility libraries
+                if (id.includes('lodash') || id.includes('underscore') || id.includes('clsx') || id.includes('class-variance-authority') || id.includes('tailwind-merge')) {
+                  return 'vendor-utils';
+                }
+                
+                // CLMR/sonner toasts  
+                if (id.includes('sonner') || id.includes('react-hot-toast')) {
+                  return 'vendor-toast';
+                }
+                
+                // Group remaining node_modules into smaller chunks by first letter
+                // This prevents one giant vendor chunk
+                const packageMatch = id.match(/node_modules\/(@[^/]+\/[^/]+|[^/]+)/);
+                if (packageMatch) {
+                  const pkgName = packageMatch[1].replace('@', '').replace('/', '-');
+                  const firstChar = pkgName.charAt(0).toLowerCase();
+                  // Group by first letter to create multiple smaller chunks
+                  return `vendor-other-${firstChar}`;
+                }
+                
+                return 'vendor-misc';
               }
               
               // Split large data registries into separate chunks

@@ -316,8 +316,33 @@ export async function getQuestionBatch(
 
     return [...questions, ...generatedQuestions];
   } catch (error) {
-    console.warn('[QuestionService] Batch fetch failed:', error);
-    return [];
+    console.warn('[QuestionService] Pool fetch failed, falling back to Gemini generation:', error);
+    
+    // Pool failed (possibly 401) - fall back to generating questions via Gemini
+    try {
+      const { fetchNewQuestion } = await import('./geminiService');
+      const generatedQuestions: Question[] = [];
+      
+      for (let i = 0; i < count; i++) {
+        try {
+          const q = await fetchNewQuestion(settings, growthAreas);
+          generatedQuestions.push(q);
+        } catch (genError) {
+          console.error('[QuestionService] Failed to generate question:', genError);
+          break;
+        }
+      }
+      
+      if (generatedQuestions.length > 0) {
+        console.log(`[QuestionService] Generated ${generatedQuestions.length} questions via Gemini fallback`);
+        return generatedQuestions;
+      }
+    } catch (geminiError) {
+      console.error('[QuestionService] Gemini fallback also failed:', geminiError);
+    }
+    
+    // If everything fails, throw so the UI can show an error
+    throw new Error('Unable to load questions. Please check your connection and try again.');
   }
 }
 
