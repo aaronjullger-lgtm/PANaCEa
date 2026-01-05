@@ -7,7 +7,7 @@
   # Protects against XSS and other code injection attacks
   # Note: Cloudflare Pages requires CSP on a single line
   # Permits: Vite, Clerk auth, Cloudflare features, Supabase backend, Google Fonts
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.cloudflare.com https://challenges.cloudflare.com; connect-src 'self' https://*.clerk.com https://*.supabase.co https://*.studypanacea.com https://clerk.studypanacea.com https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; worker-src 'self' blob:; frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://clerk.studypanacea.com https://*.cloudflare.com https://challenges.cloudflare.com; connect-src 'self' https://*.clerk.com https://clerk.studypanacea.com https://*.supabase.co https://*.studypanacea.com https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; worker-src 'self' blob:; frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com;
   
   # Prevent MIME type sniffing
   X-Content-Type-Options: nosniff
