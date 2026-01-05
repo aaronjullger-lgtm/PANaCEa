@@ -10,23 +10,24 @@ import type { SystemCode } from '../types';
 export interface ConditionContentData {
   overview?: string;
   pathophysiology?: string;
-  symptoms?: string[];
-  signs?: string[];
+  // These fields may be arrays OR strings from inconsistent DB data
+  symptoms?: string[] | string;
+  signs?: string[] | string;
   diagnostics?: unknown;
-  treatment?: string[];
-  differentialDiagnosis?: string[];
-  complications?: string[];
+  treatment?: string[] | string;
+  differentialDiagnosis?: string[] | string;
+  complications?: string[] | string;
   prognosis?: string;
-  classicTriad?: string[];
-  buzzwords?: string[];
+  classicTriad?: string[] | string;
+  buzzwords?: string[] | string;
   clinicalPearls?: unknown;
-  examFindings?: string[];
-  riskFactors?: string[];
-  firstLineTests?: string[];
+  examFindings?: string[] | string;
+  riskFactors?: string[] | string;
+  firstLineTests?: string[] | string;
   goldStandardTest?: string;
   firstLineTreatment?: string;
-  contraindications?: string[];
-  monitoring?: string[];
+  contraindications?: string[] | string;
+  monitoring?: string[] | string;
   patientEducation?: string;
   aiConfidence?: number;
 }
@@ -44,6 +45,33 @@ export interface LoadedConditionContent {
 // Cache for condition content to reduce API calls
 const contentCache = new Map<string, { data: LoadedConditionContent; timestamp: number }>();
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
+
+/**
+ * Safely format array-like fields from the database
+ * Handles inconsistent data: arrays, strings, null/undefined
+ */
+function safeArrayJoin(value: unknown, separator = ', '): string {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).join(separator);
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return '';
+}
+
+/**
+ * Check if a field has meaningful array-like content
+ */
+function hasArrayContent(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+  if (typeof value === 'string') {
+    return value.trim().length > 0;
+  }
+  return false;
+}
 
 /**
  * Fetch condition content from the API (browser-safe)
@@ -86,10 +114,10 @@ export function hasCompleteContent(content: LoadedConditionContent): boolean {
   
   const c = content.content;
   
-  // Check for key content fields
+  // Check for key content fields (using safe array check)
   const hasOverview = Boolean(c.overview && c.overview.length > 50);
-  const hasSymptoms = Boolean(c.symptoms && c.symptoms.length > 0);
-  const hasTreatment = Boolean(c.treatment && c.treatment.length > 0);
+  const hasSymptoms = hasArrayContent(c.symptoms);
+  const hasTreatment = hasArrayContent(c.treatment);
   const hasPearls = Boolean(c.clinicalPearls);
   
   // Require at least 2 meaningful content areas
@@ -107,7 +135,7 @@ export function buildDatabaseContext(content: LoadedConditionContent): string {
   const c = content.content;
   const parts: string[] = [];
   
-  parts.push(`=== Database Content for ${content.condition} (${content.system}) ===`);
+  parts.push(`=== Database Content for ${content.condition || 'Unknown'} (${content.system || 'Unknown'}) ===`);
   
   if (c.overview) {
     parts.push(`\nOverview: ${c.overview}`);
@@ -117,52 +145,53 @@ export function buildDatabaseContext(content: LoadedConditionContent): string {
     parts.push(`\nPathophysiology: ${c.pathophysiology}`);
   }
   
-  if (c.symptoms && c.symptoms.length > 0) {
-    parts.push(`\nKey Symptoms: ${c.symptoms.join(', ')}`);
+  // Use safeArrayJoin for all array-like fields to handle string/array/null inconsistency
+  if (hasArrayContent(c.symptoms)) {
+    parts.push(`\nKey Symptoms: ${safeArrayJoin(c.symptoms)}`);
   }
   
-  if (c.signs && c.signs.length > 0) {
-    parts.push(`\nClinical Signs: ${c.signs.join(', ')}`);
+  if (hasArrayContent(c.signs)) {
+    parts.push(`\nClinical Signs: ${safeArrayJoin(c.signs)}`);
   }
   
-  if (c.examFindings && c.examFindings.length > 0) {
-    parts.push(`\nExam Findings: ${c.examFindings.join(', ')}`);
+  if (hasArrayContent(c.examFindings)) {
+    parts.push(`\nExam Findings: ${safeArrayJoin(c.examFindings)}`);
   }
   
-  if (c.classicTriad && c.classicTriad.length > 0) {
-    parts.push(`\nClassic Triad: ${c.classicTriad.join(', ')}`);
+  if (hasArrayContent(c.classicTriad)) {
+    parts.push(`\nClassic Triad: ${safeArrayJoin(c.classicTriad)}`);
   }
   
-  if (c.buzzwords && c.buzzwords.length > 0) {
-    parts.push(`\nBuzzwords: ${c.buzzwords.join(', ')}`);
+  if (hasArrayContent(c.buzzwords)) {
+    parts.push(`\nBuzzwords: ${safeArrayJoin(c.buzzwords)}`);
   }
   
-  if (c.riskFactors && c.riskFactors.length > 0) {
-    parts.push(`\nRisk Factors: ${c.riskFactors.join(', ')}`);
+  if (hasArrayContent(c.riskFactors)) {
+    parts.push(`\nRisk Factors: ${safeArrayJoin(c.riskFactors)}`);
   }
   
-  if (c.firstLineTests && c.firstLineTests.length > 0) {
-    parts.push(`\nFirst-Line Tests: ${c.firstLineTests.join(', ')}`);
+  if (hasArrayContent(c.firstLineTests)) {
+    parts.push(`\nFirst-Line Tests: ${safeArrayJoin(c.firstLineTests)}`);
   }
   
   if (c.goldStandardTest) {
     parts.push(`\nGold Standard Test: ${c.goldStandardTest}`);
   }
   
-  if (c.treatment && c.treatment.length > 0) {
-    parts.push(`\nTreatment: ${c.treatment.join(', ')}`);
+  if (hasArrayContent(c.treatment)) {
+    parts.push(`\nTreatment: ${safeArrayJoin(c.treatment)}`);
   }
   
   if (c.firstLineTreatment) {
     parts.push(`\nFirst-Line Treatment: ${c.firstLineTreatment}`);
   }
   
-  if (c.differentialDiagnosis && c.differentialDiagnosis.length > 0) {
-    parts.push(`\nDifferential Diagnosis: ${c.differentialDiagnosis.join(', ')}`);
+  if (hasArrayContent(c.differentialDiagnosis)) {
+    parts.push(`\nDifferential Diagnosis: ${safeArrayJoin(c.differentialDiagnosis)}`);
   }
   
-  if (c.complications && c.complications.length > 0) {
-    parts.push(`\nComplications: ${c.complications.join(', ')}`);
+  if (hasArrayContent(c.complications)) {
+    parts.push(`\nComplications: ${safeArrayJoin(c.complications)}`);
   }
   
   if (c.prognosis) {
