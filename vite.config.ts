@@ -47,11 +47,13 @@ export default defineConfig(({ mode }) => {
           workbox: {
             maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // 35MB to accommodate large condition data
             globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-            // Force SW update - increment this to bust cache
+            // Force SW update - increment this to bust cache: v2-lucide-fix-2026-01-05
             skipWaiting: true,
             clientsClaim: true,
             // Clean old caches on activation
             cleanupOutdatedCaches: true,
+            // Force precache invalidation by adding version to cache name
+            cacheId: 'panacea-v2',
             // Use network-first for JS chunks to avoid stale cache issues
             runtimeCaching: [
               {
