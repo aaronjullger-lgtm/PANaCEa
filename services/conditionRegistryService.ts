@@ -43,7 +43,20 @@ export async function fetchConditions(forceRefresh = false): Promise<ConditionMe
     
     // API returns { conditions, bySystem, total, systems }
     // Extract the conditions array
-    const conditions = Array.isArray(data) ? data : (data.conditions || []);
+    const rawConditions = Array.isArray(data) ? data : (data.conditions || []);
+    
+    // Filter out any conditions with missing required fields (id, name, system)
+    // This prevents downstream crashes when code assumes these fields exist
+    const conditions = rawConditions.filter((c: ConditionMetadata | null | undefined) => 
+      c && 
+      typeof c.id === 'string' && c.id &&
+      typeof c.name === 'string' && c.name &&
+      typeof c.system === 'string' && c.system
+    );
+    
+    if (conditions.length < rawConditions.length) {
+      console.warn(`Filtered out ${rawConditions.length - conditions.length} conditions with missing id/name/system fields`);
+    }
     
     // Update cache
     conditionsCache = conditions;
@@ -70,7 +83,12 @@ export async function getAvailableSystems(): Promise<SystemCode[]> {
   const conditions = await fetchConditions();
   const systemSet = new Set<SystemCode>();
   
-  conditions.forEach(c => systemSet.add(c.system));
+  // Only add valid system codes (skip null/undefined)
+  conditions.forEach(c => {
+    if (c?.system) {
+      systemSet.add(c.system);
+    }
+  });
   
   return Array.from(systemSet).sort();
 }
@@ -85,7 +103,8 @@ export async function getConditionsBySystem(system: SystemCode): Promise<Conditi
     return [];
   }
   const conditions = await fetchConditions();
-  return conditions.filter(c => c.system === system);
+  // Use optional chaining for safety in case a condition has null system
+  return conditions.filter(c => c?.system === system);
 }
 
 /**

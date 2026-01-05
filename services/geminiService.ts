@@ -44,7 +44,9 @@ function buildConditionId(meta: ConditionMeta): string {
       .replace(/\s+/g, "_")
       .replace(/[^a-z0-9_]/g, "");
 
-  return `${meta.system}__${norm(meta.subcategory)}__${norm(meta.condition)}`;
+  // Ensure meta.system is also handled safely
+  const safeSystem = meta.system || 'UNKNOWN';
+  return `${safeSystem}__${norm(meta.subcategory)}__${norm(meta.condition)}`;
 }
 
 /**
@@ -63,9 +65,21 @@ function buildConditionDefinition(meta: ConditionMeta): ConditionDefinition {
  * Find condition metadata by name using the API
  */
 async function findConditionMeta(conditionName: string): Promise<ConditionMeta | undefined> {
+  // Safety check: if conditionName is null/undefined/empty, return undefined
+  if (!conditionName) {
+    console.warn('findConditionMeta called with empty conditionName');
+    return undefined;
+  }
+  
   try {
     const conditionData = await findConditionByName(conditionName);
     if (!conditionData) return undefined;
+    
+    // Validate required fields exist before using them
+    if (!conditionData.system || !conditionData.name) {
+      console.warn('findConditionMeta: conditionData missing required fields (system or name)', conditionData);
+      return undefined;
+    }
 
     return {
       system: conditionData.system as SystemCode,
@@ -469,7 +483,8 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
       // NEW: Use database-driven registry instead of static import
       try {
         const dbCondition = await getRandomConditionForSystemDB(systemCode);
-        if (dbCondition) {
+        // Validate dbCondition has required fields before using
+        if (dbCondition && dbCondition.name && dbCondition.system) {
           // Convert database metadata to ConditionMeta for compatibility
           const compatMeta = await findConditionMeta(dbCondition.name);
           if (compatMeta) {
@@ -477,6 +492,8 @@ Context: This question is for a PA STUDENT preparing for the initial PANCE certi
             chosenConditionMeta = selectedConditionMeta;
             chosenConditionDef = buildConditionDefinition(selectedConditionMeta);
           }
+        } else if (dbCondition) {
+          console.warn(`Skipping condition with missing fields:`, dbCondition);
         }
       } catch (error) {
         console.error(`Error fetching random condition for ${systemCode}:`, error);
