@@ -41,11 +41,15 @@ export async function fetchConditions(forceRefresh = false): Promise<ConditionMe
     
     const data = await response.json();
     
+    // API returns { conditions, bySystem, total, systems }
+    // Extract the conditions array
+    const conditions = Array.isArray(data) ? data : (data.conditions || []);
+    
     // Update cache
-    conditionsCache = data;
+    conditionsCache = conditions;
     cacheTimestamp = now;
     
-    return data;
+    return conditions;
   } catch (error) {
     console.error('Error fetching conditions:', error);
     

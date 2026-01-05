@@ -3,17 +3,17 @@
  * 
  * Background generation of questions to seed the pre-generated pool
  * Uses Gemini API to generate questions and stores them in PreGeneratedQuestion table
+ * 
+ * PUBLIC endpoint - generates questions for a shared pool, no user data involved
  */
 
-import { authenticateRequest } from '../_shared/auth';
+import { handleCorsOptions } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import type { CloudflareContext } from '../_shared/types';
 
 interface Env {
   DATABASE_URL: string;
-  CLERK_SECRET_KEY: string;
   GEMINI_API_KEY: string;
-  CRON_SECRET?: string; // For scheduled job authentication
 }
 
 const DEFAULT_BATCH_SIZE = 10;
@@ -22,41 +22,22 @@ const MAX_BATCH_SIZE = 50;
 // Systems for question generation
 const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
 
-/**
- * Check if request is from a scheduled job using CRON_SECRET
- */
-function isScheduledJob(request: Request, env: Env): boolean {
-  const cronSecret = env.CRON_SECRET;
-  if (!cronSecret) return false;
-  
-  // Check X-Cron-Secret header
-  const headerSecret = request.headers.get('X-Cron-Secret');
-  if (headerSecret === cronSecret) return true;
-  
-  // Check Authorization header for cron bearer
-  const authHeader = request.headers.get('Authorization');
-  if (authHeader?.startsWith('Bearer cron_') && authHeader.slice(12) === cronSecret) return true;
-  
-  return false;
+// Handle CORS preflight
+export function onRequestOptions() {
+  return handleCorsOptions();
 }
 
 export const onRequestPost = async (context: CloudflareContext<Env>) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+  
   try {
-    // Allow scheduled jobs without user authentication
-    const isFromScheduler = isScheduledJob(context.request, context.env);
-    
-    if (!isFromScheduler) {
-      // Authenticate regular user requests
-      const authResult = await authenticateRequest(context.request as any, context.env);
-      if (!authResult) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-    }
 
     // Parse request body
     const body = await context.request.json() as {
@@ -75,7 +56,7 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
     if (!context.env.GEMINI_API_KEY) {
       return new Response(JSON.stringify({ error: 'Gemini API key not configured' }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
       });
     }
 
@@ -95,7 +76,7 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
         generated: 0 
       }), {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
       });
     }
 
@@ -122,7 +103,7 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
       difficulty,
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
     });
   } catch (error) {
     console.error('Error generating batch questions:', error);
@@ -133,7 +114,7 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
       }
     );
   } finally {
