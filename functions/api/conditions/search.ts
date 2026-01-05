@@ -1,12 +1,12 @@
 // functions/api/conditions/search.ts
 // GET endpoint for condition search with fuzzy matching
+// PUBLIC endpoint - condition search is public curriculum content
 
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { authenticateRequest } from '../_shared/auth';
+import { handleCorsOptions } from '../_shared/auth';
 
 interface Env {
   DATABASE_URL?: string;
-  CLERK_SECRET_KEY?: string;
 }
 
 interface PagesContext {
@@ -14,28 +14,27 @@ interface PagesContext {
   env: Env;
 }
 
+// Handle CORS preflight
+export function onRequestOptions(): Response {
+  return handleCorsOptions();
+}
+
 /**
  * GET /api/conditions/search?q={query}&system={system}&subcategory={subcategory}
  * Searches conditions by name, aliases, synonyms with fuzzy matching
  * Returns ranked results based on relevance score
+ * 
+ * PUBLIC endpoint - condition metadata is public curriculum content
  */
 export async function onRequestGet(context: PagesContext): Promise<Response> {
   const { request, env } = context;
 
-  // Authenticate the request
-  const authResult = await authenticateRequest(request, env);
-  if (!authResult) {
-    return new Response(
-      JSON.stringify({ 
-        error: 'Unauthorized', 
-        message: 'Authentication required to search conditions' 
-      }),
-      { 
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  }
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -49,7 +48,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     if (!query) {
       return new Response(
         JSON.stringify({ error: 'Query parameter "q" is required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -132,7 +131,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       JSON.stringify(results),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       }
     );
 
@@ -145,7 +144,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       }),
       { 
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       }
     );
   } finally {

@@ -1,12 +1,12 @@
 // functions/api/conditions/index.ts
 // GET endpoint to fetch condition list from database
+// PUBLIC endpoint - no authentication required for basic condition metadata
 
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { authenticateRequest } from '../_shared/auth';
+import { handleCorsOptions } from '../_shared/auth';
 
 interface Env {
   DATABASE_URL?: string;
-  CLERK_SECRET_KEY?: string;
 }
 
 interface PagesContext {
@@ -14,34 +14,33 @@ interface PagesContext {
   env: Env;
 }
 
+// Handle CORS preflight
+export function onRequestOptions(context: PagesContext): Response {
+  return handleCorsOptions();
+}
+
 /**
  * GET /api/conditions
  * Fetches all published conditions from the Condition table
  * Groups by system for efficient frontend rendering
+ * 
+ * PUBLIC endpoint - condition metadata is public curriculum content
  */
 export async function onRequestGet(context: PagesContext): Promise<Response> {
-  const { request, env } = context;
+  const { env } = context;
 
-  // Authenticate the request
-  const authResult = await authenticateRequest(request, env);
-  if (!authResult) {
-    return new Response(
-      JSON.stringify({ 
-        error: 'Unauthorized', 
-        message: 'Authentication required to access conditions' 
-      }),
-      { 
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    );
-  }
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
     // Parse query params for filtering
-    const url = new URL(request.url);
+    const url = new URL(context.request.url);
     const system = url.searchParams.get('system');
     const includeContent = url.searchParams.get('includeContent') === 'true';
 
@@ -98,7 +97,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       }),
       { 
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       }
     );
 
@@ -114,7 +113,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       }),
       { 
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       }
     );
 
