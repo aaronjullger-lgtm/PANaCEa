@@ -13,12 +13,14 @@
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const prisma = new PrismaClient();
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
 const QUESTIONS_PER_CONDITION = 2; // Questions per condition
@@ -82,7 +84,6 @@ async function getConditionsForSystem(system: string): Promise<ConditionInfo[]> 
  * Generate questions for a specific condition using Gemini
  */
 async function generateQuestionsForCondition(
-  apiKey: string,
   condition: ConditionInfo,
   count: number
 ): Promise<GeneratedQuestion[]> {
@@ -119,35 +120,10 @@ Return ONLY a JSON array with this exact structure (no markdown, no code blocks)
 ]`;
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 8192,
-          },
-        }),
-      }
-    );
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
 
-    if (!response.ok) {
-      console.error(`Gemini API error: ${response.status}`);
-      return [];
-    }
-
-    const data = await response.json() as {
-      candidates?: Array<{
-        content?: {
-          parts?: Array<{ text?: string }>;
-        };
-      }>;
-    };
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!text) {
       console.error('No text in Gemini response');
       return [];
@@ -197,13 +173,6 @@ function generateQuestionId(system: string): string {
 }
 
 async function seedPool() {
-  const apiKey = process.env.GEMINI_API_KEY;
-  
-  if (!apiKey) {
-    console.error('❌ GEMINI_API_KEY not found in environment');
-    process.exit(1);
-  }
-
   console.log('🌱 Starting question pool seeding (V2 - with condition linking)...\n');
 
   // Check current pool status
@@ -260,7 +229,7 @@ async function seedPool() {
       console.log(`   ⏳ ${condition.name}: Generating ${needed} questions...`);
 
       try {
-        const questions = await generateQuestionsForCondition(apiKey, condition, needed);
+        const questions = await generateQuestionsForCondition(condition, needed);
 
         if (questions.length > 0) {
           const records = questions.map((q) => ({
