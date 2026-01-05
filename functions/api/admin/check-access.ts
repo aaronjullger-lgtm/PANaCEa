@@ -81,7 +81,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
 
     // Check database for role if not in env vars
     if (env.DATABASE_URL) {
-      const prisma = createEdgePrismaClient(env);
+      const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
       try {
         const user = await prisma.user.findUnique({

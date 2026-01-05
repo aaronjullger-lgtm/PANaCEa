@@ -29,7 +29,7 @@ function getDebugFlag(flag: string): boolean {
   }
   
   // Check window for runtime flags (useful for debugging in production)
-  if (IS_BROWSER && (window as Record<string, unknown>)[flag] === true) {
+  if (IS_BROWSER && (window as unknown as Record<string, unknown>)[flag] === true) {
     return true;
   }
   
@@ -302,7 +302,7 @@ export function enableDebug(flag: DebugFlag | 'ALL' = 'ALL'): void {
   if (IS_BROWSER) {
     const key = flag === 'ALL' ? DEBUG_FLAGS.ALL : DEBUG_FLAGS[flag];
     localStorage.setItem(key, 'true');
-    (window as Record<string, unknown>)[key] = true;
+    (window as unknown as Record<string, unknown>)[key] = true;
     console.log(`Debug logging enabled for: ${flag}`);
   }
 }
@@ -314,7 +314,7 @@ export function disableDebug(flag: DebugFlag | 'ALL' = 'ALL'): void {
   if (IS_BROWSER) {
     const key = flag === 'ALL' ? DEBUG_FLAGS.ALL : DEBUG_FLAGS[flag];
     localStorage.removeItem(key);
-    delete (window as Record<string, unknown>)[key];
+    delete (window as unknown as Record<string, unknown>)[key];
     console.log(`Debug logging disabled for: ${flag}`);
   }
 }

@@ -105,11 +105,8 @@ export default defineConfig(({ mode }) => {
             manualChunks: (id) => {
               // Vendor chunks for better caching and performance
               if (id.includes('node_modules')) {
-                // IMPORTANT: Check specific packages BEFORE generic 'react' match
-                // lucide-react must be separate from React core to avoid initialization conflicts
-                if (id.includes('lucide-react')) {
-                  return 'vendor-icons';
-                }
+                // NOTE: lucide-react is NOT manually chunked - let Vite bundle it naturally
+                // to avoid import initialization conflicts (Activity icon crash issue)
                 
                 // Markdown rendering (check before generic 'react' since react-markdown contains 'react')
                 if (id.includes('react-markdown') || id.includes('remark') || id.includes('rehype') || id.includes('unified')) {

@@ -15,6 +15,13 @@
  *   }
  */
 
+// Type for KV namespace (from Cloudflare Workers types)
+interface KVNamespace {
+  get(key: string, type?: 'text'): Promise<string | null>;
+  get(key: string, type: 'json'): Promise<unknown | null>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+}
+
 // Rate limit configurations by endpoint type
 export const RATE_LIMITS = {
   // Gemini API calls - expensive, limit tightly
@@ -63,6 +70,7 @@ export interface RateLimitHeaders {
   'X-RateLimit-Remaining': string;
   'X-RateLimit-Reset': string;
   'Retry-After'?: string;
+  [key: string]: string | undefined;
 }
 
 // In-memory store for basic rate limiting (works per-isolate)
@@ -316,10 +324,19 @@ export async function withRateLimit(
   const checkResult = await limiter.checkAndRespond(identifier, limitType);
   
   if (!checkResult.allowed) {
-    return { response: checkResult.response, headers: {} };
+    return { response: (checkResult as { allowed: false; response: Response }).response, headers: {} };
   }
   
-  return { headers: checkResult.headers as Record<string, string> };
+  // Cast headers since we added index signature
+  const headers: Record<string, string> = {};
+  const rateLimitHeaders = (checkResult as { allowed: true; headers: RateLimitHeaders }).headers;
+  for (const [key, value] of Object.entries(rateLimitHeaders)) {
+    if (value !== undefined) {
+      headers[key] = value;
+    }
+  }
+  
+  return { headers };
 }
 
 /**
