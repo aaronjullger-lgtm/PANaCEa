@@ -206,66 +206,82 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
       const photoCases: PhotoCase[] = [];
       
       for (const asset of assets) {
-        // Validate required fields
-        if (!hasRequiredQuizFields(asset)) {
-          continue; // Skip assets without complete quiz data
-        }
-        
-        // Prefer original URL, fallback to thumbnail
-        const imageUrl = asset.originalUrl || asset.thumbnailUrl;
-        if (!imageUrl) continue;
-        
-        // Parse JSON fields
-        const distractors = Array.isArray(asset.distractors)
-          ? asset.distractors
-          : typeof asset.distractors === 'string'
-          ? JSON.parse(asset.distractors)
-          : [];
-        
-        let clinicalContext: ClinicalContext | undefined;
-        if (asset.clinicalContext) {
-          try {
-            clinicalContext = typeof asset.clinicalContext === 'string'
-              ? JSON.parse(asset.clinicalContext)
-              : asset.clinicalContext;
-          } catch (e) {
-            // If parsing fails, generate default
-            clinicalContext = generateDefaultContext(asset.correctDiagnosis!);
+        try {
+          // Validate required fields
+          if (!hasRequiredQuizFields(asset)) {
+            continue; // Skip assets without complete quiz data
           }
-        }
+          
+          // Prefer original URL, fallback to thumbnail
+          const imageUrl = asset.originalUrl || asset.thumbnailUrl;
+          if (!imageUrl) continue;
+          
+          // Parse JSON fields safely
+          let distractors: string[] = [];
+          try {
+            if (Array.isArray(asset.distractors)) {
+              distractors = asset.distractors;
+            } else if (typeof asset.distractors === 'string') {
+              distractors = JSON.parse(asset.distractors);
+            }
+          } catch (jsonError) {
+            console.error(`Failed to parse distractors for asset ${asset.id}:`, jsonError);
+            continue; // Skip this asset if distractors are invalid
+          }
+          
+          // Ensure we have enough distractors
+          if (!Array.isArray(distractors) || distractors.length < 3) {
+            console.warn(`Asset ${asset.id} has insufficient distractors (${distractors.length})`);
+            continue;
+          }
         
-        // Map type to modality
-        const modality = mapTypeToModality(asset.type);
-        
-        // Generate explanation
-        const explanation = asset.description || 
-          asset.altText || 
-          generateDefaultExplanation(asset.correctDiagnosis!, modality);
-        
-        photoCases.push({
-          id: asset.id,
-          imageUrl,
-          modality,
-          correctDiagnosis: asset.correctDiagnosis!,
-          distractors,
-          explanation,
-          clinicalContext,
-        });
-        
-        // Stop once we have enough valid cases
-        if (photoCases.length >= count) {
-          break;
+          let clinicalContext: ClinicalContext | undefined;
+          if (asset.clinicalContext) {
+            try {
+              clinicalContext = typeof asset.clinicalContext === 'string'
+                ? JSON.parse(asset.clinicalContext)
+                : asset.clinicalContext;
+            } catch (e) {
+              // If parsing fails, generate default
+              clinicalContext = generateDefaultContext(asset.correctDiagnosis!);
+            }
+          }
+          
+          // Map type to modality
+          const modality = mapTypeToModality(asset.type);
+          
+          // Generate explanation
+          const explanation = asset.description || 
+            asset.altText || 
+            generateDefaultExplanation(asset.correctDiagnosis!, modality);
+          
+          photoCases.push({
+            id: asset.id,
+            imageUrl,
+            modality,
+            correctDiagnosis: asset.correctDiagnosis!,
+            distractors,
+            explanation,
+            clinicalContext,
+          });
+          
+          // Stop once we have enough valid cases
+          if (photoCases.length >= count) {
+            break;
+          }
+        } catch (assetError) {
+          console.error(`Error processing asset ${asset.id}:`, assetError);
+          continue; // Skip this asset and continue with next
         }
       }
       
-      // If we don't have enough cases, return what we found
+      // Handle empty results
       if (photoCases.length === 0) {
+        console.warn(`[Media Drill API] No valid assets found. Total assets queried: ${assets.length}, modality: ${modalityParam || 'all'}`);
+        // Return empty array instead of 404 to allow graceful degradation
         return new Response(
-          JSON.stringify({
-            error: 'No approved media assets found for drill questions',
-            suggestion: 'Ensure MediaAsset table has approved clinical images with correctDiagnosis and distractors fields populated'
-          }),
-          { status: 404, headers: { 'Content-Type': 'application/json' } }
+          JSON.stringify([]),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
         );
       }
       
