@@ -256,7 +256,8 @@ export async function getQuestion(
   const question = await fetchNewQuestion(settings, growthAreas);
 
   // Seed the generated question into the pool for future use
-  seedGeneratedQuestion(question, system, poolDifficulty);
+  const token = getToken ? await getToken() : null;
+  seedGeneratedQuestion(question, token, system, poolDifficulty);
 
   return question;
 }
@@ -326,7 +327,7 @@ export async function getQuestionBatch(
       try {
         const q = await fetchNewQuestion(settings, growthAreas);
         generatedQuestions.push(q);
-        seedGeneratedQuestion(q, system, poolDifficulty);
+        seedGeneratedQuestion(q, token, system, poolDifficulty);
       } catch (error) {
         console.error('[QuestionService] Failed to generate question:', error);
         break;
@@ -370,17 +371,26 @@ export async function getQuestionBatch(
  */
 async function seedGeneratedQuestion(
   question: Question,
+  token: string | null,
   system?: string,
   difficulty?: string
 ): Promise<void> {
-  // Don't block on this - fire and forget
-  try {
-    // We could call an API to seed this back, but for now we'll skip
-    // since the question was already generated via Gemini
-    console.log('[QuestionService] Would seed question back to pool (skipped for now)');
-  } catch (error) {
-    console.error('[QuestionService] Failed to seed question:', error);
+  if (!token) {
+    console.warn('[QuestionService] No token, skipping background seed.');
+    return;
   }
+  // Don't block on this - fire and forget
+  (async () => {
+    try {
+      await fetch('/api/questions/pool', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ question })
+      });
+    } catch (error) {
+      console.error('[QuestionService] Failed to seed question:', error);
+    }
+  })();
 }
 
 /**

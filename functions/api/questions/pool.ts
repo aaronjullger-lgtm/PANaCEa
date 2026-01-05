@@ -319,3 +319,70 @@ async function getFromMainTable(
 
   return result;
 }
+
+/**
+ * POST handler to seed a question back into the pool
+ */
+export const onRequestPost = async (context: CloudflareContext<Env>) => {
+  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+  
+  try {
+    // Authenticate request
+    const authResult = await authenticateRequest(context.request as any, context.env);
+    if (!authResult) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const body = await context.request.json() as { question: any };
+    const q = body.question;
+
+    if (!q || !q.id || !q.question || !q.options || !q.correctAnswer || !q.explanation) {
+      return new Response(JSON.stringify({ error: 'Invalid question data' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Insert into PreGeneratedQuestion table
+    await prisma.preGeneratedQuestion.create({
+      data: {
+        id: q.id,
+        questionType: 'general',
+        system: q.system,
+        conditionId: q.conditionId,
+        medicalContentId: q.medicalContentId,
+        difficulty: q.difficulty || 'medium',
+        questionData: {
+          vignette: q.vignette,
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          conditionName: q.conditionName,
+          system: q.system,
+          subcategory: q.subcategory,
+          tags: q.tags,
+        },
+        generatedAt: new Date(),
+        usedAt: null, // Ensure it's available
+      },
+    });
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Error seeding question to pool:', error);
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+};
