@@ -260,8 +260,9 @@ const stripHtmlTags = (text: string): string =>
   typeof text === "string" ? text.replace(/<\/?[^>]+(>|$)/g, "") : text;
 
 const slugify = (value: string | null | undefined): string =>
-  (value || '')\n    .toLowerCase()
-    .replace(/\\s+/g, "_")
+  (value || '')
+    .toLowerCase()
+    .replace(/\s+/g, "_")
     .replace(/[^a-z0-9_]/g, "");
 
 function getConditionRegistryContext(meta: ConditionMeta): string | undefined {
