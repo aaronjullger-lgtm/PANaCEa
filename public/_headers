@@ -6,12 +6,8 @@
   # Content Security Policy
   # Protects against XSS and other code injection attacks
   # Note: Cloudflare Pages requires CSP on a single line
-  # Updated to support: Clerk subdomain, Cloudflare CDN paths, service workers, development API, Turnstile challenges
-  Content-Security-Policy: default-src 'self' https://*.clerk.accounts.dev https://*.clerk.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.studypanacea.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com; script-src-elem 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.studypanacea.com https://challenges.cloudflare.com https://static.cloudflareinsights.com https://aistudiocdn.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://*.clerk.com https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co; frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.studypanacea.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests;
-  
-  # Strict Transport Security (HSTS)
-  # Forces HTTPS connections for 1 year
-  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  # Permits: Vite, Clerk auth, Cloudflare features, Supabase backend
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.com https://*.cloudflare.com https://challenges.cloudflare.com; connect-src 'self' https://*.clerk.com https://*.supabase.co https://*.studypanacea.com https://clerk.studypanacea.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; frame-src 'self' https://*.clerk.com https://challenges.cloudflare.com;
   
   # Prevent MIME type sniffing
   X-Content-Type-Options: nosniff
@@ -22,9 +18,8 @@
   # Control referrer information
   Referrer-Policy: strict-origin-when-cross-origin
   
-  # Permissions Policy (formerly Feature Policy)
-  # Restrict browser features to enhance security
-  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+  # Permissions Policy (restrict sensitive browser APIs)
+  Permissions-Policy: geolocation=(self), microphone=(), camera=(), payment=()
   
   # Cache Control for static assets
   Cache-Control: public, max-age=31536000, immutable
@@ -32,7 +27,7 @@
 # Vite-generated assets - Apply specific CSP for hashed JavaScript chunks
 /assets/*
   # Allow all scripts from assets directory (includes Vite content-hashed chunks)
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://*.clerk.com https://*.supabase.co https://*.studypanacea.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:;
   Cache-Control: public, max-age=31536000, immutable
 
 # Vendor chunks - shorter cache to handle updates better
@@ -47,14 +42,14 @@
 /sw.js
   Content-Type: application/javascript
   # Service worker-specific CSP with worker-src
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; connect-src 'self' https://*.clerk.com https://*.supabase.co https://*.studypanacea.com;
   Cache-Control: no-cache, no-store, must-revalidate
 
 # Service Worker Registration - Allow registration script to load
 /registerSW.js
   Content-Type: application/javascript
   # Registration script CSP
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src-elem 'self' 'unsafe-inline'; worker-src 'self' blob:; connect-src 'self' http://localhost:3001 https://*.clerk.accounts.dev https://clerk.studypanacea.com https://api.clerk.dev https://*.supabase.co https://generativelanguage.googleapis.com https://cloudflareinsights.com wss://*.supabase.co;
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; worker-src 'self' blob:; connect-src 'self' https://*.clerk.com https://*.supabase.co https://*.studypanacea.com;
   Cache-Control: no-cache, no-store, must-revalidate
 
 # Manifest
