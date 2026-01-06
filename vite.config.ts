@@ -139,6 +139,9 @@ export default defineConfig(({ mode }) => {
             '@prisma/extension-accelerate',
           ],
           output: {
+            // Inject CommonJS polyfill at the start of each bundle
+            // This fixes lucide-react's CJS code trying to assign to undefined exports
+            intro: 'var global = global || window; var exports = exports || {};',
             manualChunks: (id) => {
               // Group heavy libraries into separate vendor chunks
               // NOTE: Do NOT manually chunk lucide-react - let Vite tree-shake it naturally
