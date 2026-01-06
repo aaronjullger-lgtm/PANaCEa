@@ -56,8 +56,8 @@ export default defineConfig(({ mode }) => {
             clientsClaim: true,     // Take control of page immediately after activation
             // Clean old caches on activation
             cleanupOutdatedCaches: true,
-            // CRITICAL: v7 cache namespace with define-based CJS shim
-            cacheId: 'panacea-v7-defines',
+            // New cache namespace to break any lingering v7 caches
+            cacheId: 'panacea-v8-fix-chunking',
             // Use network-first for JS chunks to avoid stale cache issues
             runtimeCaching: [
               {
@@ -152,27 +152,25 @@ export default defineConfig(({ mode }) => {
             // This ensures 'exports' exists before any CJS code tries to assign to it
             intro: 'var exports = exports || {}; var global = global || window; if (typeof exports !== "object") { exports = {}; }',
             manualChunks: (id) => {
-              // Group heavy libraries into separate vendor chunks
-              // NOTE: Do NOT manually chunk lucide-react - let Vite tree-shake it naturally
-              // Forcing it into a separate chunk breaks initialization order
               if (id.includes('node_modules')) {
-                // Authentication - check FIRST before react (clerk-react contains 'react')
-                if (id.includes('@clerk')) return 'vendor-clerk';
-                // Sentry - keep separate to allow lazy loading
-                if (id.includes('@sentry')) return 'vendor-sentry';
-                // Core React libraries + lucide-react bundled together to ensure initialization order
-                if (id.includes('lucide-react')) return 'vendor-react';
-                if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+                // React core only
+                if (/(\@?node_modules\/react\/?)/.test(id) || /(\@?node_modules\/react-dom\/?)/.test(id) || /(\@?node_modules\/scheduler\/?)/.test(id)) {
                   return 'vendor-react';
                 }
-                // UI libraries - lucide-react excluded, let it tree-shake naturally
-                if (id.includes('framer-motion') || id.includes('clsx') || id.includes('tailwind-merge')) {
+                // Router
+                if (/(\@?node_modules\/react-router)/.test(id)) {
+                  return 'vendor-router';
+                }
+                // UI / icons / animation / auth UI
+                if (id.includes('lucide-react') || id.includes('@radix-ui') || id.includes('framer-motion') || id.includes('@clerk')) {
                   return 'vendor-ui';
                 }
+                // Sentry separate
+                if (id.includes('@sentry')) return 'vendor-sentry';
                 // Charts and visualization
                 if (id.includes('recharts')) return 'vendor-animation-charts';
                 // Utilities
-                if (id.includes('date-fns') || id.includes('zod')) {
+                if (id.includes('date-fns') || id.includes('zod') || id.includes('clsx') || id.includes('tailwind-merge')) {
                   return 'vendor-utils';
                 }
                 // Default vendor chunk for remaining packages
