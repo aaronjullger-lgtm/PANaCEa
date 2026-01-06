@@ -16,9 +16,8 @@ pages_build_output_dir = "dist"
 binding = "CACHE"
 id = "preview_id"  # Replace with production KV namespace ID after creating with: npx wrangler kv:namespace create CACHE
 
-# Scheduled cache warming (runs every 30 minutes)
-[triggers]
-crons = ["*/30 * * * *"]
+# Note: Scheduled cache warming via cron triggers is not supported for Cloudflare Pages.
+# Use an external scheduler (e.g., GitHub Actions, cron-job.org) to call /api/admin/cache/warm periodically.
 
 [vars]
 VITE_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuc3R1ZHlwYW5hY2VhLmNvbSQ"
