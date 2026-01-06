@@ -28,7 +28,7 @@ export interface Question {
   conditionId: string;
   /** Human-readable condition name (usually from the registry) */
   condition: string;
-  pearls: string[];
+  pearls?: string[];
   repetitionLevel?: number;
   nextReviewDate?: string; // YYYY-MM-DD
   userNote?: string;

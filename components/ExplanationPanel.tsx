@@ -60,6 +60,10 @@ export interface ExplanationPanelProps {
   basicScienceLinks?: BasicScienceLink[];
   /** Optional condition ID to fetch basic science links */
   conditionId?: string;
+  /** Clinical pearls array for high-yield teaching points */
+  pearls?: string[];
+  /** Additional rationale text (can be different from explanation) */
+  rationale?: string;
 }
 
 /**
@@ -217,6 +221,8 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
   onTagError,
   basicScienceLinks = [],
   conditionId,
+  pearls = [],
+  rationale,
 }) => {
   const [showTutor, setShowTutor] = useState(false);
   const [tutorQuestion, setTutorQuestion] = useState('');
@@ -360,6 +366,44 @@ const ExplanationPanel: React.FC<ExplanationPanelProps> = ({
               title="Why the Others Were Wrong" 
             />
             <DifferentialAccordion differentials={differentials} />
+          </section>
+        )}
+
+        {/* Clinical Pearls Section */}
+        {pearls.length > 0 && (
+          <section className="mb-6">
+            <SectionHeader 
+              icon={<Lightbulb className="w-5 h-5" />} 
+              title="Clinical Pearls" 
+            />
+            <ul className="space-y-2 pl-1">
+              {pearls.map((pearl, index) => (
+                <li 
+                  key={index} 
+                  className="flex items-start gap-2 text-[var(--color-text-secondary)] leading-relaxed"
+                >
+                  <span className="text-amber-500 mt-1.5 flex-shrink-0">💡</span>
+                  <span 
+                    dangerouslySetInnerHTML={{ __html: pearl }}
+                    className="flex-1"
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Rationale Section (if different from explanation) */}
+        {rationale && rationale !== explanation && (
+          <section className="mb-6">
+            <SectionHeader 
+              icon={<BookOpen className="w-5 h-5" />} 
+              title="Additional Rationale" 
+            />
+            <div 
+              className="text-[var(--color-text-secondary)] leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: rationale }}
+            />
           </section>
         )}
 

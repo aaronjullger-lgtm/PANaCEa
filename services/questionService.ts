@@ -68,9 +68,37 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question {
     topic: poolQ.system,
     conditionId,
     condition,
-    pearls: [],
+    pearls: undefined, // Will be loaded on-demand from medicalContent
     source: poolQ.source === 'pool' ? 'database-pool' : 'database-main',
   } as Question;
+}
+
+/**
+ * Fetch clinical pearls from medical content by conditionId
+ * This is a client-side fetch that can be called when displaying a question
+ */
+export async function fetchPearlsForQuestion(conditionId: string, token?: string | null): Promise<string[]> {
+  try {
+    if (!token) {
+      console.warn('[QuestionService] No auth token for fetching pearls');
+      return [];
+    }
+
+    const response = await fetch(`/api/conditions/${conditionId}/pearls`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      console.warn(`[QuestionService] Failed to fetch pearls for ${conditionId}: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json() as { pearls: string[] };
+    return data.pearls || [];
+  } catch (error) {
+    console.error('[QuestionService] Error fetching pearls:', error);
+    return [];
+  }
 }
 
 /**

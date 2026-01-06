@@ -487,11 +487,27 @@ const QuizView: React.FC<QuizViewProps> = ({
   }, [isAnswered]);
 
   // Keyboard shortcuts
-  const handleSubmitAnswer = useCallback(() => {
+  const handleSubmitAnswer = useCallback(async () => {
     // Guard against submitting without selection
     if (selectedAnswerIndex === null || !currentQuestion || isAnswered) return;
 
     setIsAnswered(true);
+    
+    // Lazy-load pearls from medical content if not already loaded
+    if (!currentQuestion.pearls && currentQuestion.conditionId) {
+      try {
+        const { fetchPearlsForQuestion } = await import('../services/questionService');
+        const token = await getToken();
+        const pearls = await fetchPearlsForQuestion(currentQuestion.conditionId, token);
+        if (pearls.length > 0) {
+          // Update the current question with loaded pearls
+          setCurrentQuestion(prev => prev ? { ...prev, pearls } : null);
+        }
+      } catch (error) {
+        console.error('Failed to load clinical pearls:', error);
+      }
+    }
+    
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
     const timeToAnswer = Date.now() - questionStartTime;
     const parTime = calculateParTime(currentQuestion);
@@ -702,7 +718,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       setWellnessReason('late_night');
       setShowWellnessModal(true);
     }
-  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance, user, questionStartTime, performanceData, getToken, answerFeedback, currentStreak, answerChangeCount, eliminatedAnswers, firstSelectedAnswer]);
+  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance, user, questionStartTime, performanceData, getToken, answerFeedback, currentStreak, answerChangeCount, eliminatedAnswers, firstSelectedAnswer, setCurrentQuestion]);
 
   // Keyboard shortcuts using centralized shortcut context
   // FLIP_CARD: Toggle showing the explanation/rationale after answering
@@ -1171,19 +1187,22 @@ const QuizView: React.FC<QuizViewProps> = ({
               </div>
             )}
 
-            <div className="mt-4 pt-4 border-t border-slate-200">
-              <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
-                Key Pearls: {currentQuestion.condition}
-              </h3>
-              <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
-                {currentQuestion.pearls.map((pearl, index) => (
-                  <li
-                    key={index}
-                    dangerouslySetInnerHTML={{ __html: pearl }}
-                  />
-                ))}
-              </ul>
-            </div>
+            {/* Clinical Pearls Section */}
+            {(currentQuestion.pearls && currentQuestion.pearls.length > 0) && (
+              <div className="mt-4 pt-4 border-t border-slate-200">
+                <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
+                  Key Pearls: {currentQuestion.condition}
+                </h3>
+                <ul className="list-disc list-inside space-y-1 text-[var(--color-text-secondary)]">
+                  {currentQuestion.pearls.map((pearl, index) => (
+                    <li
+                      key={index}
+                      dangerouslySetInnerHTML={{ __html: pearl }}
+                    />
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="mt-4 pt-4 border-t border-slate-200">
               <h3 className="font-bold text-lg mb-2 text-[var(--color-text-primary)]">
