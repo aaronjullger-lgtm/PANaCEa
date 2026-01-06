@@ -10,6 +10,18 @@ import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import type { CloudflareContext } from '../_shared/types';
 
+/**
+ * Fisher-Yates shuffle algorithm for unbiased randomization
+ */
+function fisherYatesShuffle<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 interface Env {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
@@ -188,17 +200,29 @@ async function getFromPreGeneratedPool(
   if (difficulty) where.difficulty = difficulty;
   if (category) where.questionType = category;
 
+  // BATCH SHUFFLING: Fetch 5x the requested count for better randomization
+  const fetchCount = count * 5;
+
   // Fetch available pre-generated questions
   const preGenQuestions = await prisma.preGeneratedQuestion.findMany({
     where,
-    take: count * 3, // Fetch extra to account for filtering
+    take: fetchCount,
     orderBy: { generatedAt: 'asc' },
   });
 
   // Count remaining unused
   const remaining = await prisma.preGeneratedQuestion.count({ where });
 
-  // Filter and format
+  // Filter out questions user has already seen
+  const unseenQuestions = preGenQuestions.filter(q => !seenIds.has(q.id));
+
+  // Apply Fisher-Yates shuffle for unbiased randomization
+  const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
+
+  // Take only the requested count
+  const selectedQuestions = shuffledQuestions.slice(0, count);
+
+  // Format questions
   const questions: Array<{
     id: string;
     vignette?: string;
@@ -214,29 +238,26 @@ async function getFromPreGeneratedPool(
   }> = [];
   const toMarkUsed: string[] = [];
 
-  for (const q of preGenQuestions) {
-    if (questions.length >= count) break;
-    if (seenIds.has(q.id)) continue;
-
-    const data = q.questionData as Record<string, unknown>;
+  for (const q of selectedQuestions) {
+    const data = (q as any).questionData as Record<string, unknown>;
     // Handle different option field names (options, answers, choices)
     const optionsData = data.options || data.answers || data.choices;
     const options = Array.isArray(optionsData) ? (optionsData as string[]) : [];
     
     questions.push({
-      id: q.id,
+      id: (q as any).id,
       vignette: data.vignette as string | undefined,
       question: data.question as string,
       options,
       correctAnswer: data.correctAnswer as string,
       explanation: data.explanation as string,
-      system: q.system || 'General',
-      difficulty: q.difficulty,
+      system: (q as any).system || 'General',
+      difficulty: (q as any).difficulty,
       tags: data.tags as string[] | undefined,
-      conditionId: q.conditionId || undefined,
+      conditionId: (q as any).conditionId || undefined,
       source: 'pool',
     });
-    toMarkUsed.push(q.id);
+    toMarkUsed.push((q as any).id);
   }
 
   // Record in user history ONLY - do NOT mark questions as globally used
@@ -281,10 +302,13 @@ async function getFromMainTable(
     where.tags = { array_contains: category };
   }
 
+  // BATCH SHUFFLING: Fetch 5x the requested count for better randomization
+  const fetchCount = count * 5;
+
   // Fetch questions
   const questions = await prisma.question.findMany({
     where,
-    take: count * 3,
+    take: fetchCount,
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -299,7 +323,16 @@ async function getFromMainTable(
     },
   });
 
-  // Filter and format
+  // Filter out questions user has already seen
+  const unseenQuestions = questions.filter(q => !seenIds.has(q.id));
+
+  // Apply Fisher-Yates shuffle for unbiased randomization
+  const shuffledQuestions = fisherYatesShuffle(unseenQuestions);
+
+  // Take only the requested count
+  const selectedQuestions = shuffledQuestions.slice(0, count);
+
+  // Format questions
   const result: Array<{
     id: string;
     vignette?: string;
@@ -314,23 +347,20 @@ async function getFromMainTable(
   }> = [];
   const toRecord: string[] = [];
 
-  for (const q of questions) {
-    if (result.length >= count) break;
-    if (seenIds.has(q.id)) continue;
-
+  for (const q of selectedQuestions) {
     result.push({
-      id: q.id,
-      vignette: q.vignette || undefined,
-      question: q.question,
-      options: Array.isArray(q.options) ? (q.options as string[]) : [],
-      correctAnswer: q.correctAnswer,
-      explanation: q.explanation,
-      system: q.system,
-      difficulty: q.difficulty || 'medium',
-      tags: q.tags as string[] || undefined,
+      id: (q as any).id,
+      vignette: (q as any).vignette || undefined,
+      question: (q as any).question,
+      options: Array.isArray((q as any).options) ? ((q as any).options as string[]) : [],
+      correctAnswer: (q as any).correctAnswer,
+      explanation: (q as any).explanation,
+      system: (q as any).system,
+      difficulty: (q as any).difficulty || 'medium',
+      tags: (q as any).tags as string[] || undefined,
       source: 'main',
     });
-    toRecord.push(q.id);
+    toRecord.push((q as any).id);
   }
 
   // Record in history
