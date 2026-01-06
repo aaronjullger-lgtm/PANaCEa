@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-// Build cache buster: 2026-01-06-v5-remove-lucide-chunk
+// Build cache buster: 2026-01-06-v6-force-esm-lucide
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     const isDevelopment = mode === 'development';
@@ -109,6 +109,9 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
+          // Force ESM build of lucide-react to prevent CJS/ESM mismatch initialization errors
+          // This fixes "Cannot set properties of undefined (setting 'Activity')" runtime error
+          'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react/dist/esm/lucide-react.js'),
         }
       },
       build: {
