@@ -58,6 +58,39 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
     const difficulty = url.searchParams.get('difficulty');
     const countStr = url.searchParams.get('count');
     const count = countStr ? parseInt(countStr, 10) : DEFAULT_FETCH_COUNT;
+    const mode = url.searchParams.get('mode'); // 'curation' for admin curation panel
+
+    // ADMIN CURATION MODE: Return raw pre-generated questions for review
+    if (mode === 'curation') {
+      // Check if user is admin
+      const userWithRole = await prisma.user.findUnique({
+        where: { clerkId: authResult.userId },
+        select: { role: true },
+      });
+
+      if (userWithRole?.role !== 'admin') {
+        return new Response(JSON.stringify({ error: 'Admin access required' }), {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Fetch all pre-generated questions for curation (no user filtering)
+      const curationWhere: Record<string, unknown> = {};
+      if (system) curationWhere.system = system;
+      if (difficulty) curationWhere.difficulty = difficulty;
+
+      const curationQuestions = await prisma.preGeneratedQuestion.findMany({
+        where: curationWhere,
+        orderBy: { generatedAt: 'desc' },
+        take: 100, // Limit to 100 for performance
+      });
+
+      return new Response(JSON.stringify(curationQuestions), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
     // Get questions user has already seen
     const seenQuestionIds = await prisma.userQuestionHistory.findMany({

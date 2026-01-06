@@ -43,7 +43,8 @@ const QuestionCurationPanel = () => {
     setError(null);
     try {
       const token = await getToken();
-      const response = await fetch(getApiEndpoint(API_ENDPOINTS.QUESTIONS_POOL), {
+      // Use curation mode to get raw pre-generated questions for admin review
+      const response = await fetch(`${getApiEndpoint(API_ENDPOINTS.QUESTIONS_POOL)}?mode=curation`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) {

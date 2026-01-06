@@ -27,11 +27,13 @@ import {
   BarChart3,
   Flag,
   ArrowLeft,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { isAdmin, canManageRoles, getRoleDisplayName, type UserRole } from '../../lib/auth/rbac';
 import { FlaggedQuestionsDashboard } from '../../components/admin/FlaggedQuestionsDashboard';
 import { QuestionPerformanceDashboard } from '../../components/admin/QuestionPerformanceDashboard';
+import QuestionCurationPanel from '../../components/admin/QuestionCurationPanel';
 
 interface AdminStats {
   totalUsers: number;
@@ -50,7 +52,7 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
   const userId = user?.id;
   const [userRole, setUserRole] = useState<UserRole>('user');
   const [hasAccess, setHasAccess] = useState(false);
-  const [activePanel, setActivePanel] = useState<'dashboard' | 'flags' | 'performance'>('dashboard');
+  const [activePanel, setActivePanel] = useState<'dashboard' | 'flags' | 'performance' | 'curation'>('dashboard');
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     activeUsers: 0,
@@ -205,6 +207,11 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                       <BarChart3 className="w-7 h-7 text-purple-500" />
                       Question Performance
                     </>
+                  ) : activePanel === 'curation' ? (
+                    <>
+                      <Sparkles className="w-7 h-7 text-amber-500" />
+                      Question Curation
+                    </>
                   ) : (
                     <>
                       <Shield className="w-7 h-7 text-[var(--color-accent)]" />
@@ -217,6 +224,8 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                     ? 'Review and resolve user-reported issues' 
                     : activePanel === 'performance'
                     ? 'Identify and improve low-performing questions'
+                    : activePanel === 'curation'
+                    ? 'Review and approve AI-generated questions'
                     : 'Platform management and analytics'}
                   <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-[var(--color-accent)]/20 text-[var(--color-accent)]">
                     {getRoleDisplayName(userRole)}
@@ -245,6 +254,10 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
         ) : activePanel === 'performance' ? (
           <div className="p-6">
             <QuestionPerformanceDashboard />
+          </div>
+        ) : activePanel === 'curation' ? (
+          <div className="p-6">
+            <QuestionCurationPanel />
           </div>
         ) : (
         <>
@@ -399,6 +412,21 @@ export function AdminDashboard({ onClose }: AdminDashboardProps) {
                   </div>
                   <div className="text-xs text-[var(--color-text-muted)]">
                     Identify low-performing questions
+                  </div>
+                </div>
+              </button>
+
+              <button 
+                onClick={() => setActivePanel('curation')}
+                className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg hover:bg-amber-500/20 transition-colors text-left"
+              >
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                <div>
+                  <div className="font-medium text-[var(--color-text-primary)]">
+                    Question Curation
+                  </div>
+                  <div className="text-xs text-[var(--color-text-muted)]">
+                    Review AI-generated questions
                   </div>
                 </div>
               </button>

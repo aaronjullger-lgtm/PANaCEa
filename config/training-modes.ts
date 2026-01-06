@@ -401,19 +401,38 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
 ];
 
 // ============================================================================
+// Derived mode arrays by category
+// ============================================================================
+
+// Filter modes by category
+export const VISUAL_DIAGNOSTICS_MODES = TRAINING_MODES.filter(
+  m => m.category === 'visual_diagnostics'
+);
+
+export const CLINICAL_SIMULATION_MODES = TRAINING_MODES.filter(
+  m => m.category === 'clinical_simulation'
+);
+
+export const QUESTION_PRACTICE_MODES = TRAINING_MODES.filter(
+  m => m.category === 'question_practice'
+);
+
+export const SPECIALTY_DRILL_MODES = TRAINING_MODES.filter(
+  m => m.category === 'specialty_drills'
+);
+
+// Individual standalone mode references
+export const CORE_ADAPTIVE_MODE = TRAINING_MODES.find(m => m.id === 'core_adaptive')!;
+export const OSCE_MODE = TRAINING_MODES.find(m => m.id === 'patient_encounter')!;
+export const GRAND_ROUNDS_MODE = TRAINING_MODES.find(m => m.id === 'grand_rounds')!;
+export const PANRE_LA_MODE = TRAINING_MODES.find(m => m.id === 'panre_la')!;
+
+// ============================================================================
 // Combined registries
 // ============================================================================
 
-export const MODE_REGISTRY: TrainingModeConfig[] = [
-  CORE_ADAPTIVE_MODE,
-  ...VISUAL_DIAGNOSTICS_MODES,
-  ...CLINICAL_SIMULATION_MODES,
-  ...QUESTION_PRACTICE_MODES,
-  ...SPECIALTY_DRILL_MODES,
-  OSCE_MODE,
-  GRAND_ROUNDS_MODE,
-  PANRE_LA_MODE,
-];
+// MODE_REGISTRY is simply all TRAINING_MODES - the grouped arrays are just convenience exports
+export const MODE_REGISTRY: TrainingModeConfig[] = TRAINING_MODES;
 
 export function getModesByCategory(category: TrainingCategory): TrainingModeConfig[] {
   return MODE_REGISTRY.filter(m => m.category === category);
