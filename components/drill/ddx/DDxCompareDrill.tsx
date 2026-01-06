@@ -1,156 +1,323 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RotateCcw, Trophy, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import { 
+  X, RotateCcw, Trophy, ChevronLeft, ChevronRight, CheckCircle, XCircle,
+  GitCompare, Target, Brain, ArrowRight, Sparkles, Zap
+} from 'lucide-react';
 
-/**
- * A symptom/finding card with its correct association and explanation.
- */
+// ============================================================================
+// Types
+// ============================================================================
+
 interface SymptomCard {
   id: string;
   symptom: string;
-  /** 'A' for Condition A (Crohn's), 'B' for Condition B (UC) */
   correctAnswer: 'A' | 'B';
   explanation: string;
 }
 
-/**
- * Mock data: Crohn's Disease vs Ulcerative Colitis differential.
- * Each card represents a symptom/finding that belongs to one condition.
- */
-const CROHNS_VS_UC_CARDS: SymptomCard[] = [
+interface DDxPair {
+  id: string;
+  conditionA: string;
+  conditionB: string;
+  category: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  cards: SymptomCard[];
+}
+
+// ============================================================================
+// DDx Pair Data
+// ============================================================================
+
+const DDX_PAIRS: DDxPair[] = [
   {
-    id: '1',
-    symptom: 'Transmural inflammation',
-    correctAnswer: 'A',
-    explanation: 'Transmural inflammation (full thickness) is characteristic of Crohn\'s. UC only affects the mucosa.',
+    id: 'crohns-uc',
+    conditionA: "Crohn's Disease",
+    conditionB: 'Ulcerative Colitis',
+    category: 'GI',
+    difficulty: 'intermediate',
+    cards: [
+      { id: '1', symptom: 'Transmural inflammation', correctAnswer: 'A', explanation: "Transmural inflammation (full thickness) is characteristic of Crohn's. UC only affects the mucosa." },
+      { id: '2', symptom: 'Mucosal inflammation only', correctAnswer: 'B', explanation: "UC is limited to the mucosa and submucosa. Crohn's affects all layers." },
+      { id: '3', symptom: 'Skip lesions', correctAnswer: 'A', explanation: "Skip lesions (patchy involvement with normal bowel in between) are typical of Crohn's disease." },
+      { id: '4', symptom: 'Continuous inflammation from rectum', correctAnswer: 'B', explanation: 'UC always involves the rectum and spreads proximally in a continuous pattern.' },
+      { id: '5', symptom: 'Cobblestone appearance', correctAnswer: 'A', explanation: "The cobblestone mucosa pattern is classic for Crohn's disease." },
+      { id: '6', symptom: 'Pseudopolyps', correctAnswer: 'B', explanation: 'Pseudopolyps (inflammatory polyps) are more characteristic of UC.' },
+      { id: '7', symptom: 'Perianal fistulas and abscesses', correctAnswer: 'A', explanation: "Perianal complications like fistulas and abscesses are common in Crohn's, rare in UC." },
+      { id: '8', symptom: 'Toxic megacolon risk', correctAnswer: 'B', explanation: 'Toxic megacolon is a serious complication more associated with UC.' },
+      { id: '9', symptom: 'Non-caseating granulomas on biopsy', correctAnswer: 'A', explanation: "Non-caseating granulomas are pathognomonic for Crohn's disease." },
+      { id: '10', symptom: 'Crypt abscesses', correctAnswer: 'B', explanation: 'Crypt abscesses are more commonly seen in UC, though not specific.' },
+      { id: '11', symptom: 'Terminal ileum involvement', correctAnswer: 'A', explanation: "Terminal ileitis is very common in Crohn's disease. UC does not typically affect the ileum." },
+      { id: '12', symptom: 'Bloody diarrhea as hallmark', correctAnswer: 'B', explanation: "Bloody diarrhea is the hallmark of UC. Crohn's may have diarrhea but less commonly bloody." },
+      { id: '13', symptom: 'String sign on imaging', correctAnswer: 'A', explanation: 'The "string sign" (narrow terminal ileum) is seen in Crohn\'s disease.' },
+      { id: '14', symptom: 'Lead pipe colon on imaging', correctAnswer: 'B', explanation: 'The "lead pipe" appearance (loss of haustra) is characteristic of chronic UC.' },
+    ],
   },
   {
-    id: '2',
-    symptom: 'Mucosal inflammation only',
-    correctAnswer: 'B',
-    explanation: 'UC is limited to the mucosa and submucosa. Crohn\'s affects all layers.',
+    id: 'type1-type2-dm',
+    conditionA: 'Type 1 Diabetes',
+    conditionB: 'Type 2 Diabetes',
+    category: 'Endocrine',
+    difficulty: 'beginner',
+    cards: [
+      { id: '1', symptom: 'Autoimmune destruction of beta cells', correctAnswer: 'A', explanation: 'Type 1 DM is caused by autoimmune destruction of pancreatic beta cells.' },
+      { id: '2', symptom: 'Insulin resistance', correctAnswer: 'B', explanation: 'Type 2 DM is primarily characterized by insulin resistance and relative insulin deficiency.' },
+      { id: '3', symptom: 'Typically presents in childhood', correctAnswer: 'A', explanation: 'Type 1 DM typically presents in childhood or adolescence, though can occur at any age.' },
+      { id: '4', symptom: 'Associated with obesity', correctAnswer: 'B', explanation: 'Type 2 DM is strongly associated with obesity and metabolic syndrome.' },
+      { id: '5', symptom: 'Positive GAD65 antibodies', correctAnswer: 'A', explanation: 'GAD65 and other islet cell antibodies are markers of autoimmune Type 1 DM.' },
+      { id: '6', symptom: 'Family history often present', correctAnswer: 'B', explanation: 'Type 2 DM has a strong genetic component with frequent family history.' },
+      { id: '7', symptom: 'Requires insulin from diagnosis', correctAnswer: 'A', explanation: 'Type 1 DM requires exogenous insulin from the time of diagnosis.' },
+      { id: '8', symptom: 'May be managed with oral agents initially', correctAnswer: 'B', explanation: 'Type 2 DM can often be managed with lifestyle changes and oral medications initially.' },
+      { id: '9', symptom: 'DKA as initial presentation', correctAnswer: 'A', explanation: 'Diabetic ketoacidosis (DKA) is often the initial presentation of Type 1 DM.' },
+      { id: '10', symptom: 'Acanthosis nigricans', correctAnswer: 'B', explanation: 'Acanthosis nigricans is associated with insulin resistance in Type 2 DM.' },
+    ],
   },
   {
-    id: '3',
-    symptom: 'Skip lesions',
-    correctAnswer: 'A',
-    explanation: 'Skip lesions (patchy involvement with normal bowel in between) are typical of Crohn\'s disease.',
+    id: 'hyperthyroid-hypothyroid',
+    conditionA: 'Hyperthyroidism',
+    conditionB: 'Hypothyroidism',
+    category: 'Endocrine',
+    difficulty: 'beginner',
+    cards: [
+      { id: '1', symptom: 'Heat intolerance', correctAnswer: 'A', explanation: 'Heat intolerance occurs due to increased metabolic rate in hyperthyroidism.' },
+      { id: '2', symptom: 'Cold intolerance', correctAnswer: 'B', explanation: 'Cold intolerance occurs due to decreased metabolic rate in hypothyroidism.' },
+      { id: '3', symptom: 'Weight loss despite increased appetite', correctAnswer: 'A', explanation: 'Hyperthyroidism causes increased metabolism leading to weight loss despite eating more.' },
+      { id: '4', symptom: 'Weight gain and fatigue', correctAnswer: 'B', explanation: 'Hypothyroidism slows metabolism causing weight gain, fatigue, and lethargy.' },
+      { id: '5', symptom: 'Tachycardia and palpitations', correctAnswer: 'A', explanation: 'Excess thyroid hormone causes tachycardia, palpitations, and atrial fibrillation risk.' },
+      { id: '6', symptom: 'Bradycardia', correctAnswer: 'B', explanation: 'Low thyroid hormone causes bradycardia and decreased cardiac output.' },
+      { id: '7', symptom: 'Tremor and anxiety', correctAnswer: 'A', explanation: 'Fine tremor and anxiety/nervousness are common in hyperthyroidism.' },
+      { id: '8', symptom: 'Depression and mental slowing', correctAnswer: 'B', explanation: 'Hypothyroidism commonly causes depression, cognitive slowing, and poor concentration.' },
+      { id: '9', symptom: 'Exophthalmos (Graves disease)', correctAnswer: 'A', explanation: 'Exophthalmos is specific to Graves disease, the most common cause of hyperthyroidism.' },
+      { id: '10', symptom: 'Myxedema', correctAnswer: 'B', explanation: 'Myxedema (non-pitting edema) is seen in severe hypothyroidism.' },
+      { id: '11', symptom: 'Low TSH, high T4', correctAnswer: 'A', explanation: 'Primary hyperthyroidism shows suppressed TSH with elevated T4/T3.' },
+      { id: '12', symptom: 'High TSH, low T4', correctAnswer: 'B', explanation: 'Primary hypothyroidism shows elevated TSH with low T4.' },
+    ],
   },
   {
-    id: '4',
-    symptom: 'Continuous inflammation from rectum',
-    correctAnswer: 'B',
-    explanation: 'UC always involves the rectum and spreads proximally in a continuous pattern.',
+    id: 'ra-oa',
+    conditionA: 'Rheumatoid Arthritis',
+    conditionB: 'Osteoarthritis',
+    category: 'MSK',
+    difficulty: 'intermediate',
+    cards: [
+      { id: '1', symptom: 'Morning stiffness > 1 hour', correctAnswer: 'A', explanation: 'RA causes prolonged morning stiffness (>1 hour) due to inflammation. OA stiffness is brief (<30 min).' },
+      { id: '2', symptom: 'Worse with activity, better with rest', correctAnswer: 'B', explanation: 'OA is a "wear and tear" disease - symptoms worsen with use and improve with rest.' },
+      { id: '3', symptom: 'Symmetric joint involvement', correctAnswer: 'A', explanation: 'RA typically presents with symmetric polyarthritis, affecting both sides equally.' },
+      { id: '4', symptom: 'DIP joint involvement', correctAnswer: 'B', explanation: 'OA commonly affects DIP joints. RA typically spares DIP joints.' },
+      { id: '5', symptom: 'Positive RF and anti-CCP', correctAnswer: 'A', explanation: 'Rheumatoid factor and anti-CCP antibodies are markers of RA.' },
+      { id: '6', symptom: 'Joint space narrowing and osteophytes', correctAnswer: 'B', explanation: 'OA shows joint space narrowing, osteophytes, subchondral sclerosis on X-ray.' },
+      { id: '7', symptom: 'Periarticular erosions on X-ray', correctAnswer: 'A', explanation: 'RA causes characteristic periarticular erosions and osteopenia on X-ray.' },
+      { id: '8', symptom: 'Heberden and Bouchard nodes', correctAnswer: 'B', explanation: "Heberden (DIP) and Bouchard (PIP) nodes are bony enlargements seen in OA." },
+      { id: '9', symptom: 'Systemic symptoms (fatigue, fever)', correctAnswer: 'A', explanation: 'RA is a systemic inflammatory disease with constitutional symptoms.' },
+      { id: '10', symptom: 'Weight-bearing joints most affected', correctAnswer: 'B', explanation: 'OA primarily affects weight-bearing joints (knees, hips) and hands.' },
+      { id: '11', symptom: 'Swan neck and boutonniere deformities', correctAnswer: 'A', explanation: 'These hand deformities are characteristic of advanced RA.' },
+      { id: '12', symptom: 'Crepitus on joint movement', correctAnswer: 'B', explanation: 'Crepitus (grinding sensation) is common in OA due to cartilage loss.' },
+    ],
   },
   {
-    id: '5',
-    symptom: 'Cobblestone appearance',
-    correctAnswer: 'A',
-    explanation: 'The cobblestone mucosa pattern is classic for Crohn\'s disease.',
+    id: 'heart-failure-types',
+    conditionA: 'HFrEF (Systolic)',
+    conditionB: 'HFpEF (Diastolic)',
+    category: 'Cardiology',
+    difficulty: 'advanced',
+    cards: [
+      { id: '1', symptom: 'EF < 40%', correctAnswer: 'A', explanation: 'HFrEF is defined by reduced ejection fraction (<40%).' },
+      { id: '2', symptom: 'EF ≥ 50% with diastolic dysfunction', correctAnswer: 'B', explanation: 'HFpEF has preserved EF (≥50%) but impaired ventricular relaxation.' },
+      { id: '3', symptom: 'Dilated LV on echo', correctAnswer: 'A', explanation: 'HFrEF typically shows LV dilation with thin walls and poor contractility.' },
+      { id: '4', symptom: 'LV hypertrophy with normal size', correctAnswer: 'B', explanation: 'HFpEF often shows concentric LV hypertrophy with normal or small cavity.' },
+      { id: '5', symptom: 'S3 gallop on auscultation', correctAnswer: 'A', explanation: 'S3 (ventricular gallop) indicates volume overload seen in HFrEF.' },
+      { id: '6', symptom: 'S4 gallop on auscultation', correctAnswer: 'B', explanation: 'S4 (atrial gallop) indicates stiff ventricle with impaired filling (HFpEF).' },
+      { id: '7', symptom: 'Post-MI cardiomyopathy', correctAnswer: 'A', explanation: 'Ischemic cardiomyopathy after MI is a common cause of HFrEF.' },
+      { id: '8', symptom: 'Hypertension as primary cause', correctAnswer: 'B', explanation: 'Chronic hypertension causing LVH is the most common cause of HFpEF.' },
+      { id: '9', symptom: 'ACE inhibitors and beta-blockers proven beneficial', correctAnswer: 'A', explanation: 'These medications have clear mortality benefit in HFrEF.' },
+      { id: '10', symptom: 'Treatment focuses on underlying conditions', correctAnswer: 'B', explanation: 'HFpEF treatment focuses on controlling HTN, rate control, and diuretics.' },
+    ],
   },
   {
-    id: '6',
-    symptom: 'Pseudopolyps',
-    correctAnswer: 'B',
-    explanation: 'Pseudopolyps (inflammatory polyps) are more characteristic of UC.',
-  },
-  {
-    id: '7',
-    symptom: 'Perianal disease (fistulas, abscesses)',
-    correctAnswer: 'A',
-    explanation: 'Perianal complications like fistulas and abscesses are common in Crohn\'s, rare in UC.',
-  },
-  {
-    id: '8',
-    symptom: 'Toxic megacolon risk',
-    correctAnswer: 'B',
-    explanation: 'Toxic megacolon is a serious complication more associated with UC.',
-  },
-  {
-    id: '9',
-    symptom: 'Granulomas on biopsy',
-    correctAnswer: 'A',
-    explanation: 'Non-caseating granulomas are pathognomonic for Crohn\'s disease.',
-  },
-  {
-    id: '10',
-    symptom: 'Crypt abscesses',
-    correctAnswer: 'B',
-    explanation: 'Crypt abscesses are more commonly seen in UC, though not specific.',
-  },
-  {
-    id: '11',
-    symptom: 'Terminal ileum involvement',
-    correctAnswer: 'A',
-    explanation: 'Terminal ileitis is very common in Crohn\'s disease. UC does not typically affect the ileum.',
-  },
-  {
-    id: '12',
-    symptom: 'Bloody diarrhea',
-    correctAnswer: 'B',
-    explanation: 'Bloody diarrhea is the hallmark of UC. Crohn\'s may have diarrhea but less commonly bloody.',
-  },
-  {
-    id: '13',
-    symptom: 'String sign on imaging',
-    correctAnswer: 'A',
-    explanation: 'The "string sign" (narrow terminal ileum) is seen in Crohn\'s disease.',
-  },
-  {
-    id: '14',
-    symptom: 'Lead pipe colon on imaging',
-    correctAnswer: 'B',
-    explanation: 'The "lead pipe" appearance (loss of haustra) is characteristic of chronic UC.',
+    id: 'copd-asthma',
+    conditionA: 'COPD',
+    conditionB: 'Asthma',
+    category: 'Pulmonology',
+    difficulty: 'intermediate',
+    cards: [
+      { id: '1', symptom: 'Fixed airflow obstruction', correctAnswer: 'A', explanation: 'COPD has fixed, irreversible airflow obstruction. FEV1/FVC ratio remains low.' },
+      { id: '2', symptom: 'Reversible airflow obstruction', correctAnswer: 'B', explanation: 'Asthma shows reversible obstruction with ≥12% improvement post-bronchodilator.' },
+      { id: '3', symptom: 'Strong association with smoking', correctAnswer: 'A', explanation: 'Smoking is the primary cause of COPD (>90% of cases).' },
+      { id: '4', symptom: 'Atopy and allergies common', correctAnswer: 'B', explanation: 'Asthma is often associated with atopy, allergies, and eczema.' },
+      { id: '5', symptom: 'Onset typically after age 40', correctAnswer: 'A', explanation: 'COPD typically presents in middle age or later after years of exposure.' },
+      { id: '6', symptom: 'Often begins in childhood', correctAnswer: 'B', explanation: 'Asthma commonly begins in childhood, though can occur at any age.' },
+      { id: '7', symptom: 'Chronic productive cough', correctAnswer: 'A', explanation: 'Chronic bronchitis component of COPD causes persistent productive cough.' },
+      { id: '8', symptom: 'Episodic wheezing and dyspnea', correctAnswer: 'B', explanation: 'Asthma presents with episodic symptoms often triggered by specific factors.' },
+      { id: '9', symptom: 'Hyperinflation on chest X-ray', correctAnswer: 'A', explanation: 'COPD shows hyperinflation, flattened diaphragms, and increased AP diameter.' },
+      { id: '10', symptom: 'Normal chest X-ray between attacks', correctAnswer: 'B', explanation: "Asthma patients typically have normal CXR between exacerbations." },
+      { id: '11', symptom: 'Elevated eosinophils in sputum', correctAnswer: 'B', explanation: 'Eosinophilic airway inflammation is characteristic of asthma.' },
+      { id: '12', symptom: 'Neutrophilic airway inflammation', correctAnswer: 'A', explanation: 'COPD shows predominantly neutrophilic inflammation.' },
+    ],
   },
 ];
 
-interface DDxCompareDrillProps {
-  onExit?: () => void;
+// ============================================================================
+// Landing Page Component
+// ============================================================================
+
+interface LandingPageProps {
+  onSelectPair: (pair: DDxPair) => void;
+  onExit: () => void;
 }
 
-type DrillStatus = 'playing' | 'feedback';
-
-/**
- * DDxCompareDrill - "Tug of War" style drill for differentiating conditions.
- * 
- * Split-screen layout with Condition A on the left and Condition B on the right.
- * Symptom cards appear in the center and users click left or right to assign.
- */
-const DDxCompareDrill: React.FC<DDxCompareDrillProps> = ({ onExit }) => {
-  const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
-  const [status, setStatus] = useState<DrillStatus>('playing');
-  const [isCorrect, setIsCorrect] = useState<boolean>(false);
-  const [userChoice, setUserChoice] = useState<'A' | 'B' | null>(null);
-  const [score, setScore] = useState<number>(0);
-  const [totalAttempts, setTotalAttempts] = useState<number>(0);
-  const [shuffledCards, setShuffledCards] = useState<SymptomCard[]>([]);
-
-  // Condition metadata
-  const conditionA = {
-    name: "Crohn's Disease",
-    color: 'blue',
-    bgClass: 'bg-blue-900/50',
-    borderClass: 'border-blue-500',
-    textClass: 'text-blue-400',
-    hoverClass: 'hover:bg-blue-800/70',
-    activeClass: 'bg-blue-700',
-  };
-
-  const conditionB = {
-    name: 'Ulcerative Colitis',
-    color: 'red',
-    bgClass: 'bg-red-900/50',
-    borderClass: 'border-red-500',
-    textClass: 'text-red-400',
-    hoverClass: 'hover:bg-red-800/70',
-    activeClass: 'bg-red-700',
-  };
-
-  // Shuffle cards on mount
-  useEffect(() => {
-    const shuffled = [...CROHNS_VS_UC_CARDS].sort(() => Math.random() - 0.5);
-    setShuffledCards(shuffled);
+const LandingPage: React.FC<LandingPageProps> = ({ onSelectPair, onExit }) => {
+  const categories = useMemo(() => {
+    const cats = new Map<string, DDxPair[]>();
+    DDX_PAIRS.forEach(pair => {
+      const existing = cats.get(pair.category) || [];
+      cats.set(pair.category, [...existing, pair]);
+    });
+    return cats;
   }, []);
+
+  const getDifficultyColor = (difficulty: DDxPair['difficulty']) => {
+    switch (difficulty) {
+      case 'beginner': return 'text-emerald-400 bg-emerald-500/20';
+      case 'intermediate': return 'text-amber-400 bg-amber-500/20';
+      case 'advanced': return 'text-red-400 bg-red-500/20';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[var(--color-bg-primary)]">
+      {/* Header */}
+      <header className="sticky top-0 z-10 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-b border-[var(--color-border)]">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <button
+            onClick={onExit}
+            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+          >
+            <X className="w-5 h-5" />
+            <span className="text-sm font-medium">Exit</span>
+          </button>
+          <div className="flex items-center gap-2">
+            <GitCompare className="w-6 h-6 text-blue-500" />
+            <h1 className="text-xl font-bold text-[var(--color-text-primary)]">DDx Compare</h1>
+          </div>
+          <div className="w-16" />
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6">
+            <Brain className="w-4 h-4 text-blue-400" />
+            <span className="text-sm font-medium text-blue-400">Pattern Recognition Training</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-primary)] mb-4">
+            Master Differential Diagnosis
+          </h2>
+          <p className="text-lg text-[var(--color-text-muted)] max-w-2xl mx-auto">
+            Swipe symptoms left or right to sort them between two conditions. 
+            Build muscle memory for the distinguishing features that matter most on exam day.
+          </p>
+        </div>
+
+        {/* How It Works */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+              <Target className="w-6 h-6 text-blue-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Choose a DDx Pair</h3>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Select two commonly confused conditions to practice differentiating.
+            </p>
+          </div>
+          <div className="p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4">
+              <Zap className="w-6 h-6 text-emerald-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Sort Symptoms</h3>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Symptoms appear one at a time. Tap left or right to assign each to the correct condition.
+            </p>
+          </div>
+          <div className="p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center mb-4">
+              <Sparkles className="w-6 h-6 text-amber-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">Learn from Feedback</h3>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Get instant explanations for each answer to reinforce your understanding.
+            </p>
+          </div>
+        </div>
+
+        {/* DDx Pairs by Category */}
+        <div className="space-y-8">
+          {Array.from(categories.entries()).map(([category, pairs]) => (
+            <div key={category}>
+              <h3 className="text-sm font-semibold text-[var(--color-text-muted)] uppercase tracking-wider mb-4">
+                {category}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pairs.map((pair) => (
+                  <motion.button
+                    key={pair.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => onSelectPair(pair)}
+                    className="text-left p-5 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-blue-500/50 transition-all group"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <GitCompare className="w-5 h-5 text-blue-400" />
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getDifficultyColor(pair.difficulty)}`}>
+                        {pair.difficulty}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-semibold text-[var(--color-text-primary)]">{pair.conditionA}</span>
+                      <span className="text-[var(--color-text-muted)]">vs</span>
+                      <span className="font-semibold text-[var(--color-text-primary)]">{pair.conditionB}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[var(--color-text-muted)]">
+                        {pair.cards.length} symptoms
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-[var(--color-text-muted)] group-hover:text-blue-400 transition-colors" />
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
+// Drill Session Component
+// ============================================================================
+
+interface DrillSessionProps {
+  pair: DDxPair;
+  onExit: () => void;
+  onBack: () => void;
+}
+
+const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => {
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [status, setStatus] = useState<'playing' | 'feedback'>('playing');
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [userChoice, setUserChoice] = useState<'A' | 'B' | null>(null);
+  const [score, setScore] = useState(0);
+  const [totalAttempts, setTotalAttempts] = useState(0);
+  const [shuffledCards, setShuffledCards] = useState<SymptomCard[]>([]);
+  const [showResults, setShowResults] = useState(false);
+
+  useEffect(() => {
+    const shuffled = [...pair.cards].sort(() => Math.random() - 0.5);
+    setShuffledCards(shuffled);
+  }, [pair.cards]);
 
   const currentCard = useMemo(() => {
     return shuffledCards[currentCardIndex] || null;
@@ -158,52 +325,38 @@ const DDxCompareDrill: React.FC<DDxCompareDrillProps> = ({ onExit }) => {
 
   const handleChoice = useCallback((choice: 'A' | 'B') => {
     if (!currentCard || status === 'feedback') return;
-
     const correct = choice === currentCard.correctAnswer;
     setUserChoice(choice);
     setIsCorrect(correct);
     setStatus('feedback');
-    setTotalAttempts((prev) => prev + 1);
-
-    if (correct) {
-      setScore((prev) => prev + 1);
-    }
+    setTotalAttempts(prev => prev + 1);
+    if (correct) setScore(prev => prev + 1);
   }, [currentCard, status]);
 
   const handleNext = useCallback(() => {
     if (currentCardIndex < shuffledCards.length - 1) {
-      setCurrentCardIndex((prev) => prev + 1);
+      setCurrentCardIndex(prev => prev + 1);
       setStatus('playing');
       setUserChoice(null);
     } else {
-      // Reset and reshuffle when all cards are done
-      const reshuffled = [...CROHNS_VS_UC_CARDS].sort(() => Math.random() - 0.5);
-      setShuffledCards(reshuffled);
-      setCurrentCardIndex(0);
-      setStatus('playing');
-      setUserChoice(null);
+      setShowResults(true);
     }
   }, [currentCardIndex, shuffledCards.length]);
 
   const handleReset = useCallback(() => {
-    const reshuffled = [...CROHNS_VS_UC_CARDS].sort(() => Math.random() - 0.5);
+    const reshuffled = [...pair.cards].sort(() => Math.random() - 0.5);
     setShuffledCards(reshuffled);
     setCurrentCardIndex(0);
     setScore(0);
     setTotalAttempts(0);
     setStatus('playing');
     setUserChoice(null);
-  }, []);
+    setShowResults(false);
+  }, [pair.cards]);
 
-  const handleExit = () => {
-    if (onExit) {
-      onExit();
-    }
-  };
-
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (showResults) return;
       if (status === 'playing') {
         if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
           e.preventDefault();
@@ -219,204 +372,163 @@ const DDxCompareDrill: React.FC<DDxCompareDrillProps> = ({ onExit }) => {
         }
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [status, handleChoice, handleNext]);
+  }, [status, handleChoice, handleNext, showResults]);
 
-  // Animation variants
-  const cardVariants = {
-    initial: { opacity: 0, y: 50, scale: 0.9 },
-    animate: { opacity: 1, y: 0, scale: 1 },
-    exit: { opacity: 0, y: -50, scale: 0.9 },
-    // Swipe animations for left/right choices
-    left: { x: -200, opacity: 0, rotate: -15 },
-    right: { x: 200, opacity: 0, rotate: 15 },
-  };
-
-  const feedbackVariants = {
-    initial: { opacity: 0, y: 10 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -10 },
-  };
+  if (showResults) {
+    const percentage = Math.round((score / totalAttempts) * 100);
+    return (
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full p-8 rounded-3xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-center"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+            <Trophy className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-2">Session Complete!</h2>
+          <p className="text-[var(--color-text-muted)] mb-6">
+            {pair.conditionA} vs {pair.conditionB}
+          </p>
+          <div className="text-5xl font-bold text-[var(--color-text-primary)] mb-2">{percentage}%</div>
+          <p className="text-[var(--color-text-muted)] mb-8">{score} of {totalAttempts} correct</p>
+          <div className="space-y-3">
+            <button
+              onClick={handleReset}
+              className="w-full py-3 px-6 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold transition-colors flex items-center justify-center gap-2"
+            >
+              <RotateCcw className="w-5 h-5" />
+              Try Again
+            </button>
+            <button
+              onClick={onBack}
+              className="w-full py-3 px-6 rounded-xl bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-bg-tertiary)]/80 text-[var(--color-text-primary)] font-semibold transition-colors"
+            >
+              Choose Another Pair
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (shuffledCards.length === 0) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex items-center justify-center">
-        <p className="text-slate-400">Loading...</p>
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
+        <p className="text-[var(--color-text-muted)]">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800/50">
-        <button
-          onClick={handleExit}
-          className="flex items-center gap-2 text-slate-400 hover:text-slate-200 transition-colors"
-          aria-label="Exit"
-        >
-          <X className="w-5 h-5" />
-          <span className="text-sm font-medium hidden sm:inline">Exit</span>
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex flex-col overflow-hidden">
+      <header className="relative z-20 flex items-center justify-between px-4 py-3 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)]">
+        <button onClick={onBack} className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors">
+          <ChevronLeft className="w-5 h-5" />
+          <span className="text-sm font-medium hidden sm:inline">Back</span>
         </button>
-
-        <h1 className="text-lg font-semibold text-slate-200">DDx Compare</h1>
-
-        <div className="flex items-center gap-4">
-          {/* Score */}
-          <div className="flex items-center gap-1.5">
-            <Trophy className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-bold text-amber-500">
-              {score}/{totalAttempts}
-            </span>
-          </div>
-
-          {/* Progress */}
-          <div className="text-sm text-slate-400">
-            {currentCardIndex + 1}/{shuffledCards.length}
-          </div>
+        <div className="text-center">
+          <h1 className="text-sm font-semibold text-[var(--color-text-primary)]">DDx Compare</h1>
+          <p className="text-xs text-[var(--color-text-muted)]">{currentCardIndex + 1} of {shuffledCards.length}</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Trophy className="w-4 h-4 text-amber-500" />
+          <span className="text-sm font-bold text-amber-500">{score}/{totalAttempts}</span>
         </div>
       </header>
 
-      {/* Main Split Screen Layout */}
-      <div className="flex-1 flex pt-14">
-        {/* Left Side - Condition A (Crohn's) */}
-        <button
-          onClick={() => handleChoice('A')}
-          disabled={status === 'feedback'}
-          className={`
-            flex-1 flex flex-col items-center justify-center p-6 transition-all duration-200
-            ${conditionA.bgClass} ${conditionA.borderClass} border-r-2
-            ${status === 'playing' ? conditionA.hoverClass + ' cursor-pointer' : ''}
-            ${status === 'feedback' && userChoice === 'A' 
-              ? (isCorrect ? 'bg-emerald-900/50 border-emerald-500' : 'bg-red-900/50 border-red-500') 
-              : ''}
-            disabled:cursor-default
-          `}
-          aria-label={`Select ${conditionA.name}`}
-        >
-          <ChevronLeft className={`w-12 h-12 ${conditionA.textClass} mb-4 opacity-60`} />
-          <h2 className={`text-2xl sm:text-3xl font-bold ${conditionA.textClass}`}>
-            {conditionA.name}
-          </h2>
-          <p className="text-sm text-slate-400 mt-2 hidden sm:block">
-            Press ← or A
-          </p>
-          
-          {/* Checkmark/X indicator */}
-          {status === 'feedback' && currentCard?.correctAnswer === 'A' && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute bottom-8"
-            >
-              <CheckCircle className="w-16 h-16 text-white" />
-            </motion.div>
-          )}
-        </button>
-
-        {/* Right Side - Condition B (UC) */}
-        <button
-          onClick={() => handleChoice('B')}
-          disabled={status === 'feedback'}
-          className={`
-            flex-1 flex flex-col items-center justify-center p-6 transition-all duration-200
-            ${conditionB.bgClass} ${conditionB.borderClass} border-l-2
-            ${status === 'playing' ? conditionB.hoverClass + ' cursor-pointer' : ''}
-            ${status === 'feedback' && userChoice === 'B' 
-              ? (isCorrect ? 'bg-emerald-900/50 border-emerald-500' : 'bg-red-900/50 border-red-500') 
-              : ''}
-            disabled:cursor-default
-          `}
-          aria-label={`Select ${conditionB.name}`}
-        >
-          <ChevronRight className={`w-12 h-12 ${conditionB.textClass} mb-4 opacity-60`} />
-          <h2 className={`text-2xl sm:text-3xl font-bold ${conditionB.textClass}`}>
-            {conditionB.name}
-          </h2>
-          <p className="text-sm text-slate-400 mt-2 hidden sm:block">
-            Press → or B
-          </p>
-          
-          {/* Checkmark indicator */}
-          {status === 'feedback' && currentCard?.correctAnswer === 'B' && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute bottom-8"
-            >
-              <CheckCircle className="w-16 h-16 text-white" />
-            </motion.div>
-          )}
-        </button>
+      <div className="w-full h-1 bg-[var(--color-bg-tertiary)]">
+        <motion.div className="h-full bg-blue-500" initial={{ width: 0 }} animate={{ width: `${((currentCardIndex + 1) / shuffledCards.length) * 100}%` }} transition={{ duration: 0.3 }} />
       </div>
 
-      {/* Center Card */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-        <AnimatePresence mode="wait">
-          {currentCard && (
-            <motion.div
-              key={currentCard.id}
-              variants={cardVariants}
-              initial="initial"
-              animate="animate"
-              exit={userChoice === 'A' ? 'left' : userChoice === 'B' ? 'right' : 'exit'}
-              transition={{ duration: 0.3 }}
-              className={`
-                pointer-events-auto max-w-md w-[90%] p-6 rounded-2xl shadow-2xl
-                ${status === 'playing' 
-                  ? 'bg-slate-800 border border-slate-700' 
-                  : isCorrect 
-                    ? 'bg-emerald-900 border border-emerald-600' 
-                    : 'bg-red-900 border border-red-600'}
-              `}
-            >
-              <p className="text-xl sm:text-2xl font-semibold text-center text-slate-100 mb-4">
-                {currentCard.symptom}
-              </p>
+      <div className="flex-1 flex flex-col">
+        <div className="grid grid-cols-2 border-b border-[var(--color-border)]">
+          <div className="p-4 text-center bg-blue-500/5 border-r border-[var(--color-border)]">
+            <h2 className="text-lg font-bold text-blue-400">{pair.conditionA}</h2>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1 hidden sm:block">← or A</p>
+          </div>
+          <div className="p-4 text-center bg-rose-500/5">
+            <h2 className="text-lg font-bold text-rose-400">{pair.conditionB}</h2>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1 hidden sm:block">→ or B</p>
+          </div>
+        </div>
 
-              {/* Feedback/Explanation */}
-              <AnimatePresence>
-                {status === 'feedback' && (
-                  <motion.div
-                    variants={feedbackVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    className="mt-4 pt-4 border-t border-slate-600"
-                  >
-                    <p className={`text-center font-bold mb-2 ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {isCorrect ? 'Correct!' : 'Incorrect'}
-                    </p>
-                    <p className="text-sm text-slate-300 text-center">
-                      {currentCard.explanation}
-                    </p>
-                    <button
-                      onClick={handleNext}
-                      className="mt-4 w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-100 rounded-lg font-medium transition-colors"
-                    >
-                      {currentCardIndex < shuffledCards.length - 1 ? 'Next Card' : 'Start Over'}
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <AnimatePresence mode="wait">
+            {currentCard && (
+              <motion.div
+                key={currentCard.id}
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, x: userChoice === 'A' ? -100 : userChoice === 'B' ? 100 : 0, scale: 0.95 }}
+                transition={{ duration: 0.25 }}
+                className="w-full max-w-lg"
+              >
+                <div className={`p-6 rounded-2xl border-2 transition-colors ${status === 'playing' ? 'bg-[var(--color-bg-secondary)] border-[var(--color-border)]' : isCorrect ? 'bg-emerald-500/10 border-emerald-500' : 'bg-red-500/10 border-red-500'}`}>
+                  <p className="text-xl sm:text-2xl font-semibold text-center text-[var(--color-text-primary)] mb-4">{currentCard.symptom}</p>
+                  {status === 'feedback' && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pt-4 border-t border-[var(--color-border)]">
+                      <div className="flex items-center justify-center gap-2 mb-3">
+                        {isCorrect ? <CheckCircle className="w-6 h-6 text-emerald-500" /> : <XCircle className="w-6 h-6 text-red-500" />}
+                        <span className={`font-bold ${isCorrect ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {isCorrect ? 'Correct!' : `Incorrect - ${currentCard.correctAnswer === 'A' ? pair.conditionA : pair.conditionB}`}
+                        </span>
+                      </div>
+                      <p className="text-sm text-[var(--color-text-muted)] text-center mb-4">{currentCard.explanation}</p>
+                      <button onClick={handleNext} className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-colors">
+                        {currentCardIndex < shuffledCards.length - 1 ? 'Next' : 'See Results'}
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {status === 'playing' && (
+            <div className="grid grid-cols-2 gap-4 w-full max-w-lg mt-6">
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => handleChoice('A')} className="py-4 px-6 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border-2 border-blue-500/30 hover:border-blue-500 text-blue-400 font-semibold transition-all flex items-center justify-center gap-2">
+                <ChevronLeft className="w-5 h-5" />
+                {pair.conditionA.split(' ')[0]}
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => handleChoice('B')} className="py-4 px-6 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border-2 border-rose-500/30 hover:border-rose-500 text-rose-400 font-semibold transition-all flex items-center justify-center gap-2">
+                {pair.conditionB.split(' ')[0]}
+                <ChevronRight className="w-5 h-5" />
+              </motion.button>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
       </div>
 
-      {/* Reset button */}
-      <button
-        onClick={handleReset}
-        className="fixed bottom-4 right-4 p-3 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-400 hover:text-slate-200 transition-colors shadow-lg z-20"
-        aria-label="Reset session"
-        title="Reset session"
-      >
+      <button onClick={handleReset} className="fixed bottom-4 right-4 p-3 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-tertiary)] rounded-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors shadow-lg z-20 border border-[var(--color-border)]" title="Reset session">
         <RotateCcw className="w-5 h-5" />
       </button>
     </div>
   );
+};
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
+interface DDxCompareDrillProps {
+  onExit?: () => void;
+}
+
+const DDxCompareDrill: React.FC<DDxCompareDrillProps> = ({ onExit }) => {
+  const [selectedPair, setSelectedPair] = useState<DDxPair | null>(null);
+
+  const handleExit = () => {
+    if (onExit) onExit();
+  };
+
+  if (selectedPair) {
+    return <DrillSession pair={selectedPair} onExit={handleExit} onBack={() => setSelectedPair(null)} />;
+  }
+
+  return <LandingPage onSelectPair={setSelectedPair} onExit={handleExit} />;
 };
 
 export default DDxCompareDrill;
