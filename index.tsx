@@ -6,10 +6,14 @@ import './index.css';
 import { AuthProvider } from './components/AuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ShortcutProvider } from './src/context/ShortcutContext';
-import { initializeSentry } from './lib/monitoring/sentry';
 
-// Initialize error tracking before app loads
-initializeSentry();
+// Initialize error tracking asynchronously to avoid blocking app load
+// and prevent conflicts with other library initializations
+import('./lib/monitoring/sentry').then(({ initializeSentry }) => {
+  initializeSentry();
+}).catch(() => {
+  console.warn('[Sentry] Failed to load error tracking');
+});
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

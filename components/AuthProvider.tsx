@@ -5,7 +5,18 @@
 
 import React, { useEffect } from 'react';
 import { ClerkProvider, useUser } from '@clerk/clerk-react';
-import { setUserContext, clearUserContext } from '../lib/monitoring/sentry';
+
+// Lazy import Sentry functions to avoid initialization conflicts
+let setUserContext: ((user: { id: string; email?: string; username?: string }) => void) | null = null;
+let clearUserContext: (() => void) | null = null;
+
+// Load Sentry functions asynchronously
+import('../lib/monitoring/sentry').then((sentry) => {
+  setUserContext = sentry.setUserContext;
+  clearUserContext = sentry.clearUserContext;
+}).catch(() => {
+  // Sentry not available, ignore
+});
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -106,13 +117,13 @@ function SentryUserSync() {
   const { user, isSignedIn } = useUser();
   
   useEffect(() => {
-    if (isSignedIn && user) {
+    if (isSignedIn && user && setUserContext) {
       setUserContext({
         id: user.id,
         email: user.primaryEmailAddress?.emailAddress,
         username: user.username || undefined,
       });
-    } else {
+    } else if (clearUserContext) {
       clearUserContext();
     }
   }, [isSignedIn, user]);
