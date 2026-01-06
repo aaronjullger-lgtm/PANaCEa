@@ -1,11 +1,13 @@
 /**
  * Sentry Error Tracking Configuration
  * 
- * Centralizes error tracking and performance monitoring for PANaCEa.
- * Used across client-side React app and CloudFlare Functions.
+ * IMPORTANT: This module uses lazy loading to prevent conflicts with Clerk.
+ * Sentry is only loaded when VITE_SENTRY_DSN is configured.
  */
 
-import * as Sentry from '@sentry/react';
+// Sentry instance - loaded lazily only when DSN is configured
+let Sentry: typeof import('@sentry/react') | null = null;
+let isInitialized = false;
 
 export interface SentryConfig {
   dsn: string;
@@ -13,105 +15,89 @@ export interface SentryConfig {
   tracesSampleRate: number;
   replaysSessionSampleRate: number;
   replaysOnErrorSampleRate: number;
-  beforeSend?: (event: Sentry.ErrorEvent, hint: Sentry.EventHint) => Sentry.ErrorEvent | null;
 }
 
 /**
  * Initialize Sentry for React application
+ * Only loads Sentry SDK if DSN is configured
  */
-export function initializeSentry(config?: Partial<SentryConfig>): void {
-  const isDevelopment = import.meta.env.DEV;
-  const dsn = import.meta.env.VITE_SENTRY_DSN;
+export async function initializeSentry(config?: Partial<SentryConfig>): Promise<void> {
+  // @ts-ignore
+  const isDevelopment = import.meta.env?.DEV;
+  // @ts-ignore
+  const dsn = import.meta.env?.VITE_SENTRY_DSN;
 
   // Don't initialize in development unless explicitly enabled
-  if (isDevelopment && !import.meta.env.VITE_SENTRY_ENABLE_DEV) {
+  // @ts-ignore
+  if (isDevelopment && !import.meta.env?.VITE_SENTRY_ENABLE_DEV) {
     console.log('[Sentry] Skipping initialization in development');
     return;
   }
 
   if (!dsn) {
-    console.warn('[Sentry] DSN not configured, error tracking disabled');
+    console.log('[Sentry] DSN not configured, error tracking disabled');
     return;
   }
 
-  const defaultConfig: SentryConfig = {
-    dsn,
-    environment: import.meta.env.MODE || 'production',
+  try {
+    // Dynamically import Sentry only when we have a DSN
+    Sentry = await import('@sentry/react');
     
-    // Performance Monitoring
-    tracesSampleRate: isDevelopment ? 1.0 : 0.1, // 100% in dev, 10% in prod
-    
-    // Session Replay
-    replaysSessionSampleRate: 0.1, // 10% of sessions
-    replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
-    
-    // Filter sensitive data
-    beforeSend: (event: Sentry.ErrorEvent) => {
-      // Remove sensitive data from events
-      if (event.request?.headers) {
-        delete event.request.headers['Authorization'];
-        delete event.request.headers['Cookie'];
-      }
+    const defaultConfig: SentryConfig = {
+      dsn,
+      // @ts-ignore
+      environment: import.meta.env?.MODE || 'production',
+      tracesSampleRate: isDevelopment ? 1.0 : 0.1,
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+    };
+
+    const finalConfig = { ...defaultConfig, ...config };
+
+    Sentry.init({
+      dsn: finalConfig.dsn,
+      environment: finalConfig.environment,
+      integrations: [
+        Sentry.browserTracingIntegration(),
+        Sentry.replayIntegration({
+          maskAllText: true,
+          blockAllMedia: true,
+        }),
+      ],
+      tracesSampleRate: finalConfig.tracesSampleRate,
+      replaysSessionSampleRate: finalConfig.replaysSessionSampleRate,
+      replaysOnErrorSampleRate: finalConfig.replaysOnErrorSampleRate,
       
-      // Remove query parameters that might contain sensitive data
-      if (event.request?.url) {
-        try {
-          const url = new URL(event.request.url);
-          url.searchParams.delete('token');
-          url.searchParams.delete('apiKey');
-          event.request.url = url.toString();
-        } catch (e) {
-          // Invalid URL, skip sanitization
+      // Filter sensitive data
+      beforeSend: (event) => {
+        if (event.request?.headers) {
+          delete event.request.headers['Authorization'];
+          delete event.request.headers['Cookie'];
         }
-      }
+        return event;
+      },
       
-      return event;
-    },
-  };
+      // Ignore common non-critical errors
+      ignoreErrors: [
+        'top.GLOBALS',
+        'chrome-extension://',
+        'moz-extension://',
+        'Network request failed',
+        'Failed to fetch',
+        'NetworkError',
+        'ResizeObserver loop limit exceeded',
+        'ResizeObserver loop completed with undelivered notifications',
+        'ChunkLoadError',
+        'Loading chunk',
+        'adsbygoogle',
+      ],
+    });
 
-  const finalConfig = { ...defaultConfig, ...config };
-
-  Sentry.init({
-    dsn: finalConfig.dsn,
-    environment: finalConfig.environment,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-    ],
-    tracesSampleRate: finalConfig.tracesSampleRate,
-    replaysSessionSampleRate: finalConfig.replaysSessionSampleRate,
-    replaysOnErrorSampleRate: finalConfig.replaysOnErrorSampleRate,
-    beforeSend: finalConfig.beforeSend,
-    
-    // Ignore common non-critical errors
-    ignoreErrors: [
-      // Browser extensions
-      'top.GLOBALS',
-      'chrome-extension://',
-      'moz-extension://',
-      
-      // Network errors (often transient)
-      'Network request failed',
-      'Failed to fetch',
-      'NetworkError',
-      
-      // ResizeObserver (benign)
-      'ResizeObserver loop limit exceeded',
-      'ResizeObserver loop completed with undelivered notifications',
-      
-      // Chunk loading (handled by ErrorBoundary)
-      'ChunkLoadError',
-      'Loading chunk',
-      
-      // Ad blockers
-      'adsbygoogle',
-    ],
-  });
-
-  console.log('[Sentry] Initialized successfully');
+    isInitialized = true;
+    console.log('[Sentry] Initialized successfully');
+  } catch (error) {
+    console.warn('[Sentry] Failed to initialize:', error);
+  }
 }
 
 /**
@@ -121,12 +107,16 @@ export function captureError(
   error: Error,
   context?: {
     tags?: Record<string, string>;
-    extra?: Record<string, any>;
-    level?: Sentry.SeverityLevel;
+    extra?: Record<string, unknown>;
+    level?: 'fatal' | 'error' | 'warning' | 'info' | 'debug';
     user?: { id: string; email?: string };
   }
 ): string {
-  console.error('[Sentry] Capturing error:', error, context);
+  console.error('[Error]', error.message, context);
+  
+  if (!Sentry || !isInitialized) {
+    return '';
+  }
   
   if (context?.tags) {
     Sentry.setTags(context.tags);
@@ -150,12 +140,17 @@ export function captureError(
  */
 export function captureMessage(
   message: string,
-  level: Sentry.SeverityLevel = 'info',
+  level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info',
   context?: {
     tags?: Record<string, string>;
-    extra?: Record<string, any>;
+    extra?: Record<string, unknown>;
   }
 ): string {
+  if (!Sentry || !isInitialized) {
+    console.log(`[${level}]`, message, context);
+    return '';
+  }
+  
   if (context?.tags) {
     Sentry.setTags(context.tags);
   }
@@ -176,11 +171,14 @@ export function setUserContext(user: {
   username?: string;
   role?: string;
 }): void {
+  if (!Sentry || !isInitialized) {
+    return;
+  }
+  
   Sentry.setUser({
     id: user.id,
     email: user.email,
     username: user.username,
-    role: user.role,
   });
 }
 
@@ -188,6 +186,10 @@ export function setUserContext(user: {
  * Clear user context (e.g., on logout)
  */
 export function clearUserContext(): void {
+  if (!Sentry || !isInitialized) {
+    return;
+  }
+  
   Sentry.setUser(null);
 }
 
@@ -197,9 +199,13 @@ export function clearUserContext(): void {
 export function addBreadcrumb(
   message: string,
   category: string,
-  level: Sentry.SeverityLevel = 'info',
-  data?: Record<string, any>
+  level: 'fatal' | 'error' | 'warning' | 'info' | 'debug' = 'info',
+  data?: Record<string, unknown>
 ): void {
+  if (!Sentry || !isInitialized) {
+    return;
+  }
+  
   Sentry.addBreadcrumb({
     message,
     category,
@@ -210,13 +216,17 @@ export function addBreadcrumb(
 }
 
 /**
- * Measure performance of an async operation using Sentry spans
+ * Measure performance of an async operation
  */
 export async function measurePerformance<T>(
   name: string,
   operation: () => Promise<T>,
   tags?: Record<string, string>
 ): Promise<T> {
+  if (!Sentry || !isInitialized) {
+    return operation();
+  }
+  
   return Sentry.startSpan(
     {
       name,
@@ -224,27 +234,7 @@ export async function measurePerformance<T>(
       attributes: tags,
     },
     async () => {
-      try {
-        const result = await operation();
-        return result;
-      } catch (error) {
-        throw error;
-      }
+      return operation();
     }
   );
 }
-
-/**
- * Create Sentry error boundary wrapper
- */
-export const withSentryErrorBoundary = Sentry.withErrorBoundary;
-
-/**
- * Profile React component performance
- */
-export const withProfiler = Sentry.withProfiler;
-
-/**
- * Export Sentry namespace for advanced usage
- */
-export { Sentry };
