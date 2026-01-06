@@ -1138,34 +1138,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-// Example of how you might structure your routes
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { ROUTES } from './config/routes';
-
-// Inside the main App component return
-<Router>
-  <Suspense fallback={<Loader />}>
-    <Routes>
-      <Route path={ROUTES.HOME} element={<LandingPage />} />
-      <Route path={ROUTES.DASHBOARD} element={<MenuView onStartDrill={startDrill} />} />
-      {/* Other routes */}
-      <Route path={ROUTES.ADMIN_CURATION} element={
-        <AdminRoute>
-          <QuestionCurationPanel />
-        </AdminRoute>
-      } />
-      {/* Fallback route */}
-      <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} />} />
-    </Routes>
-  </Suspense>
-</Router>
-
-// Helper component to protect admin routes
-const AdminRoute = ({ children }: { children: JSX.Element }) => {
-  const { user } = useUser();
-  if (user && user.publicMetadata.role === 'admin') {
-    return children;
-  }
-  return <Navigate to={ROUTES.DASHBOARD} />;
-};
