@@ -7,6 +7,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { captureError } from '../lib/monitoring/sentry';
 
 interface Props {
   children: ReactNode;
@@ -73,12 +74,19 @@ export class ErrorBoundary extends Component<Props, State> {
       }, 1500);
     }
     
-    // In production, you would send this to an error reporting service
-    // e.g., Sentry, LogRocket, etc.
-    if (process.env.NODE_ENV === 'production') {
-      // Send to error tracking service
-      // Example: Sentry.captureException(error);
-    }
+    // Send to error tracking service
+    captureError(error, {
+      tags: {
+        boundary: 'root',
+        isChunkError: isChunkLoadError.toString(),
+      },
+      extra: {
+        componentStack: errorInfo.componentStack,
+        errorName: error.name,
+        errorMessage: error.message,
+      },
+      level: isChunkLoadError ? 'warning' : 'error',
+    });
   }
 
   isChunkLoadError(): boolean {

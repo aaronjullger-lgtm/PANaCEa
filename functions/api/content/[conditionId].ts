@@ -3,10 +3,19 @@
 
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { authenticateRequest } from '../_shared/auth';
+import { 
+  getFromCache, 
+  setInCache, 
+  getConditionCacheKey, 
+  CACHE_CONFIG,
+  isKVAvailable 
+} from '../_shared/cache';
+import type { KVNamespace } from '@cloudflare/workers-types';
 
 interface Env {
   DATABASE_URL?: string;
   CLERK_SECRET_KEY?: string;
+  CACHE?: KVNamespace;
 }
 
 interface PagesContext {
@@ -61,6 +70,25 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
   // Sanitize: remove any potentially dangerous characters
   const sanitizedId = conditionId.trim().replace(/[<>"'`;]/g, '');
 
+  // Check cache first if KV is available
+  if (isKVAvailable(env.CACHE)) {
+    const cacheKey = getConditionCacheKey(sanitizedId);
+    const cached = await getFromCache(env.CACHE, cacheKey);
+    
+    if (cached) {
+      return new Response(
+        JSON.stringify(cached),
+        { 
+          status: 200,
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Cache': 'HIT'
+          }
+        }
+      );
+    }
+  }
+
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
@@ -95,12 +123,26 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
       );
     }
 
+    // Cache the result if KV is available
+    if (isKVAvailable(env.CACHE)) {
+      const cacheKey = getConditionCacheKey(sanitizedId);
+      await setInCache(
+        env.CACHE,
+        cacheKey,
+        content,
+        CACHE_CONFIG.TTL.CONDITION_DETAIL
+      );
+    }
+
     // Return the full content object directly (pass-through for frontend rendering)
     return new Response(
       JSON.stringify(content),
       { 
         status: 200,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Cache': 'MISS'
+        }
       }
     );
 

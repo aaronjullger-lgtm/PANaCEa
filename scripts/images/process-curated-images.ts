@@ -321,7 +321,6 @@ async function main() {
             quizSuitability: analysis.quizSuitability,
             quizReason: analysis.quizReason
           },
-          difficulty: analysis.difficulty,
           explanation: analysis.explanation,
           status: analysis.quizSuitability === 'excellent' ? 'approved' : 'pending_review',
           approvalStatus: analysis.quizSuitability === 'excellent' ? 'approved' : 'pending',

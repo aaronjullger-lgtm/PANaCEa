@@ -32,7 +32,7 @@ async function generateTextWithFallback(
   const genAI = new GoogleGenerativeAI(apiKey);
   let lastError: unknown;
 
-  for (const modelName of MODEL_CANDIDATES) {
+  for (const modelName of GEMINI_MODEL_NAMES) {
     try {
       const model = genAI.getGenerativeModel({
         model: modelName,

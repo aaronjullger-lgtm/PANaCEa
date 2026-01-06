@@ -6,6 +6,10 @@ import './index.css';
 import { AuthProvider } from './components/AuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ShortcutProvider } from './src/context/ShortcutContext';
+import { initializeSentry } from './lib/monitoring/sentry';
+
+// Initialize error tracking before app loads
+initializeSentry();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

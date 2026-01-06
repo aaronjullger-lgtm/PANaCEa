@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import type { Context } from 'hono';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import type { CloudflareEnv, CloudflareContext } from '../_shared/types';
 
 interface FeedbackSubmission {
   questionId: string;
@@ -13,10 +13,10 @@ interface FeedbackSubmission {
   system?: string;
 }
 
-export const onRequestPost = async (context: Context) => {
-  const { env } = context;
-  const auth = await authenticateRequest(context.req, env);
-  if (!auth.user) {
+export const onRequestPost = async (context: CloudflareContext<CloudflareEnv>) => {
+  const { env, request } = context;
+  const auth = await authenticateRequest(request, env);
+  if (!auth?.user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
@@ -30,7 +30,7 @@ export const onRequestPost = async (context: Context) => {
       questionText,
       topic,
       system,
-    }: FeedbackSubmission = await context.req.json();
+    }: FeedbackSubmission = await request.json();
 
     if (!questionId || !flagType || !description) {
       return new Response(JSON.stringify({ error: 'Missing required feedback fields' }), { status: 400 });

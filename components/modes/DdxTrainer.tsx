@@ -84,7 +84,7 @@ const DdxTrainer = () => {
 
       {!isRevealed ? (
         <div className="text-center">
-          <Button onClick={handleSubmit} size="lg">Submit</Button>
+          <Button onClick={handleSubmit}>Submit</Button>
         </div>
       ) : (
         <div>
@@ -104,7 +104,7 @@ const DdxTrainer = () => {
             ))}
           </div>
           <div className="text-center mt-8">
-            <Button onClick={fetchProblem} size="lg">Next Problem</Button>
+            <Button onClick={fetchProblem}>Next Problem</Button>
           </div>
         </div>
       )}

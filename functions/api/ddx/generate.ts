@@ -1,8 +1,8 @@
-import type { Context } from 'hono';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { callGeminiText } from '../../../services/geminiService'; // Assuming shared Gemini utility
 import { GEMINI_FLASH_MODEL } from '../../../src/constants';
+import type { CloudflareEnv, CloudflareContext } from '../_shared/types';
 
 export interface DdxProblem {
   vignette: string;
@@ -86,15 +86,16 @@ async function generateDdxProblem(prisma: any, topic: string = 'Cardiology'): Pr
 }
 
 
-export const onRequestGet = async (context: Context) => {
-  const { env } = context;
-  const auth = await authenticateRequest(context.req, env);
-  if (!auth.user) {
+export const onRequestGet = async (context: CloudflareContext<CloudflareEnv>) => {
+  const { env, request } = context;
+  const auth = await authenticateRequest(request, env);
+  if (!auth?.user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
-  const topic = context.req.query('topic') || 'Cardiology';
+  const url = new URL(request.url);
+  const topic = url.searchParams.get('topic') || 'Cardiology';
 
   try {
     const ddxProblem = await generateDdxProblem(prisma, topic);

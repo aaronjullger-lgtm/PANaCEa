@@ -1050,7 +1050,6 @@ async function uploadBatch(items: BatchItem[]): Promise<void> {
         description: item.description,
         tags: item.tags,
         sourceAttribution: item.sourceAttribution,
-        difficulty: 'medium', // All questions are PANCE-level
         explanation: item.explanation,
         clinicalContext: item.clinicalContext,
       }

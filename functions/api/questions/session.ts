@@ -462,6 +462,7 @@ async function fetchFromMain(
   });
 
   const questions: EnrichedQuestion[] = [];
+  const questionIdsToUpdate: string[] = [];
 
   for (const q of dbQuestions) {
     if (questions.length >= count) break;
@@ -486,10 +487,13 @@ async function fetchFromMain(
       source: 'main',
     });
     seenIds.add(q.id);
+    questionIdsToUpdate.push(q.id);
+  }
 
-    // Update question stats
-    await prisma.question.update({
-      where: { id: q.id },
+  // OPTIMIZATION: Batch update instead of N+1 individual updates
+  if (questionIdsToUpdate.length > 0) {
+    await prisma.question.updateMany({
+      where: { id: { in: questionIdsToUpdate } },
       data: { timesSeen: { increment: 1 } },
     });
   }

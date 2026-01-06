@@ -1,8 +1,8 @@
 # PANaCEa Master Documentation
 
-**Last Updated**: December 24, 2025  
-**Current Version**: 1.0.0  
-**Status**: Production
+**Last Updated**: January 6, 2026  
+**Current Version**: 1.1.0  
+**Status**: Production (with Monitoring)
 
 ---
 
@@ -39,9 +39,10 @@ PANaCEa is an AI-powered medical education platform for PA (Physician Assistant)
 ```
 Frontend:   React 19, TypeScript, Vite, TailwindCSS, Framer Motion
 Backend:    Cloudflare Functions (serverless), Express.js (optional)
-Database:   PostgreSQL (Supabase) + Prisma ORM
+Database:   PostgreSQL (Supabase) + Prisma ORM + Prisma Accelerate
 AI:         Google Gemini API (2.5 Flash/Pro)
 Auth:       Clerk (with webhook sync to Prisma)
+Monitoring: Sentry (error tracking, session replay, performance)
 Deployment: Cloudflare Pages + Functions
 ```
 
@@ -98,6 +99,9 @@ npm run build
 
 # Run health check
 npm run health-check
+
+# Test API health endpoint (after deploy)
+curl https://your-domain.com/api/health?ping=true
 ```
 
 ---
@@ -412,6 +416,13 @@ GEMINI_API_KEY
 DATABASE_URL
 CLERK_SECRET_KEY
 VITE_CLERK_PUBLISHABLE_KEY (in wrangler.toml)
+
+# Monitoring (Sprint 5)
+VITE_SENTRY_DSN
+SENTRY_DSN (for Functions)
+SENTRY_ORG (optional, for source maps)
+SENTRY_PROJECT (optional)
+SENTRY_AUTH_TOKEN (optional)
 ```
 
 **Build Settings:**
@@ -478,9 +489,37 @@ npm run build
 
 ### Performance Monitoring
 
+**Error Tracking (Sentry):**
+- Client-side errors: React error boundaries + Sentry SDK
+- Server-side errors: CloudFlare Functions error handler
+- Session replay: 10% of sessions, 100% on errors
+- Performance tracing: 10% sample rate in production
+
+**Health Check Endpoint:**
+```bash
+# Quick ping (uptime monitors)
+curl https://your-domain.com/api/health?ping=true
+
+# Full health check (database, cache, environment)
+curl https://your-domain.com/api/health
+```
+
+**Response Format:**
+```json
+{
+  "status": "healthy" | "degraded" | "unhealthy",
+  "timestamp": "2026-01-06T12:00:00Z",
+  "checks": {
+    "database": { "status": "pass", "latency": 45 },
+    "cache": { "status": "pass", "latency": 12 },
+    "environment": { "status": "pass" }
+  }
+}
+```
+
 **Bundle Size:**
-- Current: vendor-common 1.3MB (needs optimization)
-- Target: <500KB per chunk
+- Current: vendor-common ~608KB (optimized with chunking)
+- Target: <500KB per chunk (achieved for most chunks)
 
 **Manual Chunks (vite.config.ts):**
 - `vendor-clerk` - Clerk auth library
@@ -573,6 +612,20 @@ npm run build
 
 ## Version History
 
+### v1.1.0 (January 2026) - Performance & Monitoring
+- ✅ **Sprint 1**: TypeScript error fixes (10/11 resolved)
+- ✅ **Sprint 2**: 27 database indexes for query optimization
+- ✅ **Sprint 3**: CloudFlare KV cache integration (60-80% hit rate)
+- ✅ **Sprint 4**: Query optimization, N+1 query fixes (5-10x fewer queries)
+- ✅ **Sprint 5**: Sentry error tracking & monitoring
+  - Sentry SDK with session replay
+  - 3 error boundaries with Sentry capture
+  - Health check endpoint (`/api/health`)
+  - CloudFlare Functions error handler
+  - User context sync with Clerk
+- ✅ Bundle size optimization (code splitting complete)
+- ✅ Prisma Accelerate for edge-compatible database access
+
 ### v1.0.0 (December 2025)
 - ✅ Database-first architecture migration complete
 - ✅ 1,180 medical conditions (up from 1,119)
@@ -585,7 +638,6 @@ npm run build
 - ✅ PWA support with offline capabilities
 
 ### Upcoming Features
-- 📋 Bundle size optimization (code splitting)
 - 📋 Content quality peer review workflow
 - 📋 Advanced analytics dashboard
 - 📋 Social learning (study groups)
@@ -607,6 +659,6 @@ For issues or questions:
 
 ---
 
-**Last Review Date**: December 24, 2025  
-**Documentation Version**: 1.0  
-**Code Version**: 1.0.0
+**Last Review Date**: January 6, 2026  
+**Documentation Version**: 1.1  
+**Code Version**: 1.1.0

@@ -18,6 +18,7 @@ import {
   BookOpen,
   Clock
 } from 'lucide-react';
+import { captureError } from '../../lib/monitoring/sentry';
 
 // ============================================================================
 // Types
@@ -342,10 +343,19 @@ export class DrillErrorBoundary extends Component<DrillErrorBoundaryProps, Drill
     // Log to console in development
     console.error('[DrillErrorBoundary] Caught error:', error, errorInfo);
     
-    // In production, send to error tracking
-    if (process.env.NODE_ENV === 'production') {
-      // Example: Sentry.captureException(error, { extra: { errorInfo } });
-    }
+    // Send to error tracking
+    captureError(error, {
+      tags: {
+        boundary: 'drill',
+        errorType: this.state.errorType,
+        drillType: this.props.drillType || 'unknown',
+      },
+      extra: {
+        componentStack: errorInfo.componentStack,
+        errorMessage: error.message,
+      },
+      level: this.state.errorType === 'network' ? 'warning' : 'error',
+    });
   }
 
   handleReset = () => {

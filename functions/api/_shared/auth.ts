@@ -15,6 +15,9 @@ export type Env = CloudflareEnv;
 export interface AuthContext {
   userId: string;
   clerkId: string;
+  user?: {
+    id: string;
+  };
 }
 
 /**
@@ -296,5 +299,8 @@ export async function authenticateRequest(
   return {
     userId,
     clerkId: userId,
+    user: {
+      id: userId,
+    },
   };
 }

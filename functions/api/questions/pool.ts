@@ -9,6 +9,14 @@
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import type { CloudflareContext } from '../_shared/types';
+import { 
+  getFromCache, 
+  setInCache, 
+  getQuestionPoolCacheKey, 
+  CACHE_CONFIG,
+  isKVAvailable 
+} from '../_shared/cache';
+import type { KVNamespace } from '@cloudflare/workers-types';
 
 /**
  * Fisher-Yates shuffle algorithm for unbiased randomization
@@ -26,6 +34,7 @@ interface Env {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
   GEMINI_API_KEY: string;
+  CACHE?: KVNamespace;
 }
 
 // Thresholds for question pool management
@@ -111,13 +120,28 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
     });
     const seenIds = new Set<string>(seenQuestionIds.map(q => q.questionId));
 
+    // Check cache for pre-generated pool (user-agnostic)
+    // Cache key based on filters, not userId (questions are same for all users)
+    const cacheKey = getQuestionPoolCacheKey({ system, category, difficulty });
+    let cachedPool: Array<any> | null = null;
+    
+    if (isKVAvailable(context.env.CACHE)) {
+      cachedPool = await getFromCache(context.env.CACHE, cacheKey);
+    }
+
     // Try pre-generated pool first
-    const poolQuestions = await getFromPreGeneratedPool(prisma, userId, seenIds, {
-      count,
-      system,
-      category,
-      difficulty,
-    });
+    const poolQuestions = await getFromPreGeneratedPool(
+      prisma, 
+      userId, 
+      seenIds, 
+      {
+        count,
+        system,
+        category,
+        difficulty,
+      },
+      cachedPool // Pass cached data if available
+    );
 
     let questions: Array<{
       id: string;
@@ -149,6 +173,16 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
     // Check if pool needs regeneration
     const needsGeneration = poolAvailable < POOL_LOW_THRESHOLD;
 
+    // Cache the pool questions if KV is available and we fetched from DB
+    if (isKVAvailable(context.env.CACHE) && !cachedPool && poolQuestions.rawQuestions) {
+      await setInCache(
+        context.env.CACHE,
+        cacheKey,
+        poolQuestions.rawQuestions,
+        CACHE_CONFIG.TTL.QUESTION_POOL
+      );
+    }
+
     return new Response(JSON.stringify({ 
       questions,
       poolStatus: {
@@ -158,7 +192,10 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
       }
     }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Cache': cachedPool ? 'HIT' : 'MISS'
+      },
     });
   } catch (error) {
     console.error('Error fetching pool questions:', error);
@@ -189,29 +226,39 @@ async function getFromPreGeneratedPool(
     system?: string | null;
     category?: string | null;
     difficulty?: string | null;
-  }
+  },
+  cachedQuestions?: Array<any> | null
 ) {
   const { count, system, category, difficulty } = options;
 
-  // Build where clause - do NOT filter by usedAt
-  // Questions remain available to all users; per-user filtering happens via seenIds
-  const where: Record<string, unknown> = {};
-  if (system) where.system = system;
-  if (difficulty) where.difficulty = difficulty;
-  if (category) where.questionType = category;
+  let preGenQuestions: Array<any>;
+  let remaining: number;
 
-  // BATCH SHUFFLING: Fetch 5x the requested count for better randomization
-  const fetchCount = count * 5;
+  // Use cached data if available
+  if (cachedQuestions && cachedQuestions.length > 0) {
+    preGenQuestions = cachedQuestions;
+    remaining = cachedQuestions.length;
+  } else {
+    // Build where clause - do NOT filter by usedAt
+    // Questions remain available to all users; per-user filtering happens via seenIds
+    const where: Record<string, unknown> = {};
+    if (system) where.system = system;
+    if (difficulty) where.difficulty = difficulty;
+    if (category) where.questionType = category;
 
-  // Fetch available pre-generated questions
-  const preGenQuestions = await prisma.preGeneratedQuestion.findMany({
-    where,
-    take: fetchCount,
-    orderBy: { generatedAt: 'asc' },
-  });
+    // BATCH SHUFFLING: Fetch 5x the requested count for better randomization
+    const fetchCount = count * 5;
 
-  // Count remaining unused
-  const remaining = await prisma.preGeneratedQuestion.count({ where });
+    // Fetch available pre-generated questions
+    preGenQuestions = await prisma.preGeneratedQuestion.findMany({
+      where,
+      take: fetchCount,
+      orderBy: { generatedAt: 'asc' },
+    });
+
+    // Count remaining unused
+    remaining = await prisma.preGeneratedQuestion.count({ where });
+  }
 
   // Filter out questions user has already seen
   const unseenQuestions = preGenQuestions.filter(q => !seenIds.has(q.id));
@@ -275,7 +322,7 @@ async function getFromPreGeneratedPool(
     });
   }
 
-  return { questions, remaining };
+  return { questions, remaining, rawQuestions: cachedQuestions ? undefined : preGenQuestions };
 }
 
 /**

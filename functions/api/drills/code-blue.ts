@@ -60,7 +60,7 @@ function shuffleArray<T>(array: T[]): T[] {
 // MAIN HANDLER
 // ============================================================================
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
+export const onRequestGet: PagesFunction<Env> = async (context): Promise<any> => {
   try {
     const { env, request } = context;
     const url = new URL(request.url);
@@ -75,7 +75,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       return new Response(
         JSON.stringify({ error: 'Invalid count parameter. Must be between 1 and 50.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+      ) as Response;
     }
     
     const validCategories: CategoryType[] = ['ACLS', 'PALS', 'BLS', 'Critical Care'];

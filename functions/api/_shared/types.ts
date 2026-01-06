@@ -5,6 +5,8 @@
  * Import these types instead of using `any` for context and env.
  */
 
+import type { KVNamespace as WorkersKVNamespace } from '@cloudflare/workers-types';
+
 // ============================================================================
 // ENVIRONMENT TYPES
 // ============================================================================
@@ -29,9 +31,9 @@ export interface CloudflareEnv {
   ENABLE_LOGGING?: string;
   LOG_LEVEL?: string;
   
-  // Optional KV bindings (for future use)
-  CACHE?: KVNamespace;
-  RATE_LIMIT?: KVNamespace;
+  // Optional KV bindings (use official types from @cloudflare/workers-types)
+  CACHE?: WorkersKVNamespace;
+  RATE_LIMIT?: WorkersKVNamespace;
   
   // Optional D1 binding (for future use)
   DB?: D1Database;
@@ -241,8 +243,9 @@ export async function parseJsonBody<T>(request: Request): Promise<T | null> {
 // ============================================================================
 
 /**
- * KV Namespace binding stub
- * Full types available from @cloudflare/workers-types
+ * KV Namespace binding stub (for backward compatibility)
+ * Use WorkersKVNamespace from @cloudflare/workers-types in new code
+ * @deprecated Use import { KVNamespace } from '@cloudflare/workers-types' instead
  */
 export interface KVNamespace {
   get(key: string, options?: { type?: 'text' | 'json' | 'arrayBuffer' | 'stream' }): Promise<string | null>;

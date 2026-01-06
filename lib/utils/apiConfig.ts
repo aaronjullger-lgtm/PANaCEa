@@ -61,4 +61,6 @@ export const API_ENDPOINTS = {
   QUESTIONS_POOL: '/api/questions/pool',
   QUESTIONS_POOL_STATUS: '/api/questions/pool-status',
   QUESTIONS_CURATE: '/api/questions/curate',
+  // DDx training endpoint
+  DDX_GENERATE: '/api/ddx/generate',
 } as const;

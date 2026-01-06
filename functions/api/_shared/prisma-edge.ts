@@ -84,3 +84,18 @@ export function createEdgePrismaClient(databaseUrl: string) {
     );
   }
 }
+
+/**
+ * Safely disconnect Prisma client with error handling
+ * Prevents connection leaks in serverless environments
+ */
+export async function safePrismaDisconnect(prisma: EdgePrismaClient | null): Promise<void> {
+  if (!prisma) return;
+  
+  try {
+    await prisma.$disconnect();
+  } catch (error) {
+    // Log but don't throw - disconnection errors shouldn't fail the request
+    console.warn('[Prisma Edge] Error during disconnect (non-fatal):', error);
+  }
+}

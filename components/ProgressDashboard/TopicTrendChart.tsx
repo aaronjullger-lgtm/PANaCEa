@@ -22,14 +22,13 @@ interface TopicTrendChartProps {
 }
 
 const TopicTrendChart: React.FC<TopicTrendChartProps> = ({ topic }) => {
-  // Find the full topic name from the PANCE_TOPICS constant
-  const topicInfo = PANCE_TOPICS.find(t => t.name === topic);
+  // PANCE_TOPICS is an array of strings, not objects
   const chartData = getMockPerformanceData(topic);
 
   return (
     <div className="p-4 bg-white dark:bg-slate-800 rounded-xl shadow-md">
       <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">
-        Performance Trend: {topicInfo?.name || topic}
+        Performance Trend: {topic}
       </h3>
       <div style={{ width: '100%', height: 300 }}>
         <ResponsiveContainer>

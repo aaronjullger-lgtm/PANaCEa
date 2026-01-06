@@ -3,12 +3,22 @@ compatibility_date = "2025-12-15"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
 
-# KV namespace for distributed rate limiting
+# KV namespace for distributed rate limiting and caching
 # Create with: npx wrangler kv:namespace create RATE_LIMIT_KV
-# Then add the id below and uncomment
+# Create with: npx wrangler kv:namespace create CACHE
+# Then add the IDs below and uncomment
+
 # [[kv_namespaces]]
 # binding = "RATE_LIMIT_KV"
-# id = "your-kv-namespace-id"
+# id = "your-rate-limit-kv-namespace-id"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "preview_id"  # Replace with production KV namespace ID after creating with: npx wrangler kv:namespace create CACHE
+
+# Scheduled cache warming (runs every 30 minutes)
+[triggers]
+crons = ["*/30 * * * *"]
 
 [vars]
 VITE_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuc3R1ZHlwYW5hY2VhLmNvbSQ"

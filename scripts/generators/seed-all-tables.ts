@@ -173,7 +173,11 @@ async function seedAllTables() {
       await prisma.procedure.upsert({
         where: { name: proc.name },
         update: proc,
-        create: proc,
+        create: {
+          ...proc,
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
+        },
       });
       console.log(`  ✓ ${proc.name}`);
     } catch (e) {
@@ -188,7 +192,11 @@ async function seedAllTables() {
       await prisma.vitalSignRange.upsert({
         where: { vitalSign: vital.vitalSign },
         update: vital,
-        create: vital,
+        create: {
+          ...vital,
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
+        },
       });
       console.log(`  ✓ ${vital.vitalSign}`);
     } catch (e) {
@@ -203,7 +211,11 @@ async function seedAllTables() {
       await prisma.historyComponent.upsert({
         where: { name: hist.name },
         update: hist,
-        create: hist,
+        create: {
+          ...hist,
+          id: crypto.randomUUID(),
+          updatedAt: new Date(),
+        },
       });
       console.log(`  ✓ ${hist.name}`);
     } catch (e) {

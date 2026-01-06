@@ -71,13 +71,10 @@ async function main() {
 
     if (questionData) {
       try {
-        // First, find the corresponding MedicalContent entry
+        // First, find the corresponding MedicalContent entry by conditionId
         const medicalContent = await prisma.medicalContent.findFirst({
           where: {
-            title: {
-              equals: questionData.condition,
-              mode: 'insensitive',
-            },
+            conditionId: questionData.condition,
           },
         });
 
@@ -88,18 +85,23 @@ async function main() {
 
         await prisma.preGeneratedQuestion.create({
           data: {
-            question: questionData.question,
-            options: questionData.options,
-            correctAnswerIndex: questionData.correctAnswerIndex,
-            rationale: questionData.rationale,
-            pearls: questionData.pearls,
-            topic: questionData.topic,
+            id: crypto.randomUUID(),
+            questionType: 'image',
             system: questionData.system,
-            condition: questionData.condition,
-            isPinned: false,
-            source: 'IMAGE_GEN_V1',
-            imageUrl: `/assets/clinical-images/${file}`, // Save path to image
-            medicalContentId: medicalContent.id, // Link to MedicalContent
+            conditionId: questionData.condition,
+            medicalContentId: medicalContent.id,
+            difficulty: 'medium',
+            questionData: {
+              question: questionData.question,
+              options: questionData.options,
+              correctAnswerIndex: questionData.correctAnswerIndex,
+              rationale: questionData.rationale,
+              pearls: questionData.pearls,
+              topic: questionData.topic,
+              condition: questionData.condition,
+              source: 'IMAGE_GEN_V1',
+              imageUrl: `/assets/clinical-images/${file}`,
+            },
           },
         });
         console.log(`Successfully saved question for ${questionData.condition}`);

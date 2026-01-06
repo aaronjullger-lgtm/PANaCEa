@@ -7,6 +7,7 @@
 
 import React, { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Wifi, Clock, Server } from 'lucide-react';
+import { captureError, addBreadcrumb } from '../lib/monitoring/sentry';
 
 export interface GeminiErrorInfo {
   type: 'rate_limit' | 'server_error' | 'network' | 'timeout' | 'generic';
@@ -167,6 +168,33 @@ export class GeminiErrorBoundary extends Component<GeminiErrorBoundaryProps, Gem
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('[GeminiErrorBoundary] Caught error:', error, errorInfo);
+    
+    const errorType = this.state.errorInfo?.type || 'generic';
+    
+    // Track Gemini API errors
+    captureError(error, {
+      tags: {
+        boundary: 'gemini',
+        errorType,
+        retryable: this.state.errorInfo?.retryable.toString() || 'false',
+      },
+      extra: {
+        componentStack: errorInfo.componentStack,
+        status: this.state.errorInfo?.status,
+        retryCount: this.state.retryCount,
+      },
+      level: errorType === 'rate_limit' ? 'warning' : 'error',
+    });
+    
+    // Add breadcrumb for retry attempts
+    if (this.state.retryCount > 0) {
+      addBreadcrumb(
+        `Gemini retry attempt ${this.state.retryCount}`,
+        'retry',
+        'info',
+        { errorType }
+      );
+    }
   }
 
   componentWillUnmount() {

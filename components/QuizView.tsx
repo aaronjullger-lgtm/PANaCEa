@@ -68,6 +68,13 @@ import { recordAnswerPattern } from "../services/answerPatternService";
 import { updatePerformancePrediction, resetPrediction } from "../services/performancePredictionService";
 import { recordPauseResult, resetPauseTracking } from "../services/smartPauseService";
 import { useAdvancedAnalytics } from "../hooks/useAdvancedAnalytics";
+// Sprint 4: Optimistic UI for instant feedback
+import { 
+  optimisticUpdateStats, 
+  optimisticUpdateSystemStats, 
+  createOptimisticPerformanceRecord,
+  showOptimisticFeedback,
+} from "../lib/utils/optimisticUI";
 
 interface QuizViewProps {
   initialQueue: Question[];
@@ -493,6 +500,13 @@ const QuizView: React.FC<QuizViewProps> = ({
 
     setIsAnswered(true);
     
+    // Sprint 4: Calculate correctness IMMEDIATELY
+    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
+    const timeToAnswer = Date.now() - questionStartTime;
+    
+    // Sprint 4: Show optimistic feedback INSTANTLY (no server wait)
+    showOptimisticFeedback(isCorrect);
+    
     // Lazy-load pearls from medical content if not already loaded
     if (!currentQuestion.pearls && currentQuestion.conditionId) {
       try {
@@ -508,8 +522,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       }
     }
     
-    const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
-    const timeToAnswer = Date.now() - questionStartTime;
+    // Sprint 4: Calculate par time (isCorrect and timeToAnswer already calculated above for instant feedback)
     const parTime = calculateParTime(currentQuestion);
 
     // Sprint 4: Record behavioral confidence (auto-inferred, no manual input)

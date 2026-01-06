@@ -3,8 +3,9 @@
  * Wraps the application with Clerk authentication
  */
 
-import React from 'react';
-import { ClerkProvider } from '@clerk/clerk-react';
+import React, { useEffect } from 'react';
+import { ClerkProvider, useUser } from '@clerk/clerk-react';
+import { setUserContext, clearUserContext } from '../lib/monitoring/sentry';
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -92,7 +93,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
         },
       }}
     >
+      <SentryUserSync />
       {children}
     </ClerkProvider>
   );
+}
+
+/**
+ * Sync Clerk user context with Sentry for error tracking
+ */
+function SentryUserSync() {
+  const { user, isSignedIn } = useUser();
+  
+  useEffect(() => {
+    if (isSignedIn && user) {
+      setUserContext({
+        id: user.id,
+        email: user.primaryEmailAddress?.emailAddress,
+        username: user.username || undefined,
+      });
+    } else {
+      clearUserContext();
+    }
+  }, [isSignedIn, user]);
+  
+  return null;
 }

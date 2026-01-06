@@ -8,7 +8,7 @@
 
 import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 interface Env {
   DATABASE_URL: string;
@@ -215,7 +215,7 @@ export const onRequestPost: PagesFunction<Env> = async (context): Promise<any> =
       }
     );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };
 

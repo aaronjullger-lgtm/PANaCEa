@@ -8,10 +8,19 @@
 import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { 
+  getFromCache, 
+  setInCache, 
+  getUserStatsCacheKey, 
+  CACHE_CONFIG,
+  isKVAvailable 
+} from '../_shared/cache';
+import type { KVNamespace } from '@cloudflare/workers-types';
 
 interface Env {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
+  CACHE?: KVNamespace;
 }
 
 const SYSTEMS = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
@@ -31,6 +40,25 @@ export const onRequestGet: PagesFunction<Env> = async (context): Promise<any> =>
     }
 
     const userId = authResult.userId;
+
+    // Check cache first if KV is available
+    if (isKVAvailable(context.env.CACHE)) {
+      const cacheKey = getUserStatsCacheKey(userId);
+      const cached = await getFromCache(context.env.CACHE, cacheKey);
+      
+      if (cached) {
+        return new Response(
+          JSON.stringify(cached),
+          { 
+            status: 200,
+            headers: { 
+              'Content-Type': 'application/json',
+              'X-Cache': 'HIT'
+            }
+          }
+        );
+      }
+    }
 
     // Get all attempts for this user
     const allAttempts = await prisma.questionAttempt.findMany({
@@ -228,7 +256,7 @@ export const onRequestGet: PagesFunction<Env> = async (context): Promise<any> =>
       recommendations.push(`Try more questions in: ${underStudiedSystems.slice(0, 3).join(', ')}`);
     }
 
-    return new Response(JSON.stringify({
+    const responseData = {
       success: true,
       stats: {
         overall: {
@@ -261,9 +289,25 @@ export const onRequestGet: PagesFunction<Env> = async (context): Promise<any> =>
         },
         recommendations,
       },
-    }), {
+    };
+
+    // Cache the result if KV is available
+    if (isKVAvailable(context.env.CACHE)) {
+      const cacheKey = getUserStatsCacheKey(userId);
+      await setInCache(
+        context.env.CACHE,
+        cacheKey,
+        responseData,
+        CACHE_CONFIG.TTL.USER_STATS
+      );
+    }
+
+    return new Response(JSON.stringify(responseData), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Cache': 'MISS'
+      },
     });
   } catch (error) {
     console.error('Error fetching user stats:', error);

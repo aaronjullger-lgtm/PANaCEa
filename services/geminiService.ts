@@ -805,7 +805,7 @@ Return ONLY a single JSON object (no prose before or after) with the exact struc
     }
 
     if (!baseQuestion.conditionId) {
-      const matchedMeta = findConditionMeta(baseQuestion.condition);
+      const matchedMeta = await findConditionMeta(baseQuestion.condition);
       if (matchedMeta) {
         const def = buildConditionDefinition(matchedMeta);
         baseQuestion.conditionId = def.id;

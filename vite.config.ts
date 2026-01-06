@@ -2,10 +2,14 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-// Build cache buster: 2026-01-05-v2-force-rebuild
+// Build cache buster: 2026-01-05-v3-sentry-integration
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    const isDevelopment = mode === 'development';
+    const isProduction = mode === 'production';
+    
     return {
       server: {
         port: 3000,
@@ -47,13 +51,13 @@ export default defineConfig(({ mode }) => {
           workbox: {
             maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // 35MB to accommodate large condition data
             globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-            // Force SW update - increment this to bust cache: v2-lucide-fix-2026-01-05
+            // Force SW update - increment this to bust cache: v3-sentry-2026-01-05
             skipWaiting: true,
             clientsClaim: true,
             // Clean old caches on activation
             cleanupOutdatedCaches: true,
             // Force precache invalidation by adding version to cache name
-            cacheId: 'panacea-v2',
+            cacheId: 'panacea-v3-sentry',
             // Use network-first for JS chunks to avoid stale cache issues
             runtimeCaching: [
               {
@@ -82,7 +86,21 @@ export default defineConfig(({ mode }) => {
               },
             ],
           }
-        })
+        }),
+        // Sentry plugin for source maps upload (production only)
+        ...(isProduction && env.SENTRY_AUTH_TOKEN ? [
+          sentryVitePlugin({
+            org: env.SENTRY_ORG,
+            project: env.SENTRY_PROJECT,
+            authToken: env.SENTRY_AUTH_TOKEN,
+            sourcemaps: {
+              assets: './dist/**',
+              ignore: ['node_modules'],
+              filesToDeleteAfterUpload: ['./dist/**/*.map'],
+            },
+            telemetry: false,
+          })
+        ] : []),
       ],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
@@ -160,6 +178,7 @@ export default defineConfig(({ mode }) => {
           'framer-motion',
           'lucide-react',
         ]
-      }
+      },
     };
-});
+  }
+);
