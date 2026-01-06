@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-// Build cache buster: 2026-01-06-v7-string-alias-lucide
+// Build cache buster: 2026-01-06-v8-dedupe-lucide
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     const isDevelopment = mode === 'development';
@@ -107,14 +107,19 @@ export default defineConfig(({ mode }) => {
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
       },
       resolve: {
+        // Force all dependencies to use the SAME copy of lucide-react (prevents nested node_modules issues)
+        dedupe: ['lucide-react'],
         alias: {
           '@': path.resolve(__dirname, '.'),
           // Force ESM build of lucide-react using string literal (portable across build environments)
-          // Uses Node's module resolution instead of fragile absolute paths
           'lucide-react': 'lucide-react/dist/esm/lucide-react.js',
         }
       },
       build: {
+        // Transform mixed ES/CJS modules to prevent initialization errors
+        commonjsOptions: {
+          transformMixedEsModules: true,
+        },
         rollupOptions: {
           external: [
             // Externalize Prisma packages - they should never be in browser bundles
