@@ -113,11 +113,11 @@ export default defineConfig(({ mode }) => {
       },
       resolve: {
         // Force all dependencies to use the SAME copy of lucide-react (prevents nested node_modules issues)
-        dedupe: ['lucide-react'],
+        dedupe: ['lucide-react', 'react', 'react-dom'],
         alias: {
           '@': path.resolve(__dirname, '.'),
-          // Force ESM build of lucide-react using string literal (portable across build environments)
-          'lucide-react': 'lucide-react/dist/esm/lucide-react.js',
+          // REMOVED: lucide-react alias - let Vite optimizeDeps handle CJS/ESM conversion
+          // The manual alias path differs between Mac and Linux build environments
         }
       },
       build: {
@@ -151,7 +151,8 @@ export default defineConfig(({ mode }) => {
                 if (id.includes('@clerk')) return 'vendor-clerk';
                 // Sentry - keep separate to allow lazy loading
                 if (id.includes('@sentry')) return 'vendor-sentry';
-                // Core React libraries (lucide-react will naturally tree-shake into components)
+                // Core React libraries + lucide-react bundled together to ensure initialization order
+                if (id.includes('lucide-react')) return 'vendor-react';
                 if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
                   return 'vendor-react';
                 }
@@ -195,14 +196,15 @@ export default defineConfig(({ mode }) => {
         target: 'esnext',
       },
       optimizeDeps: {
+        // FORCE Vite to pre-bundle lucide-react - this converts CJS to ESM at build time
+        // and fixes the "Cannot set properties of undefined (setting 'Activity')" error
         include: [
+          'lucide-react',
           'react',
           'react-dom',
           '@clerk/clerk-react',
           'framer-motion',
         ],
-        // EXCLUDE lucide-react from pre-bundling to force fresh ESM resolution
-        exclude: ['lucide-react'],
         // Force ESM format
         esbuildOptions: {
           target: 'esnext',
