@@ -114,7 +114,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   initialCategory,
   initialSearch = '',
 }) => {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
   const refService = useReferenceService();
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory || null);
@@ -128,7 +128,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
   // Fetch items when category changes
   useEffect(() => {
-    if (!selectedCategory) {
+    if (!selectedCategory || !isSignedIn) {
       setItems([]);
       return;
     }
@@ -183,7 +183,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
     };
 
     fetchItems();
-  }, [selectedCategory, refService, getToken]);
+  }, [selectedCategory, refService, getToken, isSignedIn]);
 
   // Filter items based on search and high-yield filter
   useEffect(() => {

@@ -22,7 +22,7 @@ import {
   Loader2,
   Timer
 } from 'lucide-react';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import type { Question } from '@/types';
 
@@ -74,6 +74,7 @@ const getTimeUntilNextChallenge = () => {
 
 const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const userId = user?.id || 'demo-user';
   
   const [viewState, setViewState] = useState<ViewState>('loading');
@@ -96,9 +97,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   useEffect(() => {
     const fetchChallenge = async () => {
       try {
+        const token = await getToken();
         const response = await fetch('/api/grand-rounds/today', {
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
         });
 
@@ -147,7 +150,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     };
 
     fetchChallenge();
-  }, []);
+  }, [getToken]);
 
   // Timer for next challenge countdown (only active when completed)
   useEffect(() => {
@@ -226,10 +229,12 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     try {
       const timeSpentMs = Date.now() - startTime;
 
+      const token = await getToken();
       const response = await fetch('/api/grand-rounds/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           challengeId: challengeData.challengeId,

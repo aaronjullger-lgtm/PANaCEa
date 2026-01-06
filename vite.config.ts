@@ -105,15 +105,40 @@ export default defineConfig(({ mode }) => {
           ],
           output: {
             manualChunks: (id) => {
-              // Group heavy libraries into a vendor chunk
+              // Group heavy libraries into separate vendor chunks
               if (id.includes('node_modules')) {
+                // Core React libraries
+                if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+                  return 'vendor-react';
+                }
+                // UI libraries
+                if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('clsx') || id.includes('tailwind-merge')) {
+                  return 'vendor-ui';
+                }
+                // Authentication
                 if (id.includes('@clerk')) return 'vendor-clerk';
-                if (id.includes('framer-motion') || id.includes('recharts')) return 'vendor-animation-charts';
-                if (id.includes('lucide-react')) return 'vendor-icons';
+                // Charts and visualization
+                if (id.includes('recharts')) return 'vendor-animation-charts';
+                // Utilities
+                if (id.includes('date-fns') || id.includes('zod')) {
+                  return 'vendor-utils';
+                }
+                // Default vendor chunk for remaining packages
                 return 'vendor';
               }
+              // Group data files
+              if (id.includes('/data/')) {
+                if (id.includes('conditionContent') || id.includes('conditionDrillData')) {
+                  return 'data-conditions';
+                }
+                if (id.includes('drugData')) return 'data-drugs';
+                if (id.includes('labData')) return 'data-labs';
+                return 'data-other';
+              }
+              // Group drill components
+              if (id.includes('/components/drill/')) return 'drill-modes';
               // Group components into logical chunks
-              if (id.includes('/components/admin/')) return 'chunk-admin';
+              if (id.includes('/components/admin/')) return 'admin';
               if (id.includes('/components/modes/')) return 'chunk-modes';
               if (id.includes('/components/analytics/')) return 'chunk-analytics';
             },
