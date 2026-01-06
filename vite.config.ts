@@ -125,6 +125,10 @@ export default defineConfig(({ mode }) => {
             manualChunks: (id) => {
               // Group heavy libraries into separate vendor chunks
               if (id.includes('node_modules')) {
+                // Authentication - check FIRST before react (clerk-react contains 'react')
+                if (id.includes('@clerk')) return 'vendor-clerk';
+                // Sentry - keep separate to allow lazy loading
+                if (id.includes('@sentry')) return 'vendor-sentry';
                 // Core React libraries
                 if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
                   return 'vendor-react';
@@ -133,8 +137,6 @@ export default defineConfig(({ mode }) => {
                 if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('clsx') || id.includes('tailwind-merge')) {
                   return 'vendor-ui';
                 }
-                // Authentication
-                if (id.includes('@clerk')) return 'vendor-clerk';
                 // Charts and visualization
                 if (id.includes('recharts')) return 'vendor-animation-charts';
                 // Utilities
