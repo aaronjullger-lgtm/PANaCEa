@@ -56,8 +56,8 @@ export default defineConfig(({ mode }) => {
             clientsClaim: true,     // Take control of page immediately after activation
             // Clean old caches on activation
             cleanupOutdatedCaches: true,
-            // CRITICAL: New cache namespace to invalidate stuck v4 zombie cache
-            cacheId: 'panacea-v5-fix',
+            // CRITICAL: v7 cache namespace with define-based CJS shim
+            cacheId: 'panacea-v7-defines',
             // Use network-first for JS chunks to avoid stale cache issues
             runtimeCaching: [
               {
@@ -107,9 +107,9 @@ export default defineConfig(({ mode }) => {
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         // Hardcode Sentry DSN to bypass Cloudflare Dashboard env var lock (DSNs are public, safe in frontend)
         'import.meta.env.VITE_SENTRY_DSN': JSON.stringify('https://fcb4b9b78fce46cb919609702673a04b@o4510664011087872.ingest.us.sentry.io/4510664018231296'),
-        // Compile-time polyfills for CJS modules that try to assign to exports/global
-        // This prevents "Cannot set properties of undefined" errors at runtime
-        'global': 'globalThis',
+        // CRITICAL: Compile-time shim for CJS modules that try to assign to exports/global
+        // 'global' -> 'window' prevents "global is not defined" errors
+        'global': 'window',
       },
       resolve: {
         // Force all dependencies to use the SAME copy of lucide-react (prevents nested node_modules issues)
@@ -139,9 +139,9 @@ export default defineConfig(({ mode }) => {
             '@prisma/extension-accelerate',
           ],
           output: {
-            // Inject CommonJS polyfill at the start of each bundle
-            // This fixes lucide-react's CJS code trying to assign to undefined exports
-            intro: 'var global = global || window; var exports = exports || {};',
+            // Inject CommonJS polyfill at the start of each bundle chunk
+            // This ensures 'exports' exists before any CJS code tries to assign to it
+            intro: 'var exports = exports || {}; var global = global || window;',
             manualChunks: (id) => {
               // Group heavy libraries into separate vendor chunks
               // NOTE: Do NOT manually chunk lucide-react - let Vite tree-shake it naturally
