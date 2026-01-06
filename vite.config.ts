@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-// Build cache buster: 2026-01-06-v4-lucide-fix
+// Build cache buster: 2026-01-06-v5-remove-lucide-chunk
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     const isDevelopment = mode === 'development';
@@ -124,19 +124,18 @@ export default defineConfig(({ mode }) => {
           output: {
             manualChunks: (id) => {
               // Group heavy libraries into separate vendor chunks
+              // NOTE: Do NOT manually chunk lucide-react - let Vite tree-shake it naturally
+              // Forcing it into a separate chunk breaks initialization order
               if (id.includes('node_modules')) {
                 // Authentication - check FIRST before react (clerk-react contains 'react')
                 if (id.includes('@clerk')) return 'vendor-clerk';
                 // Sentry - keep separate to allow lazy loading
                 if (id.includes('@sentry')) return 'vendor-sentry';
-                // Lucide icons - separate chunk to prevent circular dependency issues
-                // Must be checked BEFORE react pattern since lucide-react contains 'react'
-                if (id.includes('lucide-react')) return 'vendor-lucide';
-                // Core React libraries
+                // Core React libraries (lucide-react will naturally tree-shake into components)
                 if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
                   return 'vendor-react';
                 }
-                // UI libraries (without lucide-react)
+                // UI libraries - lucide-react excluded, let it tree-shake naturally
                 if (id.includes('framer-motion') || id.includes('clsx') || id.includes('tailwind-merge')) {
                   return 'vendor-ui';
                 }

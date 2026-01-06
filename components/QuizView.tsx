@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useShortcut } from "../src/context/ShortcutContext";
 import { useUser } from "@clerk/clerk-react";
 import { generateAlternateRationale } from "../services/geminiService";
-import { getQuestion } from "../services/questionService";
+import { getQuestion, fetchPearlsForQuestion } from "../services/questionService";
 import { 
   fetchSessionQuestions, 
   recordSessionAnswer,
@@ -507,10 +507,9 @@ const QuizView: React.FC<QuizViewProps> = ({
     // Sprint 4: Show optimistic feedback INSTANTLY (no server wait)
     showOptimisticFeedback(isCorrect);
     
-    // Lazy-load pearls from medical content if not already loaded
+    // Load pearls from medical content if not already loaded
     if (!currentQuestion.pearls && currentQuestion.conditionId) {
       try {
-        const { fetchPearlsForQuestion } = await import('../services/questionService');
         const token = await getToken();
         const pearls = await fetchPearlsForQuestion(currentQuestion.conditionId, token);
         if (pearls.length > 0) {
