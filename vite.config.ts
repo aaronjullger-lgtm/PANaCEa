@@ -1,10 +1,10 @@
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-// Build cache buster: 2026-01-05-v3-sentry-integration
+// Build cache buster: 2026-01-06-v4-lucide-fix
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     const isDevelopment = mode === 'development';
@@ -129,12 +129,15 @@ export default defineConfig(({ mode }) => {
                 if (id.includes('@clerk')) return 'vendor-clerk';
                 // Sentry - keep separate to allow lazy loading
                 if (id.includes('@sentry')) return 'vendor-sentry';
+                // Lucide icons - separate chunk to prevent circular dependency issues
+                // Must be checked BEFORE react pattern since lucide-react contains 'react'
+                if (id.includes('lucide-react')) return 'vendor-lucide';
                 // Core React libraries
                 if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
                   return 'vendor-react';
                 }
-                // UI libraries
-                if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('clsx') || id.includes('tailwind-merge')) {
+                // UI libraries (without lucide-react)
+                if (id.includes('framer-motion') || id.includes('clsx') || id.includes('tailwind-merge')) {
                   return 'vendor-ui';
                 }
                 // Charts and visualization
