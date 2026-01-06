@@ -107,15 +107,24 @@ export default defineConfig(({ mode }) => {
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         // Hardcode Sentry DSN to bypass Cloudflare Dashboard env var lock (DSNs are public, safe in frontend)
         'import.meta.env.VITE_SENTRY_DSN': JSON.stringify('https://fcb4b9b78fce46cb919609702673a04b@o4510664011087872.ingest.us.sentry.io/4510664018231296'),
-        // CRITICAL: Compile-time shim for CJS modules that try to assign to exports/global
-        // 'global' -> 'window' prevents "global is not defined" errors
+        // Global shim for CJS modules
         'global': 'window',
+      },
+      // Esbuild-level defines ensure prebundling and TS transforms see the same shims
+      esbuild: {
+        define: {
+          global: 'window',
+          exports: '{}',
+        },
       },
       resolve: {
         // Force all dependencies to use the SAME copy of lucide-react (prevents nested node_modules issues)
         dedupe: ['lucide-react', 'react', 'react-dom'],
         alias: {
+          // Preserve legacy absolute imports that assume repo root
           '@': path.resolve(__dirname, '.'),
+          // Preferred alias for source files
+          '@src': path.resolve(__dirname, './src'),
           // REMOVED: lucide-react alias - let Vite optimizeDeps handle CJS/ESM conversion
           // The manual alias path differs between Mac and Linux build environments
         }
@@ -141,7 +150,7 @@ export default defineConfig(({ mode }) => {
           output: {
             // Inject CommonJS polyfill at the start of each bundle chunk
             // This ensures 'exports' exists before any CJS code tries to assign to it
-            intro: 'var exports = exports || {}; var global = global || window;',
+            intro: 'var exports = exports || {}; var global = global || window; if (typeof exports !== "object") { exports = {}; }',
             manualChunks: (id) => {
               // Group heavy libraries into separate vendor chunks
               // NOTE: Do NOT manually chunk lucide-react - let Vite tree-shake it naturally
