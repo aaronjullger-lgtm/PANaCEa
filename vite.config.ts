@@ -50,14 +50,14 @@ export default defineConfig(({ mode }) => {
           },
           workbox: {
             maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // 35MB to accommodate large condition data
-            globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-            // Force SW update - increment this to bust cache: v4-lucide-fix-2026-01-06
-            skipWaiting: true,
-            clientsClaim: true,
+            globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+            // AGGRESSIVE UPDATE STRATEGY - Force new SW to take control immediately
+            skipWaiting: true,      // Don't wait for old SW to stop
+            clientsClaim: true,     // Take control of page immediately after activation
             // Clean old caches on activation
             cleanupOutdatedCaches: true,
-            // Force precache invalidation by adding version to cache name
-            cacheId: 'panacea-v4-lucide-fix',
+            // CRITICAL: New cache namespace to invalidate stuck v4 zombie cache
+            cacheId: 'panacea-v5-fix',
             // Use network-first for JS chunks to avoid stale cache issues
             runtimeCaching: [
               {
