@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-// Build cache buster: 2026-01-06-v8-dedupe-lucide
+// Build cache buster: 2026-01-06-v9-compile-time-fixes
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     const isDevelopment = mode === 'development';
@@ -104,7 +104,12 @@ export default defineConfig(({ mode }) => {
       ],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        // Hardcode Sentry DSN to bypass Cloudflare Dashboard env var lock (DSNs are public, safe in frontend)
+        'import.meta.env.VITE_SENTRY_DSN': JSON.stringify('https://fcb4b9b78fce46cb919609702673a04b@o4510664011087872.ingest.us.sentry.io/4510664018231296'),
+        // Compile-time polyfills for CJS modules that try to assign to exports/global
+        // This prevents "Cannot set properties of undefined" errors at runtime
+        'global': 'globalThis',
       },
       resolve: {
         // Force all dependencies to use the SAME copy of lucide-react (prevents nested node_modules issues)
@@ -189,7 +194,13 @@ export default defineConfig(({ mode }) => {
           '@clerk/clerk-react',
           'framer-motion',
           'lucide-react',
-        ]
+        ],
+        // Force lucide-react to be pre-bundled correctly as ESM
+        esbuildOptions: {
+          target: 'esnext',
+          // Ensure proper module format
+          format: 'esm',
+        },
       },
     };
   }
