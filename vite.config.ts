@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 
-// Build cache buster: 2026-01-06-v9-compile-time-fixes
+// Build cache buster: 2026-01-06-v10-force-esm-exclude
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     const isDevelopment = mode === 'development';
@@ -51,13 +51,13 @@ export default defineConfig(({ mode }) => {
           workbox: {
             maximumFileSizeToCacheInBytes: 35 * 1024 * 1024, // 35MB to accommodate large condition data
             globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-            // Force SW update - increment this to bust cache: v3-sentry-2026-01-05
+            // Force SW update - increment this to bust cache: v4-lucide-fix-2026-01-06
             skipWaiting: true,
             clientsClaim: true,
             // Clean old caches on activation
             cleanupOutdatedCaches: true,
             // Force precache invalidation by adding version to cache name
-            cacheId: 'panacea-v3-sentry',
+            cacheId: 'panacea-v4-lucide-fix',
             // Use network-first for JS chunks to avoid stale cache issues
             runtimeCaching: [
               {
@@ -124,6 +124,10 @@ export default defineConfig(({ mode }) => {
         // Transform mixed ES/CJS modules to prevent initialization errors
         commonjsOptions: {
           transformMixedEsModules: true,
+          // Force these packages to be treated as ESM
+          include: [/node_modules/],
+          // Explicitly handle lucide-react as ESM
+          esmExternals: true,
         },
         rollupOptions: {
           external: [
@@ -193,12 +197,12 @@ export default defineConfig(({ mode }) => {
           'react-dom',
           '@clerk/clerk-react',
           'framer-motion',
-          'lucide-react',
         ],
-        // Force lucide-react to be pre-bundled correctly as ESM
+        // EXCLUDE lucide-react from pre-bundling to force fresh ESM resolution
+        exclude: ['lucide-react'],
+        // Force ESM format
         esbuildOptions: {
           target: 'esnext',
-          // Ensure proper module format
           format: 'esm',
         },
       },
