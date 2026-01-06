@@ -6,15 +6,14 @@ pages_build_output_dir = "dist"
 # KV namespace for distributed rate limiting and caching
 # Create with: npx wrangler kv:namespace create RATE_LIMIT_KV
 # Create with: npx wrangler kv:namespace create CACHE
-# Then add the IDs below and uncomment
 
 # [[kv_namespaces]]
 # binding = "RATE_LIMIT_KV"
-# id = "your-rate-limit-kv-namespace-id"
+# id = "7df124d8b81f400eafe6ba55477bf11d"
 
-# [[kv_namespaces]]
-# binding = "CACHE"
-# id = "your-cache-kv-namespace-id"  # Create with: npx wrangler kv:namespace create CACHE
+[[kv_namespaces]]
+binding = "CACHE"
+id = "b576c43270a3407a8e5ae65afad0fe7e"
 
 # Note: Scheduled cache warming via cron triggers is not supported for Cloudflare Pages.
 # Use an external scheduler (e.g., GitHub Actions, cron-job.org) to call /api/admin/cache/warm periodically.
@@ -24,3 +23,4 @@ VITE_CLERK_PUBLISHABLE_KEY = "pk_live_Y2xlcmsuc3R1ZHlwYW5hY2VhLmNvbSQ"
 VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6ZmVzY2RycGV6empoZ3Zlb3R6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxNTgxNzYsImV4cCI6MjA4MDczNDE3Nn0.iIb2xtAPWLGtN_g75YGESf7WyN6W9pfhA0dCxNx2GaQ"
 VITE_SUPABASE_URL = "https://lzfescdrpezzjhgveotz.supabase.co"
 VITE_API_URL = "https://studypanacea.com"
+VITE_SENTRY_DSN = "https://fcb4b9b78fce46cb919609702673a04b@o4510664011087872.ingest.us.sentry.io/4510664018231296"
