@@ -18,7 +18,12 @@ import {
   BookOpen,
   Clock
 } from 'lucide-react';
-import { captureError } from '../../lib/monitoring/sentry';
+
+// Lazy load Sentry to avoid initialization conflicts with Clerk
+let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
+import('../../lib/monitoring/sentry').then((sentry) => {
+  captureError = sentry.captureError;
+}).catch(() => {});
 
 // ============================================================================
 // Types
@@ -344,18 +349,20 @@ export class DrillErrorBoundary extends Component<DrillErrorBoundaryProps, Drill
     console.error('[DrillErrorBoundary] Caught error:', error, errorInfo);
     
     // Send to error tracking
-    captureError(error, {
-      tags: {
-        boundary: 'drill',
-        errorType: this.state.errorType,
-        drillType: this.props.drillType || 'unknown',
-      },
-      extra: {
-        componentStack: errorInfo.componentStack,
-        errorMessage: error.message,
-      },
-      level: this.state.errorType === 'network' ? 'warning' : 'error',
-    });
+    if (captureError) {
+      captureError(error, {
+        tags: {
+          boundary: 'drill',
+          errorType: this.state.errorType,
+          drillType: this.props.drillType || 'unknown',
+        },
+        extra: {
+          componentStack: errorInfo.componentStack,
+          errorMessage: error.message,
+        },
+        level: this.state.errorType === 'network' ? 'warning' : 'error',
+      });
+    }
   }
 
   handleReset = () => {

@@ -7,7 +7,12 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { captureError } from '../lib/monitoring/sentry';
+
+// Lazy load Sentry to avoid initialization conflicts with Clerk
+let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
+import('../lib/monitoring/sentry').then((sentry) => {
+  captureError = sentry.captureError;
+}).catch(() => {});
 
 interface Props {
   children: ReactNode;
@@ -75,18 +80,20 @@ export class ErrorBoundary extends Component<Props, State> {
     }
     
     // Send to error tracking service
-    captureError(error, {
-      tags: {
-        boundary: 'root',
-        isChunkError: isChunkLoadError.toString(),
-      },
-      extra: {
-        componentStack: errorInfo.componentStack,
-        errorName: error.name,
-        errorMessage: error.message,
-      },
-      level: isChunkLoadError ? 'warning' : 'error',
-    });
+    if (captureError) {
+      captureError(error, {
+        tags: {
+          boundary: 'root',
+          isChunkError: isChunkLoadError.toString(),
+        },
+        extra: {
+          componentStack: errorInfo.componentStack,
+          errorName: error.name,
+          errorMessage: error.message,
+        },
+        level: isChunkLoadError ? 'warning' : 'error',
+      });
+    }
   }
 
   isChunkLoadError(): boolean {
