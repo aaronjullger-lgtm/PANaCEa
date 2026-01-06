@@ -12,9 +12,9 @@ pages_build_output_dir = "dist"
 # binding = "RATE_LIMIT_KV"
 # id = "your-rate-limit-kv-namespace-id"
 
-[[kv_namespaces]]
-binding = "CACHE"
-id = "preview_id"  # Replace with production KV namespace ID after creating with: npx wrangler kv:namespace create CACHE
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "your-cache-kv-namespace-id"  # Create with: npx wrangler kv:namespace create CACHE
 
 # Note: Scheduled cache warming via cron triggers is not supported for Cloudflare Pages.
 # Use an external scheduler (e.g., GitHub Actions, cron-job.org) to call /api/admin/cache/warm periodically.
