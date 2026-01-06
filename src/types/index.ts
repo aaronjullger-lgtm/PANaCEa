@@ -339,3 +339,23 @@ export interface BuzzwordEntry {
   subcategory?: string;
   explanation?: string;
 }
+
+/**
+ * Pre-generated question from the question pool
+ * Used for admin curation and review before questions enter the main pool
+ */
+export interface PreGeneratedQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswerIndex: number;
+  rationale: string;
+  system: string;
+  conditionId?: string;
+  condition?: string;
+  difficulty?: string;
+  imageUrl?: string;
+  source?: string;
+  generatedAt?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+}
