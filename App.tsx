@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState, useCallback, lazy, Suspense } from
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, Keyboard, X } from "lucide-react";
 import { useUser, useAuth } from "@clerk/clerk-react";
+import { Toaster } from "sonner";
 import Loader from "./components/Loader";
 import ThemeToggleButton from "./components/ThemeToggleButton";
 import { LandingPage } from "./components/LandingPage";
@@ -535,6 +536,16 @@ const App: React.FC = () => {
   return (
     <ToastProvider>
     <CommuterProvider>
+    {/* Sonner toast notifications */}
+    <Toaster 
+      position="top-right" 
+      richColors 
+      closeButton 
+      toastOptions={{
+        duration: 4000,
+        className: 'sonner-toast',
+      }}
+    />
     <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
       {/* Loading Progress Bar */}
       <LoadingProgress isLoading={isLoading} />
