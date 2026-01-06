@@ -17,11 +17,13 @@ interface Env {
 
 interface AttemptPayload {
   questionId: string;
-  wasCorrect: boolean;
+  isCorrect: boolean; // Support both isCorrect and wasCorrect
+  wasCorrect?: boolean;
   system?: string;
   conditionId?: string;
   questionType?: string;
   mode?: string;
+  timeSpent?: number; // Support both timeSpent and timeSpentMs
   timeSpentMs?: number;
   answerChangedCount?: number;
   isRankedAttempt?: boolean;
@@ -62,18 +64,33 @@ export const onRequestPost: PagesFunction<Env> = async (context): Promise<any> =
 
     const {
       questionId,
+      isCorrect,
       wasCorrect,
       system,
       conditionId,
       questionType,
       mode = 'session',
+      timeSpent,
       timeSpentMs,
       answerChangedCount,
       isRankedAttempt = false,
     } = body;
 
+    // Support both isCorrect and wasCorrect field names
+    const correctness = isCorrect !== undefined ? isCorrect : wasCorrect;
+    
+    // Support both timeSpent and timeSpentMs field names
+    const timeSpentMillis = timeSpentMs !== undefined ? timeSpentMs : (timeSpent !== undefined ? timeSpent : null);
+
     if (!questionId) {
       return new Response(JSON.stringify({ error: 'questionId is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (correctness === undefined) {
+      return new Response(JSON.stringify({ error: 'isCorrect or wasCorrect is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -83,61 +100,104 @@ export const onRequestPost: PagesFunction<Env> = async (context): Promise<any> =
     const attemptId = `attempt-${userId}-${questionId}-${Date.now()}`;
     const historyId = `${userId}-${questionId}`;
 
-    // Record the attempt in QuestionAttempt table
-    await prisma.questionAttempt.create({
-      data: {
-        id: attemptId,
-        userId,
-        questionId,
-        wasCorrect,
-        system: system || null,
-        conditionId: conditionId || null,
-        questionType: questionType || null,
-        mode,
-        isRankedAttempt,
-        timeSpentMs: timeSpentMs || null,
-        answerChangedCount: answerChangedCount || null,
-        createdAt: new Date(),
-      },
-    });
-
-    // Update UserQuestionHistory (upsert - update if exists, create if not)
-    await prisma.userQuestionHistory.upsert({
-      where: { id: historyId },
-      create: {
-        id: historyId,
-        userId,
-        questionId,
-        isCorrect: wasCorrect,
-        seenAt: new Date(),
-      },
-      update: {
-        isCorrect: wasCorrect,
-        seenAt: new Date(),
-      },
-    });
-
-    // Update question statistics in the Question table
-    try {
-      await prisma.question.update({
-        where: { id: questionId },
+    // Use transaction to ensure atomicity
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Record the attempt in QuestionAttempt table
+      await tx.questionAttempt.create({
         data: {
-          timesSeen: { increment: 1 },
-          timesCorrect: wasCorrect ? { increment: 1 } : undefined,
+          id: attemptId,
+          userId,
+          questionId,
+          wasCorrect: correctness,
+          system: system || null,
+          conditionId: conditionId || null,
+          questionType: questionType || null,
+          mode,
+          isRankedAttempt,
+          timeSpentMs: timeSpentMillis,
+          answerChangedCount: answerChangedCount || null,
+          createdAt: new Date(),
         },
       });
-    } catch {
-      // Question might not exist in main table (could be pre-generated)
-      // This is fine, just skip the update
-    }
 
-    // Get user's updated statistics for this system
-    const systemStats = system ? await getUserSystemStats(prisma, userId, system) : null;
+      // 2. Update UserQuestionHistory (upsert - update if exists, create if not)
+      await tx.userQuestionHistory.upsert({
+        where: { id: historyId },
+        create: {
+          id: historyId,
+          userId,
+          questionId,
+          isCorrect: correctness,
+          seenAt: new Date(),
+        },
+        update: {
+          isCorrect: correctness,
+          seenAt: new Date(),
+        },
+      });
+
+      // 3. Update question statistics in the Question table (if exists)
+      try {
+        await tx.question.update({
+          where: { id: questionId },
+          data: {
+            timesSeen: { increment: 1 },
+            timesCorrect: correctness ? { increment: 1 } : undefined,
+          },
+        });
+      } catch {
+        // Question might not exist in main table (could be pre-generated)
+        // This is fine, just skip the update
+      }
+
+      // 4. Calculate aggregate stats for user
+      const allAttempts = await tx.questionAttempt.findMany({
+        where: { userId },
+        select: { wasCorrect: true, system: true },
+      });
+
+      const totalQuestionsAnswered = allAttempts.length;
+      const correctAnswers = allAttempts.filter(a => a.wasCorrect).length;
+      const overallAccuracy = totalQuestionsAnswered > 0 
+        ? Math.round((correctAnswers / totalQuestionsAnswered) * 100) 
+        : 0;
+
+      // System-specific stats
+      let systemStats = null;
+      if (system) {
+        const systemAttempts = allAttempts.filter(a => a.system === system);
+        const systemCorrect = systemAttempts.filter(a => a.wasCorrect).length;
+        systemStats = {
+          system,
+          totalAttempts: systemAttempts.length,
+          correctAnswers: systemCorrect,
+          accuracy: systemAttempts.length > 0 
+            ? Math.round((systemCorrect / systemAttempts.length) * 100) 
+            : 0,
+        };
+      }
+
+      return {
+        attemptId,
+        stats: {
+          totalQuestionsAnswered,
+          correctAnswers,
+          overallAccuracy,
+        },
+        systemStats,
+      };
+    });
+
+    // Get detailed system stats with trends (outside transaction for performance)
+    const detailedSystemStats = system 
+      ? await getUserSystemStats(prisma, userId, system) 
+      : null;
 
     return new Response(JSON.stringify({
       success: true,
-      attemptId,
-      systemStats,
+      attemptId: result.attemptId,
+      stats: result.stats,
+      systemStats: detailedSystemStats || result.systemStats,
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
