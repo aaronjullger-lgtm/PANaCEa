@@ -404,21 +404,24 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
 // Derived mode arrays by category
 // ============================================================================
 
-// Filter modes by category
+// Standalone modes that have their own dedicated tabs (NOT in training menu categories)
+const STANDALONE_MODE_IDS = ['core_adaptive', 'patient_encounter', 'grand_rounds'] as const;
+
+// Filter modes by category, EXCLUDING standalone modes that have their own tabs
 export const VISUAL_DIAGNOSTICS_MODES = TRAINING_MODES.filter(
-  m => m.category === 'visual_diagnostics'
+  m => m.category === 'visual_diagnostics' && !STANDALONE_MODE_IDS.includes(m.id as typeof STANDALONE_MODE_IDS[number])
 );
 
 export const CLINICAL_SIMULATION_MODES = TRAINING_MODES.filter(
-  m => m.category === 'clinical_simulation'
+  m => m.category === 'clinical_simulation' && !STANDALONE_MODE_IDS.includes(m.id as typeof STANDALONE_MODE_IDS[number])
 );
 
 export const QUESTION_PRACTICE_MODES = TRAINING_MODES.filter(
-  m => m.category === 'question_practice'
+  m => m.category === 'question_practice' && !STANDALONE_MODE_IDS.includes(m.id as typeof STANDALONE_MODE_IDS[number])
 );
 
 export const SPECIALTY_DRILL_MODES = TRAINING_MODES.filter(
-  m => m.category === 'specialty_drills'
+  m => m.category === 'specialty_drills' && !STANDALONE_MODE_IDS.includes(m.id as typeof STANDALONE_MODE_IDS[number])
 );
 
 // Individual standalone mode references
