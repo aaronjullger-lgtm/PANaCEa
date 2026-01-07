@@ -1,25 +1,41 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Flame, RotateCcw, ArrowRight, Loader2, BadgeCheck } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import { buzzwordService } from '@/services/buzzwordService';
 import { semanticValidationService } from '@/lib/services/semanticValidationService';
 
 interface RapidRecallDrillProps {
   onExit?: () => void;
+  system?: string; // Optional: filter pearls by PANCE system
 }
 
 type DrillStatus = 'playing' | 'feedback' | 'summary';
+type QuestionSource = 'pearl' | 'buzzword';
+
+interface PearlQuestion {
+  conditionId: string;
+  conditionName: string;
+  pearl: string;
+}
 
 /**
  * RapidRecallDrill - "Flashcard meets Type-ahead" drill mode.
  * 
- * Displays a massive buzzword in the center and users must type the
- * associated diagnosis. Uses the same full-screen dark mode layout
- * as PhotoDrill.
+ * Displays clinical pearls or buzzwords and users must type the diagnosis.
+ * Uses Pearl Harvester pattern to prioritize cached pearls before falling
+ * back to buzzword dictionary.
  */
-const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
-  const [currentBuzzword, setCurrentBuzzword] = useState<string>('');
+const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit, system }) => {
+  const { getToken } = useAuth();
+  
+  // Question state
+  const [currentQuestion, setCurrentQuestion] = useState<string>('');
+  const [currentAnswer, setCurrentAnswer] = useState<string>('');
+  const [questionSource, setQuestionSource] = useState<QuestionSource>('buzzword');
+  
+  // Score state
   const [streak, setStreak] = useState<number>(0);
   const [highScore, setHighScore] = useState<number>(0);
   const [totalCorrect, setTotalCorrect] = useState<number>(0);
@@ -27,20 +43,57 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
   const [status, setStatus] = useState<DrillStatus>('playing');
   const [isCorrect, setIsCorrect] = useState<boolean>(false);
   const [userAnswer, setUserAnswer] = useState<string>('');
-  const [usedBuzzwords, setUsedBuzzwords] = useState<Set<string>>(new Set());
+  const [usedQuestions, setUsedQuestions] = useState<Set<string>>(new Set());
   const [isValidating, setIsValidating] = useState<boolean>(false);
   const [acceptedSynonym, setAcceptedSynonym] = useState<boolean>(false);
   
-  // Data state
+  // Data state (buzzwords fallback)
   const [buzzwordDictionary, setBuzzwordDictionary] = useState<Record<string, string>>({});
   const [buzzwordsList, setBuzzwordsList] = useState<string[]>([]);
   const [allDiagnoses, setAllDiagnoses] = useState<string[]>([]);
+  
+  // Pearl state (primary source)
+  const [pearlQuestions, setPearlQuestions] = useState<PearlQuestion[]>([]);
+  const [usePearls, setUsePearls] = useState<boolean>(true); // Toggle for pearl vs buzzword mode
+  
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load data
+  // Load data: prioritize pearls, fallback to buzzwords
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Try to load pearls first
+        const token = await getToken();
+        if (token && system) {
+          try {
+            const response = await fetch(
+              `/api/conditions/pearls?system=${system}&random=true`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              }
+            );
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.pearls && data.pearls.length > 0) {
+                setPearlQuestions(data.pearls);
+                setUsePearls(true);
+                console.log(`[RapidRecallDrill] Loaded ${data.pearls.length} pearl questions for ${system}`);
+              } else {
+                // No pearls available, fall back to buzzwords
+                setUsePearls(false);
+              }
+            }
+          } catch (pearlError) {
+            console.warn('[RapidRecallDrill] Failed to load pearls, using buzzwords:', pearlError);
+            setUsePearls(false);
+          }
+        }
+        
+        // Load buzzwords as fallback
         const dict = await buzzwordService.getBuzzwordDictionary();
         const diagnoses = await buzzwordService.getAllBuzzwordConditions();
         
@@ -48,13 +101,13 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
         setBuzzwordsList(Object.keys(dict));
         setAllDiagnoses(diagnoses);
       } catch (error) {
-        console.error("Failed to load buzzwords", error);
+        console.error("[RapidRecallDrill] Failed to load data", error);
       } finally {
         setIsLoading(false);
       }
     };
     loadData();
-  }, []);
+  }, [system, getToken]);
 
   // Load high score from localStorage
   useEffect(() => {
@@ -80,25 +133,59 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
     }
   }, [streak, highScore]);
 
-  // Get a random buzzword that hasn't been used yet in this session
-  const getNextBuzzword = useCallback(() => {
-    if (buzzwordsList.length === 0) return '';
+  // Get next question (pearl or buzzword)
+  const getNextQuestion = useCallback(() => {
+    // Try pearls first if available
+    if (usePearls && pearlQuestions.length > 0) {
+      const available = pearlQuestions.filter((p) => 
+        !usedQuestions.has(p.conditionId + p.pearl)
+      );
+      
+      if (available.length === 0) {
+        // Reset if all pearls used
+        setUsedQuestions(new Set());
+        const randomPearl = pearlQuestions[Math.floor(Math.random() * pearlQuestions.length)];
+        setCurrentQuestion(randomPearl.pearl);
+        setCurrentAnswer(randomPearl.conditionName);
+        setQuestionSource('pearl');
+        return;
+      }
+      
+      const randomPearl = available[Math.floor(Math.random() * available.length)];
+      setCurrentQuestion(randomPearl.pearl);
+      setCurrentAnswer(randomPearl.conditionName);
+      setQuestionSource('pearl');
+      setUsedQuestions(prev => new Set(prev).add(randomPearl.conditionId + randomPearl.pearl));
+      return;
+    }
     
-    const available = buzzwordsList.filter((b) => !usedBuzzwords.has(b));
+    // Fallback to buzzwords
+    if (buzzwordsList.length === 0) return;
+    
+    const available = buzzwordsList.filter((b) => !usedQuestions.has(b));
+    let selectedBuzzword: string;
+    
     if (available.length === 0) {
       // Reset if all buzzwords have been used
-      setUsedBuzzwords(new Set());
-      return buzzwordsList[Math.floor(Math.random() * buzzwordsList.length)];
+      setUsedQuestions(new Set());
+      selectedBuzzword = buzzwordsList[Math.floor(Math.random() * buzzwordsList.length)];
+    } else {
+      selectedBuzzword = available[Math.floor(Math.random() * available.length)];
     }
-    return available[Math.floor(Math.random() * available.length)];
-  }, [usedBuzzwords, buzzwordsList]);
+    
+    setCurrentQuestion(selectedBuzzword);
+    setCurrentAnswer(buzzwordDictionary[selectedBuzzword]);
+    setQuestionSource('buzzword');
+    setUsedQuestions(prev => new Set(prev).add(selectedBuzzword));
+  }, [usePearls, pearlQuestions, buzzwordsList, buzzwordDictionary, usedQuestions]);
 
-  // Initialize with first buzzword
+  // Initialize with first question
   useEffect(() => {
-    if (!isLoading && !currentBuzzword && buzzwordsList.length > 0) {
-      setCurrentBuzzword(getNextBuzzword());
+    if (!isLoading && !currentQuestion && 
+        (pearlQuestions.length > 0 || buzzwordsList.length > 0)) {
+      getNextQuestion();
     }
-  }, [isLoading, currentBuzzword, getNextBuzzword, buzzwordsList]);
+  }, [isLoading, currentQuestion, pearlQuestions, buzzwordsList, getNextQuestion]);
 
   /**
    * Normalize a diagnosis string for comparison.
@@ -120,9 +207,8 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
   const handleSubmit = useCallback(async (answer: string) => {
     if (isValidating) return;
 
-    const correctAnswer = buzzwordDictionary[currentBuzzword];
     const normalizedAnswer = normalizeDiagnosis(answer);
-    const normalizedCorrect = normalizeDiagnosis(correctAnswer);
+    const normalizedCorrect = normalizeDiagnosis(currentAnswer);
     
     let isAnswerCorrect = normalizedAnswer === normalizedCorrect;
     let wasSemantic = false;
@@ -130,7 +216,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
     if (!isAnswerCorrect) {
       setIsValidating(true);
       try {
-        const result = await semanticValidationService.validate(answer, correctAnswer);
+        const result = await semanticValidationService.validate(answer, currentAnswer);
         isAnswerCorrect = result.isEquivalent;
         wasSemantic = result.viaModel && result.isEquivalent;
       } catch (error) {
@@ -152,27 +238,25 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
     } else {
       setStreak(0);
     }
-
-    setUsedBuzzwords((prev) => new Set([...prev, currentBuzzword]));
-  }, [currentBuzzword, isValidating, buzzwordDictionary]);
+  }, [currentAnswer, isValidating]);
 
   const handleNext = useCallback(() => {
-    setCurrentBuzzword(getNextBuzzword());
+    getNextQuestion();
     setUserAnswer('');
     setAcceptedSynonym(false);
     setStatus('playing');
-  }, [getNextBuzzword]);
+  }, [getNextQuestion]);
 
   const handleReset = useCallback(() => {
     setStreak(0);
     setTotalCorrect(0);
     setTotalAttempts(0);
-    setUsedBuzzwords(new Set());
-    setCurrentBuzzword(getNextBuzzword());
+    setUsedQuestions(new Set());
+    getNextQuestion();
     setUserAnswer('');
     setAcceptedSynonym(false);
     setStatus('playing');
-  }, [getNextBuzzword]);
+  }, [getNextQuestion]);
 
   const handleExit = () => {
     if (onExit) {
@@ -254,24 +338,31 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
         </div>
       </header>
 
-      {/* Main Stage - Buzzword Display */}
+      {/* Main Stage - Question Display */}
       <main className="flex-1 flex items-center justify-center p-4 pt-16 pb-32">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentBuzzword}
+            key={currentQuestion}
             variants={buzzwordVariants}
             initial="initial"
             animate="animate"
             exit="exit"
             transition={{ duration: 0.3 }}
-            className="text-center"
+            className="text-center max-w-4xl"
           >
             <p className="text-sm uppercase tracking-widest text-[var(--color-text-muted)] mb-4">
-              What diagnosis is this buzzword associated with?
+              {questionSource === 'pearl' 
+                ? 'What condition is associated with this clinical pearl?' 
+                : 'What diagnosis is this buzzword associated with?'}
             </p>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-[var(--color-text-primary)] leading-tight">
-              {currentBuzzword}
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--color-text-primary)] leading-tight">
+              {currentQuestion}
             </h2>
+            {questionSource === 'pearl' && (
+              <span className="inline-block mt-3 px-3 py-1 text-xs font-medium bg-blue-500/10 text-blue-400 rounded-full">
+                Clinical Pearl
+              </span>
+            )}
           </motion.div>
         </AnimatePresence>
       </main>
@@ -339,7 +430,7 @@ const RapidRecallDrill: React.FC<RapidRecallDrillProps> = ({ onExit }) => {
                       <div className="text-sm text-[var(--color-text-secondary)] mt-1">
                         Correct answer:{' '}
                         <span className="font-semibold text-[var(--color-text-primary)]">
-                          {buzzwordDictionary[currentBuzzword]}
+                          {currentAnswer}
                         </span>
                       </div>
                     )}

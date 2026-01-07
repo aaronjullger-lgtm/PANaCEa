@@ -74,6 +74,75 @@ function convertPoolQuestion(poolQ: PoolQuestion): Question {
 }
 
 /**
+ * Extract clinical pearls from a question's rationale using regex patterns
+ * Looks for "Key Takeaway:", "Clinical Pearl:", "Remember:", etc.
+ */
+function extractPearlsFromRationale(rationale: string): string[] {
+  const pearls: string[] = [];
+  
+  // Pattern 1: "Key Takeaway:" or "Clinical Pearl:" followed by content
+  const keyTakeawayPattern = /(?:Key Takeaway|Clinical Pearl|Remember|Important|High-Yield Fact):\s*(.+?)(?:\n\n|$)/gi;
+  let match;
+  while ((match = keyTakeawayPattern.exec(rationale)) !== null) {
+    const pearl = match[1].trim();
+    if (pearl.length > 10 && pearl.length < 500) {
+      pearls.push(pearl);
+    }
+  }
+  
+  // Pattern 2: Bullet points that look like pearls (start with • or - and are concise)
+  const bulletPattern = /^[•\-]\s*(.{10,300})$/gm;
+  while ((match = bulletPattern.exec(rationale)) !== null) {
+    const pearl = match[1].trim();
+    // Filter for high-quality pearls (avoid generic statements)
+    if (pearl.length > 20 && !pearl.toLowerCase().startsWith('the correct answer')) {
+      pearls.push(pearl);
+    }
+  }
+  
+  // Pattern 3: Sentences with clinical keywords that indicate high-yield info
+  const clinicalKeywords = ['classic presentation', 'gold standard', 'first-line', 'diagnostic criteria', 'pathognomonic'];
+  const sentences = rationale.split(/[.!?]\s+/);
+  for (const sentence of sentences) {
+    const normalized = sentence.toLowerCase();
+    if (clinicalKeywords.some(kw => normalized.includes(kw))) {
+      const pearl = sentence.trim();
+      if (pearl.length > 20 && pearl.length < 300) {
+        pearls.push(pearl);
+      }
+    }
+  }
+  
+  // Deduplicate and limit to top 5 pearls
+  return Array.from(new Set(pearls)).slice(0, 5);
+}
+
+/**
+ * Save extracted pearls to MedicalContent table
+ */
+async function savePearlsToDatabase(
+  conditionId: string,
+  pearls: string[],
+  token: string | null
+): Promise<void> {
+  if (!token || pearls.length === 0) return;
+  
+  try {
+    await fetch('/api/conditions/pearls', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ conditionId, pearls })
+    });
+    console.log(`[Pearl Harvester] Saved ${pearls.length} pearls for ${conditionId}`);
+  } catch (error) {
+    console.error('[Pearl Harvester] Failed to save pearls:', error);
+  }
+}
+
+/**
  * Fetch clinical pearls from medical content by conditionId
  * This is a client-side fetch that can be called when displaying a question
  */
@@ -294,6 +363,15 @@ export async function getQuestion(
   const question = await fetchNewQuestion(settings, growthAreas);
   console.timeEnd('[QuestionService] Gemini Gen');
 
+  // Pearl Harvester: Extract and save clinical pearls from the rationale
+  if (question.rationale && question.conditionId) {
+    const extractedPearls = extractPearlsFromRationale(question.rationale);
+    if (extractedPearls.length > 0) {
+      const token = getToken ? await getToken() : null;
+      savePearlsToDatabase(question.conditionId, extractedPearls, token);
+    }
+  }
+
   // Seed the generated question into the pool for future use
   const token = getToken ? await getToken() : null;
   seedGeneratedQuestion(question, token, system, poolDifficulty);
@@ -366,6 +444,15 @@ export async function getQuestionBatch(
       try {
         const q = await fetchNewQuestion(settings, growthAreas);
         generatedQuestions.push(q);
+        
+        // Pearl Harvester: Extract and save clinical pearls
+        if (q.rationale && q.conditionId) {
+          const extractedPearls = extractPearlsFromRationale(q.rationale);
+          if (extractedPearls.length > 0) {
+            savePearlsToDatabase(q.conditionId, extractedPearls, token);
+          }
+        }
+        
         seedGeneratedQuestion(q, token, system, poolDifficulty);
       } catch (error) {
         console.error('[QuestionService] Failed to generate question:', error);
