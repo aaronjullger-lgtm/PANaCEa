@@ -153,6 +153,10 @@ export default defineConfig(({ mode }) => {
             intro: 'var exports = exports || {}; var global = global || window; if (typeof exports !== "object") { exports = {}; }',
             manualChunks: (id) => {
               if (id.includes('node_modules')) {
+                // Isolate lucide-react into its own chunk to avoid hoisting with react core
+                if (id.includes('lucide-react')) {
+                  return 'vendor-lucide';
+                }
                 // React core only
                 if (/(\@?node_modules\/react\/?)/.test(id) || /(\@?node_modules\/react-dom\/?)/.test(id) || /(\@?node_modules\/scheduler\/?)/.test(id)) {
                   return 'vendor-react';
@@ -162,7 +166,7 @@ export default defineConfig(({ mode }) => {
                   return 'vendor-router';
                 }
                 // UI / icons / animation / auth UI
-                if (id.includes('lucide-react') || id.includes('@radix-ui') || id.includes('framer-motion') || id.includes('@clerk')) {
+                if (id.includes('@radix-ui') || id.includes('framer-motion') || id.includes('@clerk')) {
                   return 'vendor-ui';
                 }
                 // Sentry separate
