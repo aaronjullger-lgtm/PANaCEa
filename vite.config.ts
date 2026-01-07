@@ -56,8 +56,8 @@ export default defineConfig(({ mode }) => {
             clientsClaim: true,     // Take control of page immediately after activation
             // Clean old caches on activation
             cleanupOutdatedCaches: true,
-            // New cache namespace to break any lingering caches
-            cacheId: 'panacea-v9-esm-force',
+            // New cache namespace - "compat" strategy with interop mode
+            cacheId: 'panacea-v10-compat',
             // Use network-first for JS chunks to avoid stale cache issues
             runtimeCaching: [
               {
@@ -132,51 +132,10 @@ export default defineConfig(({ mode }) => {
             '@prisma/extension-accelerate',
           ],
           output: {
-            manualChunks: (id) => {
-              if (id.includes('node_modules')) {
-                // React core only (strict paths)
-                if (/node_modules\/react\//.test(id) || /node_modules\/react-dom\//.test(id) || /node_modules\/scheduler\//.test(id)) {
-                  return 'vendor-react';
-                }
-                // Router
-                if (/node_modules\/react-router/.test(id)) {
-                  return 'vendor-router';
-                }
-                // Lucide isolated
-                if (id.includes('node_modules/lucide-react')) {
-                  return 'vendor-lucide';
-                }
-                // UI / icons / animation / auth UI
-                if (id.includes('@radix-ui') || id.includes('framer-motion') || id.includes('@clerk')) {
-                  return 'vendor-ui';
-                }
-                // Sentry separate
-                if (id.includes('@sentry')) return 'vendor-sentry';
-                // Charts and visualization
-                if (id.includes('recharts')) return 'vendor-animation-charts';
-                // Utilities
-                if (id.includes('date-fns') || id.includes('zod') || id.includes('clsx') || id.includes('tailwind-merge')) {
-                  return 'vendor-utils';
-                }
-                // Default vendor chunk for remaining packages
-                return 'vendor';
-              }
-              // Group data files
-              if (id.includes('/data/')) {
-                if (id.includes('conditionContent') || id.includes('conditionDrillData')) {
-                  return 'data-conditions';
-                }
-                if (id.includes('drugData')) return 'data-drugs';
-                if (id.includes('labData')) return 'data-labs';
-                return 'data-other';
-              }
-              // Group drill components
-              if (id.includes('/components/drill/')) return 'drill-modes';
-              // Group components into logical chunks
-              if (id.includes('/components/admin/')) return 'admin';
-              if (id.includes('/components/modes/')) return 'chunk-modes';
-              if (id.includes('/components/analytics/')) return 'chunk-analytics';
-            },
+            // Add interop compatibility mode to handle CJS/ESM mixing gracefully
+            interop: 'compat',
+            // Safety net polyfill for CommonJS remnants
+            intro: 'var global = global || window; var exports = exports || {};',
           },
         },
         chunkSizeWarningLimit: 700, // Increased limit for larger vendor chunks
