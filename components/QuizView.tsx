@@ -68,6 +68,7 @@ import { recordAnswerPattern } from "../services/answerPatternService";
 import { updatePerformancePrediction, resetPrediction } from "../services/performancePredictionService";
 import { recordPauseResult, resetPauseTracking } from "../services/smartPauseService";
 import { useAdvancedAnalytics } from "../hooks/useAdvancedAnalytics";
+import ClinicalSkeleton from "./ui/ClinicalSkeleton";
 // Sprint 4: Optimistic UI for instant feedback
 import { 
   optimisticUpdateStats, 
@@ -903,7 +904,19 @@ const QuizView: React.FC<QuizViewProps> = ({
   if (!currentQuestion) {
     // In continuous mode, if we're actively generating, show loading screen
     if (shouldEndlesslyReplenish && isGeneratingQuestion) {
-      return <Loader message="Generating next question..." />;
+      return (
+        <div className="bg-[var(--color-bg-primary)] min-h-screen px-4 sm:px-6 py-10">
+          <div className="max-w-5xl mx-auto space-y-4">
+            <ClinicalSkeleton />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
+              <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
+              <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
+              <ClinicalSkeleton variant="compact" className="min-h-[72px]" lines={2} />
+            </div>
+          </div>
+        </div>
+      );
     }
     
     // Otherwise, show session complete (for finite modes or when truly done)
@@ -1061,7 +1074,17 @@ const QuizView: React.FC<QuizViewProps> = ({
             </button>
           </div>
         </div>
-        <QuestionDisplay text={currentQuestion.question} />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentQuestion.id ?? `${currentQuestion.question}-${questionNumber}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            <QuestionDisplay text={currentQuestion.question} />
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* ANSWER OPTIONS */}

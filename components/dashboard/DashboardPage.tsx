@@ -15,6 +15,8 @@ import {
 import DecayCurve from './charts/DecayCurve';
 import StabilityPyramid from './charts/StabilityPyramid';
 import AlgorithmStatusWidget from './AlgorithmStatusWidget';
+import ClinicalSkeleton from '../ui/ClinicalSkeleton';
+import DailyTriad from './DailyTriad';
 
 // ============================================================================
 // Types
@@ -40,24 +42,6 @@ const fetcher = async (url: string) => {
   const data = await res.json();
   return data.data as RetentionData;
 };
-
-// ============================================================================
-// Skeleton Loaders
-// ============================================================================
-
-const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <div className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 animate-pulse ${className}`}>
-    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-    <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-  </div>
-);
-
-const SkeletonChart: React.FC = () => (
-  <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 animate-pulse">
-    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6"></div>
-    <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
-  </div>
-);
 
 // ============================================================================
 // Quick Stat Card Component
@@ -121,15 +105,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="h-12 bg-gray-200 dark:bg-gray-800 rounded w-1/3 animate-pulse mb-8"></div>
+          <ClinicalSkeleton
+            variant="compact"
+            lines={2}
+            className="w-1/3 mb-4 min-h-[64px]"
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
+            <ClinicalSkeleton variant="compact" lines={3} className="min-h-[140px]" />
+            <ClinicalSkeleton variant="compact" lines={3} className="min-h-[140px]" />
+            <ClinicalSkeleton variant="compact" lines={3} className="min-h-[140px]" />
           </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SkeletonChart />
-            <SkeletonChart />
+            <ClinicalSkeleton lines={6} className="min-h-[260px]" />
+            <ClinicalSkeleton lines={6} className="min-h-[260px]" />
           </div>
         </div>
       </div>
@@ -260,7 +250,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
             Daily Practice
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <button
               onClick={() => handleNavigation('/drills/wordle')}
               className="group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 hover:border-blue-500 dark:hover:border-blue-500 transition-all shadow-sm hover:shadow-md w-full text-left"
@@ -302,6 +292,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
                 <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </button>
+
+            <DailyTriad />
           </div>
         </motion.div>
       </div>

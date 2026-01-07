@@ -46,6 +46,11 @@ export interface DDxComparison {
     A: string[];
     B: string[];
   };
+  keyDifferentiators?: {
+    A?: string[] | null;
+    B?: string[] | null;
+  };
+  triad?: string[] | null;
 }
 
 export interface TopConfusion {

@@ -279,10 +279,8 @@ export async function authenticateRequest(
   const isTestEnv = secretKey.startsWith('sk_test_');
 
   // Phase 1.3: Log masked key for verification (test environments only)
-  if (isTestEnv) {
-    console.log('[AUTH] Secret key verified (masked):', maskSecretKey(secretKey));
-    console.log('[AUTH] Secret key environment:', isTestEnv ? 'test' : 'live');
-  }
+  console.log('[AUTH] Secret key verified (masked):', maskSecretKey(secretKey));
+  console.log('[AUTH] Secret key environment:', isTestEnv ? 'test' : 'live');
 
   const authHeader = request.headers.get('Authorization');
   const userId = await verifyAuthToken(authHeader, secretKey);
@@ -299,8 +297,5 @@ export async function authenticateRequest(
   return {
     userId,
     clerkId: userId,
-    user: {
-      id: userId,
-    },
   };
 }

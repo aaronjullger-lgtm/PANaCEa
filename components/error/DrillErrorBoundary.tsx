@@ -21,9 +21,11 @@ import {
 
 // Lazy load Sentry to avoid initialization conflicts with Clerk
 let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
-import('../../lib/monitoring/sentry').then((sentry) => {
-  captureError = sentry.captureError;
-}).catch(() => {});
+if (import.meta.env.PROD) {
+  import('../../lib/monitoring/sentry').then((sentry) => {
+    captureError = sentry.captureError;
+  }).catch(() => {});
+}
 
 // ============================================================================
 // Types

@@ -11,10 +11,12 @@ import { AlertTriangle, RefreshCw, Wifi, Clock, Server } from 'lucide-react';
 // Lazy load Sentry to avoid initialization conflicts with Clerk
 let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
 let addBreadcrumb: ((category: string, message: string, data?: Record<string, unknown>) => void) | null = null;
-import('../lib/monitoring/sentry').then((sentry) => {
-  captureError = sentry.captureError;
-  addBreadcrumb = sentry.addBreadcrumb;
-}).catch(() => {});
+if (import.meta.env.PROD) {
+  import('../lib/monitoring/sentry').then((sentry) => {
+    captureError = sentry.captureError;
+    addBreadcrumb = sentry.addBreadcrumb;
+  }).catch(() => {});
+}
 
 export interface GeminiErrorInfo {
   type: 'rate_limit' | 'server_error' | 'network' | 'timeout' | 'generic';

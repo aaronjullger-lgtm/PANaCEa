@@ -23,16 +23,17 @@ export interface SentryConfig {
  */
 export async function initializeSentry(config?: Partial<SentryConfig>): Promise<void> {
   // @ts-ignore
-  const isDevelopment = import.meta.env?.DEV;
-  // @ts-ignore
-  const dsn = import.meta.env?.VITE_SENTRY_DSN;
+  const mode = import.meta.env?.MODE;
+  const isProduction = mode === 'production';
 
-  // Don't initialize in development unless explicitly enabled
-  // @ts-ignore
-  if (isDevelopment && !import.meta.env?.VITE_SENTRY_ENABLE_DEV) {
-    console.log('[Sentry] Skipping initialization in development');
+  // Only touch the DSN when we're in production
+  if (!isProduction) {
+    console.log('[Sentry] Skipping initialization outside production');
     return;
   }
+
+  // @ts-ignore
+  const dsn = import.meta.env?.VITE_SENTRY_DSN;
 
   if (!dsn) {
     console.log('[Sentry] DSN not configured, error tracking disabled');
@@ -45,9 +46,8 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
     
     const defaultConfig: SentryConfig = {
       dsn,
-      // @ts-ignore
-      environment: import.meta.env?.MODE || 'production',
-      tracesSampleRate: isDevelopment ? 1.0 : 0.1,
+      environment: mode || 'production',
+      tracesSampleRate: 0.1,
       replaysSessionSampleRate: 0.1,
       replaysOnErrorSampleRate: 1.0,
     };

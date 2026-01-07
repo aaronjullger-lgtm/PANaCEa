@@ -10,13 +10,15 @@ import { ClerkProvider, useUser } from '@clerk/clerk-react';
 let setUserContext: ((user: { id: string; email?: string; username?: string }) => void) | null = null;
 let clearUserContext: (() => void) | null = null;
 
-// Load Sentry functions asynchronously
-import('../lib/monitoring/sentry').then((sentry) => {
-  setUserContext = sentry.setUserContext;
-  clearUserContext = sentry.clearUserContext;
-}).catch(() => {
-  // Sentry not available, ignore
-});
+// Load Sentry functions asynchronously (production only)
+if (import.meta.env.PROD) {
+  import('../lib/monitoring/sentry').then((sentry) => {
+    setUserContext = sentry.setUserContext;
+    clearUserContext = sentry.clearUserContext;
+  }).catch(() => {
+    // Sentry not available, ignore
+  });
+}
 
 interface AuthProviderProps {
   children: React.ReactNode;

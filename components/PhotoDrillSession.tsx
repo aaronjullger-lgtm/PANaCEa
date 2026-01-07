@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoDrill, type CategoryType, type ClinicalContext } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
@@ -72,12 +72,28 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
 
   // State for Clinical Presentation Mode: controls when image is revealed
   const [imageRevealed, setImageRevealed] = useState<boolean>(false);
+  const [isImageLoaded, setIsImageLoaded] = useState<boolean>(false);
+  const [imageErrored, setImageErrored] = useState<boolean>(false);
+
+  // Resolve image source with public/images fallback for locally stored assets
+  const resolvedImageSrc = useMemo(() => {
+    if (!currentCase?.imageUrl) return '';
+    if (currentCase.imageUrl.startsWith('http')) return currentCase.imageUrl;
+
+    const normalized = currentCase.imageUrl.replace(/^\/+/, '');
+    if (normalized.startsWith('images/')) {
+      return `/${normalized}`;
+    }
+    return `/images/${normalized}`;
+  }, [currentCase?.imageUrl]);
 
   // Reset imageRevealed when case changes
   useEffect(() => {
     if (currentCase) {
       // For non-derm cases or cases without clinical context, auto-reveal
       setImageRevealed(!currentCase.clinicalContext);
+      setIsImageLoaded(false);
+      setImageErrored(false);
     }
   }, [currentCase?.id]);
 
@@ -111,11 +127,15 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
 
   const handleNextCase = () => {
     setImageRevealed(false); // Reset for next case
+    setIsImageLoaded(false);
+    setImageErrored(false);
     nextCase();
   };
 
   const handleReset = () => {
     setImageRevealed(false);
+    setIsImageLoaded(false);
+    setImageErrored(false);
     reset();
   };
 
@@ -374,11 +394,22 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                 {/* Image View (shown for non-derm cases or when revealed) */}
                 {(imageRevealed || !currentCase.clinicalContext) && (
                   <div className="relative bg-slate-900 dark:bg-slate-950 rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto">
-                    <img
-                      src={currentCase.imageUrl}
-                      alt={`Medical ${currentCase.modality.toUpperCase()} case`}
-                      className="w-full max-h-[50vh] object-contain"
+                    <div
+                      className={`absolute inset-0 bg-slate-800 animate-pulse transition-opacity duration-300 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
+                      aria-hidden
                     />
+                    <img
+                      src={resolvedImageSrc}
+                      alt={`Medical ${currentCase.modality.toUpperCase()} case`}
+                      className={`w-full max-h-[50vh] object-contain transition-all duration-500 ${isImageLoaded ? 'blur-0 scale-100 opacity-100' : 'blur-md scale-[1.01] opacity-80'}`}
+                      onLoad={() => setIsImageLoaded(true)}
+                      onError={() => setImageErrored(true)}
+                    />
+                    {imageErrored && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 text-slate-200 text-sm">
+                        Unable to load image. Check public/images path.
+                      </div>
+                    )}
                     {/* Modality Badge */}
                     <div className="absolute top-3 left-3 px-2.5 py-1 bg-slate-800/90 backdrop-blur-sm rounded-lg text-xs font-semibold uppercase tracking-wider text-slate-300">
                       {currentCase.modality === 'derm' ? 'Clinical Presentation' : currentCase.modality}

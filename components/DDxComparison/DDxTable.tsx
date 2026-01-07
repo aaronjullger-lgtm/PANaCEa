@@ -12,6 +12,17 @@ interface DDxTableProps {
   comparison: DDxComparison;
 }
 
+const toSafeList = (items?: string[] | null): string[] => {
+  if (!items) return [];
+  if (Array.isArray(items)) return items.filter(Boolean);
+  return [];
+};
+
+const toSafePair = (pair?: { A?: string[] | null; B?: string[] | null }) => ({
+  A: toSafeList(pair?.A),
+  B: toSafeList(pair?.B),
+});
+
 interface ComparisonSectionProps {
   title: string;
   itemsA: string[];
@@ -113,16 +124,24 @@ const SimilaritiesSection: React.FC<{ items: string[] }> = ({ items }) => (
  * DDxTable - Complete comparison table
  */
 const DDxTable: React.FC<DDxTableProps> = ({ comparison }) => {
+  const similarities = toSafeList(comparison.similarities);
+  const differences = toSafePair(comparison.differences);
+  const buzzwords = toSafePair(comparison.buzzwords);
+  const diagnostic = toSafePair(comparison.diagnostic);
+  const treatments = toSafePair(comparison.treatments);
+  const keyDiffs = toSafePair(comparison.keyDifferentiators);
+  const triadItems = toSafeList(comparison.triad);
+
   return (
     <div>
       {/* Similarities */}
-      <SimilaritiesSection items={comparison.similarities} />
+      <SimilaritiesSection items={similarities} />
 
       {/* Key Differences */}
       <ComparisonSection
         title="Key Differences"
-        itemsA={comparison.differences.A}
-        itemsB={comparison.differences.B}
+        itemsA={differences.A}
+        itemsB={differences.B}
         conditionA={comparison.conditionA}
         conditionB={comparison.conditionB}
       />
@@ -130,8 +149,8 @@ const DDxTable: React.FC<DDxTableProps> = ({ comparison }) => {
       {/* Buzzwords */}
       <ComparisonSection
         title="Distinguishing Buzzwords"
-        itemsA={comparison.buzzwords.A}
-        itemsB={comparison.buzzwords.B}
+        itemsA={buzzwords.A}
+        itemsB={buzzwords.B}
         conditionA={comparison.conditionA}
         conditionB={comparison.conditionB}
         colorA="blue"
@@ -141,8 +160,8 @@ const DDxTable: React.FC<DDxTableProps> = ({ comparison }) => {
       {/* Diagnostic Clues */}
       <ComparisonSection
         title="Diagnostic Clues"
-        itemsA={comparison.diagnostic.A}
-        itemsB={comparison.diagnostic.B}
+        itemsA={diagnostic.A}
+        itemsB={diagnostic.B}
         conditionA={comparison.conditionA}
         conditionB={comparison.conditionB}
       />
@@ -150,11 +169,41 @@ const DDxTable: React.FC<DDxTableProps> = ({ comparison }) => {
       {/* Treatments */}
       <ComparisonSection
         title="Treatment Distinctions"
-        itemsA={comparison.treatments.A}
-        itemsB={comparison.treatments.B}
+        itemsA={treatments.A}
+        itemsB={treatments.B}
         conditionA={comparison.conditionA}
         conditionB={comparison.conditionB}
       />
+
+      {/* Key Differentiators (optional) */}
+      {(keyDiffs.A.length > 0 || keyDiffs.B.length > 0) && (
+        <ComparisonSection
+          title="Key Differentiators"
+          itemsA={keyDiffs.A}
+          itemsB={keyDiffs.B}
+          conditionA={comparison.conditionA}
+          conditionB={comparison.conditionB}
+        />
+      )}
+
+      {/* Classic Triad (optional) */}
+      {triadItems.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
+            Classic Triad
+          </h3>
+          <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800">
+            <ul className="space-y-1.5">
+              {triadItems.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+                  <span className="text-rose-500 mt-1">•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

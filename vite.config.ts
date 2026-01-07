@@ -105,8 +105,6 @@ export default defineConfig(({ mode }) => {
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        // Hardcode Sentry DSN to bypass Cloudflare Dashboard env var lock (DSNs are public, safe in frontend)
-        'import.meta.env.VITE_SENTRY_DSN': JSON.stringify('https://fcb4b9b78fce46cb919609702673a04b@o4510664011087872.ingest.us.sentry.io/4510664018231296'),
         // Global shim for CJS modules
         'global': 'window',
       },
@@ -137,6 +135,10 @@ export default defineConfig(({ mode }) => {
             // Safety net polyfill for CommonJS remnants
             intro: 'var global = global || window; var exports = exports || {};',
           },
+          // Ensure lucide-react is treated as side-effect-free for optimal tree-shaking
+          treeshake: {
+            moduleSideEffects: (id) => id.includes('lucide-react') ? false : undefined,
+          },
         },
         chunkSizeWarningLimit: 700, // Increased limit for larger vendor chunks
         // Conditionally enable source maps based on environment
@@ -153,6 +155,8 @@ export default defineConfig(({ mode }) => {
           '@clerk/clerk-react',
           'framer-motion',
         ],
+        // Avoid prebundling the entire lucide icon set; rely on per-icon ESM imports for tree-shaking
+        exclude: ['lucide-react'],
       },
     };
   }

@@ -251,11 +251,13 @@ export async function getQuestion(
   // Fixed at PANCE-level (medium) difficulty for standardized practice
   const poolDifficulty = 'medium';
 
+  let dbQuestion: Question | null = null;
+
   try {
     // Get auth token if available
     const token = getToken ? await getToken() : null;
-    
-    // Try to get from pool first
+    console.time('[QuestionService] DB Fetch');
+    // Try to get from pool (DB) first
     const { questions, poolStatus } = await fetchFromPool(
       1,
       system,
@@ -263,6 +265,7 @@ export async function getQuestion(
       poolDifficulty,
       token
     );
+    console.timeEnd('[QuestionService] DB Fetch');
 
     // Update cached status and trigger generation if needed
     cachedPoolStatus = poolStatus;
@@ -271,17 +274,25 @@ export async function getQuestion(
     }
 
     if (questions.length > 0) {
-      console.log('[QuestionService] Served question from pool');
-      return questions[0];
+      dbQuestion = questions[0];
+      console.log('[QuestionService] Served question from DB pool');
     }
   } catch (error) {
+    console.timeEnd('[QuestionService] DB Fetch');
     console.warn('[QuestionService] Pool fetch failed, falling back to generation:', error);
+  }
+
+  // If DB provided a fresh question, return it; otherwise generate via Gemini
+  if (dbQuestion) {
+    return dbQuestion;
   }
 
   // Fall back to Gemini generation
   console.log('[QuestionService] Pool empty or failed, using Gemini generation');
+  console.time('[QuestionService] Gemini Gen');
   const { fetchNewQuestion } = await import('./geminiService');
   const question = await fetchNewQuestion(settings, growthAreas);
+  console.timeEnd('[QuestionService] Gemini Gen');
 
   // Seed the generated question into the pool for future use
   const token = getToken ? await getToken() : null;

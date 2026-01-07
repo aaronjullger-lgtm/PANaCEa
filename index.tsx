@@ -7,13 +7,16 @@ import { AuthProvider } from './components/AuthProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ShortcutProvider } from './src/context/ShortcutContext';
 
-// Initialize error tracking asynchronously to avoid blocking app load
-// and prevent conflicts with other library initializations
-import('./lib/monitoring/sentry').then(({ initializeSentry }) => {
-  initializeSentry();
-}).catch(() => {
-  console.warn('[Sentry] Failed to load error tracking');
-});
+// Initialize error tracking asynchronously only in production to avoid dev DSN access
+if (import.meta.env.PROD) {
+  import('./lib/monitoring/sentry').then(({ initializeSentry }) => {
+    initializeSentry();
+  }).catch(() => {
+    console.warn('[Sentry] Failed to load error tracking');
+  });
+} else {
+  console.log('[Sentry] Skipped in non-production mode');
+}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

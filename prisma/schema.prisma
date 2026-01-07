@@ -328,6 +328,7 @@ model Condition {
   aliases                   String[]                    @default([])
   content                   Json?
   displayName               String?
+  mediaUrl                  String?                 @map("media_url")
   parentId                  String?
   relatedSystems            String[]                    @default([])
   status                    String                      @default("published")

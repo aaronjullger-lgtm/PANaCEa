@@ -10,6 +10,17 @@
 
 import { createEdgePrismaClient } from './_shared/prisma-edge';
 import { withErrorHandler, successResponse, errorResponse } from './_shared/error-handler';
+import type { PagesFunction, Response as CfResponse } from '@cloudflare/workers-types';
+
+interface Env {
+  DATABASE_URL: string;
+  APP_VERSION?: string;
+  CACHE?: any;
+  SENTRY_DSN?: string;
+  CLERK_SECRET_KEY?: string;
+  CLERK_WEBHOOK_SECRET?: string;
+  GEMINI_API_KEY?: string;
+}
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -181,14 +192,14 @@ function determineOverallStatus(checks: HealthStatus['checks']): HealthStatus['s
 /**
  * Health check handler
  */
-export const onRequestGet = withErrorHandler(async (context) => {
+const handler: PagesFunction<Env> = async (context): Promise<CfResponse> => {
   const { env, request } = context;
   const startTime = Date.now();
   
   // Check if this is a simple ping (fast path)
   const url = new URL(request.url);
   if (url.searchParams.get('ping') === 'true') {
-    return successResponse({ status: 'ok', timestamp: new Date().toISOString() });
+    return successResponse({ status: 'ok', timestamp: new Date().toISOString() }) as unknown as CfResponse;
   }
   
   // Run comprehensive health checks in parallel
@@ -224,5 +235,7 @@ export const onRequestGet = withErrorHandler(async (context) => {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-cache, no-store, must-revalidate',
     },
-  });
-}, { endpoint: '/api/health' });
+  }) as unknown as CfResponse;
+};
+
+export const onRequestGet = withErrorHandler(handler, { endpoint: '/api/health' });

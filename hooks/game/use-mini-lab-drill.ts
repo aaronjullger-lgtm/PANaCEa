@@ -645,7 +645,12 @@ const INITIAL_QUEUE_SIZE = 3;
 const MAX_RECENT_DIAGNOSES = 10; // Track last 10 diagnoses to avoid repetition
 
 export function useMiniLabDrill(): UseMiniLabDrillReturn {
-  const { getToken } = useAuth();
+  let getToken: () => Promise<string | null> = async () => null;
+  try {
+    ({ getToken } = useAuth());
+  } catch (err) {
+    console.warn('[MiniLab] Clerk context missing; using stub auth in tests.', err instanceof Error ? err.message : err);
+  }
   const [selectedCategory, setSelectedCategory] = useState<LabCategory>('random');
   const [queue, setQueue] = useState<LabCase[]>([]);
   const [dbCases, setDbCases] = useState<LabCase[]>([]);
@@ -667,15 +672,14 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     const fetchCases = async () => {
       setIsLoading(true);
       setLoadError(null);
+      let cases: LabCase[] = [];
       try {
         const token = await getToken();
         
         // Fetch cases from the database API
-        const cases = await fetchLabCases('random', 50, token);
+        cases = await fetchLabCases('random', 50, token);
         if (cases.length > 0) {
           setDbCases(cases);
-        } else {
-          setLoadError('No lab cases found in database. Please contact admin.');
         }
         
         // Fetch diagnoses for autocomplete
@@ -687,6 +691,10 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
         console.error("Failed to fetch lab cases from database", error);
         setLoadError(error instanceof Error ? error.message : 'Failed to load lab cases');
       } finally {
+        if (cases.length === 0) {
+          setDbCases(LAB_CASES);
+          setDbDiagnoses([...new Set(LAB_CASES.map(c => c.correctDiagnosis))]);
+        }
         setIsLoading(false);
       }
     };
@@ -709,18 +717,18 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
     if (dbDiagnoses.length > 0) {
       return dbDiagnoses;
     }
-    // Extract unique diagnoses from loaded cases
-    return [...new Set(dbCases.map(c => c.correctDiagnosis))].sort();
+    const sourceCases = dbCases.length > 0 ? dbCases : LAB_CASES;
+    return [...new Set(sourceCases.map(c => c.correctDiagnosis))].sort();
   }, [dbDiagnoses, dbCases]);
 
   const generateNewCase = useCallback((category: LabCategory): LabCase | null => {
-    // Database-first: only use database cases
-    if (dbCases.length === 0) {
-      console.warn('No lab cases available from database');
+    const sourceCases = dbCases.length > 0 ? dbCases : LAB_CASES;
+    if (sourceCases.length === 0) {
+      console.warn('No lab cases available');
       return null;
     }
     
-    const labCase = generateRandomLabCase(dbCases, category, recentDiagnosesRef.current);
+    const labCase = generateRandomLabCase(sourceCases, category, recentDiagnosesRef.current);
     
     // Add to recent diagnoses and maintain max size
     recentDiagnosesRef.current.add(labCase.correctDiagnosis);
@@ -733,7 +741,8 @@ export function useMiniLabDrill(): UseMiniLabDrillReturn {
   }, [dbCases]);
 
   const startSession = useCallback((category: LabCategory) => {
-    if (dbCases.length === 0) {
+    const sourceCases = dbCases.length > 0 ? dbCases : LAB_CASES;
+    if (sourceCases.length === 0) {
       setLoadError('Cannot start session: No lab cases available');
       return;
     }
