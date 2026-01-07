@@ -1160,6 +1160,7 @@ model MedicalContent {
   publishedBy           String?
   approvedAt            DateTime?
   approvedBy            String?
+  content               Json?
   relatedSystems        String[]          @default([])
   buzzwords             String[]          @default([])
   complications         String?
@@ -1219,6 +1220,7 @@ model MedicalContent {
   QuestionSeeds                QuestionSeed[]
   SavedQuestions               SavedQuestion[]
   WeaknessPatterns             WeaknessPattern[]
+  UserProgress                 UserProgress[]
 
   @@index([conditionId])
   @@index([createdBy])
@@ -1226,6 +1228,27 @@ model MedicalContent {
   @@index([status])
   @@index([system])
   @@index([updatedAt])
+}
+
+model UserProgress {
+  id            String           @id @default(uuid())
+  userId        String
+  conditionId   String
+  fsrsCard      Json
+  fsrsParams    Json?
+  totalAttempts Int              @default(0)
+  correctCount  Int              @default(0)
+  accuracy      Float            @default(0)
+  lastReviewAt  DateTime?
+  nextReviewAt  DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  User          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  MedicalContent MedicalContent  @relation(fields: [conditionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conditionId])
+  @@index([userId, nextReviewAt])
+  @@index([conditionId])
 }
 
 /// Junction table linking MedicalContent to MediaAsset
@@ -1964,6 +1987,7 @@ model User {
   UserQuestionHistory     UserQuestionHistory[]
   UserSRSConfig           UserSRSConfig?
   UserWordleState         UserWordleState[]
+  UserProgress            UserProgress[]
   // New deep relations
   ConfusionPair           ConfusionPair[]
   WeaknessPattern         WeaknessPattern[]

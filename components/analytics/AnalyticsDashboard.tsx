@@ -3,9 +3,11 @@ import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, Pola
 import { Sparkles, Gauge, Clock, TrendingUp, Activity, AlertCircle, BarChart3 } from 'lucide-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
+import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
 
 interface AnalyticsDashboardProps {
   performanceData: PerformanceRecord[];
+  isLoading?: boolean;
 }
 
 type SystemRadarDatum = { system: string; accuracy: number; attempts: number };
@@ -22,7 +24,7 @@ function calculateReadinessScore(records: PerformanceRecord[]): number {
   return Math.round((accuracy * 0.7 + coverage * 0.3) * 100);
 }
 
-export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performanceData }) => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performanceData, isLoading = false }) => {
   const radarData: SystemRadarDatum[] = useMemo(() => {
     const map = new Map<SystemCode, { correct: number; total: number }>();
     performanceData.forEach((r) => {
@@ -93,6 +95,25 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
   }, [radarData]);
 
   const hasData = performanceData.length > 0;
+
+  // Loading state skeleton
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <SkeletonLoader height="5rem" className="rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <SkeletonLoader height="20rem" className="rounded-xl" />
+          <SkeletonLoader height="20rem" className="rounded-xl" />
+        </div>
+        <SkeletonLoader height="20rem" className="rounded-xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

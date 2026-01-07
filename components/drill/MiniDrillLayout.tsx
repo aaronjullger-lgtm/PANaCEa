@@ -140,6 +140,7 @@ interface QuestionCardProps {
   question: string;
   category?: string;
   subcategory?: string;
+  isLoading?: boolean;
 }
 
 /**
@@ -149,31 +150,50 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
   category,
   subcategory,
-}) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    className="bg-[var(--color-bg-secondary)] rounded-xl sm:rounded-2xl border border-[var(--color-border)] p-4 sm:p-6 mb-4 sm:mb-6"
-  >
-    {(category || subcategory) && (
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        {category && (
-          <span className="px-2 py-0.5 bg-[var(--color-bg-tertiary)] rounded text-xs font-medium text-[var(--color-text-secondary)]">
-            {category}
-          </span>
-        )}
-        {subcategory && (
-          <span className="px-2 py-0.5 bg-[var(--color-bg-tertiary)]/50 rounded text-xs text-[var(--color-text-muted)]">
-            {subcategory}
-          </span>
-        )}
+  isLoading = false,
+}) => {
+  if (isLoading) {
+    return (
+      <div className="bg-[var(--color-bg-secondary)] rounded-xl sm:rounded-2xl border border-[var(--color-border)] p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="flex gap-2 mb-3">
+          <div className="w-16 h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+          <div className="w-20 h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+        </div>
+        <div className="space-y-2">
+          <div className="w-full h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+          <div className="w-11/12 h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+          <div className="w-4/5 h-5 bg-slate-200 dark:bg-slate-700 animate-pulse rounded" />
+        </div>
       </div>
-    )}
-    <p className="text-base sm:text-lg text-[var(--color-text-primary)] leading-relaxed">
-      {question}
-    </p>
-  </motion.div>
-);
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-[var(--color-bg-secondary)] rounded-xl sm:rounded-2xl border border-[var(--color-border)] p-4 sm:p-6 mb-4 sm:mb-6"
+    >
+      {(category || subcategory) && (
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {category && (
+            <span className="px-2 py-0.5 bg-[var(--color-bg-tertiary)] rounded text-xs font-medium text-[var(--color-text-secondary)]">
+              {category}
+            </span>
+          )}
+          {subcategory && (
+            <span className="px-2 py-0.5 bg-[var(--color-bg-tertiary)]/50 rounded text-xs text-[var(--color-text-muted)]">
+              {subcategory}
+            </span>
+          )}
+        </div>
+      )}
+      <p className="text-base sm:text-lg text-[var(--color-text-primary)] leading-relaxed">
+        {question}
+      </p>
+    </motion.div>
+  );
+};
 
 interface AnswerOptionProps {
   index: number;
