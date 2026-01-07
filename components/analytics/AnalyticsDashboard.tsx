@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
-import { Sparkles, Gauge, Clock, TrendingUp, Activity, AlertCircle, BarChart3 } from 'lucide-react';
+import { Sparkles, Gauge, Clock, TrendingUp, Activity, AlertCircle, BarChart3, Brain } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
@@ -13,6 +14,7 @@ interface AnalyticsDashboardProps {
 type SystemRadarDatum = { system: string; accuracy: number; attempts: number };
 type TrendDatum = { label: string; accuracy: number; pace: number };
 type TimeDatum = { system: string; seconds: number; accuracy: number };
+type StabilityTrendDatum = { date: string; avgStability: number; totalReviews: number };
 
 function calculateReadinessScore(records: PerformanceRecord[]): number {
   if (!records.length) return 0;
@@ -25,6 +27,54 @@ function calculateReadinessScore(records: PerformanceRecord[]): number {
 }
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performanceData, isLoading = false }) => {
+  const { getToken } = useAuth();
+  const [stabilityTrendData, setStabilityTrendData] = useState<StabilityTrendDatum[]>([]);
+  const [stabilityLoading, setStabilityLoading] = useState(true);
+  const [stabilityError, setStabilityError] = useState<string | null>(null);
+
+  // Fetch stability trend on mount
+  useEffect(() => {
+    const fetchStabilityTrend = async () => {
+      try {
+        const token = await getToken();
+        if (!token) {
+          setStabilityLoading(false);
+          return;
+        }
+
+        const response = await fetch('/api/user/stability-trend?days=30', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch stability trend');
+        }
+
+        const result = await response.json();
+        
+        if (result.data && Array.isArray(result.data)) {
+          // Format dates for display
+          const formattedData = result.data.map((point: any) => ({
+            date: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            avgStability: point.avgStability,
+            totalReviews: point.totalReviews,
+          }));
+          setStabilityTrendData(formattedData);
+        }
+      } catch (error) {
+        console.error('[AnalyticsDashboard] Failed to fetch stability trend:', error);
+        setStabilityError(error instanceof Error ? error.message : 'Unknown error');
+      } finally {
+        setStabilityLoading(false);
+      }
+    };
+
+    fetchStabilityTrend();
+  }, [getToken]);
+
   const radarData: SystemRadarDatum[] = useMemo(() => {
     const map = new Map<SystemCode, { correct: number; total: number }>();
     performanceData.forEach((r) => {
@@ -268,6 +318,89 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                 </ResponsiveContainer>
               )}
             </div>
+          </div>
+
+          {/* FSRS Stability Growth Trend - NEW */}
+          <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
+                <Brain className="w-4 h-4" /> Memory Stability Growth (Last 30 Days)
+              </div>
+              {stabilityLoading && (
+                <div className="text-xs text-[var(--color-text-muted)]">Loading...</div>
+              )}
+            </div>
+            {stabilityError ? (
+              <p className="text-sm text-amber-600 dark:text-amber-400">
+                Error loading stability data: {stabilityError}
+              </p>
+            ) : stabilityLoading ? (
+              <SkeletonLoader width="100%" height={320} />
+            ) : stabilityTrendData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[320px] text-center">
+                <Brain className="w-12 h-12 text-[var(--color-text-muted)] mb-2 opacity-30" />
+                <p className="text-sm text-[var(--color-text-muted)]">
+                  Complete questions to track your memory stability growth over time.
+                </p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                  Stability measures how well you retain knowledge.
+                </p>
+              </div>
+            ) : (
+              <>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={stabilityTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} 
+                      angle={-20}
+                      height={60}
+                    />
+                    <YAxis 
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} 
+                      label={{ value: 'Stability', angle: -90, position: 'insideLeft', style: { fill: 'var(--color-text-muted)' } }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'var(--color-bg-secondary)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '8px',
+                      }}
+                      formatter={(value: any, name: string) => {
+                        if (name === 'avgStability') return [value.toFixed(2), 'Stability'];
+                        return [value, name];
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="avgStability" 
+                      stroke="#8b5cf6" 
+                      strokeWidth={3} 
+                      dot={{ fill: '#8b5cf6', r: 4 }}
+                      name="avgStability"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+                <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <p className="text-xs text-purple-900 dark:text-purple-100">
+                    <strong>What is Stability?</strong> Stability measures how long you'll remember information. 
+                    Higher stability means longer retention and fewer reviews needed. 
+                    {stabilityTrendData.length > 1 && (
+                      <span className="block mt-1">
+                        Your stability has{' '}
+                        <strong>
+                          {stabilityTrendData[stabilityTrendData.length - 1].avgStability > stabilityTrendData[0].avgStability
+                            ? 'increased'
+                            : 'remained stable'}
+                        </strong>{' '}
+                        over the past 30 days.
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="p-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)]">

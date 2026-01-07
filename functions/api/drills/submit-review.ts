@@ -2,6 +2,8 @@ import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
 import { calculateParTime } from '../../../lib/utils/questionComplexity';
 import { updateReviewOutcome } from '../../../lib/services/srsService';
+import { FSRS, Rating } from '../../../lib/fsrs';
+import { updateUserProgressWithHistory } from '../../../lib/services/userProgressService';
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -118,12 +120,56 @@ export const onRequestPost = async (context) => {
           ? 4 // Good / Normal
           : 2; // Hard / Slow
 
+    // Map quality to FSRS rating
+    const rating: Rating = quality <= 1 ? Rating.Again : quality === 2 ? Rating.Hard : quality >= 5 ? Rating.Easy : Rating.Good;
+
     // Feed into FSRS with dynamic baseline
-    updateReviewOutcome(userId, questionId, {
+    const srsResult = updateReviewOutcome(userId, questionId, {
       quality,
       timeToAnswer: numericTime,
       baselineTime: parTimeMs,
     });
+
+    // If question has conditionId, also update UserProgress with review history
+    if (question.conditionId) {
+      try {
+        // Get or create FSRS card for this condition
+        const fsrs = new FSRS();
+        const existingProgress = await prisma.userProgress.findUnique({
+          where: {
+            userId_conditionId: {
+              userId,
+              conditionId: question.conditionId,
+            },
+          },
+        });
+
+        const fsrsCardData: any = existingProgress?.fsrsCard || {};
+        const currentCard = {
+          stability: fsrsCardData.stability || 0,
+          difficulty: fsrsCardData.difficulty || 0,
+          state: fsrsCardData.state || 0,
+          elapsed_days: fsrsCardData.elapsed_days || 0,
+          scheduled_days: fsrsCardData.scheduled_days || 0,
+          reps: fsrsCardData.reps || 0,
+          lapses: fsrsCardData.lapses || 0,
+          last_review: fsrsCardData.last_review ? new Date(fsrsCardData.last_review) : new Date(),
+        };
+
+        const { card: updatedCard } = fsrs.next(currentCard, new Date(), rating);
+
+        await updateUserProgressWithHistory(prisma, {
+          userId,
+          conditionId: question.conditionId,
+          fsrsCard: updatedCard,
+          rating,
+          accuracy: isCorrect ? 1.0 : 0.0,
+        });
+      } catch (progressError) {
+        console.warn('Failed to update UserProgress:', progressError);
+        // Don't fail the entire request if progress update fails
+      }
+    }
 
     return new Response(
       JSON.stringify({

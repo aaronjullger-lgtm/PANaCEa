@@ -1236,6 +1236,7 @@ model UserProgress {
   conditionId   String
   fsrsCard      Json
   fsrsParams    Json?
+  reviewHistory Json[]           @default([])
   totalAttempts Int              @default(0)
   correctCount  Int              @default(0)
   accuracy      Float            @default(0)

@@ -36,6 +36,17 @@ export interface FSRSReviewLog {
   state: FSRSState;
 }
 
+/**
+ * Review history snapshot for UserProgress tracking
+ */
+export interface ReviewSnapshot {
+  date: string; // ISO 8601 date string
+  stability: number;
+  difficulty: number;
+  rating: Rating;
+  state: FSRSState;
+}
+
 export interface FSRSParameters {
   request_retention: number;
   maximum_interval: number;
@@ -180,4 +191,21 @@ export class FSRS {
     const new_interval = s * 9 * (1 / this.p.request_retention - 1);
     return Math.min(Math.max(new_interval, 1), this.p.maximum_interval);
   }
+}
+
+/**
+ * Create a review snapshot for UserProgress.reviewHistory
+ */
+export function createReviewSnapshot(
+  card: FSRSCard,
+  rating: Rating,
+  reviewDate: Date = new Date()
+): ReviewSnapshot {
+  return {
+    date: reviewDate.toISOString(),
+    stability: card.stability,
+    difficulty: card.difficulty,
+    rating,
+    state: card.state,
+  };
 }

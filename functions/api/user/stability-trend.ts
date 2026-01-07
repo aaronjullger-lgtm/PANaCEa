@@ -1,0 +1,142 @@
+/**
+ * User Stability Trend API
+ * 
+ * Returns FSRS stability growth over time for visualization
+ * Used by AnalyticsDashboard to show learning progress
+ */
+
+import { authenticateRequest, handleCorsOptions } from '../_shared/auth';
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { getAllUserReviewHistory } from '../../../lib/services/userProgressService';
+
+export const onRequestOptions = handleCorsOptions;
+
+export interface StabilityTrendDataPoint {
+  date: string; // ISO 8601 date
+  avgStability: number;
+  totalReviews: number;
+  conditions: Array<{
+    conditionId: string;
+    stability: number;
+  }>;
+}
+
+export async function onRequestGet(context: any) {
+  const { request, env } = context;
+  const url = new URL(request.url);
+  const days = parseInt(url.searchParams.get('days') || '30', 10);
+
+  // Authenticate
+  const auth = await authenticateRequest(request, env);
+  if (!auth) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
+    // Get user by clerkId
+    const user = await prisma.user.findUnique({
+      where: { clerkId: auth.userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
+
+    // Fetch all review history
+    const reviewHistory = await getAllUserReviewHistory(prisma, user.id, days);
+
+    if (reviewHistory.length === 0) {
+      return new Response(
+        JSON.stringify({
+          data: [],
+          message: 'No review history found. Complete some questions to see stability trends!',
+        }),
+        {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        }
+      );
+    }
+
+    // Group by date (day-level granularity)
+    const dateMap = new Map<string, {
+      stabilities: number[];
+      conditions: Map<string, number>;
+    }>();
+
+    reviewHistory.forEach((snapshot) => {
+      const date = snapshot.date.split('T')[0]; // Get YYYY-MM-DD
+      
+      if (!dateMap.has(date)) {
+        dateMap.set(date, {
+          stabilities: [],
+          conditions: new Map(),
+        });
+      }
+
+      const entry = dateMap.get(date)!;
+      entry.stabilities.push(snapshot.stability);
+      entry.conditions.set(snapshot.conditionId, snapshot.stability);
+    });
+
+    // Convert to array format
+    const trendData: StabilityTrendDataPoint[] = Array.from(dateMap.entries())
+      .map(([date, entry]) => {
+        const avgStability = entry.stabilities.reduce((sum, s) => sum + s, 0) / entry.stabilities.length;
+        
+        return {
+          date,
+          avgStability: Math.round(avgStability * 100) / 100, // Round to 2 decimals
+          totalReviews: entry.stabilities.length,
+          conditions: Array.from(entry.conditions.entries()).map(([conditionId, stability]) => ({
+            conditionId,
+            stability: Math.round(stability * 100) / 100,
+          })),
+        };
+      })
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return new Response(
+      JSON.stringify({
+        data: trendData,
+        summary: {
+          days,
+          totalDataPoints: trendData.length,
+          totalReviews: reviewHistory.length,
+          startDate: trendData[0]?.date,
+          endDate: trendData[trendData.length - 1]?.date,
+          startStability: trendData[0]?.avgStability || 0,
+          endStability: trendData[trendData.length - 1]?.avgStability || 0,
+          stabilityGrowth: trendData.length > 1 
+            ? Math.round(((trendData[trendData.length - 1].avgStability - trendData[0].avgStability) / trendData[0].avgStability) * 100)
+            : 0,
+        },
+      }),
+      {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      }
+    );
+  } catch (error) {
+    console.error('[StabilityTrendAPI] Error:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to fetch stability trend',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
