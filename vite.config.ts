@@ -56,8 +56,8 @@ export default defineConfig(({ mode }) => {
             clientsClaim: true,     // Take control of page immediately after activation
             // Clean old caches on activation
             cleanupOutdatedCaches: true,
-            // New cache namespace to break any lingering v7 caches
-            cacheId: 'panacea-v8-fix-chunking',
+            // New cache namespace to break any lingering caches
+            cacheId: 'panacea-v9-esm-force',
             // Use network-first for JS chunks to avoid stale cache issues
             runtimeCaching: [
               {
@@ -110,34 +110,18 @@ export default defineConfig(({ mode }) => {
         // Global shim for CJS modules
         'global': 'window',
       },
-      // Esbuild-level defines ensure prebundling and TS transforms see the same shims
-      esbuild: {
-        define: {
-          global: 'window',
-          exports: '{}',
-        },
-      },
       resolve: {
-        // Force all dependencies to use the SAME copy of lucide-react (prevents nested node_modules issues)
         dedupe: ['lucide-react', 'react', 'react-dom'],
         alias: {
           // Preserve legacy absolute imports that assume repo root
           '@': path.resolve(__dirname, '.'),
           // Preferred alias for source files
           '@src': path.resolve(__dirname, './src'),
-          // REMOVED: lucide-react alias - let Vite optimizeDeps handle CJS/ESM conversion
-          // The manual alias path differs between Mac and Linux build environments
+          // Force ESM build of lucide-react
+          'lucide-react': 'lucide-react/dist/esm/lucide-react.js',
         }
       },
       build: {
-        // Transform mixed ES/CJS modules to prevent initialization errors
-        commonjsOptions: {
-          transformMixedEsModules: true,
-          // Force these packages to be treated as ESM
-          include: [/node_modules/],
-          // Explicitly handle lucide-react as ESM
-          esmExternals: true,
-        },
         rollupOptions: {
           external: [
             // Externalize Prisma packages - they should never be in browser bundles
@@ -148,22 +132,19 @@ export default defineConfig(({ mode }) => {
             '@prisma/extension-accelerate',
           ],
           output: {
-            // Inject CommonJS polyfill at the start of each bundle chunk
-            // This ensures 'exports' exists before any CJS code tries to assign to it
-            intro: 'var exports = exports || {}; var global = global || window; if (typeof exports !== "object") { exports = {}; }',
             manualChunks: (id) => {
               if (id.includes('node_modules')) {
-                // Isolate lucide-react into its own chunk to avoid hoisting with react core
-                if (id.includes('lucide-react')) {
-                  return 'vendor-lucide';
-                }
-                // React core only
-                if (/(\@?node_modules\/react\/?)/.test(id) || /(\@?node_modules\/react-dom\/?)/.test(id) || /(\@?node_modules\/scheduler\/?)/.test(id)) {
+                // React core only (strict paths)
+                if (/node_modules\/react\//.test(id) || /node_modules\/react-dom\//.test(id) || /node_modules\/scheduler\//.test(id)) {
                   return 'vendor-react';
                 }
                 // Router
-                if (/(\@?node_modules\/react-router)/.test(id)) {
+                if (/node_modules\/react-router/.test(id)) {
                   return 'vendor-router';
+                }
+                // Lucide isolated
+                if (id.includes('node_modules/lucide-react')) {
+                  return 'vendor-lucide';
                 }
                 // UI / icons / animation / auth UI
                 if (id.includes('@radix-ui') || id.includes('framer-motion') || id.includes('@clerk')) {
@@ -207,20 +188,12 @@ export default defineConfig(({ mode }) => {
         target: 'esnext',
       },
       optimizeDeps: {
-        // FORCE Vite to pre-bundle lucide-react - this converts CJS to ESM at build time
-        // and fixes the "Cannot set properties of undefined (setting 'Activity')" error
         include: [
-          'lucide-react',
           'react',
           'react-dom',
           '@clerk/clerk-react',
           'framer-motion',
         ],
-        // Force ESM format
-        esbuildOptions: {
-          target: 'esnext',
-          format: 'esm',
-        },
       },
     };
   }
