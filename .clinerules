@@ -1,175 +1,375 @@
-# PANaCEa Cline Rules
+# AI BEHAVIOR & CODING STANDARDS (PANaCEa)
 
-## Project Overview
-PANaCEa is a PA (Physician Assistant) exam preparation application. It uses:
-- React 19 + TypeScript + Vite
-- Tailwind CSS + Framer Motion
-- Cloudflare Pages Functions (primary backend)
-- PostgreSQL/Supabase via Prisma
-- Clerk for authentication
-- Supabase Storage for media files
+## 🛑 CRITICAL BEHAVIORAL RULES (DO NOT IGNORE)
+1.  **NO LAZY CODING:** When editing a file, you must rewrite the ENTIRE file if the structure is changing significantly. Do NOT use placeholders like `// ... rest of code` or `// ... existing imports`.
+2.  **VERIFY WRITES:** After every file modification, you must immediately use `read_file` to verify the file system actually updated with your changes.
+3.  **TRUST BUT VERIFY:** If the read operation shows old code, you must acknowledge the failure and retry the write operation immediately.
+4.  **NO HALLUCINATED SUCCESS:** Do not claim a task is "Complete" until you have verified the file content on disk matches your intention.
+5.  **DATABASE-FIRST ONLY:** Never create or reference static JSON/TS registries. All medical content MUST be fetched from PostgreSQL via Prisma.
 
-## Architecture Principles
+---
 
-### Database-First Architecture
-- ALL content comes from the PostgreSQL database - NEVER use static JSON files
-- Use Prisma for database operations
-- MedicalContent table stores condition data as JSONB
-- MediaAsset table stores references to images in Supabase Storage
+## 1. CORE ARCHITECTURE
 
-### API Pattern (Cloudflare Functions)
-```typescript
-// functions/api/example.ts
-import { createEdgePrismaClient } from './_shared/prisma-edge';
-import { authenticateRequest, createSuccessResponse, createErrorResponse } from './_shared/auth';
+### Database & Content Management
+-   **Database-First Only:** PostgreSQL (via Prisma) is the SINGLE source of truth for all medical content.
+    -   *Forbidden:* Static JSON/TS arrays, hardcoded condition lists, or in-memory registries for medical data.
+    -   *Mandatory:* All content must be fetched from the `MedicalContent` table (uses `content` JSONB column for structured data).
+    -   *Note:* `lib/conditionRegistry.ts` has been **deprecated and deleted**. Use `services/conditionDataLoader.ts` for database-first content loading.
+-   **Content Loading Pattern:**
+    ```typescript
+    // services/conditionDataLoader.ts
+    import { loadConditionContent } from './conditionDataLoader';
+    
+    // Throws error if condition not found in database
+    const content = await loadConditionContent(conditionId);
+    ```
 
-export const onRequestGet = async (context) => {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
-  try {
-    const auth = await authenticateRequest(context.request, context.env);
-    // ... logic
-    return createSuccessResponse(data);
-  } catch (e) {
-    return createErrorResponse(e.message, 500);
-  } finally {
-    await prisma.$disconnect();
-  }
-};
+### Serverless Architecture
+-   **Cloudflare Pages Functions:** All API routes live in `functions/api/*`
+    -   **Pattern:** `export async function onRequestGet(context: any) { ... }`
+    -   **Pattern:** `export async function onRequestPost(context: any) { ... }`
+    -   **DB Access:** Use `createEdgePrismaClient(env.DATABASE_URL)` from `functions/api/_shared/prisma-edge.ts`
+    -   **Auth:** Use `authenticateRequest(request, env)` from `functions/api/_shared/auth.ts`
+    -   **Cleanup:** ALWAYS include `await prisma.$disconnect()` in a `finally` block to prevent connection pool exhaustion
+    -   **Example:**
+      ```typescript
+      export async function onRequestGet(context: any) {
+        const { request, env } = context;
+        const auth = await authenticateRequest(request, env);
+        if (!auth) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+        }
+        const prisma = createEdgePrismaClient(env.DATABASE_URL);
+        try {
+          // ... your logic
+        } finally {
+          await prisma.$disconnect();
+        }
+      }
+      ```
+
+### Offline Resilience
+-   **LocalStorage Mirroring:** Mirror critical state to `localStorage` for offline functionality
+    -   Keys: `panceai_srsState_{userId}`, `panceai_rapid_recall_high_score`, `panceai_session_prefs`
+    -   Sync strategy: Write to localStorage on every update, sync to database when online
+    -   Use `services/offlineService.ts` for sync logic
+
+### Type Safety
+-   **Runtime Validation:** Use `zod` for all external data (API inputs, AI responses)
+-   **Type Exports:** Import types from `src/types/*.ts`, never from deleted registries
+
+---
+
+## 2. FSRS v5 SPACED REPETITION
+
+### Implementation Details
+-   **Algorithm:** FSRS v5 (Free Spaced Repetition Scheduler) in `lib/fsrs.ts`
+-   **4-Button Rating System:**
+    -   `Rating.Again = 1` (Fail: Forgot completely)
+    -   `Rating.Hard = 2` (Pass with difficulty: Hesitation or partial recall)
+    -   `Rating.Good = 3` (Pass: Confident recall)
+    -   `Rating.Easy = 4` (Pass with ease: Instant recall)
+-   **NO Manual Intervals:** Users do NOT set intervals manually. The algorithm computes optimal intervals based on:
+    -   Stability (S): How long information stays in memory
+    -   Difficulty (D): Inherent complexity of the material (1-10 scale)
+    -   Retrievability (R): Probability of successful recall
+-   **Parameters:** Stored in `UserProgress.fsrsParams` (JSONB) - auto-optimized per user
+-   **Learning Steps:** New cards use graduated intervals:
+    -   Again: ~5 minutes (0.0035 days)
+    -   Hard: ~10 minutes (0.007 days)
+    -   Good: 1 day
+    -   Easy: 4 days
+-   **Review State Tracking:** Every review updates `UserProgress.reviewHistory[]` with snapshots containing:
+    ```typescript
+    {
+      date: "2026-01-07T12:00:00Z",
+      stability: 2.5,
+      difficulty: 4.2,
+      rating: 3,
+      state: 2  // FSRSState.Review
+    }
+    ```
+
+### Integration Points
+-   **Update on Review:** `functions/api/drills/submit-review.ts` calls `updateUserProgressWithHistory()` after each question
+-   **Visualization:** `components/analytics/AnalyticsDashboard.tsx` fetches stability trends via `/api/user/stability-trend`
+-   **Service:** `lib/services/userProgressService.ts` handles UserProgress CRUD with history management
+
+---
+
+## 3. PEDAGOGY & SCIENCE OF LEARNING
+
+### Interleaving (MANDATORY)
+-   **Never Block by Topic:** Session generators MUST mix organ systems to force discrimination practice
+-   **Implementation:** `functions/api/questions/session.ts` uses NCCPA Blueprint weighted selection
+-   **Constraint:** Every 20-question session MUST contain questions from at least **3 distinct organ systems**
+-   **Validation:** Session metadata must include `systemDistribution` object showing actual mix
+-   **Service:** `services/mainSessionService.ts` orchestrates client-side session fetching
+
+### NCCPA Blueprint Weighting
+-   **Official Percentages (2024):**
+    -   Cardiovascular: 11%
+    -   Pulmonary: 9%
+    -   Gastrointestinal: 9%
+    -   Musculoskeletal: 9%
+    -   HEENT: 8%
+    -   Reproductive: 8%
+    -   Neurological: 7%
+    -   Psychiatry: 7%
+    -   Endocrine: 6%
+    -   Dermatology: 5%
+    -   Genitourinary: 5%
+    -   Hematology: 4%
+    -   Infectious Disease: 4%
+    -   Nephrology: 4%
+    -   Emergency Medicine: 2%
+-   **Implementation:** `NCCPA_BLUEPRINT_WEIGHTS` constant in `functions/api/questions/session.ts`
+-   **Usage:** Weighted random selection during session generation to match exam distribution
+
+### Active Retrieval Practice
+-   **No Premature Hints:** In `components/drill/recall/RapidRecallDrill.tsx`, clinical pearls/buzzwords must be displayed first
+-   **Hint Toggle:** If hints exist, they must be **collapsed by default** - user must actively expand
+-   **Explanation Timing:** Full explanations only shown AFTER user submits answer (no peeking)
+-   **Pearl Harvester:** Extracts clinical pearls from AI responses and caches them in `MedicalContent.content.pearls[]` for future recall drills
+
+### Metacognition (Future Enhancement)
+-   **Reflection Prompts:** After each session, prompt users with:
+    -   "What patterns did you notice in the questions you missed?"
+    -   "What will you do differently next time?"
+    -   "Which topics need more review?"
+-   **Implementation:** Create `components/session/MetacognitiveReflection.tsx` (not yet built)
+
+---
+
+## 4. MEDIA & ASSETS
+
+### Storage Architecture
+-   **Primary Storage:** Supabase Storage buckets (e.g., `medical-images`)
+-   **Database Reference:** `MediaAsset` table stores metadata and public URLs
+-   **Linking:** `MedicalContentMedia` junction table links assets to conditions via `medicalContentId`
+
+### Upload Workflow
+1.  Upload image to Supabase bucket: `POST /api/media/upload`
+2.  Create `MediaAsset` record with `approvalStatus: 'pending'`
+3.  Admin reviews via `/api/admin/media/approve/{id}`
+4.  Link to `MedicalContent` via `MedicalContentMedia` junction table
+5.  Frontend displays via `<MediaAsset>` component using public URL
+
+### Repository Rules
+-   **FORBIDDEN:** Never commit binary images (PNG, JPG, GIF) to the git repository
+-   **ALLOWED:** Static UI assets (logos, icons) in `public/images/` only
+-   **Medical Images:** All clinical photos, diagrams, and illustrations must be in Supabase Storage
+
+### Processing Pipeline
+-   **Scripts:** `scripts/media/media-processor.ts` handles batch uploads
+-   **Integration:** `scripts/media/integrate-media.ts` links existing assets to conditions
+
+---
+
+## 5. UI/UX STABILITY
+
+### Zero Layout Shift (CLS = 0.0)
+-   **Loading States:** Use `SkeletonLoader` components from `components/ui/SkeletonLoader.tsx`
+    -   Base skeleton: `<SkeletonLoader width="100%" height={200} />`
+    -   Text skeleton: `<SkeletonText lines={3} />`
+    -   Card skeleton: `<SkeletonCard />`
+-   **Styling:** All skeletons use `bg-slate-200 dark:bg-slate-700 animate-pulse rounded-xl`
+-   **Implementation:** Set `isLoading` prop on components:
+    ```tsx
+    <QuestionCard isLoading={isLoading} question={question} />
+    <AnalyticsDashboard isLoading={isLoading} performanceData={data} />
+    ```
+
+### Smooth Transitions
+-   **Page Transitions:** Wrap routes in `<AnimatePresence mode="wait">` from `framer-motion`
+-   **Question Transitions:** Use `AnimatePresence` in `components/drill/MiniDrillLayout.tsx`
+-   **Animation Config:**
+    ```tsx
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+    />
+    ```
+
+### Streaming AI Responses
+-   **Proxy:** `functions/geminiProxy.ts` handles streaming from Google Gemini API
+-   **Target:** First token rendered within 100ms (perceived as instant)
+-   **Implementation:** Use Server-Sent Events (SSE) for real-time explanation streaming
+-   **Component:** `<StreamingExplanation>` component receives SSE chunks
+
+---
+
+## 6. QA & TESTING
+
+### Unit Tests
+-   **Framework:** Vitest (`vitest.config.ts`)
+-   **Coverage Target:** >80% for critical paths (FSRS, session generation, content loading)
+-   **Run:** `npm test`
+-   **Location:** `tests/` directory
+
+### Integration Tests
+-   **Focus:** Verify FSRS calculations persist correctly to `UserProgress` table
+-   **Database:** Use test database with `DATABASE_URL_TEST` env var
+-   **Critical Paths:**
+    -   Question submission → FSRS update → UserProgress.reviewHistory update
+    -   Session generation → Interleaving validation → 3+ systems check
+    -   Pearl harvesting → MedicalContent.content.pearls[] storage
+
+### Health Checks
+-   **Command:** `npm run health-check`
+-   **Checks:**
+    -   Database connectivity
+    -   MedicalContent table populated (>2000 conditions)
+    -   MediaAsset table has approved images
+    -   No orphaned records in junction tables
+-   **Location:** `scripts/health-check.ts`
+
+### Performance Benchmarks
+-   **API Response Time:** <200ms for all endpoints (P95)
+-   **Database Queries:** Use `prisma.$queryRaw` with proper indexing
+-   **Monitoring:** Cloudflare Analytics + Sentry for production errors
+-   **Optimization:** Use `select` clauses to fetch only needed fields
+
+---
+
+## 7. KEY FILES & PATTERNS
+
+### API Endpoints (Cloudflare Pages Functions)
+```
+functions/api/
+├── _shared/
+│   ├── auth.ts              # authenticateRequest(), handleCorsOptions
+│   ├── prisma-edge.ts       # createEdgePrismaClient()
+│   └── types.ts             # CloudflareEnv interface
+├── conditions/
+│   └── pearls.ts            # GET/POST pearl management
+├── drills/
+│   └── submit-review.ts     # POST review submission + FSRS update
+├── questions/
+│   ├── session.ts           # GET session questions with interleaving
+│   └── pool.ts              # GET/POST question pool management
+├── user/
+│   ├── analytics.ts         # GET user performance stats
+│   └── stability-trend.ts   # GET stability growth data
+└── geminiProxy.ts           # POST streaming AI proxy
 ```
 
-### Service Pattern
-```typescript
-// services/exampleService.ts
-export async function getExample(id: string): Promise<Example> {
-  const response = await fetch(`/api/example/${id}`);
-  if (!response.ok) throw new Error('Failed to fetch');
-  return response.json();
-}
+### Services (Business Logic)
+```
+services/
+├── conditionDataLoader.ts        # Database-first content loading
+├── mainSessionService.ts         # Client-side session orchestration
+├── questionService.ts            # Question fetching with pool management
+├── geminiService.ts              # AI question generation
+└── buzzwordService.ts            # Rapid recall buzzword management
 ```
 
-## Media Storage
+### Core Libraries
+```
+lib/
+├── fsrs.ts                       # FSRS v5 algorithm implementation
+└── services/
+    ├── userProgressService.ts    # UserProgress CRUD + history
+    ├── srsService.ts             # SRS item management (localStorage)
+    └── semanticValidationService.ts  # Answer validation
+```
 
-### Supabase Storage Buckets
-- `medical-images` - ECG, X-ray, dermatology photos
-- Folder structure: `{category}/{filename}`
-- Categories: ecg, derm, radiology, labs, diagrams
+### Database Schema
+```
+prisma/schema.prisma
+Key Models:
+- User                    # Clerk-synced users
+- MedicalContent          # Conditions with JSONB content
+- UserProgress            # FSRS state + reviewHistory[]
+- MediaAsset              # Supabase-stored images
+- MedicalContentMedia     # Junction: content ↔ media
+- QuestionAttempt         # Answer tracking
+- SRSItem                 # Legacy SRS (being phased out)
+```
 
-### MediaAsset Table Fields
-- `id` - UUID
-- `conditionId` - Links to Condition table
-- `imagingStudyId` - Links to ImagingStudy table
-- `type` - 'ecg' | 'derm' | 'radiology' | 'labs' | 'diagrams'
-- `originalUrl` - Full Supabase Storage URL
-- `thumbnailUrl` - Optimized thumbnail
-- `approvalStatus` - 'pending' | 'approved' | 'rejected'
-- `correctDiagnosis` - For drill questions
-- `distractors` - JSON array of wrong answers (need 3+)
-- `clinicalContext` - JSON with patient scenario
+---
 
-### Image Upload Flow
-1. Upload to Supabase Storage via `mediaStorageService.ts`
-2. Create MediaAsset record with `approvalStatus: 'pending'`
-3. Auto-assess quality via `imageQualityService.ts`
-4. High-quality images auto-approved, others need manual review
-5. Only approved images appear in drills
+## 8. CONTENT PIPELINE
 
-### Clinical Image Acquisition (ImageSorcery MCP)
-ImageSorcery is configured as an MCP server. Use its tools to search for clinical images.
+### Database Migration
+-   **Status:** `lib/conditionRegistry.ts` is **DEPRECATED and DELETED**
+-   **Migration:** `scripts/registry-to-db.ts` migrated all conditions to database
+-   **Verification:** All 2195+ conditions now in `MedicalContent` table
 
-**Task file:** `scripts/images/CLINE_IMAGE_TASK.md` - Contains 100+ conditions with search terms
-
-**Upload helper commands:**
+### Content Generation
 ```bash
-# Upload single image
-npm run images:upload "https://example.com/image.jpg" ecg "Atrial Fibrillation" "Atrial Flutter,MAT,Sinus Arrhythmia"
+# Generate new content
+npm run generate:lab              # Lab interpretation questions
+npm run generate:clinical         # Clinical scenario questions
+npm run generate:basic-science-links  # Pathophysiology links
 
-# Batch upload from JSON
-npm run images:batch images-to-upload.json
+# Media processing
+npm run media:integrate           # Link existing media to conditions
+npm run media:process-existing    # Batch process unlinked images
 
-# Test Supabase connection
-npm run images:test
+# Registry sync (legacy - now database-first)
+npm run sync:all                  # Full content sync
+
+# Orchestration
+npm run orchestrate:full          # Full content generation pipeline
 ```
 
-**Workflow:**
-1. Use ImageSorcery MCP to search for clinical images
-2. Download promising results to local temp or get direct URL
-3. Use upload-helper.ts to upload to Supabase and create MediaAsset records
-4. All images go to `approvalStatus: 'pending'` for admin review
-
-**Priority categories:** ECG > Dermatology > Chest X-ray > Fractures > CT Head > Physical Exam
-
-## Drill Modes Requiring Images
-
-### Photo Drill (`use-photo-drill.ts`)
-- Uses MediaAsset with `type` in ('ecg', 'derm', 'xray')
-- Requires: `correctDiagnosis`, `distractors[]`, `clinicalContext`
-- API: `/api/drills/media`
-
-### ECG Drill
-- Uses ECGPattern table with `exampleImageUrls[]`
-- Each pattern can have multiple example images
-- Images stored in Supabase under `ecg/` folder
-
-### Imaging Drill
-- Uses ImagingStudy table (no direct images yet)
-- NEEDS: Image examples added to ImagingStudy or linked via MediaAsset
-
-### Lab Drill
-- Uses LabCase table with lab panel images
-- Images stored under `labs/` folder
-
-## Key Files
-
-### Services
-- `services/mediaStorageService.ts` - Upload/retrieve from Supabase
-- `services/mediaApprovalService.ts` - Approval workflow
-- `services/imageQualityService.ts` - Quality assessment
-
-### APIs
-- `functions/api/drills/media.ts` - Get photo drill questions
-- `functions/api/admin/media/` - Media management endpoints
-
-### Components
-- `components/PhotoDrillSession.tsx` - Photo drill UI
-- `components/drill/ECGDrillSession.tsx` - ECG drill UI
-- `components/admin/MediaApprovalDashboard.tsx` - Admin UI (TODO)
-
-## Environment Variables
-```
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ... (server only)
-DATABASE_URL=postgresql://...
+### Automation
+```bash
+npm run automation:daily          # Daily content updates
+npm run automation:weekly         # Weekly analytics aggregation
 ```
 
-## Common Tasks
+---
 
-### Add Images to a Condition
-1. Upload image via admin UI or API
-2. Link to condition via `conditionId` in MediaAsset
-3. Set `correctDiagnosis` and `distractors` for drill use
-4. Image appears in relevant drill mode after approval
+## 9. ENVIRONMENT VARIABLES
 
-### Add ECG Pattern Images
-1. Upload to `ecg/` folder in Supabase Storage
-2. Update ECGPattern record with URL in `exampleImageUrls[]`
+### Required Variables
+```bash
+# Clerk Authentication
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_***
+CLERK_SECRET_KEY=sk_test_***
+CLERK_WEBHOOK_SECRET=whsec_***
 
-### Add Imaging Study Examples
-1. Upload to `radiology/` folder
-2. Create MediaAsset linked to imaging study
-3. Or add `exampleImageUrl` field to ImagingStudy table
+# Database (Supabase)
+DATABASE_URL=postgresql://...?pgbouncer=true&connection_limit=1
+DIRECT_DATABASE_URL=postgresql://...  # For migrations only
 
-## Code Style
-- Use TypeScript strict mode
-- Prefer async/await over .then()
-- Use Lucide icons
-- Clinical palette: slate text, blue accents
-- Mobile-first responsive design
-- All questions fixed at PANCE-level difficulty
+# AI Services
+GEMINI_API_KEY=AIza***
 
-## DO NOT
-- Import static JSON for content (database-only)
-- Use Express server.ts patterns (legacy)
-- Prefix secrets with VITE_ (except Clerk publishable key)
-- Create files without proper TypeScript types
-- Skip error handling in API endpoints
+# Cloudflare (set automatically in Pages)
+NODE_ENV=production
+```
+
+### Security Notes
+-   **NEVER** prefix secrets with `VITE_` (exposes to client bundle)
+-   **ONLY** `VITE_CLERK_PUBLISHABLE_KEY` should be prefixed with `VITE_`
+-   Store secrets in Cloudflare Pages → Settings → Environment Variables
+
+---
+
+## 10. COMMON PITFALLS & SOLUTIONS
+
+### Issue: "Condition not found in database"
+-   **Cause:** Content not yet migrated from registry
+-   **Fix:** Ensure `MedicalContent` table is populated via `scripts/registry-to-db.ts`
+
+### Issue: "Connection pool exhausted"
+-   **Cause:** Missing `prisma.$disconnect()` in API endpoint
+-   **Fix:** Always use `try/finally` pattern with disconnect in finally block
+
+### Issue: "FSRS intervals not persisting"
+-   **Cause:** `updateUserProgressWithHistory()` not called after review
+-   **Fix:** Add call in `functions/api/drills/submit-review.ts`
+
+### Issue: "Questions not interleaved"
+-   **Cause:** Using old `getQuestionBatch()` instead of `/api/questions/session`
+-   **Fix:** Use `mainSessionService.fetchSessionQuestions()` which calls the interleaved endpoint
+
+### Issue: "Skeleton doesn't match content layout"
+-   **Cause:** Skeleton structure differs from actual component
+-   **Fix:** Match skeleton dimensions to loaded content (use same height/width)

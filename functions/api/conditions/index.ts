@@ -2,8 +2,8 @@
 // GET endpoint to fetch condition list from database
 // PUBLIC endpoint - no authentication required for basic condition metadata
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions } from '../_shared/auth';
+import { ContentService } from '../../../lib/services/content/contentService';
 
 interface Env {
   DATABASE_URL?: string;
@@ -36,7 +36,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  const contentService = new ContentService(env.DATABASE_URL);
 
   try {
     // Parse query params for filtering
@@ -44,39 +44,16 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     const system = url.searchParams.get('system');
     const includeContent = url.searchParams.get('includeContent') === 'true';
 
-    // Build where clause
-    const where: any = {
-      status: 'published',
-    };
+    // Use ContentService to fetch conditions
+    // Note: If system is null, we might need a method to get ALL conditions
+    // Currently getConditionsBySystem requires a system string.
+    // If system is provided, we use it. If not, we might need a new method in ContentService.
+    // For now, let's implement getAllConditions in ContentService to match this requirement.
     
-    if (system) {
-      where.OR = [
-        { system: system.toUpperCase() },
-        { relatedSystems: { has: system.toUpperCase() } },
-      ];
-    }
-
-    // Query conditions
-    const conditions = await prisma.condition.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        system: true,
-        subcategory: true,
-        relatedSystems: true,
-        aliases: true,
-        displayName: true,
-        status: true,
-        content: includeContent,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: [
-        { system: 'asc' },
-        { subcategory: 'asc' },
-        { name: 'asc' },
-      ],
+    // Use ContentService to fetch conditions
+    const conditions = await contentService.getAllConditions({
+      system: system,
+      includeContent: includeContent,
     });
 
     // Group by system for frontend convenience
@@ -118,6 +95,7 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
     );
 
   } finally {
-    await prisma.$disconnect();
+    await contentService.disconnect();
   }
 }
+
