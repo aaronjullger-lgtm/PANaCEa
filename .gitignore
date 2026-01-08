@@ -43,3 +43,76 @@ lerna-debug.log*
 /playwright/.cache/
 /playwright/.auth/user.json
 playwright/*.json
+
+# MCP Server configurations and API keys
+**/cline_mcp_settings.json
+**/mcp-settings.json
+**/.mcp/
+**/MCP/
+**/Documents/Cline/MCP/
+**/Library/Application Support/Code/User/globalStorage/saoudrizwan.claude-dev/settings/
+
+# Additional API keys and secrets
+*.key
+*.pem
+*.p12
+*.pfx
+*secret*
+*token*
+*credential*
+*apikey*
+*api_key*
+*auth_token*
+*access_token*
+*refresh_token*
+*private_key*
+*secret_key*
+
+# Environment files with various extensions
+.env.*
+.envrc
+.env.production
+.env.staging
+.env.development
+.env.local
+.env.test
+.env.ci
+
+# Database credentials
+*.db
+*.sqlite
+*.sqlite3
+connection-strings.json
+db-credentials.json
+
+# Cloud service credentials
+gcp-credentials.json
+aws-credentials.json
+azure-credentials.json
+cloudflare-credentials.json
+vercel-credentials.json
+netlify-credentials.json
+
+# IDE and editor secrets
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Additional temporary files
+*.tmp
+*.temp
+.cache/
+.tmp/
+temp/
