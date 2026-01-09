@@ -42,12 +42,26 @@ async function auditFile(filePath: string): Promise<AuditResult> {
   const content = await fs.readFile(filePath, 'utf-8');
 
   const usesPrisma = /prisma\./.test(content);
-  const hasDisconnect = /prisma\.\$disconnect\(\)/.test(content);
-  const hasTryFinally = /finally\s*\{[\s\S]*prisma\.\$disconnect\(\)/.test(content);
+  
+  // Recognize both direct $disconnect() and safePrismaDisconnect wrapper
+  const hasDisconnect = /prisma\.\$disconnect\(\)/.test(content) || /safePrismaDisconnect\s*\(/.test(content);
+  
+  // Check if in finally block (either pattern)
+  const hasTryFinally = 
+    /finally\s*\{[\s\S]*prisma\.\$disconnect\(\)/.test(content) ||
+    /finally\s*\{[\s\S]*safePrismaDisconnect\s*\(/.test(content);
+
+  // Utility modules that export functions (not API endpoints) shouldn't be flagged
+  // They receive prisma as a parameter and caller handles cleanup
+  const isUtilityModule = /export\s+(async\s+)?function\s+\w+\s*\([^)]*prisma/.test(content) &&
+                          !/onRequest(Get|Post|Put|Delete|Patch)/.test(content);
 
   let status: AuditResult['status'] = 'PASS';
 
-  if (usesPrisma && !hasDisconnect) {
+  // Skip utility modules that receive prisma as a parameter
+  if (isUtilityModule) {
+    status = 'PASS'; // Caller is responsible for cleanup
+  } else if (usesPrisma && !hasDisconnect) {
     status = 'FAIL_MISSING_DISCONNECT';
   } else if (usesPrisma && hasDisconnect && !hasTryFinally) {
     status = 'FAIL_MISSING_TRY_FINALLY';
