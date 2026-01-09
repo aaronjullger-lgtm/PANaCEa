@@ -57,6 +57,9 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
     Sentry.init({
       dsn: finalConfig.dsn,
       environment: finalConfig.environment,
+      // Use our tunnel to bypass ad-blockers and CORS restrictions
+      // The tunnel proxies Sentry envelopes through our own API
+      tunnel: '/api/sentry-tunnel',
       integrations: [
         Sentry.browserTracingIntegration(),
         Sentry.replayIntegration({
