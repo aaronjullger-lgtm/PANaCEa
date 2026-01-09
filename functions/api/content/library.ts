@@ -103,11 +103,21 @@ export const onRequestGet = async (context: any) => {
       }
     );
   } catch (error) {
-    console.error('[library] Error fetching content:', error);
+    // Enhanced error logging for debugging
+    const errorDetails = {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      name: error instanceof Error ? error.name : 'UnknownError',
+      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join('\n') : undefined,
+      prismaCode: (error as any)?.code,
+      prismaClientVersion: (error as any)?.clientVersion,
+    };
+    console.error('[library] Error fetching content:', JSON.stringify(errorDetails, null, 2));
+    
     return new Response(
       JSON.stringify({
         error: 'Failed to fetch library content',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: errorDetails.message,
+        code: errorDetails.prismaCode,
       }),
       {
         status: 500,

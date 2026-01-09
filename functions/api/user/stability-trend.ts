@@ -168,12 +168,22 @@ export async function onRequestGet(context: any) {
       }
     );
   } catch (error) {
-    console.error('[StabilityTrendAPI] Error:', error);
+    // Enhanced error logging for debugging
+    const errorDetails = {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      name: error instanceof Error ? error.name : 'UnknownError',
+      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join('\n') : undefined,
+      prismaCode: (error as any)?.code,
+      prismaClientVersion: (error as any)?.clientVersion,
+    };
+    console.error('[StabilityTrendAPI] Error:', JSON.stringify(errorDetails, null, 2));
+    
     return new Response(
       JSON.stringify({ 
         error: 'Failed to fetch stability trend',
         data: [],
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: errorDetails.message,
+        code: errorDetails.prismaCode,
       }),
       {
         status: 500,
