@@ -312,11 +312,11 @@ const RecommendationCard: React.FC<{
           >
             <div className="p-4 space-y-3">
               <div>
-                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">📚 Research Evidence</p>
+                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Research Evidence</p>
                 <p className="text-sm text-[var(--color-text-secondary)]">{recommendation.evidence}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">✅ Action Step</p>
+                <p className="text-xs font-medium text-[var(--color-text-muted)] mb-1">Action Step</p>
                 <p className="text-sm text-[var(--color-text-primary)] font-medium">{recommendation.actionable}</p>
               </div>
             </div>
@@ -506,10 +506,11 @@ export const UserFriendlyStatsDisplay: React.FC = () => {
                     <span className="text-sm text-[var(--color-text-secondary)]">Answer Changes Help</span>
                     <span className="font-medium text-[var(--color-text-primary)]">{stats.answerChangeHelpfulness}%</span>
                   </div>
-                  <div className={`p-3 rounded-lg ${stats.shouldTrustFirstInstinct ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'} text-sm`}>
+                  <div className={`p-3 rounded-lg ${stats.shouldTrustFirstInstinct ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'} text-sm flex items-center gap-2`}>
+                    <Lightbulb className="w-4 h-4 flex-shrink-0" />
                     {stats.shouldTrustFirstInstinct 
-                      ? '💡 Trust your gut - your first answers are usually correct'
-                      : '🤔 Take your time - reconsidering helps your score'}
+                      ? 'Trust your gut - your first answers are usually correct'
+                      : 'Take your time - reconsidering helps your score'}
                   </div>
                 </div>
               </div>
