@@ -475,13 +475,13 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
               <ul className="space-y-2">
                 {patternAnalysis.overallInsights.slice(0, 3).map((insight, i) => (
                   <li key={`pattern-${i}`} className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400">
-                    <span className="mt-1">💡</span>
+                    <TrendingUp className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                     <span>{insight}</span>
                   </li>
                 ))}
                 {behavioralCalibration.insights.slice(0, 2).map((insight, i) => (
                   <li key={`behavior-${i}`} className="flex items-start gap-2 text-sm text-blue-600 dark:text-blue-400">
-                    <span className="mt-1">🧠</span>
+                    <TrendingUp className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
                     <span>{insight}</span>
                   </li>
                 ))}
