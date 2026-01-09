@@ -18,7 +18,8 @@
 
 // Our Sentry project configuration
 const SENTRY_HOST = 'o4510664011087872.ingest.us.sentry.io';
-const SENTRY_PROJECT_ID = '4510664018231296';
+// Updated 2026-01-09: New Sentry project ID for production DSN
+const SENTRY_PROJECT_ID = '4510664023212032';
 
 export async function onRequestPost(context: any) {
   const { request } = context;
