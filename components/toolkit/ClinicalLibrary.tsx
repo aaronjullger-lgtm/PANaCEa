@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Loader2, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { LibraryCard } from '../library/LibraryCard';
 import { ContextWidget } from '../library/ContextWidget';
 import { LibraryFilters } from '../library/LibraryFilters';
@@ -13,6 +14,8 @@ interface ClinicalLibraryProps {
 const shimmer = 'bg-gradient-to-r from-transparent via-white/10 to-transparent';
 
 export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondition }) => {
+  const { getToken, isSignedIn } = useAuth();
+  
   // State
   const [content, setContent] = useState<any[]>([]);
   const [selectedContent, setSelectedContent] = useState<any | null>(null);
@@ -31,6 +34,12 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
 
   // Fetch content from API
   const fetchContent = useCallback(async () => {
+    if (!isSignedIn) {
+      setError('Please sign in to access clinical content');
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
 
@@ -41,7 +50,13 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
       if (filters.search) params.append('search', filters.search);
       params.append('limit', '100');
 
-      const response = await fetch(`/api/content/library?${params.toString()}`);
+      const token = await getToken();
+      const response = await fetch(`/api/content/library?${params.toString()}`, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -71,7 +86,7 @@ export const ClinicalLibrary: React.FC<ClinicalLibraryProps> = ({ onSelectCondit
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, getToken, isSignedIn]);
 
   // Fetch on mount and when filters change
   useEffect(() => {
