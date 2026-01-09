@@ -5,7 +5,7 @@
  * Supports filtering by system, subcategory, and search
  */
 
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { handleCorsOptions, authenticateRequest } from '../_shared/auth';
 
 export const onRequestOptions = handleCorsOptions;
@@ -115,6 +115,6 @@ export const onRequestGet = async (context: any) => {
       }
     );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 };
