@@ -4,15 +4,13 @@
  * POST: Triggers batch generation for low systems
  */
 
-import { PrismaClient } from '@prisma/client';
+import { createEdgePrismaClient } from './_shared/prisma-edge';
+import { CloudflareContext, CloudflareEnv, jsonResponse, errorResponse } from './_shared/types';
 
-const prisma = new PrismaClient();
+export async function onRequestGet(context: CloudflareContext<CloudflareEnv>): Promise<Response> {
+  const { env } = context;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL!);
 
-interface Env {
-  DATABASE_URL: string;
-}
-
-export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
     const systems = ['CV', 'PULM', 'GI', 'NEURO', 'MSK', 'DERM', 'HEME', 'ENDO', 'HEENT', 'RENAL', 'REPRO', 'PSYCH', 'ID', 'GU'];
     
@@ -29,40 +27,32 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     const totalQuestions = stats.reduce((s, x) => s + x.total, 0);
     const totalUnused = stats.reduce((s, x) => s + x.unused, 0);
     
-    return new Response(JSON.stringify({
+    return jsonResponse({
       health: totalUnused < 100 ? 'critical' : totalUnused < 500 ? 'warning' : 'healthy',
       totalQuestions,
       totalUnused,
       systems: stats,
-    }), {
-      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Failed to get pool stats' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return errorResponse('Failed to get pool stats', 500);
+  } finally {
+    await prisma.$disconnect();
   }
-};
+}
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
+export async function onRequestPost(context: CloudflareContext<CloudflareEnv>): Promise<Response> {
   try {
-    const { system, count = 25 } = await context.request.json();
+    const { system, count = 25 } = await context.request.json() as { system?: string; count?: number };
     
     // In production, this would queue a background job
     // For now, just acknowledge the request
-    return new Response(JSON.stringify({
+    return jsonResponse({
       queued: true,
       system: system || 'all',
       count,
       message: 'Batch generation queued',
-    }), {
-      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Failed to queue generation' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return errorResponse('Failed to queue generation', 500);
   }
-};
+}

@@ -4,6 +4,7 @@ import { FSRSCard, FSRS, Rating, FSRSState, defaultParameters } from '../../lib/
 import { useAuth } from '@clerk/clerk-react';
 import { getApiEndpoint, API_ENDPOINTS } from '../../lib/utils/apiConfig';
 import { toast } from 'sonner';
+import FSRSInsightCard from './FSRSInsightCard';
 
 // Mock function to get user's FSRS data. In a real app, this would be a service call.
 async function fetchUserSrsData(userId: string, token: string): Promise<FSRSCard[]> {
@@ -127,6 +128,33 @@ const SrsDashboard = () => {
             <Bar dataKey="count" fill="var(--color-accent)" name="Number of Items" />
           </BarChart>
         </ResponsiveContainer>
+      </div>
+      
+      {/* FSRS Insight Card - Per-Topic Drilldown */}
+      <div className="mt-6">
+        <h3 className="text-lg font-bold mb-4">Topic Deep Dive</h3>
+        <FSRSInsightCard 
+          data={{
+            conceptName: "Cardiovascular",
+            conditionId: "cv-demo",
+            system: "Cardiovascular",
+            stability: analytics.avgStability || 7.0,
+            difficulty: 5.0,
+            retrievability: (analytics.retentionRate || 85) / 100,
+            state: 'review',
+            dueDate: new Date(Date.now() + Math.round(analytics.avgStability || 7) * 86400000),
+            reviewCount: 5,
+            lastReview: new Date(Date.now() - 3 * 86400000),
+            stabilityHistory: [
+              { date: new Date(Date.now() - 14 * 86400000).toLocaleDateString(), stability: (analytics.avgStability || 7) * 0.3 },
+              { date: new Date(Date.now() - 10 * 86400000).toLocaleDateString(), stability: (analytics.avgStability || 7) * 0.5 },
+              { date: new Date(Date.now() - 7 * 86400000).toLocaleDateString(), stability: (analytics.avgStability || 7) * 0.65 },
+              { date: new Date(Date.now() - 3 * 86400000).toLocaleDateString(), stability: (analytics.avgStability || 7) * 0.85 },
+              { date: new Date().toLocaleDateString(), stability: analytics.avgStability || 7 },
+            ],
+          }}
+          compact={false}
+        />
       </div>
     </div>
   );

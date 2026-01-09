@@ -13,7 +13,7 @@ import { useUserStats } from "./hooks/useUserStats";
 import { preloadData } from "./lib/utils/dataLoader";
 import { useAccessibleTransition } from "./hooks/useReducedMotion";
 import { flushPendingToLocalStorage } from "./lib/services/sync/offlineSync";
-import { GeminiErrorBoundary } from "./components/GeminiErrorBoundary";
+import { WithGeminiErrorBoundary } from "./components/hoc/withGeminiErrorBoundary";
 import type {
   Question,
   PerformanceRecord,
@@ -709,7 +709,7 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <GeminiErrorBoundary onRetry={() => setView("quiz")}>
+              <WithGeminiErrorBoundary viewName="quiz" onRetry={() => setView("quiz")}>
               <Suspense fallback={<Loader />}>
                 <QuizView
                   initialQueue={questionQueue}
@@ -733,151 +733,187 @@ const App: React.FC = () => {
                   updateQuestionNote={updateQuestionNote}
                 />
               </Suspense>
-              </GeminiErrorBoundary>
+              </WithGeminiErrorBoundary>
             </motion.div>
           )}
 
           {view === "photo_drill" && (
-            <Suspense fallback={<Loader />}>
-              <PhotoDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="photo_drill" onRetry={() => setView("photo_drill")}>
+              <Suspense fallback={<Loader />}>
+                <PhotoDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {/* ECG, Derm, and Imaging drills use the same PhotoDrillSession component with different filters */}
           {view === "ecg_drill" && (
-            <Suspense fallback={<Loader />}>
-              <ECGDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="ecg_drill" onRetry={() => setView("ecg_drill")}>
+              <Suspense fallback={<Loader />}>
+                <ECGDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "derm_drill" && (
-            <Suspense fallback={<Loader />}>
-              <DermDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="derm_drill" onRetry={() => setView("derm_drill")}>
+              <Suspense fallback={<Loader />}>
+                <DermDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "imaging_drill" && (
-            <Suspense fallback={<Loader />}>
-              <ImagingDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="imaging_drill" onRetry={() => setView("imaging_drill")}>
+              <Suspense fallback={<Loader />}>
+                <ImagingDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "rapid_recall" && (
-            <Suspense fallback={<Loader />}>
-              <RapidRecallDrill onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="rapid_recall" onRetry={() => setView("rapid_recall")}>
+              <Suspense fallback={<Loader />}>
+                <RapidRecallDrill onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "ddx_compare" && (
-            <Suspense fallback={<Loader />}>
-              <DDxCompareDrill onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="ddx_compare" onRetry={() => setView("ddx_compare")}>
+              <Suspense fallback={<Loader />}>
+                <DDxCompareDrill onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "mini_lab" && (
-            <Suspense fallback={<Loader />}>
-              <MiniLabDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="mini_lab" onRetry={() => setView("mini_lab")}>
+              <Suspense fallback={<Loader />}>
+                <MiniLabDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "pharmacology" && (
-            <Suspense fallback={<Loader />}>
-              <PharmacologyDrillSession 
-                onExit={() => setView("command_center")}
-                addPerformanceRecord={addPerformanceRecord}
-                addMissedQuestion={addMissedQuestion}
-                updateReviewQuestion={updateReviewQuestion}
-                updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
-                performanceData={performanceData}
-                fontSizeAdjustment={fontSizeAdjustment}
-                setFontSizeAdjustment={setFontSizeAdjustment}
-                flaggedQuestions={flaggedQuestions}
-                addFlaggedQuestion={addFlaggedQuestion}
-                removeFlaggedQuestion={removeFlaggedQuestion}
-                updateQuestionNote={updateQuestionNote}
-              />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="pharmacology" onRetry={() => setView("pharmacology")}>
+              <Suspense fallback={<Loader />}>
+                <PharmacologyDrillSession 
+                  onExit={() => setView("command_center")}
+                  addPerformanceRecord={addPerformanceRecord}
+                  addMissedQuestion={addMissedQuestion}
+                  updateReviewQuestion={updateReviewQuestion}
+                  updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                  performanceData={performanceData}
+                  fontSizeAdjustment={fontSizeAdjustment}
+                  setFontSizeAdjustment={setFontSizeAdjustment}
+                  flaggedQuestions={flaggedQuestions}
+                  addFlaggedQuestion={addFlaggedQuestion}
+                  removeFlaggedQuestion={removeFlaggedQuestion}
+                  updateQuestionNote={updateQuestionNote}
+                />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "first_line_treatment" && (
-            <Suspense fallback={<Loader />}>
-              <FirstLineDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="first_line_treatment" onRetry={() => setView("first_line_treatment")}>
+              <Suspense fallback={<Loader />}>
+                <FirstLineDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "condition_drill" && (
-            <Suspense fallback={<Loader />}>
-              <ConditionDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="condition_drill" onRetry={() => setView("condition_drill")}>
+              <Suspense fallback={<Loader />}>
+                <ConditionDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "system_drill" && (
-            <Suspense fallback={<Loader />}>
-              <SystemDrillSession 
-                onExit={() => setView("command_center")}
-                addPerformanceRecord={addPerformanceRecord}
-                addMissedQuestion={addMissedQuestion}
-                updateReviewQuestion={updateReviewQuestion}
-                updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
-                performanceData={performanceData}
-                fontSizeAdjustment={fontSizeAdjustment}
-                setFontSizeAdjustment={setFontSizeAdjustment}
-                flaggedQuestions={flaggedQuestions}
-                addFlaggedQuestion={addFlaggedQuestion}
-                removeFlaggedQuestion={removeFlaggedQuestion}
-                updateQuestionNote={updateQuestionNote}
-              />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="system_drill" onRetry={() => setView("system_drill")}>
+              <Suspense fallback={<Loader />}>
+                <SystemDrillSession 
+                  onExit={() => setView("command_center")}
+                  addPerformanceRecord={addPerformanceRecord}
+                  addMissedQuestion={addMissedQuestion}
+                  updateReviewQuestion={updateReviewQuestion}
+                  updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                  performanceData={performanceData}
+                  fontSizeAdjustment={fontSizeAdjustment}
+                  setFontSizeAdjustment={setFontSizeAdjustment}
+                  flaggedQuestions={flaggedQuestions}
+                  addFlaggedQuestion={addFlaggedQuestion}
+                  removeFlaggedQuestion={removeFlaggedQuestion}
+                  updateQuestionNote={updateQuestionNote}
+                />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "subcategory_drill" && (
-            <Suspense fallback={<Loader />}>
-              <SubcategoryDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="subcategory_drill" onRetry={() => setView("subcategory_drill")}>
+              <Suspense fallback={<Loader />}>
+                <SubcategoryDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "guideline_drill" && (
-            <Suspense fallback={<Loader />}>
-              <GuidelineDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="guideline_drill" onRetry={() => setView("guideline_drill")}>
+              <Suspense fallback={<Loader />}>
+                <GuidelineDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "ventilator_hero" && (
-            <Suspense fallback={<Loader />}>
-              <VentilatorDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="ventilator_hero" onRetry={() => setView("ventilator_hero")}>
+              <Suspense fallback={<Loader />}>
+                <VentilatorDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "physiology_drill" && (
-            <Suspense fallback={<Loader />}>
-              <PhysiologyDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="physiology_drill" onRetry={() => setView("physiology_drill")}>
+              <Suspense fallback={<Loader />}>
+                <PhysiologyDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "anatomy_review" && (
-            <Suspense fallback={<Loader />}>
-              <AnatomyDrillSession onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="anatomy_review" onRetry={() => setView("anatomy_review")}>
+              <Suspense fallback={<Loader />}>
+                <AnatomyDrillSession onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "fluid_electrolyte" && (
-            <Suspense fallback={<Loader />}>
-              <FluidElectrolyteMode onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="fluid_electrolyte" onRetry={() => setView("fluid_electrolyte")}>
+              <Suspense fallback={<Loader />}>
+                <FluidElectrolyteMode onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "antibiotic_mode" && (
-            <Suspense fallback={<Loader />}>
-              <AntibioticMode onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="antibiotic_mode" onRetry={() => setView("antibiotic_mode")}>
+              <Suspense fallback={<Loader />}>
+                <AntibioticMode onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "patient_encounter" && (
-            <GeminiErrorBoundary onRetry={() => setView("patient_encounter")}>
-            <Suspense fallback={<Loader />}>
-              <PatientEncounterMode onExit={() => setView("command_center")} />
-            </Suspense>
-            </GeminiErrorBoundary>
+            <WithGeminiErrorBoundary viewName="patient_encounter" onRetry={() => setView("patient_encounter")}>
+              <Suspense fallback={<Loader />}>
+                <PatientEncounterMode onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "integrations" && (
@@ -891,29 +927,35 @@ const App: React.FC = () => {
           )}
 
           {view === "panre_la" && (
-            <Suspense fallback={<Loader />}>
-              <PANRELASimulator onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="panre_la" onRetry={() => setView("panre_la")}>
+              <Suspense fallback={<Loader />}>
+                <PANRELASimulator onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "cram_mode" && (
-            <GeminiErrorBoundary onRetry={() => setView("cram_mode")}>
-            <Suspense fallback={<Loader />}>
-              <CramMode onExit={() => setView("command_center")} />
-            </Suspense>
-            </GeminiErrorBoundary>
+            <WithGeminiErrorBoundary viewName="cram_mode" onRetry={() => setView("cram_mode")}>
+              <Suspense fallback={<Loader />}>
+                <CramMode onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "code_blue_speed" && (
-            <Suspense fallback={<Loader />}>
-              <CodeBlueSpeedMode onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="code_blue_speed" onRetry={() => setView("code_blue_speed")}>
+              <Suspense fallback={<Loader />}>
+                <CodeBlueSpeedMode onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "grand_rounds" && (
-            <Suspense fallback={<Loader />}>
-              <GrandRoundsMode onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="grand_rounds" onRetry={() => setView("grand_rounds")}>
+              <Suspense fallback={<Loader />}>
+                <GrandRoundsMode onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "medical_wordle" && (

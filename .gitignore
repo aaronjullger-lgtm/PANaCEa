@@ -116,3 +116,10 @@ desktop.ini
 .cache/
 .tmp/
 temp/
+
+# Legacy static data files (database-first pattern - these should not be in repo)
+data/*.json
+data/conditionDrillData.ts
+data/highYieldConditions.ts
+data/labCasesData.ts
+data/photoManifest.ts

@@ -42,6 +42,7 @@ import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
 import type { PerformanceRecord } from '../../types';
 import { StreakVisualization } from './StreakVisualization';
 import { ScorePredictionCard } from './ScorePredictionCard';
+import { MetacognitiveReflection } from '../session/MetacognitiveReflection';
 
 interface SessionEndSummaryProps {
   isOpen?: boolean;  // For conditional rendering from parent
@@ -87,6 +88,7 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
   const { getToken } = useAuth();
   const syncAttempted = useRef(false);
   const [syncStatus, setSyncStatus] = React.useState<'pending' | 'synced' | 'failed' | null>(null);
+  const [showReflection, setShowReflection] = React.useState(false);
   
   // Use external summary if provided, otherwise calculate
   const summary = externalSummary || getSessionSummary();
@@ -537,6 +539,15 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
             </button>
           )}
           
+          {/* Metacognitive Reflection Button - Research shows 15-20% learning gains */}
+          <button
+            onClick={() => setShowReflection(true)}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-medium hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+          >
+            <BookOpen className="w-5 h-5" />
+            Reflect
+          </button>
+          
           {onStartNewSession && (
             <button
               onClick={() => {
@@ -563,6 +574,26 @@ export const SessionEndSummary: React.FC<SessionEndSummaryProps> = ({
           </button>
         </div>
       </motion.div>
+      
+      {/* Metacognitive Reflection Modal */}
+      {showReflection && (
+        <MetacognitiveReflection
+          sessionPerformance={{
+            totalQuestions: overallStats.total,
+            correctAnswers: overallStats.correct,
+            missedSystems: weakAreas.map(w => w.name),
+            missedConditions: performanceData.filter(p => !p.isCorrect).map(p => p.condition || '').filter(Boolean),
+            averageTimePerQuestion: overallStats.avgTimePerQuestionMs,
+            difficulty: 'medium', // PANCE-level is always medium
+          }}
+          onComplete={(reflection) => {
+            console.log('[SessionEndSummary] Reflection submitted:', reflection);
+            // TODO: Sync to database via API
+            setShowReflection(false);
+          }}
+          onSkip={() => setShowReflection(false)}
+        />
+      )}
     </motion.div>
   );
 };
