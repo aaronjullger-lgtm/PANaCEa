@@ -12,15 +12,15 @@ These endpoints access sensitive data and MUST have auth:
 
 | File | Line | Endpoint | Status |
 |------|------|----------|--------|
-| `admin/MediaApprovalDashboard.tsx` | 82 | `/api/admin/media/upload` | ⚠️ NEEDS REVIEW |
-| `admin/MediaApprovalDashboard.tsx` | 124 | `/api/admin/media/approve` | ⚠️ NEEDS REVIEW |
-| `admin/MediaApprovalDashboard.tsx` | 156 | `/api/admin/media/approve` | ⚠️ NEEDS REVIEW |
-| `admin/MediaApprovalDashboard.tsx` | 639 | `/api/admin/media/upload` | ⚠️ NEEDS REVIEW |
-| `admin/FlaggedQuestionsDashboard.tsx` | 100 | `/api/questions/flags` | ⚠️ NEEDS REVIEW |
-| `admin/FlaggedQuestionsDashboard.tsx` | 162 | `/api/questions/flag/.../resolve` | ⚠️ NEEDS REVIEW |
-| `admin/QuestionPerformanceDashboard.tsx` | 77 | `/api/questions/performance` | ⚠️ NEEDS REVIEW |
-| `admin/QuestionCurationPanel.tsx` | 47 | `/api/questions/pool?mode=curation` | ⚠️ NEEDS REVIEW |
-| `admin/QuestionCurationPanel.tsx` | 81 | `/api/questions/curate` | ⚠️ NEEDS REVIEW |
+| `admin/MediaApprovalDashboard.tsx` | 82 | `/api/admin/media/upload` | ✅ HAS AUTH |
+| `admin/MediaApprovalDashboard.tsx` | 124 | `/api/admin/media/approve` | ✅ HAS AUTH |
+| `admin/MediaApprovalDashboard.tsx` | 156 | `/api/admin/media/approve` | ✅ HAS AUTH |
+| `admin/MediaApprovalDashboard.tsx` | 639 | `/api/admin/media/upload` | ✅ HAS AUTH |
+| `admin/FlaggedQuestionsDashboard.tsx` | 100 | `/api/questions/flags` | ✅ HAS AUTH |
+| `admin/FlaggedQuestionsDashboard.tsx` | 162 | `/api/questions/flag/.../resolve` | ✅ HAS AUTH |
+| `admin/QuestionPerformanceDashboard.tsx` | 77 | `/api/questions/performance` | ✅ HAS AUTH |
+| `admin/QuestionCurationPanel.tsx` | 47 | `/api/questions/pool?mode=curation` | ✅ HAS AUTH |
+| `admin/QuestionCurationPanel.tsx` | 81 | `/api/questions/curate` | ✅ HAS AUTH |
 | `admin/ContentEditor.tsx` | 126 | `/api/admin/generate-draft` | ⚠️ NEEDS REVIEW |
 
 ---
