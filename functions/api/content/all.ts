@@ -50,8 +50,8 @@ export async function onRequestGet(context: any) {
         // Buzzwords are needed for search functionality
         buzzwords: true,
         
-        // Definition is a short text, useful for previews
-        definition: true,
+        // Overview is a short text, useful for previews (no 'definition' field exists)
+        overview: true,
         
         // High-yield flag for filtering
         pance_yield: true,
@@ -91,7 +91,7 @@ export async function onRequestGet(context: any) {
         buzzwords: item.buzzwords && (item.buzzwords as any[]).length > 0 ? item.buzzwords : undefined,
         
         // Preview text (kept short)
-        definition: item.definition,
+        overview: item.overview,
         classic_patient: item.classic_patient,
         
         // Yield info
