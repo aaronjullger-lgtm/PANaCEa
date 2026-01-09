@@ -152,4 +152,29 @@ export async function onRequestGet(context: any) {
 
     console.log(`Returning ${Object.keys(contentMap).length} conditions`);
 
-    return new Response(JSO
+    return new Response(JSON.stringify(contentMap), {
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Cache-Control': 'public, max-age=300' // Cache for 5 minutes
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching all content:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Failed to fetch content',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), { 
+      status: 500,
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+  } finally {
+    await safePrismaDisconnect(prisma);
+  }
+}
