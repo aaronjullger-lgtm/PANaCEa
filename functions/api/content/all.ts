@@ -1,4 +1,4 @@
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { handleCorsOptions } from '../_shared/auth';
 
 function normalizeTreatment(data: any): any {
@@ -56,44 +56,59 @@ export async function onRequestGet(context: any) {
   if (!env.DATABASE_URL) {
     return new Response(JSON.stringify({ error: 'Database not configured' }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    // Fetch in chunks to avoid 5MB limit (Prisma Accelerate limitation)
-    // Increased batch size to reduce number of round trips (connection overhead)
-    const BATCH_SIZE = 50; 
-    let allContent: any[] = [];
-    let skip = 0;
-    let hasMore = true;
+    // Single optimized query - select only essential fields to reduce payload
+    // Cloudflare Workers have 30s timeout, this should complete well under that
+    const allContent = await prisma.medicalContent.findMany({
+      where: { status: 'published' },
+      select: {
+        conditionId: true,
+        condition: true,
+        system: true,
+        subcategory: true,
+        overview: true,
+        etiology: true,
+        pathophysiology: true,
+        epidemiology: true,
+        symptoms: true,
+        physicalExam: true,
+        riskFactors: true,
+        complications: true,
+        differentialDiagnosis: true,
+        diagnostics: true,
+        treatment: true,
+        prognosis: true,
+        buzzwords: true,
+      },
+      orderBy: { conditionId: 'asc' },
+      take: 3000, // Safety limit to prevent OOM
+    });
 
-    while (hasMore) {
-      const batch = await prisma.medicalContent.findMany({
-        where: { status: 'published' },
-        skip,
-        take: BATCH_SIZE,
-        orderBy: { conditionId: 'asc' } // Ensure consistent ordering for pagination
+    // If no content found, return empty object (not an error)
+    if (!allContent || allContent.length === 0) {
+      console.warn('No published medical content found in database');
+      return new Response(JSON.stringify({}), {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        }
       });
-      
-      if (batch.length < BATCH_SIZE) {
-        hasMore = false;
-      }
-      
-      allContent = [...allContent, ...batch];
-      skip += BATCH_SIZE;
-
-      // Small delay to prevent overwhelming the connection
-      if (hasMore) {
-        await new Promise(resolve => setTimeout(resolve, 20));
-      }
     }
 
     // Transform to map format expected by frontend
     const contentMap: Record<string, any> = {};
-    allContent.forEach((item: any) => {
+    for (const item of allContent) {
       contentMap[item.conditionId] = {
         // Basic info
         conditionId: item.conditionId,
@@ -116,39 +131,70 @@ export async function onRequestGet(context: any) {
         epidemiology: item.epidemiology,
         
         // Arrays - ensure they're properly formatted
-        symptoms: item.symptoms && item.symptoms.length > 0 ? item.symptoms : undefined,
-        physicalExam: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined,
+        symptoms: item.symptoms && (item.symptoms as any[]).length > 0 ? item.symptoms : undefined,
+        physicalExam: item.physicalExam && (item.physicalExam as any[]).length > 0 ? item.physicalExam : undefined,
         
         // Alias for backward compatibility
-        examFindings: item.physicalExam && item.physicalExam.length > 0 ? item.physicalExam : undefined,
+        examFindings: item.physicalExam && (item.physicalExam as any[]).length > 0 ? item.physicalExam : undefined,
         
-        riskFactors: item.riskFactors && item.riskFactors.length > 0 ? item.riskFactors : undefined,
-        complications: item.complications && item.complications.length > 0 ? item.complications : undefined,
-        differentialDiagnosis: item.differentialDiagnosis && item.differentialDiagnosis.length > 0 ? item.differentialDiagnosis : undefined,
+        riskFactors: item.riskFactors && (item.riskFactors as any[]).length > 0 ? item.riskFactors : undefined,
+        complications: item.complications && (item.complications as any[]).length > 0 ? item.complications : undefined,
+        differentialDiagnosis: item.differentialDiagnosis && (item.differentialDiagnosis as any[]).length > 0 ? item.differentialDiagnosis : undefined,
         
         // JSON fields - normalize for smart rendering
         diagnostics: normalizeDiagnostics(item.diagnostics),
         treatment: normalizeTreatment(item.treatment),
         
         prognosis: item.prognosis,
-        buzzwords: item.buzzwords && item.buzzwords.length > 0 ? item.buzzwords : undefined
+        buzzwords: item.buzzwords && (item.buzzwords as any[]).length > 0 ? item.buzzwords : undefined
       };
-    });
+    }
+
+    console.log(`Returning ${Object.keys(contentMap).length} conditions`);
 
     return new Response(JSON.stringify(contentMap), {
       headers: { 
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
       }
     });
   } catch (error: any) {
     console.error('Error fetching all content:', error);
+    
+    // More specific error handling
+    if (error.message?.includes('timeout') || error.code === 'P2024') {
+      return new Response(JSON.stringify({ 
+        error: 'Database timeout',
+        message: 'The request took too long. Please try again.',
+      }), { 
+        status: 504,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+    
+    if (error.message?.includes('connection') || error.code === 'P2002') {
+      return new Response(JSON.stringify({ 
+        error: 'Database connection error',
+        message: 'Unable to connect to the database. Please try again later.',
+      }), { 
+        status: 503,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
       message: 'Failed to fetch medical content from database',
-      details: error.message 
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     }), { 
       status: 500,
       headers: { 
@@ -157,6 +203,6 @@ export async function onRequestGet(context: any) {
       }
     });
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }

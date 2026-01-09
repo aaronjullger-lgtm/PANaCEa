@@ -6,8 +6,7 @@
  */
 
 import { authenticateRequest, handleCorsOptions } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { getAllUserReviewHistory } from '../../../lib/services/userProgressService';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -19,6 +18,14 @@ export interface StabilityTrendDataPoint {
     conditionId: string;
     stability: number;
   }>;
+}
+
+interface ReviewSnapshot {
+  date: string;
+  stability: number;
+  difficulty: number;
+  rating: number;
+  state: number;
 }
 
 export async function onRequestGet(context: any) {
@@ -45,14 +52,50 @@ export async function onRequestGet(context: any) {
     });
 
     if (!user) {
-      return new Response(JSON.stringify({ error: 'User not found' }), {
-        status: 404,
+      return new Response(JSON.stringify({ 
+        data: [],
+        message: 'User not found. Please complete some questions first!' 
+      }), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       });
     }
 
-    // Fetch all review history
-    const reviewHistory = await getAllUserReviewHistory(prisma, user.id, days);
+    // Fetch all UserProgress records with review history - INLINED to avoid import issues
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+
+    const allProgress = await prisma.userProgress.findMany({
+      where: { userId: user.id },
+      select: {
+        conditionId: true,
+        reviewHistory: true,
+      },
+    });
+
+    // Extract and filter review history
+    const allSnapshots: Array<ReviewSnapshot & { conditionId: string }> = [];
+
+    for (const progress of allProgress) {
+      if (!Array.isArray(progress.reviewHistory)) continue;
+
+      const snapshots = (progress.reviewHistory as ReviewSnapshot[])
+        .filter((snapshot) => {
+          if (!snapshot.date) return false;
+          const snapshotDate = new Date(snapshot.date);
+          return snapshotDate >= cutoffDate;
+        })
+        .map((snapshot) => ({
+          ...snapshot,
+          conditionId: progress.conditionId,
+        }));
+
+      allSnapshots.push(...snapshots);
+    }
+
+    // Sort by date
+    const reviewHistory = allSnapshots.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
 
     if (reviewHistory.length === 0) {
       return new Response(
@@ -115,7 +158,7 @@ export async function onRequestGet(context: any) {
           endDate: trendData[trendData.length - 1]?.date,
           startStability: trendData[0]?.avgStability || 0,
           endStability: trendData[trendData.length - 1]?.avgStability || 0,
-          stabilityGrowth: trendData.length > 1 
+          stabilityGrowth: trendData.length > 1 && trendData[0].avgStability > 0
             ? Math.round(((trendData[trendData.length - 1].avgStability - trendData[0].avgStability) / trendData[0].avgStability) * 100)
             : 0,
         },
@@ -129,6 +172,7 @@ export async function onRequestGet(context: any) {
     return new Response(
       JSON.stringify({ 
         error: 'Failed to fetch stability trend',
+        data: [],
         details: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
@@ -137,6 +181,6 @@ export async function onRequestGet(context: any) {
       }
     );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }
