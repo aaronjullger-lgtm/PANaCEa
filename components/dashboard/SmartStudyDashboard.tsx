@@ -157,10 +157,10 @@ const CognitiveLoadGauge: React.FC<{ load: CognitiveLoadProfile }> = ({ load }) 
           : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
       }`}>
         {load.isOverloaded 
-          ? '⚠️ Take a break! Cognitive overload detected.'
+          ? 'Take a break! Cognitive overload detected.'
           : load.optimalBreakTime
-          ? '☕ Perfect time for a 5-10 minute break!'
-          : '✨ Optimal learning state - keep going!'}
+          ? 'Perfect time for a 5-10 minute break!'
+          : 'Optimal learning state - keep going!'}
       </div>
     </div>
   );
@@ -175,11 +175,11 @@ const ChronotypeCard: React.FC<{ chronotype: ChronotypeProfile }> = ({ chronotyp
 
   const getTypeLabel = () => {
     const labels: Record<ChronotypeProfile['type'], string> = {
-      'strong-morning': 'Early Bird 🌅',
+      'strong-morning': 'Early Bird',
       'moderate-morning': 'Morning Person',
       'intermediate': 'Flexible Schedule',
       'moderate-evening': 'Night Owl',
-      'strong-evening': 'True Night Owl 🌙',
+      'strong-evening': 'True Night Owl',
     };
     return labels[chronotype.type];
   };
@@ -272,11 +272,11 @@ const ExamCountdownCard: React.FC<{ plan: ExamCountdownPlan }> = ({ plan }) => {
 
   const getPhaseLabel = () => {
     const labels: Record<ExamCountdownPlan['phase'], string> = {
-      'initial-learning': '📚 Initial Learning',
-      'deepening': '🔬 Deepening',
-      'consolidation': '🏗️ Consolidation',
-      'review': '🔄 Review',
-      'tapering': '🧘 Tapering',
+      'initial-learning': 'Initial Learning',
+      'deepening': 'Deepening',
+      'consolidation': 'Consolidation',
+      'review': 'Review',
+      'tapering': 'Tapering',
     };
     return labels[plan.phase];
   };
