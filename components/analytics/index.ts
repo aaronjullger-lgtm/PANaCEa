@@ -13,17 +13,23 @@ export type { CalendarViewMode } from './StudyCalendar';
 export { default as IntelligenceHub } from './IntelligenceHub';
 export { default as LongitudinalProgressDashboard } from './LongitudinalProgressDashboard';
 export { default as DecisionTimeAnalysis } from './DecisionTimeAnalysis';
-// DayCellPopover - not exported due to missing named export
 export { default as AnalyticsDashboard } from './AnalyticsDashboard';
 export { default as DatabaseAnalyticsDashboard } from './DatabaseAnalyticsDashboard';
-export { default as LearningProfileDashboard } from './AdvancedLearningProfileDashboard';
-export { AdvancedLearningProfileDashboard } from './AdvancedLearningProfileDashboard';
+export { default as LearningProfileDashboard } from './LearningProfileDashboard';
+export { default as AdvancedLearningProfileDashboard } from './AdvancedLearningProfileDashboard';
 export { UserFriendlyStatsDisplay } from './UserFriendlyStatsDisplay';
+export { default as SrsDashboard } from './SrsDashboard';
 
-// Performance Panels
+// Performance & Insights
 export { default as ConditionPerformancePanel } from './ConditionPerformancePanel';
 export { default as PerformanceTrendChart } from './PerformanceTrendChart';
+export { default as FSRSInsightCard } from './FSRSInsightCard';
+export { default as LearningProgressCard } from './LearningProgressCard';
+export { default as PredictedScoreCard } from './PredictedScoreCard';
+export { default as SystemMasteryMap } from './SystemMasteryMap';
 
 // Export Tools
 export { default as WeaknessCheatsheetExporter } from './WeaknessCheatsheetExporter';
 export { default as SyllabusDecompiler } from './SyllabusDecompiler';
+
+// DayCellPopover - import directly from './DayCellPopover' if needed

@@ -24,10 +24,70 @@ import {
 } from "../lib/loadConditions";
 import { getApiEndpoint, API_ENDPOINTS } from "../lib/utils/apiConfig";
 import {
-  getRandomConditionForSystem as getRandomConditionForSystemDB,
-  findConditionByName,
-  type ConditionMetadata,
-} from "./conditionRegistryService";
+  getConditionsBySystem,
+  getAllConditions,
+} from "./conditionService";
+
+// ============================================================================
+// CONDITION REGISTRY HELPERS (Replacing deprecated conditionRegistryService)
+// ============================================================================
+
+/**
+ * Condition metadata type for internal use
+ */
+interface ConditionMetadata {
+  name: string;
+  system: string;
+  subcategory?: string;
+}
+
+/**
+ * Get a random condition for a specific organ system
+ */
+async function getRandomConditionForSystemDB(systemCode: string): Promise<ConditionMetadata | null> {
+  try {
+    const conditions = await getConditionsBySystem(systemCode);
+    if (!conditions || conditions.length === 0) {
+      return null;
+    }
+    const randomIndex = Math.floor(Math.random() * conditions.length);
+    const condition = conditions[randomIndex];
+    return {
+      name: condition.condition,
+      system: condition.system,
+      subcategory: condition.subcategory,
+    };
+  } catch (error) {
+    console.error(`Error getting random condition for ${systemCode}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Find a condition by name across all systems
+ */
+async function findConditionByName(conditionName: string): Promise<ConditionMetadata | null> {
+  try {
+    const allConditions = await getAllConditions();
+    const normalizedSearch = conditionName.toLowerCase().trim();
+    
+    const match = allConditions.find(c => 
+      c.condition.toLowerCase().trim() === normalizedSearch ||
+      (c.aliases && c.aliases.some((a: string) => a.toLowerCase().trim() === normalizedSearch))
+    );
+    
+    if (!match) return null;
+    
+    return {
+      name: match.condition,
+      system: match.system,
+      subcategory: match.subcategory,
+    };
+  } catch (error) {
+    console.error(`Error finding condition by name "${conditionName}":`, error);
+    return null;
+  }
+}
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -418,8 +478,9 @@ export async function fetchNewQuestion(
   // Get user context for career-aware prompting
   let userContextInstruction = "";
   try {
-    const { getUserContext } = await import('./userContextService');
-    const userContext = getUserContext();
+    // Dynamic import with type assertion to handle TS inference issues
+    const userContextModule = await import('./userContextService') as { getUserContext: () => { isPANREUser: boolean } };
+    const userContext = userContextModule.getUserContext();
     
     if (userContext.isPANREUser) {
       userContextInstruction = `

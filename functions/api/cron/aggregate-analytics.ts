@@ -1,0 +1,126 @@
+/**
+ * Daily Analytics Aggregation Cron Endpoint
+ * Compiles daily user statistics for performance tracking
+ * 
+ * Called by: Cloudflare Scheduled Handler at 2 AM UTC
+ */
+
+import { createEdgePrismaClient } from '../_shared/prisma-edge';
+
+export async function onRequestPost(context: any) {
+  const { request, env } = context;
+  
+  // Verify cron secret
+  const auth = request.headers.get('Authorization');
+  if (auth !== `Bearer ${env.CRON_SECRET}`) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+  
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+  
+  try {
+    // Get start of today (UTC)
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Get all users with activity in the last 24 hours
+    const activeUsers = await prisma.questionAttempt.groupBy({
+      by: ['userId'],
+      where: {
+        createdAt: { gte: yesterday }
+      },
+      _count: { id: true }
+    });
+    
+    let processedCount = 0;
+    
+    for (const userActivity of activeUsers) {
+      const attempts = await prisma.questionAttempt.findMany({
+        where: {
+          userId: userActivity.userId,
+          createdAt: { gte: yesterday, lt: today }
+        },
+        select: {
+          isCorrect: true,
+          timeSpentMs: true,
+          system: true
+        }
+      });
+      
+      const totalAttempts = attempts.length;
+      const correctAttempts = attempts.filter(a => a.isCorrect).length;
+      const avgTime = attempts.reduce((sum, a) => sum + (a.timeSpentMs || 0), 0) / totalAttempts;
+      
+      // Systems studied
+      const systems = [...new Set(attempts.map(a => a.system).filter(Boolean))];
+      
+      // Upsert daily analytics
+      await prisma.sessionAnalytics.upsert({
+        where: {
+          userId_sessionDate: {
+            userId: userActivity.userId,
+            sessionDate: yesterday
+          }
+        },
+        update: {
+          questionsAnswered: totalAttempts,
+          correctAnswers: correctAttempts,
+          accuracy: totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0,
+          avgResponseTimeMs: Math.round(avgTime),
+          systemsStudied: systems,
+          updatedAt: new Date()
+        },
+        create: {
+          userId: userActivity.userId,
+          sessionDate: yesterday,
+          questionsAnswered: totalAttempts,
+          correctAnswers: correctAttempts,
+          accuracy: totalAttempts > 0 ? (correctAttempts / totalAttempts) * 100 : 0,
+          avgResponseTimeMs: Math.round(avgTime),
+          systemsStudied: systems
+        }
+      });
+      
+      processedCount++;
+    }
+    
+    // Log to audit
+    await prisma.auditLog.create({
+      data: {
+        action: 'DAILY_ANALYTICS_AGGREGATION',
+        entityType: 'SYSTEM',
+        details: {
+          date: yesterday.toISOString(),
+          usersProcessed: processedCount,
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
+    
+    return new Response(JSON.stringify({ 
+      success: true, 
+      usersProcessed: processedCount,
+      date: yesterday.toISOString()
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    console.error('[Cron] Analytics aggregation failed:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Aggregation failed', 
+      message: error instanceof Error ? error.message : 'Unknown error' 
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
