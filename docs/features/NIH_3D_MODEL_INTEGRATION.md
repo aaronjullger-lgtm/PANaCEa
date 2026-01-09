@@ -213,4 +213,10 @@ model AnatomyModel {
 - Check browser console for loading errors
 
 ### Poor Performance
-- Reduce polygon count i
+- Reduce polygon count in the source model
+- Use compressed GLB format (Draco compression)
+- Enable progressive loading
+
+### Citation Not Displaying
+- Ensure `showCitation` prop is true
+- Verify citation data is complete in model metadata
