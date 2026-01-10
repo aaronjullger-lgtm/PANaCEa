@@ -15,6 +15,7 @@ import {
 import { useGuidelineDrill } from '@/hooks/game/use-guideline-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
+import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { useAuth } from '@clerk/clerk-react';
 
 interface GuidelineDrillSessionProps {
@@ -556,10 +557,12 @@ const GuidelineDrillSession: React.FC<GuidelineDrillSessionProps> = ({ onExit })
 
 
 
-  // Fallback
+  // Fallback - Use skeleton loader for zero CLS
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
-      <p className="text-[var(--color-text-secondary)]">Loading...</p>
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
+      <div className="max-w-3xl w-full">
+        <QuestionSkeleton />
+      </div>
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { usePharmDrill, type PharmCategory } from '@/hooks/game/use-pharm-drill'
 import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
+import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 
 interface PharmDrillSessionProps {
   onExit?: () => void;
@@ -283,14 +284,11 @@ const PharmDrillSession: React.FC<PharmDrillSessionProps> = ({ onExit }) => {
     );
   }
 
-  // Fallback
+  // Fallback - Use skeleton loader for zero CLS
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-slate-400 mb-4">Loading...</p>
-        <button onClick={handleExit} className="text-sky-400 hover:text-sky-300">
-          Exit
-        </button>
+    <div className="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+      <div className="max-w-3xl w-full">
+        <QuestionSkeleton />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
+import { validateRequest, DrillSubmitReviewSchema } from '../_shared/schemas';
 import { calculateParTime } from '../../../lib/utils/questionComplexity';
 import { updateReviewOutcome } from '../../../lib/services/srsService';
 import { FSRS, Rating } from '../../../lib/fsrs';
@@ -7,8 +8,7 @@ import { updateUserProgressWithHistory } from '../../../lib/services/userProgres
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestPost = async (context) => {
-
+export const onRequestPost = async (context: any) => {
   const { request, env } = context;
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
@@ -23,6 +23,14 @@ export const onRequestPost = async (context) => {
         },
       });
     }
+
+    // Validate request body with Zod schema
+    const validation = await validateRequest(request, DrillSubmitReviewSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
+    }
+
+    const { questionId, selectedAnswer, timeSpentMs } = validation.data;
 
     if (!env.DATABASE_URL) {
       return new Response(JSON.stringify({ error: 'Database not configured' }), {
@@ -56,21 +64,6 @@ export const onRequestPost = async (context) => {
     }
 
     const userId = user.id;
-    const body = await request.json();
-    const { questionId, selectedAnswer, timeSpentMs } = body || {};
-
-    if (!questionId || typeof selectedAnswer === 'undefined') {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: questionId, selectedAnswer' }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
 
     const question = await prisma.preGeneratedQuestion.findUnique({ where: { id: questionId } });
 

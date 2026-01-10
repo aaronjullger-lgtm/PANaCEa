@@ -327,7 +327,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
                 <Brain className="w-4 h-4" /> Memory Stability Growth (Last 30 Days)
               </div>
               {stabilityLoading && (
-                <div className="text-xs text-[var(--color-text-muted)]">Loading...</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-xs text-[var(--color-text-muted)]">Fetching data...</span>
+                </div>
               )}
             </div>
             {stabilityError ? (

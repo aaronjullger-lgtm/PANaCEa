@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePhotoDrill, type CategoryType, type ClinicalContext } from '@/hooks/game/use-photo-drill';
 import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
+import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { Flame, X, ArrowRight, RotateCcw, FileImage, Scan, Activity as ActivityIcon, Shuffle, User, Heart, ClipboardList, Eye, EyeOff, Stethoscope } from 'lucide-react';
 
 export type PhotoDrillFilterType = 'ecg' | 'derm' | 'imaging' | 'all';
@@ -559,17 +560,11 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
     );
   }
 
-  // Fallback for legacy 'active' status (backwards compatibility)
+  // Fallback - Use skeleton loader for zero CLS
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-[var(--color-text-secondary)] mb-4">Loading...</p>
-        <button
-          onClick={handleExit}
-          className="text-sky-400 hover:text-sky-300"
-        >
-          Exit
-        </button>
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
+      <div className="max-w-3xl w-full">
+        <QuestionSkeleton />
       </div>
     </div>
   );

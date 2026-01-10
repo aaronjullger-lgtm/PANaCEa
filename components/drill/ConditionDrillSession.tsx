@@ -302,16 +302,22 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     );
   }
 
-  // Fallback
+  // Fallback - Use skeleton loader for zero CLS
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-slate-400 mb-4">Loading...</p>
-        <button onClick={handleExit} className="text-sky-400 hover:text-sky-300">
-          Exit
-        </button>
+    <MiniDrillLayout
+      title="Condition Drill"
+      score={0}
+      totalAttempts={0}
+      streak={0}
+      isFeedback={false}
+      isCorrect={null}
+      onExit={handleExit}
+      onReset={reset}
+    >
+      <div className="max-w-4xl mx-auto py-4 sm:py-8">
+        <QuestionSkeleton />
       </div>
-    </div>
+    </MiniDrillLayout>
   );
 };
 

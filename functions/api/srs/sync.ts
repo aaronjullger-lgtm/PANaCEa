@@ -5,22 +5,7 @@
 
 import { authenticateRequest, createErrorResponse, type Env } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
-
-interface SRSItemData {
-  questionId: string;
-  interval: number;
-  repetition: number;
-  easiness: number;
-  dueDate: string;
-  lastReviewed: string;
-  quality: number;
-  difficulty: number;
-  stabilityScore: number;
-  fsrsStability?: number;
-  fsrsDifficulty?: number;
-  fsrsState?: number;
-  fsrsLastReview?: string;
-}
+import { validateRequest, SRSSyncSchema, type SRSItemInput } from '../_shared/schemas';
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -33,6 +18,12 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
   if (!env.DATABASE_URL) {
     return createErrorResponse('Database not configured', 500);
+  }
+
+  // Validate request body with Zod schema
+  const validation = await validateRequest(request, SRSSyncSchema);
+  if (!validation.success) {
+    return (validation as { success: false; response: Response }).response;
   }
 
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
@@ -49,11 +40,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }
 
     const userId = user.id;
-    const body = await request.json() as { items: SRSItemData[] };
-    
-    if (!body.items || !Array.isArray(body.items)) {
-      return createErrorResponse('Invalid request body', 400);
-    }
+    const { items } = validation.data;
 
     const now = new Date();
 
@@ -61,7 +48,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     let skipped = 0;
 
     // Sync each item
-    for (const item of body.items) {
+    for (const item of items) {
       try {
         // Check if item already exists
         const existing = await prisma.sRSItem.findFirst({
@@ -132,7 +119,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         success: true,
         synced,
         skipped,
-        total: body.items.length,
+        total: items.length,
         timestamp: now.toISOString(),
       }),
       {

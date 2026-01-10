@@ -4,6 +4,7 @@ import {
   X, RotateCcw, Trophy, ChevronLeft, ChevronRight, CheckCircle, XCircle,
   GitCompare, Target, Brain, ArrowRight, Sparkles, Zap
 } from 'lucide-react';
+import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 
 // ============================================================================
 // Types
@@ -414,10 +415,13 @@ const DrillSession: React.FC<DrillSessionProps> = ({ pair, onExit, onBack }) => 
     );
   }
 
+  // Loading state - Use skeleton loader for zero CLS
   if (shuffledCards.length === 0) {
     return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
-        <p className="text-[var(--color-text-muted)]">Loading...</p>
+      <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
+        <div className="max-w-3xl w-full">
+          <QuestionSkeleton />
+        </div>
       </div>
     );
   }

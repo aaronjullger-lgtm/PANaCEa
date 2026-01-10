@@ -917,13 +917,15 @@ const App: React.FC = () => {
           )}
 
           {view === "integrations" && (
-            <Suspense fallback={<Loader />}>
-              <IntegrationsHub
-                performanceData={performanceData}
-                missedQuestions={missedQuestions}
-                onBack={() => setView("command_center")}
-              />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="integrations" onRetry={() => setView("integrations")}>
+              <Suspense fallback={<Loader />}>
+                <IntegrationsHub
+                  performanceData={performanceData}
+                  missedQuestions={missedQuestions}
+                  onBack={() => setView("command_center")}
+                />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "panre_la" && (
@@ -959,29 +961,35 @@ const App: React.FC = () => {
           )}
 
           {view === "medical_wordle" && (
-            <Suspense fallback={<Loader />}>
-              <MedicalWordleMode onExit={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="medical_wordle" onRetry={() => setView("medical_wordle")}>
+              <Suspense fallback={<Loader />}>
+                <MedicalWordleMode onExit={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "social_dashboard" && (
-            <Suspense fallback={<Loader />}>
-              <div className="relative">
-                <button
-                  onClick={() => setView("command_center")}
-                  className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-slate-600 dark:text-slate-400"><path d="m15 18-6-6 6-6"/></svg>
-                </button>
-                <StudyGroupDashboard />
-              </div>
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="social_dashboard" onRetry={() => setView("social_dashboard")}>
+              <Suspense fallback={<Loader />}>
+                <div className="relative">
+                  <button
+                    onClick={() => setView("command_center")}
+                    className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-slate-600 dark:text-slate-400"><path d="m15 18-6-6 6-6"/></svg>
+                  </button>
+                  <StudyGroupDashboard />
+                </div>
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "admin_media" && (
-            <Suspense fallback={<Loader />}>
-              <MediaApproval onClose={() => setView("command_center")} />
-            </Suspense>
+            <WithGeminiErrorBoundary viewName="admin_media" onRetry={() => setView("admin_media")}>
+              <Suspense fallback={<Loader />}>
+                <MediaApproval onClose={() => setView("command_center")} />
+              </Suspense>
+            </WithGeminiErrorBoundary>
           )}
 
           {view === "toolkit" && (
@@ -993,12 +1001,14 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <Suspense fallback={<Loader />}>
-                <ToolkitHub 
-                  onClose={() => setView("command_center")}
-                  onNavigateToItem={handleNavigateToDrillMode}
-                />
-              </Suspense>
+              <WithGeminiErrorBoundary viewName="toolkit" onRetry={() => setView("toolkit")}>
+                <Suspense fallback={<Loader />}>
+                  <ToolkitHub 
+                    onClose={() => setView("command_center")}
+                    onNavigateToItem={handleNavigateToDrillMode}
+                  />
+                </Suspense>
+              </WithGeminiErrorBoundary>
             </motion.div>
           )}
 
@@ -1011,9 +1021,11 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <Suspense fallback={<Loader />}>
-                <GapAnalysisDashboard />
-              </Suspense>
+              <WithGeminiErrorBoundary viewName="gap_analysis" onRetry={() => setView("gap_analysis")}>
+                <Suspense fallback={<Loader />}>
+                  <GapAnalysisDashboard />
+                </Suspense>
+              </WithGeminiErrorBoundary>
             </motion.div>
           )}
 
@@ -1026,16 +1038,18 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <Suspense fallback={<Loader />}>
-                <TrainingMenu 
-                  onClose={() => setView("command_center")}
-                  onNavigateToMode={(route, mode) => handleNavigateToDrillMode(mode.id)}
-                  onStartSession={handleTrainingMenuStart}
-                  dueQuestionsCount={dueQuestionsCount}
-                  flaggedQuestionsCount={flaggedQuestions.length}
-                  growthAreasCount={growthAreas.length}
-                />
-              </Suspense>
+              <WithGeminiErrorBoundary viewName="training_menu" onRetry={() => setView("training_menu")}>
+                <Suspense fallback={<Loader />}>
+                  <TrainingMenu 
+                    onClose={() => setView("command_center")}
+                    onNavigateToMode={(route, mode) => handleNavigateToDrillMode(mode.id)}
+                    onStartSession={handleTrainingMenuStart}
+                    dueQuestionsCount={dueQuestionsCount}
+                    flaggedQuestionsCount={flaggedQuestions.length}
+                    growthAreasCount={growthAreas.length}
+                  />
+                </Suspense>
+              </WithGeminiErrorBoundary>
             </motion.div>
           )}
 
@@ -1048,16 +1062,18 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <Suspense fallback={<Loader />}>
-                <SimulationPage 
-                  onStartSession={handleConfirmSession}
-                  onBack={() => setView("command_center")}
-                  performanceData={heatmapPerformance}
-                  flaggedQuestions={flaggedQuestions}
-                  growthAreas={growthAreas}
-                  examLabel={examLabel}
-                />
-              </Suspense>
+              <WithGeminiErrorBoundary viewName="simulation_page" onRetry={() => setView("simulation_page")}>
+                <Suspense fallback={<Loader />}>
+                  <SimulationPage 
+                    onStartSession={handleConfirmSession}
+                    onBack={() => setView("command_center")}
+                    performanceData={heatmapPerformance}
+                    flaggedQuestions={flaggedQuestions}
+                    growthAreas={growthAreas}
+                    examLabel={examLabel}
+                  />
+                </Suspense>
+              </WithGeminiErrorBoundary>
             </motion.div>
           )}
 
@@ -1070,23 +1086,25 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <Suspense fallback={<Loader />}>
-                <CommandCenterPage 
-                  performanceData={heatmapPerformance}
-                  missedQuestions={missedQuestions}
-                  flaggedQuestions={flaggedQuestions}
-                  growthAreas={growthAreas}
-                  dueCount={dueQuestionsCount}
-                  examLabel={examLabel}
-                  onStartSession={handleConfirmSession}
-                  onNavigateToDrillMode={handleNavigateToDrillMode}
-                  onNavigateToToolkit={() => setView("toolkit")}
-                  onNavigateToGapAnalysis={() => setView("gap_analysis")}
-                  onNavigateToIntegrations={() => setView("integrations")}
-                  onNavigateToReference={() => setView("reference_library")}
-                  onBack={() => setView("command_center")}
-                />
-              </Suspense>
+              <WithGeminiErrorBoundary viewName="command_center_page" onRetry={() => setView("command_center_page")}>
+                <Suspense fallback={<Loader />}>
+                  <CommandCenterPage 
+                    performanceData={heatmapPerformance}
+                    missedQuestions={missedQuestions}
+                    flaggedQuestions={flaggedQuestions}
+                    growthAreas={growthAreas}
+                    dueCount={dueQuestionsCount}
+                    examLabel={examLabel}
+                    onStartSession={handleConfirmSession}
+                    onNavigateToDrillMode={handleNavigateToDrillMode}
+                    onNavigateToToolkit={() => setView("toolkit")}
+                    onNavigateToGapAnalysis={() => setView("gap_analysis")}
+                    onNavigateToIntegrations={() => setView("integrations")}
+                    onNavigateToReference={() => setView("reference_library")}
+                    onBack={() => setView("command_center")}
+                  />
+                </Suspense>
+              </WithGeminiErrorBoundary>
             </motion.div>
           )}
 
@@ -1099,11 +1117,13 @@ const App: React.FC = () => {
               exit="exit"
               transition={pageTransition}
             >
-              <Suspense fallback={<Loader />}>
-                <ClinicalReferenceLibrary 
-                  onExit={() => setView("command_center")}
-                />
-              </Suspense>
+              <WithGeminiErrorBoundary viewName="reference_library" onRetry={() => setView("reference_library")}>
+                <Suspense fallback={<Loader />}>
+                  <ClinicalReferenceLibrary 
+                    onExit={() => setView("command_center")}
+                  />
+                </Suspense>
+              </WithGeminiErrorBoundary>
             </motion.div>
           )}
         </AnimatePresence>

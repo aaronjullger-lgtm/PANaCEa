@@ -105,7 +105,12 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:smoke": "playwright test e2e/all-modes",
-    "test:auth": "playwright test e2e/auth.setup.ts --headed"
+    "test:auth": "playwright test e2e/auth.setup.ts --headed",
+    "audit:prisma": "tsx scripts/audit-prisma-disconnect.ts",
+    "audit:zod": "tsx scripts/audit-zod-validation.ts",
+    "audit:loading": "tsx scripts/audit-loading-states.ts",
+    "audit:services": "tsx scripts/audit-service-consolidation.ts",
+    "audit:all": "npm run audit:prisma && npm run audit:zod && npm run audit:loading && npm run audit:services"
   },
   "dependencies": {
     "@clerk/backend": "^2.25.0",

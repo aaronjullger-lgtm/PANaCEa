@@ -5,11 +5,8 @@
 
 import { authenticateRequest, handleCorsOptions } from "../_shared/auth";
 import { createEdgePrismaClient } from "../_shared/prisma-edge";
+import { validateRequest, CompleteExamSchema } from "../_shared/schemas";
 import { ExamService } from "../../../services/examService";
-
-interface CompleteExamRequest {
-  attemptId: string;
-}
 
 export async function onRequestOptions(context: any) {
   return handleCorsOptions();
@@ -27,11 +24,17 @@ export async function onRequestPost(context: any) {
     });
   }
 
+  // Validate request body with Zod schema
+  const validation = await validateRequest(request, CompleteExamSchema);
+  if (!validation.success) {
+    return (validation as { success: false; response: Response }).response;
+  }
+
+  const { attemptId } = validation.data;
+
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const body: CompleteExamRequest = await request.json();
-    const { attemptId } = body;
 
     // Get the attempt
     const attempt = await prisma.examAttempt.findFirst({

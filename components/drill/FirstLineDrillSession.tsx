@@ -4,6 +4,7 @@ import { X, Heart, Wind, Bug, Activity as ActivityIcon, Utensils, Brain, Bone, S
 import { useFirstLineDrill, type FirstLineCategory } from '@/hooks/game/use-first-line-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption, CategoryCard } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
+import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 
 interface FirstLineDrillSessionProps {
   onExit?: () => void;
@@ -238,14 +239,11 @@ const FirstLineDrillSession: React.FC<FirstLineDrillSessionProps> = ({ onExit })
     );
   }
 
-  // Fallback
+  // Fallback - Use skeleton loader for zero CLS
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-slate-100 flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-slate-400 mb-4">Loading...</p>
-        <button onClick={handleExit} className="text-sky-400 hover:text-sky-300">
-          Exit
-        </button>
+    <div className="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+      <div className="max-w-3xl w-full">
+        <QuestionSkeleton />
       </div>
     </div>
   );

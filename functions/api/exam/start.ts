@@ -5,12 +5,8 @@
 
 import { authenticateRequest, handleCorsOptions } from "../_shared/auth";
 import { createEdgePrismaClient } from "../_shared/prisma-edge";
+import { validateRequest, StartExamSchema } from "../_shared/schemas";
 import { ExamService } from "../../../services/examService";
-
-interface StartExamRequest {
-  configId: string; // "pance-2024" or "panre-la-2024"
-  resumeAttemptId?: string; // Resume existing attempt
-}
 
 export async function onRequestOptions(context: any) {
   return handleCorsOptions();
@@ -28,11 +24,17 @@ export async function onRequestPost(context: any) {
     });
   }
 
+  // Validate request body with Zod schema
+  const validation = await validateRequest(request, StartExamSchema);
+  if (!validation.success) {
+    return (validation as { success: false; response: Response }).response;
+  }
+
+  const { configId, resumeAttemptId } = validation.data;
+
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const body: StartExamRequest = await request.json();
-    const { configId, resumeAttemptId } = body;
 
     // Check for resume
     if (resumeAttemptId) {

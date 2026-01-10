@@ -854,7 +854,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       <div className="bg-[var(--color-bg-secondary)] rounded-lg p-4 border border-[var(--color-border)]">
                         <p className="text-xs font-semibold text-[var(--color-accent)] mb-1">CHIEF COMPLAINT</p>
                         <p className="text-lg font-semibold text-[var(--color-text-primary)] whitespace-pre-wrap">
-                          {currentCase?.chiefComplaint ? getTranslatedText(currentCase.chiefComplaint) : 'Loading...'}
+                          {currentCase?.chiefComplaint ? getTranslatedText(currentCase.chiefComplaint) : <span className="inline-block w-32 h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></span>}
                         </p>
                       </div>
 

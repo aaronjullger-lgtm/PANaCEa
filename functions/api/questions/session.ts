@@ -2,6 +2,7 @@
 import { authenticateRequest, handleCorsOptions, type Env } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { SessionService, type SessionQuestionRequest } from '../../../lib/services/session/sessionService';
+import { validateRequest, SessionRequestSchema } from '../_shared/schemas';
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -72,6 +73,12 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
  * Fetch questions with more complex filtering
  */
 export async function onRequestPost(context: { request: Request; env: Env }) {
+  // Validate request body with Zod schema first
+  const validation = await validateRequest(context.request, SessionRequestSchema);
+  if (!validation.success) {
+    return (validation as { success: false; response: Response }).response;
+  }
+
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
   try {
     const authResult = await authenticateRequest(context.request, context.env);
@@ -91,12 +98,11 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       }, 404);
     }
 
-    const body = await context.request.json() as SessionQuestionRequest;
     const sessionService = new SessionService(context.env.DATABASE_URL, context.env);
     const result = await sessionService.getSessionQuestions({
-      ...body,
+      ...validation.data,
       userId: user.id,
-      count: Math.min(body.count || 10, 50),
+      count: Math.min(validation.data.count || 10, 50),
     });
 
     return jsonResponse(result);

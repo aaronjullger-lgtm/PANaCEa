@@ -92,23 +92,29 @@ export const SessionConfigSchema = z.object({
 export type SessionConfigInput = z.infer<typeof SessionConfigSchema>;
 
 export const StartExamSchema = z.object({
-  configId: IDSchema.optional(),
-  examType: z.enum(['PANCE', 'PANRE_LA']).optional().default('PANCE'),
+  configId: IDSchema,
+  resumeAttemptId: IDSchema.optional(),
 });
 
 export type StartExamInput = z.infer<typeof StartExamSchema>;
 
 export const CompleteExamSchema = z.object({
+  attemptId: IDSchema,
+});
+
+export type CompleteExamInput = z.infer<typeof CompleteExamSchema>;
+
+export const SubmitExamAnswersSchema = z.object({
   examAttemptId: IDSchema,
   answers: z.array(z.object({
     questionId: IDSchema,
-    selectedAnswer: z.string().max(1),
+    selectedAnswer: z.string().max(500),
     flagged: z.boolean().optional(),
     timeSpentMs: z.number().int().min(0).optional(),
   })),
 });
 
-export type CompleteExamInput = z.infer<typeof CompleteExamSchema>;
+export type SubmitExamAnswersInput = z.infer<typeof SubmitExamAnswersSchema>;
 
 // =============================================================================
 // QUESTION FLAGGING
@@ -146,6 +152,14 @@ export const ReviewSubmissionSchema = z.object({
 });
 
 export type ReviewSubmissionInput = z.infer<typeof ReviewSubmissionSchema>;
+
+export const DrillSubmitReviewSchema = z.object({
+  questionId: IDSchema,
+  selectedAnswer: z.union([z.string(), z.number()]),
+  timeSpentMs: z.number().int().min(0).max(600000).optional(),
+});
+
+export type DrillSubmitReviewInput = z.infer<typeof DrillSubmitReviewSchema>;
 
 export const UserProgressUpdateSchema = z.object({
   conditionId: IDSchema,
@@ -204,6 +218,17 @@ export const FeedbackSubmitSchema = z.object({
 
 export type FeedbackSubmitInput = z.infer<typeof FeedbackSubmitSchema>;
 
+export const QuestionFeedbackSchema = z.object({
+  questionId: IDSchema,
+  flagType: z.enum(['incorrect_fact', 'typo', 'confusing_options', 'image_unclear', 'other']),
+  description: z.string().min(5).max(2000),
+  questionText: z.string().max(5000).optional(),
+  topic: z.string().max(200).optional(),
+  system: OrganSystemSchema.optional(),
+});
+
+export type QuestionFeedbackInput = z.infer<typeof QuestionFeedbackSchema>;
+
 export const PearlSaveSchema = z.object({
   pearlId: IDSchema,
   notes: z.string().max(2000).optional(),
@@ -260,6 +285,140 @@ export const QuestionCurateSchema = z.object({
 });
 
 export type QuestionCurateInput = z.infer<typeof QuestionCurateSchema>;
+
+// =============================================================================
+// PERFORMANCE RECORDING
+// =============================================================================
+
+export const PerformanceRecordSchema = z.object({
+  drillType: z.string().min(1).max(100),
+  startTime: z.string().datetime(),
+  endTime: z.string().datetime(),
+  questionsAttempted: z.number().int().min(0).max(10000),
+  correctAnswers: z.number().int().min(0).max(10000),
+  accuracy: z.number().min(0).max(100),
+  timeSpent: z.number().int().min(0).max(86400000), // Max 24 hours in ms
+  bestStreak: z.number().int().min(0).max(10000),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+export type PerformanceRecordInput = z.infer<typeof PerformanceRecordSchema>;
+
+// =============================================================================
+// SRS SYNC
+// =============================================================================
+
+export const SRSItemSchema = z.object({
+  questionId: IDSchema,
+  interval: z.number().int().min(0).max(365000),
+  repetition: z.number().int().min(0).max(10000),
+  easiness: z.number().min(1).max(5),
+  dueDate: z.string().datetime(),
+  lastReviewed: z.string().datetime(),
+  quality: z.number().int().min(0).max(5),
+  difficulty: z.number().min(0).max(10),
+  stabilityScore: z.number().min(0).max(100),
+  fsrsStability: z.number().min(0).optional(),
+  fsrsDifficulty: z.number().min(1).max(10).optional(),
+  fsrsState: z.number().int().min(0).max(3).optional(),
+  fsrsLastReview: z.string().datetime().optional(),
+});
+
+export const SRSSyncSchema = z.object({
+  items: z.array(SRSItemSchema).max(5000),
+});
+
+export type SRSItemInput = z.infer<typeof SRSItemSchema>;
+export type SRSSyncInput = z.infer<typeof SRSSyncSchema>;
+
+// =============================================================================
+// QUESTIONS SESSION
+// =============================================================================
+
+export const SessionRequestSchema = z.object({
+  count: z.number().int().min(1).max(100).optional().default(10),
+  system: z.string().max(100).optional(),
+  systems: z.array(OrganSystemSchema).optional(),
+  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  mode: z.enum(['standard', 'interleaved', 'review', 'weakness', 'random']).optional().default('standard'),
+  focus: z.enum(['all', 'growth', 'review', 'reviewFlagged', 'flagged', 'due', 'new']).optional().default('all'),
+  excludeIds: z.array(IDSchema).max(1000).optional(),
+  includeInterleaved: z.boolean().optional().default(true),
+  conditionIds: z.array(IDSchema).max(500).optional(),
+  subcategory: z.string().max(200).optional(),
+});
+
+export type SessionRequestInput = z.infer<typeof SessionRequestSchema>;
+
+// =============================================================================
+// STREAKS
+// =============================================================================
+
+export const StreakRecordSchema = z.object({
+  questionsAnswered: z.number().int().min(0).max(10000),
+  accuracyPercent: z.number().min(0).max(100),
+  studyMinutes: z.number().int().min(0).max(1440).optional(), // Max 24 hours
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), // YYYY-MM-DD format
+});
+
+export type StreakRecordInput = z.infer<typeof StreakRecordSchema>;
+
+// =============================================================================
+// SYNC
+// =============================================================================
+
+export const SyncPerformanceRecordSchema = z.object({
+  id: IDSchema.optional(),
+  topic: z.string().max(200),
+  system: z.string().max(100).nullable().optional(),
+  focus: z.string().max(100),
+  difficulty: z.number().int().min(1).max(10),
+  isCorrect: z.boolean(),
+  timestamp: z.number().int().positive(),
+  questionWordCount: z.number().int().positive().nullable().optional(),
+  errorTag: z.string().max(100).nullable().optional(),
+  subcategoryName: z.string().max(200).nullable().optional(),
+  conditionName: z.string().max(200).nullable().optional(),
+});
+
+export const SyncSRSItemSchema = z.object({
+  questionId: IDSchema,
+  interval: z.number().int().min(0),
+  repetition: z.number().int().min(0),
+  easiness: z.number().min(1).max(5),
+  dueDate: z.string(),
+  lastReviewed: z.string(),
+  quality: z.number().int().min(0).max(5),
+  difficulty: z.number().min(0).max(10),
+  stabilityScore: z.number().min(0).optional(),
+  updatedAt: z.string().optional(),
+});
+
+export const SyncSavedQuestionSchema = z.object({
+  questionId: IDSchema,
+  questionText: z.string().max(5000),
+  correctAnswer: z.string().max(2000),
+  explanation: z.string().max(5000).optional(),
+  topic: z.string().max(200),
+  system: z.string().max(100).optional(),
+  type: z.enum(['missed', 'flagged']),
+  userNote: z.string().max(2000).optional(),
+  repetitionLevel: z.number().int().min(0).max(100).optional(),
+  nextReviewDate: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+export const SyncPayloadSchema = z.object({
+  userId: z.string().max(200),
+  performanceRecords: z.array(SyncPerformanceRecordSchema).max(10000).optional(),
+  srsItems: z.array(SyncSRSItemSchema).max(10000).optional(),
+  savedQuestions: z.array(SyncSavedQuestionSchema).max(5000).optional(),
+});
+
+export type SyncPerformanceRecordInput = z.infer<typeof SyncPerformanceRecordSchema>;
+export type SyncSRSItemInput = z.infer<typeof SyncSRSItemSchema>;
+export type SyncSavedQuestionInput = z.infer<typeof SyncSavedQuestionSchema>;
+export type SyncPayloadInput = z.infer<typeof SyncPayloadSchema>;
 
 // =============================================================================
 // VALIDATION HELPER

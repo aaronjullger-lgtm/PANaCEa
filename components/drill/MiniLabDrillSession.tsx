@@ -5,6 +5,7 @@ import DiagnosisInput from '@/components/drill/DiagnosisInput';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { EnhancedFeedbackPanel } from '@/components/drill/EnhancedFeedbackPanel';
+import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { X, ArrowRight, RotateCcw, FlaskConical, Heart, Droplets, Activity as ActivityIcon, Shuffle, AlertTriangle, Plus } from 'lucide-react';
 
 interface MiniLabDrillSessionProps {
@@ -550,17 +551,11 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     );
   }
 
-  // Fallback
+  // Fallback - Use skeleton loader for zero CLS
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-[var(--color-text-secondary)] mb-4">Loading...</p>
-        <button
-          onClick={handleExit}
-          className="text-sky-400 hover:text-sky-300"
-        >
-          Exit
-        </button>
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center p-4">
+      <div className="max-w-3xl w-full">
+        <QuestionSkeleton />
       </div>
     </div>
   );

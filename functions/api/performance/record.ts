@@ -7,22 +7,11 @@
 import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { validateRequest, PerformanceRecordSchema } from '../_shared/schemas';
 
 interface Env {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
-}
-
-interface PerformanceData {
-  drillType: string;
-  startTime: string;
-  endTime: string;
-  questionsAttempted: number;
-  correctAnswers: number;
-  accuracy: number;
-  timeSpent: number;
-  bestStreak: number;
-  metadata?: Record<string, any>;
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
@@ -37,18 +26,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       });
     }
 
-    // Parse request body
-    let performanceData: PerformanceData;
-    try {
-      performanceData = await context.request.json();
-    } catch (err) {
-      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    // Validate request body with Zod schema
+    const validation = await validateRequest(context.request as any, PerformanceRecordSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
 
-    // Validate required fields
     const {
       drillType,
       startTime,
@@ -59,46 +42,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       timeSpent,
       bestStreak,
       metadata,
-    } = performanceData;
-
-    if (!drillType || !startTime || !endTime) {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          required: ['drillType', 'startTime', 'endTime'],
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    // Validate data types
-    if (
-      typeof questionsAttempted !== 'number' ||
-      typeof correctAnswers !== 'number' ||
-      typeof accuracy !== 'number' ||
-      typeof timeSpent !== 'number' ||
-      typeof bestStreak !== 'number'
-    ) {
-      return new Response(
-        JSON.stringify({
-          error: 'Invalid data types',
-          expected: {
-            questionsAttempted: 'number',
-            correctAnswers: 'number',
-            accuracy: 'number',
-            timeSpent: 'number',
-            bestStreak: 'number',
-          },
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    } = validation.data;
 
     // Create Prisma client
     const prisma = createEdgePrismaClient(context.env.DATABASE_URL);

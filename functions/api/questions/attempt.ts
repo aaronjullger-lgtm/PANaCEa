@@ -9,24 +9,11 @@
 import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+import { validateRequest, QuestionAttemptSchema } from '../_shared/schemas';
 
 interface Env {
   DATABASE_URL: string;
   CLERK_SECRET_KEY: string;
-}
-
-interface AttemptPayload {
-  questionId: string;
-  isCorrect: boolean; // Support both isCorrect and wasCorrect
-  wasCorrect?: boolean;
-  system?: string;
-  conditionId?: string;
-  questionType?: string;
-  mode?: string;
-  timeSpent?: number; // Support both timeSpent and timeSpentMs
-  timeSpentMs?: number;
-  answerChangedCount?: number;
-  isRankedAttempt?: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,6 +29,26 @@ export const onRequestPost: PagesFunction<Env> = async (context): Promise<any> =
         headers: { 'Content-Type': 'application/json' },
       });
     }
+
+    // Validate request body with Zod schema
+    const validation = await validateRequest(context.request, QuestionAttemptSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
+    }
+
+    const {
+      questionId,
+      isCorrect,
+      wasCorrect,
+      system,
+      conditionId,
+      questionType,
+      mode = 'session',
+      timeSpent,
+      timeSpentMs,
+      answerChangedCount,
+      isRankedAttempt = false,
+    } = validation.data;
 
     // Look up user by clerkId to get internal database ID
     const user = await prisma.user.findUnique({
@@ -60,41 +67,12 @@ export const onRequestPost: PagesFunction<Env> = async (context): Promise<any> =
     }
 
     const userId = user.id;
-    const body = await context.request.json() as AttemptPayload;
-
-    const {
-      questionId,
-      isCorrect,
-      wasCorrect,
-      system,
-      conditionId,
-      questionType,
-      mode = 'session',
-      timeSpent,
-      timeSpentMs,
-      answerChangedCount,
-      isRankedAttempt = false,
-    } = body;
 
     // Support both isCorrect and wasCorrect field names
     const correctness = isCorrect !== undefined ? isCorrect : wasCorrect;
     
     // Support both timeSpent and timeSpentMs field names
     const timeSpentMillis = timeSpentMs !== undefined ? timeSpentMs : (timeSpent !== undefined ? timeSpent : null);
-
-    if (!questionId) {
-      return new Response(JSON.stringify({ error: 'questionId is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    if (correctness === undefined) {
-      return new Response(JSON.stringify({ error: 'isCorrect or wasCorrect is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
 
     // Generate unique IDs
     const attemptId = `attempt-${userId}-${questionId}-${Date.now()}`;

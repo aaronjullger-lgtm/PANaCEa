@@ -14,68 +14,27 @@ import {
   handleCorsOptions,
 } from './_shared/auth';
 import { createEdgePrismaClient, type EdgePrismaClient } from './_shared/prisma-edge';
+import { 
+  validateRequest, 
+  SyncPayloadSchema, 
+  type SyncPerformanceRecordInput,
+  type SyncSRSItemInput,
+  type SyncSavedQuestionInput,
+  type SyncPayloadInput 
+} from './_shared/schemas';
 
 interface PagesContext {
   request: Request;
   env: Env;
 }
 
-// Typed sync payload interfaces
-interface SyncPerformanceRecord {
-  id?: string;
-  topic: string;
-  system?: string | null;
-  focus: string;
-  difficulty: number;
-  isCorrect: boolean;
-  timestamp: number;
-  questionWordCount?: number | null;
-  errorTag?: string | null;
-  subcategoryName?: string | null;
-  conditionName?: string | null;
-}
-
-interface SyncSRSItem {
-  questionId: string;
-  interval: number;
-  repetition: number;
-  easiness: number;
-  dueDate: string;
-  lastReviewed: string;
-  quality: number;
-  difficulty: number;
-  stabilityScore?: number;
-  updatedAt?: string;
-}
-
-interface SyncSavedQuestion {
-  questionId: string;
-  questionText: string;
-  correctAnswer: string;
-  explanation?: string;
-  topic: string;
-  system?: string;
-  type: 'missed' | 'flagged';
-  userNote?: string;
-  repetitionLevel?: number;
-  nextReviewDate?: string;
-  updatedAt?: string;
-}
-
-interface SyncPayload {
-  userId: string;
-  performanceRecords?: SyncPerformanceRecord[];
-  srsItems?: SyncSRSItem[];
-  savedQuestions?: SyncSavedQuestion[];
-}
-
 interface SyncResponse {
   success: boolean;
   message?: string;
   data?: {
-    performanceRecords: SyncPerformanceRecord[];
-    srsItems: SyncSRSItem[];
-    savedQuestions: SyncSavedQuestion[];
+    performanceRecords: SyncPerformanceRecordInput[];
+    srsItems: SyncSRSItemInput[];
+    savedQuestions: SyncSavedQuestionInput[];
   };
 }
 
@@ -194,6 +153,12 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
 export async function onRequestPost(context: PagesContext): Promise<Response> {
   const { request, env } = context;
   
+  // Validate request body with Zod schema first
+  const validation = await validateRequest(request, SyncPayloadSchema);
+  if (!validation.success) {
+    return (validation as { success: false; response: Response }).response;
+  }
+
   // Initialize edge-compatible Prisma client
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -207,8 +172,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     }
 
     const { clerkId } = authContext;
-    // Parse request payload
-    const payload: SyncPayload = await request.json();
+    const payload = validation.data;
 
     if (payload.userId !== clerkId) {
       console.error('[SYNC POST] User ID mismatch:', { expected: clerkId, received: payload.userId });
