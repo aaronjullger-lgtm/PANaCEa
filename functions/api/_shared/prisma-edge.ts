@@ -90,15 +90,13 @@ export function createEdgePrismaClient(databaseUrl: string) {
     console.log('[Prisma Edge] Creating client with Prisma 7...');
     console.log('[Prisma Edge] URL type:', isAccelerateUrl ? 'Accelerate' : 'PostgreSQL');
     
-    // Prisma 7 with Accelerate: Use PrismaClient constructor with datasources
-    // The types don't expose this but it works at runtime
+    // Prisma 7 with Accelerate: Use accelerateUrl in constructor
+    // This is the new Prisma 7 approach for edge runtimes
     const PrismaClientAny = PrismaClient as any;
     const client = new PrismaClientAny({
-      datasources: {
-        db: {
-          url: databaseUrl,
-        },
-      },
+      // For Accelerate URLs, use accelerateUrl
+      // For direct PostgreSQL URLs, use datasourceUrl (development only)
+      ...(isAccelerateUrl ? { accelerateUrl: databaseUrl } : { datasourceUrl: databaseUrl }),
     });
     
     console.log('[Prisma Edge] PrismaClient created, applying Accelerate extension...');
