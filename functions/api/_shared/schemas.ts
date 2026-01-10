@@ -287,6 +287,60 @@ export const QuestionCurateSchema = z.object({
 export type QuestionCurateInput = z.infer<typeof QuestionCurateSchema>;
 
 // =============================================================================
+// ADMIN CONTENT MANAGEMENT
+// =============================================================================
+
+export const AdminContentCreateSchema = z.object({
+  conditionId: IDSchema,
+  system: z.string().min(1).max(100),
+  subcategory: z.string().min(1).max(200),
+  condition: z.string().min(1).max(500),
+  content: z.record(z.unknown()).optional(),
+  description: z.string().max(1000).optional(),
+});
+
+export type AdminContentCreateInput = z.infer<typeof AdminContentCreateSchema>;
+
+export const AdminContentUpdateSchema = z.object({
+  system: z.string().min(1).max(100).optional(),
+  subcategory: z.string().min(1).max(200).optional(),
+  condition: z.string().min(1).max(500).optional(),
+  content: z.record(z.unknown()).optional(),
+  status: z.enum(['draft', 'review', 'published', 'archived']).optional(),
+  description: z.string().max(1000).optional(),
+});
+
+export type AdminContentUpdateInput = z.infer<typeof AdminContentUpdateSchema>;
+
+export const AdminContentTransitionSchema = z.object({
+  contentId: IDSchema,
+  targetStatus: z.enum(['draft', 'review', 'published', 'archived']),
+  notes: z.string().max(1000).optional(),
+});
+
+export type AdminContentTransitionInput = z.infer<typeof AdminContentTransitionSchema>;
+
+export const AdminMediaUpdateSchema = z.object({
+  altText: z.string().max(500).optional(),
+  description: z.string().max(1000).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  approvalStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
+  rejectionReason: z.string().max(500).optional(),
+});
+
+export type AdminMediaUpdateInput = z.infer<typeof AdminMediaUpdateSchema>;
+
+export const AdminGenerateDraftSchema = z.object({
+  conditionId: IDSchema,
+  system: z.string().min(1).max(100).optional(),
+  subcategory: z.string().min(1).max(200).optional(),
+  condition: z.string().min(1).max(500).optional(),
+  contentType: z.enum(['full', 'pearls', 'buzzwords', 'mnemonics']).optional().default('full'),
+});
+
+export type AdminGenerateDraftInput = z.infer<typeof AdminGenerateDraftSchema>;
+
+// =============================================================================
 // PERFORMANCE RECORDING
 // =============================================================================
 

@@ -32,4 +32,10 @@ export { default as SystemMasteryMap } from './SystemMasteryMap';
 export { default as WeaknessCheatsheetExporter } from './WeaknessCheatsheetExporter';
 export { default as SyllabusDecompiler } from './SyllabusDecompiler';
 
+// Tiered Analytics (Sprint D: Analytics Simplification)
+export { TieredAnalytics, default as TieredAnalyticsDefault } from './TieredAnalytics';
+
+// FSRS Decay Visualization (Sprint E: Magic Features)
+export { FSRSDecayVisualization, default as FSRSDecayVisualizationDefault } from './FSRSDecayVisualization';
+
 // DayCellPopover - import directly from './DayCellPopover' if needed

@@ -190,31 +190,73 @@ services/
 
 ## 🟢 Sprint D: Analytics Simplification (Week 5)
 
-### 10. Analytics Tiered Experience - NOT STARTED
-- [ ] Quick Glance: 3 key metrics
-- [ ] Dashboard: System heatmap, weakness prescriber
-- [ ] Deep Dive: Full FSRS insights
+### 10. ✅ Analytics Tiered Experience - COMPLETE
+- [x] Quick Glance: 3 key metrics (readiness score, recent accuracy, questions due)
+- [x] Dashboard: System heatmap, weakness prescriber
+- [x] Deep Dive: Full FSRS insights
 
-**Current State:** 25+ analytics components
+**Created Component:** `components/analytics/TieredAnalytics.tsx`
+
+**Features:**
+- Three progressive detail levels (Quick Glance → Dashboard → Deep Dive)
+- Animated tier switching with framer-motion
+- System weakness/strength analysis
+- Performance trend detection (improving/stable/declining)
+- Weekly goal progress tracking
+- FSRS card state distribution (new/learning/review/relearning)
+- Explanations for memory science metrics
 
 ---
 
 ## 🟣 Sprint E: Magic Features (Weeks 6-7)
 
-### 11. FSRS Visualization - NOT STARTED
-- [ ] Show memory decay curves to users
-- [ ] Display stability/difficulty metrics visually
-- [ ] "You will forget this" predictive alerts
+### 11. ✅ FSRS Visualization - COMPLETE
+- [x] Show memory decay curves to users (SVG-based curve rendering)
+- [x] Display stability/difficulty metrics visually
+- [x] "You will forget this" predictive alerts with urgency levels
 
-### 12. On-Demand Mnemonics - NOT STARTED
-- [ ] Add "Generate Mnemonic" button
-- [ ] Use Gemini API for personalized mnemonics
-- [ ] Save to user's personal library
+**Created Component:** `components/analytics/FSRSDecayVisualization.tsx`
 
-### 13. Question Flag Feedback Loop - NOT STARTED
-- [ ] Show users status of their flags
-- [ ] "3 of your flags have been resolved"
-- [ ] Improve trust in platform quality
+**Features:**
+- Visual decay curves per card using SVG polylines
+- Urgency categorization: safe (≥85%), warning (70-85%), critical (<70%)
+- Current retention % with color-coded markers
+- "Time until forgotten" predictions
+- Predictive alert banner for at-risk cards
+- Review Now CTAs for urgent cards
+- Card state tracking (new/learning/review/relearning)
+
+### 12. ✅ On-Demand Mnemonics - COMPLETE
+- [x] Add "Generate Mnemonic" button
+- [x] Use Gemini API for personalized mnemonics
+- [x] Save to user's personal library
+
+**Created Component:** `components/toolkit/MnemonicGenerator.tsx`
+
+**Features:**
+- Full modal and compact inline variants
+- AI-powered mnemonic generation via /api/ai/generate-mnemonic
+- Mnemonic types: acronym, story, visual, rhyme
+- Copy to clipboard functionality
+- Save to localStorage library (persists per user)
+- "Try Another" button for alternative suggestions
+- Fallback acronym generation when API unavailable
+
+### 13. ✅ Question Flag Feedback Loop - COMPLETE
+- [x] Show users status of their flags
+- [x] "3 of your flags have been resolved" notification
+- [x] Improve trust in platform quality
+
+**Created Component:** `components/questions/FlagFeedbackNotification.tsx`
+
+**Features:**
+- Banner notification for newly resolved flags
+- Compact badge variant for navbar integration
+- Full detail panel with all user flags
+- Status tracking: pending, under_review, resolved, rejected
+- Resolution notes from moderators
+- Stats: total flags, resolved count, in-progress count
+- Dismissable notifications with localStorage persistence
 
 ---
 

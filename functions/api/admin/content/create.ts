@@ -7,6 +7,7 @@ import { authenticateRequest, createErrorResponse, createSuccessResponse, handle
 import { canEditContent, type UserRole } from '../../_shared/rbac';
 import { createDraft } from '../../../../lib/services/cms/contentService';
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { validateRequest, AdminContentCreateSchema } from '../../_shared/schemas';
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -32,13 +33,12 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       return createErrorResponse('Forbidden: Insufficient permissions', 403);
     }
 
-    const body = await request.json();
-    const { conditionId, system, subcategory, condition, content, description } = body;
-
-    // Validate required fields
-    if (!conditionId || !system || !subcategory || !condition) {
-      return createErrorResponse('Missing required fields', 400);
+    // Validate input with Zod schema
+    const validation = await validateRequest(request.clone(), AdminContentCreateSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
+    const { conditionId, system, subcategory, condition, content, description } = (validation as { success: true; data: any }).data;
 
     // Check if conditionId already exists
     const existing = await prisma.medicalContent.findUnique({
