@@ -18,6 +18,7 @@
     "migrate:buzzwords": "tsx ./scripts/migrateBuzzwordsToDb.ts",
     "migrate:production": "tsx ./scripts/applyProductionMigration.ts",
     "migrate:related-systems": "tsx ./scripts/migrateRelatedSystems.ts",
+    "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:generate": "prisma generate --accelerate",
     "db:studio": "prisma studio",
