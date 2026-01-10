@@ -314,8 +314,8 @@ export type AdminContentUpdateInput = z.infer<typeof AdminContentUpdateSchema>;
 
 export const AdminContentTransitionSchema = z.object({
   contentId: IDSchema,
-  targetStatus: z.enum(['draft', 'review', 'published', 'archived']),
-  notes: z.string().max(1000).optional(),
+  newStatus: z.enum(['draft', 'pending_review', 'approved', 'published', 'archived']),
+  description: z.string().max(1000).optional(),
 });
 
 export type AdminContentTransitionInput = z.infer<typeof AdminContentTransitionSchema>;

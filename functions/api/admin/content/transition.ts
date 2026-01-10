@@ -16,6 +16,7 @@ import { authenticateRequest, createErrorResponse, createSuccessResponse, handle
 import { canEditContent, canApproveContent, canPublishContent, type UserRole } from '../../_shared/rbac';
 import { transitionStatus, type ContentStatus } from '../../../../lib/services/cms/contentService';
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { validateRequest, AdminContentTransitionSchema } from '../../_shared/schemas';
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -41,19 +42,12 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       return createErrorResponse('User not found', 404);
     }
 
-    const body = await request.json();
-    const { contentId, newStatus, description } = body;
-
-    // Validate required fields
-    if (!contentId || !newStatus) {
-      return createErrorResponse('Missing contentId or newStatus', 400);
+    // Validate input with Zod schema
+    const validation = await validateRequest(request.clone(), AdminContentTransitionSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
-
-    // Validate status value
-    const validStatuses = ['draft', 'pending_review', 'approved', 'published', 'archived'];
-    if (!validStatuses.includes(newStatus)) {
-      return createErrorResponse('Invalid status', 400);
-    }
+    const { contentId, newStatus, description } = (validation as { success: true; data: any }).data;
 
     // Check permissions based on target status
     const userRole = user.role as UserRole;

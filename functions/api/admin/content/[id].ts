@@ -9,6 +9,7 @@ import { authenticateRequest, createErrorResponse, createSuccessResponse, handle
 import { canViewCMS, canEditContent, isAdmin, type UserRole } from '../../_shared/rbac';
 import { updateContent } from '../../../../lib/services/cms/contentService';
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
+import { validateRequest, AdminContentUpdateSchema } from '../../_shared/schemas';
 
 export async function onRequestGet(context: { request: Request; env: Env; params: { id: string } }) {
   const { request, env, params } = context;
@@ -81,8 +82,12 @@ export async function onRequestPut(context: { request: Request; env: Env; params
       return createErrorResponse('Forbidden: Insufficient permissions', 403);
     }
 
-    const body = await request.json();
-    const { content: contentData, description } = body;
+    // Validate input with Zod schema
+    const validation = await validateRequest(request.clone(), AdminContentUpdateSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
+    }
+    const { content: contentData, description } = (validation as { success: true; data: any }).data;
 
     // Get client IP and user agent for audit logging
     const ipAddress = request.headers.get('x-forwarded-for') || 

@@ -11,6 +11,8 @@
 
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 import { authenticateRequest, createErrorResponse, createSuccessResponse } from '../../_shared/auth';
+import { validateRequest, AdminMediaApproveSchema } from '../../_shared/schemas';
+import { z } from 'zod';
 
 interface Env {
   DATABASE_URL: string;
@@ -18,6 +20,13 @@ interface Env {
 }
 
 type ApprovalAction = 'approve' | 'reject';
+
+// Batch approval schema
+const BatchApproveSchema = z.object({
+  mediaIds: z.array(z.string().min(1).max(100)).min(1).max(100),
+  action: z.enum(['approve', 'reject']),
+  reason: z.string().max(500).optional(),
+});
 
 export const onRequestPost = async (context: { request: Request; env: Env }) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
@@ -38,21 +47,12 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
       return createErrorResponse('Admin access required', 403);
     }
 
-    const body = await context.request.json();
-    const { mediaId, action, reason } = body as {
-      mediaId: string;
-      action: ApprovalAction;
-      reason?: string;
-    };
-
-    // Validate input
-    if (!mediaId) {
-      return createErrorResponse('mediaId is required', 400);
+    // Validate input with Zod schema
+    const validation = await validateRequest(context.request.clone(), AdminMediaApproveSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
-
-    if (!action || !['approve', 'reject'].includes(action)) {
-      return createErrorResponse('action must be "approve" or "reject"', 400);
-    }
+    const { mediaId, action, rejectionReason: reason } = (validation as { success: true; data: any }).data;
 
     // Get the media asset
     const media = await prisma.mediaAsset.findUnique({
@@ -124,24 +124,12 @@ export const onRequestPut = async (context: { request: Request; env: Env }) => {
       return createErrorResponse('Admin access required', 403);
     }
 
-    const body = await context.request.json();
-    const { mediaIds, action, reason } = body as {
-      mediaIds: string[];
-      action: ApprovalAction;
-      reason?: string;
-    };
-
-    if (!mediaIds || !Array.isArray(mediaIds) || mediaIds.length === 0) {
-      return createErrorResponse('mediaIds array is required', 400);
+    // Validate input with Zod schema
+    const validation = await validateRequest(context.request.clone(), BatchApproveSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
-
-    if (mediaIds.length > 100) {
-      return createErrorResponse('Maximum 100 items per batch', 400);
-    }
-
-    if (!action || !['approve', 'reject'].includes(action)) {
-      return createErrorResponse('action must be "approve" or "reject"', 400);
-    }
+    const { mediaIds, action, reason } = (validation as { success: true; data: any }).data;
 
     const newStatus = action === 'approve' ? 'approved' : 'rejected';
     const newFolder = action === 'approve' ? 'approved' : 'rejected';
