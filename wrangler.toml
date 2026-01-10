@@ -3,6 +3,19 @@ compatibility_date = "2025-12-15"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "dist"
 
+# Prisma 7 requires these modules to be external for edge bundling
+[build]
+command = "npm run build"
+
+[build.upload]
+format = "modules"
+
+# Mark Prisma internal paths as external - required for Prisma 7
+[[rules]]
+type = "ESModule"
+globs = ["**/*.js", "**/*.mjs"]
+fallthrough = true
+
 # KV namespace for distributed rate limiting and caching
 # Create with: npx wrangler kv:namespace create RATE_LIMIT_KV
 # Create with: npx wrangler kv:namespace create CACHE
