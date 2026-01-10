@@ -87,23 +87,34 @@ export function createEdgePrismaClient(databaseUrl: string) {
   }
 
   try {
-    // Prisma 7 + Accelerate: Set DATABASE_URL in process.env for the extension
-    // This is needed because Cloudflare doesn't set process.env automatically
-    // @ts-ignore - Setting env for Accelerate extension to read
+    console.log('[Prisma Edge] Creating client with Prisma 7...');
+    console.log('[Prisma Edge] URL type:', isAccelerateUrl ? 'Accelerate' : 'PostgreSQL');
+    
+    // Set DATABASE_URL in globalThis for Accelerate extension to read
+    // This is needed because Cloudflare Workers don't have process.env automatically
+    // @ts-ignore - Setting env for Accelerate extension
     globalThis.process = globalThis.process || { env: {} };
     // @ts-ignore
     globalThis.process.env = globalThis.process.env || {};
-    // @ts-ignore
+    // @ts-ignore  
     globalThis.process.env.DATABASE_URL = databaseUrl;
     
-    // Create client and extend with Accelerate
-    // Accelerate reads from process.env.DATABASE_URL
+    // Create base Prisma client
     const client = new PrismaClient();
     
-    // Apply Accelerate extension - it reads URL from process.env.DATABASE_URL
-    return client.$extends(withAccelerate());
+    console.log('[Prisma Edge] PrismaClient created, applying Accelerate extension...');
+    
+    // Apply Accelerate extension - it reads DATABASE_URL from process.env
+    const extendedClient = client.$extends(withAccelerate());
+    
+    console.log('[Prisma Edge] Accelerate extension applied successfully');
+    
+    return extendedClient;
   } catch (error) {
     console.error('[Prisma Edge] Failed to create Prisma client:', error);
+    console.error('[Prisma Edge] Error name:', error instanceof Error ? error.name : 'Unknown');
+    console.error('[Prisma Edge] Error message:', error instanceof Error ? error.message : 'Unknown');
+    console.error('[Prisma Edge] Error stack:', error instanceof Error ? error.stack : 'No stack');
     throw new Error(
       'Failed to initialize Prisma Client. ' +
       'Error: ' + (error instanceof Error ? error.message : 'Unknown error')
