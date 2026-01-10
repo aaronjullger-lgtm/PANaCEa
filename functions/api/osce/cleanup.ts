@@ -11,6 +11,13 @@
 
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { validateRequest, IDSchema } from '../_shared/schemas';
+import { z } from 'zod';
+
+// Zod schema for cleanup (optional body param - can also use query param)
+const CleanupSchema = z.object({
+  sessionId: IDSchema.optional(),
+});
 
 async function handleCleanup(request: Request, env: Env) {
   const authContext = await authenticateRequest(request, env);
@@ -21,8 +28,20 @@ async function handleCleanup(request: Request, env: Env) {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
+    // Try to get sessionId from body first (with Zod validation), then fall back to query param
+    let sessionId: string | null = null;
+    
     const url = new URL(request.url);
-    const sessionId = url.searchParams.get('sessionId');
+    sessionId = url.searchParams.get('sessionId');
+    
+    // Try body if not in query params
+    if (!sessionId && request.method === 'POST') {
+      const validation = await validateRequest(request.clone(), CleanupSchema);
+      if (validation.success) {
+        const data = (validation as { success: true; data: any }).data;
+        sessionId = data.sessionId || null;
+      }
+    }
 
     if (!sessionId) {
       return createErrorResponse('Missing sessionId parameter', 400);

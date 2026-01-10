@@ -14,6 +14,7 @@
 
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { validateRequest, OSCEChatSchema } from '../_shared/schemas';
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
@@ -30,13 +31,12 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
   try {
-    const body = await request.json();
-    const { sessionId, messages } = body;
-
-    // Validate required fields
-    if (!sessionId || !messages) {
-      return createErrorResponse('Missing required fields', 400);
+    // Validate input with Zod schema
+    const validation = await validateRequest(request.clone(), OSCEChatSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
+    const { sessionId, messages } = (validation as { success: true; data: any }).data;
 
     await prisma.patientEncounterSession.update({
       where: { id: sessionId },

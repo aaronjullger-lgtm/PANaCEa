@@ -7,7 +7,14 @@
 
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { validateRequest } from '../_shared/schemas';
+import { z } from 'zod';
 import type { CloudflareContext } from '../_shared/types';
+
+// Zod schema for profile recompute request (empty - just triggers recomputation)
+const ProfileRecomputeSchema = z.object({
+  force: z.boolean().optional(),
+}).optional().default({});
 
 interface Env {
   DATABASE_URL: string;

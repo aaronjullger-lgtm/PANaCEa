@@ -7,6 +7,14 @@
 
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions, authenticateRequest } from '../_shared/auth';
+import { validateRequest } from '../_shared/schemas';
+import { z } from 'zod';
+
+// Zod schema for pharmacology drill request
+const PharmacologyDrillSchema = z.object({
+  drugClass: z.string().max(100).optional(),
+  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+});
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -25,8 +33,12 @@ export const onRequestPost = async (context: any) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
 
   try {
-    const body = await context.request.json();
-    const { drugClass, difficulty } = body;
+    // Validate input with Zod schema
+    const validation = await validateRequest(context.request.clone(), PharmacologyDrillSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
+    }
+    const { drugClass, difficulty } = (validation as { success: true; data: any }).data;
 
     // Build where clause for pharmacology questions
     const where: any = {

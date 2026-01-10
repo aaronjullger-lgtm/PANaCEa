@@ -8,6 +8,8 @@
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import type { CloudflareContext } from '../_shared/types';
+import { validateRequest, IDSchema } from '../_shared/schemas';
+import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 
 interface Env {
@@ -15,71 +17,73 @@ interface Env {
   CLERK_SECRET_KEY: string;
 }
 
-interface SessionAnalyticsData {
-  // Session identifiers
-  sessionId?: string;
-  startedAt: string;
-  endedAt: string;
+// Zod schema for session analytics data
+const SessionAnalyticsSchema = z.object({
+  sessionId: IDSchema.optional(),
+  startedAt: z.string().datetime(),
+  endedAt: z.string().datetime(),
   
   // Core metrics
-  totalQuestions: number;
-  correctAnswers: number;
-  accuracy: number;
-  totalTimeMs: number;
-  avgTimePerQuestion?: number;
+  totalQuestions: z.number().int().min(0).max(10000),
+  correctAnswers: z.number().int().min(0).max(10000).optional().default(0),
+  accuracy: z.number().min(0).max(100).optional().default(0),
+  totalTimeMs: z.number().int().min(0).max(86400000).optional().default(0),
+  avgTimePerQuestion: z.number().int().min(0).optional(),
   
   // Streak data
-  bestStreak: number;
-  finalStreak: number;
-  avgStreak?: number;
-  errorClusters?: number;
+  bestStreak: z.number().int().min(0).max(10000).optional().default(0),
+  finalStreak: z.number().int().min(0).max(10000).optional().default(0),
+  avgStreak: z.number().min(0).optional(),
+  errorClusters: z.number().int().min(0).optional().default(0),
   
   // Momentum metrics
-  peakMomentum?: number;
-  avgMomentum?: number;
-  momentumTrend?: string;
+  peakMomentum: z.number().optional(),
+  avgMomentum: z.number().optional(),
+  momentumTrend: z.string().max(50).optional(),
   
   // Behavioral signals
-  totalAnswerChanges: number;
-  helpfulChanges: number;
-  harmfulChanges: number;
-  firstInstinctAccuracy?: number;
+  totalAnswerChanges: z.number().int().min(0).optional().default(0),
+  helpfulChanges: z.number().int().min(0).optional().default(0),
+  harmfulChanges: z.number().int().min(0).optional().default(0),
+  firstInstinctAccuracy: z.number().min(0).max(100).optional(),
   
   // Confidence calibration
-  avgInferredConfidence?: number;
-  highConfidenceAccuracy?: number;
-  lowConfidenceAccuracy?: number;
-  calibrationScore?: number;
+  avgInferredConfidence: z.number().min(0).max(100).optional(),
+  highConfidenceAccuracy: z.number().min(0).max(100).optional(),
+  lowConfidenceAccuracy: z.number().min(0).max(100).optional(),
+  calibrationScore: z.number().optional(),
   
   // Time pressure analysis
-  questionsUnderPar?: number;
-  questionsOverPar?: number;
-  rushingAccuracy?: number;
-  deliberateAccuracy?: number;
+  questionsUnderPar: z.number().int().min(0).optional().default(0),
+  questionsOverPar: z.number().int().min(0).optional().default(0),
+  rushingAccuracy: z.number().min(0).max(100).optional(),
+  deliberateAccuracy: z.number().min(0).max(100).optional(),
   
   // Fatigue indicators
-  early10Accuracy?: number;
-  late10Accuracy?: number;
-  staminaFade?: number;
+  early10Accuracy: z.number().min(0).max(100).optional(),
+  late10Accuracy: z.number().min(0).max(100).optional(),
+  staminaFade: z.number().optional(),
   
   // PANCE distribution
-  distributionScore?: number;
-  systemsCovered?: string[];
+  distributionScore: z.number().optional(),
+  systemsCovered: z.array(z.string().max(100)).max(20).optional().default([]),
   
   // Predicted score
-  predictedScore?: number;
-  scoreConfidence?: string;
-  passLikelihood?: number;
+  predictedScore: z.number().optional(),
+  scoreConfidence: z.string().max(50).optional(),
+  passLikelihood: z.number().min(0).max(100).optional(),
   
   // Session settings
-  mode?: string;
-  focus?: string;
-  difficulty?: string;
+  mode: z.string().max(50).optional(),
+  focus: z.string().max(50).optional(),
+  difficulty: z.string().max(50).optional(),
   
   // Device info
-  deviceType?: string;
-  browserName?: string;
-}
+  deviceType: z.string().max(100).optional(),
+  browserName: z.string().max(100).optional(),
+});
+
+type SessionAnalyticsData = z.infer<typeof SessionAnalyticsSchema>;
 
 export const onRequestPost = async (context: CloudflareContext<Env>) => {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
@@ -94,27 +98,12 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
       });
     }
 
-    // Parse request body
-    let data: SessionAnalyticsData;
-    try {
-      data = await context.request.json();
-    } catch {
-      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    // Validate input with Zod schema  
+    const validation = await validateRequest(context.request as any, SessionAnalyticsSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
-
-    // Validate minimum required fields
-    if (!data.startedAt || !data.endedAt || data.totalQuestions === undefined) {
-      return new Response(JSON.stringify({ 
-        error: 'Missing required fields',
-        required: ['startedAt', 'endedAt', 'totalQuestions'] 
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    const data = (validation as { success: true; data: SessionAnalyticsData }).data;
 
     // Find user by Clerk ID
     const user = await prisma.user.findUnique({

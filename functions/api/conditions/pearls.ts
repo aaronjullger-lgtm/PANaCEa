@@ -6,6 +6,7 @@
 
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { authenticateRequest } from '../_shared/auth';
+import { validateRequest, ConditionPearlsSchema } from '../_shared/schemas';
 
 export async function onRequestPost(context: any) {
   const { request, env } = context;
@@ -21,16 +22,12 @@ export async function onRequestPost(context: any) {
 
   let prisma;
   try {
-    // Parse request body
-    const body = await request.json() as { conditionId: string; pearls: string[] };
-    const { conditionId, pearls } = body;
-
-    if (!conditionId || !Array.isArray(pearls) || pearls.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid request: conditionId and pearls array required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    // Validate input with Zod schema
+    const validation = await validateRequest(request.clone(), ConditionPearlsSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
+    const { conditionId, pearls } = (validation as { success: true; data: any }).data;
 
     // Initialize Prisma Edge Client
     prisma = createEdgePrismaClient(env.DATABASE_URL);

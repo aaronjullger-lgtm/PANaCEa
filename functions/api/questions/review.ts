@@ -7,7 +7,19 @@ import {
 } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { ReviewService, type ReviewQuestion } from '../../../lib/services/review/reviewService';
+import { validateRequest, IDSchema } from '../_shared/schemas';
+import { z } from 'zod';
 import type { JsonValue } from '@prisma/client/runtime/library';
+
+// Zod schema for review submission
+const ReviewSubmitSchema = z.object({
+  questionId: IDSchema,
+  wasCorrect: z.boolean(),
+  timeSpentMs: z.number().int().min(0).max(600000).optional(),
+  quality: z.number().int().min(0).max(5).optional(),
+  srsItemId: IDSchema.optional(),
+  conditionId: IDSchema.optional(),
+});
 
 interface PagesContext {
   request: Request;
@@ -86,14 +98,12 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       return createErrorResponse('Unauthorized', 401);
     }
 
-    const body = await context.request.json() as {
-      questionId: string;
-      wasCorrect: boolean;
-      timeSpentMs?: number;
-      quality?: number;
-      srsItemId?: string;
-      conditionId?: string;
-    };
+    // Validate input with Zod schema
+    const validation = await validateRequest(context.request.clone(), ReviewSubmitSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
+    }
+    const body = (validation as { success: true; data: z.infer<typeof ReviewSubmitSchema> }).data;
 
     const user = await prisma.user.findUnique({
       where: { clerkId: auth.userId },

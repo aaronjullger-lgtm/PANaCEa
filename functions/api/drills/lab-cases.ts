@@ -7,6 +7,13 @@
 
 import { authenticateRequest } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { validateRequest } from '../_shared/schemas';
+import { z } from 'zod';
+
+// Zod schema for lab cases POST actions
+const LabCasesActionSchema = z.object({
+  action: z.enum(['getDiagnoses']),
+});
 
 interface Env {
   DATABASE_URL: string;
@@ -431,8 +438,12 @@ export async function onRequestPost(context: any): Promise<Response> {
       });
     }
 
-    const body = await context.request.json();
-    const { action } = body;
+    // Validate input with Zod schema
+    const validation = await validateRequest(context.request.clone(), LabCasesActionSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
+    }
+    const { action } = (validation as { success: true; data: any }).data;
 
     if (action === 'getDiagnoses') {
       const cases = await prisma.labCase.findMany({

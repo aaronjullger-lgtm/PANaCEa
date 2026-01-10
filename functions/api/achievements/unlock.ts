@@ -11,16 +11,19 @@ import {
   handleCorsOptions,
 } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { validateRequest, IDSchema } from '../_shared/schemas';
+import { z } from 'zod';
 
 interface PagesContext {
   request: Request;
   env: Env;
 }
 
-interface UnlockPayload {
-  achievementId: string;
-  progress?: number;
-}
+// Zod schema for achievement unlock
+const UnlockPayloadSchema = z.object({
+  achievementId: IDSchema,
+  progress: z.number().int().min(0).max(100).optional(),
+});
 
 export async function onRequestOptions(): Promise<Response> {
   return handleCorsOptions();
@@ -32,6 +35,12 @@ export async function onRequestOptions(): Promise<Response> {
 export async function onRequestPost(context: PagesContext): Promise<Response> {
   const { request, env } = context;
 
+  if (!env.DATABASE_URL) {
+    return createErrorResponse('Database not configured', 500);
+  }
+
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
     const authContext = await authenticateRequest(request, env);
 
@@ -40,32 +49,28 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     }
 
     const { userId } = authContext;
-    const payload: UnlockPayload = await request.json();
 
-    if (!payload.achievementId) {
-      return createErrorResponse('achievementId is required', 400);
+    // Validate input with Zod schema
+    const validation = await validateRequest(request.clone(), UnlockPayloadSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
-
-    if (!env.DATABASE_URL) {
-      return createErrorResponse('Database not configured', 500);
-    }
-
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    const { achievementId, progress } = (validation as { success: true; data: any }).data;
 
     const achievement = await prisma.userAchievement.upsert({
       where: {
         userId_achievementId: {
           userId,
-          achievementId: payload.achievementId
+          achievementId
         }
       },
       update: {
-        progress: payload.progress ?? 100
+        progress: progress ?? 100
       },
       create: {
         userId,
-        achievementId: payload.achievementId,
-        progress: payload.progress ?? 100,
+        achievementId,
+        progress: progress ?? 100,
         unlockedAt: new Date()
       }
     });
@@ -74,7 +79,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       success: true,
       message: 'Achievement unlocked successfully',
       data: {
-        achievementId: payload.achievementId,
+        achievementId,
         unlockedAt: achievement.unlockedAt,
         progress: achievement.progress,
       },

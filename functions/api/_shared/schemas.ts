@@ -341,6 +341,50 @@ export const AdminGenerateDraftSchema = z.object({
 export type AdminGenerateDraftInput = z.infer<typeof AdminGenerateDraftSchema>;
 
 // =============================================================================
+// OSCE
+// =============================================================================
+
+export const OSCESessionSchema = z.object({
+  caseId: IDSchema,
+});
+
+export const OSCEChatSchema = z.object({
+  sessionId: IDSchema,
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string().max(10000),
+  })).min(1).max(100),
+});
+
+export const OSCECompleteSchema = z.object({
+  sessionId: IDSchema,
+  finalNotes: z.string().max(5000).optional(),
+});
+
+// =============================================================================
+// CONDITIONS/PEARLS
+// =============================================================================
+
+export const ConditionPearlsSchema = z.object({
+  conditionId: IDSchema,
+  pearls: z.array(z.string().max(1000)).min(1).max(20),
+});
+
+// =============================================================================
+// CUSTOM SESSION
+// =============================================================================
+
+export const CustomSessionSchema = z.object({
+  config: z.object({
+    systems: z.array(z.string().max(100)).min(1).max(15),
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+    subcategory: z.string().max(200).optional(),
+    conditionIds: z.array(IDSchema).max(100).optional(),
+  }),
+  count: z.number().int().min(1).max(100).optional().default(10),
+});
+
+// =============================================================================
 // PERFORMANCE RECORDING
 // =============================================================================
 

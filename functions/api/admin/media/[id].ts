@@ -8,6 +8,21 @@
 
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 import { authenticateRequest, createErrorResponse, createSuccessResponse } from '../../_shared/auth';
+import { validateRequest } from '../../_shared/schemas';
+import { z } from 'zod';
+
+// Schema for media asset update
+const MediaAssetUpdateSchema = z.object({
+  conditionId: z.string().max(100).nullable().optional(),
+  correctDiagnosis: z.string().max(500).optional(),
+  distractors: z.array(z.string().max(500)).max(10).optional(),
+  description: z.string().max(1000).optional(),
+  altText: z.string().max(500).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  type: z.string().max(50).optional(),
+  clinicalContext: z.string().max(2000).optional(),
+  qualityScore: z.number().min(0).max(100).optional(),
+});
 
 interface Env {
   DATABASE_URL: string;
@@ -79,8 +94,12 @@ export const onRequestPut = async (context: { request: Request; env: Env; params
     }
 
     const { id } = context.params;
-    const body = await context.request.json();
 
+    // Validate input with Zod schema
+    const validation = await validateRequest(context.request.clone(), MediaAssetUpdateSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
+    }
     const {
       conditionId,
       correctDiagnosis,
@@ -91,17 +110,7 @@ export const onRequestPut = async (context: { request: Request; env: Env; params
       type,
       clinicalContext,
       qualityScore,
-    } = body as {
-      conditionId?: string | null;
-      correctDiagnosis?: string;
-      distractors?: string[];
-      description?: string;
-      altText?: string;
-      tags?: string[];
-      type?: string;
-      clinicalContext?: string;
-      qualityScore?: number;
-    };
+    } = (validation as { success: true; data: any }).data;
 
     // Verify media exists
     const existingMedia = await prisma.mediaAsset.findUnique({

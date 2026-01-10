@@ -13,24 +13,29 @@ import {
   handleCorsOptions,
 } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { validateRequest, IDSchema } from '../_shared/schemas';
+import { z } from 'zod';
 
 interface PagesContext {
   request: Request;
   env: Env;
 }
 
-interface CurationRequest {
-  action: 'approve' | 'delete' | 'update';
-  questionId: string;
-  question?: {
-    question: string;
-    options: string[];
-    correctAnswerIndex: number;
-    rationale: string;
-    system?: string;
-    difficulty?: string;
-  };
-}
+// Zod schema for question curation
+const CurationRequestSchema = z.object({
+  action: z.enum(['approve', 'delete', 'update']),
+  questionId: IDSchema,
+  question: z.object({
+    question: z.string().min(1).max(5000),
+    options: z.array(z.string().max(500)).length(4),
+    correctAnswerIndex: z.number().int().min(0).max(3),
+    rationale: z.string().max(5000),
+    system: z.string().max(100).optional(),
+    difficulty: z.string().max(20).optional(),
+  }).optional(),
+});
+
+type CurationRequest = z.infer<typeof CurationRequestSchema>;
 
 export async function onRequestOptions(): Promise<Response> {
   return handleCorsOptions();
@@ -58,12 +63,12 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       return createErrorResponse('Admin access required', 403);
     }
 
-    const body = await context.request.json() as CurationRequest;
-    const { questionId, action, question: updatedQuestion } = body;
-
-    if (!questionId || !action) {
-      return createErrorResponse('Missing questionId or action', 400);
+    // Validate input with Zod schema
+    const validation = await validateRequest(context.request.clone(), CurationRequestSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
+    const { questionId, action, question: updatedQuestion } = (validation as { success: true; data: CurationRequest }).data;
 
     // Fetch the pre-generated question
     const preGenQuestion = await prisma.preGeneratedQuestion.findUnique({

@@ -1,6 +1,19 @@
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
 import { fetchUnseenQuestions } from '../_shared/no-repeat';
+import { validateRequest } from '../_shared/schemas';
+import { z } from 'zod';
+
+// Zod schema for no-repeat request
+const NoRepeatSchema = z.object({
+  filter: z.object({
+    system: z.string().max(100).optional(),
+    systems: z.array(z.string().max(100)).max(15).optional(),
+    difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+    conditionId: z.string().max(100).optional(),
+  }).optional().default({}),
+  limit: z.number().int().min(1).max(100).optional().default(10),
+});
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -21,8 +34,12 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const { filter, limit } = body;
+    // Validate input with Zod schema
+    const validation = await validateRequest(request.clone(), NoRepeatSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
+    }
+    const { filter, limit } = (validation as { success: true; data: any }).data;
     const userId = authResult;
 
     if (!env.DATABASE_URL) {

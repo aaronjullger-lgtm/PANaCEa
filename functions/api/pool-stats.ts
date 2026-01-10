@@ -6,6 +6,14 @@
 
 import { createEdgePrismaClient } from './_shared/prisma-edge';
 import { CloudflareContext, CloudflareEnv, jsonResponse, errorResponse } from './_shared/types';
+import { validateRequest } from './_shared/schemas';
+import { z } from 'zod';
+
+// Zod schema for batch generation request
+const PoolStatsSchema = z.object({
+  system: z.string().max(50).optional(),
+  count: z.number().int().min(1).max(100).optional().default(25),
+});
 
 export async function onRequestGet(context: CloudflareContext<CloudflareEnv>): Promise<Response> {
   const { env } = context;
@@ -42,14 +50,19 @@ export async function onRequestGet(context: CloudflareContext<CloudflareEnv>): P
 
 export async function onRequestPost(context: CloudflareContext<CloudflareEnv>): Promise<Response> {
   try {
-    const { system, count = 25 } = await context.request.json() as { system?: string; count?: number };
+    // Validate input with Zod schema
+    const validation = await validateRequest(context.request.clone(), PoolStatsSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
+    }
+    const { system, count } = (validation as { success: true; data: any }).data;
     
     // In production, this would queue a background job
     // For now, just acknowledge the request
     return jsonResponse({
       queued: true,
       system: system || 'all',
-      count,
+      count: count || 25,
       message: 'Batch generation queued',
     });
   } catch (error) {

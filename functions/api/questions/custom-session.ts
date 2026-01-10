@@ -9,23 +9,7 @@
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { authenticateRequest } from '../_shared/auth';
 import { handleCorsOptions } from '../_shared/auth';
-
-interface CustomSessionConfig {
-  systems: string[];
-  subcategories: string[];
-  conditions: string[];
-  focusAreas: string[];
-  questionsPerIncrement: number;
-  difficulty: 'easier' | 'same' | 'harder';
-  retryMissedQuestions: boolean;
-  includeUserMaterials?: boolean;
-  userMaterialIds?: string[];
-}
-
-interface RequestBody {
-  config: CustomSessionConfig;
-  count: number;
-}
+import { validateRequest, CustomSessionSchema } from '../_shared/schemas';
 
 /**
  * POST handler - fetch questions for custom session
@@ -45,16 +29,12 @@ export async function onRequestPost(context: any) {
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   
   try {
-    const body: RequestBody = await request.json();
-    const { config, count } = body;
-    
-    // Validate request
-    if (!config || !config.systems || config.systems.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'At least one system must be selected' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+    // Validate input with Zod schema
+    const validation = await validateRequest(request.clone(), CustomSessionSchema);
+    if (!validation.success) {
+      return (validation as { success: false; response: Response }).response;
     }
+    const { config, count } = (validation as { success: true; data: any }).data;
     
     const requestedCount = Math.min(count || 10, 50); // Cap at 50
     
