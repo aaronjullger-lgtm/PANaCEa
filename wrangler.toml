@@ -7,9 +7,9 @@ pages_build_output_dir = "dist"
 # Create with: npx wrangler kv:namespace create RATE_LIMIT_KV
 # Create with: npx wrangler kv:namespace create CACHE
 
-# [[kv_namespaces]]
-# binding = "RATE_LIMIT_KV"
-# id = "7df124d8b81f400eafe6ba55477bf11d"
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "7df124d8b81f400eafe6ba55477bf11d"
 
 [[kv_namespaces]]
 binding = "CACHE"

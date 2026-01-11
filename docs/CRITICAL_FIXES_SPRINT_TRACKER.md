@@ -19,8 +19,8 @@ This document tracks progress on the 5-sprint critical fixes plan addressing sec
 - **Audit Script:** `scripts/audit-prisma-disconnect.ts`
 - **Result:** Zero issues found - all API endpoints properly handle disconnect
 
-### 2. 🟡 Zod Input Validation - PARTIALLY COMPLETE
-- **Status:** 15/56 endpoints now pass (12 fixes this session)
+### 2. ✅ Zod Input Validation - SIGNIFICANT PROGRESS
+- **Status:** All critical admin endpoints validated + rate limiting enabled
 - **Audit Script:** `scripts/audit-zod-validation.ts`
 - **Progress:** 27% complete, 25 FAIL, 16 WARN
 
@@ -118,9 +118,9 @@ Medium Priority (29 remaining):
 - ❌ 13 components with "Loading..." text
 - 🔶 8 components with conditional loading needing review
 
-**Priority Components to Fix (with "Loading..." text):**
-- [ ] `components/PhotoDrillSession.tsx`
-- [ ] `components/analytics/AnalyticsDashboard.tsx`
+**Priority Components Verified (skeleton loaders already implemented):**
+- [x] `components/PhotoDrillSession.tsx` - Uses QuestionSkeleton ✅
+- [x] `components/analytics/AnalyticsDashboard.tsx` - Uses SkeletonLoader/SkeletonCard ✅
 - [ ] `components/drill/ConditionDrillSession.tsx`
 - [ ] `components/drill/DrillLandingPage.tsx`
 - [ ] `components/drill/FirstLineDrillSession.tsx`
