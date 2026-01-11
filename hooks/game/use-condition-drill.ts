@@ -85,6 +85,9 @@ export function useConditionDrill(): UseConditionDrillReturn {
   
   // Track recently used conditions to avoid repetition
   const recentConditionsRef = useRef<Set<string>>(new Set());
+  
+  // Track time spent on current question
+  const questionStartTimeRef = useRef<number>(Date.now());
 
   const currentQuestion = queue[currentIndex] ?? null;
 
@@ -144,6 +147,8 @@ export function useConditionDrill(): UseConditionDrillReturn {
     setAttemptNumber(1);
     setFirstAttemptAnswer(null);
     setStatus('playing');
+    // Reset timer for first question
+    questionStartTimeRef.current = Date.now();
   }, [fetchQuestionsFromAPI]);
 
   const showCategoryMenu = useCallback(() => {
@@ -175,6 +180,9 @@ export function useConditionDrill(): UseConditionDrillReturn {
     const selectedAnswer = currentQuestion.options[answerIndex];
     const isCorrectAnswer = answerIndex === currentQuestion.correctAnswerIndex;
     
+    // Calculate time spent on this question
+    const timeSpentMs = Date.now() - questionStartTimeRef.current;
+    
     // Store first attempt for coaching flow
     if (attemptNumber === 1) {
       setFirstAttemptAnswer(answerIndex);
@@ -187,7 +195,7 @@ export function useConditionDrill(): UseConditionDrillReturn {
         body: JSON.stringify({
           questionId: currentQuestion.id,
           selectedAnswer,
-          timeSpent: 0, // TODO: Track actual time spent
+          timeSpentMs, // Now tracking actual time spent
         }),
       });
       
@@ -287,6 +295,8 @@ export function useConditionDrill(): UseConditionDrillReturn {
     setAttemptNumber(1);
     setFirstAttemptAnswer(null);
     setStatus('playing');
+    // Reset timer for next question
+    questionStartTimeRef.current = Date.now();
   }, [fetchQuestionsFromAPI]);
 
   const reset = useCallback(async () => {
@@ -310,6 +320,8 @@ export function useConditionDrill(): UseConditionDrillReturn {
     setAttemptNumber(1);
     setFirstAttemptAnswer(null);
     setStatus('playing');
+    // Reset timer on reset
+    questionStartTimeRef.current = Date.now();
   }, [fetchQuestionsFromAPI]);
 
   return {
