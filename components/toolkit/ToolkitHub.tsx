@@ -843,11 +843,6 @@ const CalculatorCard: React.FC<CalculatorCardProps> = ({
   );
 };
 
-      )}
-    </div>
-  );
-};
-
 // Pediatric Dosing Calculator
 const PediatricDosingCalculator: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [weight, setWeight] = useState('');
