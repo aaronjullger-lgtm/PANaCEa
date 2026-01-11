@@ -13,13 +13,14 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { withAccelerate } from '@prisma/extension-accelerate';
 import { config } from 'dotenv';
 
 // Load environment variables
 config();
 
 /**
- * Creates a PrismaClient instance with explicit datasourceUrl
+ * Creates a PrismaClient instance with Prisma Accelerate support
  * Required for Prisma 7 since url/directUrl were removed from schema.prisma
  */
 function createPrismaClient() {
@@ -32,12 +33,17 @@ function createPrismaClient() {
     );
   }
 
-  return new PrismaClient({
-    datasourceUrl: databaseUrl,
-    log: process.env.NODE_ENV === 'development' 
-      ? ['query', 'error', 'warn'] 
-      : ['error'],
+  const isAccelerateUrl = databaseUrl.startsWith('prisma://');
+  
+  // Use PrismaClient with proper constructor options for Prisma 7
+  const PrismaClientAny = PrismaClient as any;
+  const client = new PrismaClientAny({
+    // For Accelerate URLs, use accelerateUrl
+    // For direct PostgreSQL URLs, use datasourceUrl
+    ...(isAccelerateUrl ? { accelerateUrl: databaseUrl } : { datasourceUrl: databaseUrl }),
   });
+  
+  return client.$extends(withAccelerate());
 }
 
 // Export singleton instance
