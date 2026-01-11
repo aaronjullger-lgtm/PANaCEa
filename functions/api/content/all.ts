@@ -16,10 +16,11 @@
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { handleCorsOptions } from '../_shared/auth';
+import { CloudflareContext } from '../_shared/types';
 
 export const onRequestOptions = handleCorsOptions;
 
-export async function onRequestGet(context: any) {
+export async function onRequestGet(context: CloudflareContext) {
   const { env } = context;
   
   if (!env.DATABASE_URL) {
@@ -110,7 +111,7 @@ export async function onRequestGet(context: any) {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Cache-Control': 'public, max-age=600' // Cache for 10 minutes (summaries don't change often)
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600' // Cache for 1 hour
       }
     });
 

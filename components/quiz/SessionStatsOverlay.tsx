@@ -22,7 +22,7 @@ import {
   getSessionSummary, 
   calculateDistributionDrift,
   PANCE_SYSTEM_PERCENTAGES 
-} from '../../services/panceDistributionService';
+} from '@/services/domain';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
 
 interface SessionStatsOverlayProps {

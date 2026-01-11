@@ -21,6 +21,9 @@ export {
   // Main prediction function
   predictScore,
 
+  // Legacy prediction function (prefer predictScore for new code)
+  predictPANCEScore,
+
   // Constants
   NCCPA_BLUEPRINT_WEIGHTS,
   PANCE_CONSTANTS,

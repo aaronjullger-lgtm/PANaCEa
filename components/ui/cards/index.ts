@@ -1,0 +1,1 @@
+export { MedicalContentCard } from './MedicalContentCard';

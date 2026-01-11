@@ -30,7 +30,7 @@ import {
   RefreshCw,
   Activity,
 } from 'lucide-react';
-import { fetchLearningProfile } from '../../services/sessionAnalyticsSyncService';
+import { fetchLearningProfile } from '@/services/analytics';
 
 interface LearningProfile {
   lifetimeQuestions: number;

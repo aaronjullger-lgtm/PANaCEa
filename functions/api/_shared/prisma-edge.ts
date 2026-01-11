@@ -60,12 +60,6 @@ export function createEdgePrismaClient(databaseUrl: string) {
   const isAccelerateUrl = databaseUrl.startsWith('prisma://');
   const isPostgresUrl = databaseUrl.startsWith('postgresql://') || databaseUrl.startsWith('postgres://');
 
-  // Log the connection type (without exposing credentials)
-  if (DEBUG) {
-    const urlType = isAccelerateUrl ? 'Prisma Accelerate' : isPostgresUrl ? 'Direct PostgreSQL' : 'Unknown';
-    console.log(`[Prisma Edge] Connecting via: ${urlType}`);
-  }
-
   // Warn if using direct PostgreSQL (won't work on Cloudflare Workers in production)
   if (isPostgresUrl) {
     console.warn(
@@ -87,9 +81,6 @@ export function createEdgePrismaClient(databaseUrl: string) {
   }
 
   try {
-    console.log('[Prisma Edge] Creating client with Prisma 7...');
-    console.log('[Prisma Edge] URL type:', isAccelerateUrl ? 'Accelerate' : 'PostgreSQL');
-    
     // Prisma 7 with Accelerate: Use accelerateUrl in constructor
     // This is the new Prisma 7 approach for edge runtimes
     const PrismaClientAny = PrismaClient as any;
@@ -99,12 +90,8 @@ export function createEdgePrismaClient(databaseUrl: string) {
       ...(isAccelerateUrl ? { accelerateUrl: databaseUrl } : { datasourceUrl: databaseUrl }),
     });
     
-    console.log('[Prisma Edge] PrismaClient created, applying Accelerate extension...');
-    
     // Apply Accelerate extension for edge runtime HTTP-based queries
     const extendedClient = client.$extends(withAccelerate());
-    
-    console.log('[Prisma Edge] Accelerate extension applied successfully');
     
     return extendedClient;
   } catch (error) {

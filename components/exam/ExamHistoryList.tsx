@@ -18,7 +18,7 @@ import {
   BarChart3,
   RefreshCcw,
 } from "lucide-react";
-import { ExamService } from "../../services/examService";
+import { ExamService } from '@/services/domain';
 
 // =============================================================================
 // TYPES

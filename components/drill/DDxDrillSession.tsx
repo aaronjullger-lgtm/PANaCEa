@@ -10,6 +10,7 @@ import { Stethoscope, AlertTriangle, Activity, Target } from 'lucide-react';
 import MiniDrillLayout, { QuestionCard, AnswerOption } from './MiniDrillLayout';
 import { EnhancedFeedbackPanel } from './EnhancedFeedbackPanel';
 import { DrillLandingPage } from './DrillLandingPage';
+import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { useDifferentialDrill } from '@/hooks/game/use-ddx-drill';
 import { getDrillLandingStats, DrillType } from '@/services/drillStatsService';
 
@@ -95,14 +96,7 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
         onExit={drill.exitToMenu}
         onReset={drill.reset}
       >
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Loading differential diagnoses...</p>
-          </div>
-        </div>
-      </MiniDrillLayout>
-    );
+        <QuestionSkeleton />
   }
 
   // Error state

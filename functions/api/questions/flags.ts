@@ -1,17 +1,18 @@
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
+import { CloudflareContext } from '../_shared/types';
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestGet = async (context: { request: Request; env: { DATABASE_URL?: string; CLERK_SECRET_KEY: string } }) => {
+export const onRequestGet = async (context: CloudflareContext) => {
 
   const { request, env } = context;
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
     // Verify auth
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
+    const clerkId = await verifyAuthToken(request, env);
+    if (!clerkId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 
@@ -21,14 +22,10 @@ export const onRequestGet = async (context: { request: Request; env: { DATABASE_
       });
     }
 
-    // TODO: Add admin check here
-
-    const url = new URL(request.url);
-    const status = url.searchParams.get('status');
-    const priority = url.searchParams.get('priority');
-
+    // Admin check: Verify user has admin role
     if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ success: true, flags: [] }), {
+      return new Response(JSON.stringify({ error: 'Database not configured' }), {
+        status: 500,
         headers: { 
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
@@ -36,7 +33,26 @@ export const onRequestGet = async (context: { request: Request; env: { DATABASE_
       });
     }
 
-    prisma = createEdgePrismaClient(env);
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true, role: true },
+    });
+
+    if (!user || !['ADMIN', 'SUPERADMIN'].includes(user.role)) {
+      return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
+        status: 403,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status');
+    const priority = url.searchParams.get('priority');
 
     const flags = await prisma.questionFlag.findMany({
       where: {

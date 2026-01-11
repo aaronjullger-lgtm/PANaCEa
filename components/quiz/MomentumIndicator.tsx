@@ -21,7 +21,7 @@ import {
   detectFatigueSignals,
   type MomentumLevel,
   type MomentumState,
-} from '../../services/sessionMomentumService';
+} from '@/services/session';
 
 interface MomentumIndicatorProps {
   /** Force refresh when question answered */

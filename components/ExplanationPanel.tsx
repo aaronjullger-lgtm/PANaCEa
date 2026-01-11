@@ -22,7 +22,7 @@ import {
 import ErrorTagger from './quiz/ErrorTagger';
 import type { ErrorTag } from '../types';
 import { getConditionByIdSync, loadConditions } from '../lib/loadConditions';
-import { analyzeAnswer } from '../services/CoachingService';
+import { analyzeAnswer } from '@/services/CoachingService';
 
 /** Maximum number of bullet points to display in Core Rationale section */
 const MAX_BULLETS = 6;

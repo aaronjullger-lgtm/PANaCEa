@@ -116,13 +116,6 @@ export async function verifyAuthToken(
     if (isTestEnv) {
       const payload = decodeJwtPayload(token);
       if (payload) {
-        // Keep console logs for unit tests and local diagnostics
-        console.log('[AUTH] Token payload claims:', {
-          iss: payload.iss,
-          exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : undefined,
-          iat: payload.iat ? new Date(payload.iat * 1000).toISOString() : undefined,
-        });
-
         // Only log non-sensitive claims for diagnostics
         authLogger.success(payload.sub || 'unknown', 'jwt_verification');
         
@@ -143,9 +136,6 @@ export async function verifyAuthToken(
     });
 
     authLogger.success(verifiedToken.sub || 'unknown', 'token_verification');
-    if (isTestEnv) {
-      console.log('[AUTH] Token verification successful for user:', verifiedToken.sub || 'unknown');
-    }
     return verifiedToken.sub || null;
   } catch (error) {
     // Phase 2.1: Retrieve error details (limited to essential info)
@@ -278,10 +268,6 @@ export async function authenticateRequest(
 
   const isTestEnv = secretKey.startsWith('sk_test_');
 
-  // Phase 1.3: Log masked key for verification (test environments only)
-  console.log('[AUTH] Secret key verified (masked):', maskSecretKey(secretKey));
-  console.log('[AUTH] Secret key environment:', isTestEnv ? 'test' : 'live');
-
   const authHeader = request.headers.get('Authorization');
   const userId = await verifyAuthToken(authHeader, secretKey);
 
@@ -291,9 +277,6 @@ export async function authenticateRequest(
   }
 
   authLogger.success(userId, 'request_authentication');
-  if (isTestEnv) {
-    console.log('[AUTH] Authentication successful for user:', userId);
-  }
   return {
     userId,
     clerkId: userId,

@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import type { CustomSessionConfig, CustomSessionSummary as SummaryType } from '../../types/custom-session';
-import { customSessionService } from '../../services/customSessionService';
+import { customSessionService } from '@/services/core';
 import CustomSessionBuilder from '../custom-study/CustomSessionBuilder';
 import CustomSessionRunner from '../custom-study/CustomSessionRunner';
 import CustomSessionSummary from '../custom-study/CustomSessionSummary';

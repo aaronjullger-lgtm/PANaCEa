@@ -122,6 +122,7 @@ export const recordTimeOfDayAttempt = advancedAnalytics.recordTimeOfDayAttempt;
 export const isLateNightStudying = circadianAnalytics.isLateNightStudying;
 export const getCircadianInsights = circadianAnalytics.getCircadianInsights;
 export const analyzeCircadianPerformance = circadianAnalytics.analyzeCircadianPerformance;
+export const formatHour = circadianAnalytics.formatHour;
 
 // FSRS personalization
 export const calculatePersonalizedFSRS = advancedAnalytics.calculatePersonalizedFSRS;

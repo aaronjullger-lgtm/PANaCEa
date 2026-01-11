@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import type { Question } from '../../types';
 import type { CustomSessionConfig, CustomSessionState } from '../../types/custom-session';
-import { customSessionService } from '../../services/customSessionService';
+import { customSessionService } from '@/services/core';
 
 interface Props {
   config: CustomSessionConfig;

@@ -14,7 +14,7 @@ import {
   recordPauseTaken,
   getQuickEncouragement,
   type PauseRecommendation 
-} from '../../services/smartPauseService';
+} from '@/services/session';
 
 interface SmartPauseIndicatorProps {
   refreshKey?: number;

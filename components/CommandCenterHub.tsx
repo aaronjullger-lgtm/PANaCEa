@@ -52,7 +52,7 @@ import { DatabaseAnalyticsDashboard } from './analytics/DatabaseAnalyticsDashboa
 import { LearningProfileDashboard } from './analytics/LearningProfileDashboard';
 import { AdvancedLearningProfileDashboard } from './analytics/AdvancedLearningProfileDashboard';
 import { UserFriendlyStatsDisplay } from './analytics/UserFriendlyStatsDisplay';
-import { ClinicalLibrary } from './toolkit/ClinicalLibrary';
+import { MedicalContentBrowser } from './toolkit/MedicalContentBrowser';
 import {
   VISUAL_DIAGNOSTICS_MODES,
   CLINICAL_SIMULATION_MODES,
@@ -720,7 +720,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 Clinical Knowledge
               </h3>
               <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
-                <ClinicalLibrary onSelectCondition={(conditionId) => {
+                <MedicalContentBrowser onSelectCondition={(conditionId) => {
                   // Navigate to condition detail or show in modal
                   console.log('Selected condition:', conditionId);
                 }} />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { PANCE_TOPICS } from '../../src/constants';
+import chartTheme from '@/lib/chartTheme';
 
 // Mock data for demonstration purposes
 // In a real application, this would be fetched from an analytics service
@@ -30,7 +31,7 @@ const TopicTrendChart: React.FC<TopicTrendChartProps> = ({ topic }) => {
       <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">
         Performance Trend: {topic}
       </h3>
-      <div style={{ width: '100%', height: 300 }}>
+      <div className="w-full h-[300px]">
         <ResponsiveContainer>
           <LineChart
             data={chartData}
@@ -41,17 +42,12 @@ const TopicTrendChart: React.FC<TopicTrendChartProps> = ({ topic }) => {
               bottom: 5,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.3)" />
-            <XAxis dataKey="date" stroke="rgba(128, 128, 128, 0.8)" />
-            <YAxis domain={[0, 100]} stroke="rgba(128, 128, 128, 0.8)" />
+            <CartesianGrid {...chartTheme.grid} />
+            <XAxis dataKey="date" tick={chartTheme.axis.tick} />
+            <YAxis domain={[0, 100]} tick={chartTheme.axis.tick} />
             <Tooltip
-              contentStyle={{
-                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(5px)',
-                border: '1px solid #ccc',
-                borderRadius: '8px',
-              }}
-              labelStyle={{ fontWeight: 'bold' }}
+              contentStyle={chartTheme.tooltip.contentStyle}
+              labelStyle={chartTheme.tooltip.labelStyle}
               formatter={(value: number) => [`${value.toFixed(1)}%`, 'Performance']}
             />
             <Legend />

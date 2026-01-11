@@ -33,7 +33,7 @@ import {
   FOCUS_AREA_META, 
   DEFAULT_CUSTOM_SESSION_CONFIG 
 } from '../../types/custom-session';
-import { customSessionService } from '../../services/customSessionService';
+import { customSessionService } from '@/services/core';
 
 interface Props {
   onStartSession: (config: CustomSessionConfig) => void;

@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import type { AnatomyModel, ModelAnnotation, ViewerConfig, AnatomySystem } from '../../types/anatomy-model';
 import { DEFAULT_VIEWER_CONFIG } from '../../types/anatomy-model';
-import { anatomyModelService } from '../../services/anatomyModelService';
+import * as anatomyModelService from '@/services/anatomyModelService';
 
 // Skeleton loader for when 3D libraries are loading
 const ModelSkeleton = () => (

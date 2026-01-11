@@ -10,6 +10,7 @@ import { Wind, X, ArrowRight, RotateCcw, Activity, Droplets, Gauge, Wind as Brea
 import { useVentilatorDrill, type VentCase } from '@/hooks/game/use-ventilator-drill';
 import MiniDrillLayout from '@/components/drill/MiniDrillLayout';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
+import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { getDrillLandingStats } from '@/services/drillStatsService';
 
 // Action options for ventilator adjustments
@@ -103,10 +104,9 @@ const VentilatorDrillSession: React.FC<VentilatorDrillSessionProps> = ({ onExit 
   // Loading state
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-primary)]">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-lg text-[var(--color-text-primary)] font-medium">Loading questions...</p>
+      <div className="min-h-screen bg-[var(--color-bg-primary)] p-6">
+        <div className="max-w-4xl mx-auto">
+          <QuestionSkeleton />
         </div>
       </div>
     );

@@ -5,10 +5,29 @@ import { calculateParTime } from '../../../lib/utils/questionComplexity';
 import { updateReviewOutcome } from '../../../lib/services/srsService';
 import { FSRS, Rating } from '../../../lib/fsrs';
 import { updateUserProgressWithHistory } from '../../../lib/services/userProgressService';
+import { CloudflareContext } from '../_shared/types';
+
+/**
+ * Question data structure from PreGeneratedQuestion.questionData field
+ */
+interface QuestionData {
+  stem?: string;
+  question?: string;
+  vignette?: string;
+  text?: string;
+  correctAnswer?: string;
+  answer?: string;
+  correct_option?: string;
+  correctChoice?: string;
+  correctIndex?: number;
+  options?: Array<{ value?: string; text?: string; label?: string } | string>;
+  choices?: Array<{ value?: string; text?: string; label?: string } | string>;
+  [key: string]: unknown;
+}
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestPost = async (context: any) => {
+export const onRequestPost = async (context: CloudflareContext) => {
   const { request, env } = context;
   let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
@@ -77,25 +96,34 @@ export const onRequestPost = async (context: any) => {
       });
     }
 
-    const qData: any = (question as any).questionData || {};
+    const qData = (question.questionData as QuestionData) || {};
 
-    let correctAnswer: any =
+    let correctAnswer: string | null =
       qData.correctAnswer ?? qData.answer ?? qData.correct_option ?? qData.correctChoice ?? null;
 
     if (correctAnswer === null && typeof qData.correctIndex === 'number') {
       const pool = Array.isArray(qData.options) ? qData.options : qData.choices;
       if (Array.isArray(pool) && pool[qData.correctIndex]) {
         const candidate = pool[qData.correctIndex];
-        correctAnswer = candidate?.value ?? candidate?.text ?? candidate?.label ?? candidate;
+        if (typeof candidate === 'string') {
+          correctAnswer = candidate;
+        } else if (typeof candidate === 'object' && candidate !== null) {
+          correctAnswer = candidate.value ?? candidate.text ?? candidate.label ?? null;
+        }
       }
     }
 
     const isCorrect = correctAnswer !== null
       ? selectedAnswer === correctAnswer
-      : Boolean((qData.options || qData.choices || []).some((opt: any) => {
-          const val = opt?.value ?? opt?.text ?? opt?.label ?? opt;
-          return val === selectedAnswer;
-        }));
+      : (qData.options || qData.choices || []).some((opt: unknown) => {
+          if (typeof opt === 'string') return opt === selectedAnswer;
+          if (typeof opt === 'object' && opt !== null) {
+            const optObj = opt as { value?: string; text?: string; label?: string };
+            const val = optObj.value ?? optObj.text ?? optObj.label;
+            return val === selectedAnswer;
+          }
+          return false;
+        });
 
     const parTimeMs = calculateParTime({
       ...qData,
@@ -137,16 +165,16 @@ export const onRequestPost = async (context: any) => {
           },
         });
 
-        const fsrsCardData: any = existingProgress?.fsrsCard || {};
+        const fsrsCardData = (existingProgress?.fsrsCard as Record<string, unknown>) || {};
         const currentCard = {
-          stability: fsrsCardData.stability || 0,
-          difficulty: fsrsCardData.difficulty || 0,
-          state: fsrsCardData.state || 0,
-          elapsed_days: fsrsCardData.elapsed_days || 0,
-          scheduled_days: fsrsCardData.scheduled_days || 0,
-          reps: fsrsCardData.reps || 0,
-          lapses: fsrsCardData.lapses || 0,
-          last_review: fsrsCardData.last_review ? new Date(fsrsCardData.last_review) : new Date(),
+          stability: typeof fsrsCardData.stability === 'number' ? fsrsCardData.stability : 0,
+          difficulty: typeof fsrsCardData.difficulty === 'number' ? fsrsCardData.difficulty : 0,
+          state: typeof fsrsCardData.state === 'number' ? fsrsCardData.state : 0,
+          elapsed_days: typeof fsrsCardData.elapsed_days === 'number' ? fsrsCardData.elapsed_days : 0,
+          scheduled_days: typeof fsrsCardData.scheduled_days === 'number' ? fsrsCardData.scheduled_days : 0,
+          reps: typeof fsrsCardData.reps === 'number' ? fsrsCardData.reps : 0,
+          lapses: typeof fsrsCardData.lapses === 'number' ? fsrsCardData.lapses : 0,
+          last_review: typeof fsrsCardData.last_review === 'string' ? new Date(fsrsCardData.last_review) : new Date(),
         };
 
         const { card: updatedCard } = fsrs.next(currentCard, new Date(), rating);

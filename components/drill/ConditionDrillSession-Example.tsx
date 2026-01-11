@@ -54,8 +54,8 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
       return {
         condition: 'Mock Condition',
         system: 'CV',
-        question: 'Loading...',
-        options: ['A', 'B', 'C', 'D'],
+        question: 'Preparing question...',
+        options: ['Option A', 'Option B', 'Option C', 'Option D'],
         correctIndex: 0,
       };
     }

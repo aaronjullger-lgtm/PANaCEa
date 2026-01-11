@@ -5,6 +5,7 @@ import { useAuth } from '@clerk/clerk-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
 import { SkeletonLoader, SkeletonCard } from '@/components/ui/SkeletonLoader';
+import chartTheme from '@/lib/chartTheme';
 
 interface AnalyticsDashboardProps {
   performanceData: PerformanceRecord[];
@@ -353,23 +354,20 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
               <>
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart data={stabilityTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <CartesianGrid {...chartTheme.grid} />
                     <XAxis 
                       dataKey="date" 
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} 
+                      tick={chartTheme.axis.tick}
                       angle={-20}
                       height={60}
                     />
                     <YAxis 
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} 
+                      tick={chartTheme.axis.tick}
                       label={{ value: 'Stability', angle: -90, position: 'insideLeft', style: { fill: 'var(--color-text-muted)' } }}
                     />
                     <Tooltip 
-                      contentStyle={{
-                        backgroundColor: 'var(--color-bg-secondary)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: '8px',
-                      }}
+                      contentStyle={chartTheme.tooltip.contentStyle}
+                      labelStyle={chartTheme.tooltip.labelStyle}
                       formatter={(value: any, name: string) => {
                         if (name === 'avgStability') return [value.toFixed(2), 'Stability'];
                         return [value, name];

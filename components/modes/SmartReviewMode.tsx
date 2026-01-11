@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Brain, Clock, Zap, TrendingUp, CheckCircle, AlertCircle, AlertTriangle, Sparkles, FileText } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
+import { SkeletonLoader, SkeletonText } from '@/components/ui/SkeletonLoader';
 
 interface ReviewItem {
   id: string;
@@ -139,15 +140,42 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   // Loading State
   if (viewState === 'loading') {
     return (
-      <div className="fixed inset-0 bg-[var(--color-bg-primary)] flex items-center justify-center z-50">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
-        >
-          <Brain className="w-16 h-16 text-[var(--color-accent)] mx-auto mb-4 animate-pulse" />
-          <p className="text-[var(--color-text-muted)]">Loading your daily reviews...</p>
-        </motion.div>
+      <div className="fixed inset-0 bg-[var(--color-bg-primary)] overflow-y-auto z-50">
+        {/* Header Skeleton */}
+        <div className="sticky top-0 bg-[var(--color-bg-secondary)]/95 backdrop-blur border-b border-[var(--color-border)]">
+          <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <SkeletonLoader width="24px" height="24px" className="rounded" />
+              <SkeletonLoader width="100px" height="20px" className="rounded" />
+            </div>
+            <SkeletonLoader width="60px" height="20px" className="rounded" />
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+          {/* Badge skeleton */}
+          <div className="flex justify-center">
+            <SkeletonLoader width="140px" height="36px" className="rounded-full" />
+          </div>
+          
+          {/* Question card skeleton */}
+          <div className="bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-2xl p-8">
+            <SkeletonText lines={3} className="mb-8" />
+            
+            {/* Answer choices skeleton */}
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <SkeletonLoader key={i} height="64px" className="rounded-xl" />
+              ))}
+            </div>
+          </div>
+          
+          {/* Button skeleton */}
+          <div className="flex justify-center">
+            <SkeletonLoader width="160px" height="48px" className="rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }

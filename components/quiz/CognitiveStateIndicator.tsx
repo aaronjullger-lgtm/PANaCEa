@@ -8,7 +8,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Zap, Coffee, Target } from 'lucide-react';
-import type { CognitiveState } from '../../services/advancedUserAnalyticsEngine';
+import type { CognitiveState } from '@/services/analytics';
 
 interface CognitiveStateIndicatorProps {
   cognitiveState: CognitiveState | null;

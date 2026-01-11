@@ -24,13 +24,13 @@ import {
   ToggleLeft,
   ToggleRight
 } from 'lucide-react';
-import type { AttendingPersona } from '../../services/virtualAttendingService';
+import type { AttendingPersona } from '@/services/ai';
 import { 
   ATTENDING_PERSONAS, 
   loadPreferredPersona, 
   savePreferredPersona 
-} from '../../services/virtualAttendingService';
-import type { SpanishMode } from '../../services/medicalSpanishService';
+} from '@/services/ai';
+import type { SpanishMode } from '@/services/domain';
 
 interface AdvancedFeaturesPanelProps {
   onOpenWellnessCheck?: () => void;

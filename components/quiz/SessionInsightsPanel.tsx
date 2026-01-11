@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { MomentumIndicator } from './MomentumIndicator';
 import { BehavioralCalibration } from './BehavioralCalibration';
-import { getSessionSummary } from '../../services/panceDistributionService';
+import { getSessionSummary } from '@/services/domain';
 
 interface SessionInsightsPanelProps {
   /** Force refresh when question answered */

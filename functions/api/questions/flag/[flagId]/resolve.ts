@@ -2,18 +2,20 @@ import { createEdgePrismaClient } from '../../../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../../../_shared/auth';
 import { validateRequired } from '../../../_shared/validation';
 import { sendFlagResolvedNotification } from '../../../_shared/notifications';
+import { CloudflareContext } from '../../../_shared/types';
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestPost = async (context) => {
+export const onRequestPost = async (context: CloudflareContext) => {
 
   const { request, env, params } = context;
   const { flagId } = params;
+  let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
   try {
     // Verify auth
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
+    const clerkId = await verifyAuthToken(request, env);
+    if (!clerkId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 
@@ -23,7 +25,35 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    // TODO: Add admin check here if needed (RBAC)
+    if (!env.DATABASE_URL) {
+      return new Response(JSON.stringify({ 
+        error: 'Database not configured' 
+      }), {
+        status: 503,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
+
+    prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+    // Admin check: Verify user has admin role
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true, role: true },
+    });
+
+    if (!user || !['ADMIN', 'SUPERADMIN'].includes(user.role)) {
+      return new Response(JSON.stringify({ error: 'Forbidden: Admin access required' }), {
+        status: 403,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
 
     const body = await request.json();
     
@@ -43,21 +73,6 @@ export const onRequestPost = async (context) => {
     }
 
     const { reviewedBy, resolutionNote } = body;
-
-    if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Database not configured' 
-      }), {
-        status: 503,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      });
-    }
-
-    const prisma = createEdgePrismaClient(env);
 
     // Update flag status
     const flag = await prisma.questionFlag.update({

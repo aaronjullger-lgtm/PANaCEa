@@ -262,7 +262,7 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
       </div>
       
       {/* Month labels - positioned above their corresponding columns */}
-      <div className="flex mb-1 ml-8" style={{ position: 'relative', width: 'calc(100% - 2rem)' }}>
+      <div className="flex mb-1 ml-8 relative w-[calc(100%-2rem)]">
         {monthLabels.map((label, idx) => {
           const totalCols = dateGrid[0].length;
           const width = ((label.endCol - label.startCol + 1) / totalCols) * 100;
@@ -271,9 +271,8 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           return (
             <div
               key={idx}
-              className="text-xs text-slate-600 dark:text-slate-400 font-medium"
+              className="absolute text-xs text-slate-600 dark:text-slate-400 font-medium"
               style={{ 
-                position: 'absolute',
                 left: `${left}%`,
                 width: `${width}%`,
               }}
@@ -291,8 +290,9 @@ const HeatmapCalendar: React.FC<HeatmapCalendarProps> = ({
           {DAY_NAMES.map((day, idx) => (
             <div
               key={idx}
-              className="h-3 text-xs text-slate-600 dark:text-slate-400 flex items-center"
-              style={{ visibility: idx === 1 || idx === 3 || idx === 5 ? 'visible' : 'hidden' }}
+              className={`h-3 text-xs text-slate-600 dark:text-slate-400 flex items-center ${
+                idx === 1 || idx === 3 || idx === 5 ? 'visible' : 'invisible'
+              }`}
             >
               {day}
             </div>

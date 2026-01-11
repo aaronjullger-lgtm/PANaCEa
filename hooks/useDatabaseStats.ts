@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
-import { getUserStats } from '../services/attemptService';
+import { getUserStats } from '@/services/core';
 
 interface SystemStats {
   total: number;

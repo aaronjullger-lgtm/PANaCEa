@@ -229,8 +229,12 @@ export function DrillLandingPage({
             disabled={isLoading}
             className={`w-full ${colors.button} text-white font-bold py-4 px-6 rounded-xl transition-colors flex items-center justify-center gap-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            <Play className="w-6 h-6" />
-            {isLoading ? 'Loading...' : 'Start Drill'}
+            {isLoading ? (
+              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Play className="w-6 h-6" />
+            )}
+            {isLoading ? 'Starting...' : 'Start Drill'}
           </motion.button>
         </div>
 

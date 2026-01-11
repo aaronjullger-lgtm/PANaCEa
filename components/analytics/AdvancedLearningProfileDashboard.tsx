@@ -47,7 +47,7 @@ import {
   Sunrise,
   Sunset,
 } from 'lucide-react';
-import { fetchLearningProfile } from '../../services/sessionAnalyticsSyncService';
+import { fetchLearningProfile } from '@/services/analytics';
 import {
   getCognitiveState,
   getLearningVelocity,
@@ -57,7 +57,7 @@ import {
   type CognitiveState,
   type LearningVelocity,
   type PerformanceByTimeOfDay,
-} from '../../services/advancedUserAnalyticsEngine';
+} from '@/services/analytics';
 
 // ============================================================================
 // Types

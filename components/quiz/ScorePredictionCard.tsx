@@ -16,10 +16,10 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { 
-  predictPANCEScore, 
+  predictScore as predictPANCEScore, 
   calculateTrend,
   type PerformanceSnapshot,
-} from '../../services/performancePredictionService';
+} from '@/services/analytics';
 import type { PerformanceRecord } from '../../types';
 
 interface ScorePredictionCardProps {

@@ -24,22 +24,22 @@ import {
   type SystemMasteryProfile,
   type ComprehensiveUserAnalytics,
   type AnalyticsInsight,
-} from '../services/advancedUserAnalyticsEngine';
+} from '@/services/analytics';
 import {
   getAdaptiveFSRS,
   generateAdaptiveStudyPlan,
   type StudySessionPlan,
-} from '../services/adaptiveFSRSService';
+} from '@/services/domain';
 import {
   getIntelligentQuestions,
   enhanceSessionSettings,
   type IntelligentQuestionResult,
-} from '../services/intelligentQuestionService';
+} from '@/services/ai';
 import {
   storeQuestionAttempt,
   generateId,
   type QuestionAttemptRecord,
-} from '../services/deepAnalyticsStore';
+} from '@/services/analytics';
 import type { Question, SessionSettings } from '../types';
 
 // ============================================================================

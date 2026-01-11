@@ -8,6 +8,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers, X, Heart, Brain, Activity, Droplets, Bone, Eye, Ear, Scissors, Baby, Users, Stethoscope, Shield, ArrowRight, BarChart3, Loader2 } from 'lucide-react';
+import { QuestionSkeleton } from '@/components/loading/SkeletonLoader';
 import { useAuth } from '@clerk/clerk-react';
 import { DrillLandingPage } from '@/components/drill/DrillLandingPage';
 import { getDrillLandingStats, getCategoryBreakdown } from '@/services/drillStatsService';
@@ -221,10 +222,9 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
   if (selectedSystem && !showLanding) {
     if (isLoading && queue.length === 0) {
       return (
-        <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
-            <p className="text-[var(--color-text-secondary)]">Loading {SYSTEM_OPTIONS.find(s => s.id === selectedSystem)?.name} questions...</p>
+        <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] p-6">
+          <div className="max-w-4xl mx-auto mt-20">
+            <QuestionSkeleton />
           </div>
         </div>
       );

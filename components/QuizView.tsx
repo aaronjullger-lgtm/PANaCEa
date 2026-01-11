@@ -9,8 +9,9 @@ import React, {
 import { motion, AnimatePresence } from "framer-motion";
 import { useShortcut } from "../src/context/ShortcutContext";
 import { useUser } from "@clerk/clerk-react";
-import { generateAlternateRationale } from "../services/geminiService";
-import { getQuestion, fetchPearlsForQuestion } from "../services/questionService";
+
+// Core services
+import { getQuestion, fetchPearlsForQuestion } from "@/services/core";
 import { 
   fetchSessionQuestions, 
   recordSessionAnswer,
@@ -18,30 +19,45 @@ import {
   getPoolStatus,
   checkAndReplenishPool,
   getSessionSummary as getMainSessionSummary,
-} from "../services/mainSessionService";
-import { recordQuestionAttempt } from "../services/attemptService";
+} from "@/services/core";
+import { recordQuestionAttempt } from "@/services/core";
+
+// Session services
+import { 
+  recordAnswerPattern,
+  recordBehavioralConfidence,
+  inferConfidence,
+  type BehaviorSignals,
+  recordMomentumResult,
+  recordPauseResult,
+  resetPauseTracking,
+} from "@/services/session";
+
+// Analytics services
+import { recordCircadianPerformance } from "@/services/analytics";
+import { 
+  updatePerformancePrediction, 
+  resetPrediction 
+} from "@/services/analytics";
+
+// Domain services
+import { 
+  recordQuestion, 
+  getSessionSummary, 
+  resetSessionDistribution 
+} from "@/services/domain";
+
+// AI services
+import { generateAlternateRationale } from "@/services/ai";
+
+// Components
 import { FlagQuestionModal } from "./FlagQuestionModal";
-import type {
-  Question,
-  PerformanceRecord,
-  SessionSettings,
-  ErrorTag,
-} from "../types";
-import { CloseIcon } from "./icons/CloseIcon";
-import { FlagIcon } from "./icons/FlagIcon";
-import { AlertTriangle, BarChart3 } from "lucide-react";
-import { ArrowLeftIcon } from "./icons/ArrowLeftIcon";
-import { ClearHighlightIcon } from "./icons/ClearHighlightIcon";
 import AnswerChoice from "./quiz/AnswerChoice";
 import ErrorTagger from "./quiz/ErrorTagger";
 import Loader from "./Loader";
 import WellnessCheckModal from "./wellness/WellnessCheckModal";
-import { recordCircadianPerformance } from "../services/circadianAnalyticsService";
-import { feedback } from "../services/feedbackService";
-import { updateReviewOutcome, type SRSScheduleResult } from "../lib/services/srsService";
-import { calculateParTime } from '../lib/utils/questionComplexity';
 import { SRSFeedbackBadge } from "./quiz/SRSFeedbackBadge";
-import { useAuth } from "../hooks/useAuth";
+
 // Sprint 4: Enhanced session components
 import { 
   SessionStatsOverlay, 
@@ -57,18 +73,39 @@ import {
   EncouragementToast,
   CognitiveStateIndicator,
 } from "./quiz";
-import { recordQuestion, getSessionSummary, resetSessionDistribution } from "../services/panceDistributionService";
+
+// Icons
+import { CloseIcon } from "./icons/CloseIcon";
+import { FlagIcon } from "./icons/FlagIcon";
+import { AlertTriangle, BarChart3 } from "lucide-react";
+import { ArrowLeftIcon } from "./icons/ArrowLeftIcon";
+import { ClearHighlightIcon } from "./icons/ClearHighlightIcon";
+
+// Types
+import type {
+  Question,
+  PerformanceRecord,
+  SessionSettings,
+  ErrorTag,
+} from "../types";
+import type { SRSScheduleResult } from "../lib/services/srsService";
+
+// Lib utils
+import { updateReviewOutcome } from "../lib/services/srsService";
+import { calculateParTime } from '../lib/utils/questionComplexity';
 import { 
-  inferConfidence, 
-  recordBehavioralConfidence,
-  type BehaviorSignals,
-} from "../services/behavioralConfidenceService";
-import { recordMomentumResult } from "../services/sessionMomentumService";
-import { recordAnswerPattern } from "../services/answerPatternService";
-import { updatePerformancePrediction, resetPrediction } from "../services/performancePredictionService";
-import { recordPauseResult, resetPauseTracking } from "../services/smartPauseService";
+  optimisticUpdateStats, 
+  optimisticUpdateSystemStats, 
+  createOptimisticPerformanceRecord,
+  showOptimisticFeedback,
+} from "../lib/utils/optimisticUI";
+
+// Hooks
+import { useAuth } from "../hooks/useAuth";
 import { useAdvancedAnalytics } from "../hooks/useAdvancedAnalytics";
-import ClinicalSkeleton from "./ui/ClinicalSkeleton";
+
+// Other services (non-barrel)
+import { feedback } from "../services/feedbackService";
 // Sprint 4: Optimistic UI for instant feedback
 import { 
   optimisticUpdateStats, 

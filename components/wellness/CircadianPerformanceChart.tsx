@@ -12,7 +12,7 @@ import {
   analyzeCircadianPerformance,
   getCircadianInsights,
   formatHour
-} from '../../services/circadianAnalyticsService';
+} from '@/services/analytics';
 
 interface CircadianPerformanceChartProps {
   performanceRecords: PerformanceRecord[];

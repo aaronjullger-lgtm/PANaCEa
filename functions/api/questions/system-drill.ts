@@ -7,10 +7,11 @@
 
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions, authenticateRequest } from '../_shared/auth';
+import { CloudflareContext } from '../_shared/types';
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestPost = async (context: any) => {
+export const onRequestPost = async (context: CloudflareContext) => {
   // Authenticate user
   const env = context.env as any;
   const authResult = await authenticateRequest(context.request, env);

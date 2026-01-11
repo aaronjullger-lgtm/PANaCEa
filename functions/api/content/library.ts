@@ -7,10 +7,11 @@
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { handleCorsOptions, authenticateRequest } from '../_shared/auth';
+import { CloudflareContext } from '../_shared/types';
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestGet = async (context: any) => {
+export const onRequestGet = async (context: CloudflareContext) => {
 
   // Authenticate user
   const env = context.env as any;
@@ -94,7 +95,7 @@ export const onRequestGet = async (context: any) => {
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, s-maxage=300', // Cache for 5 minutes
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
         },
       }
     );

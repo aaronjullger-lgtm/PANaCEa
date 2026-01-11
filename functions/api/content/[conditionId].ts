@@ -141,7 +141,8 @@ export async function onRequestGet(context: PagesContext): Promise<Response> {
         status: 200,
         headers: { 
           'Content-Type': 'application/json',
-          'X-Cache': 'MISS'
+          'X-Cache': 'MISS',
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600' // Cache for 1 hour
         }
       }
     );

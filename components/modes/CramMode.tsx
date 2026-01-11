@@ -23,7 +23,7 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { callGeminiText } from '../../services/geminiService';
+import { geminiService } from '@/services/ai';
 import { GEMINI_FLASH_MODEL } from '@/src/constants';
 
 /**
@@ -95,7 +95,7 @@ FORMAT YOUR RESPONSE AS VALID JSON:
 IMPORTANT: Return ONLY valid JSON, no markdown or code blocks.`;
 
   try {
-    const response = await callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.7);
+    const response = await geminiService.callGeminiText(GEMINI_FLASH_MODEL, prompt, 0.7);
     
     // Clean response - remove markdown code blocks if present
     let cleanedResponse = response.trim();

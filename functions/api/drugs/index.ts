@@ -1,9 +1,10 @@
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import { handleCorsOptions } from '../_shared/auth';
+import { CloudflareContext } from '../_shared/types';
 
 export const onRequestOptions = handleCorsOptions;
 
-export async function onRequestGet(context: any) {
+export async function onRequestGet(context: CloudflareContext) {
   const { request, env } = context;
   const url = new URL(request.url);
   const limitParam = url.searchParams.get('limit');
@@ -71,7 +72,7 @@ export async function onRequestGet(context: any) {
       headers: { 
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
       }
     });
   } catch (error: any) {

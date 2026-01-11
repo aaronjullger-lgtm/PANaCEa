@@ -70,7 +70,6 @@ export async function getOrSet<T>(
   try {
     const cached = await env.CACHE.get(key, 'json');
     if (cached) {
-      console.log(`[KV Cache] HIT: ${key}`);
       return cached as T;
     }
   } catch (error) {
@@ -78,13 +77,11 @@ export async function getOrSet<T>(
   }
 
   // Cache miss - fetch and store
-  console.log(`[KV Cache] MISS: ${key}`);
   const data = await fetchFn();
 
   // Store in cache (non-blocking)
   try {
     await env.CACHE.put(key, JSON.stringify(data), { expirationTtl: ttl });
-    console.log(`[KV Cache] STORED: ${key} (TTL: ${ttl}s)`);
   } catch (error) {
     console.error('[KV Cache] Error writing to cache:', error);
   }
@@ -100,7 +97,6 @@ export async function invalidate(env: CloudflareEnv, key: string): Promise<void>
 
   try {
     await env.CACHE.delete(key);
-    console.log(`[KV Cache] INVALIDATED: ${key}`);
   } catch (error) {
     console.error('[KV Cache] Error invalidating cache:', error);
   }
@@ -120,8 +116,6 @@ export async function invalidatePrefix(env: CloudflareEnv, prefix: string): Prom
     await Promise.all(
       list.keys.map(({ name }) => env.CACHE!.delete(name))
     );
-    
-    console.log(`[KV Cache] INVALIDATED PREFIX: ${prefix} (${list.keys.length} keys)`);
   } catch (error) {
     console.error('[KV Cache] Error invalidating prefix:', error);
   }
@@ -206,8 +200,6 @@ export async function invalidateUserCache(env: CloudflareEnv, userId: string): P
  * Call this during application startup or on scheduled worker
  */
 export async function warmCache(env: CloudflareEnv, prisma: any): Promise<void> {
-  console.log('[KV Cache] Warming cache...');
-  
   try {
     // Cache high-yield conditions
     const highYieldConditions = await prisma.medicalContent.findMany({
@@ -239,8 +231,6 @@ export async function warmCache(env: CloudflareEnv, prisma: any): Promise<void> 
         { ttl: LONG_TTL }
       );
     }
-
-    console.log('[KV Cache] Cache warmed successfully');
   } catch (error) {
     console.error('[KV Cache] Error warming cache:', error);
   }

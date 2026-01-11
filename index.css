@@ -166,6 +166,43 @@ body,
   --color-category-specialty: #B39B6C;    /* Muted Amber */
   --color-category-toolkit: #7A8F6E;      /* Sage */
   --color-category-command: #5E8686;      /* Slate-Teal */
+
+  /* ===== DARK SPORTSBOOK AESTHETIC VARIABLES ===== */
+  /* Deep backgrounds with subtle opacity */
+  --sportsbook-bg-primary: rgba(15, 23, 42, 0.95);      /* slate-950/95 */
+  --sportsbook-bg-secondary: rgba(30, 41, 59, 0.90);    /* slate-900/90 */
+  --sportsbook-bg-card: rgba(30, 41, 59, 0.40);         /* slate-900/40 */
+  --sportsbook-bg-hover: rgba(51, 65, 85, 0.60);        /* slate-800/60 */
+  
+  /* High contrast text colors */
+  --sportsbook-text-primary: rgb(241, 245, 249);        /* slate-100 */
+  --sportsbook-text-secondary: rgb(203, 213, 225);      /* slate-300 */
+  --sportsbook-text-muted: rgb(148, 163, 184);          /* slate-400 */
+  
+  /* Subtle borders with glow potential */
+  --sportsbook-border-primary: rgba(71, 85, 105, 0.50); /* slate-600/50 */
+  --sportsbook-border-secondary: rgba(100, 116, 139, 0.30); /* slate-500/30 */
+  --sportsbook-border-accent: rgba(59, 130, 246, 0.50); /* blue-500/50 */
+  
+  /* System-specific accent backgrounds (for badges) */
+  --sportsbook-cv-bg: rgba(127, 29, 29, 0.40);          /* red-950/40 */
+  --sportsbook-pulm-bg: rgba(8, 51, 68, 0.40);          /* cyan-950/40 */
+  --sportsbook-gi-bg: rgba(69, 26, 3, 0.40);            /* amber-950/40 */
+  --sportsbook-neuro-bg: rgba(46, 16, 101, 0.40);       /* purple-950/40 */
+  --sportsbook-renal-bg: rgba(12, 10, 9, 0.40);         /* blue-950/40 */
+  --sportsbook-endo-bg: rgba(80, 7, 36, 0.40);          /* pink-950/40 */
+  --sportsbook-eent-bg: rgba(4, 47, 46, 0.40);          /* teal-950/40 */
+  --sportsbook-msk-bg: rgba(15, 23, 42, 0.40);          /* slate-800/40 */
+  
+  /* Yield level colors */
+  --sportsbook-yield-high: rgba(127, 29, 29, 0.50);     /* red-950/50 */
+  --sportsbook-yield-medium: rgba(69, 26, 3, 0.50);     /* amber-950/50 */
+  --sportsbook-yield-low: rgba(30, 41, 59, 0.50);       /* slate-800/50 */
+  
+  /* Hover and interaction effects */
+  --sportsbook-glow-blue: rgba(59, 130, 246, 0.20);     /* blue-500/20 */
+  --sportsbook-glow-accent: rgba(59, 130, 246, 0.30);   /* blue-500/30 */
+  --sportsbook-shadow-strong: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 .dark {

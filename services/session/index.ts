@@ -62,6 +62,45 @@ export {
 export { default as sessionService } from './sessionService';
 
 // ============================================================================
+// BEHAVIORAL & PATTERN SERVICES
+// ============================================================================
+
+export {
+  // Answer patterns
+  recordAnswerPattern,
+  getAnswerPatterns,
+  analyzePatterns,
+  getPatternSummary,
+  resetAnswerPatterns,
+  type AnswerPatternData,
+  type PatternInsights,
+} from '../answerPatternService';
+
+export {
+  // Behavioral confidence
+  inferConfidence,
+  recordBehavioralConfidence,
+  calculateBehavioralCalibration,
+  getBehavioralRecords,
+  resetBehavioralRecords,
+  getBehavioralInsights,
+  type InferredConfidence,
+  type BehaviorSignals,
+  type InferredConfidenceResult,
+  type BehavioralConfidenceRecord,
+} from '../behavioralConfidenceService';
+
+export {
+  // Smart pause
+  recordPauseResult,
+  analyzePauseNeed,
+  recordPauseTaken,
+  getQuickEncouragement,
+  resetPauseTracking,
+  type PauseRecommendation,
+} from '../smartPauseService';
+
+// ============================================================================
 // LEGACY EXPORTS (Deprecated)
 // ============================================================================
 

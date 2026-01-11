@@ -22,7 +22,7 @@ import {
   BarChart3,
   Clock,
 } from "lucide-react";
-import type { PredictedScore } from "../../services/panceScorePredictorService";
+import type { IrtPredictedScore as PredictedScore } from '@/services/analytics';
 
 // =============================================================================
 // TYPES

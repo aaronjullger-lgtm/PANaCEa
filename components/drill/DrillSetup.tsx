@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Filter, Zap, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import type { SystemCode, SessionSettings } from '../../types';
 
 interface ConditionMetadata {
@@ -154,10 +155,12 @@ export function DrillSetup({
   // Render loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-[var(--color-accent)] animate-spin mx-auto mb-4" />
-          <p className="text-[var(--color-text-muted)]">Loading conditions...</p>
+      <div className="min-h-screen bg-[var(--color-bg-primary)] p-6">
+        <div className="max-w-2xl mx-auto space-y-4">
+          <SkeletonLoader height="3rem" className="mb-6" />
+          <SkeletonLoader height="6rem" />
+          <SkeletonLoader height="6rem" />
+          <SkeletonLoader height="6rem" />
         </div>
       </div>
     );

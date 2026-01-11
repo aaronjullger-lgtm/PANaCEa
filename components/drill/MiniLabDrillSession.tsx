@@ -226,10 +226,9 @@ const MiniLabDrillSession: React.FC<MiniLabDrillSessionProps> = ({ onExit }) => 
     // Show loading state while fetching database content
     if (isDataLoading) {
       return (
-        <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-[var(--color-text-secondary)]">Loading lab cases from database...</p>
+        <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] p-6">
+          <div className="max-w-4xl mx-auto mt-20">
+            <QuestionSkeleton />
           </div>
         </div>
       );

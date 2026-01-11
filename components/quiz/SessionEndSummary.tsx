@@ -26,18 +26,33 @@ import {
   Cloud,
   CloudOff,
 } from 'lucide-react';
+// Domain services
 import { 
   getSessionSummary, 
   calculateDistributionDrift,
   resetSessionDistribution,
   PANCE_SYSTEM_PERCENTAGES 
-} from '../../services/panceDistributionService';
-import { analyzePatterns, resetAnswerPatterns } from '../../services/answerPatternService';
-import { calculateBehavioralCalibration, resetBehavioralRecords, getBehavioralInsights } from '../../services/behavioralConfidenceService';
-import { resetMomentum, getMomentumInsights } from '../../services/sessionMomentumService';
-import { getPrediction, resetPrediction } from '../../services/performancePredictionService';
-import { resetPauseTracking } from '../../services/smartPauseService';
-import { collectSessionAnalytics, syncSessionAnalytics } from '../../services/sessionAnalyticsSyncService';
+} from '@/services/domain';
+
+// Session services
+import { 
+  analyzePatterns, 
+  resetAnswerPatterns,
+  calculateBehavioralCalibration, 
+  resetBehavioralRecords, 
+  getBehavioralInsights,
+  resetMomentum, 
+  getMomentumInsights,
+  resetPauseTracking,
+} from '@/services/session';
+
+// Analytics services
+import { 
+  getPrediction, 
+  resetPrediction,
+  collectSessionAnalytics, 
+  syncSessionAnalytics,
+} from '@/services/analytics';
 import { ABBREVIATION_TO_TOPIC_MAP } from '../../src/constants';
 import type { PerformanceRecord } from '../../types';
 import { StreakVisualization } from './StreakVisualization';

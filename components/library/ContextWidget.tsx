@@ -8,6 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Pill, Activity, AlertCircle, Loader2 } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import ReactMarkdown from 'react-markdown';
 
 interface ContextWidgetProps {
@@ -16,6 +17,7 @@ interface ContextWidgetProps {
 }
 
 export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type }) => {
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any>(null);
@@ -26,8 +28,12 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
       setError(null);
 
       try {
+        const token = await getToken();
         const response = await fetch(
-          `/api/content/context-widgets?conditionId=${conditionId}&type=${type}`
+          `/api/content/context-widgets?conditionId=${conditionId}&type=${type}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
         );
 
         if (!response.ok) {
@@ -47,7 +53,7 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
     if (conditionId) {
       fetchContext();
     }
-  }, [conditionId, type]);
+  }, [conditionId, type, getToken]);
 
   const icon = type === 'pharm' ? Pill : Activity;
   const Icon = icon;

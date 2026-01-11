@@ -38,7 +38,7 @@ import {
   type UserFriendlyStats,
   type TestReadinessAssessment,
   type StrengthWeaknessAnalysis,
-} from '../../services/researchBackedAnalytics';
+} from '@/services/analytics';
 
 // ============================================================================
 // Types

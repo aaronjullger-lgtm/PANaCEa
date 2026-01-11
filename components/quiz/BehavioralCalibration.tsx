@@ -27,7 +27,7 @@ import {
   BehavioralConfidenceRecord,
   calculateBehavioralCalibration,
   getBehavioralRecords,
-} from '../../services/behavioralConfidenceService';
+} from '@/services/session';
 
 interface BehavioralCalibrationProps {
   isExpanded?: boolean;

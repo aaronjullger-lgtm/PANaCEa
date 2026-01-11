@@ -33,6 +33,7 @@ export {
 
 // Session-scoped prediction (temporary session data)
 export {
+  predictPANCEScore,
   updatePerformancePrediction,
   getPrediction as getSessionPrediction,
   getConfidenceInterval,
