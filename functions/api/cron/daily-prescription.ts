@@ -6,6 +6,13 @@
  */
 
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { validateRequest } from '../_shared/schemas';
+import { z } from 'zod';
+
+// Zod schema for cron request (empty - triggered by scheduler)
+const CronRequestSchema = z.object({
+  userId: z.string().optional(), // Optional: run for specific user only
+}).optional().default({});
 
 export async function onRequestPost(context: any) {
   const { request, env } = context;
@@ -17,6 +24,12 @@ export async function onRequestPost(context: any) {
       status: 401,
       headers: { 'Content-Type': 'application/json' }
     });
+  }
+
+  // Validate request body (optional for cron jobs)
+  const validation = await validateRequest(request, CronRequestSchema);
+  if (validation.success === false) {
+    return validation.response;
   }
   
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
