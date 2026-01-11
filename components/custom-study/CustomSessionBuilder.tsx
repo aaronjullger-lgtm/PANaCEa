@@ -464,29 +464,18 @@ function SettingsStep({ config, onChange }: SettingsStepProps) {
           </div>
         </div>
         
-        {/* Difficulty */}
+        {/* Difficulty - Fixed at PANCE-Level for standardized practice */}
         <div>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Difficulty
           </label>
           <div className="flex gap-2">
-            {[
-              { value: 'easier' as const, label: 'Easier' },
-              { value: 'same' as const, label: 'Standard' },
-              { value: 'harder' as const, label: 'Harder' },
-            ].map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => onChange({ ...config, difficulty: opt.value })}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  config.difficulty === opt.value
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+            <div className="px-4 py-2 rounded-lg font-medium bg-blue-600 text-white">
+              PANCE-Level
+            </div>
+            <span className="text-sm text-slate-500 dark:text-slate-400 self-center ml-2">
+              (Standardized difficulty for accurate practice)
+            </span>
           </div>
         </div>
         

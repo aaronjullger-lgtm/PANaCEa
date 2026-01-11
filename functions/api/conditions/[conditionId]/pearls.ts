@@ -38,9 +38,9 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
       });
     }
 
-    // Fetch medical content for this condition
-    const medicalContent = await prisma.medicalContent.findFirst({
-      where: { conditionId },
+    // Fetch medical content for this condition (using id field, not conditionId)
+    const medicalContent = await prisma.medicalContent.findUnique({
+      where: { id: conditionId },
       select: { content: true },
     });
 

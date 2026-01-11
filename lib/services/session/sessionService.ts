@@ -96,7 +96,7 @@ export class SessionService {
     analytics: SessionAnalytics;
     poolStatus: { available: number; needsGeneration: boolean };
   }> {
-    const { userId, count = 10, system, conditionId, difficulty, mode, excludeQuestionIds = [] } = params;
+    const { userId, count = 10, system, conditionId, difficulty, mode, excludeQuestionIds = [], minSystems = 3 } = params;
 
     const seenHistory = await this.prisma.userQuestionHistory.findMany({
       where: { userId },
@@ -115,37 +115,81 @@ export class SessionService {
       systemDistribution: {},
     };
 
-    const poolQuestions = await this.fetchFromPool(userId, seenIds, {
-      count,
-      system,
-      conditionId,
-      difficulty,
-    });
-    questions.push(...poolQuestions.questions);
-    analytics.fromPool = poolQuestions.questions.length;
+    // If no specific system requested, use NCCPA blueprint distribution
+    if (!system && !conditionId) {
+      const systemQuotas = this.calculateNCCPAQuotas(count, minSystems);
+      
+      for (const [targetSystem, targetCount] of Object.entries(systemQuotas)) {
+        const poolQ = await this.fetchFromPool(userId, seenIds, {
+          count: targetCount,
+          system: targetSystem,
+          difficulty,
+        });
+        questions.push(...poolQ.questions);
+        analytics.fromPool += poolQ.questions.length;
 
-    if (questions.length < count && mode !== 'review') {
-      const seedQuestions = await this.expandFromSeeds(userId, seenIds, {
-        count: count - questions.length,
+        // If not enough from pool, try seeds
+        const remaining = targetCount - poolQ.questions.length;
+        if (remaining > 0 && mode !== 'review') {
+          const seedQ = await this.expandFromSeeds(userId, seenIds, {
+            count: remaining,
+            system: targetSystem,
+            difficulty,
+          });
+          questions.push(...seedQ);
+          analytics.fromSeeds += seedQ.length;
+        }
+
+        // If still not enough, try main questions
+        const stillRemaining = targetCount - poolQ.questions.length - (analytics.fromSeeds || 0);
+        if (stillRemaining > 0) {
+          const mainQ = await this.fetchFromMain(userId, seenIds, {
+            count: Math.min(stillRemaining, 5),
+            system: targetSystem,
+            difficulty,
+          });
+          questions.push(...mainQ);
+          analytics.fromMain += mainQ.length;
+        }
+      }
+
+      // Shuffle for true randomization (interleaving)
+      this.shuffleArray(questions);
+    } else {
+      // Original logic for specific system or condition
+      const poolQuestions = await this.fetchFromPool(userId, seenIds, {
+        count,
         system,
         conditionId,
         difficulty,
       });
-      questions.push(...seedQuestions);
-      analytics.fromSeeds = seedQuestions.length;
+      questions.push(...poolQuestions.questions);
+      analytics.fromPool = poolQuestions.questions.length;
+
+      if (questions.length < count && mode !== 'review') {
+        const seedQuestions = await this.expandFromSeeds(userId, seenIds, {
+          count: count - questions.length,
+          system,
+          conditionId,
+          difficulty,
+        });
+        questions.push(...seedQuestions);
+        analytics.fromSeeds = seedQuestions.length;
+      }
+
+      if (questions.length < count) {
+        const mainQuestions = await this.fetchFromMain(userId, seenIds, {
+          count: count - questions.length,
+          system,
+          conditionId,
+          difficulty,
+        });
+        questions.push(...mainQuestions);
+        analytics.fromMain = mainQuestions.length;
+      }
     }
 
-    if (questions.length < count) {
-      const mainQuestions = await this.fetchFromMain(userId, seenIds, {
-        count: count - questions.length,
-        system,
-        conditionId,
-        difficulty,
-      });
-      questions.push(...mainQuestions);
-      analytics.fromMain = mainQuestions.length;
-    }
-
+    // Generate new questions if needed (only if we have less than requested)
     if (questions.length < count && this.env.GEMINI_API_KEY) {
       const generated = await this.generateNewQuestions({
         count: Math.min(count - questions.length, 5), // Limit AI generation
@@ -177,6 +221,50 @@ export class SessionService {
         needsGeneration: poolCount < 50,
       },
     };
+  }
+
+  /**
+   * Calculate NCCPA-weighted system quotas for a session
+   * Ensures minimum system diversity while following blueprint percentages
+   */
+  private calculateNCCPAQuotas(totalCount: number, minSystems: number = 3): Record<string, number> {
+    const systems = Object.keys(NCCPA_BLUEPRINT_WEIGHTS);
+    const totalWeight = Object.values(NCCPA_BLUEPRINT_WEIGHTS).reduce((a, b) => a + b, 0);
+    
+    // Calculate proportional quotas
+    const quotas: Record<string, number> = {};
+    let remaining = totalCount;
+    
+    // Shuffle systems to add randomness in which systems get included
+    const shuffledSystems = this.shuffleArray([...systems]);
+    
+    // Ensure minimum diversity: pick at least minSystems
+    const selectedSystems = shuffledSystems.slice(0, Math.max(minSystems, Math.min(totalCount, systems.length)));
+    
+    for (const system of selectedSystems) {
+      const weight = NCCPA_BLUEPRINT_WEIGHTS[system] || 2;
+      // Calculate weighted portion, but ensure at least 1 question per selected system
+      const portion = Math.max(1, Math.round((weight / totalWeight) * totalCount));
+      quotas[system] = Math.min(portion, remaining);
+      remaining -= quotas[system];
+      
+      if (remaining <= 0) break;
+    }
+    
+    // Distribute any remaining to highest-weight systems
+    if (remaining > 0) {
+      const sortedByWeight = Object.entries(NCCPA_BLUEPRINT_WEIGHTS)
+        .sort(([, a], [, b]) => b - a)
+        .map(([s]) => s);
+      
+      for (const system of sortedByWeight) {
+        if (remaining <= 0) break;
+        quotas[system] = (quotas[system] || 0) + 1;
+        remaining--;
+      }
+    }
+    
+    return quotas;
   }
 
   private async fetchFromPool(
@@ -467,7 +555,8 @@ export class SessionService {
   ): Promise<EnrichedQuestion | null> {
     const { GoogleGenerativeAI } = await import('@google/generative-ai');
     const genAI = new GoogleGenerativeAI(this.env.GEMINI_API_KEY as string);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Using gemini-2.5-pro for higher quality PANCE-style questions
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro-preview-05-06' });
   
     const prompt = `Generate a PANCE-style multiple choice question about ${content.condition}.
 
