@@ -15,6 +15,13 @@ import * as adaptiveFSRSServiceModule from '../adaptiveFSRSService';
 
 export const fsrsService = adaptiveFSRSServiceModule;
 
+// Re-export commonly used functions from adaptiveFSRSService
+export { 
+  getAdaptiveFSRS,
+  generateAdaptiveStudyPlan,
+  type StudySessionPlan,
+} from '../adaptiveFSRSService';
+
 // ============================================================================
 // EXAM SIMULATION
 // ============================================================================
@@ -24,6 +31,15 @@ import * as panceDistributionServiceModule from '../panceDistributionService';
 
 export const examService = examServiceModule;
 export const panceDistribution = panceDistributionServiceModule;
+
+// Re-export commonly used functions from panceDistributionService
+export { 
+  getSessionSummary, 
+  calculateDistributionDrift,
+  resetSessionDistribution,
+  recordQuestion,
+  PANCE_SYSTEM_PERCENTAGES 
+} from '../panceDistributionService';
 
 // ============================================================================
 // REFERENCE DATA - Labs, Drugs, Guidelines

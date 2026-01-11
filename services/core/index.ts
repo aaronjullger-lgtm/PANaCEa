@@ -34,9 +34,16 @@ export {
   calculateAdaptiveState,
   selectOptimalQuestions,
   convertPoolQuestion,
+  fetchPearlsForQuestion,
   SYSTEM_CODE_MAP,
   SYSTEM_NAME_TO_CODE,
 } from './questionService';
+
+// Named exports from attemptService
+export {
+  recordQuestionAttempt,
+  getUserStats,
+} from '../attemptService';
 
 // ============================================================================
 // SESSION SERVICES - Session management
@@ -47,6 +54,16 @@ import * as customSessionServiceModule from '../customSessionService';
 
 export const sessionService = mainSessionServiceModule;
 export const customSessionService = customSessionServiceModule;
+
+// Named exports from sessionService
+export {
+  fetchSessionQuestions,
+  recordSessionAnswer,
+  initializeSession,
+  getPoolStatus,
+  checkAndReplenishPool,
+  getSessionSummary,
+} from '../mainSessionService';
 
 // ============================================================================
 // DRILL SERVICES - Drill-specific logic

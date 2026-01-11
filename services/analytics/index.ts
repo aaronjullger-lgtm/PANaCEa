@@ -57,6 +57,9 @@ export {
   PANCEScorePredictorService,
 } from './performanceService';
 
+// Direct export of getPrediction for components that use it
+export { getPrediction } from '../performancePredictionService';
+
 // ============================================================================
 // USER ANALYTICS SERVICE (Phase 6 Consolidation)
 // ============================================================================
@@ -111,6 +114,9 @@ export {
   generateComprehensiveAnalytics,
   generateQuestionTargeting,
 } from './userAnalyticsService';
+
+// Additional exports from circadianAnalyticsService
+export { recordCircadianPerformance } from '../circadianAnalyticsService';
 
 // Alias for cleaner imports
 export { default as userAnalytics } from './userAnalyticsService';

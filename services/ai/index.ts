@@ -15,6 +15,11 @@ import * as geminiServiceModule from '../geminiService';
 
 export const geminiService = geminiServiceModule;
 
+// Re-export commonly used functions from geminiService
+export {
+  generateAlternateRationale,
+} from '../geminiService';
+
 // ============================================================================
 // CONTENT GENERATION PIPELINE
 // ============================================================================
@@ -38,6 +43,13 @@ import * as enhancedQuestionServiceModule from '../enhancedQuestionService';
 export const intelligentQuestions = intelligentQuestionServiceModule;
 export const adaptiveEngine = adaptiveQuestionEngineModule;
 export const enhancedQuestions = enhancedQuestionServiceModule;
+
+// Re-export commonly used functions
+export { 
+  getIntelligentQuestions,
+  enhanceSessionSettings,
+  type IntelligentQuestionResult,
+} from '../intelligentQuestionService';
 
 // ============================================================================
 // AI TUTORING SERVICES
