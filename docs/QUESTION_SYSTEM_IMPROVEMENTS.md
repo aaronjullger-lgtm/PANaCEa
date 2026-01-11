@@ -118,7 +118,49 @@ if (duplicates.length > 0 && duplicates[0].similarity > 0.9) {
 }
 ```
 
-## Migration Path
+## Implementation Status
+
+### ✅ Phase 1: Consolidated Tracking (COMPLETED)
+
+**Date:** January 10, 2026
+
+1. **SessionService Migration**
+   - Now reads from `UserQuestionSeen` instead of `UserQuestionHistory`
+   - Records questions as seen with full metrics via `recordQuestionSeen()`
+   - Maps source types to questionType enum
+
+2. **no-repeat.ts Complete Rewrite**
+   - `recordQuestionSeen()` - Records with wasCorrect, timeMs
+   - `updateQuestionPerformance()` - Updates metrics after answer
+   - `getUserSeenQuestions()` - Get seen question IDs
+   - `getUserSeenQuestionsDetailed()` - Get full metrics
+   - `fetchUnseenQuestions()` - Fetch unseen from pool
+   - `getUserQuestionStats()` - Aggregate performance stats
+
+3. **attempt.ts Enhanced**
+   - Now upserts to `UserQuestionSeen` on every attempt
+   - Calculates rolling average time
+   - Tracks correct/incorrect counts
+
+### 🔄 Phase 2: Timing Capture (Planned)
+
+- Add timing capture to frontend question components
+- Pass `timeMs` to attempt endpoint
+- Display timing analytics in dashboard
+
+### 🔄 Phase 3: Quality Scoring (Planned)
+
+- Add `qualityScore` and `conditionAccuracy` fields to questions
+- Implement AI-assessed quality scoring
+- Add duplicate detection before generation
+
+### 🔄 Phase 4: Analytics Dashboard (Planned)
+
+- Question quality monitoring
+- System coverage gaps
+- Flag rate tracking
+
+## Migration Path (Legacy)
 
 1. Add new columns (nullable first)
 2. Backfill existing data
