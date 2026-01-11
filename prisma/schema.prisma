@@ -1479,6 +1479,31 @@ model PreGeneratedQuestion {
   usedAt           DateTime?
   usedBy           String?
   quality          Int?
+  
+  // Quality scoring (Phase 3)
+  qualityScore       Float?        // AI-assessed quality 0-100
+  conditionAccuracy  Float?        // How well question tests the linked condition 0-1
+  contentRelevance   Float?        // How relevant to PANCE content 0-1
+  distracorQuality   Float?        // Quality of wrong answer options 0-1
+  
+  // Validation tracking
+  validatedAt        DateTime?     // When human validated
+  validatedBy        String?       // Admin userId who validated
+  validationStatus   String        @default("pending") // 'pending' | 'approved' | 'rejected' | 'needs_revision'
+  validationNotes    String?       // Admin notes on quality
+  
+  // Usage statistics
+  timesServed        Int           @default(0)   // How many times served to users
+  timesCorrect       Int           @default(0)   // Times answered correctly
+  timesIncorrect     Int           @default(0)   // Times answered incorrectly
+  avgTimeMs          Int?          // Average time to answer
+  flagCount          Int           @default(0)   // Number of times flagged by users
+  flagRate           Float?        // flagCount / timesServed
+  
+  // Duplicate detection
+  semanticHash       String?       // Hash for duplicate detection
+  similarQuestionIds String[]      @default([]) // IDs of similar questions
+  
   // FK relations
   Condition        Condition?      @relation(fields: [conditionId], references: [id], onDelete: SetNull)
   MedicalContent   MedicalContent? @relation(fields: [medicalContentId], references: [id], onDelete: SetNull)
@@ -1490,6 +1515,9 @@ model PreGeneratedQuestion {
   @@index([questionType])
   @@index([system])
   @@index([usedAt])
+  @@index([validationStatus])
+  @@index([qualityScore])
+  @@index([flagRate])
 }
 
 model Procedure {
