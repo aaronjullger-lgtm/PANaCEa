@@ -1,6 +1,18 @@
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
 import { assembleQuestionsFromSeeds } from '../../_shared/question-seeds';
+import { validateRequest } from '../../_shared/schemas';
+import { z } from 'zod';
+
+// Zod schema for assemble request
+const AssembleRequestSchema = z.object({
+  filter: z.object({
+    system: z.string().optional(),
+    difficulty: z.string().optional(),
+    type: z.string().optional(),
+  }).optional().default({}),
+  count: z.number().int().min(1).max(100).optional().default(10),
+});
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -20,8 +32,12 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const { filter, count } = body;
+    // Validate request body
+    const validation = await validateRequest(request, AssembleRequestSchema);
+    if (validation.success === false) {
+      return validation.response;
+    }
+    const { filter, count } = validation.data;
 
     if (!env.DATABASE_URL) {
       return new Response(JSON.stringify({ 
@@ -36,15 +52,19 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const prisma = createEdgePrismaClient(env);
-    const questions = await assembleQuestionsFromSeeds(prisma, filter || {}, count || 10);
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      const questions = await assembleQuestionsFromSeeds(prisma, filter || {}, count || 10);
 
-    return new Response(JSON.stringify({ success: true, questions }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+      return new Response(JSON.stringify({ success: true, questions }), {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
 
   } catch (error) {
     console.error('Failed to assemble questions from seeds:', error);
@@ -58,7 +78,5 @@ export const onRequestPost = async (context) => {
         'Access-Control-Allow-Origin': '*'
       }
     });
-  } finally {
-    await prisma.$disconnect();
   }
 };

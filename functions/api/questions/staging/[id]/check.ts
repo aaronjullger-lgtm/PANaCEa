@@ -1,6 +1,13 @@
 import { createEdgePrismaClient } from '../../../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../../../_shared/auth';
 import { runAdequacyCheck } from '../../../_shared/staging-questions';
+import { validateRequest } from '../../../_shared/schemas';
+import { z } from 'zod';
+
+// Zod schema for check request (empty - ID from URL params)
+const CheckRequestSchema = z.object({
+  force: z.boolean().optional(), // Optional: force recheck
+}).optional().default({});
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -21,6 +28,12 @@ export const onRequestPost = async (context) => {
       });
     }
 
+    // Validate request body (optional)
+    const validation = await validateRequest(request, CheckRequestSchema);
+    if (validation.success === false) {
+      return validation.response;
+    }
+
     if (!env.DATABASE_URL) {
       return new Response(JSON.stringify({ 
         success: false, 
@@ -34,15 +47,19 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const prisma = createEdgePrismaClient(env);
-    const result = await runAdequacyCheck(prisma, env, id as string);
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      const result = await runAdequacyCheck(prisma, env, id as string);
 
-    return new Response(JSON.stringify({ success: true, result }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+      return new Response(JSON.stringify({ success: true, result }), {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
 
   } catch (error) {
     console.error('Failed to run adequacy check:', error);
@@ -56,7 +73,5 @@ export const onRequestPost = async (context) => {
         'Access-Control-Allow-Origin': '*'
       }
     });
-  } finally {
-    if (prisma) await prisma.$disconnect();
   }
 };

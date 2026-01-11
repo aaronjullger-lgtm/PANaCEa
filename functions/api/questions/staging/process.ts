@@ -1,6 +1,13 @@
 import { createEdgePrismaClient } from '../../_shared/prisma-edge';
 import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
 import { processStagingQueue } from '../../_shared/staging-questions';
+import { validateRequest } from '../../_shared/schemas';
+import { z } from 'zod';
+
+// Zod schema for process request
+const ProcessRequestSchema = z.object({
+  limit: z.number().int().min(1).max(100).optional().default(10),
+});
 
 export const onRequestOptions = handleCorsOptions;
 
@@ -20,8 +27,12 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const limit = body.limit || 10;
+    // Validate request body
+    const validation = await validateRequest(request, ProcessRequestSchema);
+    if (validation.success === false) {
+      return validation.response;
+    }
+    const { limit } = validation.data;
 
     if (!env.DATABASE_URL) {
       return new Response(JSON.stringify({ 
@@ -36,15 +47,19 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const prisma = createEdgePrismaClient(env);
-    const results = await processStagingQueue(prisma, env, limit);
+    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    try {
+      const results = await processStagingQueue(prisma, env, limit);
 
-    return new Response(JSON.stringify({ success: true, results }), {
-      headers: { 
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+      return new Response(JSON.stringify({ success: true, results }), {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    } finally {
+      await prisma.$disconnect();
+    }
 
   } catch (error) {
     console.error('Failed to process staging queue:', error);
@@ -58,7 +73,5 @@ export const onRequestPost = async (context) => {
         'Access-Control-Allow-Origin': '*'
       }
     });
-  } finally {
-    await prisma.$disconnect();
   }
 };
