@@ -1,8 +1,8 @@
 /**
  * Grand Rounds Daily Challenge Mode Component
  * 
- * Database-first high-yield question mode with organ system selection.
- * Features speed-weighted scoring and one attempt per system per day.
+ * REFACTORED: Server-authoritative, one attempt per day.
+ * Users compete on a shared set of 5 questions with speed-weighted scoring.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -21,23 +21,21 @@ import {
   AlertCircle,
   Loader2,
   Timer,
-  Stethoscope
+  Target
 } from 'lucide-react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
-import { ABBREVIATION_TO_TOPIC_MAP, PANCE_TOPIC_ABBREVIATIONS } from '@/src/constants';
-import type { Question, SystemCode } from '@/types';
+import type { Question } from '@/types';
 
 interface GrandRoundsModeProps {
   onExit?: () => void;
 }
 
-type ViewState = 'loading' | 'system-select' | 'completed' | 'landing' | 'active' | 'summary' | 'error';
+type ViewState = 'loading' | 'completed' | 'landing' | 'active' | 'summary' | 'error';
 
 interface ChallengeData {
   challengeId: string;
-  questions: (Question & { id: string })[];
-  system: SystemCode;
+  questions: Question[];
 }
 
 interface CompletedStats {
@@ -53,15 +51,16 @@ interface SubmissionResult {
   success: boolean;
   score: number;
   correctCount: number;
+  totalQuestions: number;
   percentile: number;
   ranking: number;
   speedBonus: number;
 }
 
 const TOTAL_TIME_MS = 20 * 60 * 1000; // 20 minutes total
-const QUESTIONS_PER_SESSION = 10;
+const QUESTIONS_COUNT = 5;
 
-// Helper function to calculate time until next challenge (moved outside component for hook initialization)
+// Helper function to calculate time until next challenge (midnight UTC)
 const getTimeUntilNextChallenge = () => {
   const now = new Date();
   const tomorrow = new Date(now);
@@ -79,10 +78,8 @@ const getTimeUntilNextChallenge = () => {
 const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   const { user } = useUser();
   const { getToken } = useAuth();
-  const userId = user?.id || 'demo-user';
   
-  const [viewState, setViewState] = useState<ViewState>('system-select');
-  const [selectedSystem, setSelectedSystem] = useState<SystemCode | null>(null);
+  const [viewState, setViewState] = useState<ViewState>('loading');
   const [challengeData, setChallengeData] = useState<ChallengeData | null>(null);
   const [completedStats, setCompletedStats] = useState<CompletedStats | null>(null);
   
@@ -98,47 +95,39 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Next challenge countdown
   const [nextChallengeCountdown, setNextChallengeCountdown] = useState(getTimeUntilNextChallenge());
 
-  // Fetch challenge when system is selected
-  const handleSystemSelect = useCallback(async (system: SystemCode) => {
-    setSelectedSystem(system);
+  // Fetch today's challenge on mount
+  useEffect(() => {
+    fetchTodaysChallenge();
+  }, []);
+
+  const fetchTodaysChallenge = async () => {
     setViewState('loading');
     setError(null);
 
     try {
       const token = await getToken();
-      const response = await fetch(`/api/grand-rounds/system/${system}`, {
+      const response = await fetch('/api/grand-rounds/today', {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
       });
 
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('Backend server not available. Using database-first fallback.');
-      }
-
       if (!response.ok) {
-        throw new Error('Failed to fetch challenge');
+        throw new Error(`HTTP ${response.status}: Failed to fetch challenge`);
       }
 
       const data = await response.json();
 
       if (data.status === 'completed') {
-        setCompletedStats({
-          score: data.stats.score,
-          correctCount: data.stats.correctCount,
-          totalQuestions: data.stats.totalQuestions,
-          timeSpentMs: data.stats.timeSpentMs,
-          percentile: data.stats.percentile,
-          ranking: data.stats.ranking,
-        });
+        // User already completed today's challenge
+        setCompletedStats(data.stats);
         setViewState('completed');
       } else if (data.status === 'active') {
+        // Challenge available, user hasn't attempted yet
         setChallengeData({
           challengeId: data.challengeId,
           questions: data.questions,
-          system,
         });
         setViewState('landing');
       } else {
@@ -152,7 +141,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         : 'Unable to load challenge. Please try again.');
       setViewState('error');
     }
-  }, [getToken]);
+  };
 
   // Timer for next challenge countdown (only active when completed)
   useEffect(() => {
@@ -200,10 +189,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     const currentQuestion = challengeData.questions[currentQuestionIndex];
     
     // Save answer
-    setUserAnswers(prev => ({
-      ...prev,
+    const updatedAnswers = {
+      ...userAnswers,
       [currentQuestion.id]: selectedAnswer,
-    }));
+    };
+    setUserAnswers(updatedAnswers);
 
     // Move to next question or finish
     if (currentQuestionIndex < challengeData.questions.length - 1) {
@@ -211,10 +201,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       setSelectedAnswer(null);
     } else {
       // Last question - submit
-      handleSubmitChallenge({
-        ...userAnswers,
-        [currentQuestion.id]: selectedAnswer,
-      });
+      handleSubmitChallenge(updatedAnswers);
     }
   }, [challengeData, currentQuestionIndex, selectedAnswer, userAnswers]);
 
@@ -246,7 +233,8 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit challenge');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to submit challenge');
       }
 
       const result: SubmissionResult = await response.json();
@@ -257,7 +245,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
         setCompletedStats({
           score: result.score,
           correctCount: result.correctCount,
-          totalQuestions: challengeData.questions.length,
+          totalQuestions: result.totalQuestions,
           timeSpentMs,
           percentile: result.percentile,
           ranking: result.ranking,
@@ -270,8 +258,7 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     } catch (err) {
       console.error('Error submitting challenge:', err);
       hapticError();
-      // User-friendly error message - don't expose technical details
-      setError('Unable to submit your results. Your progress has been saved locally. Please try again.');
+      setError(err instanceof Error ? err.message : 'Unable to submit your results. Please try again.');
       setViewState('error');
     } finally {
       setIsSubmitting(false);
@@ -289,105 +276,6 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     return Math.max(0, TOTAL_TIME_MS - timeElapsedMs);
   };
 
-  // Note: getTimeUntilNextChallenge moved outside component for useState initialization
-
-  // System selection view
-  if (viewState === 'system-select') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl w-full space-y-8"
-        >
-          <div className="text-center space-y-4">
-            <motion.div
-              animate={{ 
-                rotate: [0, -5, 5, 0],
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ 
-                repeat: Infinity,
-                duration: 3,
-                ease: "easeInOut"
-              }}
-              className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
-            >
-              <Stethoscope className="w-12 h-12 text-amber-500" />
-            </motion.div>
-            
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-              Grand Rounds - System Focus
-            </h1>
-            
-            <p className="text-xl text-[var(--color-text-muted)]">
-              Select a PANCE organ system to begin your high-yield challenge
-            </p>
-          </div>
-
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
-            <h3 className="text-lg font-semibold text-center mb-4">14 PANCE Organ Systems</h3>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {PANCE_TOPIC_ABBREVIATIONS.filter(abbr => abbr !== 'PRO').map((systemCode) => {
-                const systemName = ABBREVIATION_TO_TOPIC_MAP[systemCode];
-                
-                return (
-                  <motion.button
-                    key={systemCode}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSystemSelect(systemCode as SystemCode)}
-                    className="bg-[var(--color-bg-primary)] hover:bg-amber-500/10 border-2 border-[var(--color-border)] hover:border-amber-500 rounded-xl p-4 transition-all text-center group"
-                  >
-                    <div className="text-2xl font-bold text-amber-500 mb-1">{systemCode}</div>
-                    <div className="text-xs text-[var(--color-text-muted)] group-hover:text-[var(--color-text-primary)] line-clamp-2">
-                      {systemName}
-                    </div>
-                  </motion.button>
-                );
-              })}
-            </div>
-
-            <div className="pt-4 border-t border-[var(--color-border)] text-center space-y-2">
-              <div className="flex items-center justify-center gap-2 text-amber-500 text-sm">
-                <Trophy className="w-4 h-4" />
-                <span>Each system: {QUESTIONS_PER_SESSION} high-yield questions in 20 minutes</span>
-              </div>
-              <button
-                onClick={onExit}
-                className="text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] py-2 transition-colors text-sm"
-              >
-                Back to Menu
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Loading state
-  if (viewState === 'error') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center space-y-4">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-          <h2 className="text-2xl font-bold">Error</h2>
-          <p className="text-[var(--color-text-muted)]">
-            {error || 'Something went wrong loading Grand Rounds.'}
-          </p>
-          <button
-            onClick={onExit}
-            className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors"
-          >
-            Exit
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // Loading state
   if (viewState === 'loading') {
     return (
@@ -400,278 +288,188 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     );
   }
 
-  // Completed state (already finished today)
-  if (viewState === 'completed' && completedStats) {
-    // Note: nextChallengeCountdown state and useEffect moved to top level to follow Rules of Hooks
-
+  // Error state
+  if (viewState === 'error') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-2xl w-full space-y-6"
-        >
-          <div className="text-center space-y-4">
-            <motion.div
-              animate={{ 
-                rotate: [0, -5, 5, 0],
-                scale: [1, 1.05, 1]
-              }}
-              transition={{ 
-                repeat: Infinity,
-                duration: 3,
-                ease: "easeInOut"
-              }}
-              className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
+        <div className="max-w-md w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 text-center space-y-4">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
+          <h2 className="text-2xl font-bold">Error</h2>
+          <p className="text-[var(--color-text-muted)]">
+            {error || 'Something went wrong loading Grand Rounds.'}
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={fetchTodaysChallenge}
+              className="flex-1 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-semibold transition-colors"
             >
-              <Trophy className="w-12 h-12 text-amber-500" />
-            </motion.div>
-            
-            <h1 className="text-4xl font-bold">Challenge Complete!</h1>
-            <p className="text-xl text-[var(--color-text-muted)]">
-              You've already completed today's Grand Rounds
-            </p>
-          </div>
-
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">{completedStats.score}</div>
-                <div className="text-sm text-[var(--color-text-muted)]">Points</div>
-              </div>
-              <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">
-                  {completedStats.correctCount}/{completedStats.totalQuestions}
-                </div>
-                <div className="text-sm text-[var(--color-text-muted)]">Correct</div>
-              </div>
-              <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">#{completedStats.ranking}</div>
-                <div className="text-sm text-[var(--color-text-muted)]">Global Rank</div>
-              </div>
-              <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">
-                  {Math.round(completedStats.percentile)}%
-                </div>
-                <div className="text-sm text-[var(--color-text-muted)]">Percentile</div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-[var(--color-border)]">
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--color-text-muted)]">Time Spent</span>
-                <span className="font-semibold">{formatTime(completedStats.timeSpentMs)}</span>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-lg p-4 text-center">
-              <div className="flex items-center justify-center gap-2 text-amber-500 mb-2">
-                <Timer className="w-5 h-5" />
-                <span className="font-semibold">Next Challenge In</span>
-              </div>
-              <div className="text-2xl font-bold">{nextChallengeCountdown}</div>
-            </div>
-
+              Retry
+            </button>
             <button
               onClick={onExit}
-              className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors"
+              className="flex-1 px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors"
             >
               Exit
             </button>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   }
 
-  // Landing page (before starting challenge)
-  if (viewState === 'landing' && challengeData) {
-    const systemName = ABBREVIATION_TO_TOPIC_MAP[challengeData.system];
-    
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex flex-col">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex-1 flex items-center justify-center p-6"
-        >
-          <div className="max-w-2xl w-full space-y-8">
-            <div className="text-center space-y-4">
-              <motion.div
-                animate={{ 
-                  rotate: [0, -5, 5, 0],
-                  scale: [1, 1.05, 1]
-                }}
-                transition={{ 
-                  repeat: Infinity,
-                  duration: 3,
-                  ease: "easeInOut"
-                }}
-                className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
-              >
-                <Trophy className="w-12 h-12 text-amber-500" />
-              </motion.div>
-              
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-                {systemName} Challenge
-              </h1>
-              
-              <p className="text-xl text-[var(--color-text-muted)]">
-                High-Yield Questions • Speed Matters • One Attempt
-              </p>
-            </div>
+  // Completed state - Already finished today's challenge
+  if (viewState === 'completed' && completedStats) {
+    const isTopPercentile = completedStats.percentile >= 90;
 
-            <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="space-y-2">
-                  <Trophy className="w-8 h-8 text-amber-500 mx-auto" />
-                  <div className="text-2xl font-bold">{challengeData.questions.length}</div>
-                  <div className="text-xs text-[var(--color-text-muted)]">Questions</div>
-                </div>
-                <div className="space-y-2">
-                  <Clock className="w-8 h-8 text-amber-500 mx-auto" />
-                  <div className="text-2xl font-bold">20</div>
-                  <div className="text-xs text-[var(--color-text-muted)]">Minutes</div>
-                </div>
-                <div className="space-y-2">
-                  <Crown className="w-8 h-8 text-amber-500 mx-auto" />
-                  <div className="text-2xl font-bold">1</div>
-                  <div className="text-xs text-[var(--color-text-muted)]">Attempt</div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Zap className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold">Speed Matters</h3>
-                    <p className="text-sm text-[var(--color-text-muted)]">
-                      Faster completion = bonus points. 20 points per correct + speed bonus.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <Users className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold">Global Competition</h3>
-                    <p className="text-sm text-[var(--color-text-muted)]">
-                      Compete against medical students and PAs worldwide.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <Calendar className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h3 className="font-semibold">Daily Reset</h3>
-                    <p className="text-sm text-[var(--color-text-muted)]">
-                      New challenge every day at midnight UTC. One attempt only!
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleStart}
-                className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg"
-              >
-                <Play className="w-5 h-5" />
-                Start Challenge
-              </motion.button>
-
-              <button
-                onClick={onExit}
-                className="w-full text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] py-2 transition-colors"
-              >
-                Back to Menu
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Summary state (after completing challenge)
-  if (viewState === 'summary' && completedStats && challengeData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-2xl w-full space-y-6"
+          className="max-w-2xl w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6"
+        >
+          <div className="text-center space-y-4">
+            {isTopPercentile && (
+              <motion.div
+                animate={{ rotate: [0, -5, 5, 0], scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="inline-block"
+              >
+                <Crown className="w-16 h-16 text-amber-500 mx-auto" />
+              </motion.div>
+            )}
+            
+            <h2 className="text-3xl font-bold text-amber-500">Challenge Complete!</h2>
+            <p className="text-[var(--color-text-muted)]">
+              You've already completed today's Grand Rounds challenge.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
+              <div className="text-4xl font-bold text-amber-500">{completedStats.score}</div>
+              <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
+            </div>
+
+            <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
+              <div className="text-4xl font-bold text-amber-500">
+                {completedStats.correctCount}/{completedStats.totalQuestions}
+              </div>
+              <div className="text-sm text-[var(--color-text-muted)] mt-1">Correct</div>
+            </div>
+
+            <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
+              <div className="text-4xl font-bold text-amber-500">{completedStats.percentile}%</div>
+              <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
+            </div>
+
+            <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
+              <div className="text-4xl font-bold text-amber-500">#{completedStats.ranking}</div>
+              <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
+            </div>
+          </div>
+
+          <div className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center">
+            <div className="flex items-center justify-center gap-2 text-[var(--color-text-muted)] mb-2">
+              <Calendar className="w-5 h-5" />
+              <span>Next Challenge In:</span>
+            </div>
+            <div className="text-2xl font-bold text-amber-500">{nextChallengeCountdown}</div>
+          </div>
+
+          <button
+            onClick={onExit}
+            className="w-full px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors"
+          >
+            Back to Menu
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Landing state - Start challenge
+  if (viewState === 'landing' && challengeData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-2xl w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6"
         >
           <div className="text-center space-y-4">
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', duration: 0.6 }}
+              animate={{ rotate: [0, -5, 5, 0], scale: [1, 1.05, 1] }}
+              transition={{ repeat: Infinity, duration: 3 }}
               className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-500/20 to-orange-500/20 rounded-full"
             >
               <Trophy className="w-12 h-12 text-amber-500" />
             </motion.div>
             
-            <h1 className="text-4xl font-bold">Challenge Complete!</h1>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+              Grand Rounds Daily Challenge
+            </h1>
+            
             <p className="text-xl text-[var(--color-text-muted)]">
-              Great work! Here's how you performed.
+              Compete globally on today's challenge!
             </p>
           </div>
 
-          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6">
-            {/* Score highlight */}
-            <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-xl p-6 text-center border-2 border-amber-500/50">
-              <div className="text-sm text-[var(--color-text-muted)] mb-2">Final Score</div>
-              <div className="text-6xl font-bold text-amber-500 mb-2">{completedStats.score}</div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
+              <Target className="w-6 h-6 text-amber-500 flex-shrink-0" />
+              <div>
+                <div className="font-semibold">5 Questions</div>
+                <div className="text-sm text-[var(--color-text-muted)]">
+                  High-yield clinical scenarios
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
+              <Clock className="w-6 h-6 text-amber-500 flex-shrink-0" />
+              <div>
+                <div className="font-semibold">20 Minutes</div>
+                <div className="text-sm text-[var(--color-text-muted)]">
+                  Speed affects your score
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-primary)] rounded-lg">
+              <Users className="w-6 h-6 text-amber-500 flex-shrink-0" />
+              <div>
+                <div className="font-semibold">Global Leaderboard</div>
+                <div className="text-sm text-[var(--color-text-muted)]">
+                  See your percentile ranking
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-[var(--color-text-muted)]">
-                {completedStats.correctCount}/{completedStats.totalQuestions} correct
+                <strong className="text-amber-500">One Attempt Per Day:</strong> You can only complete this
+                challenge once. New challenges available daily at midnight UTC.
               </div>
             </div>
+          </div>
 
-            {/* Stats grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">#{completedStats.ranking}</div>
-                <div className="text-sm text-[var(--color-text-muted)]">Global Rank</div>
-              </div>
-              <div className="bg-[var(--color-bg-primary)] rounded-lg p-4 text-center">
-                <div className="text-3xl font-bold text-amber-500">
-                  {Math.round(completedStats.percentile)}%
-                </div>
-                <div className="text-sm text-[var(--color-text-muted)]">Percentile</div>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-[var(--color-border)]">
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--color-text-muted)]">Time Spent</span>
-                <span className="font-semibold">{formatTime(completedStats.timeSpentMs)}</span>
-              </div>
-            </div>
-
-            {completedStats.percentile >= 90 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 rounded-lg p-4 flex items-center gap-3"
-              >
-                <Crown className="w-6 h-6 text-yellow-500" />
-                <div>
-                  <div className="font-semibold text-yellow-500">Top Performer!</div>
-                  <div className="text-sm text-[var(--color-text-muted)]">
-                    You scored in the top 10% globally!
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
+          <div className="flex gap-3">
             <button
               onClick={onExit}
-              className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-lg transition-all"
+              className="flex-1 px-6 py-3 bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)] rounded-lg font-semibold transition-colors"
             >
-              Exit
+              Back
+            </button>
+            <button
+              onClick={handleStart}
+              className="flex-1 px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+            >
+              <Play className="w-5 h-5" />
+              Start Challenge
             </button>
           </div>
         </motion.div>
@@ -684,114 +482,131 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     const currentQuestion = challengeData.questions[currentQuestionIndex];
     const progress = ((currentQuestionIndex + 1) / challengeData.questions.length) * 100;
     const timeRemaining = getTimeRemaining();
-    const isLastQuestion = currentQuestionIndex === challengeData.questions.length - 1;
+    const timeRemainingPercent = (timeRemaining / TOTAL_TIME_MS) * 100;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex flex-col">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-[var(--color-bg-primary)]/95 backdrop-blur-sm border-b border-[var(--color-border)] p-4">
-          <div className="max-w-4xl mx-auto space-y-3">
+      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header with timer */}
+          <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Trophy className="w-6 h-6 text-amber-500" />
+                <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-xl font-bold text-amber-500">
+                    {currentQuestionIndex + 1}/{challengeData.questions.length}
+                  </span>
+                </div>
                 <div>
+                  <div className="text-sm text-[var(--color-text-muted)]">Question</div>
                   <div className="font-semibold">Grand Rounds Challenge</div>
-                  <div className="text-sm text-[var(--color-text-muted)]">
-                    Question {currentQuestionIndex + 1} of {challengeData.questions.length}
-                  </div>
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="text-sm text-[var(--color-text-muted)]">Time Remaining</div>
-                <div className={`text-xl font-bold ${timeRemaining < 60000 ? 'text-red-500' : 'text-amber-500'}`}>
+              <div className="flex items-center gap-2">
+                <Timer className={`w-5 h-5 ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-amber-500'}`} />
+                <span className={`text-2xl font-bold ${timeRemainingPercent < 25 ? 'text-red-500' : 'text-amber-500'}`}>
                   {formatTime(timeRemaining)}
-                </div>
+                </span>
               </div>
             </div>
 
             {/* Progress bar */}
-            <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-2">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full"
-                transition={{ duration: 0.3 }}
-              />
+            <div className="space-y-2">
+              <div className="h-2 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  className="h-full bg-gradient-to-r from-amber-500 to-orange-500"
+                />
+              </div>
+              <div className="h-1 bg-[var(--color-bg-primary)] rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-100 ${
+                    timeRemainingPercent < 25 ? 'bg-red-500' : 'bg-amber-500'
+                  }`}
+                  style={{ width: `${timeRemainingPercent}%` }}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Question content */}
-        <div className="flex-1 p-6">
+          {/* Question card */}
           <AnimatePresence mode="wait">
             <motion.div
               key={currentQuestionIndex}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="max-w-4xl mx-auto space-y-6"
+              className="bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6"
             >
-              {/* Question */}
-              <div className="bg-[var(--color-bg-secondary)] rounded-xl p-6">
-                <h2 className="text-xl font-semibold leading-relaxed">
-                  {currentQuestion.question}
-                </h2>
+              {currentQuestion.vignette && (
+                <div className="prose prose-invert max-w-none">
+                  <p className="text-[var(--color-text-muted)] leading-relaxed whitespace-pre-wrap">
+                    {currentQuestion.vignette}
+                  </p>
+                </div>
+              )}
+
+              <div className="text-xl font-semibold">
+                {currentQuestion.question}
               </div>
 
-              {/* Options */}
               <div className="space-y-3">
-                {currentQuestion?.options?.map((option, index) => {
-                  if (!option) return null;
-                  const isSelected = selectedAnswer === index;
-
-                  return (
-                    <motion.button
-                      key={index}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={() => handleAnswerSelect(index)}
-                      className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
-                        isSelected
-                          ? 'bg-amber-500/10 border-amber-500'
-                          : 'bg-[var(--color-bg-secondary)] border-[var(--color-border)] hover:border-amber-500/50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="flex-1">{option}</span>
-                        {isSelected && (
-                          <CheckCircle className="w-5 h-5 ml-2 flex-shrink-0 text-amber-500" />
-                        )}
+                {currentQuestion.options?.map((option: string, index: number) => (
+                  <motion.button
+                    key={index}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => handleAnswerSelect(index)}
+                    className={`w-full p-4 rounded-lg text-left transition-all border-2 ${
+                      selectedAnswer === index
+                        ? 'bg-amber-500/20 border-amber-500'
+                        : 'bg-[var(--color-bg-primary)] border-[var(--color-border)] hover:border-amber-500/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${
+                          selectedAnswer === index
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]'
+                        }`}
+                      >
+                        {String.fromCharCode(65 + index)}
                       </div>
-                    </motion.button>
-                  );
-                })}
+                      <span>{option}</span>
+                    </div>
+                  </motion.button>
+                ))}
               </div>
 
-              {/* Next button */}
-              <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+              <div className="flex justify-end pt-4">
+                <button
                   onClick={handleNext}
                   disabled={selectedAnswer === null || isSubmitting}
-                  className={`flex-1 py-3 px-6 rounded-lg font-semibold transition-all ${
+                  className={`px-8 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                     selectedAnswer === null || isSubmitting
-                      ? 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] cursor-not-allowed'
+                      ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)] cursor-not-allowed'
                       : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
                   }`}
                 >
                   {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
+                    <>
                       <Loader2 className="w-5 h-5 animate-spin" />
                       Submitting...
-                    </span>
-                  ) : isLastQuestion ? (
-                    'Submit Challenge'
+                    </>
+                  ) : currentQuestionIndex === challengeData.questions.length - 1 ? (
+                    <>
+                      Submit Challenge
+                      <CheckCircle className="w-5 h-5" />
+                    </>
                   ) : (
-                    'Next Question'
+                    <>
+                      Next Question
+                      <Play className="w-5 h-5" />
+                    </>
                   )}
-                </motion.button>
+                </button>
               </div>
             </motion.div>
           </AnimatePresence>
@@ -800,7 +615,108 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
     );
   }
 
-  // Fallback
+  // Summary state - Just finished
+  if (viewState === 'summary' && completedStats) {
+    const isTopPercentile = completedStats.percentile >= 90;
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-amber-500/10 via-[var(--color-bg-primary)] to-orange-500/10 text-[var(--color-text-primary)] flex items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-2xl w-full bg-[var(--color-bg-secondary)] rounded-xl p-8 space-y-6"
+        >
+          <div className="text-center space-y-4">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', bounce: 0.5 }}
+            >
+              {isTopPercentile ? (
+                <Crown className="w-20 h-20 text-amber-500 mx-auto" />
+              ) : (
+                <Trophy className="w-20 h-20 text-amber-500 mx-auto" />
+              )}
+            </motion.div>
+            
+            <h2 className="text-3xl font-bold text-amber-500">
+              {isTopPercentile ? 'Outstanding Performance!' : 'Challenge Complete!'}
+            </h2>
+            <p className="text-[var(--color-text-muted)]">
+              {isTopPercentile 
+                ? "You're in the top 10% of all participants today!"
+                : "You've completed today's Grand Rounds challenge."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
+            >
+              <div className="text-4xl font-bold text-amber-500">{completedStats.score}</div>
+              <div className="text-sm text-[var(--color-text-muted)] mt-1">Total Score</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
+            >
+              <div className="text-4xl font-bold text-amber-500">
+                {completedStats.correctCount}/{completedStats.totalQuestions}
+              </div>
+              <div className="text-sm text-[var(--color-text-muted)] mt-1">Correct</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
+            >
+              <div className="text-4xl font-bold text-amber-500">{completedStats.percentile}%</div>
+              <div className="text-sm text-[var(--color-text-muted)] mt-1">Percentile</div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
+            >
+              <div className="text-4xl font-bold text-amber-500">#{completedStats.ranking}</div>
+              <div className="text-sm text-[var(--color-text-muted)] mt-1">Global Rank</div>
+            </motion.div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="bg-[var(--color-bg-primary)] rounded-lg p-6 text-center"
+          >
+            <div className="flex items-center justify-center gap-2 text-[var(--color-text-muted)] mb-2">
+              <Calendar className="w-5 h-5" />
+              <span>Next Challenge In:</span>
+            </div>
+            <div className="text-2xl font-bold text-amber-500">{nextChallengeCountdown}</div>
+          </motion.div>
+
+          <button
+            onClick={onExit}
+            className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg font-semibold transition-all"
+          >
+            Back to Menu
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return null;
 };
 

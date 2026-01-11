@@ -832,14 +832,17 @@ model GrandRoundsAttempt {
   userId               String
   challengeId          String
   score                Int
+  correctCount         Int                  // Number of correct answers (out of 5)
   timeSpentMs          Int
+  answers              Json?                // Store user's answers for potential review
   completedAt          DateTime             @default(now())
   createdAt            DateTime             @default(now())
   GrandRoundsChallenge GrandRoundsChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   User                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, challengeId])
-  @@index([challengeId])
+  @@index([challengeId, score])
+  @@index([userId])
 }
 
 model GrandRoundsChallenge {

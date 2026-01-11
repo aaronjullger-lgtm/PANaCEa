@@ -1,55 +1,68 @@
 /**
- * API: Submit Grand Rounds completion and get rank
- * POST /api/grandrounds/submit
+ * API: Submit Grand Rounds attempt
+ * POST /api/grand-rounds/submit
  * 
  * Body: {
- *   userId: string,
- *   date: string (ISO),
+ *   challengeId: string,
+ *   answers: Record<questionId, answerIndex>,
+ *   timeSpentMs: number
+ * }
+ * 
+ * Returns: {
+ *   success: true,
  *   score: number,
- *   completionTimeMs: number,
- *   correctAnswers: number,
- *   timeBonus: number
+ *   correctCount: number,
+ *   percentile: number,
+ *   ranking: number,
+ *   speedBonus: number
  * }
  */
 
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions, type Env } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 
+export const onRequestOptions = handleCorsOptions;
+
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
-  if (request.method === 'OPTIONS') {
-    return handleCorsOptions();
-  }
-
   const authContext = await authenticateRequest(request, env);
-  if (!authContext) {
+  if (!authContext.isAuthenticated || !authContext.userId) {
     return createErrorResponse('Unauthorized', 401);
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const { challengeId, answers, timeSpentMs } = await request.json() as { 
+    const body = await request.json() as { 
       challengeId: string, 
-      answers: Record<string, string>, 
+      answers: Record<string, number>, 
       timeSpentMs: number 
     };
 
+    const { challengeId, answers, timeSpentMs } = body;
+
+    // Validate inputs
     if (!challengeId || !answers || typeof timeSpentMs !== 'number') {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return createErrorResponse('Missing required fields: challengeId, answers, timeSpentMs', 400);
     }
 
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
+    if (typeof answers !== 'object' || Array.isArray(answers)) {
+      return createErrorResponse('Answers must be an object mapping questionId to answer index', 400);
+    }
+
+    if (timeSpentMs < 0 || timeSpentMs > 20 * 60 * 1000) {
+      return createErrorResponse('Invalid timeSpentMs: must be between 0 and 20 minutes', 400);
+    }
 
     // Get internal user ID
-    const user = await prisma.user.findUnique({ where: { clerkId: authContext.userId } });
+    const user = await prisma.user.findUnique({ 
+      where: { clerkId: authContext.userId },
+      select: { id: true }
+    });
+
     if (!user) {
-      return new Response(JSON.stringify({ error: 'User not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return createErrorResponse('User not found', 404);
     }
 
     // Check if user already submitted
@@ -63,10 +76,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     });
 
     if (existingAttempt) {
-      return new Response(JSON.stringify({ error: 'Challenge already completed' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return createErrorResponse('Challenge already completed. You can only attempt each challenge once.', 400);
     }
 
     // Get the challenge
@@ -75,16 +85,30 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     });
 
     if (!challenge) {
-      return new Response(JSON.stringify({ error: 'Challenge not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return createErrorResponse('Challenge not found', 404);
     }
 
-    // Fetch questions with correct answers for grading
+    // Validate that answers match challenge questions
+    const expectedQuestionIds = challenge.questionIds as string[];
+    const submittedQuestionIds = Object.keys(answers);
+
+    if (submittedQuestionIds.length !== expectedQuestionIds.length) {
+      return createErrorResponse(
+        `Expected ${expectedQuestionIds.length} answers, got ${submittedQuestionIds.length}`,
+        400
+      );
+    }
+
+    for (const qid of submittedQuestionIds) {
+      if (!expectedQuestionIds.includes(qid)) {
+        return createErrorResponse(`Invalid question ID: ${qid}`, 400);
+      }
+    }
+
+    // Fetch questions with correct answers for SERVER-SIDE GRADING
     const questions = await prisma.question.findMany({
       where: {
-        id: { in: challenge.questionIds as string[] },
+        id: { in: expectedQuestionIds },
       },
       select: {
         id: true,
@@ -97,38 +121,48 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const POINTS_PER_CORRECT = 20;
 
     for (const question of questions) {
-      const userAnswer = answers[question.id];
-      if (userAnswer === question.correctAnswer) {
+      const userAnswerIndex = answers[question.id];
+      
+      // Validate answer index
+      if (typeof userAnswerIndex !== 'number' || userAnswerIndex < 0 || userAnswerIndex > 4) {
+        return createErrorResponse(
+          `Invalid answer index for question ${question.id}: must be 0-4`,
+          400
+        );
+      }
+
+      // Compare with correct answer
+      if (userAnswerIndex === question.correctAnswer) {
         correctCount++;
       }
     }
 
     // Calculate score with speed bonus
-    const rawScore = correctCount * POINTS_PER_CORRECT;
+    const baseScore = correctCount * POINTS_PER_CORRECT;
+    
+    // Speed bonus: max 20 points, decreases by 1 point per minute
+    // Complete under 1 minute = +20, under 10 minutes = +10, under 20 minutes = +0
     const timeInMinutes = timeSpentMs / 60000;
-    const speedBonus = correctCount > 0 ? Math.max(0, Math.min(20, 20 - timeInMinutes)) : 0;
-    const finalScore = Math.round(rawScore + speedBonus);
+    const speedBonus = correctCount > 0 
+      ? Math.max(0, Math.min(20, Math.round(20 - timeInMinutes)))
+      : 0;
+    
+    const finalScore = baseScore + speedBonus;
 
-    // Save the attempt
+    // Save the attempt with correctCount
     await prisma.grandRoundsAttempt.create({
       data: {
         userId: user.id,
         challengeId,
         score: finalScore,
+        correctCount,
         timeSpentMs,
+        answers: answers as any, // Store for potential review
       },
     });
 
-    // Calculate percentile
+    // Calculate percentile and ranking
     const allAttempts = await prisma.grandRoundsAttempt.findMany({
-      where: { challengeId },
-      select: { score: true },
-    });
-    const worseCount = allAttempts.filter(a => a.score < finalScore).length;
-    const percentile = allAttempts.length > 0 ? Math.round((worseCount / allAttempts.length) * 100) : 100;
-
-    // Calculate ranking
-    const rankingAttempts = await prisma.grandRoundsAttempt.findMany({
       where: { challengeId },
       select: { score: true, timeSpentMs: true },
       orderBy: [
@@ -136,18 +170,45 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         { timeSpentMs: 'asc' },
       ],
     });
+
+    const totalAttempts = allAttempts.length;
     let ranking = 1;
-    for (const attempt of rankingAttempts) {
+
+    for (const attempt of allAttempts) {
       if (attempt.score > finalScore) {
         ranking++;
       } else if (attempt.score === finalScore && attempt.timeSpentMs < timeSpentMs) {
         ranking++;
+      } else {
+        break; // Since sorted, we can break here
       }
     }
 
-    return new Response(JSON.stringify({
+    // Calculate percentile (higher is better)
+    const percentile = totalAttempts > 1
+      ? Math.round(((totalAttempts - ranking) / (totalAttempts - 1)) * 100)
+      : 100;
+
+    return createSuccessResponse({
       success: true,
       score: finalScore,
+      correctCount,
+      totalQuestions: expectedQuestionIds.length,
+      percentile,
+      ranking,
+      speedBonus,
+    });
+
+  } catch (error: any) {
+    console.error('Grand Rounds submit error:', error);
+    return createErrorResponse(
+      'Failed to submit attempt: ' + (error.message || 'Unknown error'),
+      500
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
       correctCount,
       totalQuestions: questions.length,
       percentile,
