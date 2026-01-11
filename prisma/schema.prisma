@@ -1991,6 +1991,7 @@ model User {
   WeaknessPattern         WeaknessPattern[]
   StudySession            StudySession[]
   UserLearningProfile     UserLearningProfile?
+  UserQuestionSeen        UserQuestionSeen[]
 
   @@index([clerkId])
   @@index([email])
@@ -2569,4 +2570,43 @@ model NormalPhysicalExamFinding {
   @@unique([system, examComponent, ageGroup])
   @@index([system])
   @@index([examComponent])
+}
+
+// =============================================================================
+// QUESTION TRACKING IMPROVEMENTS
+// Tracks which questions each user has seen to prevent repetition
+// =============================================================================
+
+/// Tracks which questions each user has seen for no-repeat functionality
+model UserQuestionSeen {
+  id              String   @id @default(cuid())
+  userId          String
+  questionId      String   // ID from Question, PreGeneratedQuestion, etc.
+  questionType    String   // 'question' | 'pre_generated' | 'seed' | 'staging'
+  
+  // Timing
+  firstSeenAt     DateTime @default(now())
+  lastSeenAt      DateTime @default(now())
+  timesShown      Int      @default(1)
+  
+  // Performance on this specific question
+  timesCorrect    Int      @default(0)
+  timesIncorrect  Int      @default(0)
+  avgTimeMs       Int?     // Average time to answer
+  lastAnswerMs    Int?     // Most recent answer time
+  
+  // Was the question answered correctly on first attempt?
+  correctOnFirst  Boolean?
+  
+  // User relation
+  User            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, questionId, questionType])
+  @@index([userId, questionType])
+  @@index([userId, lastSeenAt])
+  @@index([questionId])
+  @@index([questionType])
 }
