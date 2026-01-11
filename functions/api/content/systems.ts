@@ -25,23 +25,26 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       });
     }
 
-    // Group by system and count entries
+    // Group by system and count entries (sorted by count desc)
     const systemGroups = await prisma.medicalContent.groupBy({
       by: ['system'],
       _count: {
-        id: true,
+        _all: true,
       },
       where: {
         status: 'published',
       },
       orderBy: {
-        system: 'asc',
+        _count: {
+          _all: 'desc',
+        },
       },
     });
 
     const systems = systemGroups.map((group) => ({
-      system: group.system,
-      count: group._count.id,
+      id: group.system,
+      label: group.system,
+      count: group._count._all,
     }));
 
     return new Response(JSON.stringify(systems), {

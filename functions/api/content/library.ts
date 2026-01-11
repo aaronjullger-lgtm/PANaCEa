@@ -30,13 +30,15 @@ export const onRequestGet = async (context: CloudflareContext) => {
     const system = url.searchParams.get('system');
     const subcategory = url.searchParams.get('subcategory');
     const search = url.searchParams.get('search');
-    const limit = parseInt(url.searchParams.get('limit') || '100');
-    const offset = parseInt(url.searchParams.get('offset') || '0');
+    // Remove pagination limits - load all for selected system
+    // const limit = parseInt(url.searchParams.get('limit') || '100');
+    // const offset = parseInt(url.searchParams.get('offset') || '0');
 
     // Build where clause
     const where: any = {};
 
-    if (system) {
+    // SYSTEM FILTER - triggers fresh query per system
+    if (system && system !== 'all') {
       where.system = system;
     }
 
@@ -53,42 +55,33 @@ export const onRequestGet = async (context: CloudflareContext) => {
       ];
     }
 
-    // Fetch content with pagination
-    const [content, total] = await Promise.all([
-      prisma.medicalContent.findMany({
-        where,
-        select: {
-          id: true,
-          condition: true,
-          conditionId: true,
-          system: true,
-          subcategory: true,
-          symptoms: true,
-          buzzwords: true,
-          clinical_pearls: true,
-          classic_patient: true,
-          pance_yield: true,
-        },
-        orderBy: [
-          { pance_yield: 'desc' },
-          { system: 'asc' },
-          { condition: 'asc' },
-        ],
-        take: limit,
-        skip: offset,
-      }),
-      prisma.medicalContent.count({ where }),
-    ]);
+    // Fetch content without pagination
+    const content = await prisma.medicalContent.findMany({
+      where,
+      select: {
+        id: true,
+        condition: true,
+        conditionId: true,
+        system: true,
+        subcategory: true,
+        symptoms: true,
+        buzzwords: true,
+        clinical_pearls: true,
+        classic_patient: true,
+        pance_yield: true,
+      },
+      orderBy: [
+        { pance_yield: 'desc' },  // High yield first
+        { subcategory: 'asc' },   // Then by subcategory
+        { condition: 'asc' },     // Then alphabetical
+      ],
+      // NO take limit - load all for the selected system
+    });
 
     return new Response(
       JSON.stringify({
         content,
-        pagination: {
-          total,
-          limit,
-          offset,
-          hasMore: offset + content.length < total,
-        },
+        count: content.length,
       }),
       {
         status: 200,

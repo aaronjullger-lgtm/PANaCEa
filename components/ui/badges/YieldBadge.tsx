@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, TrendingUp, Minus } from 'lucide-react';
+import { Star, TrendingUp, Minus, Flame } from 'lucide-react';
 
 interface YieldBadgeProps {
   yield: number | string | null | undefined;
@@ -99,7 +99,7 @@ function parseYieldValue(yieldValue: number | string | null | undefined) {
 
   const configs = {
     high: {
-      icon: Star,
+      icon: Flame,  // 🔥 for HIGH YIELD
       bgClass: 'bg-red-950/50',
       textClass: 'text-red-200',
       borderClass: 'border-red-700/60',
