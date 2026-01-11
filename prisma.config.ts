@@ -21,6 +21,11 @@ export default defineConfig({
   // Prisma schema location
   schema: path.resolve(process.cwd(), 'prisma/schema.prisma'),
   
+  // Datasource URL for db push/pull commands
+  datasource: {
+    url: process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL || '',
+  },
+  
   // Migrate configuration for database connections
   migrate: {
     async adapter() {
