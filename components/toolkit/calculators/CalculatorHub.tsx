@@ -213,27 +213,11 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
             );
           })}
         </div>
-                  flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all
-                  ${isActive
-                    ? 'bg-blue-600 text-white shadow-lg scale-105'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
-                  }
-                `}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-                <span className={`px-1.5 py-0.5 rounded text-xs ${isActive ? 'bg-blue-700' : 'bg-slate-700'}`}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Calculator Grid */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeSystem + searchQuery}
+            key={activeCategory + searchQuery}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -246,7 +230,7 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
                 <button
                   onClick={() => {
                     setSearchQuery('');
-                    setActiveSystem('all');
+                    setActiveCategory('cardiac');
                   }}
                   className="mt-4 text-blue-400 hover:text-blue-300 text-sm font-medium"
                 >
