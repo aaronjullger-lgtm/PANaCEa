@@ -16,8 +16,33 @@
 
 import { authenticateRequest, handleCorsOptions, type Env } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { validateRequest } from '../_shared/schemas';
+import { z } from 'zod';
 
 export const onRequestOptions = handleCorsOptions;
+
+// Zod schema for session attempt
+const SessionAttemptSchema = z.object({
+  questionId: z.string(),
+  conditionId: z.string().nullable().optional(),
+  system: z.string().nullable().optional(),
+  wasCorrect: z.boolean(),
+  responseTimeMs: z.number(),
+  answerChanged: z.boolean().optional().default(false),
+  selectedAnswer: z.string(),
+  correctAnswer: z.string(),
+  difficulty: z.string(),
+  timestamp: z.number(),
+});
+
+// Zod schema for analyze session request
+const AnalyzeSessionRequestSchema = z.object({
+  sessionId: z.string().optional(),
+  attempts: z.array(SessionAttemptSchema).min(1, 'At least one attempt required'),
+  sessionStartTime: z.number(),
+  sessionEndTime: z.number(),
+  mode: z.string().optional(),
+});
 
 // ============================================================================
 // Types
@@ -558,16 +583,13 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       });
     }
 
-    // Parse request
-    const body = await context.request.json() as AnalyzeSessionRequest;
-    const { attempts, sessionStartTime, sessionEndTime } = body;
-
-    if (!attempts || attempts.length === 0) {
-      return new Response(JSON.stringify({ error: 'No attempts provided' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    // Validate and parse request
+    const validation = await validateRequest(context.request, AnalyzeSessionRequestSchema);
+    if (validation.success === false) {
+      return validation.response;
     }
+    const body = validation.data as AnalyzeSessionRequest;
+    const { attempts, sessionStartTime, sessionEndTime } = body;
 
     // Calculate basic metrics
     const totalCorrect = attempts.filter(a => a.wasCorrect).length;
