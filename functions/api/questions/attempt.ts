@@ -98,7 +98,7 @@ export const onRequestPost: PagesFunction<Env> = async (context): Promise<any> =
         },
       });
 
-      // 2. Update UserQuestionHistory (upsert - update if exists, create if not)
+      // 2. Update UserQuestionHistory (legacy - keeping for backward compatibility)
       await tx.userQuestionHistory.upsert({
         where: { id: historyId },
         create: {
@@ -111,6 +111,59 @@ export const onRequestPost: PagesFunction<Env> = async (context): Promise<any> =
         update: {
           isCorrect: correctness,
           seenAt: new Date(),
+        },
+      });
+
+      // 3. Update UserQuestionSeen with comprehensive metrics
+      const qType = questionType || 'question';
+      const existingSeen = await tx.userQuestionSeen.findUnique({
+        where: {
+          userId_questionId_questionType: {
+            userId,
+            questionId,
+            questionType: qType,
+          },
+        },
+        select: { avgTimeMs: true, timesShown: true },
+      });
+
+      // Calculate new rolling average time
+      let newAvgTimeMs: number | null = null;
+      if (timeSpentMillis && timeSpentMillis > 0) {
+        if (existingSeen?.avgTimeMs) {
+          const currentCount = existingSeen.timesShown || 1;
+          newAvgTimeMs = Math.round(
+            (existingSeen.avgTimeMs * (currentCount - 1) + timeSpentMillis) / currentCount
+          );
+        } else {
+          newAvgTimeMs = timeSpentMillis;
+        }
+      }
+
+      await tx.userQuestionSeen.upsert({
+        where: {
+          userId_questionId_questionType: {
+            userId,
+            questionId,
+            questionType: qType,
+          },
+        },
+        create: {
+          userId,
+          questionId,
+          questionType: qType,
+          firstSeenAt: new Date(),
+          lastSeenAt: new Date(),
+          timesShown: 1,
+          timesCorrect: correctness ? 1 : 0,
+          timesIncorrect: correctness ? 0 : 1,
+          avgTimeMs: timeSpentMillis || null,
+        },
+        update: {
+          lastSeenAt: new Date(),
+          timesCorrect: correctness ? { increment: 1 } : undefined,
+          timesIncorrect: correctness ? undefined : { increment: 1 },
+          avgTimeMs: newAvgTimeMs !== null ? newAvgTimeMs : undefined,
         },
       });
 

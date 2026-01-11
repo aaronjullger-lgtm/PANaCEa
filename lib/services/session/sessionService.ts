@@ -99,11 +99,12 @@ export class SessionService {
     // All questions are now PANCE-level - no difficulty filtering needed
     const { userId, count = 10, system, conditionId, mode, excludeQuestionIds = [], minSystems = 3 } = params;
 
-    const seenHistory = await this.prisma.userQuestionHistory.findMany({
+    // Use UserQuestionSeen for comprehensive tracking (replaces UserQuestionHistory)
+    const seenRecords = await this.prisma.userQuestionSeen.findMany({
       where: { userId },
-      select: { questionId: true },
+      select: { questionId: true, questionType: true },
     });
-    const seenIds = new Set([...seenHistory.map(h => h.questionId), ...excludeQuestionIds]);
+    const seenIds = new Set([...seenRecords.map(r => r.questionId), ...excludeQuestionIds]);
 
     const questions: EnrichedQuestion[] = [];
     const analytics: SessionAnalytics = {
@@ -198,7 +199,7 @@ export class SessionService {
 
     const enriched = await this.enrichWithMedicalContent(questions);
 
-    await this.recordQuestionHistory(userId, enriched);
+    await this.recordQuestionSeen(userId, enriched);
 
     analytics.questionsServed = enriched.length;
     analytics.avgDifficulty = this.calculateAvgDifficulty(enriched);
@@ -627,22 +628,52 @@ Return ONLY valid JSON:
     });
   }
 
-  private async recordQuestionHistory(
+  /**
+   * Record questions as seen in UserQuestionSeen table
+   * Uses upsert to increment timesShown for repeat views
+   */
+  private async recordQuestionSeen(
     userId: string,
     questions: EnrichedQuestion[]
   ): Promise<void> {
-    const historyRecords = questions.map(q => ({
-      id: `${userId}-${q.id}`,
-      userId,
-      questionId: q.id,
-      isCorrect: false,
-      seenAt: new Date(),
-    }));
-  
-    await this.prisma.userQuestionHistory.createMany({
-      data: historyRecords,
-      skipDuplicates: true,
-    });
+    const now = new Date();
+    
+    // Map source to questionType enum value
+    const sourceToType: Record<string, string> = {
+      'pool': 'pre_generated',
+      'main': 'question',
+      'seed': 'seed',
+      'generated': 'pre_generated',
+    };
+    
+    // Use transactions for bulk upsert
+    const upsertPromises = questions.map(q => 
+      this.prisma.userQuestionSeen.upsert({
+        where: {
+          userId_questionId_questionType: {
+            userId,
+            questionId: q.id,
+            questionType: sourceToType[q.source] || 'question',
+          },
+        },
+        update: {
+          timesShown: { increment: 1 },
+          lastSeenAt: now,
+        },
+        create: {
+          userId,
+          questionId: q.id,
+          questionType: sourceToType[q.source] || 'question',
+          firstSeenAt: now,
+          lastSeenAt: now,
+          timesShown: 1,
+          timesCorrect: 0,
+          timesIncorrect: 0,
+        },
+      })
+    );
+    
+    await Promise.all(upsertPromises);
   }
 
   private shuffleArray<T>(array: T[]): T[] {
