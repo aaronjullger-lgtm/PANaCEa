@@ -142,17 +142,41 @@ if (duplicates.length > 0 && duplicates[0].similarity > 0.9) {
    - Calculates rolling average time
    - Tracks correct/incorrect counts
 
-### 🔄 Phase 2: Timing Capture (Planned)
+### ✅ Phase 2: Timing Capture (COMPLETED)
 
-- Add timing capture to frontend question components
-- Pass `timeMs` to attempt endpoint
-- Display timing analytics in dashboard
+**Date:** January 10, 2026
 
-### 🔄 Phase 3: Quality Scoring (Planned)
+1. **useConditionDrill Hook Enhanced**
+   - Added `questionStartTimeRef` to track when question is displayed
+   - Timer resets on `startSession`, `nextQuestion`, `reset`
+   - `timeSpentMs` calculated on answer submit and passed to endpoint
 
-- Add `qualityScore` and `conditionAccuracy` fields to questions
-- Implement AI-assessed quality scoring
-- Add duplicate detection before generation
+2. **Data Flow**
+   - Frontend captures timing → API receives `timeSpentMs`
+   - `UserQuestionSeen.avgTimeMs` updated with rolling average
+
+### ✅ Phase 3: Quality Scoring (COMPLETED)
+
+**Date:** January 10, 2026
+
+1. **Schema Enhanced** (`PreGeneratedQuestion` model)
+   - `qualityScore` (0-100): AI-assessed quality
+   - `conditionAccuracy` (0-1): How well it tests the condition
+   - `contentRelevance` (0-1): PANCE relevance
+   - `distractorQuality` (0-1): Wrong answer quality
+   - `validationStatus`: pending | approved | rejected | needs_revision
+   - `semanticHash`: For duplicate detection
+   - `similarQuestionIds`: Array of related questions
+   - Usage stats: `timesServed`, `timesCorrect`, `timesIncorrect`, `avgTimeMs`, `flagCount`, `flagRate`
+
+2. **Quality Service** (`services/questionQualityService.ts`)
+   - `generateSemanticHash()` - SHA-256 hash of normalized question content
+   - `calculateTextSimilarity()` - Jaccard index similarity scoring
+   - `assessDistractorQuality()` - Evaluates wrong answer options
+   - `quickQualityCheck()` - Rule-based quality assessment
+   - `validateQuestionQuality()` - Main validation function
+   - `determineValidationStatus()` - Auto-approve/reject logic
+   - `buildQualityAssessmentPrompt()` - AI prompt for enhanced scoring
 
 ### 🔄 Phase 4: Analytics Dashboard (Planned)
 
