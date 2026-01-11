@@ -113,6 +113,13 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
       });
     }
 
+    // Validate request body (optional force param)
+    const validation = await validateRequest(context.request, ProfileRecomputeSchema);
+    if (validation.success === false) {
+      return validation.response;
+    }
+    // const { force } = validation.data; // Optional: use force to bypass cache
+
     const user = await prisma.user.findUnique({
       where: { clerkId: authResult.userId },
       select: { id: true },
