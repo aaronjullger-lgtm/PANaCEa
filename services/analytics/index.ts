@@ -1,29 +1,30 @@
 /**
  * Analytics Services - Unified Exports
  *
- * FORTRESS MODE: Consolidated analytics and performance prediction services.
+ * FORTRESS MODE: Consolidated analytics and performance tracking services.
  *
  * @example
- * import { predictScore, NCCPA_BLUEPRINT_WEIGHTS, PANCE_CONSTANTS } from '@/services/analytics';
+ * // Performance & Score Prediction
+ * import { predictScore, NCCPA_BLUEPRINT_WEIGHTS } from '@/services/analytics';
+ *
+ * // User Analytics (cognitive, circadian, research-backed)
+ * import { userAnalytics, getQuickStatus, assessTestReadiness } from '@/services/analytics';
  */
 
 // ============================================================================
-// UNIFIED PERFORMANCE SERVICE (Phase 6 Consolidation)
+// PERFORMANCE SERVICE (Phase 6 Consolidation)
 // ============================================================================
-// Merged from:
-// - performanceService.ts (localStorage recording)
-// - panaceScorePredictor.ts (simple domain weights)
-// - panceScorePredictorService.ts (IRT-based prediction)
-// - performancePredictionService.ts (session-scoped)
+// Merged from: performanceService, panaceScorePredictor,
+// panceScorePredictorService, performancePredictionService
 
 export {
   // Main prediction function
   predictScore,
-  
+
   // Constants
   NCCPA_BLUEPRINT_WEIGHTS,
   PANCE_CONSTANTS,
-  
+
   // Types
   type SystemPerformance,
   type ScorePrediction,
@@ -36,43 +37,136 @@ export {
   type ISystemPerformance,
   type IrtPredictedScore,
   type HistoricalPrediction,
-  
+
   // Recording & Stats
   recordQuestionOutcome,
   getHierarchicalStats,
   clearPerformanceCache,
-  
+
   // Session prediction
   updatePerformancePrediction,
   getSessionPrediction,
   getConfidenceInterval,
   resetPrediction,
   calculateTrend,
-  
+
   // Class-based predictor
   PANCEScorePredictorService,
 } from './performanceService';
 
 // ============================================================================
+// USER ANALYTICS SERVICE (Phase 6 Consolidation)
+// ============================================================================
+// Merged from: advancedUserAnalyticsEngine, circadianAnalyticsService,
+// researchBackedAnalytics
+
+export {
+  // Namespaces for full access
+  advancedAnalytics,
+  circadianAnalytics,
+  researchAnalytics,
+
+  // High-level unified API
+  getFullAnalyticsSnapshot,
+  getQuickStatus,
+  getOptimalConditions,
+  checkBreakNeeded,
+
+  // Cognitive state
+  getCognitiveState,
+  recordCognitiveDataPoint,
+  shouldSuggestBreak,
+
+  // Learning velocity
+  getLearningVelocity,
+  recordSessionVelocity,
+
+  // Time of day
+  getPerformanceByTimeOfDay,
+  getOptimalStudyTime,
+  recordTimeOfDayAttempt,
+
+  // Circadian
+  isLateNightStudying,
+  getCircadianInsights,
+  analyzeCircadianPerformance,
+
+  // FSRS personalization
+  calculatePersonalizedFSRS,
+  getSystemFSRSAdjustments,
+
+  // Research-backed analysis
+  analyzeLearningEfficiency,
+  analyzeMetacognition,
+  analyzeCognitiveLoad,
+  analyzeCircadianPatterns,
+  analyzeStrengthsWeaknesses,
+  assessTestReadiness,
+  generateUserFriendlyStats,
+
+  // Comprehensive
+  generateComprehensiveAnalytics,
+  generateQuestionTargeting,
+} from './userAnalyticsService';
+
+// Alias for cleaner imports
+export { default as userAnalytics } from './userAnalyticsService';
+
+// ============================================================================
+// ANALYTICS STORAGE (deepAnalyticsStore + sessionAnalyticsSyncService)
+// ============================================================================
+
+export {
+  // Storage operations
+  storeQuestionAttempt,
+  getQuestionAttempts,
+  storeDailyRecord,
+  getDailyRecords,
+  storeMilestone,
+  getMilestones,
+  storeSnapshot,
+  getSnapshots,
+  getStorageStats,
+  generateId,
+  getTodayString,
+
+  // Types
+  type QuestionAttemptRecord,
+  type DailyStudyRecord,
+  type LearningMilestone,
+  type AnalyticsSnapshot,
+} from '../deepAnalyticsStore';
+
+export {
+  // Session sync
+  collectSessionAnalytics,
+  syncSessionAnalytics,
+  processPendingSync,
+  fetchLearningProfile,
+
+  // Types
+  type SessionAnalyticsPayload,
+} from '../sessionAnalyticsSyncService';
+
+// ============================================================================
 // LEGACY EXPORTS (Deprecated - Use unified API above)
 // ============================================================================
-// These maintain backward compatibility during migration
 
 import * as advancedUserAnalyticsModule from '../advancedUserAnalyticsEngine';
 import * as circadianAnalyticsModule from '../circadianAnalyticsService';
 import * as deepAnalyticsModule from '../deepAnalyticsStore';
 
 /**
- * @deprecated Use imports from './performanceService' directly
+ * @deprecated Use userAnalytics or direct imports from userAnalyticsService
  */
 export const analyticsService = advancedUserAnalyticsModule;
 
 /**
- * @deprecated Functionality merged into performanceService
+ * @deprecated Use circadianAnalytics from userAnalyticsService
  */
-export const circadianAnalytics = circadianAnalyticsModule;
+export const circadianService = circadianAnalyticsModule;
 
 /**
- * @deprecated Use predictScore() from performanceService
+ * @deprecated Use storage functions directly from this module
  */
 export const deepAnalytics = deepAnalyticsModule;
