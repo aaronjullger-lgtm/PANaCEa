@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Brain, Clock, Zap, TrendingUp, CheckCircle, AlertCircle, AlertTriangle, Sparkles, FileText } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 
 interface ReviewItem {
@@ -28,6 +29,7 @@ interface SmartReviewModeProps {
 type ViewState = 'loading' | 'active' | 'complete';
 
 const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
+  const { getToken } = useAuth();
   const [viewState, setViewState] = useState<ViewState>('loading');
   const [reviewQueue, setReviewQueue] = useState<ReviewItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -40,11 +42,11 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
   useEffect(() => {
     loadReviewItems();
   }, []);
-
   const loadReviewItems = async () => {
     try {
+      const token = await getToken();
       const response = await fetch('/api/drills/smart-review', {
-        headers: { Authorization: `Bearer ${await getAuthToken()}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const data = await response.json();
 
@@ -59,11 +61,6 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
       console.error('Failed to load review items:', error);
       setViewState('complete');
     }
-  };
-
-  const getAuthToken = async (): Promise<string> => {
-    // Placeholder: integrate with Clerk or your auth provider
-    return 'mock-token';
   };
 
   const currentItem = reviewQueue[currentIndex];
@@ -87,14 +84,15 @@ const SmartReviewMode: React.FC<SmartReviewModeProps> = ({ onExit }) => {
 
     // Submit to backend for FSRS update
     try {
+      const token = await getToken();
       await fetch('/api/drills/submit-review', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${await getAuthToken()}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          userId: 'current-user-id', // Replace with actual userId
+          userId: 'current-user-id', // Will be replaced by server with actual userId from auth
           questionId: currentItem.questionId,
           selectedAnswer,
           timeSpentMs,

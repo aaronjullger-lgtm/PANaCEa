@@ -101,7 +101,6 @@ export const onRequestGet = async (context: any) => {
       // Find related conditions with similar pathophysiology
       const relatedConditions = await prisma.medicalContent.findMany({
         where: {
-          content_type: 'condition',
           system: condition.system,
           id: { not: conditionId },
           // Could add pathophysiology similarity search here

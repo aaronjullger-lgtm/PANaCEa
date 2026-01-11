@@ -33,9 +33,7 @@ export const onRequestGet = async (context: any) => {
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
     // Build where clause
-    const where: any = {
-      content_type: 'condition', // Only conditions for library
-    };
+    const where: any = {};
 
     if (system) {
       where.system = system;
@@ -46,10 +44,10 @@ export const onRequestGet = async (context: any) => {
     }
 
     if (search && search.trim()) {
-      // Full-text search across condition, definition, symptoms
+      // Full-text search across condition, overview, symptoms
       where.OR = [
         { condition: { contains: search, mode: 'insensitive' } },
-        { definition: { contains: search, mode: 'insensitive' } },
+        { overview: { contains: search, mode: 'insensitive' } },
         { classic_patient: { contains: search, mode: 'insensitive' } },
       ];
     }
@@ -64,13 +62,11 @@ export const onRequestGet = async (context: any) => {
           conditionId: true,
           system: true,
           subcategory: true,
-          definition: true,
           symptoms: true,
           buzzwords: true,
           clinical_pearls: true,
           classic_patient: true,
           pance_yield: true,
-          content_type: true,
         },
         orderBy: [
           { system: 'asc' },
