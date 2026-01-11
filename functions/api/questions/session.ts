@@ -45,7 +45,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     const url = new URL(context.request.url);
     const count = parseInt(url.searchParams.get('count') || '10', 10);
     const system = url.searchParams.get('system');
-    const difficulty = url.searchParams.get('difficulty') as 'easy' | 'medium' | 'hard' | null;
+    // Difficulty removed - all questions are now PANCE-level
     const mode = url.searchParams.get('mode') || 'standard';
 
     const sessionService = new SessionService(context.env.DATABASE_URL, context.env);
@@ -53,7 +53,6 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       userId: user.id,
       count: Math.min(count, 50),
       system: system || undefined,
-      difficulty: difficulty || undefined,
       mode: mode as SessionQuestionRequest['mode'],
     });
 

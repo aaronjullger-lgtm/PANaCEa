@@ -10,7 +10,7 @@ export interface SessionQuestionRequest {
   count?: number;
   system?: string;
   conditionId?: string;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  // Difficulty removed - all questions are now PANCE-level
   mode?: 'standard' | 'review' | 'weakness' | 'random' | 'interleaved';
   excludeQuestionIds?: string[];
   minSystems?: number;
@@ -96,7 +96,8 @@ export class SessionService {
     analytics: SessionAnalytics;
     poolStatus: { available: number; needsGeneration: boolean };
   }> {
-    const { userId, count = 10, system, conditionId, difficulty, mode, excludeQuestionIds = [], minSystems = 3 } = params;
+    // All questions are now PANCE-level - no difficulty filtering needed
+    const { userId, count = 10, system, conditionId, mode, excludeQuestionIds = [], minSystems = 3 } = params;
 
     const seenHistory = await this.prisma.userQuestionHistory.findMany({
       where: { userId },
@@ -116,6 +117,7 @@ export class SessionService {
     };
 
     // If no specific system requested, use NCCPA blueprint distribution
+    // All questions are PANCE-level - no difficulty filtering
     if (!system && !conditionId) {
       const systemQuotas = this.calculateNCCPAQuotas(count, minSystems);
       
@@ -123,7 +125,6 @@ export class SessionService {
         const poolQ = await this.fetchFromPool(userId, seenIds, {
           count: targetCount,
           system: targetSystem,
-          difficulty,
         });
         questions.push(...poolQ.questions);
         analytics.fromPool += poolQ.questions.length;
@@ -134,7 +135,6 @@ export class SessionService {
           const seedQ = await this.expandFromSeeds(userId, seenIds, {
             count: remaining,
             system: targetSystem,
-            difficulty,
           });
           questions.push(...seedQ);
           analytics.fromSeeds += seedQ.length;
@@ -146,7 +146,6 @@ export class SessionService {
           const mainQ = await this.fetchFromMain(userId, seenIds, {
             count: Math.min(stillRemaining, 5),
             system: targetSystem,
-            difficulty,
           });
           questions.push(...mainQ);
           analytics.fromMain += mainQ.length;
@@ -161,7 +160,6 @@ export class SessionService {
         count,
         system,
         conditionId,
-        difficulty,
       });
       questions.push(...poolQuestions.questions);
       analytics.fromPool = poolQuestions.questions.length;
@@ -171,7 +169,6 @@ export class SessionService {
           count: count - questions.length,
           system,
           conditionId,
-          difficulty,
         });
         questions.push(...seedQuestions);
         analytics.fromSeeds = seedQuestions.length;
@@ -182,7 +179,6 @@ export class SessionService {
           count: count - questions.length,
           system,
           conditionId,
-          difficulty,
         });
         questions.push(...mainQuestions);
         analytics.fromMain = mainQuestions.length;
@@ -195,7 +191,6 @@ export class SessionService {
         count: Math.min(count - questions.length, 5), // Limit AI generation
         system,
         conditionId,
-        difficulty,
       });
       questions.push(...generated);
       analytics.generated = generated.length;
