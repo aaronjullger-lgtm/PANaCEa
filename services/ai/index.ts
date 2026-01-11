@@ -21,16 +21,6 @@ export {
 } from '../geminiService';
 
 // ============================================================================
-// CONTENT GENERATION PIPELINE
-// ============================================================================
-
-import * as automatedContentPipelineModule from '../automatedContentPipeline';
-import * as batchGeneratorServiceModule from '../batchGeneratorService';
-
-export const contentPipeline = automatedContentPipelineModule;
-export const batchGenerator = batchGeneratorServiceModule;
-
-// ============================================================================
 // INTELLIGENT QUESTION SERVICES
 // ============================================================================
 

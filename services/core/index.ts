@@ -14,12 +14,10 @@
 
 // NEW: Unified question service that consolidates 4 legacy services
 import * as consolidatedQuestionService from './questionService';
-import * as questionPoolServiceModule from '../questionPoolService';
 import * as attemptServiceModule from '../attemptService';
 
 // Re-export as namespaced services
 export const questionService = consolidatedQuestionService;
-export const questionPoolService = questionPoolServiceModule;
 export const attemptService = attemptServiceModule;
 
 // Named exports for common operations (tree-shakeable)
@@ -103,8 +101,8 @@ export const conditionContentService = conditionContentServiceModule;
  * - enhancedQuestionService.ts → Use questionService with enhanced options
  * - intelligentQuestionService.ts → Use questionService with adaptive mode
  * - adaptiveQuestionEngine.ts → Integrated into questionService
- * - questionSeedService.ts → Use questionPoolService
- * - stagingQuestionService.ts → Use questionPoolService with staging flag
+ * - questionSeedService.ts → Use server-side questionPoolService
+ * - stagingQuestionService.ts → Use server-side questionPoolService with staging flag
  * 
  * SESSION-RELATED (use sessionService):
  * - sessionMomentumService.ts → Integrated into sessionService

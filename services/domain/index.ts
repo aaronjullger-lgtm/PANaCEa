@@ -41,83 +41,10 @@ export {
   PANCE_SYSTEM_PERCENTAGES 
 } from '../panceDistributionService';
 
-// ============================================================================
-// REFERENCE DATA - Labs, Drugs, Guidelines
-// ============================================================================
+// Re-export exam utilities/types so consumers don't import directly
+export * from '../examService';
 
-import * as referenceDataServiceModule from '../referenceDataService';
-import * as labServiceModule from '../labService';
-import * as drugServiceModule from '../drugService';
-import * as guidelineServiceModule from '../guidelineService';
+// Spanish mode types (type-only to avoid extra bundling)
+export type { SpanishMode } from '../medicalSpanishService';
 
-export const referenceService = referenceDataServiceModule;
-export const labService = labServiceModule;
-export const drugService = drugServiceModule;
-export const guidelineService = guidelineServiceModule;
-
-// ============================================================================
-// CLINICAL SCENARIOS
-// ============================================================================
-
-import * as scenarioServiceModule from '../scenarioService';
-import * as osceServiceModule from '../osceService';
-import * as labCaseServiceModule from '../labCaseService';
-
-export const scenarioService = scenarioServiceModule;
-export const osceService = osceServiceModule;
-export const labCaseService = labCaseServiceModule;
-
-// ============================================================================
-// MEDIA & IMAGES
-// ============================================================================
-
-import * as mediaStorageServiceModule from '../mediaStorageService';
-import * as mediaApprovalServiceModule from '../mediaApprovalService';
-import * as imageQualityServiceModule from '../imageQualityService';
-
-export const mediaService = mediaStorageServiceModule;
-export const mediaApproval = mediaApprovalServiceModule;
-export const imageQuality = imageQualityServiceModule;
-
-// ============================================================================
-// SPECIALTY CONTENT
-// ============================================================================
-
-import * as buzzwordServiceModule from '../buzzwordService';
-import * as clinicalPearlServiceModule from '../clinicalPearlService';
-import * as firstLineServiceModule from '../firstLineService';
-
-export const buzzwordService = buzzwordServiceModule;
-export const pearlService = clinicalPearlServiceModule;
-export const firstLineService = firstLineServiceModule;
-
-// ============================================================================
-// KNOWLEDGE GRAPH
-// ============================================================================
-
-import * as knowledgeGraphServiceModule from '../knowledgeGraphService';
-import * as conceptDependencyServiceModule from '../conceptDependencyService';
-
-export const knowledgeGraph = knowledgeGraphServiceModule;
-export const conceptDependency = conceptDependencyServiceModule;
-
-// ============================================================================
-// DEPRECATION GUIDE
-// ============================================================================
-/**
- * DOMAIN SERVICE ORGANIZATION:
- * 
- * This module organizes domain-specific medical education services:
- * 
- * LEARNING ALGORITHMS:
- * - fsrsService: FSRS v5 spaced repetition (primary)
- * - adaptiveFSRSService.ts: Same service, adaptive extensions
- * 
- * EXAM PREP:
- * - examService: Full exam simulation mode
- * - panceDistribution: NCCPA blueprint weighting
- * 
- * REFERENCE:
- * - referenceService: Unified reference data access
- * - Individual services (lab, drug, guideline) for specialized queries
- */
+// This barrel intentionally limits exports to client-safe services.

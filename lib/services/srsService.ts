@@ -20,10 +20,12 @@ const fsrs = new FSRS();
  * Falls back to defaults if user has no custom config
  */
 async function loadUserFSRSConfig(userId: string): Promise<FSRSParameters> {
+  // Browser bundle should never import Prisma; guard with build-time SSR flag.
+  if (!import.meta.env.SSR || !process.env.DATABASE_URL) {
+    return defaultParameters;
+  }
+
   try {
-    if (typeof window !== 'undefined' || !process.env.DATABASE_URL) {
-      return defaultParameters;
-    }
     const { prisma } = await import('../prisma');
     const config = await prisma.userSRSConfig.findUnique({
       where: { userId },
@@ -38,6 +40,7 @@ async function loadUserFSRSConfig(userId: string): Promise<FSRSParameters> {
   } catch (error) {
     console.warn('[SRS] Failed to load user config, using defaults:', error);
   }
+
   return defaultParameters;
 }
 

@@ -1,4 +1,4 @@
-import { FirstLineTreatment } from '@prisma/client';
+import type { FirstLineTreatment } from '@prisma/client';
 
 export const firstLineService = {
   getAll: async (category?: string): Promise<FirstLineTreatment[]> => {

@@ -7,7 +7,7 @@
  * Database contains 1000+ drugs with comprehensive clinical data.
  */
 
-import { Drug } from '@prisma/client';
+import type { Drug } from '@prisma/client';
 
 export const drugService = {
   /**
