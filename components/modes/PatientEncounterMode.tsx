@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight, ChevronDown, ChevronUp, Shield } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 import type { PatientEncounterCase, PatientQuestion, EncounterSession, PatientPersona } from '@/types/drill-modes';
 import { getRandomEncounterCase, calculateEncounterScore, saveChatMessage, getSessionHistory, clearSession } from '@/services/osceService';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
@@ -43,6 +44,7 @@ type ViewState = 'landing' | 'active' | 'results';
 type EncounterPhase = 'history' | 'physical' | 'diagnostic' | 'diagnosis' | 'treatment';
 
 const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) => {
+  const { getToken } = useAuth();
   const [viewState, setViewState] = useState<ViewState>('landing');
   const [phase, setPhase] = useState<EncounterPhase>('history');
   const [isPaused, setIsPaused] = useState(false);
@@ -206,8 +208,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     setIsLoading(true);
     setLoadError(null);
     
+    // Get authentication token
+    const token = await getToken();
+    
     // Use dynamic generation to ensure fresh content each time (backend OSCE case)
-    const newCase = await getRandomEncounterCase();
+    const newCase = await getRandomEncounterCase(token);
     
     if (!newCase) {
       console.error("Failed to load case");
@@ -221,7 +226,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     // Start backend session
     let sessionId: string | undefined;
     try {
-      const osceSession = await startOSCESession(newCase.id);
+      const osceSession = await startOSCESession(newCase.id, token);
       if (osceSession) {
         sessionId = osceSession.id;
       }
@@ -280,10 +285,11 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
       // Persist chat messages individually
       if (session.id) {
+        const token = await getToken();
         // Save user message
-        await saveChatMessage(session.id, 'user', currentQuestion);
+        await saveChatMessage(session.id, 'user', currentQuestion, token);
         // Save patient response
-        await saveChatMessage(session.id, 'patient', response);
+        await saveChatMessage(session.id, 'patient', response, token);
       }
 
     } catch (error) {
@@ -383,7 +389,8 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       
       // Complete session in backend
       if (session?.id) {
-        await completeOSCESession(session.id, userDiagnosis, treatmentPlan);
+        const token = await getToken();
+        await completeOSCESession(session.id, userDiagnosis, treatmentPlan, token);
       }
     } catch (error) {
       console.error("Treatment error:", error);

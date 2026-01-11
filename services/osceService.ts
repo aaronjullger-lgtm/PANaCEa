@@ -30,9 +30,11 @@ async function parseJsonResponse(response: Response): Promise<any | null> {
 /**
  * Fetch a random patient encounter case
  */
-export async function getRandomEncounterCase(): Promise<any | null> {
+export async function getRandomEncounterCase(token?: string | null): Promise<any | null> {
   try {
-    const response = await fetch('/api/osce/cases/random');
+    const response = await fetch('/api/osce/cases/random', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     
     if (!response.ok) {
       console.error('Failed to fetch case:', response.statusText);
@@ -49,11 +51,14 @@ export async function getRandomEncounterCase(): Promise<any | null> {
 /**
  * Create or get active session
  */
-export async function startOSCESession(caseId: string): Promise<OSCESession | null> {
+export async function startOSCESession(caseId: string, token?: string | null): Promise<OSCESession | null> {
   try {
     const response = await fetch('/api/osce/session', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ caseId })
     });
     
@@ -70,11 +75,14 @@ export async function startOSCESession(caseId: string): Promise<OSCESession | nu
 /**
  * Save chat history (append new messages)
  */
-export async function saveOSCEChat(sessionId: string, messages: any[]): Promise<boolean> {
+export async function saveOSCEChat(sessionId: string, messages: any[], token?: string | null): Promise<boolean> {
   try {
     const response = await fetch('/api/osce/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ sessionId, messages })
     });
     
@@ -91,12 +99,16 @@ export async function saveOSCEChat(sessionId: string, messages: any[]): Promise<
 export async function completeOSCESession(
   sessionId: string, 
   diagnosis: string, 
-  treatmentPlan: string
+  treatmentPlan: string,
+  token?: string | null
 ): Promise<boolean> {
   try {
     const response = await fetch('/api/osce/complete', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ sessionId, diagnosis, treatmentPlan })
     });
     
@@ -120,12 +132,16 @@ export function generateSessionId(): string {
 export async function saveChatMessage(
   sessionId: string, 
   role: 'user' | 'patient', 
-  content: string
+  content: string,
+  token?: string | null
 ): Promise<boolean> {
   try {
     const response = await fetch('/api/osce/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ 
         sessionId, 
         userId: 'current', // Will be replaced by server with actual userId from auth
@@ -144,7 +160,7 @@ export async function saveChatMessage(
 /**
  * Retrieve session chat history
  */
-export async function getSessionHistory(sessionId: string): Promise<Array<{
+export async function getSessionHistory(sessionId: string, token?: string | null): Promise<Array<{
   id: string;
   role: 'user' | 'patient';
   message: string;
@@ -152,7 +168,9 @@ export async function getSessionHistory(sessionId: string): Promise<Array<{
   phase?: string;
 }> | null> {
   try {
-    const response = await fetch(`/api/osce/history?sessionId=${encodeURIComponent(sessionId)}`);
+    const response = await fetch(`/api/osce/history?sessionId=${encodeURIComponent(sessionId)}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     
     if (!response.ok) return null;
     
@@ -167,10 +185,11 @@ export async function getSessionHistory(sessionId: string): Promise<Array<{
 /**
  * Clear all chat messages for a session
  */
-export async function clearSession(sessionId: string): Promise<boolean> {
+export async function clearSession(sessionId: string, token?: string | null): Promise<boolean> {
   try {
     const response = await fetch(`/api/osce/cleanup?sessionId=${encodeURIComponent(sessionId)}`, {
-      method: 'POST'
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     
     return response.ok;

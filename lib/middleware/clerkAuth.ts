@@ -28,6 +28,13 @@ export async function requireAuth(
   const debug = process.env.CLERK_AUTH_DEBUG === 'true';
   
   try {
+    // Log all request headers (sanitized) for debugging
+    if (debug) {
+      const headerKeys = Object.keys(req.headers);
+      console.log('[Auth Debug] Request headers present:', headerKeys);
+      console.log('[Auth Debug] Authorization header:', req.headers.authorization ? 'PRESENT (redacted)' : 'MISSING');
+    }
+
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {

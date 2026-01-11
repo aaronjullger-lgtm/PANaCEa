@@ -209,18 +209,3 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     await prisma.$disconnect();
   }
 }
-      correctCount,
-      totalQuestions: questions.length,
-      percentile,
-      ranking,
-      speedBonus: Math.round(speedBonus),
-    }), {
-      headers: { 'Content-Type': 'application/json' }
-    });
-  } catch (error) {
-    console.error('Error submitting Grand Rounds completion:', error);
-    return createErrorResponse('Failed to submit completion', 500);
-  } finally {
-    await prisma.$disconnect();
-  }
-}
