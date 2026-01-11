@@ -138,13 +138,13 @@ body,
   --border: #E2E8F0;
   
   /* Legacy theme-aware variables (for backward compatibility) */
-  --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: #F8FAFC;
-  --color-bg-tertiary: #F1F5F9;
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #334155;
-  --color-text-muted: #64748B;
-  --color-border: #E2E8F0;
+  --color-bg-primary: #0f172a;      /* slate-950 */
+  --color-bg-secondary: #1e293b;    /* slate-800 */
+  --color-bg-tertiary: #334155;     /* slate-700 */
+  --color-text-primary: #f1f5f9;    /* slate-100 */
+  --color-text-secondary: #cbd5e1;  /* slate-300 */
+  --color-text-muted: #94a3b8;      /* slate-400 */
+  --color-border: #475569;          /* slate-600 */
   --color-border-light: #F1F5F9;
   --color-accent: #0284C7;
   --color-accent-hover: #0369A1;

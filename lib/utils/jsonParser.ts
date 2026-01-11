@@ -48,6 +48,26 @@ export function safeParseJson<T>(value: unknown, fallback: T): T {
 }
 
 /**
+ * Handles "fake null" strings from dirty database fields.
+ * Converts the string "null" to actual null and normalizes empty strings.
+ */
+export function handleFakeNull<T>(value: unknown, fallback: T): T | null {
+  if (typeof value === 'string' && value.trim().toLowerCase() === 'null') {
+    return null;
+  }
+
+  if (typeof value === 'string' && value.trim() === '') {
+    return fallback;
+  }
+
+  if (value === null || value === undefined) {
+    return fallback;
+  }
+
+  return value as T;
+}
+
+/**
  * Normalizes various input formats to a string array
  * 
  * Handles:
@@ -163,6 +183,36 @@ export function isEmptyJsonbField(value: unknown): boolean {
 }
 
 /**
+ * Cleans medical content records by handling fake nulls and stringified JSON.
+ * Ensures arrays/objects are parsed and strings representing null become null.
+ */
+export function cleanMedicalContent(rawData: Record<string, unknown>): Record<string, unknown> {
+  const cleaned: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(rawData)) {
+    const nonFakeNull = handleFakeNull(value, null);
+    if (nonFakeNull === null) {
+      cleaned[key] = null;
+      continue;
+    }
+
+    if (typeof nonFakeNull === 'string' && nonFakeNull.trim().startsWith('[')) {
+      cleaned[key] = safeParseJson(nonFakeNull, []);
+      continue;
+    }
+
+    if (typeof nonFakeNull === 'string' && nonFakeNull.trim().startsWith('{')) {
+      cleaned[key] = safeParseJson(nonFakeNull, {});
+      continue;
+    }
+
+    cleaned[key] = nonFakeNull;
+  }
+
+  return cleaned;
+}
+
+/**
  * Parses and validates an age demographic object
  * 
  * @param value - The age demographic value from database
@@ -194,4 +244,6 @@ export default {
   safeExtractPath,
   isEmptyJsonbField,
   parseAgeDemographic,
+  handleFakeNull,
+  cleanMedicalContent,
 };

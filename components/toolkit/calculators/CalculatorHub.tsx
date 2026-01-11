@@ -11,7 +11,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Heart, Activity, Droplet, ArrowLeft } from 'lucide-react';
+import { Search, Heart, Activity, Droplet, ArrowLeft, Wind, Baby } from 'lucide-react';
 
 // Import calculator components
 import { CURB65Calculator } from './risk/CURB65Calculator';
@@ -99,35 +99,27 @@ const CALCULATORS: Calculator[] = [
   },
 ];
 
-// System tabs configuration
-const SYSTEM_TABS: Array<{
-  id: CalculatorSystem | 'all';
-  label: string;
-  icon: typeof Heart;
-  color: string;
-}> = [
-  { id: 'all', label: 'All', icon: Activity, color: 'slate' },
-  { id: 'cardiac', label: 'Cardiac', icon: Heart, color: 'red' },
-  { id: 'pulmonary', label: 'Pulmonary', icon: Activity, color: 'cyan' },
-  { id: 'vascular', label: 'Vascular', icon: Activity, color: 'rose' },
-  { id: 'renal', label: 'Renal', icon: Droplet, color: 'blue' },
-];
+// Calculator category tabs
+const CALCULATOR_CATEGORIES = [
+  { id: 'cardiac', label: 'Cardiac', icon: Heart, calculatorIds: ['chads2vasc'] },
+  { id: 'pulmonary', label: 'Pulmonary', icon: Wind, calculatorIds: ['curb65', 'wells_pe', 'perc'] },
+  { id: 'vascular', label: 'Vascular', icon: Activity, calculatorIds: ['wells_dvt'] },
+  { id: 'renal', label: 'Renal/Labs', icon: Droplet, calculatorIds: ['gfr', 'anion_gap'] },
+  { id: 'pediatric', label: 'Pediatric', icon: Baby, calculatorIds: ['pediatric_dosing'] },
+] as const;
 
 export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
-  const [activeSystem, setActiveSystem] = useState<CalculatorSystem | 'all'>('all');
+  const [activeCategory, setActiveCategory] = useState<(typeof CALCULATOR_CATEGORIES)[number]['id']>('cardiac');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
 
   // Filter calculators by system and search
   const filteredCalculators = useMemo(() => {
-    let filtered = CALCULATORS;
+    const category = CALCULATOR_CATEGORIES.find((cat) => cat.id === activeCategory);
+    let filtered = category
+      ? CALCULATORS.filter((calc) => category.calculatorIds.includes(calc.id))
+      : CALCULATORS;
 
-    // Filter by system
-    if (activeSystem !== 'all') {
-      filtered = filtered.filter((calc) => calc.system === activeSystem);
-    }
-
-    // Filter by search
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter((calc) =>
@@ -139,7 +131,7 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
     }
 
     return filtered;
-  }, [activeSystem, searchQuery]);
+  }, [activeCategory, searchQuery]);
 
   // Render selected calculator component
   const renderCalculator = () => {
@@ -195,30 +187,32 @@ export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search calculators by name, description, or formula..."
-            className="w-full pl-12 pr-4 py-4 bg-slate-900 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-          />
-        </div>
-
-        {/* System Tabs */}
+        {/* Category Tabs with animated underline */}
         <div className="flex gap-2 overflow-x-auto pb-2">
-          {SYSTEM_TABS.map((tab) => {
+          {CALCULATOR_CATEGORIES.map((tab) => {
             const Icon = tab.icon;
-            const isActive = activeSystem === tab.id;
-            const count = tab.id === 'all' ? CALCULATORS.length : CALCULATORS.filter((c) => c.system === tab.id).length;
+            const isActive = activeCategory === tab.id;
+            const count = tab.calculatorIds.length;
 
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveSystem(tab.id)}
-                className={`
+                onClick={() => setActiveCategory(tab.id)}
+                className="relative px-4 py-3 rounded-xl border border-slate-700 bg-slate-900/60 text-slate-300 hover:border-slate-500 hover:bg-slate-900 transition-colors flex items-center gap-2 text-sm font-semibold whitespace-nowrap"
+              >
+                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+                <span>{tab.label}</span>
+                <span className="text-xs text-slate-400">({count})</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="calculator-tab-underline"
+                    className="absolute inset-x-2 -bottom-1 h-0.5 rounded-full bg-blue-400"
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
                   flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all
                   ${isActive
                     ? 'bg-blue-600 text-white shadow-lg scale-105'

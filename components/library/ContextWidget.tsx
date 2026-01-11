@@ -17,13 +17,19 @@ interface ContextWidgetProps {
 }
 
 export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type }) => {
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
     const fetchContext = async () => {
+      if (!isSignedIn) {
+        setError('Please sign in to view this content');
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -53,7 +59,7 @@ export const ContextWidget: React.FC<ContextWidgetProps> = ({ conditionId, type 
     if (conditionId) {
       fetchContext();
     }
-  }, [conditionId, type, getToken]);
+  }, [conditionId, type, getToken, isSignedIn]);
 
   const icon = type === 'pharm' ? Pill : Activity;
   const Icon = icon;

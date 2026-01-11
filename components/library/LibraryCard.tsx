@@ -19,7 +19,7 @@ import {
   ClinicalPearlsRenderer,
   ClassicTriadRenderer 
 } from '@/components/ui/content-renderers';
-import { safeParseJson, normalizeToStringArray } from '@/lib/utils/jsonParser';
+import { safeParseJson, normalizeToStringArray, handleFakeNull } from '@/lib/utils/jsonParser';
 
 interface LibraryCardProps {
   content: Partial<MedicalContentDisplay>;
@@ -59,14 +59,12 @@ const CollapsibleSection: React.FC<SectionProps> = ({ title, children, defaultOp
   );
 };
 
-};
-
 export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
   // Parse JSONB fields safely
-  const clinicalPearls = safeParseJson(content.clinical_pearls, []);
-  const classicTriad = safeParseJson(content.classic_triad, []);
-  const buzzwords = normalizeToStringArray(content.buzzwords);
-  const synonyms = normalizeToStringArray(safeParseJson(content.synonyms, []));
+  const clinicalPearls = safeParseJson(handleFakeNull(content.clinical_pearls, null), []);
+  const classicTriad = safeParseJson(handleFakeNull(content.classic_triad, null), []);
+  const buzzwords = normalizeToStringArray(handleFakeNull(content.buzzwords, []));
+  const synonyms = normalizeToStringArray(safeParseJson(handleFakeNull(content.synonyms, []), []));
   
   return (
     <div className="bg-[var(--color-card-bg)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-sm">
@@ -131,27 +129,27 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
 
       {/* Content Sections */}
       <div className="divide-y divide-[var(--color-border)]">
-        {content.overview && (
+        {handleFakeNull(content.overview, null) && (
           <CollapsibleSection title="Overview" defaultOpen>
-            <ContentFieldRenderer value={content.overview} />
+            <ContentFieldRenderer value={handleFakeNull(content.overview, null)} />
           </CollapsibleSection>
         )}
 
-        {content.pathophysiology && (
+        {handleFakeNull(content.pathophysiology, null) && (
           <CollapsibleSection title="Pathophysiology">
-            <ContentFieldRenderer value={content.pathophysiology} />
+            <ContentFieldRenderer value={handleFakeNull(content.pathophysiology, null)} />
           </CollapsibleSection>
         )}
 
-        {content.epidemiology && (
+        {handleFakeNull(content.epidemiology, null) && (
           <CollapsibleSection title="Epidemiology">
-            <ContentFieldRenderer value={content.epidemiology} />
+            <ContentFieldRenderer value={handleFakeNull(content.epidemiology, null)} />
           </CollapsibleSection>
         )}
 
-        {content.symptoms && (
+        {handleFakeNull(content.symptoms, null) && (
           <CollapsibleSection title="Symptoms & Presentation">
-            <ContentFieldRenderer value={content.symptoms} />
+            <ContentFieldRenderer value={handleFakeNull(content.symptoms, null)} />
           </CollapsibleSection>
         )}
 
@@ -167,52 +165,52 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
           </CollapsibleSection>
         )}
 
-        {content.physicalExam && (
+        {handleFakeNull(content.physicalExam, null) && (
           <CollapsibleSection title="Physical Exam">
-            <ContentFieldRenderer value={content.physicalExam} />
+            <ContentFieldRenderer value={handleFakeNull(content.physicalExam, null)} />
           </CollapsibleSection>
         )}
 
-        {content.diagnostics && (
+        {handleFakeNull(content.diagnostics, null) && (
           <CollapsibleSection title="Diagnostics">
-            <ContentFieldRenderer value={content.diagnostics} />
-            {content.gold_standard_dx && (
+            <ContentFieldRenderer value={handleFakeNull(content.diagnostics, null)} />
+            {handleFakeNull(content.gold_standard_dx, null) && (
               <div className="mt-3 p-3 bg-emerald-950/20 border border-emerald-800/30 rounded-lg">
                 <div className="text-xs font-semibold text-emerald-400 mb-1">
                   Gold Standard
                 </div>
                 <div className="text-sm text-[var(--color-text-primary)]">
-                  {content.gold_standard_dx}
+                  {handleFakeNull(content.gold_standard_dx, null)}
                 </div>
               </div>
             )}
-            {content.best_initial_test && (
+            {handleFakeNull(content.best_initial_test, null) && (
               <div className="mt-2 p-3 bg-blue-950/20 border border-blue-800/30 rounded-lg">
                 <div className="text-xs font-semibold text-blue-400 mb-1">
                   Best Initial Test
                 </div>
                 <div className="text-sm text-[var(--color-text-primary)]">
-                  {content.best_initial_test}
+                  {handleFakeNull(content.best_initial_test, null)}
                 </div>
               </div>
             )}
           </CollapsibleSection>
         )}
 
-        {content.treatment && (
+        {handleFakeNull(content.treatment, null) && (
           <CollapsibleSection title="Treatment">
-            <ContentFieldRenderer value={content.treatment} />
-            {content.first_line_rx && (
+            <ContentFieldRenderer value={handleFakeNull(content.treatment, null)} />
+            {handleFakeNull(content.first_line_rx, null) && (
               <div className="mt-3 p-3 bg-purple-950/20 border border-purple-800/30 rounded-lg">
                 <div className="text-xs font-semibold text-purple-400 mb-1">
                   First Line Treatment
                 </div>
                 <div className="text-sm text-[var(--color-text-primary)]">
-                  {content.first_line_rx}
+                  {handleFakeNull(content.first_line_rx, null)}
                 </div>
-                {content.rx_mechanism && (
+                {handleFakeNull(content.rx_mechanism, null) && (
                   <div className="mt-2 text-xs text-[var(--color-text-muted)]">
-                    Mechanism: {content.rx_mechanism}
+                    Mechanism: {handleFakeNull(content.rx_mechanism, null)}
                   </div>
                 )}
               </div>
@@ -226,15 +224,15 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({ content }) => {
           </CollapsibleSection>
         )}
 
-        {content.complications && (
+        {handleFakeNull(content.complications, null) && (
           <CollapsibleSection title="Complications">
-            <ContentFieldRenderer value={content.complications} />
+            <ContentFieldRenderer value={handleFakeNull(content.complications, null)} />
           </CollapsibleSection>
         )}
 
-        {content.prognosis && (
+        {handleFakeNull(content.prognosis, null) && (
           <CollapsibleSection title="Prognosis">
-            <ContentFieldRenderer value={content.prognosis} />
+            <ContentFieldRenderer value={handleFakeNull(content.prognosis, null)} />
           </CollapsibleSection>
         )}
       </div>

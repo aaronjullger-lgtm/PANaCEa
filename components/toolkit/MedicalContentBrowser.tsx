@@ -15,6 +15,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { MedicalContentCard } from '@/components/ui/cards';
 import { ContentGrid, ContentGridHeader, LoadingOverlay } from '@/components/ui/layouts';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { cleanMedicalContent } from '@/lib/utils/jsonParser';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 
 interface MedicalContentBrowserProps {
@@ -157,7 +158,8 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
       }
 
       const data = JSON.parse(text);
-      setContent(data.content || []);
+      const cleanedContent = (data.content || []).map(cleanMedicalContent);
+      setContent(cleanedContent as Partial<MedicalContentDisplay>[]);
     } catch (err) {
       console.error('[MedicalContentBrowser] Error fetching content:', err);
       setError(err instanceof Error ? err.message : 'Failed to load clinical data');
