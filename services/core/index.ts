@@ -9,17 +9,34 @@
  */
 
 // ============================================================================
-// QUESTION SERVICES - Primary question management
+// QUESTION SERVICES - Primary question management (CONSOLIDATED)
 // ============================================================================
 
-import * as questionServiceModule from '../questionService';
+// NEW: Unified question service that consolidates 4 legacy services
+import * as consolidatedQuestionService from './questionService';
 import * as questionPoolServiceModule from '../questionPoolService';
 import * as attemptServiceModule from '../attemptService';
 
-// Re-export as namespaced services to avoid conflicts
-export const questionService = questionServiceModule;
+// Re-export as namespaced services
+export const questionService = consolidatedQuestionService;
 export const questionPoolService = questionPoolServiceModule;
 export const attemptService = attemptServiceModule;
+
+// Named exports for common operations (tree-shakeable)
+export {
+  getQuestion,
+  getQuestionBatch,
+  getOptimalQuestions,
+  getEnhancedQuestion,
+  getIntelligentQuestions,
+  getWeakAreaQuestions,
+  getReviewQuestions,
+  calculateAdaptiveState,
+  selectOptimalQuestions,
+  convertPoolQuestion,
+  SYSTEM_CODE_MAP,
+  SYSTEM_NAME_TO_CODE,
+} from './questionService';
 
 // ============================================================================
 // SESSION SERVICES - Session management
