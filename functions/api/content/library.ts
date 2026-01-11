@@ -70,8 +70,8 @@ export const onRequestGet = async (context: CloudflareContext) => {
           pance_yield: true,
         },
         orderBy: [
+          { pance_yield: 'desc' },
           { system: 'asc' },
-          { subcategory: 'asc' },
           { condition: 'asc' },
         ],
         take: limit,

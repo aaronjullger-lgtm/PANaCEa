@@ -15,7 +15,6 @@ import { useAuth } from '@clerk/clerk-react';
 import { MedicalContentCard } from '@/components/ui/cards';
 import { ContentGrid, ContentGridHeader, LoadingOverlay } from '@/components/ui/layouts';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { cleanMedicalContent } from '@/lib/utils/jsonParser';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 
 interface MedicalContentBrowserProps {
@@ -47,11 +46,11 @@ const FilterBar: React.FC<{
     <div className="flex flex-col md:flex-row gap-3">
       {/* System Filter */}
       <div className="flex items-center gap-2">
-        <Filter className="w-4 h-4 text-slate-400" />
+        <Filter className="w-4 h-4 text-[var(--color-text-muted)]" />
         <select
           value={filters.system || ''}
           onChange={(e) => onFilterChange({ ...filters, system: e.target.value || null })}
-          className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
         >
           <option value="">All Systems</option>
           {systems.map((system) => (
@@ -65,18 +64,18 @@ const FilterBar: React.FC<{
       {/* Search Bar */}
       <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
           <input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search conditions..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] text-sm placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
           />
         </div>
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+          className="px-4 py-2 bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white rounded-lg text-sm font-medium transition-colors"
         >
           Search
         </button>
@@ -87,7 +86,7 @@ const FilterBar: React.FC<{
               setSearchInput('');
               onFilterChange({ system: null, subcategory: null, search: '' });
             }}
-            className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-sm transition-colors"
+            className="px-3 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/80 text-[var(--color-text-secondary)] rounded-lg text-sm transition-colors"
           >
             Clear
           </button>
@@ -111,11 +110,33 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({});
+  const [availableSystems, setAvailableSystems] = useState<string[]>([]);
 
-  // Unique systems from loaded content
-  const uniqueSystems = Array.from(
-    new Set(content.map((c) => c.system).filter(Boolean))
-  ).sort() as string[];
+  // Fetch available systems from API
+  useEffect(() => {
+    const fetchSystems = async () => {
+      if (!isSignedIn) return;
+
+      try {
+        const token = await getToken();
+        const response = await fetch('/api/content/systems', {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const systems = await response.json();
+          setAvailableSystems(systems.map((s: { system: string }) => s.system));
+        }
+      } catch (err) {
+        console.warn('[MedicalContentBrowser] Failed to fetch systems:', err);
+      }
+    };
+
+    fetchSystems();
+  }, [getToken, isSignedIn]);
 
   // Fetch content from API
   const fetchContent = useCallback(async () => {
@@ -158,8 +179,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
       }
 
       const data = JSON.parse(text);
-      const cleanedContent = (data.content || []).map(cleanMedicalContent);
-      setContent(cleanedContent as Partial<MedicalContentDisplay>[]);
+      setContent(data.content || []);
     } catch (err) {
       console.error('[MedicalContentBrowser] Error fetching content:', err);
       setError(err instanceof Error ? err.message : 'Failed to load clinical data');
@@ -190,7 +210,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-4 md:p-6">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <ContentGridHeader
@@ -201,7 +221,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
               <button
                 onClick={fetchContent}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/80 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
@@ -211,7 +231,7 @@ export const MedicalContentBrowser: React.FC<MedicalContentBrowserProps> = ({
           filters={
             !selectedContent && (
               <FilterBar
-                systems={uniqueSystems}
+                systems={availableSystems}
                 filters={filters}
                 onFilterChange={handleFilterChange}
               />

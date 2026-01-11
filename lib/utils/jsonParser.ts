@@ -48,6 +48,44 @@ export function safeParseJson<T>(value: unknown, fallback: T): T {
 }
 
 /**
+ * Safely parses a value into a string list.
+ * Falls back to treating plain text as a single-item list when JSON parsing fails.
+ */
+export function safeParseList(value: unknown): string[] {
+  if (value === null || value === undefined) return [];
+
+  const normalize = (items: unknown[]): string[] =>
+    items
+      .map(item => String(item ?? '').trim())
+      .filter(item => item.length > 0);
+
+  if (Array.isArray(value)) {
+    return normalize(value);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return normalize(parsed);
+      }
+    } catch {
+      // Ignore JSON parse errors and fall back to plain text handling
+    }
+
+    // Plain text fallback: split on newlines or commas, or wrap as single item
+    if (trimmed.includes('\n')) return normalize(trimmed.split('\n'));
+    if (trimmed.includes(',')) return normalize(trimmed.split(','));
+    return [trimmed];
+  }
+
+  return normalize([value]);
+}
+
+/**
  * Handles "fake null" strings from dirty database fields.
  * Converts the string "null" to actual null and normalizes empty strings.
  */

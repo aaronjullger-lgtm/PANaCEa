@@ -11,7 +11,7 @@ interface YieldBadgeProps {
 /**
  * YieldBadge - Displays PANCE yield score with color coding
  * 
- * Supports both numeric (1-10) and text ('HIGH', 'MEDIUM', 'LOW') formats.
+ * Supports both numeric (1-3) and text ('HIGH', 'MEDIUM', 'LOW') formats.
  * Uses sportsbook-style color coding: red for high yield, amber for medium, gray for low.
  */
 export const YieldBadge: React.FC<YieldBadgeProps> = ({
@@ -51,11 +51,6 @@ export const YieldBadge: React.FC<YieldBadgeProps> = ({
     >
       {showIcon && <Icon className={iconSizes[size]} />}
       <span>{displayText}</span>
-      {numericValue !== null && (
-        <span className="text-xs opacity-75">
-          ({numericValue}/10)
-        </span>
-      )}
     </div>
   );
 };
@@ -67,11 +62,11 @@ function parseYieldValue(yieldValue: number | string | null | undefined) {
   let numericValue: number | null = null;
   let level: 'high' | 'medium' | 'low' = 'low';
 
-  // Handle numeric values (1-10 scale)
+  // Handle numeric values (1-3 scale)
   if (typeof yieldValue === 'number') {
     numericValue = yieldValue;
-    if (yieldValue >= 8) level = 'high';
-    else if (yieldValue >= 5) level = 'medium';
+    if (yieldValue >= 3) level = 'high';
+    else if (yieldValue === 2) level = 'medium';
     else level = 'low';
   }
   // Handle string values
@@ -91,8 +86,8 @@ function parseYieldValue(yieldValue: number | string | null | undefined) {
       const parsed = parseInt(yieldValue);
       if (!isNaN(parsed)) {
         numericValue = parsed;
-        if (parsed >= 8) level = 'high';
-        else if (parsed >= 5) level = 'medium';
+        if (parsed >= 3) level = 'high';
+        else if (parsed === 2) level = 'medium';
         else level = 'low';
       }
     }
@@ -139,7 +134,7 @@ export const YieldStars: React.FC<{
   className?: string;
 }> = ({ yield: yieldValue, className = '' }) => {
   const { numericValue, level } = parseYieldValue(yieldValue);
-  const stars = numericValue ? Math.ceil(numericValue / 2) : level === 'high' ? 5 : level === 'medium' ? 3 : 1;
+  const stars = numericValue ? Math.max(1, Math.min(5, numericValue)) : level === 'high' ? 5 : level === 'medium' ? 3 : 1;
 
   const colorClass = level === 'high' ? 'text-red-400' :
                      level === 'medium' ? 'text-amber-400' :

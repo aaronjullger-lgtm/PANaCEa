@@ -8,7 +8,7 @@ import {
   ClinicalPearlsRenderer,
   ClassicTriadRenderer 
 } from '@/components/ui/content-renderers';
-import { safeParseJson, normalizeToStringArray } from '@/lib/utils/jsonParser';
+import { safeParseJson, safeParseList, handleFakeNull, normalizeToStringArray } from '@/lib/utils/jsonParser';
 
 interface MedicalContentCardProps {
   content: Partial<MedicalContentDisplay>;
@@ -37,19 +37,19 @@ const CollapsibleSection: React.FC<SectionProps> = ({
   if (!children) return null;
 
   return (
-    <div className="border-b border-slate-700/50 last:border-b-0">
+    <div className="border-b border-[var(--color-border)] last:border-b-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 hover:bg-slate-800/30 transition-colors group"
+        className="w-full flex items-center justify-between p-4 hover:bg-[var(--color-bg-secondary)]/30 transition-colors group"
       >
-        <h3 className="text-base font-semibold text-slate-100 group-hover:text-blue-400 transition-colors">
+        <h3 className="text-base font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors">
           {title}
         </h3>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown className="w-5 h-5 text-slate-400" />
+          <ChevronDown className="w-5 h-5 text-[var(--color-text-muted)]" />
         </motion.div>
       </button>
       
@@ -62,7 +62,7 @@ const CollapsibleSection: React.FC<SectionProps> = ({
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 text-slate-300 leading-relaxed">
+            <div className="px-4 pb-4 text-[var(--color-text-secondary)] leading-relaxed">
               {children}
             </div>
           </motion.div>
@@ -91,10 +91,10 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
   compact = false,
 }) => {
   // Parse JSONB fields safely
-  const clinicalPearls = safeParseJson(content.clinical_pearls, []);
-  const classicTriad = safeParseJson(content.classic_triad, []);
-  const buzzwords = normalizeToStringArray(content.buzzwords);
-  const synonyms = normalizeToStringArray(safeParseJson(content.synonyms, []));
+  const clinicalPearls = safeParseList(content.clinical_pearls);
+  const classicTriad = handleFakeNull(content.classic_triad, null);
+  const buzzwords = safeParseList(content.buzzwords);
+  const synonyms = safeParseList(content.synonyms);
 
   return (
     <motion.div
@@ -103,19 +103,24 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
       whileHover={{ scale: 1.02, y: -4 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className={`
-        bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-xl
-        hover:shadow-2xl hover:shadow-blue-900/20 hover:border-slate-600
+        condition-card
+        bg-[var(--color-glass-bg)] backdrop-blur-xl
+        border border-[var(--color-glass-border)]
+        rounded-2xl overflow-hidden
+        shadow-lg shadow-[var(--color-glass-shadow)]
+        hover:shadow-xl hover:shadow-blue-900/20 hover:border-[var(--color-accent)]
         transition-all duration-200
+        dark:bg-[var(--card)] dark:border-[var(--border)]
         ${compact ? 'max-w-md' : 'max-w-4xl'}
       `}
     >
       {/* Header - Dark gradient with display font */}
-      <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 p-6 border-b border-slate-700/50">
+      <div className="bg-gradient-to-br from-[var(--color-bg-secondary)] via-[var(--color-bg-primary)] to-[var(--color-bg-secondary)] p-6 border-b border-[var(--color-border)]">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             {/* Condition Name - Display Font */}
             <h2 
-              className="text-3xl font-bold text-slate-100 mb-3 tracking-wide"
+              className="text-3xl font-bold text-[var(--color-text-primary)] mb-3 tracking-wide"
               style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
             >
               {content.condition}
@@ -132,7 +137,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
               )}
               
               {content.subcategory && (
-                <span className="px-2 py-1 bg-slate-800/50 border border-slate-700 rounded text-xs text-slate-400">
+                <span className="px-2 py-1 bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] rounded text-xs">
                   {content.subcategory}
                 </span>
               )}
@@ -140,8 +145,8 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
             
             {/* Synonyms */}
             {synonyms.length > 0 && (
-              <div className="text-xs text-slate-500 mt-2">
-                Also: <span className="text-slate-400">{synonyms.join(', ')}</span>
+              <div className="text-xs text-[var(--color-text-muted)] mt-2">
+                Also: <span className="text-[var(--color-text-secondary)]">{synonyms.join(', ')}</span>
               </div>
             )}
           </div>
@@ -200,7 +205,7 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
       </div>
 
       {/* Content Sections - Dark collapsible panels */}
-      <div className="divide-y divide-slate-700/50 bg-slate-900/50">
+      <div className="divide-y divide-[var(--color-border)] bg-[var(--color-bg-secondary)]/50">
         {content.overview && (
           <CollapsibleSection title="Overview" defaultOpen>
             <ContentFieldRenderer value={content.overview} />
@@ -233,7 +238,16 @@ export const MedicalContentCard: React.FC<MedicalContentCardProps> = ({
 
         {buzzwords.length > 0 && (
           <CollapsibleSection title="Buzzwords">
-            <ContentFieldRenderer value={buzzwords} variant="clinical" />
+            <div className="flex flex-wrap gap-2">
+              {buzzwords.map((word, idx) => (
+                <span 
+                  key={idx}
+                  className="px-2.5 py-1 rounded-lg bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] text-sm font-medium"
+                >
+                  {word}
+                </span>
+              ))}
+            </div>
           </CollapsibleSection>
         )}
 
