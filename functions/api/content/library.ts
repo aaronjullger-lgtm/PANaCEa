@@ -31,11 +31,33 @@ export const onRequestGet = async (context: CloudflareContext) => {
     const subcategory = url.searchParams.get('subcategory');
     const search = url.searchParams.get('search');
     const highYield = url.searchParams.get('highYield');
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '50', 10);
+
+    // REQUIRE system selection unless searching
+    // This prevents loading 2000+ conditions at once
+    if ((!system || system === 'all') && !search) {
+      return new Response(
+        JSON.stringify({
+          content: [],
+          count: 0,
+          message: 'Please select a system to browse conditions',
+          requiresSelection: true,
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
+    }
 
     // Build where clause
     const where: any = {};
 
-    // SYSTEM FILTER - triggers fresh query per system
+    // SYSTEM FILTER
     if (system && system !== 'all') {
       where.system = system;
     }
@@ -58,7 +80,7 @@ export const onRequestGet = async (context: CloudflareContext) => {
       ];
     }
 
-    // Fetch content without pagination
+    // Fetch content with ALL fields needed for detail view
     const content = await prisma.medicalContent.findMany({
       where,
       select: {
@@ -67,21 +89,38 @@ export const onRequestGet = async (context: CloudflareContext) => {
         conditionId: true,
         system: true,
         subcategory: true,
-        symptoms: true,
-        buzzwords: true,
-        clinical_pearls: true,
-        classic_patient: true,
         pance_yield: true,
-        // Added for EnhancedConditionCard quick info tooltips
+        // Card preview fields
+        classic_patient: true,
+        buzzwords: true,
         gold_standard_dx: true,
         first_line_rx: true,
+        // Detail panel - Essentials
+        epidemiology: true,
+        etiology: true,
+        risk_factors: true,
+        // Detail panel - Pathophysiology
+        pathophysiology: true,
+        // Detail panel - Clinical Presentation
+        symptoms: true,
+        signs: true,
+        physical_exam: true,
+        classic_triad: true,
+        clinical_pearls: true,
+        // Detail panel - Workup & Treatment
+        best_initial_test: true,
+        diagnostics: true,
+        treatment: true,
+        complications: true,
+        prognosis: true,
+        // Additional useful fields
+        overview: true,
       },
       orderBy: [
         { pance_yield: 'desc' },  // High yield first
         { subcategory: 'asc' },   // Then by subcategory
         { condition: 'asc' },     // Then alphabetical
       ],
-      // NO take limit - load all for the selected system
     });
 
     return new Response(

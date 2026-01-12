@@ -55,6 +55,10 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   const [selected, setSelected] = useState<Partial<MedicalContentDisplay> | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
+  // Expansion state for subcategories (show more than default 4)
+  const [expandedSubcats, setExpandedSubcats] = useState<Set<string>>(new Set());
+  const ITEMS_PER_SUBCATEGORY = 4; // Show top 4 highest yield by default
+
   // Refs for keyboard navigation
   const contentRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -332,6 +336,32 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
           {loading ? (
             <LoadingOverlay message="Loading clinical content..." />
+          ) : activeSystem === 'all' && !searchQuery ? (
+            // System Selection Prompt - Don't load all 2000+ conditions
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6">
+                <svg className="w-10 h-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
+                Select a Medical System
+              </h3>
+              <p className="text-sm text-[var(--color-text-muted)] max-w-md mb-6">
+                Choose a system from the sidebar to explore conditions. This helps you focus your study and prevents information overload.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-w-md">
+                {systems.slice(0, 6).map((sys) => (
+                  <button
+                    key={sys.id}
+                    onClick={() => handleSystemSelect(sys.id)}
+                    className="px-3 py-2 rounded-lg bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-[var(--color-accent)]/60 hover:bg-[var(--color-bg-secondary)]/80 text-sm font-medium text-[var(--color-text-secondary)] transition-all"
+                  >
+                    {sys.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : filteredContent.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
               <AlertCircle className="w-12 h-12 text-[var(--color-text-muted)] mb-4" />
@@ -343,36 +373,78 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                   ? 'No high-yield conditions match your criteria. Try disabling the High Yield filter.'
                   : searchQuery
                     ? `No results for "${searchQuery}". Try a different search term.`
-                    : 'Select a system or subcategory from the sidebar to browse conditions.'
+                    : 'No conditions match your current filters.'
                 }
               </p>
             </div>
           ) : (
             <div className="space-y-8">
-              {groupedContent.map((group) => (
-                <div key={group.subcategory}>
-                  {/* Subcategory Header */}
-                  <h3 className="text-sm uppercase tracking-wide text-[var(--color-text-muted)] font-semibold mb-4 flex items-center gap-2">
-                    <span>{group.subcategory}</span>
-                    <span className="text-xs font-normal">({group.items.length})</span>
-                  </h3>
+              {groupedContent.map((group) => {
+                const isExpanded = expandedSubcats.has(group.subcategory);
+                const hasMore = group.items.length > ITEMS_PER_SUBCATEGORY;
+                const displayItems = isExpanded ? group.items : group.items.slice(0, ITEMS_PER_SUBCATEGORY);
+                const remainingCount = group.items.length - ITEMS_PER_SUBCATEGORY;
 
-                  {/* Cards Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {group.items.map((item, idx) => {
-                      const globalIndex = filteredContent.indexOf(item);
-                      return (
-                        <EnhancedConditionCard
-                          key={item.id}
-                          condition={item}
-                          isSelected={selected?.id === item.id}
-                          onClick={() => handleConditionSelect(item, globalIndex)}
-                        />
-                      );
-                    })}
+                return (
+                  <div key={group.subcategory} className="bg-[var(--color-bg-secondary)]/20 rounded-xl p-5 border border-[var(--color-border)]/50">
+                    {/* Subcategory Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm uppercase tracking-wide text-[var(--color-text-muted)] font-semibold flex items-center gap-2">
+                        <span>{group.subcategory}</span>
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--color-accent)]/20 text-[var(--color-accent)] text-xs font-medium">
+                          {group.items.length}
+                        </span>
+                      </h3>
+                      {hasMore && !isExpanded && (
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          Showing {ITEMS_PER_SUBCATEGORY} highest yield
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Cards Grid - High density for desktop */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                      {displayItems.map((item) => {
+                        const globalIndex = filteredContent.indexOf(item);
+                        return (
+                          <EnhancedConditionCard
+                            key={item.id}
+                            condition={item}
+                            isSelected={selected?.id === item.id}
+                            onClick={() => handleConditionSelect(item, globalIndex)}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {/* Show More / Show Less Button */}
+                    {hasMore && (
+                      <div className="mt-4 text-center">
+                        <button
+                          onClick={() => {
+                            setExpandedSubcats(prev => {
+                              const next = new Set(prev);
+                              if (isExpanded) {
+                                next.delete(group.subcategory);
+                              } else {
+                                next.add(group.subcategory);
+                              }
+                              return next;
+                            });
+                          }}
+                          className="px-4 py-2 rounded-lg bg-[var(--color-bg-secondary)] hover:bg-[var(--color-bg-secondary)]/80 border border-[var(--color-border)] text-sm font-medium text-[var(--color-text-secondary)] transition-all hover:border-[var(--color-accent)]/60"
+                        >
+                          {isExpanded ? (
+                            <>Show Less</>
+                          ) : (
+                            <>Show {remainingCount} More Condition{remainingCount !== 1 ? 's' : ''}</>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -444,16 +516,33 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 };
 
 /**
- * ConditionMasterEmbedded - Reusable content from ConditionMaster without the modal
+ * ConditionMasterEmbedded - Enhanced deep-dive view for condition details
  */
 import ReactMarkdown from 'react-markdown';
-import { Info, Stethoscope, ClipboardList, Activity } from 'lucide-react';
+import { Info, Stethoscope, ClipboardList, Activity, Lightbulb, Target, Pill, FlaskConical, AlertTriangle, BookOpen } from 'lucide-react';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 
 const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay> }> = ({ content }) => {
   const normalized = useMemo(() => normalizeMedicalContent(content), [content]);
+  
+  // Track which sections are expanded (all start expanded)
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(['quickfacts', 'clinical', 'workup'])
+  );
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(section)) {
+        next.delete(section);
+      } else {
+        next.add(section);
+      }
+      return next;
+    });
+  };
 
   const getValue = (data: Record<string, unknown>, keys: string[]): unknown => {
     for (const key of keys) {
@@ -465,23 +554,64 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
     return undefined;
   };
 
-  const Section: React.FC<{ title: string; icon: React.ElementType; children: React.ReactNode }> = ({ title, icon: Icon, children }) => (
-    <div className="border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-secondary)]/30">
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--color-border)]">
-        <Icon className="w-4 h-4 text-[var(--color-accent)]" />
-        <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">{title}</h3>
-      </div>
-      <div className="p-4 space-y-4">{children}</div>
-    </div>
-  );
+  // Extract key values
+  const goldStandard = parseTextField(getValue(normalized, ['gold_standard', 'gold_standard_dx']));
+  const firstLineRx = parseTextField(getValue(normalized, ['first_line_rx']));
+  const classicPatient = parseTextField(normalized.classic_patient);
+  const buzzwords = parseListField(normalized.buzzwords);
+  const clinicalPearls = parseListField(normalized.clinical_pearls);
+  const classicTriad = parseListField(normalized.classic_triad);
 
-  const TextField: React.FC<{ label: string; value: unknown }> = ({ label, value }) => {
+  const Section: React.FC<{ 
+    id: string;
+    title: string; 
+    icon: React.ElementType; 
+    children: React.ReactNode;
+    accentColor?: string;
+  }> = ({ id, title, icon: Icon, children, accentColor }) => {
+    const isExpanded = expandedSections.has(id);
+    
+    return (
+      <div className="border border-[var(--color-border)] rounded-xl bg-[var(--color-bg-secondary)]/30 overflow-hidden">
+        <button
+          onClick={() => toggleSection(id)}
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-bg-secondary)]/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Icon className={`w-4 h-4 ${accentColor || 'text-[var(--color-accent)]'}`} />
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] uppercase tracking-wide">{title}</h3>
+          </div>
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronRight className="w-4 h-4 text-[var(--color-text-muted)] rotate-90" />
+          </motion.div>
+        </button>
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="p-4 pt-0 space-y-4 border-t border-[var(--color-border)]">{children}</div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  const TextField: React.FC<{ label: string; value: unknown; highlight?: boolean }> = ({ label, value, highlight }) => {
     const text = parseTextField(value);
     if (!text) return null;
     return (
-      <div>
-        <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-1">{label}</h4>
-        <ContentFieldRenderer value={text} />
+      <div className={highlight ? 'p-3 rounded-lg bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30' : ''}>
+        <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">{label}</h4>
+        <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">{text}</p>
       </div>
     );
   };
@@ -491,47 +621,18 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
     if (!text) return null;
     return (
       <div>
-        <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-1">{label}</h4>
-        <ReactMarkdown className="condition-markdown prose prose-sm prose-invert max-w-none">{text}</ReactMarkdown>
-      </div>
-    );
-  };
-
-  const ListField: React.FC<{ label: string; value: unknown }> = ({ label, value }) => {
-    const items = parseListField(value);
-    if (!items.length) return null;
-    return (
-      <div>
-        <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-1">{label}</h4>
-        <ContentFieldRenderer value={items} variant="clinical" />
-      </div>
-    );
-  };
-
-  const PillListField: React.FC<{ label: string; value: unknown }> = ({ label, value }) => {
-    const items = parseListField(value);
-    if (!items.length) return null;
-    return (
-      <div>
-        <h4 className="text-sm font-semibold text-[var(--color-text-secondary)] mb-2">{label}</h4>
-        <div className="flex flex-wrap gap-2">
-          {items.map((item, idx) => (
-            <span
-              key={idx}
-              className="px-2.5 py-1 rounded-lg bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] text-sm font-medium"
-            >
-              {item}
-            </span>
-          ))}
+        <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">{label}</h4>
+        <div className="prose prose-sm prose-invert max-w-none text-[var(--color-text-secondary)]">
+          <ReactMarkdown>{text}</ReactMarkdown>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="mb-6">
+      <div>
         <h2
           className="text-3xl font-bold text-[var(--color-text-primary)] tracking-wide mb-3"
           style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
@@ -549,39 +650,130 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         </div>
       </div>
 
-      {/* Sections */}
-      <div className="space-y-4">
-        {/* Section 1: Essentials */}
-        <Section title="Essentials" icon={Info}>
-          <TextField label="Classic Patient" value={normalized.classic_patient} />
+      {/* Quick Facts Hero Card - Semantic colors for critical clinical info */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {goldStandard && (
+          <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Gold Standard Dx</span>
+            </div>
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">{goldStandard}</p>
+          </div>
+        )}
+        {firstLineRx && (
+          <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Pill className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">First-Line Rx</span>
+            </div>
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">{firstLineRx}</p>
+          </div>
+        )}
+        {parseTextField(getValue(normalized, ['best_initial_test'])) && (
+          <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)]">
+            <div className="flex items-center gap-2 mb-2">
+              <FlaskConical className="w-4 h-4 text-[var(--color-accent)]" />
+              <span className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wide">Best Initial Test</span>
+            </div>
+            <p className="text-sm font-medium text-[var(--color-text-primary)]">{parseTextField(getValue(normalized, ['best_initial_test']))}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Classic Patient Callout - Theme consistent */}
+      {classicPatient && (
+        <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)]">
+          <div className="flex items-start gap-3">
+            <BookOpen className="w-5 h-5 text-[var(--color-accent)] mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="text-xs font-semibold text-[var(--color-accent)] uppercase tracking-wide mb-1">Classic Patient</h4>
+              <p className="text-sm text-[var(--color-text-primary)] leading-relaxed italic">"{classicPatient}"</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Buzzwords - Theme consistent pills */}
+      {buzzwords.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2 flex items-center gap-2">
+            <Lightbulb className="w-4 h-4 text-[var(--color-accent)]" />
+            Buzzwords / Key Associations
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {buzzwords.map((word, idx) => (
+              <span
+                key={idx}
+                className="px-3 py-1.5 rounded-lg bg-[var(--color-accent)]/15 text-[var(--color-accent)] border border-[var(--color-accent)]/30 text-sm font-medium"
+              >
+                {word}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Clinical Pearls - Theme consistent */}
+      {clinicalPearls.length > 0 && (
+        <div className="p-4 rounded-xl bg-[var(--color-bg-secondary)]/50 border border-[var(--color-border)]">
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="w-5 h-5 text-[var(--color-accent)]" />
+            <h4 className="text-sm font-semibold text-[var(--color-accent)] uppercase tracking-wide">Clinical Pearls</h4>
+          </div>
+          <ul className="space-y-2">
+            {clinicalPearls.map((pearl, idx) => (
+              <li key={idx} className="flex items-start gap-2 text-sm text-[var(--color-text-primary)]">
+                <span className="text-[var(--color-accent)] mt-1">•</span>
+                <span>{pearl}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Classic Triad - Keep rose for warning/important triads */}
+      {classicTriad.length > 0 && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-rose-500/10 to-rose-600/5 border border-rose-500/30">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="w-5 h-5 text-rose-400" />
+            <h4 className="text-sm font-semibold text-rose-400 uppercase tracking-wide">Classic Triad</h4>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {classicTriad.map((item, idx) => (
+              <span
+                key={idx}
+                className="px-3 py-1.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 text-sm font-medium"
+              >
+                {idx + 1}. {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Expandable Sections */}
+      <div className="space-y-3 pt-2">
+        {/* Clinical Presentation */}
+        <Section id="clinical" title="Clinical Presentation" icon={Stethoscope} accentColor="text-blue-400">
+          <TextField label="Symptoms" value={normalized.symptoms} />
+          <TextField label="Physical Exam Findings" value={getValue(normalized, ['physicalExam', 'physical_exam', 'signs'])} />
+        </Section>
+
+        {/* Workup Details */}
+        <Section id="workup" title="Workup & Diagnostics" icon={FlaskConical} accentColor="text-amber-400">
+          <TextField label="Diagnostics" value={getValue(normalized, ['diagnostics'])} />
+          <MarkdownField label="Treatment Approach" value={normalized.treatment} />
+          <TextField label="Complications" value={normalized.complications} />
+          <TextField label="Prognosis" value={normalized.prognosis} />
+        </Section>
+
+        {/* Background */}
+        <Section id="background" title="Background & Etiology" icon={Info} accentColor="text-purple-400">
           <TextField label="Epidemiology" value={normalized.epidemiology} />
           <TextField label="Etiology" value={normalized.etiology} />
           <TextField label="Risk Factors" value={getValue(normalized, ['riskFactors', 'risk_factors'])} />
-        </Section>
-
-        {/* Section 2: Pathophysiology */}
-        <Section title="Pathophysiology" icon={Activity}>
           <MarkdownField label="Pathophysiology" value={normalized.pathophysiology} />
-          <ListField label="Related Systems" value={normalized.relatedSystems} />
-        </Section>
-
-        {/* Section 3: Clinical Presentation */}
-        <Section title="Clinical Presentation" icon={Stethoscope}>
-          <TextField label="Symptoms" value={normalized.symptoms} />
-          <TextField label="Physical Exam" value={getValue(normalized, ['physicalExam', 'physical_exam', 'signs'])} />
-          <ListField label="Classic Triad" value={normalized.classic_triad} />
-          <PillListField label="Buzzwords" value={normalized.buzzwords} />
-        </Section>
-
-        {/* Section 4: Workup & Treatment */}
-        <Section title="Workup & Treatment" icon={ClipboardList}>
-          <TextField label="Best Initial Test" value={getValue(normalized, ['best_initial_test'])} />
-          <TextField label="Gold Standard" value={getValue(normalized, ['gold_standard', 'gold_standard_dx'])} />
-          <TextField label="Diagnostics" value={getValue(normalized, ['diagnostics'])} />
-          <MarkdownField label="Treatment" value={normalized.treatment} />
-          <TextField label="First-Line Treatment" value={getValue(normalized, ['first_line_rx'])} />
-          <TextField label="Complications" value={normalized.complications} />
-          <TextField label="Prognosis" value={normalized.prognosis} />
         </Section>
       </div>
     </div>

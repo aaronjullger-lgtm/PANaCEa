@@ -154,21 +154,31 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
         </div>
       )}
 
-      {/* Quick Info Icons (Gold Standard + First Line Rx) */}
+      {/* Quick Info Badges - Visible Gold Standard & First-Line */}
       {hasQuickInfo && (
-        <div className="flex items-center gap-1 pt-2 border-t border-[var(--color-border)]/50">
-          <QuickInfoTooltip
-            icon={FlaskConical}
-            label="Gold Standard Diagnosis"
-            value={goldStandard}
-            color="text-amber-400"
-          />
-          <QuickInfoTooltip
-            icon={Pill}
-            label="First-Line Treatment"
-            value={firstLineRx}
-            color="text-emerald-400"
-          />
+        <div className="space-y-2 pt-2 border-t border-[var(--color-border)]/50">
+          {goldStandard && (
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-400">
+                <FlaskConical className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase tracking-wide">Gold Dx</span>
+              </span>
+              <span className="text-xs text-[var(--color-text-secondary)] truncate flex-1">
+                {goldStandard}
+              </span>
+            </div>
+          )}
+          {firstLineRx && (
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
+                <Pill className="w-3 h-3" />
+                <span className="text-[10px] font-bold uppercase tracking-wide">1st Rx</span>
+              </span>
+              <span className="text-xs text-[var(--color-text-secondary)] truncate flex-1">
+                {firstLineRx}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </motion.button>

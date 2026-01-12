@@ -623,6 +623,21 @@ const App: React.FC = () => {
         />
       </Suspense>
 
+      {/* Full-screen views that break out of max-w-4xl constraint */}
+      {view === "reference_library" && (
+        <div className="w-full">
+          <WithGeminiErrorBoundary viewName="reference_library" onRetry={() => setView("reference_library")}>
+            <Suspense fallback={<Loader />}>
+              <ClinicalReferenceLibrary 
+                onExit={() => setView("command_center")}
+              />
+            </Suspense>
+          </WithGeminiErrorBoundary>
+        </div>
+      )}
+
+      {/* Standard views with max-w-4xl constraint */}
+      {view !== "reference_library" && (
       <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24">
         {isLoading && <Loader forceDark={view === "imaging_drill"} />}
         {error && (
@@ -1108,26 +1123,9 @@ const App: React.FC = () => {
             </motion.div>
           )}
 
-          {view === "reference_library" && (
-            <motion.div
-              key="reference_library"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <WithGeminiErrorBoundary viewName="reference_library" onRetry={() => setView("reference_library")}>
-                <Suspense fallback={<Loader />}>
-                  <ClinicalReferenceLibrary 
-                    onExit={() => setView("command_center")}
-                  />
-                </Suspense>
-              </WithGeminiErrorBoundary>
-            </motion.div>
-          )}
         </AnimatePresence>
       </div>
+      )}
 
       {/* Command Palette */}
       <Suspense fallback={null}>
