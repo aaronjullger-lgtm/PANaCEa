@@ -23,6 +23,8 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import { config } from 'dotenv';
 import { SPECIAL_TEST_REGISTRY, buildSpecialTestId } from '../specialTestRegistry';
 import { fileURLToPath } from 'url';
@@ -30,7 +32,15 @@ import { fileURLToPath } from 'url';
 // Load environment variables
 config();
 
-const prisma = new PrismaClient();
+// Prisma v7 requires adapter for PostgreSQL
+const directUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
+if (!directUrl) {
+  console.error('❌ DATABASE_URL not set in environment');
+  process.exit(1);
+}
+const pool = new Pool({ connectionString: directUrl });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 interface SyncReport {
   startTime: Date;

@@ -12,7 +12,7 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertCircle, RefreshCw, X, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { LibrarySidebar } from './LibrarySidebar';
 import { LibraryBreadcrumb } from './LibraryBreadcrumb';
 import { EnhancedConditionCard } from './EnhancedConditionCard';
@@ -57,7 +57,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
   // Expansion state for subcategories (show more than default 4)
   const [expandedSubcats, setExpandedSubcats] = useState<Set<string>>(new Set());
-  const ITEMS_PER_SUBCATEGORY = 4; // Show top 4 highest yield by default
+  const ITEMS_PER_SUBCATEGORY = 3; // Show top 3 highest yield by default
 
   // Refs for keyboard navigation
   const contentRef = useRef<HTMLDivElement>(null);
@@ -314,21 +314,46 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10">
-          <div className="flex items-center gap-4">
+        {/* Header with Global Search */}
+        <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]/95 backdrop-blur-sm sticky top-0 z-20">
+          {/* Left: Breadcrumb Navigation */}
+          <div className="flex items-center gap-3 min-w-0">
             <LibraryBreadcrumb
               system={activeSystemLabel}
               subcategory={activeSubcategory}
               onHomeClick={() => handleSystemSelect('all')}
               onSystemClick={() => setActiveSubcategory(null)}
-              onSubcategoryClick={() => {}} // Already at subcategory level
+              onSubcategoryClick={() => {}}
             />
-            <span className="text-sm text-[var(--color-text-muted)]">
+            <span className="text-xs text-[var(--color-text-muted)] hidden sm:inline">
               {filteredContent.length} condition{filteredContent.length !== 1 ? 's' : ''}
             </span>
           </div>
 
+          {/* Center: Global Search Bar */}
+          <div className="flex-1 max-w-md mx-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search conditions... (press /)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-lg text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 focus:border-[var(--color-accent)]"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-[var(--color-bg-secondary)] transition-colors"
+                >
+                  <X className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Actions */}
           <div className="flex items-center gap-2">
             {onExit && (
               <button
@@ -499,13 +524,13 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
               onClick={() => setSelected(null)}
             />
 
-            {/* Panel */}
+            {/* Panel - 60% width for better readability */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed top-0 right-0 h-full w-full max-w-2xl bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] shadow-2xl z-50 flex flex-col"
+              className="fixed top-0 right-0 h-full w-[60%] min-w-[500px] max-w-4xl bg-[var(--color-bg-primary)] border-l border-[var(--color-border)] shadow-2xl z-50 flex flex-col"
             >
               {/* Panel Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
@@ -560,12 +585,63 @@ import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { parseListField, parseTextField, normalizeMedicalContent } from '@/lib/utils/normalization';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 
+// Types for display priority
+interface DisplayPriority {
+  primary: string;
+  secondary?: string;
+  tertiary?: string;
+  reasoning?: string;
+}
+
+// Compute display priority from content or infer from available data
+function computeDisplayPriority(content: Record<string, unknown>): DisplayPriority {
+  // Check for stored display priority in content JSONB
+  const storedContent = content.content as Record<string, unknown> | null;
+  if (storedContent?.display_priority) {
+    return storedContent.display_priority as DisplayPriority;
+  }
+  
+  // Infer priority based on available data
+  const classicTriad = parseListField(content.classic_triad);
+  const buzzwords = parseListField(content.buzzwords);
+  const classicPatient = parseTextField(content.classic_patient);
+  const goldStandard = parseTextField(content.gold_standard_dx || content.gold_standard);
+  const mnemonic = parseTextField(content.mnemonic);
+  const physicalExam = parseTextField(content.physicalExam || content.physical_exam);
+  
+  // Priority logic: If triad exists with 3+ items, it's likely pathognomonic
+  if (classicTriad.length >= 3) {
+    return { primary: 'classic_triad', secondary: 'buzzwords', tertiary: 'gold_standard_dx' };
+  }
+  
+  // If buzzwords are distinctive (3+ items), prioritize them
+  if (buzzwords.length >= 3) {
+    return { primary: 'buzzwords', secondary: 'classic_patient', tertiary: 'gold_standard_dx' };
+  }
+  
+  // If classic patient description is detailed (>50 chars), it's key
+  if (classicPatient && classicPatient.length > 50) {
+    return { primary: 'classic_patient', secondary: 'buzzwords', tertiary: 'gold_standard_dx' };
+  }
+  
+  // If mnemonic exists, it's a memory aid condition
+  if (mnemonic && mnemonic.length > 5) {
+    return { primary: 'mnemonic', secondary: 'classic_patient', tertiary: 'buzzwords' };
+  }
+  
+  // Default to gold standard dx as primary
+  return { primary: 'gold_standard_dx', secondary: 'classic_patient', tertiary: 'buzzwords' };
+}
+
 const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay> }> = ({ content }) => {
   const normalized = useMemo(() => normalizeMedicalContent(content), [content]);
   
-  // Track which sections are expanded (all start expanded)
+  // Compute context-aware display priority
+  const displayPriority = useMemo(() => computeDisplayPriority(normalized as Record<string, unknown>), [normalized]);
+  
+  // Track which sections are expanded (clinical starts expanded)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['quickfacts', 'clinical', 'workup'])
+    new Set(['clinical'])
   );
 
   const toggleSection = (section: string) => {
@@ -591,12 +667,19 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
   };
 
   // Extract key values
+  const overview = parseTextField(normalized.overview);
   const goldStandard = parseTextField(getValue(normalized, ['gold_standard', 'gold_standard_dx']));
   const firstLineRx = parseTextField(getValue(normalized, ['first_line_rx']));
+  const bestInitialTest = parseTextField(getValue(normalized, ['best_initial_test']));
   const classicPatient = parseTextField(normalized.classic_patient);
   const buzzwords = parseListField(normalized.buzzwords);
   const clinicalPearls = parseListField(normalized.clinical_pearls);
   const classicTriad = parseListField(normalized.classic_triad);
+  const mnemonic = parseTextField((normalized as Record<string, unknown>).mnemonic);
+  const physicalExam = parseTextField(getValue(normalized, ['physicalExam', 'physical_exam', 'signs']));
+  const differentialDx = parseListField((normalized as Record<string, unknown>).differentialDiagnosis);
+  const complications = parseListField(normalized.complications) || parseTextField(normalized.complications);
+  const riskFactors = parseListField((normalized as Record<string, unknown>).riskFactors) || parseTextField(getValue(normalized, ['riskFactors', 'risk_factors']));
 
   const Section: React.FC<{ 
     id: string;
@@ -644,22 +727,48 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
   const TextField: React.FC<{ label: string; value: unknown; highlight?: boolean }> = ({ label, value, highlight }) => {
     const text = parseTextField(value);
     if (!text) return null;
+    // Clean HTML entities and render through ReactMarkdown for proper formatting
+    const cleanText = text
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/?p>/gi, '\n')
+      .replace(/<\/?strong>/gi, '**')
+      .replace(/<\/?b>/gi, '**')
+      .replace(/<\/?em>/gi, '*')
+      .replace(/<\/?i>/gi, '*');
     return (
       <div className={highlight ? 'p-3 rounded-lg bg-[var(--color-accent)]/10 border border-[var(--color-accent)]/30' : ''}>
         <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-1">{label}</h4>
-        <p className="text-sm text-[var(--color-text-primary)] leading-relaxed">{text}</p>
+        <div className="prose prose-sm prose-invert max-w-none text-[var(--color-text-primary)] leading-relaxed">
+          <ReactMarkdown>{cleanText}</ReactMarkdown>
+        </div>
       </div>
     );
   };
 
-  const MarkdownField: React.FC<{ label: string; value: unknown }> = ({ label, value }) => {
+  const MarkdownField = ({ label, value }: { label: string; value: unknown }) => {
     const text = parseTextField(value);
     if (!text) return null;
+    // Clean HTML entities for proper markdown rendering
+    const cleanText = text
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/?p>/gi, '\n')
+      .replace(/<\/?strong>/gi, '**')
+      .replace(/<\/?b>/gi, '**')
+      .replace(/<\/?em>/gi, '*')
+      .replace(/<\/?i>/gi, '*');
     return (
       <div>
         <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">{label}</h4>
         <div className="prose prose-sm prose-invert max-w-none text-[var(--color-text-secondary)]">
-          <ReactMarkdown>{text}</ReactMarkdown>
+          <ReactMarkdown>{cleanText}</ReactMarkdown>
         </div>
       </div>
     );
@@ -768,6 +877,19 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         </div>
       )}
 
+      {/* Mnemonic - Prominent if exists */}
+      {mnemonic && (
+        <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/15 to-purple-500/10 border border-violet-500/30">
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-5 h-5 text-violet-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <h4 className="text-sm font-semibold text-violet-400 uppercase tracking-wide">Memory Aid / Mnemonic</h4>
+          </div>
+          <p className="text-base font-bold text-[var(--color-text-primary)] font-mono tracking-wide">{mnemonic}</p>
+        </div>
+      )}
+
       {/* Classic Triad - Keep rose for warning/important triads */}
       {classicTriad.length > 0 && (
         <div className="p-4 rounded-xl bg-gradient-to-r from-rose-500/10 to-rose-600/5 border border-rose-500/30">
@@ -784,6 +906,38 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
                 {idx + 1}. {item}
               </span>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Overview - If exists and distinct from classic patient */}
+      {overview && overview !== classicPatient && (
+        <div className="prose prose-sm prose-invert max-w-none text-[var(--color-text-secondary)] leading-relaxed">
+          <ReactMarkdown>{overview}</ReactMarkdown>
+        </div>
+      )}
+
+      {/* Differential Diagnosis - Important for clinical reasoning */}
+      {differentialDx.length > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2 flex items-center gap-2">
+            <ClipboardList className="w-4 h-4 text-blue-400" />
+            Differential Diagnosis
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {differentialDx.slice(0, 8).map((dx, idx) => (
+              <span
+                key={idx}
+                className="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-300 border border-blue-500/20 text-xs font-medium"
+              >
+                {dx}
+              </span>
+            ))}
+            {differentialDx.length > 8 && (
+              <span className="px-2.5 py-1 text-xs text-[var(--color-text-muted)]">
+                +{differentialDx.length - 8} more
+              </span>
+            )}
           </div>
         </div>
       )}

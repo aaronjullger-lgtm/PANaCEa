@@ -17,11 +17,25 @@
  *   --limit=N          Limit AI calls
  */
 
+import { config } from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import crypto from 'crypto';
 
-const prisma = new PrismaClient();
+// Load environment variables
+config();
+
+// Prisma v7 requires adapter for PostgreSQL
+const directUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
+if (!directUrl) {
+  console.error('❌ DATABASE_URL not set in environment');
+  process.exit(1);
+}
+const pool = new Pool({ connectionString: directUrl });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 // ==================== Configuration ====================
 const MODEL_NAME = 'gemini-2.5-pro';
@@ -1071,6 +1085,123 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
 
   let merged = 0;
 
+  // First, use SQL to find actual duplicates by condition name
+  const sqlDuplicates = await prisma.$queryRaw<Array<{ condition: string; count: bigint }>>`
+    SELECT condition, COUNT(*) as count
+    FROM "MedicalContent"
+    GROUP BY condition
+    HAVING COUNT(*) > 1
+    ORDER BY count DESC
+  `;
+
+  console.log(`\n   Found ${sqlDuplicates.length} duplicate condition names in database\n`);
+
+  for (const dup of sqlDuplicates) {
+    const conditionName = dup.condition;
+    const count = Number(dup.count);
+    
+    // Find all records with this exact name
+    const records = await prisma.medicalContent.findMany({
+      where: { condition: conditionName },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    if (records.length <= 1) continue;
+
+    console.log(`\n   📋 "${conditionName}" - Found ${records.length} duplicate records`);
+    for (const r of records) {
+      console.log(`      - ${r.conditionId} (${r.system}) - Updated: ${r.updatedAt.toISOString().split('T')[0]}`);
+    }
+
+    if (!dryRun && records.length > 1) {
+      // Pick the most recently updated record as primary
+      const primary = records[0];
+      const duplicates = records.slice(1);
+
+      // Deep merge content from all records
+      const mergedContent = deepMergeContent(records);
+
+      // Collect all related systems
+      const allRelatedSystems = [...new Set(records.flatMap(r => [r.system, ...r.relatedSystems]))];
+      const primarySystem = primary.system;
+      const otherSystems = allRelatedSystems.filter(s => s !== primarySystem);
+
+      // Update primary with merged data
+      await prisma.medicalContent.update({
+        where: { id: primary.id },
+        data: {
+          ...mergedContent,
+          relatedSystems: otherSystems,
+          updatedBy: 'condition-doctor-auto-merge',
+          updatedAt: new Date(),
+        },
+      });
+
+      // Update or create corresponding Condition record
+      const primaryCond = await prisma.condition.findUnique({
+        where: { id: primary.conditionId },
+      });
+
+      if (primaryCond) {
+        await prisma.condition.update({
+          where: { id: primary.conditionId },
+          data: {
+            relatedSystems: otherSystems,
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      // Delete duplicate MedicalContent records
+      await prisma.medicalContent.deleteMany({
+        where: { id: { in: duplicates.map(d => d.id) } },
+      });
+
+      // Handle duplicate Condition records carefully (they may have foreign keys)
+      const dupCondIds = duplicates.map(d => d.conditionId).filter(id => id !== primary.conditionId);
+      if (dupCondIds.length > 0) {
+        // First, update any references to point to the primary
+        try {
+          // Update QuestionSeed references
+          await prisma.questionSeed.updateMany({
+            where: { conditionId: { in: dupCondIds } },
+            data: { conditionId: primary.conditionId },
+          });
+          
+          // Update Question references
+          await prisma.question.updateMany({
+            where: { conditionId: { in: dupCondIds } },
+            data: { conditionId: primary.conditionId },
+          });
+          
+          // Update PreGeneratedQuestion references
+          await prisma.preGeneratedQuestion.updateMany({
+            where: { conditionId: { in: dupCondIds } },
+            data: { conditionId: primary.conditionId },
+          });
+        } catch (refError) {
+          console.log(`      ⚠️  Warning: Could not update all references - ${refError instanceof Error ? refError.message : 'unknown error'}`);
+        }
+
+        // Now safe to delete the duplicate Condition records
+        try {
+          await prisma.condition.deleteMany({
+            where: { id: { in: dupCondIds } },
+          });
+        } catch (deleteError) {
+          console.log(`      ⚠️  Warning: Could not delete duplicate Condition records - ${deleteError instanceof Error ? deleteError.message : 'unknown error'}`);
+        }
+      }
+
+      console.log(`      ✅ Merged ${records.length} records into ${primary.conditionId}`);
+      merged++;
+    } else if (dryRun) {
+      console.log(`      [DRY RUN] Would merge ${records.length} records`);
+      merged++;
+    }
+  }
+
+  // Also check the KNOWN_DUPLICATE_CONDITIONS list for stragglers
   for (const conditionName of KNOWN_DUPLICATE_CONDITIONS) {
     const normalized = normalizeConditionName(conditionName);
     
@@ -1087,7 +1218,10 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
 
     if (records.length <= 1) continue;
 
-    console.log(`\n   📋 ${conditionName} - Found ${records.length} records`);
+    // Check if we already processed this in SQL duplicates
+    if (sqlDuplicates.some(d => d.condition === records[0].condition)) continue;
+
+    console.log(`\n   📋 ${conditionName} (fuzzy match) - Found ${records.length} records`);
     for (const r of records) {
       console.log(`      - ${r.conditionId} (${r.system})`);
     }
@@ -1125,6 +1259,112 @@ async function autoDetectDuplicates(dryRun: boolean): Promise<number> {
   }
 
   console.log(`\n   Summary: ${merged} additional duplicates merged`);
+  return merged;
+}
+
+// ==================== Phase 3b: Merge Condition Table Duplicates ====================
+
+async function mergeConditionTableDuplicates(dryRun: boolean): Promise<number> {
+  console.log('\n' + '═'.repeat(70));
+  console.log('🔍 PHASE 3B: MERGE CONDITION TABLE DUPLICATES');
+  console.log('═'.repeat(70));
+
+  let merged = 0;
+
+  // Find duplicates in Condition table
+  const conditionDuplicates = await prisma.$queryRaw<Array<{ name: string; count: bigint }>>`
+    SELECT name, COUNT(*) as count
+    FROM "Condition"
+    GROUP BY name
+    HAVING COUNT(*) > 1
+    ORDER BY count DESC
+  `;
+
+  console.log(`\n   Found ${conditionDuplicates.length} duplicate condition names in Condition table\n`);
+
+  for (const dup of conditionDuplicates) {
+    const conditionName = dup.name;
+    const count = Number(dup.count);
+    
+    // Find all Condition records with this exact name
+    const records = await prisma.condition.findMany({
+      where: { name: conditionName },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    if (records.length <= 1) continue;
+
+    console.log(`\n   📋 "${conditionName}" - Found ${records.length} duplicate Condition records`);
+    for (const r of records) {
+      console.log(`      - ${r.id} (${r.system}) - Updated: ${r.updatedAt.toISOString().split('T')[0]}`);
+    }
+
+    if (!dryRun && records.length > 1) {
+      // Pick the most recently updated record as primary
+      const primary = records[0];
+      const duplicates = records.slice(1);
+
+      // Collect all related systems and aliases
+      const allRelatedSystems = [...new Set(records.flatMap(r => [r.system, ...r.relatedSystems]))];
+      const primarySystem = primary.system;
+      const otherSystems = allRelatedSystems.filter(s => s !== primarySystem);
+      const allAliases = [...new Set(records.flatMap(r => r.aliases))];
+
+      // Update primary with merged data
+      await prisma.condition.update({
+        where: { id: primary.id },
+        data: {
+          relatedSystems: otherSystems,
+          aliases: allAliases,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Update foreign key references to point to primary
+      const dupIds = duplicates.map(d => d.id);
+      
+      try {
+        await prisma.questionSeed.updateMany({
+          where: { conditionId: { in: dupIds } },
+          data: { conditionId: primary.id },
+        });
+        
+        await prisma.question.updateMany({
+          where: { conditionId: { in: dupIds } },
+          data: { conditionId: primary.id },
+        });
+        
+        await prisma.preGeneratedQuestion.updateMany({
+          where: { conditionId: { in: dupIds } },
+          data: { conditionId: primary.id },
+        });
+
+        // Update MedicalContent references
+        await prisma.medicalContent.updateMany({
+          where: { conditionId: { in: dupIds } },
+          data: { conditionId: primary.id },
+        });
+      } catch (refError) {
+        console.log(`      ⚠️  Warning: Could not update all references - ${refError instanceof Error ? refError.message : 'unknown error'}`);
+      }
+
+      // Now safe to delete duplicates
+      try {
+        await prisma.condition.deleteMany({
+          where: { id: { in: dupIds } },
+        });
+        console.log(`      ✅ Merged ${records.length} Condition records into ${primary.id}`);
+        merged++;
+      } catch (deleteError) {
+        console.log(`      ❌ Failed to delete: ${deleteError instanceof Error ? deleteError.message : 'unknown error'}`);
+      }
+    } else if (dryRun) {
+      console.log(`      [DRY RUN] Would merge ${records.length} records`);
+      merged++;
+    }
+  }
+
+  console.log(`\n   Summary: ${merged} Condition duplicates merged`);
   return merged;
 }
 
@@ -1449,6 +1689,7 @@ async function main(): Promise<void> {
       await addNewConditions(dryRun);
       await mergeDuplicates(dryRun);
       await autoDetectDuplicates(dryRun);
+      await mergeConditionTableDuplicates(dryRun);
       await fixFormattingDuplicates(dryRun);
       await standardizeAccentedNames(dryRun);
       await syncConditionTables(dryRun);
@@ -1459,6 +1700,7 @@ async function main(): Promise<void> {
       if (mergeDupesOnly) {
         await mergeDuplicates(dryRun);
         await autoDetectDuplicates(dryRun);
+        await mergeConditionTableDuplicates(dryRun);
         await fixFormattingDuplicates(dryRun);
       }
       if (standardizeOnly) {

@@ -3,7 +3,10 @@
  * Automated Content Generator using Gemini API
  * Generates missing content sections for MedicalContent records
  */
+import { config } from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs';
 import path from 'path';
@@ -12,7 +15,18 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const prisma = new PrismaClient();
+// Load environment variables
+config();
+
+// Prisma v7 requires adapter for PostgreSQL
+const directUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
+if (!directUrl) {
+  console.error('❌ DATABASE_URL not set in environment');
+  process.exit(1);
+}
+const pool = new Pool({ connectionString: directUrl });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 // Initialize Gemini AI
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;

@@ -16,9 +16,23 @@
  * Schedule: Weekly via GitHub Actions or cron
  */
 
+import { config } from 'dotenv';
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
-const prisma = new PrismaClient();
+// Load environment variables
+config();
+
+// Prisma v7 requires adapter for PostgreSQL
+const directUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
+if (!directUrl) {
+  console.error('❌ DATABASE_URL not set in environment');
+  process.exit(1);
+}
+const pool = new Pool({ connectionString: directUrl });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 // =============================================================================
 // TYPES
