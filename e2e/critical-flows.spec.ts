@@ -7,7 +7,7 @@
  * 3. Navigation and content viewing
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /**
  * Test Configuration
@@ -19,7 +19,7 @@ const TEST_TIMEOUT = 30000; // 30 seconds
 /**
  * Helper function to wait for app to be fully loaded
  */
-async function waitForAppReady(page: any) {
+async function waitForAppReady(page: Page) {
   // Wait for the main app container to be visible
   await page.waitForSelector('[data-testid="app-container"], main, #root', { 
     timeout: 10000,
@@ -30,7 +30,7 @@ async function waitForAppReady(page: any) {
 /**
  * Helper function to check if user is authenticated
  */
-async function isAuthenticated(page: any): Promise<boolean> {
+async function isAuthenticated(page: Page): Promise<boolean> {
   try {
     // Check for common authenticated UI elements
     const dashboardVisible = await page.locator('text=/dashboard|home|menu/i').first().isVisible({ timeout: 2000 });
@@ -418,7 +418,72 @@ test.describe('Critical User Flows', () => {
     });
   });
 
-  test.describe('4. Error Handling and Edge Cases', () => {
+  test.describe('4. Clinical Calculator Flow', () => {
+    test('should navigate to calculator hub and use a calculator', async ({ page }) => {
+      await page.goto(BASE_URL);
+      await waitForAppReady(page);
+      
+      const isAuth = await isAuthenticated(page);
+      if (!isAuth) {
+        console.log('⊘ Skipping calculator test - authentication required');
+        test.skip();
+        return;
+      }
+      
+      // Look for calculator/toolkit navigation
+      const calculatorSelectors = [
+        'text=/calculator|toolkit|tools/i',
+        '[data-testid*="calculator"]',
+        '[data-testid*="toolkit"]',
+        'nav a:has-text("Calculator")',
+        'nav a:has-text("Toolkit")',
+      ];
+      
+      let clicked = false;
+      for (const selector of calculatorSelectors) {
+        try {
+          const element = page.locator(selector).first();
+          if (await element.isVisible({ timeout: 2000 })) {
+            await element.click();
+            clicked = true;
+            console.log(`✓ Navigated to calculator using: ${selector}`);
+            break;
+          }
+        } catch {
+          continue;
+        }
+      }
+      
+      if (clicked) {
+        await page.waitForTimeout(1500);
+        
+        // Verify calculator hub is visible
+        const hasCalculatorHub = await page.locator('text=/CURB-65|Wells|CHA.*DS.*VASc|GFR|Anion Gap/i').first().isVisible({ timeout: 5000 });
+        
+        if (hasCalculatorHub) {
+          console.log('✓ Calculator hub visible with medical calculators');
+          
+          // Try to click on a calculator (e.g., CURB-65)
+          const calculatorCard = page.locator('text=/CURB-65|Wells DVT|Anion Gap/i').first();
+          if (await calculatorCard.isVisible({ timeout: 2000 })) {
+            await calculatorCard.click();
+            await page.waitForTimeout(1000);
+            
+            // Verify calculator interface loaded
+            const hasCalculatorUI = await page.locator('text=/score|calculate|criteria|result/i').first().isVisible({ timeout: 3000 });
+            expect(hasCalculatorUI).toBe(true);
+            console.log('✓ Calculator interface loaded');
+          }
+        } else {
+          console.log('ℹ Calculator hub structure may differ');
+        }
+      } else {
+        console.log('⊘ Calculator navigation not found');
+      }
+    });
+  });
+
+  test.describe('5. Error Handling and Edge Cases', () => {
     test('should handle network errors gracefully', async ({ page }) => {
       await page.goto(BASE_URL);
       await waitForAppReady(page);

@@ -8,6 +8,8 @@
 
 export interface Question {
   id?: string; // Unique identifier for SRS tracking
+  /** Optional vignette text for long-form stems */
+  vignette?: string;
   question: string;
   options: string[];
   correctAnswerIndex: number;
@@ -73,9 +75,11 @@ export interface TopicStats {
 }
 
 export interface SessionSettings {
-  focus: "all" | "growth" | "review" | "topic" | "reviewFlagged";
+  focus: "all" | "growth" | "review" | "topic" | "reviewFlagged" | "unseen" | "incorrect" | "bookmarked";
   difficulty: "easier" | "same" | "harder";
   topic?: string;
+  count?: number;
+  systems?: string[];
 
   /** Optional: when present, Gemini should target this specific condition */
   subcategoryName?: string;

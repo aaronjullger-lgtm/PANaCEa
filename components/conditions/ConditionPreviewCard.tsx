@@ -13,16 +13,30 @@
  * - Automatic content type detection
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, Sparkles } from 'lucide-react';
 import { getSystemAccent } from '../../lib/utils/textFormatting';
 import { RichText, stripMarkdown } from '../../src/components/ui/RichText';
 import type { ConditionMeta } from '../../src/types/conditions';
 
+/**
+ * Content structure from MedicalContent database
+ */
+interface MedicalContentData {
+  classic_triad?: string | string[];
+  buzzwords?: string | string[];
+  clinical_pearls?: string | string[];
+  classic_patient?: string;
+  gold_standard_dx?: string;
+  first_line_rx?: string;
+  best_initial_test?: string;
+  [key: string]: string | string[] | undefined;
+}
+
 interface ConditionPreviewCardProps {
   condition: ConditionMeta;
-  content?: any; // MedicalContent from database
+  content?: MedicalContentData;
   onClick: (condition: ConditionMeta) => void;
   index?: number; // For staggered animations
 }
@@ -37,7 +51,7 @@ interface ContentItem {
  * Intelligently extract and categorize content items
  * Short items (<30 chars) → pills, Long items → blocks
  */
-function extractContentItems(content: any, maxItems: number = 5): ContentItem[] {
+function extractContentItems(content: MedicalContentData | undefined, maxItems: number = 5): ContentItem[] {
   if (!content) return [];
 
   const items: ContentItem[] = [];
@@ -94,12 +108,16 @@ export const ConditionPreviewCard: React.FC<ConditionPreviewCardProps> = ({
   onClick,
   index = 0,
 }) => {
-  const contentItems = extractContentItems(content, 5);
-  const accent = getSystemAccent(condition.system);
+  // Memoize content extraction to avoid re-computation on every render
+  const contentItems = useMemo(() => extractContentItems(content, 5), [content]);
+  
+  const accent = useMemo(() => getSystemAccent(condition.system), [condition.system]);
 
-  // Separate pills and blocks
-  const pills = contentItems.filter((item) => item.type === 'pill');
-  const blocks = contentItems.filter((item) => item.type === 'block');
+  // Memoize pills and blocks separation
+  const { pills, blocks } = useMemo(() => ({
+    pills: contentItems.filter((item) => item.type === 'pill'),
+    blocks: contentItems.filter((item) => item.type === 'block'),
+  }), [contentItems]);
 
   return (
     <motion.button

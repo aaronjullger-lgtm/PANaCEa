@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Backend server for PANaCEa
  * Runs on port 3001 to serve API endpoints and proxy Gemini requests

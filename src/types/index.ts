@@ -15,6 +15,8 @@
 export interface Question {
   /** Unique identifier for tracking */
   id?: string;
+  /** Optional vignette text for long-form stems */
+  vignette?: string;
   question: string;
   options: string[];
   correctAnswerIndex: number;
@@ -82,9 +84,11 @@ export interface TopicStats {
 }
 
 export interface SessionSettings {
-  focus: "all" | "growth" | "review" | "topic" | "reviewFlagged";
+  focus: "all" | "growth" | "review" | "topic" | "reviewFlagged" | "unseen" | "incorrect" | "bookmarked";
   difficulty: "same"; // Always PANCE-level, no easy/hard modes
   topic?: string;
+  count?: number;
+  systems?: string[];
 
   /** Optional: when present, Gemini should target this specific condition */
   conditionName?: string;

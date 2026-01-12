@@ -21,9 +21,14 @@ interface StabilityPyramidProps {
   data: { bucket: string; count: number; color: string }[];
 }
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: StabilityData }>;
+}
+
 export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
   // Define stability order (weakest to strongest)
-  const stabilityOrder: { [key: string]: number } = {
+  const stabilityOrder: Record<string, number> = {
     '<1d': 5,
     '1-3d': 4,
     '3-7d': 3,
@@ -39,7 +44,7 @@ export const StabilityPyramid: React.FC<StabilityPyramidProps> = ({ data }) => {
     }))
     .sort((a, b) => b.order - a.order);
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const { bucket, count } = payload[0].payload;
       return (

@@ -119,7 +119,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.patientAge}
-                  onChange={(e) => updateSetting('patientAge', e.target.value as any)}
+                  onChange={(e) => updateSetting('patientAge', e.target.value as EncounterSettings['patientAge'])}
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="random">Random</option>
@@ -135,7 +135,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.patientSex}
-                  onChange={(e) => updateSetting('patientSex', e.target.value as any)}
+                  onChange={(e) => updateSetting('patientSex', e.target.value as EncounterSettings['patientSex'])}
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="random">Random</option>
@@ -150,7 +150,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.acuity}
-                  onChange={(e) => updateSetting('acuity', e.target.value as any)}
+                  onChange={(e) => updateSetting('acuity', e.target.value as EncounterSettings['acuity'])}
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="random">Random</option>
@@ -178,7 +178,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.focusArea}
-                  onChange={(e) => updateSetting('focusArea', e.target.value as any)}
+                  onChange={(e) => updateSetting('focusArea', e.target.value as EncounterSettings['focusArea'])}
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="all">All Systems</option>
@@ -202,7 +202,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.complexity}
-                  onChange={(e) => updateSetting('complexity', e.target.value as any)}
+                  onChange={(e) => updateSetting('complexity', e.target.value as EncounterSettings['complexity'])}
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="straightforward">Straightforward (Common)</option>
@@ -303,7 +303,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.patientLanguage}
-                  onChange={(e) => updateSetting('patientLanguage', e.target.value as any)}
+                  onChange={(e) => updateSetting('patientLanguage', e.target.value as EncounterSettings['patientLanguage'])}
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="english">English</option>
@@ -318,7 +318,7 @@ export const EncounterSettingsModal: React.FC<EncounterSettingsModalProps> = ({
                 </label>
                 <select
                   value={settings.communicationStyle}
-                  onChange={(e) => updateSetting('communicationStyle', e.target.value as any)}
+                  onChange={(e) => updateSetting('communicationStyle', e.target.value as EncounterSettings['communicationStyle'])}
                   className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-orange-500"
                 >
                   <option value="cooperative">Cooperative (Standard)</option>

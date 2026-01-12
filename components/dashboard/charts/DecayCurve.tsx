@@ -9,13 +9,22 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+interface DecayCurveData {
+  day: number;
+  retentionProb: number;
+}
 
 interface DecayCurveProps {
-  data: { day: number; retentionProb: number }[];
+  data: DecayCurveData[];
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: DecayCurveData }>;
 }
 
 export const DecayCurve: React.FC<DecayCurveProps> = ({ data }) => {
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       const { day, retentionProb } = payload[0].payload;
       return (
