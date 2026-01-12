@@ -157,6 +157,12 @@ export const DrillSubmitReviewSchema = z.object({
   questionId: IDSchema,
   selectedAnswer: z.union([z.string(), z.number()]),
   timeSpentMs: z.number().int().min(0).max(600000).optional(),
+  // Implicit behavior metrics (Phase 2 Zero-Friction)
+  timeToFirstClick: z.number().int().min(0).max(600000).optional(),
+  answerSwitches: z.number().int().min(0).max(100).optional(),
+  totalDwellTime: z.number().int().min(0).max(600000).optional(),
+  timezone: z.string().max(100).optional(),
+  wakeTimeHHMM: z.string().regex(/^\d{2}:\d{2}$/).optional(),
 });
 
 export type DrillSubmitReviewInput = z.infer<typeof DrillSubmitReviewSchema>;

@@ -5,11 +5,10 @@
  * Generates comprehensive patientEncounterCase records with AI assistance
  */
 
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../_shared/db.js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as crypto from 'crypto';
 
-const prisma = new PrismaClient();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 interface PatientEncounterCaseData {
@@ -30,45 +29,102 @@ interface PatientEncounterCaseData {
   teachingPoints: string[];
 }
 
-const PROMPT_TEMPLATE = `You are a medical education expert creating content for PA students.
+const PROMPT_TEMPLATE = `You are a senior physician and PANCE board examiner creating a complex, realistic OSCE patient encounter case for PA students. The case must be at a level appropriate for PANCE/PANRE certification exams.
 
-Generate comprehensive data for: "{{ITEM_NAME}}"
+## CASE REQUIREMENTS FOR: "{{ITEM_NAME}}"
 Category: {{CATEGORY}}
 
-Create detailed, accurate content with this JSON structure:
+### Clinical Realism Standards:
+1. **Patient Demographics**: Create a believable patient with a culturally diverse name. Age and sex should be epidemiologically appropriate for the condition.
+2. **Chief Complaint**: Use the patient's own words, not medical terminology. Include duration.
+3. **Vital Signs**: Must be numerically accurate and consistent with the diagnosis (e.g., fever in infection, tachycardia in PE).
+4. **History**: Include subtle red flags and risk factors that a skilled clinician would catch. Add 1-2 misleading details that test clinical reasoning.
+5. **Physical Exam**: Include both positive AND negative findings. Negative findings should rule out differentials.
+6. **Lab/Imaging**: Include specific numeric values with units. Some should be borderline to test interpretation.
+
+### Question Categories:
+- **Essential Questions**: Must-ask questions that would significantly change management if missed (5-7 questions)
+- **Helpful Questions**: Good questions that add useful context (3-5 questions)  
+- **Unnecessary Questions**: Time-wasters that a skilled interviewer would skip (3-5 questions)
+
+### Teaching Points:
+Include 4-6 high-yield pearls that distinguish expert from novice clinicians. Focus on:
+- Classic buzzwords and board-favorite presentations
+- Time-critical interventions
+- Common pitfalls and diagnostic errors
+- Evidence-based management priorities
+
+Return ONLY valid JSON with this exact structure:
 
 {
-  "patientName": "value",
-  "chiefComplaint": "value",
-  "age": 0,
-  "sex": "value",
-  "vitalSigns": "value",
-  "historyData": "value",
-  "physicalExamData": "value",
-  "labData": "value",
-  "essentialQuestions": ["item1", "item2"],
-  "helpfulQuestions": ["item1", "item2"],
-  "unnecessaryQuestions": ["item1", "item2"],
-  "correctDiagnosis": "value",
-  "differentialDiagnoses": ["item1", "item2"],
-  "idealWorkup": ["item1", "item2"],
-  "teachingPoints": ["item1", "item2"]
+  "patientName": "Realistic full name",
+  "chiefComplaint": "Patient's own words with duration",
+  "age": 45,
+  "sex": "male or female",
+  "vitalSigns": {
+    "bp": "systolic/diastolic",
+    "hr": 82,
+    "rr": 16,
+    "temp": "98.6F or 37C",
+    "spo2": "percentage on room air or oxygen"
+  },
+  "historyData": {
+    "hpi": "Detailed narrative with OLDCARTS elements",
+    "pmh": ["List of conditions"],
+    "psh": "Surgeries",
+    "medications": ["Current meds with doses"],
+    "allergies": "Drug allergies with reaction type",
+    "social": "Tobacco/alcohol/drugs, occupation, living situation",
+    "family": "Relevant family history"
+  },
+  "physicalExamData": {
+    "general": "Appearance and distress level",
+    "heent": "If relevant",
+    "cardiovascular": "Heart sounds, JVD, edema",
+    "pulmonary": "Breath sounds, respiratory effort",
+    "abdomen": "Inspection, auscultation, palpation, percussion",
+    "neurological": "If relevant",
+    "extremities": "Pulses, edema, skin changes",
+    "skin": "If relevant"
+  },
+  "labData": {
+    "key_labs_with_values_and_units": "Include abnormal flags",
+    "imaging_findings": "If applicable"
+  },
+  "essentialQuestions": [
+    "5-7 critical history questions that change management"
+  ],
+  "helpfulQuestions": [
+    "3-5 useful but not critical questions"
+  ],
+  "unnecessaryQuestions": [
+    "3-5 questions that waste time or are not clinically relevant"
+  ],
+  "correctDiagnosis": "Most likely diagnosis with any subtypes",
+  "differentialDiagnoses": [
+    "4-6 reasonable alternative diagnoses ranked by likelihood"
+  ],
+  "idealWorkup": [
+    "Ordered list of tests/studies with rationale"
+  ],
+  "teachingPoints": [
+    "4-6 high-yield clinical pearls"
+  ]
 }
 
 CRITICAL JSON RULES:
-- Return ONLY valid JSON with NO markdown formatting
+- Return ONLY the JSON object, no markdown formatting or backticks
 - Use straight apostrophes (') never curly quotes
-- Write "greater than" not ">" symbol
-- NO special characters: ≥ ≤ × ÷ → ∞
+- Write out symbols: "greater than" not ">"
+- NO special characters: avoid symbols like greater than or equal signs
 - NO double quotes inside string values
 - NO null values - use empty arrays [] or "Not applicable"
-- Remove ALL trailing commas
-- All text fields should have meaningful medical content
+- Ensure all trailing commas are removed
 
 Return the JSON now:`;
 
 async function generatePatientEncounterCase(item: { name: string; category: string }, retryCount = 0): Promise<PatientEncounterCaseData | null> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
   
   let prompt = PROMPT_TEMPLATE
     .replace('{{ITEM_NAME}}', item.name)

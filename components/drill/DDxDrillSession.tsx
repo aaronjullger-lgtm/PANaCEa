@@ -97,6 +97,8 @@ const DDxDrillSession: React.FC<DDxDrillSessionProps> = ({ onExit }) => {
         onReset={drill.reset}
       >
         <QuestionSkeleton />
+      </MiniDrillLayout>
+    );
   }
 
   // Error state

@@ -516,35 +516,6 @@ app.get('/api/content/:conditionId', requireAuth, async (req: AuthenticatedReque
     });
   }
 });
-        // Metadata
-        createdAt: true,
-        updatedAt: true,
-      }
-    });
-    
-    if (!content) {
-      return res.status(404).json({ 
-        error: 'Content not found',
-        message: `No published medical content found for condition: ${conditionId}`,
-        conditionId 
-      });
-    }
-    
-    res.json({
-      success: true,
-      data: content
-    });
-  } catch (error) {
-    console.error('[Content API] Error fetching condition:', {
-      conditionId: req.params.conditionId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-    res.status(500).json({ 
-      error: 'Internal server error',
-      message: 'Failed to fetch medical content. Please try again later.',
-    });
-  }
-});
 
 // Content Search Endpoint
 app.get('/api/content/search', async (req: Request, res: Response) => {

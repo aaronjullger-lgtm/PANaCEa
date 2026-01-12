@@ -117,7 +117,8 @@ export function normalizeMedicalContent<T extends Record<string, unknown>>(rawDa
   const textFields = [
     'overview', 'pathophysiology', 'treatment', 'etiology',
     'epidemiology', 'prognosis', 'prevention', 'patient_education',
-    'classic_patient', 'physical_exam', 'monitoring', 'lifestyle'
+    'classic_patient', 'physical_exam', 'monitoring', 'lifestyle',
+    'riskFactors'
   ];
 
   textFields.forEach(field => {

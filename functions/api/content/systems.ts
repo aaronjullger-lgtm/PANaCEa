@@ -17,7 +17,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
   try {
     // Authenticate user
-    const auth = await authenticateRequest(context.request);
+    const auth = await authenticateRequest(context.request, context.env);
     if (!auth.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
@@ -25,27 +25,25 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       });
     }
 
-    // Group by system and count entries (sorted by count desc)
-    const systemGroups = await prisma.medicalContent.groupBy({
-      by: ['system'],
-      _count: {
-        _all: true,
-      },
-      where: {
-        status: 'published',
-      },
-      orderBy: {
-        _count: {
-          _all: 'desc',
-        },
-      },
+    // Edge-safe approach: findMany + JS reduce (avoids groupBy/_count order issues)
+    const allSystems = await prisma.medicalContent.findMany({
+      select: { system: true },
     });
 
-    const systems = systemGroups.map((group) => ({
-      id: group.system,
-      label: group.system,
-      count: group._count._all,
-    }));
+    const systemCounts = new Map<string, number>();
+    for (const { system } of allSystems) {
+      if (system) {
+        systemCounts.set(system, (systemCounts.get(system) || 0) + 1);
+      }
+    }
+
+    const systems = Array.from(systemCounts.entries())
+      .map(([system, count]) => ({
+        id: system,
+        label: system,
+        count,
+      }))
+      .sort((a, b) => b.count - a.count);
 
     return new Response(JSON.stringify(systems), {
       status: 200,

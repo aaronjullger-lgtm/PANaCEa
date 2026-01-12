@@ -100,16 +100,21 @@ const CALCULATORS: Calculator[] = [
 ];
 
 // Calculator category tabs
-const CALCULATOR_CATEGORIES = [
+const CALCULATOR_CATEGORIES: Array<{
+  id: string;
+  label: string;
+  icon: typeof Heart;
+  calculatorIds: string[];
+}> = [
   { id: 'cardiac', label: 'Cardiac', icon: Heart, calculatorIds: ['chads2vasc'] },
   { id: 'pulmonary', label: 'Pulmonary', icon: Wind, calculatorIds: ['curb65', 'wells_pe', 'perc'] },
   { id: 'vascular', label: 'Vascular', icon: Activity, calculatorIds: ['wells_dvt'] },
   { id: 'renal', label: 'Renal/Labs', icon: Droplet, calculatorIds: ['gfr', 'anion_gap'] },
   { id: 'pediatric', label: 'Pediatric', icon: Baby, calculatorIds: ['pediatric_dosing'] },
-] as const;
+];
 
 export const CalculatorHub: React.FC<CalculatorHubProps> = ({ onClose }) => {
-  const [activeCategory, setActiveCategory] = useState<(typeof CALCULATOR_CATEGORIES)[number]['id']>('cardiac');
+  const [activeCategory, setActiveCategory] = useState<string>('cardiac');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCalculator, setSelectedCalculator] = useState<string | null>(null);
 

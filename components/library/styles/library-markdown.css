@@ -1,0 +1,223 @@
+/**
+ * Markdown Styling for Clinical Reference Library
+ * 
+ * Custom styles for rendering medical content with markdown formatting.
+ * Handles bolding, bullet points, numbered lists, and inline code.
+ */
+
+/* Base markdown container */
+.condition-markdown {
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* Headings */
+.condition-markdown h1,
+.condition-markdown h2,
+.condition-markdown h3,
+.condition-markdown h4 {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.condition-markdown h1 { font-size: 1.5rem; }
+.condition-markdown h2 { font-size: 1.25rem; }
+.condition-markdown h3 { font-size: 1.125rem; }
+.condition-markdown h4 { font-size: 1rem; }
+
+/* Paragraphs */
+.condition-markdown p {
+  margin-bottom: 0.75rem;
+}
+
+.condition-markdown p:last-child {
+  margin-bottom: 0;
+}
+
+/* Bold text - important for medical emphasis */
+.condition-markdown strong,
+.condition-markdown b {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+/* Italic text */
+.condition-markdown em,
+.condition-markdown i {
+  font-style: italic;
+}
+
+/* Lists */
+.condition-markdown ul,
+.condition-markdown ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.condition-markdown ul {
+  list-style-type: disc;
+}
+
+.condition-markdown ol {
+  list-style-type: decimal;
+}
+
+.condition-markdown li {
+  margin-bottom: 0.25rem;
+  color: var(--color-text-secondary);
+}
+
+.condition-markdown li::marker {
+  color: var(--color-accent);
+}
+
+/* Nested lists */
+.condition-markdown ul ul,
+.condition-markdown ol ul {
+  list-style-type: circle;
+  margin: 0.25rem 0;
+}
+
+.condition-markdown ul ul ul {
+  list-style-type: square;
+}
+
+/* Inline code - for medical terms, drug names, lab values */
+.condition-markdown code {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8125rem;
+  color: var(--color-accent);
+}
+
+/* Code blocks */
+.condition-markdown pre {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+
+.condition-markdown pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--color-text-secondary);
+}
+
+/* Blockquotes - for clinical pearls or important notes */
+.condition-markdown blockquote {
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-accent)/10;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: italic;
+}
+
+.condition-markdown blockquote p {
+  margin-bottom: 0;
+}
+
+/* Links */
+.condition-markdown a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.condition-markdown a:hover {
+  opacity: 0.8;
+}
+
+/* Tables - for lab values, dosing charts */
+.condition-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.8125rem;
+}
+
+.condition-markdown thead {
+  background: var(--color-bg-secondary);
+}
+
+.condition-markdown th,
+.condition-markdown td {
+  border: 1px solid var(--color-border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.condition-markdown th {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.condition-markdown tr:nth-child(even) {
+  background: var(--color-bg-secondary)/30;
+}
+
+/* Horizontal rules */
+.condition-markdown hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 1rem 0;
+}
+
+/* Treatment steps highlighting */
+.condition-markdown .first-line {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.1), transparent);
+  border-left: 3px solid rgb(34, 197, 94);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.condition-markdown .gold-standard {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), transparent);
+  border-left: 3px solid rgb(245, 158, 11);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+/* Clinical Pearl styling */
+.clinical-pearl {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(139, 92, 246, 0.05));
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.clinical-pearl::before {
+  content: "💎 ";
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .condition-markdown {
+    font-size: 0.8125rem;
+  }
+  
+  .condition-markdown h1 { font-size: 1.25rem; }
+  .condition-markdown h2 { font-size: 1.125rem; }
+  .condition-markdown h3 { font-size: 1rem; }
+  
+  .condition-markdown ul,
+  .condition-markdown ol {
+    padding-left: 1.25rem;
+  }
+  
+  .condition-markdown table {
+    display: block;
+    overflow-x: auto;
+  }
+}

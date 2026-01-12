@@ -30,9 +30,7 @@ export const onRequestGet = async (context: CloudflareContext) => {
     const system = url.searchParams.get('system');
     const subcategory = url.searchParams.get('subcategory');
     const search = url.searchParams.get('search');
-    // Remove pagination limits - load all for selected system
-    // const limit = parseInt(url.searchParams.get('limit') || '100');
-    // const offset = parseInt(url.searchParams.get('offset') || '0');
+    const highYield = url.searchParams.get('highYield');
 
     // Build where clause
     const where: any = {};
@@ -44,6 +42,11 @@ export const onRequestGet = async (context: CloudflareContext) => {
 
     if (subcategory) {
       where.subcategory = subcategory;
+    }
+
+    // HIGH YIELD FILTER - pance_yield >= 3
+    if (highYield === 'true') {
+      where.pance_yield = { gte: 3 };
     }
 
     if (search && search.trim()) {
@@ -69,6 +72,9 @@ export const onRequestGet = async (context: CloudflareContext) => {
         clinical_pearls: true,
         classic_patient: true,
         pance_yield: true,
+        // Added for EnhancedConditionCard quick info tooltips
+        gold_standard_dx: true,
+        first_line_rx: true,
       },
       orderBy: [
         { pance_yield: 'desc' },  // High yield first

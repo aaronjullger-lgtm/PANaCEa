@@ -76,7 +76,7 @@ const getTimeUntilNextChallenge = () => {
 };
 
 const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
-  const { user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const { getToken } = useAuth();
   
   const [viewState, setViewState] = useState<ViewState>('loading');
@@ -95,10 +95,11 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
   // Next challenge countdown
   const [nextChallengeCountdown, setNextChallengeCountdown] = useState(getTimeUntilNextChallenge());
 
-  // Fetch today's challenge on mount
+  // Fetch today's challenge once auth is ready
   useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
     fetchTodaysChallenge();
-  }, []);
+  }, [isLoaded, isSignedIn]);
 
   const fetchTodaysChallenge = async () => {
     setViewState('loading');
@@ -106,6 +107,9 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
 
     try {
       const token = await getToken();
+      if (!token) {
+        throw new Error('Authentication required. Please sign in again.');
+      }
       const response = await fetch('/api/grand-rounds/today', {
         headers: {
           'Content-Type': 'application/json',
@@ -219,6 +223,10 @@ const GrandRoundsMode: React.FC<GrandRoundsModeProps> = ({ onExit }) => {
       const timeSpentMs = Date.now() - startTime;
 
       const token = await getToken();
+      if (!token) {
+        throw new Error('Authentication required. Please sign in again.');
+      }
+
       const response = await fetch('/api/grand-rounds/submit', {
         method: 'POST',
         headers: {

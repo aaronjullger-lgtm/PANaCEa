@@ -6,6 +6,17 @@ import { updateReviewOutcome } from '../../../lib/services/srsService';
 import { FSRS, Rating } from '../../../lib/fsrs';
 import { updateUserProgressWithHistory } from '../../../lib/services/userProgressService';
 import { CloudflareContext } from '../_shared/types';
+import { 
+  deriveImplicitRating, 
+  serializeImplicitMetrics,
+  type ImplicitBehaviorMetrics 
+} from '../../../lib/implicit-metrics';
+import { 
+  buildCircadianContext, 
+  applyCircadianModifier,
+  serializeCircadianContext 
+} from '../../../lib/circadian';
+import { propagateRecallToSiblings } from '../../../lib/services/semanticSiblingService';
 
 /**
  * Question data structure from PreGeneratedQuestion.questionData field
@@ -49,7 +60,17 @@ export const onRequestPost = async (context: CloudflareContext) => {
       return (validation as { success: false; response: Response }).response;
     }
 
-    const { questionId, selectedAnswer, timeSpentMs } = validation.data;
+    const { 
+      questionId, 
+      selectedAnswer, 
+      timeSpentMs,
+      // Implicit behavior metrics (Phase 2)
+      timeToFirstClick,
+      answerSwitches,
+      totalDwellTime,
+      timezone,
+      wakeTimeHHMM,
+    } = validation.data;
 
     if (!env.DATABASE_URL) {
       return new Response(JSON.stringify({ error: 'Database not configured' }), {
@@ -133,16 +154,30 @@ export const onRequestPost = async (context: CloudflareContext) => {
 
     const numericTime = typeof timeSpentMs === 'number' ? timeSpentMs : Number(timeSpentMs) || 0;
 
-    const quality = !isCorrect
-      ? 1 // Again
-      : numericTime < parTimeMs * 0.7
-        ? 5 // Easy / Fast
-        : numericTime < parTimeMs * 1.4
-          ? 4 // Good / Normal
-          : 2; // Hard / Slow
+    // Build circadian context for time-of-day optimization
+    const circadianContext = buildCircadianContext(
+      { typicalWakeTime: wakeTimeHHMM }, // UserCircadianPrefs
+      timezone || undefined // Override timezone (defaults to browser timezone)
+    );
 
-    // Map quality to FSRS rating
-    const rating: Rating = quality <= 1 ? Rating.Again : quality === 2 ? Rating.Hard : quality >= 5 ? Rating.Easy : Rating.Good;
+    // Build implicit behavior metrics (Phase 2: Zero-Friction)
+    const behaviorMetrics: ImplicitBehaviorMetrics = {
+      timeToFirstClick: timeToFirstClick ?? numericTime,
+      answerSwitches: answerSwitches ?? 0,
+      totalDwellTime: totalDwellTime ?? numericTime,
+      isCorrect,
+      parTimeMs,
+    };
+
+    // Derive rating from implicit behavior instead of buttons
+    const implicitResult = deriveImplicitRating(behaviorMetrics);
+    const rating = implicitResult.rating;
+    
+    // Legacy quality mapping for backward compatibility
+    const quality = rating === Rating.Again ? 1 
+      : rating === Rating.Hard ? 2 
+      : rating === Rating.Easy ? 5 
+      : 4;
 
     // Feed into FSRS with dynamic baseline
     const srsResult = updateReviewOutcome(userId, questionId, {
@@ -177,7 +212,18 @@ export const onRequestPost = async (context: CloudflareContext) => {
           last_review: typeof fsrsCardData.last_review === 'string' ? new Date(fsrsCardData.last_review) : new Date(),
         };
 
-        const { card: updatedCard } = fsrs.next(currentCard, new Date(), rating);
+        const { card: rawCard } = fsrs.next(currentCard, new Date(), rating);
+
+        // Apply circadian modifier to stability
+        const modifiedStability = applyCircadianModifier(
+          rawCard.stability,
+          circadianContext
+        );
+
+        const updatedCard = {
+          ...rawCard,
+          stability: modifiedStability,
+        };
 
         await updateUserProgressWithHistory(prisma, {
           userId,
@@ -186,6 +232,21 @@ export const onRequestPost = async (context: CloudflareContext) => {
           rating,
           accuracy: isCorrect ? 1.0 : 0.0,
         });
+
+        // Propagate recall to semantic siblings (Phase 2: KAR3L)
+        try {
+          const siblingBoosts = await propagateRecallToSiblings(
+            question.conditionId,
+            rating
+          );
+          // Store boost records for future application (logged for now)
+          if (siblingBoosts.length > 0) {
+            console.log(`KAR3L: Propagated ${rating === Rating.Again ? 'penalty' : 'boost'} to ${siblingBoosts.length} siblings of ${question.conditionId}`);
+          }
+        } catch (siblingError) {
+          // Don't fail if sibling propagation fails
+          console.warn('KAR3L propagation error:', siblingError);
+        }
       } catch (progressError) {
         console.warn('Failed to update UserProgress:', progressError);
         // Don't fail the entire request if progress update fails
@@ -199,6 +260,18 @@ export const onRequestPost = async (context: CloudflareContext) => {
         quality,
         parTimeMs,
         timeSpentMs: numericTime,
+        // Phase 2: Zero-Friction metrics
+        implicitMetrics: {
+          rating,
+          confidence: implicitResult.confidence,
+          latencyRatio: numericTime / parTimeMs,
+          answerSwitches: answerSwitches ?? 0,
+        },
+        circadian: {
+          phase: circadianContext.circadianPhase,
+          stabilityModifier: circadianContext.stabilityModifier,
+          localHour: circadianContext.localHour,
+        },
       }),
       {
         headers: {

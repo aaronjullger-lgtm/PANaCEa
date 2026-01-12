@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight, ChevronDown, ChevronUp, Shield } from 'lucide-react';
+import { X, MessageSquare, Send, User, Clock, Award, CheckCircle, XCircle, Globe, ArrowRight, ChevronDown, ChevronUp, Shield, Heart, ClipboardList, Stethoscope as StethoscopeIcon } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import type { PatientEncounterCase, PatientQuestion, EncounterSession, PatientPersona } from '@/types/drill-modes';
+import type { PlacedOrder, ExamFinding, OSCEScoreReport } from '@/types/osce-enhanced';
+
+// Import OSCE Enhancement Components
+import { OrderPanel, ExamPanel, RapportMeter, RapportIndicator, ScoreReport } from './osce';
+import { useEnhancedOSCE } from '@/hooks/useEnhancedOSCE';
 import { getRandomEncounterCase, calculateEncounterScore, saveChatMessage, getSessionHistory, clearSession } from '@/services/osceService';
 import { hapticSuccess, hapticError } from '@/lib/hapticFeedback';
 import { translateToSpanish, type SpanishMode } from '@/services/medicalSpanishService';
@@ -10,10 +15,11 @@ import { chatWithPatientSimulator, evaluateDiagnosis, performPhysicalExam, order
 import { generatePatientCase } from '@/services/patientEncounterGenerator';
 import { startOSCESession, saveOSCEChat, completeOSCESession } from '@/services/osceService';
 import { generateDebrief, type PreceptorFeedback } from '@/services/virtualPreceptorService';
-import { Activity, Stethoscope, Microscope, FileText, Pill, ChevronRight, PauseCircle, PlayCircle } from 'lucide-react';
+import { Activity, Stethoscope, Microscope, FileText, Pill, ChevronRight, PauseCircle, PlayCircle, FlaskConical, Scan, TestTube } from 'lucide-react';
 import { Sparkline } from '@/components/Sparkline';
 import { ChatSkeleton } from '@/components/loading/SkeletonLoader';
 import { useVitalsEngine } from '@/hooks/useVitalsEngine';
+import { formatPatientAge, formatPatientAgeShort, parsePatientAge } from '@/lib/utils/ageFormatter';
 
 // Clinical Fidelity settings interface
 interface ClinicalFidelitySettings {
@@ -82,6 +88,19 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
   // Clinical Fidelity Mode
   const [clinicalFidelity, setClinicalFidelity] = useState<ClinicalFidelitySettings>(() => loadClinicalFidelitySettings());
   const isFidelityModeActive = clinicalFidelity.rawLabValues || clinicalFidelity.emrInterface;
+
+  // Enhanced OSCE Panel States
+  const [showOrderPanel, setShowOrderPanel] = useState(false);
+  const [showExamPanel, setShowExamPanel] = useState(false);
+  const [showRapportMeter, setShowRapportMeter] = useState(true);
+  const [enhancedScoreReport, setEnhancedScoreReport] = useState<OSCEScoreReport | null>(null);
+
+  // Initialize Enhanced OSCE Hook
+  const enhancedOSCE = useEnhancedOSCE({
+    enablePersonality: true,
+    enableRapport: true,
+    enableScoring: true,
+  });
 
   const fallbackVitals = useMemo(() => ({
     hr: 82,
@@ -222,6 +241,9 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
     }
     
     setCurrentCase(newCase);
+
+    // Initialize Enhanced OSCE with case data (pass full case for type compatibility)
+    enhancedOSCE.initializeSession(newCase as any);
 
     // Start backend session
     let sessionId: string | undefined;
@@ -420,6 +442,14 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
       // Get Virtual Preceptor evaluation
       const feedback = await generateDebrief(sessionSummary, currentCase);
       setPreceptorFeedback(feedback);
+      
+      // Generate Enhanced OSCE Score Report
+      const osceReport = enhancedOSCE.generateScoreReport({
+        diagnosisSubmitted: userDiagnosis,
+        treatmentPlan: treatmentPlan,
+        differentials: differentialDiagnoses,
+      });
+      setEnhancedScoreReport(osceReport);
       
       // Generate legacy AAR for compatibility
       const report = await generateAfterActionReport({
@@ -783,6 +813,30 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Enhanced OSCE Panel Toggles */}
+              <div className="hidden md:flex items-center gap-1 bg-[var(--color-bg-tertiary)] rounded-lg p-1 border border-[var(--color-border)]">
+                <button
+                  onClick={() => setShowRapportMeter(!showRapportMeter)}
+                  className={`p-2 rounded-md transition-colors ${showRapportMeter ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="Toggle Rapport Meter"
+                >
+                  <Heart className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setShowExamPanel(!showExamPanel)}
+                  className={`p-2 rounded-md transition-colors ${showExamPanel ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="Toggle Physical Exam Panel"
+                >
+                  <StethoscopeIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setShowOrderPanel(!showOrderPanel)}
+                  className={`p-2 rounded-md transition-colors ${showOrderPanel ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="Toggle Order Panel"
+                >
+                  <ClipboardList className="w-4 h-4" />
+                </button>
+              </div>
               {/* Clinical Fidelity Badge */}
               {isFidelityModeActive && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 rounded-full border border-amber-300 dark:border-amber-700">
@@ -844,7 +898,7 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
                       </button>
                     </div>
                     <p className="text-[var(--color-text-secondary)] truncate text-sm">
-                      {currentCase.age}yo {currentCase.sex} • {currentCase.chiefComplaint.substring(0, 40)}{currentCase.chiefComplaint.length > 40 ? '...' : ''}
+                      {formatPatientAgeShort(currentCase.age)} {currentCase.sex} • {currentCase.chiefComplaint.substring(0, 40)}{currentCase.chiefComplaint.length > 40 ? '...' : ''}
                     </p>
                   </div>
                 </div>
@@ -1197,6 +1251,21 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
 
             {/* Right Column: Output Stream */}
             <div className="space-y-4">
+              {/* Rapport Meter (when enabled) */}
+              {showRapportMeter && enhancedOSCE.state.isSessionActive && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <RapportMeter
+                    meter={enhancedOSCE.state.rapportMeter}
+                    emotionalState={enhancedOSCE.state.emotionalState}
+                    personality={enhancedOSCE.state.personality}
+                    compact
+                  />
+                </motion.div>
+              )}
+
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -1308,6 +1377,80 @@ const PatientEncounterMode: React.FC<PatientEncounterModeProps> = ({ onExit }) =
             </div>
           </div>
         </div>
+
+        {/* Enhanced OSCE Panel Overlays */}
+        <AnimatePresence>
+          {showOrderPanel && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+              onClick={() => setShowOrderPanel(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="max-w-2xl w-full max-h-[90vh] overflow-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <OrderPanel
+                  isOpen={showOrderPanel}
+                  onOrderPlace={(orders: PlacedOrder[]) => {
+                    // Handle the newly placed orders
+                    const existingIds = new Set(enhancedOSCE.state.orders.map(o => o.id));
+                    const newOrders = orders.filter(o => !existingIds.has(o.id));
+                    newOrders.forEach(order => {
+                      enhancedOSCE.placeOrder(order);
+                      setDiagnosticResults(prev => [...prev, {
+                        testName: order.itemName,
+                        result: 'Pending...',
+                        interpretation: ''
+                      }]);
+                    });
+                  }}
+                  placedOrders={enhancedOSCE.state.orders}
+                  onClose={() => setShowOrderPanel(false)}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showExamPanel && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+              onClick={() => setShowExamPanel(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="max-w-3xl w-full max-h-[90vh] overflow-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExamPanel
+                  onExamPerformed={(finding) => {
+                    enhancedOSCE.recordExamFinding(finding);
+                    setPhysicalFindings(prev => [...prev, {
+                      maneuver: finding.maneuverName,
+                      finding: finding.finding
+                    }]);
+                  }}
+                  completedExams={enhancedOSCE.state.examFindings}
+                  suggestedRegions={enhancedOSCE.getSuggestedExams(currentCase?.chiefComplaint || '')}
+                  caseData={currentCase ? { physicalExamData: currentCase.physicalExamData, correctDiagnosis: currentCase.correctDiagnosis } : undefined}
+                  onClose={() => setShowExamPanel(false)}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }

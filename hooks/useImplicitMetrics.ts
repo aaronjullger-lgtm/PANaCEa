@@ -1,0 +1,240 @@
+/**
+ * useImplicitMetrics - Hook for tracking behavioral metrics during drills
+ * 
+ * Tracks:
+ * - Time to first answer selection
+ * - Number of answer switches (changing selected answer)
+ * - Total dwell time on question
+ * - Browser timezone for circadian context
+ * 
+ * Used to derive FSRS rating without explicit user buttons (Phase 2: Zero-Friction)
+ */
+
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { getBrowserTimezone } from '../lib/circadian';
+
+/**
+ * Metrics collected during a single question attempt
+ */
+export interface QuestionImplicitMetrics {
+  /** Time to first answer selection (ms) */
+  timeToFirstClick: number | null;
+  /** Number of times user changed their selected answer */
+  answerSwitches: number;
+  /** Total time spent on question (ms) */
+  totalDwellTime: number;
+  /** Browser timezone (IANA format) */
+  timezone: string;
+  /** When question was shown (ISO timestamp) */
+  questionStartTime: string;
+  /** When answer was submitted (ISO timestamp) */
+  submitTime: string | null;
+  /** Selected answer value */
+  selectedAnswer: string | number | null;
+  /** Previous selected answer (for switch tracking) */
+  previousAnswer: string | number | null;
+}
+
+/**
+ * Hook return type
+ */
+export interface UseImplicitMetricsReturn {
+  /** Current metrics state */
+  metrics: QuestionImplicitMetrics;
+  /** Call when question is shown */
+  startQuestion: () => void;
+  /** Call when user selects/changes answer */
+  recordAnswerSelection: (answer: string | number) => void;
+  /** Call when answer is submitted - returns final metrics */
+  submitAnswer: () => QuestionImplicitMetrics;
+  /** Reset for next question */
+  reset: () => void;
+  /** Get metrics formatted for API submission */
+  getApiPayload: () => {
+    timeToFirstClick: number | undefined;
+    answerSwitches: number;
+    totalDwellTime: number;
+    timezone: string;
+  };
+}
+
+/**
+ * Create initial metrics state
+ */
+function createInitialMetrics(): QuestionImplicitMetrics {
+  return {
+    timeToFirstClick: null,
+    answerSwitches: 0,
+    totalDwellTime: 0,
+    timezone: getBrowserTimezone(),
+    questionStartTime: new Date().toISOString(),
+    submitTime: null,
+    selectedAnswer: null,
+    previousAnswer: null,
+  };
+}
+
+/**
+ * Hook for tracking implicit behavioral metrics during drill questions
+ * 
+ * @example
+ * ```tsx
+ * const { metrics, startQuestion, recordAnswerSelection, submitAnswer, reset, getApiPayload } = useImplicitMetrics();
+ * 
+ * // When question loads
+ * useEffect(() => {
+ *   startQuestion();
+ *   return () => reset();
+ * }, [questionId]);
+ * 
+ * // When user selects answer
+ * const handleSelect = (answer: string) => {
+ *   recordAnswerSelection(answer);
+ *   setSelectedAnswer(answer);
+ * };
+ * 
+ * // When submitting
+ * const handleSubmit = async () => {
+ *   const finalMetrics = submitAnswer();
+ *   await api.submitReview({
+ *     questionId,
+ *     selectedAnswer,
+ *     timeSpentMs: finalMetrics.totalDwellTime,
+ *     ...getApiPayload(),
+ *   });
+ * };
+ * ```
+ */
+export function useImplicitMetrics(): UseImplicitMetricsReturn {
+  const [metrics, setMetrics] = useState<QuestionImplicitMetrics>(createInitialMetrics);
+  const startTimeRef = useRef<number>(Date.now());
+  const dwellIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  /**
+   * Start tracking for a new question
+   */
+  const startQuestion = useCallback(() => {
+    const now = Date.now();
+    startTimeRef.current = now;
+    
+    setMetrics({
+      ...createInitialMetrics(),
+      questionStartTime: new Date(now).toISOString(),
+    });
+
+    // Update dwell time every second
+    if (dwellIntervalRef.current) {
+      clearInterval(dwellIntervalRef.current);
+    }
+    dwellIntervalRef.current = setInterval(() => {
+      setMetrics(prev => ({
+        ...prev,
+        totalDwellTime: Date.now() - startTimeRef.current,
+      }));
+    }, 1000);
+  }, []);
+
+  /**
+   * Record when user selects or changes their answer
+   */
+  const recordAnswerSelection = useCallback((answer: string | number) => {
+    setMetrics(prev => {
+      const now = Date.now();
+      const isFirstSelection = prev.timeToFirstClick === null;
+      const isSwitch = prev.selectedAnswer !== null && prev.selectedAnswer !== answer;
+
+      return {
+        ...prev,
+        // Record time to first click only on first selection
+        timeToFirstClick: isFirstSelection 
+          ? now - startTimeRef.current 
+          : prev.timeToFirstClick,
+        // Increment switch count if changing from a previous answer
+        answerSwitches: isSwitch ? prev.answerSwitches + 1 : prev.answerSwitches,
+        // Track previous and current answer
+        previousAnswer: prev.selectedAnswer,
+        selectedAnswer: answer,
+        // Update dwell time
+        totalDwellTime: now - startTimeRef.current,
+      };
+    });
+  }, []);
+
+  /**
+   * Finalize and return metrics when answer is submitted
+   */
+  const submitAnswer = useCallback((): QuestionImplicitMetrics => {
+    const now = Date.now();
+    
+    // Stop dwell tracking
+    if (dwellIntervalRef.current) {
+      clearInterval(dwellIntervalRef.current);
+      dwellIntervalRef.current = null;
+    }
+
+    const finalMetrics: QuestionImplicitMetrics = {
+      ...metrics,
+      totalDwellTime: now - startTimeRef.current,
+      submitTime: new Date(now).toISOString(),
+    };
+
+    setMetrics(finalMetrics);
+    return finalMetrics;
+  }, [metrics]);
+
+  /**
+   * Reset for next question
+   */
+  const reset = useCallback(() => {
+    if (dwellIntervalRef.current) {
+      clearInterval(dwellIntervalRef.current);
+      dwellIntervalRef.current = null;
+    }
+    setMetrics(createInitialMetrics());
+    startTimeRef.current = Date.now();
+  }, []);
+
+  /**
+   * Get metrics formatted for API submission
+   */
+  const getApiPayload = useCallback(() => {
+    return {
+      timeToFirstClick: metrics.timeToFirstClick ?? undefined,
+      answerSwitches: metrics.answerSwitches,
+      totalDwellTime: metrics.totalDwellTime,
+      timezone: metrics.timezone,
+    };
+  }, [metrics]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (dwellIntervalRef.current) {
+        clearInterval(dwellIntervalRef.current);
+      }
+    };
+  }, []);
+
+  return {
+    metrics,
+    startQuestion,
+    recordAnswerSelection,
+    submitAnswer,
+    reset,
+    getApiPayload,
+  };
+}
+
+/**
+ * Helper to format metrics for display (debugging)
+ */
+export function formatMetricsForDisplay(metrics: QuestionImplicitMetrics): string {
+  return [
+    `First Click: ${metrics.timeToFirstClick ? `${(metrics.timeToFirstClick / 1000).toFixed(1)}s` : 'N/A'}`,
+    `Switches: ${metrics.answerSwitches}`,
+    `Dwell: ${(metrics.totalDwellTime / 1000).toFixed(1)}s`,
+    `TZ: ${metrics.timezone}`,
+  ].join(' | ');
+}
+
+export default useImplicitMetrics;
