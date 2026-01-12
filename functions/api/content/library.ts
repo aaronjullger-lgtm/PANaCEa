@@ -102,13 +102,12 @@ export const onRequestGet = async (context: CloudflareContext) => {
         // Detail panel - Essentials
         epidemiology: true,
         etiology: true,
-        risk_factors: true,
+        riskFactors: true,
         // Detail panel - Pathophysiology
         pathophysiology: true,
         // Detail panel - Clinical Presentation
         symptoms: true,
-        signs: true,
-        physical_exam: true,
+        physicalExam: true,
         classic_triad: true,
         clinical_pearls: true,
         // Detail panel - Workup & Treatment

@@ -77,8 +77,9 @@ const SYSTEM_ICONS: Record<string, typeof Heart> = {
 };
 
 const getSystemIcon = (system: string) => {
+  const normalized = system.trim().toLowerCase();
   for (const [key, Icon] of Object.entries(SYSTEM_ICONS)) {
-    if (system.toLowerCase().includes(key.toLowerCase())) {
+    if (normalized.includes(key.toLowerCase())) {
       return Icon;
     }
   }

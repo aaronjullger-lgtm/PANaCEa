@@ -295,7 +295,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   }, [activeSystem, systems]);
 
   return (
-    <div className="h-screen bg-[var(--color-bg-primary)] flex overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-bg-primary)] flex overflow-hidden">
       {/* Sidebar */}
       <LibrarySidebar
         systems={systems}
@@ -313,9 +313,9 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden max-w-7xl mx-auto w-full">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <LibraryBreadcrumb
               system={activeSystemLabel}

@@ -52,7 +52,6 @@ import { DatabaseAnalyticsDashboard } from './analytics/DatabaseAnalyticsDashboa
 import { LearningProfileDashboard } from './analytics/LearningProfileDashboard';
 import { AdvancedLearningProfileDashboard } from './analytics/AdvancedLearningProfileDashboard';
 import { UserFriendlyStatsDisplay } from './analytics/UserFriendlyStatsDisplay';
-import { MedicalContentBrowser } from './toolkit/MedicalContentBrowser';
 import {
   VISUAL_DIAGNOSTICS_MODES,
   CLINICAL_SIMULATION_MODES,
@@ -713,20 +712,6 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
               </div>
             </section>
             
-            {/* Clinical Knowledge Browser */}
-            <section>
-              <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-[var(--color-text-muted)]" />
-                Clinical Knowledge
-              </h3>
-              <div className="bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] overflow-hidden">
-                <MedicalContentBrowser onSelectCondition={(conditionId) => {
-                  // Navigate to condition detail or show in modal
-                  console.log('Selected condition:', conditionId);
-                }} />
-              </div>
-            </section>
-
             {/* Clinical Reference Library */}
             {onNavigateToReference && (
               <section>
