@@ -63,9 +63,15 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
   const contentRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Systems loading state
+  const [systemsLoading, setSystemsLoading] = useState(true);
+  const [systemsError, setSystemsError] = useState<string | null>(null);
+
   // Fetch systems
   const fetchSystems = useCallback(async () => {
     if (!isSignedIn) return;
+    setSystemsLoading(true);
+    setSystemsError(null);
     try {
       const token = await getToken();
       const res = await fetch('/api/content/systems', {
@@ -74,11 +80,22 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
           'Content-Type': 'application/json',
         },
       });
-      if (!res.ok) throw new Error(`Systems fetch failed: ${res.status}`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Systems fetch failed: ${res.status} - ${errorText}`);
+      }
       const data = await res.json();
-      setSystems(data);
+      if (Array.isArray(data)) {
+        setSystems(data);
+      } else {
+        console.error('[ClinicalReferenceLibrary] systems response is not an array:', data);
+        setSystems([]);
+      }
     } catch (err) {
-      console.warn('[ClinicalReferenceLibrary] systems fetch failed', err);
+      console.error('[ClinicalReferenceLibrary] systems fetch failed', err);
+      setSystemsError(err instanceof Error ? err.message : 'Failed to load systems');
+    } finally {
+      setSystemsLoading(false);
     }
   }, [getToken, isSignedIn]);
 

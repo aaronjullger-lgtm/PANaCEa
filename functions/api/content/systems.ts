@@ -5,12 +5,22 @@
  * Used to populate filter dropdowns in the library browser.
  */
 
-import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { authenticateRequest, handleCorsOptions } from '../_shared/auth';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 interface Env {
   DATABASE_URL: string;
 }
+
+// Handle CORS preflight
+export const onRequestOptions = handleCorsOptions;
+
+const CORS_HEADERS = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 
 export async function onRequestGet(context: { request: Request; env: Env }) {
   const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
@@ -18,10 +28,10 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
   try {
     // Authenticate user
     const auth = await authenticateRequest(context.request, context.env);
-    if (!auth.userId) {
+    if (!auth) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: CORS_HEADERS,
       });
     }
 
@@ -47,7 +57,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
     return new Response(JSON.stringify(systems), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: CORS_HEADERS,
     });
   } catch (error) {
     console.error('[systems] Failed to fetch systems:', error);
@@ -58,10 +68,10 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        headers: CORS_HEADERS,
       }
     );
   } finally {
-    await prisma.$disconnect();
+    await safePrismaDisconnect(prisma);
   }
 }
