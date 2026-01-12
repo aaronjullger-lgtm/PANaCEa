@@ -29,6 +29,8 @@ interface SubcategoryData {
 
 interface LibrarySidebarProps {
   systems: SystemData[];
+  systemsLoading?: boolean;
+  systemsError?: string | null;
   subcategories: Map<string, SubcategoryData[]>;
   activeSystem: string;
   activeSubcategory: string | null;
@@ -37,6 +39,7 @@ interface LibrarySidebarProps {
   onSubcategorySelect: (system: string, subcategory: string | null) => void;
   onHighYieldToggle: (enabled: boolean) => void;
   onSearch: (query: string) => void;
+  onRetrySystems?: () => void;
   isMobileOpen?: boolean;
   onMobileClose?: () => void;
 }
@@ -200,6 +203,8 @@ const SystemTreeItem: React.FC<{
  */
 export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   systems,
+  systemsLoading,
+  systemsError,
   subcategories,
   activeSystem,
   activeSubcategory,
@@ -208,6 +213,7 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   onSubcategorySelect,
   onHighYieldToggle,
   onSearch,
+  onRetrySystems,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -219,6 +225,45 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
   const totalConditions = useMemo(() => 
     systems.reduce((sum, s) => sum + s.count, 0),
   [systems]);
+
+  const renderSystemsState = () => {
+    if (systemsLoading) {
+      return (
+        <div className="space-y-2 mb-2" aria-label="Loading systems">
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <div key={idx} className="h-10 rounded-lg bg-[var(--color-bg-secondary)] animate-pulse" />
+          ))}
+        </div>
+      );
+    }
+
+    if (systemsError) {
+      return (
+        <div className="mb-2 p-3 rounded-lg border border-rose-400/40 bg-rose-500/10 text-rose-200 text-sm">
+          <div className="font-semibold mb-1">Unable to load systems</div>
+          <div className="text-rose-100/80 mb-2">{systemsError}</div>
+          {onRetrySystems && (
+            <button
+              onClick={onRetrySystems}
+              className="px-3 py-1.5 rounded-md bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600"
+            >
+              Retry
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (!systemsLoading && systems.length === 0) {
+      return (
+        <div className="mb-2 p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 text-[var(--color-text-secondary)] text-sm">
+          No systems available.
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="w-64 flex-shrink-0 bg-[var(--color-bg-primary)] border-r border-[var(--color-border)] flex flex-col h-full">
@@ -308,6 +353,7 @@ export const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
         <div className="h-px bg-[var(--color-border)] my-2" />
 
         {/* Individual Systems */}
+        {renderSystemsState()}
         {systems.filter(s => s.id !== 'all').map(system => (
           <SystemTreeItem
             key={system.id}

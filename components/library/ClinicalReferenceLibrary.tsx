@@ -69,7 +69,11 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
   // Fetch systems
   const fetchSystems = useCallback(async () => {
-    if (!isSignedIn) return;
+    if (!isSignedIn) {
+      setSystems([]);
+      setSystemsLoading(false);
+      return;
+    }
     setSystemsLoading(true);
     setSystemsError(null);
     try {
@@ -295,6 +299,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
       {/* Sidebar */}
       <LibrarySidebar
         systems={systems}
+        systemsLoading={systemsLoading}
+        systemsError={systemsError}
         subcategories={subcategoriesMap}
         activeSystem={activeSystem}
         activeSubcategory={activeSubcategory}
@@ -303,6 +309,7 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
         onSubcategorySelect={handleSubcategorySelect}
         onHighYieldToggle={setHighYieldOnly}
         onSearch={setSearchQuery}
+        onRetrySystems={fetchSystems}
       />
 
       {/* Main Content Area */}
@@ -343,15 +350,27 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
 
         {/* Content Grid */}
         <div ref={contentRef} className="flex-1 overflow-y-auto p-6">
-          {error && (
+          {systemsError && systems.length === 0 ? (
+            <ErrorState
+              title="Failed to load systems"
+              message={systemsError}
+              onRetry={fetchSystems}
+            />
+          ) : systemsLoading && systems.length === 0 ? (
+            <LoadingOverlay message="Loading systems..." />
+          ) : systems.length === 0 ? (
+            <ErrorState
+              title="No systems available"
+              message="We couldn't find any medical systems in the database. Please try again or contact support."
+              onRetry={fetchSystems}
+            />
+          ) : error ? (
             <ErrorState
               title="Failed to load content"
               message={error}
               onRetry={fetchContent}
             />
-          )}
-
-          {loading ? (
+          ) : loading ? (
             <LoadingOverlay message="Loading clinical content..." />
           ) : activeSystem === 'all' && !searchQuery ? (
             // System Selection Prompt - Don't load all 2000+ conditions

@@ -11,6 +11,13 @@ import { CloudflareContext } from '../_shared/types';
 
 export const onRequestOptions = handleCorsOptions;
 
+const CORS_HEADERS = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
 export const onRequestGet = async (context: CloudflareContext) => {
 
   // Authenticate user
@@ -19,7 +26,7 @@ export const onRequestGet = async (context: CloudflareContext) => {
   if (!authResult) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      headers: CORS_HEADERS,
     });
   }
 
@@ -46,10 +53,7 @@ export const onRequestGet = async (context: CloudflareContext) => {
         }),
         {
           status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
+          headers: CORS_HEADERS,
         }
       );
     }
@@ -131,8 +135,7 @@ export const onRequestGet = async (context: CloudflareContext) => {
       {
         status: 200,
         headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          ...CORS_HEADERS,
           'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
         },
       }
@@ -156,7 +159,7 @@ export const onRequestGet = async (context: CloudflareContext) => {
       }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        headers: CORS_HEADERS,
       }
     );
   } finally {
