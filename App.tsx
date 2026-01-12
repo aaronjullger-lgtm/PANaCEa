@@ -673,6 +673,7 @@ const App: React.FC = () => {
                   onNavigateToGapAnalysis={() => setView("gap_analysis")}
                   onNavigateToIntegrations={() => setView("integrations")}
                   onNavigateToSimulation={handleNavigateToSimulation}
+                  onNavigateToReference={() => setView("reference_library")}
                   growthAreas={growthAreas}
                   examLabel={examLabel}
                 />
