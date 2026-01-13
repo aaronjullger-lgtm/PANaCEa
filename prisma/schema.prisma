@@ -330,6 +330,7 @@ model Condition {
   relatedSystems            String[]                    @default([])
   status                    String                      @default("published")
   subcategory               String?
+  parent_category           String?
   AnatomyConditionLink      AnatomyConditionLink[]
   Condition                 Condition?                  @relation("ConditionToCondition", fields: [parentId], references: [id], onDelete: Cascade)
   other_Condition           Condition[]                 @relation("ConditionToCondition")
@@ -369,6 +370,9 @@ model Condition {
   @@index([status])
   @@index([subcategory])
   @@index([system])
+  @@index([parent_category])
+  @@index([system, parent_category])
+  @@index([system, subcategory, parent_category])
 }
 
 model ConfusionPair {
@@ -1162,6 +1166,7 @@ model MedicalContent {
   approvedBy            String?
   content               Json?
   relatedSystems        String[]          @default([])
+  parent_category       String?
   buzzwords             String[]          @default([])
   complications         String?
   diagnostics           String?
@@ -1191,8 +1196,6 @@ model MedicalContent {
   pance_yield           Int?
   patient_education     String?
   prevention            String?
-  rx_mechanism          String?
-  rx_side_effects       String?
   synonyms              Json?
   // Inverse relations from junction tables with medicalContentId
   ContentAuditLog              ContentAuditLog[]
@@ -1229,6 +1232,9 @@ model MedicalContent {
   @@index([system])
   @@index([updatedAt])
   @@index([system, pance_yield])
+  @@index([parent_category])
+  @@index([system, parent_category])
+  @@index([system, subcategory, parent_category])
 }
 
 model UserProgress {

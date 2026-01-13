@@ -466,8 +466,8 @@ export const ClinicalReferenceLibrary: React.FC<ClinicalReferenceLibraryProps> =
                       )}
                     </div>
 
-                    {/* Cards Grid - Equal height with items-stretch */}
-                    <div className="grid gap-4 items-stretch" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+                    {/* Cards Grid - Vertical stacking for better information density */}
+                    <div className="flex flex-col gap-4">
                       {displayItems.map((item) => {
                         const globalIndex = filteredContent.indexOf(item);
                         return (
@@ -945,23 +945,36 @@ const ConditionMasterEmbedded: React.FC<{ content: Partial<MedicalContentDisplay
         </div>
       )}
 
-      {/* Expandable Sections */}
+      {/* Expandable Sections - Properly organized */}
       <div className="space-y-3 pt-2">
-        {/* Clinical Presentation */}
+        {/* Section 1: Clinical Presentation */}
         <Section id="clinical" title="Clinical Presentation" icon={Stethoscope} accentColor="text-blue-400">
           <TextField label="Symptoms" value={normalized.symptoms} />
           <TextField label="Physical Exam Findings" value={getValue(normalized, ['physicalExam', 'physical_exam', 'signs'])} />
         </Section>
 
-        {/* Workup Details */}
+        {/* Section 2: Workup - Diagnostics only */}
         <Section id="workup" title="Workup & Diagnostics" icon={FlaskConical} accentColor="text-amber-400">
           <TextField label="Diagnostics" value={getValue(normalized, ['diagnostics'])} />
-          <MarkdownField label="Treatment Approach" value={normalized.treatment} />
-          <TextField label="Complications" value={normalized.complications} />
-          <TextField label="Prognosis" value={normalized.prognosis} />
         </Section>
 
-        {/* Background */}
+        {/* Section 3: Treatment - Separate from workup */}
+        <Section id="treatment" title="Treatment" icon={Pill} accentColor="text-emerald-400">
+          <MarkdownField label="Treatment Approach" value={normalized.treatment} />
+          <TextField label="Mechanism of Action" value={getValue(normalized, ['rx_mechanism'])} />
+          <TextField label="Side Effects" value={getValue(normalized, ['rx_side_effects'])} />
+          <TextField label="Patient Education" value={getValue(normalized, ['patient_education'])} />
+        </Section>
+
+        {/* Section 4: Outcomes - Complications, Prognosis, Disposition */}
+        <Section id="outcomes" title="Outcomes & Prognosis" icon={AlertTriangle} accentColor="text-rose-400">
+          <TextField label="Complications" value={normalized.complications} />
+          <TextField label="Prognosis" value={normalized.prognosis} />
+          <TextField label="Disposition" value={getValue(normalized, ['disposition'])} />
+          <TextField label="Prevention" value={getValue(normalized, ['prevention'])} />
+        </Section>
+
+        {/* Section 5: Background & Etiology */}
         <Section id="background" title="Background & Etiology" icon={Info} accentColor="text-purple-400">
           <TextField label="Epidemiology" value={normalized.epidemiology} />
           <TextField label="Etiology" value={normalized.etiology} />

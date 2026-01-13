@@ -4,6 +4,7 @@ import { X, Stethoscope, Search, Layers, AlertCircle, Shuffle, Lightbulb } from 
 import { useConditionDrill, type ConditionCategory } from '@/hooks/game/use-condition-drill';
 import MiniDrillLayout, { QuestionCard, AnswerOption, FeedbackPanel, CategoryCard } from './MiniDrillLayout';
 import { QuestionSkeleton } from '../loading/SkeletonLoader';
+import MetacognitionPromptModal from './MetacognitionPromptModal';
 
 interface ConditionDrillSessionProps {
   onExit?: () => void;
@@ -74,13 +75,22 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     socraticHint,
     isLoadingHint,
     attemptNumber,
+    metacognitionPrompt,
+    recordAnswerSelection,
     submitAnswer,
     retryAfterHint,
     nextQuestion,
+    dismissMetacognition,
     reset,
     startSession,
     exitToMenu,
   } = useConditionDrill();
+
+  // Handler that records selection for implicit metrics then submits
+  const handleAnswerSelect = (index: number) => {
+    recordAnswerSelection(index);
+    submitAnswer(index);
+  };
 
   const handleExit = () => {
     exitToMenu();
@@ -149,9 +159,14 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
   }
 
   // =========================================================================
-  // PLAYING / FEEDBACK / COACHING VIEW
+  // METACOGNITION MODAL (shown as overlay on top of feedback)
   // =========================================================================
-  if (status === 'playing' || status === 'feedback' || status === 'coaching') {
+  const showMetacognitionModal = status === 'metacognition' && metacognitionPrompt?.shouldShow && currentQuestion;
+
+  // =========================================================================
+  // PLAYING / FEEDBACK / COACHING / METACOGNITION VIEW
+  // =========================================================================
+  if (status === 'playing' || status === 'feedback' || status === 'coaching' || status === 'metacognition') {
     // Show smooth skeleton while fetching questions
     if (isLoading) {
       return (
@@ -202,26 +217,36 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
     }
 
     return (
-      <MiniDrillLayout
-        title="Condition Drill"
-        score={score}
-        totalAttempts={totalAttempts}
-        streak={streak}
-        isFeedback={status === 'feedback'}
-        isCorrect={isCorrect}
-        onExit={handleExit}
-        onReset={reset}
-        footer={
-          status === 'feedback' && currentQuestion ? (
-            <FeedbackPanel
-              isCorrect={isCorrect ?? false}
-              correctAnswer={currentQuestion.options[currentQuestion.correctAnswerIndex]}
-              explanation={currentQuestion.explanation}
-              onNext={nextQuestion}
-            />
-          ) : undefined
-        }
-      >
+      <>
+        {/* Metacognition Modal Overlay */}
+        {showMetacognitionModal && metacognitionPrompt && currentQuestion && (
+          <MetacognitionPromptModal
+            prompt={metacognitionPrompt}
+            conditionName={currentQuestion.conditionName}
+            onDismiss={dismissMetacognition}
+          />
+        )}
+        
+        <MiniDrillLayout
+          title="Condition Drill"
+          score={score}
+          totalAttempts={totalAttempts}
+          streak={streak}
+          isFeedback={status === 'feedback' || status === 'metacognition'}
+          isCorrect={isCorrect}
+          onExit={handleExit}
+          onReset={reset}
+          footer={
+            (status === 'feedback' || status === 'metacognition') && currentQuestion ? (
+              <FeedbackPanel
+                isCorrect={isCorrect ?? false}
+                correctAnswer={currentQuestion.options[currentQuestion.correctAnswerIndex]}
+                explanation={currentQuestion.explanation}
+                onNext={nextQuestion}
+              />
+            ) : undefined
+          }
+        >
         {currentQuestion && (
           <div className="max-w-3xl mx-auto">
             <QuestionCard
@@ -292,13 +317,14 @@ const ConditionDrillSession: React.FC<ConditionDrillSessionProps> = ({ onExit })
                       : null
                   }
                   isAnswered={status === 'feedback'}
-                  onSelect={isSubmitting ? () => {} : submitAnswer}
+                  onSelect={isSubmitting ? () => {} : handleAnswerSelect}
                 />
               ))}
             </div>
           </div>
         )}
-      </MiniDrillLayout>
+        </MiniDrillLayout>
+      </>
     );
   }
 

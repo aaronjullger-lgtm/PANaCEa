@@ -1,19 +1,18 @@
 /**
- * EnhancedConditionCard - Rich preview card for Clinical Reference Library
+ * EnhancedConditionCard - Unified preview card for Clinical Reference Library
  * 
- * Features:
- * - Smart content-type detection (buzzwords vs clinical pearls vs triad)
- * - Yield badge with color gradient
- * - Quick-hit Gold Standard Dx + First-line Rx badges
- * - Consistent card sizing with min/max width
- * - Left accent bar based on content type
- * - Enhanced hover micro-interactions
+ * REDESIGNED for homogeneous display:
+ * - All cards show the SAME structure regardless of data availability
+ * - Key Clinical Features section merges: classic_triad, buzzwords, clinical_pearls
+ * - Always shows Dx/Rx badges when data exists
+ * - Consistent card sizing and layout
  */
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { FlaskConical, Pill, Lightbulb, AlertTriangle, Stethoscope, BookOpen, FileText } from 'lucide-react';
+import { FlaskConical, Pill, Lightbulb, Target } from 'lucide-react';
 import { YieldBadge } from '@/components/ui/badges';
+import { MarkdownRenderer } from '@/components/ui/content-renderers/MarkdownRenderer';
 import { parseTextField, parseListField } from '@/lib/utils/normalization';
 import type { MedicalContentDisplay } from '@/types/medical-content';
 
@@ -24,151 +23,62 @@ interface EnhancedConditionCardProps {
   className?: string;
 }
 
-// Helper to check if content looks like buzzwords (short terms) vs clinical pearls (sentences)
-function areActualBuzzwords(items: string[]): boolean {
-  if (items.length === 0) return false;
-  // Buzzwords should be short (< 50 chars), no full stops, typically 1-5 words
-  const shortItems = items.filter(item => 
-    item.length < 50 && 
-    !item.includes('.') && 
-    item.split(' ').length <= 6
-  );
-  // At least 60% should be short to consider them buzzwords
-  return shortItems.length >= items.length * 0.6;
-}
-
-// Determine what content to show as primary feature
-interface DisplayFeature {
-  type: 'classic_triad' | 'buzzwords' | 'clinical_pearls' | 'classic_patient' | 'overview' | 'none';
-  content: string | string[];
-  icon: React.ElementType;
-  label: string;
-  accentColor: string;
-  bgGradient: string;
-}
-
-function determineDisplayFeature(condition: Partial<MedicalContentDisplay>): DisplayFeature {
-  // Check for classic triad (highest priority if exists)
-  const classicTriad = parseListField(condition.classic_triad);
-  if (classicTriad.length >= 2) {
-    return {
-      type: 'classic_triad',
-      content: classicTriad,
-      icon: AlertTriangle,
-      label: 'Classic Triad',
-      accentColor: 'rose',
-      bgGradient: 'from-rose-500/5 to-transparent',
-    };
-  }
-
-  // Check for distinctive buzzwords - but verify they're actually short terms
-  const buzzwords = parseListField(condition.buzzwords);
-  if (buzzwords.length >= 2 && areActualBuzzwords(buzzwords)) {
-    return {
-      type: 'buzzwords',
-      content: buzzwords.slice(0, 4),
-      icon: Lightbulb,
-      label: 'Key Buzzwords',
-      accentColor: 'cyan',
-      bgGradient: 'from-cyan-500/5 to-transparent',
-    };
-  }
-
-  // Check clinical pearls - show as pearls if buzzwords were long sentences
-  const clinicalPearls = parseListField(condition.clinical_pearls);
-  // Also treat long "buzzwords" as pearls
-  const pearlsToShow = clinicalPearls.length > 0 
-    ? clinicalPearls 
-    : (buzzwords.length > 0 && !areActualBuzzwords(buzzwords) ? buzzwords : []);
+/**
+ * Extracts key clinical features from multiple sources in priority order
+ * Returns a unified list of 3-4 items maximum for display
+ */
+function extractKeyFeatures(condition: Partial<MedicalContentDisplay>): string[] {
+  const features: string[] = [];
   
-  if (pearlsToShow.length > 0) {
-    return {
-      type: 'clinical_pearls',
-      content: pearlsToShow.slice(0, 4),
-      icon: Lightbulb,
-      label: 'Key Buzzwords',
-      accentColor: 'cyan',
-      bgGradient: 'from-cyan-500/5 to-transparent',
-    };
+  // Priority 1: Classic Triad (pathognomonic features)
+  const classicTriad = parseListField(condition.classic_triad);
+  if (classicTriad.length > 0) {
+    features.push(...classicTriad.slice(0, 4));
+    if (features.length >= 3) return features.slice(0, 4);
   }
-
-  // Classic patient description
-  const classicPatient = parseTextField(condition.classic_patient);
-  if (classicPatient && classicPatient.length > 20) {
-    return {
-      type: 'classic_patient',
-      content: classicPatient,
-      icon: BookOpen,
-      label: 'Classic Patient',
-      accentColor: 'violet',
-      bgGradient: 'from-violet-500/5 to-transparent',
-    };
+  
+  // Priority 2: Buzzwords (if short - true buzzwords)
+  const buzzwords = parseListField(condition.buzzwords);
+  const shortBuzzwords = buzzwords.filter(b => b.length < 60 && !b.includes('.'));
+  if (shortBuzzwords.length > 0) {
+    features.push(...shortBuzzwords.slice(0, 4 - features.length));
+    if (features.length >= 3) return features.slice(0, 4);
   }
-
-  // Fallback to overview snippet
-  const overview = parseTextField(condition.overview);
-  if (overview && overview.length > 20) {
-    return {
-      type: 'overview',
-      content: overview,
-      icon: Stethoscope,
-      label: 'Overview',
-      accentColor: 'slate',
-      bgGradient: 'from-slate-500/5 to-transparent',
-    };
+  
+  // Priority 3: Clinical Pearls (key sentences)
+  const clinicalPearls = parseListField(condition.clinical_pearls);
+  if (clinicalPearls.length > 0) {
+    // Truncate long pearls
+    const truncatedPearls = clinicalPearls.slice(0, 4 - features.length).map(p => 
+      p.length > 80 ? p.slice(0, 77) + '...' : p
+    );
+    features.push(...truncatedPearls);
+    if (features.length >= 3) return features.slice(0, 4);
   }
-
-  return { 
-    type: 'none', 
-    content: '', 
-    icon: FileText, 
-    label: '',
-    accentColor: 'slate',
-    bgGradient: 'from-slate-500/5 to-transparent',
-  };
-}
-
-// Get accent border color class
-function getAccentBorderClass(accentColor: string): string {
-  const colorMap: Record<string, string> = {
-    rose: 'border-l-rose-500',
-    cyan: 'border-l-cyan-500',
-    violet: 'border-l-violet-500',
-    amber: 'border-l-amber-500',
-    emerald: 'border-l-emerald-500',
-    slate: 'border-l-slate-500',
-  };
-  return colorMap[accentColor] || 'border-l-slate-500';
-}
-
-// Get accent text color class
-function getAccentTextClass(accentColor: string): string {
-  const colorMap: Record<string, string> = {
-    rose: 'text-rose-400',
-    cyan: 'text-cyan-400',
-    violet: 'text-violet-400',
-    amber: 'text-amber-400',
-    emerald: 'text-emerald-400',
-    slate: 'text-slate-400',
-  };
-  return colorMap[accentColor] || 'text-slate-400';
-}
-
-// Get pill style classes
-function getPillClasses(accentColor: string): string {
-  const colorMap: Record<string, string> = {
-    rose: 'bg-rose-500/15 border-rose-500/30 text-rose-300',
-    cyan: 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300',
-    violet: 'bg-violet-500/15 border-violet-500/30 text-violet-300',
-    amber: 'bg-amber-500/15 border-amber-500/30 text-amber-300',
-    emerald: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300',
-    slate: 'bg-slate-500/15 border-slate-500/30 text-slate-300',
-  };
-  return colorMap[accentColor] || 'bg-slate-500/15 border-slate-500/30 text-slate-300';
+  
+  // Priority 4: Long buzzwords (sentences that were stored as buzzwords)
+  const longBuzzwords = buzzwords.filter(b => b.length >= 60 || b.includes('.'));
+  if (longBuzzwords.length > 0 && features.length < 3) {
+    const truncated = longBuzzwords.slice(0, 4 - features.length).map(b =>
+      b.length > 80 ? b.slice(0, 77) + '...' : b
+    );
+    features.push(...truncated);
+  }
+  
+  // Priority 5: Extract from classic_patient if still need features
+  if (features.length < 2) {
+    const classicPatient = parseTextField(condition.classic_patient);
+    if (classicPatient && classicPatient.length > 20) {
+      // Take first 80 chars as a feature
+      features.push(classicPatient.length > 80 ? classicPatient.slice(0, 77) + '...' : classicPatient);
+    }
+  }
+  
+  return features.slice(0, 4);
 }
 
 /**
- * EnhancedConditionCard - Vertical stacking card with context-aware display
+ * EnhancedConditionCard - Uniform card with consistent sections
  */
 export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
   condition,
@@ -176,9 +86,9 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
   isSelected = false,
   className = '',
 }) => {
-  // Parse fields safely
-  const displayFeature = useMemo(() => determineDisplayFeature(condition), [condition]);
-
+  // Extract data
+  const keyFeatures = useMemo(() => extractKeyFeatures(condition), [condition]);
+  
   const goldStandard = useMemo(() => 
     parseTextField(condition.gold_standard_dx),
   [condition.gold_standard_dx]);
@@ -192,31 +102,28 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
   [condition]);
 
   const hasQuickInfo = goldStandard || firstLineRx || bestInitialTest;
-  const accentBorderClass = getAccentBorderClass(displayFeature.accentColor);
-  const accentTextClass = getAccentTextClass(displayFeature.accentColor);
-  const pillClasses = getPillClasses(displayFeature.accentColor);
+  const hasFeatures = keyFeatures.length > 0;
 
   return (
     <motion.button
       onClick={onClick}
-      whileHover={{ scale: 1.02, y: -3 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.015, y: -2 }}
+      whileTap={{ scale: 0.985 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={`
         w-full text-left rounded-xl overflow-hidden
-        bg-gradient-to-br ${displayFeature.bgGradient}
-        bg-[var(--color-glass-bg)] backdrop-blur-lg
-        border border-l-[3px] transition-all duration-300
-        ${accentBorderClass}
+        bg-[var(--color-bg-secondary)]/40 backdrop-blur-sm
+        border border-l-[3px] transition-all duration-200
+        border-l-[var(--color-accent)]
         ${isSelected
-          ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/30 shadow-xl shadow-[var(--color-accent)]/15'
-          : 'border-[var(--color-border)]/60 hover:border-[var(--color-border)] hover:shadow-xl hover:shadow-black/20'
+          ? 'border-[var(--color-accent)] ring-2 ring-[var(--color-accent)]/30 shadow-lg shadow-[var(--color-accent)]/10'
+          : 'border-[var(--color-border)]/50 hover:border-[var(--color-border)] hover:shadow-lg hover:shadow-black/10'
         }
         ${className}
       `}
     >
-      {/* Vertical Layout Container */}
-      <div className="flex flex-col h-full min-h-[180px]">
+      {/* Unified Vertical Layout */}
+      <div className="flex flex-col h-full min-h-[200px]">
         
         {/* HEADER: Condition Name + Yield Badge */}
         <div className="flex items-start justify-between gap-3 p-4 pb-2">
@@ -226,114 +133,54 @@ export const EnhancedConditionCard: React.FC<EnhancedConditionCardProps> = ({
           <YieldBadge yield={condition.pance_yield ?? null} size="sm" />
         </div>
 
-        {/* PRIMARY FEATURE - Context-aware display */}
+        {/* KEY CLINICAL FEATURES - Always same section header */}
         <div className="px-4 pb-3 flex-1">
-          {/* CLASSIC TRIAD - Numbered pills */}
-          {displayFeature.type === 'classic_triad' && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-rose-400">Classic Triad</span>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                {(displayFeature.content as string[]).map((item, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-medium leading-relaxed"
-                  >
-                    {idx + 1}. {item}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* BUZZWORDS - Short term pills */}
-          {displayFeature.type === 'buzzwords' && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5">
-                <Lightbulb className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-cyan-400">Key Buzzwords</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {(displayFeature.content as string[]).map((word, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-medium"
-                  >
-                    {word}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* CLINICAL PEARLS - Stacked sentence cards */}
-          {displayFeature.type === 'clinical_pearls' && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5">
-                <Lightbulb className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-cyan-400">Key Buzzwords</span>
-              </div>
-              <div className="space-y-1.5">
-                {(displayFeature.content as string[]).map((pearl, idx) => (
-                  <div
-                    key={idx}
-                    className="px-3 py-2 rounded-lg bg-cyan-500/8 border border-cyan-500/15 text-cyan-300 text-xs leading-relaxed"
-                  >
-                    {pearl}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* CLASSIC PATIENT / OVERVIEW - Text block */}
-          {(displayFeature.type === 'classic_patient' || displayFeature.type === 'overview') && (
+          <div className="flex items-center gap-1.5 mb-2">
+            <Lightbulb className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--color-accent)]">
+              Key Clinical Features
+            </span>
+          </div>
+          
+          {hasFeatures ? (
             <div className="space-y-1.5">
-              <div className={`flex items-center gap-1.5 ${accentTextClass}`}>
-                {displayFeature.type === 'classic_patient' ? (
-                  <BookOpen className="w-3.5 h-3.5" />
-                ) : (
-                  <Stethoscope className="w-3.5 h-3.5" />
-                )}
-                <span className="text-xs font-semibold uppercase tracking-wide">{displayFeature.label}</span>
-              </div>
-              <p className="text-sm text-[var(--color-text-secondary)] line-clamp-4 leading-relaxed">
-                {displayFeature.content as string}
-              </p>
+              {keyFeatures.map((feature, idx) => (
+                <div
+                  key={idx}
+                  className="px-3 py-2 rounded-lg bg-[var(--color-bg-secondary)]/60 border border-[var(--color-border)]/30 text-xs leading-relaxed"
+                >
+                  <MarkdownRenderer content={feature} className="text-xs [&_p]:mb-0 [&_p]:text-[var(--color-text-primary)]" />
+                </div>
+              ))}
             </div>
-          )}
-
-          {/* EMPTY STATE - Show condition name prominently when no features */}
-          {displayFeature.type === 'none' && (
-            <div className="flex items-center justify-center h-full min-h-[60px] text-center">
+          ) : (
+            <div className="px-3 py-4 rounded-lg bg-[var(--color-bg-secondary)]/40 border border-dashed border-[var(--color-border)]/30 text-center">
               <p className="text-xs text-[var(--color-text-muted)] italic">
-                Select to view details →
+                Click to view full details
               </p>
             </div>
           )}
         </div>
 
-        {/* QUICK INFO FOOTER: Diagnostic badges */}
+        {/* DIAGNOSTIC BADGES - Always shown if data exists */}
         {hasQuickInfo && (
-          <div className="flex flex-wrap gap-1.5 px-4 pb-4 pt-2 border-t border-[var(--color-border)]/20 mt-auto bg-gradient-to-t from-black/5 to-transparent">
+          <div className="flex flex-wrap gap-1.5 px-4 pb-4 pt-2 border-t border-[var(--color-border)]/20 mt-auto">
             {goldStandard && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[11px] font-medium">
-                <FlaskConical className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate max-w-[120px]">{goldStandard}</span>
+                <Target className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate max-w-[140px]">{goldStandard}</span>
               </span>
             )}
             {firstLineRx && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-medium">
                 <Pill className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate max-w-[120px]">{firstLineRx}</span>
+                <span className="truncate max-w-[140px]">{firstLineRx}</span>
               </span>
             )}
             {bestInitialTest && !goldStandard && (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] font-medium">
                 <FlaskConical className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate max-w-[120px]">{bestInitialTest}</span>
+                <span className="truncate max-w-[140px]">{bestInitialTest}</span>
               </span>
             )}
           </div>
