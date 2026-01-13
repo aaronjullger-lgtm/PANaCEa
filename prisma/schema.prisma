@@ -363,6 +363,7 @@ model Condition {
   PreGeneratedQuestion      PreGeneratedQuestion[]
   QuestionSeed              QuestionSeed[]
   SavedQuestion             SavedQuestion[]
+  Guideline                 Guideline[]
 
   @@index([displayName])
   @@index([name])
@@ -1197,6 +1198,7 @@ model MedicalContent {
   patient_education     String?
   prevention            String?
   synonyms              Json?
+  search_vector         Unsupported("tsvector")?
   // Inverse relations from junction tables with medicalContentId
   ContentAuditLog              ContentAuditLog[]
   ContentVersion               ContentVersion[]
@@ -1224,6 +1226,7 @@ model MedicalContent {
   SavedQuestions               SavedQuestion[]
   WeaknessPatterns             WeaknessPattern[]
   UserProgress                 UserProgress[]
+  ContentStatistics            ContentStatistics[]
 
   @@index([conditionId])
   @@index([createdBy])
@@ -1966,6 +1969,106 @@ model Treatment {
   @@index([type])
 }
 
+model Guideline {
+  id               String     @id
+  name             String
+  type             String     // 'screening', 'prevention', 'treatment'
+  organization     String?    // 'USPSTF', 'AHA', 'IDSA'
+  conditionId      String?
+  criteria         Json?      // age, risk factors, frequency
+  grade            String?    // A, B, C, D, I
+  frequency        String?
+  targetPopulation String?
+  evidenceLevel    String?
+  panceYield       Int?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  Condition        Condition? @relation(fields: [conditionId], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([organization])
+  @@index([panceYield])
+  @@index([conditionId])
+}
+
+model PlatformStatistics {
+  id                      String    @id
+  date                    DateTime  @unique @db.Date
+  dau                     Int       @default(0)
+  wau                     Int       @default(0)
+  mau                     Int       @default(0)
+  newUsers                Int       @default(0)
+  returningUsers          Int       @default(0)
+  retention7Day           Decimal?  @db.Decimal(5, 4)
+  retention30Day          Decimal?  @db.Decimal(5, 4)
+  questionsAnswered       Int       @default(0)
+  questionsCorrect        Int       @default(0)
+  questionsIncorrect      Int       @default(0)
+  averageAccuracy         Decimal?  @db.Decimal(5, 4)
+  sessionsStarted         Int       @default(0)
+  sessionsCompleted       Int       @default(0)
+  averageSessionDuration  Int?
+  totalStudyTime          Int       @default(0)
+  fsrsCardsReviewed       Int       @default(0)
+  fsrsCardsMature         Int       @default(0)
+  fsrsAverageRetention    Decimal?  @db.Decimal(5, 4)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@index([date])
+  @@index([dau])
+  @@index([createdAt])
+}
+
+model ContentStatistics {
+  id                String          @id
+  conditionId       String
+  date              DateTime        @db.Date
+  views             Int             @default(0)
+  questionsAnswered Int             @default(0)
+  questionsCorrect  Int             @default(0)
+  uniqueUsers       Int             @default(0)
+  averageAccuracy   Decimal?        @db.Decimal(5, 4)
+  averageTimeSpent  Int?
+  bookmarkCount     Int             @default(0)
+  flagCount         Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  MedicalContent    MedicalContent  @relation(fields: [conditionId], references: [conditionId], onDelete: Cascade)
+
+  @@unique([conditionId, date])
+  @@index([conditionId])
+  @@index([date])
+  @@index([views])
+  @@index([questionsAnswered])
+  @@index([uniqueUsers])
+}
+
+model UserStatisticsSnapshot {
+  id                   String   @id
+  userId               String
+  snapshotDate         DateTime @db.Date
+  totalQuestions       Int      @default(0)
+  correctAnswers       Int      @default(0)
+  accuracy             Decimal? @db.Decimal(5, 4)
+  currentStreak        Int      @default(0)
+  longestStreak        Int      @default(0)
+  totalStudyTime       Int      @default(0)
+  conditionsMastered   Int      @default(0)
+  fsrsCardsTotal       Int      @default(0)
+  fsrsCardsMature      Int      @default(0)
+  fsrsAverageRetention Decimal? @db.Decimal(5, 4)
+  weakestSystem        String?
+  strongestSystem      String?
+  createdAt            DateTime @default(now())
+  User                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, snapshotDate])
+  @@index([userId])
+  @@index([snapshotDate])
+  @@index([accuracy])
+}
+
 model TreatmentConditionLink {
   id               String          @id
   treatmentId      String
@@ -2031,6 +2134,9 @@ model User {
   StudySession            StudySession[]
   UserLearningProfile     UserLearningProfile?
   UserQuestionSeen        UserQuestionSeen[]
+  UserStatisticsSnapshot  UserStatisticsSnapshot[]
+  UserBehaviorMetrics     UserBehaviorMetrics[]
+  UserPreferences         UserPreferences?
 
   @@index([clerkId])
   @@index([email])
@@ -2648,4 +2754,147 @@ model UserQuestionSeen {
   @@index([userId, lastSeenAt])
   @@index([questionId])
   @@index([questionType])
+}
+
+// Sprint C - Step 8: Question Versioning
+model QuestionVersion {
+  id              String   @id @default(cuid())
+  questionId      String   // References PreGeneratedQuestion or Question
+  questionType    String   // 'pre_generated' | 'question' | 'staging'
+  version         Int      // Version number (1, 2, 3, ...)
+  
+  // Snapshot of question data at this version
+  questionData    Json     // Full question snapshot
+  
+  // Change tracking
+  changedFields   String[] // Array of field names that changed
+  changeReason    String?  // Why was this edit made?
+  changeSummary   String?  // Brief description of changes
+  
+  // Editor info
+  editedBy        String   // User ID who made the edit
+  editedByEmail   String?  // User email for audit trail
+  
+  // Validation scores
+  distractorScore Int?     // Score from distractor validation (0-100)
+  qualityScore    Int?     // Overall quality score (0-100)
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  
+  @@index([questionId, version])
+  @@index([questionId, questionType])
+  @@index([editedBy])
+  @@index([createdAt])
+  @@unique([questionId, questionType, version])
+}
+
+// User Data Improvement Plan - Sprint A
+
+// Step 1: Persist Implicit Behavioral Metrics
+model UserBehaviorMetrics {
+  id                  String   @id @default(cuid())
+  userId              String
+  questionId          String
+  questionType        String?  // 'pre_generated' | 'question' | 'staging'
+  
+  // Core timing metrics
+  timeToFirstClick    Int      // Time from display to first selection (ms)
+  dwellTime           Int      // Total time on question before submission (ms)
+  totalResponseTime   Int      // Total time including pauses (ms)
+  
+  // Interaction patterns
+  answerChanges       Int      @default(0)  // Number of times answer was changed
+  optionHovers        Int      @default(0)  // Number of option hover events
+  scrollDepth         Int?     // Max scroll depth percentage (0-100)
+  
+  // Behavioral signals
+  hesitationEvents    Int      @default(0)  // Pauses > 3 seconds
+  backtrackCount      Int      @default(0)  // Times returned to previous options
+  
+  // Context
+  timeOfDay           Int      // Hour of day (0-23)
+  deviceType          String?  // 'mobile' | 'tablet' | 'desktop'
+  wasCorrect          Boolean
+  confidenceLevel     Int?     // 1-5 if collected
+  
+  // FSRS derivation
+  derivedRating       Int?     // FSRS rating (1-4) derived from behavior
+  ratingConfidence    Float?   // Confidence in derived rating (0-1)
+  
+  // Advanced metrics (optional)
+  trajectoryData      Json?    // Mouse trajectory metrics
+  typingRhythm        Json?    // Keystroke timing patterns
+  
+  // Relations
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([questionId])
+  @@index([userId, timeOfDay])
+  @@index([wasCorrect])
+}
+
+// Step 2: User Preferences Storage
+model UserPreferences {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  
+  // Study preferences
+  dailyGoal           Int      @default(40)  // Questions per day
+  preferredSystems    String[] @default([])  // e.g., ['CV', 'PULM']
+  sessionLength       Int      @default(20)  // Questions per session
+  difficulty          String   @default("adaptive")  // 'easy' | 'medium' | 'hard' | 'adaptive'
+  
+  // Timing preferences
+  wakeTime            String?  // HH:MM format, e.g., "07:00"
+  studyReminders      Boolean  @default(true)
+  reminderTime        String?  // HH:MM format
+  reminderDays        Int[]    @default([1, 2, 3, 4, 5])  // 0=Sunday, 1=Monday, etc.
+  
+  // UI preferences
+  theme               String   @default("light")  // 'light' | 'dark' | 'auto'
+  soundEnabled        Boolean  @default(true)
+  hapticFeedback      Boolean  @default(true)
+  animationsEnabled   Boolean  @default(true)
+  fontSize            String   @default("medium")  // 'small' | 'medium' | 'large'
+  
+  // Learning preferences
+  showHints           Boolean  @default(true)
+  autoAdvance         Boolean  @default(false)  // Auto-advance after answering
+  explanationDepth    String   @default("standard")  // 'brief' | 'standard' | 'detailed'
+  showPearls          Boolean  @default(true)
+  showRelatedConcepts Boolean  @default(true)
+  
+  // Review preferences
+  fsrsEnabled         Boolean  @default(true)
+  reviewBeforeExam    Boolean  @default(true)
+  mixNewAndReview     Boolean  @default(true)
+  
+  // Advanced settings
+  keyboardShortcuts   Boolean  @default(true)
+  developerMode       Boolean  @default(false)
+  betaFeatures        Boolean  @default(false)
+  
+  // Notification preferences
+  emailDigest         Boolean  @default(true)
+  emailFrequency      String   @default("weekly")  // 'daily' | 'weekly' | 'never'
+  pushNotifications   Boolean  @default(false)
+  
+  // Privacy preferences
+  shareAnonymousData  Boolean  @default(true)
+  showOnLeaderboard   Boolean  @default(true)
+  
+  // Custom JSON for future extensibility
+  customSettings      Json?
+  
+  // Relations
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@index([userId])
 }

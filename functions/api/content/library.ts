@@ -75,13 +75,35 @@ export const onRequestGet = async (context: CloudflareContext) => {
       where.pance_yield = { gte: 3 };
     }
 
+    // Apply search filter
+    let searchResults: string[] | undefined;
     if (search && search.trim()) {
-      // Full-text search across condition, overview, symptoms
-      where.OR = [
-        { condition: { contains: search, mode: 'insensitive' } },
-        { overview: { contains: search, mode: 'insensitive' } },
-        { classic_patient: { contains: search, mode: 'insensitive' } },
-      ];
+      // Use PostgreSQL full-text search for better performance and relevance
+      try {
+        const ftsResults = await prisma.$queryRaw<Array<{ id: string }>>`
+          SELECT id
+          FROM "MedicalContent"
+          WHERE search_vector @@ websearch_to_tsquery('english', ${search})
+          ORDER BY ts_rank(search_vector, websearch_to_tsquery('english', ${search})) DESC
+        `;
+        searchResults = ftsResults.map(r => r.id);
+        
+        // If full-text search returns results, filter by those IDs
+        if (searchResults.length > 0) {
+          where.id = { in: searchResults };
+        } else {
+          // No results from full-text search, return empty result
+          where.id = { in: [] };
+        }
+      } catch (error) {
+        // Fallback to LIKE search if full-text search fails
+        console.error('Full-text search failed, falling back to LIKE:', error);
+        where.OR = [
+          { condition: { contains: search, mode: 'insensitive' } },
+          { overview: { contains: search, mode: 'insensitive' } },
+          { classic_patient: { contains: search, mode: 'insensitive' } },
+        ];
+      }
     }
 
     // Fetch content with ALL fields needed for detail view
@@ -119,12 +141,20 @@ export const onRequestGet = async (context: CloudflareContext) => {
         // Additional useful fields
         overview: true,
       },
-      orderBy: [
-        { pance_yield: 'desc' },  // High yield first
-        { subcategory: 'asc' },   // Then by subcategory
-        { condition: 'asc' },     // Then alphabetical
-      ],
+      orderBy: searchResults
+        ? undefined // Keep search ranking order if searching
+        : [
+            { pance_yield: 'desc' },  // High yield first
+            { subcategory: 'asc' },   // Then by subcategory
+            { condition: 'asc' },     // Then alphabetical
+          ],
     });
+
+    // If we have search results, reorder content by the search ranking
+    if (searchResults && searchResults.length > 0) {
+      const rankMap = new Map(searchResults.map((id, index) => [id, index]));
+      content.sort((a, b) => (rankMap.get(a.id) ?? 999) - (rankMap.get(b.id) ?? 999));
+    }
 
     return new Response(
       JSON.stringify({

@@ -5,6 +5,13 @@
  * Consolidates: questionService, enhancedQuestionService, 
  * intelligentQuestionService, adaptiveQuestionEngine
  * 
+ * ENHANCED: Now includes Sprint A & B utilities integration
+ * - Condition resolver with fuzzy matching
+ * - NCCPA blueprint weighting
+ * - Question deduplication
+ * - Adaptive difficulty
+ * - Session interleaving
+ * 
  * @module services/core/questionService
  */
 
@@ -46,6 +53,13 @@ export {
   selectOptimalQuestions,
   generateSessionPlan,
 } from '../adaptiveQuestionEngine';
+
+// Enhanced question pool (Sprint A & B integration)
+export {
+  getEnhancedQuestionBatch,
+  getEnhancedQuestion,
+  getEnhancedPoolStatus,
+} from './enhancedQuestionPool';
 
 // ============================================================================
 // Shared Types
@@ -147,7 +161,7 @@ export const SYSTEM_NAME_TO_CODE: Record<string, string> = {
  * Convert pool question format to app Question format
  * Previously duplicated in questionService.ts and intelligentQuestionService.ts
  */
-export function convertPoolQuestion(poolQ: {
+export async function convertPoolQuestion(poolQ: {
   id: string;
   vignette?: string;
   question: string;
@@ -174,7 +188,9 @@ export function convertPoolQuestion(poolQ: {
 
   // Derive condition name from tags or system
   const condition = poolQ.tags?.[0] || poolQ.system;
+  
   // Use conditionId if available, otherwise generate from condition name
+  // TODO: Integrate resolveConditionId here once we refactor to async pipeline
   const conditionId = poolQ.conditionId || condition?.toLowerCase().replace(/\s+/g, '-') || 'unknown';
 
   return {
@@ -299,6 +315,8 @@ export function getOptimalDifficulty(
  * 
  * This is the recommended unified entry point that automatically
  * chooses between pool, enhanced, or intelligent question fetching.
+ * 
+ * NEW: Now uses Sprint A & B enhancements when prisma + userId provided
  */
 export async function getOptimalQuestions(
   settings: SessionSettings,
@@ -308,6 +326,10 @@ export async function getOptimalQuestions(
     systemMastery?: any[];
     previousQuestionIds?: string[];
     useIntelligent?: boolean;
+    // NEW: Sprint A & B integration options
+    prisma?: any;
+    userId?: string;
+    useEnhanced?: boolean;
   } = {}
 ): Promise<Question[]> {
   const { 
@@ -316,7 +338,25 @@ export async function getOptimalQuestions(
     systemMastery = [], 
     previousQuestionIds = [],
     useIntelligent = false,
+    prisma,
+    userId,
+    useEnhanced = true,
   } = options;
+
+  // NEW: If prisma + userId provided, use enhanced pool with Sprint A & B utilities
+  if (useEnhanced && prisma && userId) {
+    try {
+      const { getEnhancedQuestionBatch } = await import('./enhancedQuestionPool');
+      const result = await getEnhancedQuestionBatch(prisma, userId, settings, count);
+      
+      if (result.questions.length >= count * 0.8) {
+        console.log('[Core QuestionService] Using enhanced pool with Sprint A & B:', result.metadata);
+        return result.questions;
+      }
+    } catch (error) {
+      console.warn('[Core QuestionService] Enhanced pool failed, falling back:', error);
+    }
+  }
 
   // If we have system mastery data and intelligent mode is enabled, use intelligent selection
   if (useIntelligent && systemMastery.length > 0) {
