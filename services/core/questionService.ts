@@ -57,7 +57,7 @@ export {
 // Enhanced question pool (Sprint A & B integration)
 export {
   getEnhancedQuestionBatch,
-  getEnhancedQuestion,
+  getEnhancedQuestion as getEnhancedQuestionV2,
   getEnhancedPoolStatus,
 } from './enhancedQuestionPool';
 
@@ -161,7 +161,7 @@ export const SYSTEM_NAME_TO_CODE: Record<string, string> = {
  * Convert pool question format to app Question format
  * Previously duplicated in questionService.ts and intelligentQuestionService.ts
  */
-export async function convertPoolQuestion(poolQ: {
+export function convertPoolQuestion(poolQ: {
   id: string;
   vignette?: string;
   question: string;
