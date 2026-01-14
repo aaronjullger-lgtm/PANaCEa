@@ -1,15 +1,17 @@
-import { prisma } from '../lib/prisma';
+import type { PrismaClient } from '@prisma/client';
 import { generateVariant } from '../lib/questionVariantGenerator';
 import { TASK_TYPES } from '../lib/taskTypes';
 
 export class VariantQueueService {
+    constructor(private prisma: PrismaClient) {}
+
     /**
      * Called when a user answers incorrectly.
      * Finds an unused variant or generates a new one, then schedules it.
      */
     async queueVariantForReview(userId: string, questionId: string, taskType: string) {
         // 1. Check if there are existing unused variants for this question/taskType
-        const existingVariants = await prisma.questionVariant.findMany({
+        const existingVariants = await this.prisma.questionVariant.findMany({
             where: {
                 baseQuestionId: questionId,
                 taskType: taskType,
@@ -26,7 +28,7 @@ export class VariantQueueService {
         }
 
         // 2. Fetch original question and condition info
-        const originalQuestion = await prisma.question.findUnique({
+        const originalQuestion = await this.prisma.question.findUnique({
             where: { id: questionId },
             include: { Condition: true } // Fetch condition for analytics
         });
@@ -39,7 +41,7 @@ export class VariantQueueService {
 
         if (conditionName) {
             // Check for known confusions
-            const confusion = await prisma.confusionPair.findFirst({
+            const confusion = await this.prisma.confusionPair.findFirst({
                 where: {
                     userId: userId,
                     realCondition: conditionName,
@@ -49,7 +51,7 @@ export class VariantQueueService {
             });
 
             // Check for persistent weakness
-            const weakness = await prisma.weaknessPattern.findFirst({
+            const weakness = await this.prisma.weaknessPattern.findFirst({
                 where: {
                     userId: userId,
                     conditionId: originalQuestion.conditionId || undefined
@@ -90,7 +92,7 @@ export class VariantQueueService {
         if (!newVariantData) return null;
 
         // 4. Save the new variant
-        const savedVariant = await prisma.questionVariant.create({
+        const savedVariant = await this.prisma.questionVariant.create({
             data: {
                 baseQuestionId: questionId,
                 variantType: newVariantData.variantType,
@@ -110,7 +112,7 @@ export class VariantQueueService {
      * Retrieves the specific variant content
      */
     async getVariant(variantId: string) {
-        return prisma.questionVariant.findUnique({
+        return this.prisma.questionVariant.findUnique({
             where: { id: variantId }
         });
     }

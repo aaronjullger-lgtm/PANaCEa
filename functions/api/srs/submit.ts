@@ -156,88 +156,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         // VARIANT LOGIC
         let queuedVariantId = null;
         if (!isCorrect && conditionId && taskType) {
-            // Trigger Queue Service
-            const queueService = new VariantQueueService();
-            // We can't use the service class directly with Edge Prisma Client easily if it imports standard Prisma Client.
-            // The service uses `import { PrismaClient } from '@prisma/client'`. This might break in Edge.
-            // To be safe, I should implement the logic inline here or extract a pure logic helper.
-
-            // INLINE LOGIC FOR EDGE COMPATIBILITY:
-
-            // 1. Check existing
-            const existingVariants = await prisma.questionVariant.findMany({
-                where: {
-                    baseQuestionId: questionId, // or conditionId linked? Use questionId for direct variants
-                    taskType: taskType,
-                    NOT: {
-                        usedByUsers: {
-                            has: dbUserId
-                        }
-                    }
-                }
-            });
-
-            if (existingVariants.length > 0) {
-                queuedVariantId = existingVariants[0].id;
-            } else {
-                // GENERATION IS SLOW. 
-                // We should probably trigger this asynchronously or return "generating" status.
-                // Cloudflare Pages Functions execution time limit?
-
-                // For MVP, attempting generation here.
-                // But `questionVariantGenerator` uses GoogleGenerativeAI which checks headers/fetch. Should work in workers.
-
-                // Need original question content
-                const originalQ = await prisma.question.findUnique({ where: { id: questionId } });
-                if (originalQ) {
-                    const { generateVariant } = await import('../../../lib/questionVariantGenerator'); // Dynamic import?
-
-                    let options: string[] = [];
-                    if (typeof originalQ.options === 'string') {
-                        options = JSON.parse(originalQ.options);
-                    } else if (Array.isArray(originalQ.options)) {
-                        options = originalQ.options as string[];
-                    }
-
-                    let targetType: any = 'remediation';
-
-                    // Phase 3: Decomposition Logic
-                    // If it's a complex task (Treatment/Management) and user failed, try to decompose.
-                    if (taskType === 'treatment' || taskType === 'management' || taskType === 'workup') {
-                        // We could refine this with a probability or streak check, but for now, prioritize decomposition for these types on failure
-                        // 50/50 chance between targeted remediation (why X is wrong) vs decomposition (checking diagnosis)
-                        if (Math.random() > 0.5) {
-                            targetType = 'decomposition';
-                        }
-                    }
-
-                    const newVariantData = await generateVariant({
-                        originalQuestion: originalQ.question,
-                        originalOptions: options,
-                        originalAnswer: originalQ.correctAnswer,
-                        originalExplanation: originalQ.explanation,
-                        targetType: targetType,
-                        userIncorrectAnswer: userAnswer
-                    });
-
-                    if (newVariantData) {
-                        const saved = await prisma.questionVariant.create({
-                            data: {
-                                baseQuestionId: questionId,
-                                variantType: newVariantData.variantType,
-                                question: newVariantData.question,
-                                options: newVariantData.options,
-                                correctAnswer: newVariantData.correctAnswer,
-                                explanation: newVariantData.explanation,
-                                taskType: taskType,
-                                difficulty: originalQ.difficulty,
-                                // Note: usedByUsers is empty initially
-                            }
-                        });
-                        queuedVariantId = saved.id;
-                    }
-                }
-            }
+            // Trigger Queue Service with edge-compatible prisma instance
+            const queueService = new VariantQueueService(prisma as any);
+            queuedVariantId = await queueService.queueVariantForReview(dbUserId, questionId, taskType);
         }
 
         // If we served a variant, mark it as used
