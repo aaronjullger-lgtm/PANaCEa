@@ -236,11 +236,13 @@ async function calculateSessionMetrics(prisma: PrismaClient, ranges: ReturnType<
   });
   
   const sessionsStarted = sessions.length;
-  const sessionsCompleted = sessions.filter(s => s.status === 'completed').length;
+  // Legacy fields status/durationMs removed; approximate completed sessions via endedAt presence
+  const sessionsCompleted = sessions.filter(s => !!s.endedAt).length;
   
   const durations = sessions
-    .filter(s => s.durationMs && s.durationMs > 0)
-    .map(s => s.durationMs!);
+    // Use totalTimeMs as the closest available duration metric
+    .filter(s => s.totalTimeMs && s.totalTimeMs > 0)
+    .map(s => s.totalTimeMs);
   
   const averageSessionDuration = durations.length > 0
     ? Math.floor(durations.reduce((sum, d) => sum + d, 0) / durations.length)

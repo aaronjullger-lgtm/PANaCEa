@@ -100,6 +100,13 @@ export const onRequestPost = async (context: CloudflareContext) => {
       wakeTimeHHMM,
     } = validation.data;
 
+    const normalizedSelectedAnswer =
+      typeof selectedAnswer === 'string'
+        ? selectedAnswer
+        : selectedAnswer != null
+          ? String(selectedAnswer)
+          : '';
+
     if (!env.DATABASE_URL) {
       return new Response(JSON.stringify({ error: 'Database not configured' }), {
         status: 500,
@@ -163,19 +170,19 @@ export const onRequestPost = async (context: CloudflareContext) => {
     }
 
     const isCorrect = correctAnswer !== null
-      ? selectedAnswer === correctAnswer
+      ? normalizedSelectedAnswer === correctAnswer
       : (qData.options || qData.choices || []).some((opt: unknown) => {
-          if (typeof opt === 'string') return opt === selectedAnswer;
+          if (typeof opt === 'string') return opt === normalizedSelectedAnswer;
           if (typeof opt === 'object' && opt !== null) {
             const optObj = opt as { value?: string; text?: string; label?: string };
             const val = optObj.value ?? optObj.text ?? optObj.label;
-            return val === selectedAnswer;
+            return val === normalizedSelectedAnswer;
           }
           return false;
         });
 
     const optionPool = (qData.options || qData.choices) as Array<{ value?: string; text?: string; label?: string; conditionId?: string; condition_id?: string; conditionRef?: string; medicalContentId?: string; condition?: string; conditionName?: string; id?: string }> | string[] | undefined;
-    const selectedMeta = findSelectedOption(optionPool, selectedAnswer);
+    const selectedMeta = findSelectedOption(optionPool, normalizedSelectedAnswer);
 
     const parTimeMs = calculateParTime({
       ...qData,

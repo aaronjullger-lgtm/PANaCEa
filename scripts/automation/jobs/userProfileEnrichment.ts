@@ -20,6 +20,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import { disconnectPrisma, prisma } from '../../helpers/prisma-client';
 
 /**
@@ -48,65 +49,6 @@ function determineChronotype(hourlyPerformance: { hour: number; accuracy: number
   if (nightCount === max) return 'night';
   
   return 'variable';
-}
-
-/**
- * Calculate learning velocity (improvement rate over time)
- * Returns questions improved per day (higher = faster learner)
- */
-function calculateLearningVelocity(accuracyOverTime: { date: Date; accuracy: number }[]): number {
-  if (accuracyOverTime.length < 2) return 0;
-  
-  // Simple linear regression
-  const n = accuracyOverTime.length;
-  const firstDate = accuracyOverTime[0].date.getTime();
-  
-  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-  
-  accuracyOverTime.forEach(point => {
-    const x = (point.date.getTime() - firstDate) / (1000 * 60 * 60 * 24); // Days
-    const y = point.accuracy;
-    sumX += x;
-    sumY += y;
-    sumXY += x * y;
-    sumXX += x * x;
-  });
-  
-  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-  
-  // Return improvement per day (0-1 scale)
-  return isNaN(slope) ? 0 : Math.max(0, slope);
-}
-
-/**
- * Calculate metacognition score (JOL accuracy)
- * How well does user judge their own learning?
- * 1.0 = perfect calibration, <1 = poor calibration
- */
-function calculateMetacognitionScore(
-  confidenceLevels: { confidence: number; wasCorrect: boolean }[]
-): number {
-  if (confidenceLevels.length === 0) return 0.5;
-  
-  // For each confidence level (1-5), calculate accuracy
-  const buckets = [1, 2, 3, 4, 5].map(level => {
-    const matches = confidenceLevels.filter(c => c.confidence === level);
-    if (matches.length === 0) return null;
-    
-    const accuracy = matches.filter(c => c.wasCorrect).length / matches.length;
-    const expectedAccuracy = level / 5; // Confidence 5 = expect 100%, etc.
-    const error = Math.abs(accuracy - expectedAccuracy);
-    
-    return { level, accuracy, expectedAccuracy, error };
-  }).filter(b => b !== null);
-  
-  if (buckets.length === 0) return 0.5;
-  
-  // Average error, inverted (lower error = higher metacognition)
-  const avgError = buckets.reduce((sum, b) => sum + b!.error, 0) / buckets.length;
-  const score = 1 - avgError;
-  
-  return Math.max(0, Math.min(1, score));
 }
 
 /**
@@ -153,7 +95,7 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
   
   if (!profile) {
     profile = await prisma.userLearningProfile.create({
-      data: { userId },
+      data: { id: randomUUID(), userId },
     });
   }
   
@@ -165,7 +107,7 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
   });
   
   const avgSessionDuration = sessions.length > 0
-    ? Math.round(sessions.reduce((sum, s) => sum + s.questionsAnswered, 0) / sessions.length)
+    ? Math.round(sessions.reduce((sum, s) => sum + (s.totalQuestions ?? 0), 0) / sessions.length)
     : null;
   
   // Aggregate from QuestionAttempt
@@ -177,7 +119,6 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
       createdAt: true,
       wasCorrect: true,
       timeSpentMs: true,
-      confidenceLevel: true,
     },
   });
   
@@ -208,36 +149,6 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
         curr.accuracy > best.accuracy ? curr : best
       ).hour
     : null;
-  
-  // Calculate daily accuracy trends for learning velocity
-  const dailyAccuracies: Map<string, { correct: number; total: number }> = new Map();
-  
-  attempts.forEach(attempt => {
-    const dateKey = new Date(attempt.createdAt).toISOString().split('T')[0];
-    const stats = dailyAccuracies.get(dateKey) || { correct: 0, total: 0 };
-    stats.total++;
-    if (attempt.wasCorrect) stats.correct++;
-    dailyAccuracies.set(dateKey, stats);
-  });
-  
-  const accuracyOverTime = Array.from(dailyAccuracies.entries())
-    .map(([dateStr, stats]) => ({
-      date: new Date(dateStr),
-      accuracy: stats.correct / stats.total,
-    }))
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
-  
-  const learningVelocity = calculateLearningVelocity(accuracyOverTime);
-  
-  // Calculate metacognition score from confidence levels
-  const confidenceData = attempts
-    .filter(a => a.confidenceLevel !== null)
-    .map(a => ({
-      confidence: a.confidenceLevel!,
-      wasCorrect: a.wasCorrect,
-    }));
-  
-  const metacognitionScore = calculateMetacognitionScore(confidenceData);
   
   // Aggregate from UserBehaviorMetrics (if exists)
   const behaviorMetrics = await prisma.userBehaviorMetrics.findMany({
@@ -331,11 +242,7 @@ async function enrichUserProfile(prisma: PrismaClient, userId: string): Promise<
       
       // Behavioral insights
       avgAnswerChanges,
-      
-      // Learning insights
-      learningVelocity,
-      metacognitionScore,
-      
+
       // New fields (not in current schema, will be added if needed)
       // chronotype: Not in schema yet
       // peakLearningHour: Not in schema yet

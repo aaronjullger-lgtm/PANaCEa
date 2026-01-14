@@ -60,6 +60,20 @@ const FALLBACK_DRUG_ENTRIES: DrugEntry[] = [
     ingredients: ['Prozac']
   },
   {
+    term: 'acetaminophen',
+    type: 'Medication',
+    class: 'Analgesic',
+    subclass: 'Non-opioid',
+    MOA: 'Central COX inhibition',
+    ADEs: [],
+    contraindications: [],
+    interactions: [],
+    pharmacokinetics: { metabolism: '', elimination: '' },
+    clinicalNotes: '',
+    antidote: 'N-acetylcysteine',
+    ingredients: ['Tylenol']
+  },
+  {
     term: 'aspirin',
     type: 'Medication',
     class: 'NSAID',
@@ -72,6 +86,20 @@ const FALLBACK_DRUG_ENTRIES: DrugEntry[] = [
     clinicalNotes: '',
     antidote: '',
     ingredients: []
+  },
+  {
+    term: 'metoprolol',
+    type: 'Medication',
+    class: 'Beta blocker',
+    subclass: 'Cardioselective',
+    MOA: 'Beta-1 adrenergic blockade',
+    ADEs: [],
+    contraindications: [],
+    interactions: [],
+    pharmacokinetics: { metabolism: '', elimination: '' },
+    clinicalNotes: '',
+    antidote: '',
+    ingredients: ['Toprol', 'Lopressor']
   },
   {
     term: 'neomycin',

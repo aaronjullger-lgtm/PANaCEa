@@ -9,7 +9,8 @@
  */
 
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { authenticateRequest, handleCorsOptions, isAdmin } from '../_shared/auth';
+import { authenticateRequest, handleCorsOptions } from '../_shared/auth';
+import { isAdmin, type UserRole } from '../_shared/rbac';
 import { z } from 'zod';
 
 interface Env {
@@ -45,15 +46,14 @@ export const onRequestOptions = handleCorsOptions;
 /**
  * GET - List questions for review
  */
-export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { request, env } = context;
+export const onRequestGet = async ({ request, env }: { request: Request; env: Env }) => {
   
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   
   try {
     // Authenticate and check admin access
-    const auth = await authenticateRequest(request, env.CLERK_SECRET_KEY);
-    if (!auth.authenticated || !auth.userId) {
+    const auth = await authenticateRequest(request as any, env as any);
+    if (!auth?.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 
@@ -65,11 +65,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { id: auth.userId },
+      where: { clerkId: auth.userId },
       select: { role: true }
     });
 
-    if (!user || (user.role !== 'admin' && user.role !== 'content_creator')) {
+    if (!user || (!isAdmin(user.role as UserRole) && user.role !== 'content_creator')) {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
         headers: { 
@@ -189,15 +189,14 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 /**
  * POST - Update question validation status
  */
-export const onRequestPost: PagesFunction<Env> = async (context) => {
-  const { request, env } = context;
+export const onRequestPost = async ({ request, env }: { request: Request; env: Env }) => {
   
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
   
   try {
     // Authenticate and check admin access
-    const auth = await authenticateRequest(request, env.CLERK_SECRET_KEY);
-    if (!auth.authenticated || !auth.userId) {
+    const auth = await authenticateRequest(request as any, env as any);
+    if (!auth?.userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { 
@@ -209,11 +208,11 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // Check if user is admin
     const user = await prisma.user.findUnique({
-      where: { id: auth.userId },
+      where: { clerkId: auth.userId },
       select: { role: true, name: true }
     });
 
-    if (!user || (user.role !== 'admin' && user.role !== 'content_creator')) {
+    if (!user || (!isAdmin(user.role as UserRole) && user.role !== 'content_creator')) {
       return new Response(JSON.stringify({ error: 'Admin access required' }), {
         status: 403,
         headers: { 

@@ -347,7 +347,10 @@ export function detectLearningStyle(data: LearningBehaviorData): LearningStylePr
   
   // Generate overall style and recommendations
   const overallStyle = generateOverallStyle(partialProfile);
-  const recommendations = generateRecommendations(partialProfile);
+  const recommendations = generateRecommendations({
+    ...(partialProfile as any),
+    overallStyle: (partialProfile as any).overallStyle || 'balanced',
+  });
   
   // Calculate data points
   const uniqueDays = new Set(data.attempts.map(a => a.createdAt.toISOString().split('T')[0])).size;

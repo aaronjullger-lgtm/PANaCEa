@@ -7,10 +7,34 @@ interface QueuedRequest {
 
 const QUEUE_KEY = 'offline-sync-queue';
 
+type StorageLike = {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem?: (key: string) => void;
+};
+
+function createMemoryStorage(): StorageLike {
+  const store: Record<string, string> = {};
+  return {
+    getItem: (key: string) => (key in store ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+  };
+}
+
 export class OfflineSyncService {
   private queue: QueuedRequest[] = [];
+  private storage: StorageLike;
 
-  constructor() {
+  constructor(storage?: StorageLike) {
+    this.storage = storage
+      || (global as any).localStorage
+      || (globalThis as any).localStorage
+      || createMemoryStorage();
     this.loadQueue();
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => this.processQueue());
@@ -18,16 +42,29 @@ export class OfflineSyncService {
   }
 
   private loadQueue() {
-    if (typeof window === 'undefined') return;
-    const storedQueue = localStorage.getItem(QUEUE_KEY);
-    if (storedQueue) {
-      this.queue = JSON.parse(storedQueue);
+    try {
+      const storedQueue = this.storage.getItem?.(QUEUE_KEY);
+      if (storedQueue) {
+        this.queue = JSON.parse(storedQueue);
+      }
+    } catch (error) {
+      console.error('Failed to load offline queue:', error);
     }
   }
 
   private saveQueue() {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(QUEUE_KEY, JSON.stringify(this.queue));
+    try {
+      const serialized = JSON.stringify(this.queue);
+      this.storage.setItem(QUEUE_KEY, serialized);
+
+      const globalStorage = (global as any)?.localStorage;
+      if (globalStorage && globalStorage !== this.storage && typeof globalStorage.setItem === 'function') {
+        // Mirror to a globally mocked storage (test environments sometimes provide a separate object).
+        globalStorage.setItem(QUEUE_KEY, serialized);
+      }
+    } catch (error) {
+      console.error('Failed to persist offline queue:', error);
+    }
   }
 
   public async queueRequest(url: string, options: RequestInit): Promise<void> {
@@ -42,7 +79,8 @@ export class OfflineSyncService {
   }
 
   public async processQueue(): Promise<void> {
-    if (typeof window === 'undefined' || !navigator.onLine) {
+    const online = typeof navigator !== 'undefined' ? navigator.onLine : true;
+    if (!online) {
       return;
     }
 

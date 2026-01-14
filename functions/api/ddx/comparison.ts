@@ -165,7 +165,7 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<strin
   return text;
 }
 
-function parseComparison(raw: string, medicalContent: Array<{ condition: string }>): ComparisonResult {
+function parseComparison(raw: string, medicalContent: Array<{ condition: string; system?: string }>): ComparisonResult {
   try {
     const parsed = JSON.parse(raw);
     const features = Array.isArray(parsed.features) ? parsed.features.map(String) : [];
@@ -182,7 +182,12 @@ function parseComparison(raw: string, medicalContent: Array<{ condition: string 
     console.warn('Failed to parse Gemini comparison response; falling back', error);
   }
 
-  return buildFallbackComparison(medicalContent);
+  return buildFallbackComparison(
+    medicalContent.map(item => ({
+      condition: item.condition,
+      system: item.system || 'Unknown',
+    }))
+  );
 }
 
 function buildFallbackComparison(medicalContent: Array<{ condition: string; system: string }>): ComparisonResult {

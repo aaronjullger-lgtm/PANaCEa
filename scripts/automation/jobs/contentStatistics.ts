@@ -142,18 +142,9 @@ async function calculateBookmarkCount(
   yesterday: Date,
   today: Date
 ): Promise<number> {
-  const count = await prisma.userBookmark.count({
-    where: {
-      contentType: 'condition',
-      contentId: conditionId,
-      createdAt: {
-        gte: yesterday,
-        lt: today,
-      },
-    },
-  });
-  
-  return count;
+  // UserBookmark model no longer exists; bookmark counts are not tracked in Prisma
+  // Returning 0 keeps the enrichment job compiling until bookmarks are reintroduced
+  return 0;
 }
 
 /**

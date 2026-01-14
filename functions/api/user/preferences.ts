@@ -15,7 +15,12 @@
 
 import type { EventContext } from '@cloudflare/workers-types';
 import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
+
+interface Env {
+  DATABASE_URL: string;
+  CLERK_SECRET_KEY: string;
+}
 
 interface UserPreferencesPayload {
   // Study preferences
@@ -75,8 +80,8 @@ export async function onRequestGet(context: EventContext<Env, any, Record<string
 
   try {
     // Authenticate request
-    const authResult = await authenticateRequest(context.request, context.env);
-    if (!authResult.success || !authResult.userId) {
+    const authResult = await authenticateRequest(context.request as any, context.env as any);
+    if (!authResult?.userId) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         {
@@ -129,9 +134,7 @@ export async function onRequestGet(context: EventContext<Env, any, Record<string
       }
     );
   } finally {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
+    await safePrismaDisconnect(prisma as any);
   }
 }
 
@@ -143,8 +146,8 @@ export async function onRequestPost(context: EventContext<Env, any, Record<strin
 
   try {
     // Authenticate request
-    const authResult = await authenticateRequest(context.request, context.env);
-    if (!authResult.success || !authResult.userId) {
+    const authResult = await authenticateRequest(context.request as any, context.env as any);
+    if (!authResult?.userId) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         {
@@ -210,9 +213,7 @@ export async function onRequestPost(context: EventContext<Env, any, Record<strin
       }
     );
   } finally {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
+    await safePrismaDisconnect(prisma as any);
   }
 }
 
@@ -224,8 +225,8 @@ export async function onRequestPatch(context: EventContext<Env, any, Record<stri
 
   try {
     // Authenticate request
-    const authResult = await authenticateRequest(context.request, context.env);
-    if (!authResult.success || !authResult.userId) {
+    const authResult = await authenticateRequest(context.request as any, context.env as any);
+    if (!authResult?.userId) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         {
@@ -314,9 +315,7 @@ export async function onRequestPatch(context: EventContext<Env, any, Record<stri
       }
     );
   } finally {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
+    await safePrismaDisconnect(prisma as any);
   }
 }
 
@@ -328,8 +327,8 @@ export async function onRequestDelete(context: EventContext<Env, any, Record<str
 
   try {
     // Authenticate request
-    const authResult = await authenticateRequest(context.request, context.env);
-    if (!authResult.success || !authResult.userId) {
+    const authResult = await authenticateRequest(context.request as any, context.env as any);
+    if (!authResult?.userId) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         {
@@ -372,8 +371,6 @@ export async function onRequestDelete(context: EventContext<Env, any, Record<str
       }
     );
   } finally {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
+    await safePrismaDisconnect(prisma as any);
   }
 }

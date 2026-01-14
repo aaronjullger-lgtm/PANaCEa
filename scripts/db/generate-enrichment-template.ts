@@ -88,9 +88,9 @@ async function generateTemplate(): Promise<void> {
     ...template.map(t => 
       `"${t.condition}","${t.system}","${t.subcategory}",` +
       `${t.currentOverview ? 'YES' : 'NO'},` +
-      `${!t.symptoms || t.symptoms.length === 0 ? 'YES' : 'NO'},` +
-      `${!t.treatment ? 'YES' : 'NO'},` +
-      `${!t.diagnostics || t.diagnostics.length === 0 ? 'YES' : 'NO'}`
+        `${!t.toGenerate.symptoms || t.toGenerate.symptoms.length === 0 ? 'YES' : 'NO'},` +
+        `${!t.toGenerate.treatment ? 'YES' : 'NO'},` +
+        `${!t.toGenerate.diagnostics || t.toGenerate.diagnostics.length === 0 ? 'YES' : 'NO'}`
     ),
   ];
   

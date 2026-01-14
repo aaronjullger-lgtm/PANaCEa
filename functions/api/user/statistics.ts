@@ -1,4 +1,3 @@
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { applyAttemptToUserStatistics, updateTimingAggregates } from '../../../lib/services/userStatisticsService';
@@ -10,7 +9,7 @@ interface Env {
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestPatch: PagesFunction<Env> = async (context) => {
+export const onRequestPatch = async (context: { request: Request; env: Env }) => {
   const { request, env } = context;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 

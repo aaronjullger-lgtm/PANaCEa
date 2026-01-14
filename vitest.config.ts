@@ -14,6 +14,13 @@ export default defineConfig({
         url: 'http://localhost/',
       },
     },
+    include: [
+      'tests/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      'src/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      'lib/**/*.{test,spec}.{js,ts,jsx,tsx}',
+      'functions/**/*.{test,spec}.{js,ts,jsx,tsx}',
+    ],
+    exclude: ['**/node_modules/**', 'e2e/**'],
     setupFiles: ['./vitest.setup.ts'],
     restoreMocks: true,
     clearMocks: true,

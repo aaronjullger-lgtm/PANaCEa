@@ -1,4 +1,3 @@
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { updateTimingAggregates } from '../../../lib/services/userStatisticsService';
@@ -10,7 +9,25 @@ interface Env {
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestPost: PagesFunction<Env> = async (context) => {
+type SessionCreatePayload = {
+  sessionType?: string;
+  systemsTargeted?: string[];
+  mode?: string;
+  focus?: string;
+  difficulty?: string;
+};
+
+type SessionUpdatePayload = {
+  sessionId?: string;
+  action?: string;
+  questionsAnswered?: number;
+  correctAnswers?: number;
+  totalTimeMs?: number;
+  systemsTargeted?: string[];
+  sessionType?: string;
+};
+
+export const onRequestPost = async (context: { request: Request; env: Env }) => {
   const { request, env } = context;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -18,7 +35,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const auth = await authenticateRequest(request as any, env as any);
     if (!auth) return createErrorResponse('Unauthorized', 401);
 
-    const body = await request.json();
+    const body = (await request.json()) as SessionCreatePayload | null;
     const { sessionType, systemsTargeted = [], mode, focus, difficulty } = body || {};
 
     const session = await prisma.studySession.create({
@@ -42,7 +59,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 };
 
-export const onRequestPatch: PagesFunction<Env> = async (context) => {
+export const onRequestPatch = async (context: { request: Request; env: Env }) => {
   const { request, env } = context;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -50,7 +67,7 @@ export const onRequestPatch: PagesFunction<Env> = async (context) => {
     const auth = await authenticateRequest(request as any, env as any);
     if (!auth) return createErrorResponse('Unauthorized', 401);
 
-    const body = await request.json();
+    const body = (await request.json()) as SessionUpdatePayload | null;
     const { sessionId, action, questionsAnswered, correctAnswers, totalTimeMs, systemsTargeted, sessionType } = body || {};
 
     if (!sessionId || typeof sessionId !== 'string') {

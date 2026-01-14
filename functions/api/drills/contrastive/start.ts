@@ -1,44 +1,45 @@
+import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../../_shared/auth';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
-import { json } from '@remix-run/cloudflare';
-import { prisma } from '../../../../lib/prisma';
+interface Env {
+  DATABASE_URL: string;
+  CLERK_SECRET_KEY: string;
+}
 
-export async function onRequestPost({ request }: any) {
-    const body = await request.json();
-    const { setId, symptom, userId } = body; // Assuming userId is passed or retrieved from context
+export const onRequestOptions = handleCorsOptions;
 
-    if (!userId) {
-        return json({ error: 'User ID is required' }, { status: 400 });
+export const onRequestPost = async (context: { request: Request; env: Env }) => {
+  const { request, env } = context;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
+    const auth = await authenticateRequest(request as any, env as any);
+    if (!auth) return createErrorResponse('Unauthorized', 401);
+
+    const body = (await request.json()) as Partial<{ setId: string }> | null;
+    const { setId } = body || {};
+
+    if (!setId) {
+      return createErrorResponse('setId is required', 400);
     }
 
-    let set;
-    if (setId) {
-        set = await prisma.contrastiveSet.findUnique({ where: { id: setId } });
-    } else if (symptom) {
-        set = await prisma.contrastiveSet.findFirst({ where: { symptom } });
-    }
+    // Fetch the contrastive set
+    const set = await prisma.contrastiveSet.findUnique({
+      where: { id: setId },
+      include: {
+        conditions: true,
+      },
+    });
 
     if (!set) {
-        return json({ error: 'Set not found' }, { status: 404 });
+      return createErrorResponse('Contrastive set not found', 404);
     }
 
-    // Create an attempt record
-    const attempt = await prisma.contrastiveDrillAttempt.create({
-        data: {
-            userId,
-            setId: set.id,
-            questionsAsked: 0,
-            correctAnswers: 0,
-            conditionsMissed: [],
-        },
-    });
-
-    // We don't pre-generate questions in the DB, we will generate them on demand or return the structure.
-    // The frontend needs to know which conditions are in the set to ask for questions.
-
-    return json({
-        drillId: attempt.id,
-        set,
-        // Return empty questions array, client will request generation
-        questions: []
-    });
-}
+    return createSuccessResponse({ set }, 200);
+  } catch (error) {
+    console.error('[contrastive/start] Failed to start drill', error);
+    return createErrorResponse('Failed to start contrastive drill', 500);
+  } finally {
+    await safePrismaDisconnect(prisma as any);
+  }
+};

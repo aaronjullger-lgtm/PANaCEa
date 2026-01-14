@@ -80,7 +80,7 @@ export async function recordQuestionWithFSRS(
     }
 
     // Parse current FSRS card
-    const fsrsCard = progress.fsrsCard as EnhancedFSRSCard;
+    const fsrsCard = progress.fsrsCard as unknown as EnhancedFSRSCard;
     
     // Update question tracking
     const questionHistory = (fsrsCard.questionHistory || []).slice(-9); // Keep last 9
@@ -169,7 +169,7 @@ export async function getQuestionHistoryForCondition(
       return [];
     }
 
-    const fsrsCard = progress.fsrsCard as EnhancedFSRSCard;
+    const fsrsCard = progress.fsrsCard as unknown as EnhancedFSRSCard;
     return fsrsCard.questionHistory || [];
 
   } catch (error) {
@@ -208,7 +208,7 @@ export async function getDetailedReviewHistory(
       return [];
     }
 
-    return progress.reviewHistory as FSRSReviewEvent[];
+    return progress.reviewHistory as unknown as FSRSReviewEvent[];
 
   } catch (error) {
     console.error('[FSRSLinking] Failed to get review history:', error);
@@ -260,8 +260,8 @@ export async function getQuestionUsageStats(
       };
     }
 
-    const fsrsCard = progress.fsrsCard as EnhancedFSRSCard;
-    const reviewHistory = progress.reviewHistory as FSRSReviewEvent[];
+    const fsrsCard = progress.fsrsCard as unknown as EnhancedFSRSCard;
+    const reviewHistory = progress.reviewHistory as unknown as FSRSReviewEvent[];
 
     const questionHistory = fsrsCard.questionHistory || [];
     const uniqueQuestions = new Set(questionHistory).size;
@@ -322,7 +322,7 @@ export async function findHighRepetitionConditions(
     }> = [];
 
     for (const progress of allProgress) {
-      const fsrsCard = progress.fsrsCard as EnhancedFSRSCard;
+      const fsrsCard = progress.fsrsCard as unknown as EnhancedFSRSCard;
       const totalQuestions = fsrsCard.totalQuestionsAnswered || 0;
       const questionHistory = fsrsCard.questionHistory || [];
       const uniqueQuestions = new Set(questionHistory).size;

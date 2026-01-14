@@ -35,7 +35,7 @@ describe('OfflineSyncService', () => {
   beforeEach(() => {
     mockLocalStorage.clear();
     vi.clearAllMocks();
-    service = new OfflineSyncService();
+    service = new OfflineSyncService(mockLocalStorage as any);
   });
 
   afterEach(() => {

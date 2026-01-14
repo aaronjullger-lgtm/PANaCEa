@@ -1,8 +1,18 @@
+import { createErrorResponse, createSuccessResponse, handleCorsOptions } from '../../_shared/auth';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
-import { json } from '@remix-run/cloudflare';
-import { prisma } from '../../../../lib/prisma'; // Adjust import based on your project structure
+interface Env {
+  DATABASE_URL: string;
+  CLERK_SECRET_KEY: string;
+}
 
-export async function onRequestGet({ request, env }: any) {
+export const onRequestOptions = handleCorsOptions;
+
+export const onRequestGet = async (context: { request: Request; env: Env }) => {
+  const { request, env } = context;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
     const url = new URL(request.url);
     const symptom = url.searchParams.get('symptom');
     const system = url.searchParams.get('system');
@@ -14,9 +24,15 @@ export async function onRequestGet({ request, env }: any) {
     if (highYield) where.highYield = highYield;
 
     const sets = await prisma.contrastiveSet.findMany({
-        where,
-        orderBy: { symptom: 'asc' },
+      where,
+      orderBy: { symptom: 'asc' },
     });
 
-    return json({ sets, total: sets.length });
-}
+    return createSuccessResponse({ sets, total: sets.length });
+  } catch (error) {
+    console.error('[contrastive/sets] Failed to fetch sets', error);
+    return createErrorResponse('Failed to fetch contrastive sets', 500);
+  } finally {
+    await safePrismaDisconnect(prisma as any);
+  }
+};

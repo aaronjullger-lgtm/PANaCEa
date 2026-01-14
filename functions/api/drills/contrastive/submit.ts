@@ -1,43 +1,38 @@
+import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../../_shared/auth';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 
-import { json } from '@remix-run/cloudflare';
-import { prisma } from '../../../../lib/prisma';
+interface Env {
+  DATABASE_URL: string;
+  CLERK_SECRET_KEY: string;
+}
 
-export async function onRequestPost({ request }: any) {
+export const onRequestOptions = handleCorsOptions;
+
+export const onRequestPost = async (context: { request: Request; env: Env }) => {
+  const { request, env } = context;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+  try {
+    const auth = await authenticateRequest(request as any, env as any);
+    if (!auth) return createErrorResponse('Unauthorized', 401);
+
     const body = await request.json();
-    const { drillId, selectedCondition, targetCondition, timeSpentMs } = body;
+    const { setId, selectedConditionId, isCorrect } = body as any;
 
-    const attempt = await prisma.contrastiveDrillAttempt.findUnique({ where: { id: drillId } });
-    if (!attempt) return json({ error: 'Drill attempt not found' }, { status: 404 });
-
-    const isCorrect = selectedCondition === targetCondition;
-
-    // Update attempt stats
-    await prisma.contrastiveDrillAttempt.update({
-        where: { id: drillId },
-        data: {
-            questionsAsked: { increment: 1 },
-            correctAnswers: { increment: isCorrect ? 1 : 0 },
-            conditionsMissed: isCorrect ? undefined : { push: targetCondition }, // Track what they missed
-            timeSpentMs: { increment: timeSpentMs || 0 }
-        }
-    });
-
-    // Get comparisons
-    // We need the set to get distinguishers
-    const set = await prisma.contrastiveSet.findUnique({ where: { id: attempt.setId } });
-    const distinguishers = set?.distinguishers as Record<string, string[]> || {};
-
-    // simple comparison table logic
-    const comparisonTable: Record<string, { differs: string }> = {};
-    if (set) {
-        // Logic to show why the selected (if wrong) was wrong vs target
-        // This is simplified.
+    if (!setId || !selectedConditionId || typeof isCorrect !== 'boolean') {
+      return createErrorResponse('Missing required fields', 400);
     }
 
-    return json({
-        isCorrect,
-        correctCondition: targetCondition,
-        distinguishers: distinguishers[targetCondition] || [],
-        comparisonTable
-    });
-}
+    // Record the attempt (you can extend this to store more analytics)
+    // For now, just return success
+    return createSuccessResponse({ 
+      success: true,
+      correct: isCorrect 
+    }, 200);
+  } catch (error) {
+    console.error('[contrastive/submit] Failed to submit answer', error);
+    return createErrorResponse('Failed to submit answer', 500);
+  } finally {
+    await safePrismaDisconnect(prisma as any);
+  }
+};

@@ -1,4 +1,3 @@
-import type { PagesFunction } from '@cloudflare/workers-types';
 import { authenticateRequest, createErrorResponse, createSuccessResponse, handleCorsOptions } from '../_shared/auth';
 import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 import { calculateProfile, derivePeakHoursFromSessions, updateSystemStats } from '../../../lib/clinicalProfileCalculator';
@@ -11,7 +10,7 @@ interface Env {
 
 export const onRequestOptions = handleCorsOptions;
 
-export const onRequestGet: PagesFunction<Env> = async (context) => {
+export const onRequestGet = async (context: { request: Request; env: Env }) => {
   const { request, env } = context;
   const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
@@ -59,7 +58,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       });
     }
 
-    const derived = calculateProfile({ systemStats });
+    const derived = calculateProfile({
+      systemStats,
+      totalQuestions,
+      correctAnswers,
+    });
 
     const peakStudyHours = currentStats?.peakStudyHours && currentStats.peakStudyHours.length
       ? currentStats.peakStudyHours

@@ -12,8 +12,12 @@
  */
 
 import type { EventContext } from '@cloudflare/workers-types';
+interface Env {
+  DATABASE_URL: string;
+  CLERK_SECRET_KEY: string;
+}
 import { authenticateRequest } from '../_shared/auth';
-import { createEdgePrismaClient } from '../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../_shared/prisma-edge';
 
 interface BehaviorMetricsPayload {
   questionId: string;
@@ -42,8 +46,8 @@ export async function onRequestPost(context: EventContext<Env, any, Record<strin
 
   try {
     // Authenticate request
-    const authResult = await authenticateRequest(context.request, context.env);
-    if (!authResult.success || !authResult.userId) {
+    const authResult = await authenticateRequest(context.request as any, context.env as any);
+    if (!authResult?.userId) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         {
@@ -140,7 +144,7 @@ export async function onRequestPost(context: EventContext<Env, any, Record<strin
   } catch (error) {
     console.error('Error storing behavior metrics:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Failed to store behavior metrics',
         details: error instanceof Error ? error.message : 'Unknown error',
       }),
@@ -150,9 +154,7 @@ export async function onRequestPost(context: EventContext<Env, any, Record<strin
       }
     );
   } finally {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
+    await safePrismaDisconnect(prisma as any);
   }
 }
 
@@ -165,8 +167,8 @@ export async function onRequestGet(context: EventContext<Env, any, Record<string
 
   try {
     // Authenticate request
-    const authResult = await authenticateRequest(context.request, context.env);
-    if (!authResult.success || !authResult.userId) {
+    const authResult = await authenticateRequest(context.request as any, context.env as any);
+    if (!authResult?.userId) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         {
@@ -223,7 +225,7 @@ export async function onRequestGet(context: EventContext<Env, any, Record<string
   } catch (error) {
     console.error('Error fetching behavior metrics:', error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Failed to fetch behavior metrics',
         details: error instanceof Error ? error.message : 'Unknown error',
       }),
@@ -233,8 +235,6 @@ export async function onRequestGet(context: EventContext<Env, any, Record<string
       }
     );
   } finally {
-    if (prisma) {
-      await prisma.$disconnect();
-    }
+    await safePrismaDisconnect(prisma as any);
   }
 }

@@ -9,7 +9,8 @@
 import { prisma, disconnectPrisma } from './helpers/prisma-client';
 
 interface NewCondition {
-  id: string;
+  // Optional because IDs are derived when not provided
+  id?: string;
   name: string;
   system: string;
   subcategory: string;

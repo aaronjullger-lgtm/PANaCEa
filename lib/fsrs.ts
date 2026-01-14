@@ -119,6 +119,8 @@ export class FSRS {
       const last_d = card.difficulty;
       const last_s = card.stability;
       const retrievability = Math.pow(1 + interval / (9 * last_s), -1);
+      // Clamp retrievability below 1 to ensure stability still grows for fresh reviews
+      const adjustedRetrievability = Math.min(retrievability, 0.99);
 
       this.next_ds(newCard, rating);
 
@@ -126,7 +128,7 @@ export class FSRS {
         newCard.state = FSRSState.Relearning;
         newCard.stability = this.next_forget_stability(last_d, last_s, retrievability);
       } else {
-        newCard.stability = this.next_recall_stability(last_d, last_s, retrievability, rating);
+        newCard.stability = this.next_recall_stability(last_d, last_s, adjustedRetrievability, rating);
       }
     }
 
@@ -171,7 +173,7 @@ export class FSRS {
 
   private next_recall_stability(d: number, s: number, r: number, rating: Rating): number {
     const hard_penalty = rating === Rating.Hard ? this.p.w[15] : 1;
-    const easy_bonus = rating === Rating.Easy ? this.p.w[16] : 1;
+    const easy_bonus = rating === Rating.Easy ? Math.max(1.08, this.p.w[16]) : 1;
     return s * (1 + Math.exp(this.p.w[8]) *
       (11 - d) *
       Math.pow(s, -this.p.w[9]) *

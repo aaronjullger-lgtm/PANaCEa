@@ -42,6 +42,8 @@ export async function applyAttemptToUserStatistics(
 
   const derived = calculateProfile({
     systemStats: updatedSystemStats,
+    totalQuestions: updatedTotals.totalQuestions,
+    correctAnswers: updatedTotals.correctAnswers,
   });
 
   const record = await prisma.userStatistics.upsert({
