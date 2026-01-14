@@ -17,17 +17,16 @@
  *   - Configure multiple workers for high availability
  */
 
-import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import { getNextJob, completeJob, failJob, type JobType } from '../lib/services/queue/jobQueue';
 import { generateSingleQuestion } from '../lib/questionGenerator';
 import * as fs from 'fs';
 import * as path from 'path';
+import { prisma, disconnectPrisma } from './helpers/prisma-client';
 
 // Load environment variables
 config();
 
-const prisma = new PrismaClient();
 const POLL_INTERVAL = 5000; // 5 seconds
 const SHUTDOWN_TIMEOUT = 30000; // 30 seconds
 
@@ -263,7 +262,7 @@ function setupShutdownHandlers() {
       await sleep(1000);
     }
     
-    await prisma.$disconnect();
+    await disconnectPrisma();
     console.log('[Worker] Shutdown complete');
     process.exit(0);
   };
@@ -282,7 +281,7 @@ async function main() {
     await runWorker();
   } catch (error: any) {
     console.error('[Worker] Fatal error:', error);
-    await prisma.$disconnect();
+    await disconnectPrisma();
     process.exit(1);
   }
 }

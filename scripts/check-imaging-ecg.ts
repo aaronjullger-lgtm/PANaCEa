@@ -3,9 +3,7 @@
  * Check empty fields in ImagingStudy and ECGPattern tables
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma, disconnectPrisma } from './helpers/prisma-client';
 
 async function checkImagingStudy() {
   const records = await prisma.imagingStudy.findMany();
@@ -77,6 +75,21 @@ async function checkECGPattern() {
   // Check distinguishingFeatures JSON field
   const emptyDistinguishing = records.filter((r: any) => !r.distinguishingFeatures).length;
   console.log(`distinguishingFeatures: ${emptyDistinguishing === records.length ? '⚠️ ALL EMPTY' : emptyDistinguishing > 0 ? `⚡ ${emptyDistinguishing} EMPTY` : '✅ FILLED'}`);
+}
+
+async function main() {
+  await checkImagingStudy();
+  await checkECGPattern();
+}
+
+if (require.main === module) {
+  main()
+    .then(() => disconnectPrisma())
+    .catch(async (err) => {
+      console.error(err);
+      await disconnectPrisma();
+      process.exit(1);
+    });
 }
 
 async function main() {

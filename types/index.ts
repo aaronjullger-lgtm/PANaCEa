@@ -4,3 +4,4 @@
  */
 
 export * from '../src/types';
+export * from './preferences';

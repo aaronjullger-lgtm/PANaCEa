@@ -74,6 +74,7 @@ const SimulationPage = lazy(() => import("./pages/SimulationPage").then(m => ({ 
 const CommandCenterPage = lazy(() => import("./pages/CommandCenterPage").then(m => ({ default: m.CommandCenterPage })));
 const ClinicalReferenceLibrary = lazy(() => import("./components/library/ClinicalReferenceLibrary"));
 const QuestionCurationPanel = lazy(() => import("./components/admin/QuestionCurationPanel"));
+const ClinicalProfileDashboard = lazy(() => import("./components/dashboard/ClinicalProfile/ClinicalProfileDashboard"));
 
 // Non-lazy components that should always be available
 import { OfflineSyncIndicator } from "./components/OfflineSyncIndicator";
@@ -105,7 +106,7 @@ const DRILL_MODE_VENTILATOR: TrainingModeId = 'ventilator_hero';
 const DRILL_MODE_PHYSIOLOGY: TrainingModeId = 'physiology_drill';
 const DRILL_MODE_ANATOMY: TrainingModeId = 'anatomy_review';
 
-type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "system_drill" | "subcategory_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "ventilator_hero" | "physiology_drill" | "anatomy_review" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "training_menu" | "simulation_page" | "command_center_page" | "reference_library";
+type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "system_drill" | "subcategory_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "ventilator_hero" | "physiology_drill" | "anatomy_review" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "clinical_profile" | "training_menu" | "simulation_page" | "command_center_page" | "reference_library";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -671,6 +672,7 @@ const App: React.FC = () => {
                   onNavigateToDrillMode={handleNavigateToDrillMode}
                   onNavigateToToolkit={() => setView("toolkit")}
                   onNavigateToGapAnalysis={() => setView("gap_analysis")}
+                  onNavigateToClinicalProfile={() => setView("clinical_profile")}
                   onNavigateToIntegrations={() => setView("integrations")}
                   onNavigateToSimulation={handleNavigateToSimulation}
                   onNavigateToReference={() => setView("reference_library")}
@@ -1040,6 +1042,23 @@ const App: React.FC = () => {
               <WithGeminiErrorBoundary viewName="gap_analysis" onRetry={() => setView("gap_analysis")}>
                 <Suspense fallback={<Loader />}>
                   <GapAnalysisDashboard />
+                </Suspense>
+              </WithGeminiErrorBoundary>
+            </motion.div>
+          )}
+
+          {view === "clinical_profile" && (
+            <motion.div
+              key="clinical_profile"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              <WithGeminiErrorBoundary viewName="clinical_profile" onRetry={() => setView("clinical_profile")}>
+                <Suspense fallback={<Loader />}>
+                  <ClinicalProfileDashboard />
                 </Suspense>
               </WithGeminiErrorBoundary>
             </motion.div>

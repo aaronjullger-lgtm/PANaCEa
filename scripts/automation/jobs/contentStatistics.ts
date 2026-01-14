@@ -19,11 +19,8 @@
  * - Content quality assessment
  */
 
-import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
-import pg from 'pg';
-
-const { Pool } = pg;
+import { disconnectPrisma, prisma } from '../../helpers/prisma-client';
 
 /**
  * Calculate date range for yesterday
@@ -274,15 +271,6 @@ export async function runContentStatisticsJob(targetDate: Date = new Date()) {
   console.log('🚀 Content Statistics Job Starting...');
   console.log(`📅 Target Date: ${targetDate.toISOString().split('T')[0]}`);
   
-  const connectionString = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('DATABASE_URL or DIRECT_DATABASE_URL not set');
-  }
-  
-  const pool = new Pool({ connectionString });
-  const adapter = new PrismaPg(pool);
-  const prisma = new PrismaClient({ adapter });
-  
   try {
     const { yesterday, today } = getDateRange(targetDate);
     const dateString = yesterday.toISOString().split('T')[0];
@@ -357,8 +345,7 @@ export async function runContentStatisticsJob(targetDate: Date = new Date()) {
     console.error('❌ Content statistics job failed:', error);
     throw error;
   } finally {
-    await prisma.$disconnect();
-    await pool.end();
+    await disconnectPrisma();
   }
 }
 

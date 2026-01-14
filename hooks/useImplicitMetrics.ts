@@ -8,9 +8,13 @@
  * - Browser timezone for circadian context
  * 
  * Used to derive FSRS rating without explicit user buttons (Phase 2: Zero-Friction)
+ * 
+ * Sprint C Integration: Automatically POSTs metrics to /api/user/behavior-metrics
+ * after submitAnswer is called, enabling backend persistence for personalization.
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { getBrowserTimezone } from '../lib/circadian';
 
 /**
@@ -45,8 +49,8 @@ export interface UseImplicitMetricsReturn {
   startQuestion: () => void;
   /** Call when user selects/changes answer */
   recordAnswerSelection: (answer: string | number) => void;
-  /** Call when answer is submitted - returns final metrics */
-  submitAnswer: () => QuestionImplicitMetrics;
+  /** Call when answer is submitted - returns final metrics and POSTs to API */
+  submitAnswer: (questionId: string, wasCorrect: boolean, questionType?: string) => Promise<QuestionImplicitMetrics>;
   /** Reset for next question */
   reset: () => void;
   /** Get metrics formatted for API submission */
@@ -56,6 +60,10 @@ export interface UseImplicitMetricsReturn {
     totalDwellTime: number;
     timezone: string;
   };
+  /** Whether API submission is in progress */
+  isSubmitting: boolean;
+  /** Last API submission error, if any */
+  submissionError: Error | null;
 }
 
 /**
@@ -95,20 +103,18 @@ function createInitialMetrics(): QuestionImplicitMetrics {
  * 
  * // When submitting
  * const handleSubmit = async () => {
- *   const finalMetrics = submitAnswer();
- *   await api.submitReview({
- *     questionId,
- *     selectedAnswer,
- *     timeSpentMs: finalMetrics.totalDwellTime,
- *     ...getApiPayload(),
- *   });
+ *   const finalMetrics = await submitAnswer(questionId, wasCorrect, 'multiple_choice');
+ *   // Metrics are automatically POSTed to /api/user/behavior-metrics
  * };
  * ```
  */
 export function useImplicitMetrics(): UseImplicitMetricsReturn {
   const [metrics, setMetrics] = useState<QuestionImplicitMetrics>(createInitialMetrics);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState<Error | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const dwellIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { getToken } = useAuth();
 
   /**
    * Start tracking for a new question
@@ -162,8 +168,13 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
 
   /**
    * Finalize and return metrics when answer is submitted
+   * Also POSTs metrics to /api/user/behavior-metrics for backend persistence
    */
-  const submitAnswer = useCallback((): QuestionImplicitMetrics => {
+  const submitAnswer = useCallback(async (
+    questionId: string, 
+    wasCorrect: boolean,
+    questionType?: string
+  ): Promise<QuestionImplicitMetrics> => {
     const now = Date.now();
     
     // Stop dwell tracking
@@ -179,8 +190,56 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
     };
 
     setMetrics(finalMetrics);
+
+    // POST metrics to API asynchronously (don't block UI)
+    setIsSubmitting(true);
+    setSubmissionError(null);
+    
+    try {
+      const token = await getToken();
+      
+      const payload = {
+        questionId,
+        questionType,
+        timeToFirstClick: finalMetrics.timeToFirstClick ?? 0,
+        dwellTime: finalMetrics.totalDwellTime,
+        totalResponseTime: finalMetrics.totalDwellTime,
+        answerChanges: finalMetrics.answerSwitches,
+        wasCorrect,
+        // Additional optional fields can be added here
+        // optionHovers, scrollDepth, hesitationEvents, etc.
+      };
+
+      const response = await fetch('/api/user/behavior-metrics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      console.debug('[useImplicitMetrics] Metrics posted successfully:', {
+        questionId,
+        timeToFirstClick: finalMetrics.timeToFirstClick,
+        dwellTime: finalMetrics.totalDwellTime,
+        answerSwitches: finalMetrics.answerSwitches,
+      });
+    } catch (error) {
+      // Log error but don't block the user experience
+      console.error('[useImplicitMetrics] Failed to post metrics:', error);
+      setSubmissionError(error instanceof Error ? error : new Error('Failed to submit metrics'));
+    } finally {
+      setIsSubmitting(false);
+    }
+
     return finalMetrics;
-  }, [metrics]);
+  }, [metrics, getToken]);
 
   /**
    * Reset for next question
@@ -222,6 +281,8 @@ export function useImplicitMetrics(): UseImplicitMetricsReturn {
     submitAnswer,
     reset,
     getApiPayload,
+    isSubmitting,
+    submissionError,
   };
 }
 

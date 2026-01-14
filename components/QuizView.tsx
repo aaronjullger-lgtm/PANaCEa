@@ -103,6 +103,7 @@ import {
 // Hooks
 import { useAuth } from "../hooks/useAuth";
 import { useAdvancedAnalytics } from "../hooks/useAdvancedAnalytics";
+import { useImplicitMetrics } from "../hooks/useImplicitMetrics";
 
 // Other services (non-barrel)
 import { feedback } from "../services/feedbackService";
@@ -326,6 +327,9 @@ const QuizView: React.FC<QuizViewProps> = ({
   // ---- ADVANCED ANALYTICS ----
   const { recordQuestionResult, cognitiveState, recommendations } = useAdvancedAnalytics();
 
+  // ---- IMPLICIT METRICS TRACKING ----
+  const implicitMetrics = useImplicitMetrics();
+
   // ---- QUEUE HANDLING ----
   const [queue, setQueue] = useState<Question[]>(initialQueue);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(
@@ -476,6 +480,10 @@ const QuizView: React.FC<QuizViewProps> = ({
       setAnswerChangeCount(0); // Reset answer change tracking
       setFirstSelectedAnswer(null); // Reset first selected answer
 
+      // Reset implicit metrics for new question
+      implicitMetrics.reset();
+      implicitMetrics.startQuestion();
+
       setQueue((prev) => {
         if (prev.length === 0) return prev;
 
@@ -506,6 +514,7 @@ const QuizView: React.FC<QuizViewProps> = ({
     replenishQueue,
     handleEndSession,
     setError,
+    implicitMetrics,
   ]);
 
   // Initialize from incoming queue once
@@ -515,7 +524,12 @@ const QuizView: React.FC<QuizViewProps> = ({
     }
     setLocalNote(initialQueue[0]?.userNote || "");
     setEliminatedAnswers(new Set()); // Reset when new question loaded
-  }, [initialQueue, currentQuestion]);
+    
+    // Start tracking implicit metrics for the first question
+    if (initialQueue.length > 0) {
+      implicitMetrics.startQuestion();
+    }
+  }, [initialQueue, currentQuestion, implicitMetrics]);
 
   // Handler for toggling elimination state
   const handleToggleEliminate = useCallback((index: number) => {
@@ -541,6 +555,13 @@ const QuizView: React.FC<QuizViewProps> = ({
     // Sprint 4: Calculate correctness IMMEDIATELY
     const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
     const timeToAnswer = Date.now() - questionStartTime;
+    
+    // Sprint C: Submit implicit metrics to backend
+    const questionId = currentQuestion.id || `temp-${questionNumber}`;
+    await implicitMetrics.submitAnswer(questionId, isCorrect, 'multiple_choice').catch(err => {
+      // Don't block UI if metrics submission fails
+      console.warn('Implicit metrics submission failed:', err);
+    });
     
     // Sprint 4: Show optimistic feedback INSTANTLY (no server wait)
     showOptimisticFeedback(isCorrect);
@@ -768,7 +789,7 @@ const QuizView: React.FC<QuizViewProps> = ({
       setWellnessReason('late_night');
       setShowWellnessModal(true);
     }
-  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance, user, questionStartTime, performanceData, getToken, answerFeedback, currentStreak, answerChangeCount, eliminatedAnswers, firstSelectedAnswer, setCurrentQuestion]);
+  }, [selectedAnswerIndex, currentQuestion, isAnswered, sessionSettings, updateReviewQuestion, addMissedQuestion, addPerformanceRecord, recordCircadianPerformance, user, questionStartTime, performanceData, getToken, answerFeedback, currentStreak, answerChangeCount, eliminatedAnswers, firstSelectedAnswer, setCurrentQuestion, questionNumber, implicitMetrics]);
 
   // Keyboard shortcuts using centralized shortcut context
   // FLIP_CARD: Toggle showing the explanation/rationale after answering
@@ -859,6 +880,9 @@ const QuizView: React.FC<QuizViewProps> = ({
       // Changed answer
       setAnswerChangeCount(prev => prev + 1);
     }
+
+    // Record answer selection for implicit metrics
+    implicitMetrics.recordAnswerSelection(index);
 
     // Just select the option, don't submit yet
     setSelectedAnswerIndex(index);

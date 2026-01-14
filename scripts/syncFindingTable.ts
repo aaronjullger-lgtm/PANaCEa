@@ -1,10 +1,6 @@
 #!/usr/bin/env tsx
-import { PrismaClient } from '@prisma/client';
-import { config } from 'dotenv';
 import { FINDING_REGISTRY } from '../findingRegistry';
-
-config();
-const prisma = new PrismaClient();
+import { prisma, disconnectPrisma } from './helpers/prisma-client';
 
 interface SyncStats {
   created: number;
@@ -50,11 +46,11 @@ if (require.main === module) {
   syncAllFindings()
     .then((summary) => {
       console.log(summary);
-      return prisma.$disconnect();
+      return disconnectPrisma();
     })
     .catch(async (err) => {
       console.error(err);
-      await prisma.$disconnect();
+      await disconnectPrisma();
       process.exit(1);
     });
 }

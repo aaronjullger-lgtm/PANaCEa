@@ -27,6 +27,7 @@ export { default as FSRSInsightCard } from './FSRSInsightCard';
 export { default as LearningProgressCard } from './LearningProgressCard';
 export { default as PredictedScoreCard } from './PredictedScoreCard';
 export { default as SystemMasteryMap } from './SystemMasteryMap';
+export { ConfusionMatrix, default as ConfusionMatrixDefault } from './ConfusionMatrix';
 
 // Export Tools
 export { default as WeaknessCheatsheetExporter } from './WeaknessCheatsheetExporter';

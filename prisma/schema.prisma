@@ -377,25 +377,40 @@ model Condition {
 }
 
 model ConfusionPair {
-  id               String     @id
-  userId           String?
-  realCondition    String
-  mistakenFor      String
-  count            Int        @default(1)
-  lastOccurrence   DateTime   @default(now())
-  createdAt        DateTime   @default(now())
-  // New FKs for deep relations
-  realConditionId  String?
-  mistakenForId    String?
-  RealCondition    Condition? @relation("ConfusionPairReal", fields: [realConditionId], references: [id], onDelete: SetNull)
-  MistakenCondition Condition? @relation("ConfusionPairMistaken", fields: [mistakenForId], references: [id], onDelete: SetNull)
-  User             User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id                  String           @id @default(cuid())
+  userId              String
+
+  // Legacy string labels kept for compatibility with existing analytics/UI
+  realCondition       String
+  mistakenFor         String
+
+  count               Int              @default(1)
+  lastOccurrence      DateTime         @updatedAt
+  createdAt           DateTime         @default(now())
+
+  // Legacy Condition relations
+  realConditionId     String?
+  mistakenForId       String?
+  RealCondition       Condition?       @relation("ConfusionPairReal", fields: [realConditionId], references: [id], onDelete: SetNull)
+  MistakenCondition   Condition?       @relation("ConfusionPairMistaken", fields: [mistakenForId], references: [id], onDelete: SetNull)
+
+  // New MedicalContent-linked relations for precise comparisons
+  correctConditionId  String?
+  selectedConditionId String?
+  CorrectCondition    MedicalContent?  @relation("CorrectCondition", fields: [correctConditionId], references: [id], onDelete: SetNull)
+  SelectedCondition   MedicalContent?  @relation("SelectedCondition", fields: [selectedConditionId], references: [id], onDelete: SetNull)
+
+  User                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, realCondition, mistakenFor])
+  @@unique([userId, correctConditionId, selectedConditionId])
   @@index([mistakenForId])
   @@index([realCondition])
   @@index([realConditionId])
+  @@index([correctConditionId])
+  @@index([selectedConditionId])
   @@index([userId])
+  @@index([userId, correctConditionId])
   @@index([userId, realCondition])
 }
 
@@ -1227,6 +1242,8 @@ model MedicalContent {
   WeaknessPatterns             WeaknessPattern[]
   UserProgress                 UserProgress[]
   ContentStatistics            ContentStatistics[]
+  ConfusionPairsCorrect        ConfusionPair[]       @relation("CorrectCondition")
+  ConfusionPairsSelected       ConfusionPair[]       @relation("SelectedCondition")
 
   @@index([conditionId])
   @@index([createdBy])
@@ -2137,10 +2154,51 @@ model User {
   UserStatisticsSnapshot  UserStatisticsSnapshot[]
   UserBehaviorMetrics     UserBehaviorMetrics[]
   UserPreferences         UserPreferences?
+  UserGoal                UserGoal[]
+  UserConfusionPattern    UserConfusionPattern[]
+  UserCircadianProfile    UserCircadianProfile?
+  SessionAnalytics        SessionAnalytics[]
+  PersonalizedFSRSParams  PersonalizedFSRSParams?
+  UserStatistics          UserStatistics?
 
   @@index([clerkId])
   @@index([email])
   @@index([role])
+}
+
+model UserStatistics {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+
+  // Overall Performance
+  totalQuestions     Int      @default(0)
+  correctAnswers     Int      @default(0)
+  avgTimePerQuestion Float?
+
+  // System-level breakdown (stored as JSON for flexibility)
+  systemStats        Json?
+
+  // Behavioral Patterns
+  rushedSystems      String[] @default([])
+  overthinkingSystems String[] @default([])
+
+  // Diagnosis Bias (conditions frequently over-selected as wrong answers)
+  diagnosisBias      Json?
+
+  // Strengths/Weaknesses (auto-calculated)
+  strongestSystems   String[] @default([])
+  weakestSystems     String[] @default([])
+
+  // Time tracking
+  peakStudyHours     Int[]    @default([])
+  avgSessionLength   Float?
+
+  updatedAt          DateTime @updatedAt
+  createdAt          DateTime @default(now())
+  
+  User               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model UserAchievement {
@@ -2476,6 +2534,7 @@ model StudySession {
   // PANCE distribution
   distributionScore     Float?   // How closely session matched PANCE blueprint
   systemsCovered        String[] @default([])  // Systems practiced
+  systemsTargeted       String[] @default([])  // Explicitly selected systems for the session
   
   // Predicted score
   predictedScore        Int?     // Estimated PANCE score (200-800)
@@ -2483,18 +2542,26 @@ model StudySession {
   passLikelihood        Float?   // 0-100%
   
   // Session settings
+  sessionType           String?  // 'mixed' | 'focused' | 'review'
   mode                  String?  // 'drill' | 'review' | 'exam'
   focus                 String?  // 'new' | 'review' | 'missed'
   difficulty            String?  // 'easy' | 'medium' | 'hard' | 'random'
   
-  // Metadata
+  // Metadata & Context (Step 7: Session Context Tracking)
   deviceType            String?  // 'mobile' | 'tablet' | 'desktop'
   browserName           String?
+  screenSize            String?  // e.g., "1920x1080"
+  connectionType        String?  // 'wifi' | 'cellular' | 'unknown'
+  likelyContext         String?  // 'commute' | 'home' | 'library' | 'unknown'
+  isQuickSession        Boolean  @default(false)  // < 10 questions
+  wasInterrupted        Boolean  @default(false)  // Large gaps detected
+  
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   
   // New FK for deep relations
   User                  User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  SessionAnalytics      SessionAnalytics?
 
   @@index([userId])
   @@index([userId, startedAt])
@@ -2895,6 +2962,215 @@ model UserPreferences {
   
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// Step 5: User Goal Tracking
+model UserGoal {
+  id                  String   @id @default(cuid())
+  userId              String
+  
+  // Goal identification
+  title               String   // e.g., "Complete 40 questions daily"
+  description         String?  // Optional detailed description
+  goalType            String   // 'daily' | 'weekly' | 'exam_date' | 'mastery'
+  
+  // Goal targets
+  targetValue         Int?     // Numeric target (e.g., 40 questions)
+  targetUnit          String?  // 'questions' | 'minutes' | 'conditions' | 'accuracy'
+  targetDate          DateTime?  // For exam-date goals
+  targetSystem        String?  // For mastery goals (e.g., "CV")
+  targetStability     Float?   // For FSRS mastery goals (e.g., 0.9)
+  
+  // Progress tracking
+  currentValue        Int      @default(0)
+  progressPercentage  Float    @default(0)  // 0-100
+  
+  // Status
+  status              String   @default("active")  // 'active' | 'completed' | 'paused' | 'failed'
+  isRecurring         Boolean  @default(false)  // Daily/weekly goals recur
+  
+  // Milestones (JSON array)
+  milestones          Json?    // [{ value: 20, reached: true, date: "2026-01-10" }, ...]
+  
+  // Streak tracking (for recurring goals)
+  currentStreak       Int      @default(0)  // Consecutive days/weeks met
+  bestStreak          Int      @default(0)
+  lastMetDate         DateTime?
+  
+  // Motivation
+  motivationNotes     String?  // User's personal motivation
+  rewardMessage       String?  // Custom message when completed
+  
+  // Relations
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  completedAt         DateTime?
+  
+  @@index([userId, status])
+  @@index([userId, goalType])
+  @@index([targetDate])
+}
+
+// User Data Improvement Plan - Sprint C
+
+// Step 6: Per-User Confusion Patterns
+model UserConfusionPattern {
+  id                  String   @id @default(cuid())
+  userId              String
+  
+  // Confusion pair
+  conditionA          String   // Real condition
+  conditionB          String   // Mistaken for
+  conditionAId        String?  // FK to Condition
+  conditionBId        String?  // FK to Condition
+  
+  // Tracking
+  occurrences         Int      @default(1)
+  lastOccurrence      DateTime @default(now())
+  
+  // Resolution status
+  wasResolved         Boolean  @default(false)
+  resolvedAt          DateTime?
+  resolutionMethod    String?  // 'practice' | 'study_guide' | 'time'
+  
+  // Trigger questions
+  questionIds         String[] @default([])  // Questions that triggered confusion
+  
+  // Pattern severity
+  severityScore       Float?   // 0-1, based on frequency and recency
+  
+  // Relations
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@unique([userId, conditionA, conditionB])
+  @@index([userId, wasResolved])
+  @@index([userId, severityScore])
+  @@index([conditionA])
+  @@index([conditionB])
+}
+
+// Step 8: Circadian Performance Profile
+model UserCircadianProfile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  
+  // Hourly performance (0-23)
+  hourlyAccuracy      Json     // { "0": 0.75, "1": 0.80, ... }
+  hourlyAttempts      Json     // { "0": 15, "1": 20, ... }
+  hourlyAvgTime       Json?    // Average response time by hour
+  
+  // Peak performance
+  peakHours           Int[]    @default([])  // Hours with best accuracy
+  avoidHours          Int[]    @default([])  // Hours with worst accuracy
+  optimalStudyWindow  String?  // e.g., "09:00-11:00, 19:00-21:00"
+  
+  // Chronotype classification
+  chronotype          String?  // 'morning' | 'afternoon' | 'evening' | 'night' | 'variable'
+  chronotypeConfidence Float?  // 0-1
+  
+  // Day of week patterns
+  studyDaysOfWeek     Int[]    @default([])  // 0=Sunday, 1=Monday, etc.
+  weekdayAccuracy     Float?
+  weekendAccuracy     Float?
+  
+  // Volume patterns
+  avgDailyMinutes     Int?
+  avgDailyQuestions   Int?
+  mostProductiveDay   Int?     // 0-6
+  
+  // Last analysis
+  dataPoints          Int      @default(0)  // Total attempts analyzed
+  lastAnalyzed        DateTime @default(now())
+  
+  // Relations
+  User                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([chronotype])
+}
+
+// UNIFIED_ANALYTICS Implementation - Sprint 1
+
+// SessionAnalytics: Aggregated session-level analytics
+model SessionAnalytics {
+  id                    String   @id @default(cuid())
+  userId                String
+  sessionId             String   @unique
+  
+  // Performance curve
+  accuracyQ1            Float?   // First quarter accuracy
+  accuracyQ2            Float?
+  accuracyQ3            Float?
+  accuracyQ4            Float?
+  accuracyTrend         String?  // 'improving' | 'stable' | 'declining'
+  fatiguePointIndex     Int?     // Question index where accuracy drops
+  
+  // Timing metrics
+  avgResponseTime       Int?
+  responseTimeVariance  Float?
+  responseTimeTrend     String?  // 'speeding_up' | 'stable' | 'slowing_down'
+  totalDurationMinutes  Float?
+  
+  // Metacognition (from JOL)
+  sessionBrierScore     Float?   // 0-1, lower is better
+  calibrationState      String?  // 'overconfident' | 'underconfident' | 'calibrated'
+  overconfidenceBias    Float?   // -1 to 1
+  
+  // Flow state
+  flowStateMinutes      Float?   // Time in optimal challenge zone
+  interruptionCount     Int      @default(0)
+  wasCompleted          Boolean  @default(true)
+  
+  // System distribution
+  systemDistribution    Json?    // {"CV": 5, "PULM": 3}
+  difficultyDistribution Json?   // {"easy": 3, "medium": 5, "hard": 2}
+  
+  // Relations
+  User                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  StudySession          StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  computedAt            DateTime @default(now())
+  
+  @@index([userId])
+  @@index([computedAt])
+}
+
+// PersonalizedFSRSParams: Per-user FSRS optimization
+model PersonalizedFSRSParams {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  
+  // Optimized w[] array (19 parameters)
+  w                     Json     // The 19 FSRS weights
+  
+  // Optimization metadata
+  sampleSize            Int?     // Reviews used for optimization
+  lastOptimizedAt       DateTime?
+  improvementOverDefault Float?  // % Brier score reduction
+  optimizationIterations Int?
+  
+  // Per-system adjustments
+  systemModifiers       Json?    // {"CV": {"stabilityMult": 1.1, "diffOffset": 0.2}}
+  
+  // Validation
+  validationBrierScore  Float?   // Score on holdout set
+  parameterBounds       Json?    // Constraints used
+  
+  // Relations
+  User                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
   
   @@index([userId])
 }

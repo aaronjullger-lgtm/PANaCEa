@@ -13,15 +13,13 @@
  * Schedule: 0 * * * * (every hour)
  */
 
-import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
+import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 
 // Load environment variables
 config();
-
-const prisma = new PrismaClient();
 
 interface HourlyReport {
   timestamp: Date;
@@ -329,13 +327,17 @@ async function main() {
     console.error('\n❌ Fatal error during hourly tasks:', error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await disconnectPrisma();
   }
 }
 
 // Run if executed directly
 if (require.main === module) {
-  main().catch(console.error);
+  main().catch(async (err) => {
+    console.error(err);
+    await disconnectPrisma();
+    process.exit(1);
+  });
 }
 
 export { main as runHourlyTasks };

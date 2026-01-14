@@ -14,16 +14,14 @@
  * Schedule: 0 2 * * 0 (2 AM every Sunday)
  */
 
-import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { prisma, disconnectPrisma } from '../helpers/prisma-client';
 
 // Load environment variables
 config();
-
-const prisma = new PrismaClient();
 
 /**
  * Run comprehensive weekly maintenance
@@ -491,13 +489,17 @@ async function main() {
     console.error('\n❌ Fatal error during weekly tasks:', error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await disconnectPrisma();
   }
 }
 
 // Run if executed directly
 if (require.main === module) {
-  main().catch(console.error);
+  main().catch(async (err) => {
+    console.error(err);
+    await disconnectPrisma();
+    process.exit(1);
+  });
 }
 
 export { main as runWeeklyTasks };

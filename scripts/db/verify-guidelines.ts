@@ -1,6 +1,15 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error('Missing DIRECT_DATABASE_URL or DATABASE_URL for guideline verification.');
+}
+
+const adapter = new PrismaPg(new Pool({ connectionString }));
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('Querying Guidelines table...\n');

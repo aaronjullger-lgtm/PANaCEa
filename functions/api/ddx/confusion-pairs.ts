@@ -50,6 +50,8 @@ export async function onRequestGet(context: any) {
       whereClause.OR = [
         { realConditionId: conditionId },
         { mistakenForId: conditionId },
+        { correctConditionId: conditionId },
+        { selectedConditionId: conditionId },
       ];
     }
 
@@ -72,6 +74,20 @@ export async function onRequestGet(context: any) {
             system: true,
           },
         },
+        CorrectCondition: {
+          select: {
+            id: true,
+            condition: true,
+            system: true,
+          },
+        },
+        SelectedCondition: {
+          select: {
+            id: true,
+            condition: true,
+            system: true,
+          },
+        },
       },
       orderBy: [
         { count: 'desc' },
@@ -86,7 +102,28 @@ export async function onRequestGet(context: any) {
         // Try to get distinguishing features from ConditionRelation
         let distinguishingFeatures: string | null = null;
         
-        if (pair.RealCondition && pair.MistakenCondition) {
+        if (pair.CorrectCondition && pair.SelectedCondition) {
+          const relation = await prisma.conditionRelation.findFirst({
+            where: {
+              OR: [
+                {
+                  conditionId1: pair.CorrectCondition.id,
+                  conditionId2: pair.SelectedCondition.id,
+                  relationType: 'differential',
+                },
+                {
+                  conditionId1: pair.SelectedCondition.id,
+                  conditionId2: pair.CorrectCondition.id,
+                  relationType: 'differential',
+                },
+              ],
+            },
+            select: {
+              clinicalContext: true,
+            },
+          });
+          distinguishingFeatures = relation?.clinicalContext || null;
+        } else if (pair.RealCondition && pair.MistakenCondition) {
           const relation = await prisma.conditionRelation.findFirst({
             where: {
               OR: [
@@ -112,7 +149,69 @@ export async function onRequestGet(context: any) {
         // Get MedicalContent for both conditions to extract key differences
         let keyDifferences: Record<string, { real: string | null; mistaken: string | null }> = {};
         
-        if (pair.realCondition && pair.mistakenFor) {
+        if ((pair.correctConditionId || pair.realConditionId) && (pair.selectedConditionId || pair.mistakenForId)) {
+          const [realContent, mistakenContent] = await Promise.all([
+            prisma.medicalContent.findFirst({
+              where: {
+                OR: [
+                  pair.correctConditionId ? { id: pair.correctConditionId } : undefined,
+                  pair.realConditionId ? { conditionId: pair.realConditionId } : undefined,
+                  pair.realCondition ? { condition: { equals: pair.realCondition, mode: 'insensitive' } } : undefined,
+                ].filter(Boolean) as any,
+              },
+              select: {
+                id: true,
+                condition: true,
+                system: true,
+                gold_standard_dx: true,
+                best_initial_test: true,
+                first_line_rx: true,
+                classic_patient: true,
+                buzzwords: true,
+              },
+            }),
+            prisma.medicalContent.findFirst({
+              where: {
+                OR: [
+                  pair.selectedConditionId ? { id: pair.selectedConditionId } : undefined,
+                  pair.mistakenForId ? { conditionId: pair.mistakenForId } : undefined,
+                  pair.mistakenFor ? { condition: { equals: pair.mistakenFor, mode: 'insensitive' } } : undefined,
+                ].filter(Boolean) as any,
+              },
+              select: {
+                id: true,
+                condition: true,
+                system: true,
+                gold_standard_dx: true,
+                best_initial_test: true,
+                first_line_rx: true,
+                classic_patient: true,
+                buzzwords: true,
+              },
+            }),
+          ]);
+
+          if (realContent && mistakenContent) {
+            keyDifferences = {
+              goldStandardDx: {
+                real: realContent.gold_standard_dx,
+                mistaken: mistakenContent.gold_standard_dx,
+              },
+              bestInitialTest: {
+                real: realContent.best_initial_test,
+                mistaken: mistakenContent.best_initial_test,
+              },
+              firstLineRx: {
+                real: realContent.first_line_rx,
+                mistaken: mistakenContent.first_line_rx,
+              },
+              classicPatient: {
+                real: realContent.classic_patient,
+                mistaken: mistakenContent.classic_patient,
+              },
+            };
+          }
+        } else if (pair.realCondition && pair.mistakenFor) {
           const [realContent, mistakenContent] = await Promise.all([
             prisma.medicalContent.findFirst({
               where: { condition: { contains: pair.realCondition, mode: 'insensitive' } },
@@ -158,14 +257,19 @@ export async function onRequestGet(context: any) {
           }
         }
 
+        const realConditionName = pair.CorrectCondition?.condition || pair.realCondition;
+        const mistakenConditionName = pair.SelectedCondition?.condition || pair.mistakenFor;
+
         return {
           id: pair.id,
-          realCondition: pair.realCondition,
-          mistakenFor: pair.mistakenFor,
+          realCondition: realConditionName,
+          mistakenFor: mistakenConditionName,
+          correctConditionId: pair.correctConditionId ?? pair.CorrectCondition?.id ?? pair.realConditionId,
+          selectedConditionId: pair.selectedConditionId ?? pair.SelectedCondition?.id ?? pair.mistakenForId,
           count: pair.count,
           lastOccurrence: pair.lastOccurrence,
-          realConditionData: pair.RealCondition,
-          mistakenConditionData: pair.MistakenCondition,
+          realConditionData: pair.CorrectCondition ?? pair.RealCondition,
+          mistakenConditionData: pair.SelectedCondition ?? pair.MistakenCondition,
           distinguishingFeatures,
           keyDifferences,
           severity: pair.count >= 5 ? 'high' : pair.count >= 3 ? 'medium' : 'low',

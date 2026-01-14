@@ -17,6 +17,7 @@ import {
   serializeCircadianContext 
 } from '../../../lib/circadian';
 import { propagateRecallToSiblings } from '../../../lib/services/semanticSiblingService';
+import { applyAttemptToUserStatistics, updateTimingAggregates } from '../../../lib/services/userStatisticsService';
 
 /**
  * Question data structure from PreGeneratedQuestion.questionData field
@@ -34,6 +35,33 @@ interface QuestionData {
   options?: Array<{ value?: string; text?: string; label?: string } | string>;
   choices?: Array<{ value?: string; text?: string; label?: string } | string>;
   [key: string]: unknown;
+}
+
+function findSelectedOption(
+  pool: Array<{ value?: string; text?: string; label?: string; conditionId?: string; condition_id?: string; conditionRef?: string; medicalContentId?: string; condition?: string; conditionName?: string; id?: string }> | string[] | undefined,
+  selectedAnswer: string
+) {
+  if (!Array.isArray(pool)) return null;
+
+  for (const option of pool) {
+    if (typeof option === 'string') {
+      if (option === selectedAnswer) {
+        return { label: option };
+      }
+      continue;
+    }
+
+    const label = option.value ?? option.text ?? option.label ?? option.conditionName ?? option.condition ?? option.id;
+    if (label === selectedAnswer) {
+      return {
+        label,
+        conditionId: option.conditionId ?? option.condition_id ?? option.conditionRef ?? option.medicalContentId ?? option.id,
+        conditionName: option.conditionName ?? option.condition ?? label,
+      };
+    }
+  }
+
+  return null;
 }
 
 export const onRequestOptions = handleCorsOptions;
@@ -146,6 +174,9 @@ export const onRequestPost = async (context: CloudflareContext) => {
           return false;
         });
 
+    const optionPool = (qData.options || qData.choices) as Array<{ value?: string; text?: string; label?: string; conditionId?: string; condition_id?: string; conditionRef?: string; medicalContentId?: string; condition?: string; conditionName?: string; id?: string }> | string[] | undefined;
+    const selectedMeta = findSelectedOption(optionPool, selectedAnswer);
+
     const parTimeMs = calculateParTime({
       ...qData,
       stem: qData.stem || qData.question || qData.vignette || qData.text || '',
@@ -185,6 +216,22 @@ export const onRequestPost = async (context: CloudflareContext) => {
       timeToAnswer: numericTime,
       baselineTime: parTimeMs,
     });
+
+    // Update aggregated user statistics for clinical profile
+    try {
+      await applyAttemptToUserStatistics(prisma as any, userId, {
+        system: (question as any).system || (qData as any).system || undefined,
+        isCorrect,
+        timeSpentMs: numericTime,
+        selectedCondition: selectedMeta?.conditionId ?? selectedMeta?.label ?? null,
+        correctCondition: question.conditionId ?? null,
+        timestamp: new Date(),
+      });
+
+      await updateTimingAggregates(prisma as any, userId, { refreshPeakHours: true });
+    } catch (statsError) {
+      console.warn('Failed to update user statistics after review', statsError);
+    }
 
     // If question has conditionId, also update UserProgress with review history
     if (question.conditionId) {
@@ -250,6 +297,72 @@ export const onRequestPost = async (context: CloudflareContext) => {
       } catch (progressError) {
         console.warn('Failed to update UserProgress:', progressError);
         // Don't fail the entire request if progress update fails
+      }
+    }
+
+    // Record confusion pairs when the user answers incorrectly
+    if (!isCorrect) {
+      try {
+        const correctWhere: Array<Record<string, unknown>> = [];
+        if (question.medicalContentId) correctWhere.push({ id: question.medicalContentId });
+        if (question.conditionId) correctWhere.push({ conditionId: question.conditionId });
+        if (typeof qData.condition === 'string') {
+          correctWhere.push({ condition: { equals: qData.condition, mode: 'insensitive' as const } });
+        }
+
+        const selectedWhere: Array<Record<string, unknown>> = [];
+        if (selectedMeta?.conditionId) {
+          selectedWhere.push({ id: selectedMeta.conditionId });
+          selectedWhere.push({ conditionId: selectedMeta.conditionId });
+        }
+        if (selectedMeta?.conditionName) {
+          selectedWhere.push({ condition: { equals: selectedMeta.conditionName, mode: 'insensitive' as const } });
+        }
+
+        const [correctContent, selectedContent] = await Promise.all([
+          correctWhere.length
+            ? prisma!.medicalContent.findFirst({
+                where: { OR: correctWhere },
+                select: { id: true, condition: true, conditionId: true },
+              })
+            : null,
+          selectedWhere.length
+            ? prisma!.medicalContent.findFirst({
+                where: { OR: selectedWhere },
+                select: { id: true, condition: true, conditionId: true },
+              })
+            : null,
+        ]);
+
+        if (correctContent && selectedContent && correctContent.id !== selectedContent.id) {
+          await prisma!.confusionPair.upsert({
+            where: {
+              userId_correctConditionId_selectedConditionId: {
+                userId,
+                correctConditionId: correctContent.id,
+                selectedConditionId: selectedContent.id,
+              },
+            },
+            create: {
+              userId,
+              correctConditionId: correctContent.id,
+              selectedConditionId: selectedContent.id,
+              realCondition: correctContent.condition,
+              mistakenFor: selectedContent.condition,
+              realConditionId: correctContent.conditionId,
+              mistakenForId: selectedContent.conditionId,
+            },
+            update: {
+              count: { increment: 1 },
+              realCondition: correctContent.condition,
+              mistakenFor: selectedContent.condition,
+              realConditionId: correctContent.conditionId,
+              mistakenForId: selectedContent.conditionId,
+            },
+          });
+        }
+      } catch (confusionError) {
+        console.warn('Failed to record confusion pair', confusionError);
       }
     }
 

@@ -8,8 +8,6 @@
  * - Smart suggestions
  */
 
-import { useAuth } from '@clerk/clerk-react';
-
 // Types
 export interface RelatedCondition {
   id: string;
@@ -138,6 +136,8 @@ export interface ConfusionPair {
   mistakenFor: string;
   count: number;
   lastOccurrence: string;
+  correctConditionId?: string | null;
+  selectedConditionId?: string | null;
   realConditionData?: {
     id: string;
     name: string;
@@ -170,8 +170,34 @@ export interface ConfusionPairsResponse {
   recommendations: string[];
 }
 
+export interface UserConfusionPairSummary {
+  id: string;
+  count: number;
+  correctConditionId: string | null;
+  selectedConditionId: string | null;
+  correctCondition: string;
+  selectedCondition: string;
+  correctSystem?: string | null;
+  selectedSystem?: string | null;
+  lastOccurred?: string | null;
+}
+
+export interface UserConfusionsResponse {
+  success?: boolean;
+  pairs: UserConfusionPairSummary[];
+  total: number;
+}
+
+export interface ComparisonResult {
+  features: string[];
+  distinguishers: string[];
+  generatedAt: string;
+  source: 'gemini' | 'fallback';
+}
+
 // API Base URL
 const API_BASE = '/api/ddx';
+const USER_API_BASE = '/api/user';
 
 /**
  * Fetch related differential diagnoses for a condition
@@ -245,6 +271,83 @@ export async function fetchConfusionPairs(
   
   return response.json();
 }
+
+  /**
+   * Track a confusion pair for the current user (POST /api/user/confusion)
+   */
+  export async function trackConfusionPair(
+    token: string,
+    body: { correctConditionId: string; selectedConditionId: string }
+  ) {
+    const response = await fetch(`${USER_API_BASE}/confusion`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to track confusion pair: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Fetch top confusion pairs for the current user (GET /api/user/confusions)
+   */
+  export async function fetchUserConfusions(
+    token: string,
+    options: { limit?: number } = {}
+  ): Promise<UserConfusionsResponse> {
+    const params = new URLSearchParams();
+    if (options.limit) params.set('limit', options.limit.toString());
+
+    const response = await fetch(`${USER_API_BASE}/confusions?${params.toString()}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load confusion pairs: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Generate or fetch a cached comparison table for given conditions
+   */
+  export async function generateComparison(
+    conditionIds: string[],
+    token?: string,
+    signal?: AbortSignal
+  ): Promise<ComparisonResult> {
+    if (conditionIds.length < 2) {
+      throw new Error('At least two condition IDs are required');
+    }
+
+    const params = new URLSearchParams();
+    params.set('conditions', conditionIds.join(','));
+
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_BASE}/comparison?${params.toString()}`, {
+      headers,
+      signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to generate comparison: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.comparison as ComparisonResult;
+  }
 
 /**
  * Get severity color for confusion pairs
@@ -323,6 +426,9 @@ export default {
   fetchRelatedConditions,
   fetchConditionComparison,
   fetchConfusionPairs,
+  fetchUserConfusions,
+  trackConfusionPair,
+  generateComparison,
   getSeverityColor,
   getSeverityBgColor,
   formatFieldValue,

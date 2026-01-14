@@ -47,14 +47,35 @@ interface ConditionMetadata {
 async function getRandomConditionForSystemDB(systemCode: string): Promise<ConditionMetadata | null> {
   try {
     const conditions = await getConditionsBySystem(systemCode);
-    if (!conditions || conditions.length === 0) {
+    
+    // Defensive: Ensure we have a valid array with conditions
+    if (!conditions || !Array.isArray(conditions) || conditions.length === 0) {
+      console.warn(`[getRandomConditionForSystemDB] No conditions found for system ${systemCode}`);
       return null;
     }
+    
     const randomIndex = Math.floor(Math.random() * conditions.length);
     const condition = conditions[randomIndex];
+    
+    // Defensive: Validate the condition object has required fields
+    if (!condition || typeof condition !== 'object') {
+      console.warn(`[getRandomConditionForSystemDB] Invalid condition at index ${randomIndex} for ${systemCode}`);
+      return null;
+    }
+    
+    // Safely access properties with fallbacks
+    // ConditionMeta uses 'condition' field, but some responses may use 'name'
+    const conditionName = condition.condition || (condition as any).name;
+    const conditionSystem = condition.system || systemCode;
+    
+    if (!conditionName) {
+      console.warn(`[getRandomConditionForSystemDB] Condition missing name field for ${systemCode}:`, condition);
+      return null;
+    }
+    
     return {
-      name: condition.condition,
-      system: condition.system,
+      name: conditionName,
+      system: conditionSystem,
       subcategory: condition.subcategory,
     };
   } catch (error) {
@@ -67,19 +88,61 @@ async function getRandomConditionForSystemDB(systemCode: string): Promise<Condit
  * Find a condition by name across all systems
  */
 async function findConditionByName(conditionName: string): Promise<ConditionMetadata | null> {
+  // Safety check: validate input
+  if (!conditionName || typeof conditionName !== 'string') {
+    console.warn('[findConditionByName] Invalid conditionName:', conditionName);
+    return null;
+  }
+  
   try {
     const allConditions = await getAllConditions();
+    
+    // Defensive: Ensure we have a valid array
+    if (!allConditions || !Array.isArray(allConditions)) {
+      console.error('[findConditionByName] getAllConditions did not return an array:', typeof allConditions);
+      return null;
+    }
+    
+    if (allConditions.length === 0) {
+      console.warn('[findConditionByName] No conditions available in database');
+      return null;
+    }
+    
     const normalizedSearch = conditionName.toLowerCase().trim();
     
-    const match = allConditions.find(c => 
-      c.condition.toLowerCase().trim() === normalizedSearch ||
-      (c.aliases && c.aliases.some((a: string) => a.toLowerCase().trim() === normalizedSearch))
-    );
+    // Use a safer find with explicit null checks
+    const match = allConditions.find(c => {
+      if (!c || typeof c !== 'object') return false;
+      
+      // Check primary condition name
+      const conditionNameField = c.condition || (c as any).name;
+      if (conditionNameField && typeof conditionNameField === 'string') {
+        if (conditionNameField.toLowerCase().trim() === normalizedSearch) {
+          return true;
+        }
+      }
+      
+      // Check aliases
+      if (c.aliases && Array.isArray(c.aliases)) {
+        return c.aliases.some((a: string) => 
+          a && typeof a === 'string' && a.toLowerCase().trim() === normalizedSearch
+        );
+      }
+      
+      return false;
+    });
     
     if (!match) return null;
     
+    // Safely extract the condition name
+    const matchedName = match.condition || (match as any).name;
+    if (!matchedName || !match.system) {
+      console.warn('[findConditionByName] Matched condition missing required fields:', match);
+      return null;
+    }
+    
     return {
-      name: match.condition,
+      name: matchedName,
       system: match.system,
       subcategory: match.subcategory,
     };

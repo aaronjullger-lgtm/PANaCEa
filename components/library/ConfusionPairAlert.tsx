@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, X, ArrowLeftRight, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
-import { fetchConfusionPairs, type ConfusionPair, getSeverityColor, getSeverityBgColor } from '@/services/ddxService';
+import { fetchConfusionPairs, type ConfusionPair, getSeverityColor, getSeverityBgColor, generateComparison } from '@/services/ddxService';
 
 interface ConfusionPairAlertProps {
   /** Current condition being viewed */
@@ -32,6 +32,7 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [prefetchedKeys, setPrefetchedKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!isSignedIn || (!conditionId && !conditionName)) return;
@@ -67,6 +68,35 @@ export const ConfusionPairAlert: React.FC<ConfusionPairAlertProps> = ({
     fetchData();
     setIsDismissed(false);
   }, [conditionId, conditionName, isSignedIn, getToken]);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    const topPair = confusionData[0];
+    if (!topPair || topPair.count <= 3) return;
+
+    const correctId = topPair.correctConditionId ?? topPair.realConditionData?.id ?? null;
+    const mistakenId = topPair.selectedConditionId ?? topPair.mistakenConditionData?.id ?? null;
+    if (!correctId || !mistakenId) return;
+
+    const key = `${correctId}-${mistakenId}`;
+    if (prefetchedKeys.has(key)) return;
+
+    const prefetch = async () => {
+      try {
+        const token = await getToken();
+        await generateComparison([correctId, mistakenId], token || undefined);
+        setPrefetchedKeys((prev) => {
+          const next = new Set(prev);
+          next.add(key);
+          return next;
+        });
+      } catch (error) {
+        console.warn('Failed to prefetch comparison for confusion pair', error);
+      }
+    };
+
+    prefetch();
+  }, [confusionData, getToken, isSignedIn, prefetchedKeys]);
 
   if (!isSignedIn || confusionData.length === 0 || isDismissed || isLoading) {
     return null;

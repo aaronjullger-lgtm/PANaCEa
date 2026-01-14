@@ -82,6 +82,7 @@ interface CommandCenterHubProps {
   onNavigateToDrillMode: (modeId: string) => void;
   onNavigateToToolkit: () => void;
   onNavigateToGapAnalysis: () => void;
+  onNavigateToClinicalProfile: () => void;
   onNavigateToIntegrations?: () => void;
   onNavigateToSimulation?: () => void;
   onNavigateToReference?: () => void;
@@ -419,6 +420,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   onNavigateToDrillMode,
   onNavigateToToolkit,
   onNavigateToGapAnalysis,
+  onNavigateToClinicalProfile,
   onNavigateToIntegrations,
   onNavigateToSimulation,
   onNavigateToReference,
@@ -843,6 +845,23 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                       <h4 className="font-semibold text-[var(--color-text-primary)]">Gap Analysis</h4>
                       <p className="text-sm text-[var(--color-text-muted)] mt-1">
                         Identify high-yield focus areas
+                      </p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                </button>
+                <button
+                  onClick={onNavigateToClinicalProfile}
+                  className="w-full text-left p-5 bg-[var(--color-bg-primary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)]/50 hover:shadow-lg transition-all group md:col-span-2"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-xl bg-[var(--color-bg-secondary)]">
+                      <BarChart3 className="w-6 h-6 text-[var(--color-text-secondary)]" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-[var(--color-text-primary)]">Clinical Profile</h4>
+                      <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                        Strengths, timing patterns, and diagnosis bias
                       </p>
                     </div>
                     <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-0.5 transition-transform" />

@@ -15,14 +15,8 @@
  *   0 0 * * * cd /path/to/app && tsx scripts/scheduleJobs.ts
  */
 
-import { PrismaClient } from '@prisma/client';
-import { config } from 'dotenv';
 import { scheduleHealthCheck, scheduleQuestionGeneration, cleanupOldJobs } from '../lib/services/queue/jobQueue';
-
-// Load environment variables
-config();
-
-const prisma = new PrismaClient();
+import { prisma, disconnectPrisma } from './helpers/prisma-client';
 
 /**
  * Schedule all recurring jobs
@@ -57,7 +51,7 @@ async function scheduleAllJobs() {
     console.error('[Scheduler] Error scheduling jobs:', error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await disconnectPrisma();
   }
 }
 
@@ -106,7 +100,7 @@ async function main() {
     process.exit(0);
   } catch (error: any) {
     console.error('[Scheduler] Fatal error:', error);
-    await prisma.$disconnect();
+    await disconnectPrisma();
     process.exit(1);
   }
 }
