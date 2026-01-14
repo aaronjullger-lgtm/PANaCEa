@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lightbulb, X, Check, ArrowRight, RefreshCw, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@clerk/clerk-react';
 
 interface StudyRecommendation {
     id: string;
@@ -19,13 +20,25 @@ interface RecommendationFeedProps {
 }
 
 export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({ onNavigateToDrill, className }) => {
+    const { getToken } = useAuth();
     const [recommendations, setRecommendations] = useState<StudyRecommendation[]>([]);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
 
     const fetchRecommendations = async () => {
         try {
-            const res = await fetch('/api/recommendations');
+            const token = await getToken();
+            if (!token) {
+                setLoading(false);
+                return;
+            }
+
+            const res = await fetch('/api/recommendations', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
             if (res.ok) {
                 const data = await res.json();
                 setRecommendations(data);
@@ -40,7 +53,20 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({ onNaviga
     const generateRecommendations = async () => {
         setGenerating(true);
         try {
-            const res = await fetch('/api/recommendations/generate', { method: 'POST' });
+            const token = await getToken();
+            if (!token) {
+                toast.error("Authentication required");
+                setGenerating(false);
+                return;
+            }
+
+            const res = await fetch('/api/recommendations/generate', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
             if (res.ok) {
                 const data = await res.json();
                 if (data.length > 0) {
@@ -49,6 +75,8 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({ onNaviga
                 } else if (recommendations.length === 0) {
                     toast.info("You're all caught up! No new recommendations.");
                 }
+            } else {
+                toast.error("Failed to generate recommendations");
             }
         } catch (e) {
             toast.error("Failed to analyze progress");
@@ -61,22 +89,37 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({ onNaviga
         fetchRecommendations();
         // Auto-generate on mount if empty to keep it fresh.
         generateRecommendations();
-    }, []);
+    }, [getToken]);
 
     const handleAction = async (id: string, action: 'complete' | 'dismiss') => {
         // Optimistic update
         setRecommendations(prev => prev.filter(r => r.id !== id));
 
         try {
+            const token = await getToken();
+            if (!token) {
+                toast.error("Authentication required");
+                fetchRecommendations(); // Revert
+                return;
+            }
+
             if (action === 'dismiss') {
                 await fetch(`/api/recommendations/${id}/dismiss`, {
-                    method: 'PATCH'
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
                 });
             } else {
                 // For 'complete' we might also just dismiss or have a specific complete endpoint.
                 // For now, let's treat complete as dismiss but with positive toast.
                 await fetch(`/api/recommendations/${id}/dismiss`, {
-                    method: 'PATCH'
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
                 });
             }
 
