@@ -12,6 +12,7 @@ import {
 import ConditionSidebar from "./ConditionSidebar";
 import FormattedSection from "./conditions/FormattedSection";
 import { BuzzwordBanner } from "./conditions/BuzzwordBanner";
+import { ConditionFamilyView } from "./library/ConditionFamilyView";
 import { useAuth } from "@clerk/clerk-react";
 
 /**
@@ -80,7 +81,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 
   const [content, setContent] = useState<ConditionEntry | undefined>(undefined);
-  
+
   const conditionId = useMemo(
     () => buildConditionId(condition),
     [condition]
@@ -89,7 +90,7 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   // Load condition content asynchronously
   useEffect(() => {
     let mounted = true;
-    
+
     async function loadContent() {
       // Try to get it synchronously first (if already loaded)
       let entry = getConditionByIdSync(conditionId) ?? getConditionByIdSync(condition.condition);
@@ -98,16 +99,16 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
       if (!entry) {
         entry = (await getConditionById(conditionId)) ?? (await getConditionById(condition.condition));
       }
-      
+
       if (mounted) {
         setContent(entry);
         // If we have content, we can stop loading (even if extended data isn't ready)
         setIsLoading(false);
       }
     }
-    
+
     loadContent();
-    
+
     return () => {
       mounted = false;
     };
@@ -116,16 +117,16 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
   // Load extended content (Anatomy, Special Tests)
   useEffect(() => {
     let mounted = true;
-    
+
     async function loadExtendedData() {
       try {
         const token = await getToken();
         const response = await fetch(`${(import.meta as any).env.VITE_API_URL || 'http://localhost:3001'}/api/conditions/${condition.condition}/extended`, {
-           headers: {
-             Authorization: `Bearer ${token}`
-           }
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         });
-        
+
         // Check if response is JSON before parsing
         const contentType = response.headers.get('content-type');
         if (response.ok && contentType?.includes('application/json')) {
@@ -144,16 +145,16 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
           }
           if (mounted) setIsLoading(false); // Stop loading even on error
         }
-      } catch (e) { 
-        console.warn("Could not load extended data (anatomy, special tests) - this is optional", e); 
+      } catch (e) {
+        console.warn("Could not load extended data (anatomy, special tests) - this is optional", e);
         if (mounted) setIsLoading(false); // Stop loading even on error
       }
     }
-    
+
     if (condition.condition) {
       loadExtendedData();
     }
-    
+
     return () => {
       mounted = false;
     };
@@ -161,11 +162,11 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
 
   const sections: ContentSection[] = useMemo(() => {
     const availableSections: ContentSection[] = [];
-    
+
     // Use global content if available, otherwise fall back to core content from extended endpoint
     // This allows the modal to populate quickly even if the global content cache hasn't loaded yet
     const contentSource = content?.sections || extendedData?.coreContent;
-    
+
     SECTION_ORDER.forEach(config => {
       // Check standard content
       if (contentSource?.[config.key] && isMeaningfulContent(contentSource[config.key])) {
@@ -175,19 +176,19 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
         });
         return;
       }
-      
+
       // Check extended content
       if (config.key === 'anatomy' && extendedData?.anatomyStructures?.length > 0) {
         availableSections.push({ ...config });
         return;
       }
-      
+
       if (config.key === 'specialTests' && extendedData?.specialTests?.length > 0) {
         availableSections.push({ ...config });
         return;
       }
     });
-    
+
     return availableSections;
   }, [content?.sections, extendedData]);
 
@@ -337,15 +338,20 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                 <>
                   <BuzzwordBanner conditionName={condition.condition} />
 
+                  {condition.canonicalName && (
+                    <div className="mb-6">
+                      <ConditionFamilyView canonicalName={condition.canonicalName} />
+                    </div>
+                  )}
+
                   {mediaIds.length > 0 && (
                     <section className="condition-media">
                       <div className="condition-media-frame">
                         <img
-                          src={`/media/${
-                            mediaIds[mediaIndex].includes(".")
-                              ? mediaIds[mediaIndex]
-                              : `${mediaIds[mediaIndex]}.png`
-                          }`}
+                          src={`/media/${mediaIds[mediaIndex].includes(".")
+                            ? mediaIds[mediaIndex]
+                            : `${mediaIds[mediaIndex]}.png`
+                            }`}
                           alt={`${condition.condition} media ${mediaIndex + 1}`}
                         />
                         {mediaIds.length > 1 && (
@@ -405,9 +411,8 @@ const ConditionDetailModal: React.FC<ConditionDetailModalProps> = ({
                         >
                           <h3 className="condition-section-title">{section.title}</h3>
                           <div
-                            className={`condition-content ${
-                              section.accent === "danger" ? "condition-content-danger" : ""
-                            }`}
+                            className={`condition-content ${section.accent === "danger" ? "condition-content-danger" : ""
+                              }`}
                           >
                             {section.key === 'anatomy' && extendedData?.anatomyStructures ? (
                               <div className="space-y-4">

@@ -22,9 +22,9 @@ import type {
   ErrorTag,
   UserProfile,
 } from "./types";
-import { 
-  hasCompletedOnboarding, 
-  saveUserProfile 
+import {
+  hasCompletedOnboarding,
+  saveUserProfile
 } from "./services/userProfileService";
 import { getExamLabel } from "./services/userContextService";
 import type { TrainingModeId } from "./config/training-modes";
@@ -51,6 +51,7 @@ const AnatomyDrillSession = lazy(() => import("./components/drill/AnatomyDrillSe
 const ECGDrillSession = lazy(() => import("./components/drill/ECGDrillSession"));
 const DermDrillSession = lazy(() => import("./components/drill/DermDrillSession"));
 const ImagingDrillSession = lazy(() => import("./components/drill/ImagingDrillSession"));
+const ContrastiveDrillSession = lazy(() => import("./components/drill/ContrastiveDrillSession").then(m => ({ default: m.ContrastiveDrillSession })));
 const FluidElectrolyteMode = lazy(() => import("./components/modes/FluidElectrolyteMode"));
 const AntibioticMode = lazy(() => import("./components/modes/AntibioticMode"));
 const PatientEncounterMode = lazy(() => import("./components/modes/PatientEncounterMode"));
@@ -105,8 +106,9 @@ const DRILL_MODE_MEDICAL_WORDLE: TrainingModeId = 'medical_wordle';
 const DRILL_MODE_VENTILATOR: TrainingModeId = 'ventilator_hero';
 const DRILL_MODE_PHYSIOLOGY: TrainingModeId = 'physiology_drill';
 const DRILL_MODE_ANATOMY: TrainingModeId = 'anatomy_review';
+const DRILL_MODE_CONTRASTIVE: TrainingModeId = 'contrastive_drill';
 
-type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "system_drill" | "subcategory_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "ventilator_hero" | "physiology_drill" | "anatomy_review" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "clinical_profile" | "training_menu" | "simulation_page" | "command_center_page" | "reference_library";
+type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "system_drill" | "subcategory_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "ventilator_hero" | "physiology_drill" | "anatomy_review" | "contrastive_drill" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "clinical_profile" | "training_menu" | "simulation_page" | "command_center_page" | "reference_library";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -416,7 +418,7 @@ const App: React.FC = () => {
     if (focus === 'flagged') sessionFocus = 'reviewFlagged';
     else if (focus === 'due') sessionFocus = 'review';
     else if (focus === 'growth') sessionFocus = 'growth';
-    
+
     handleConfirmSession({
       focus: sessionFocus,
       difficulty: 'same',
@@ -489,6 +491,7 @@ const App: React.FC = () => {
       [DRILL_MODE_VENTILATOR]: 'ventilator_hero',
       [DRILL_MODE_PHYSIOLOGY]: 'physiology_drill',
       [DRILL_MODE_ANATOMY]: 'anatomy_review',
+      [DRILL_MODE_CONTRASTIVE]: 'contrastive_drill',
       'admin_media': 'admin_media',
       'toolkit': 'toolkit',
     };
@@ -536,683 +539,691 @@ const App: React.FC = () => {
   // Main authenticated app
   return (
     <ToastProvider>
-    <CommuterProvider>
-    {/* Sonner toast notifications */}
-    <Toaster 
-      position="top-right" 
-      richColors 
-      closeButton 
-      toastOptions={{
-        duration: 4000,
-        className: 'sonner-toast',
-      }}
-    />
-    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
-      {/* Loading Progress Bar */}
-      <LoadingProgress isLoading={isLoading} />
-      
-      {/* Premium Glass Header - Elegant and professional */}
-      <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <motion.button
-            onClick={() => setView("command_center")}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            aria-label="Return to Dashboard"
-          >
-            {/* Favicon icons - opposites for light/dark mode */}
-            <motion.img 
-              src="/Favicon.svg"
-              alt="PANaCEa Icon"
-              className="h-10 sm:h-12 w-auto dark:hidden"
-              transition={{ duration: 0.2 }}
-            />
-            <motion.img 
-              src="/favicondarkmodeTP.svg"
-              alt="PANaCEa Icon"
-              className="h-10 sm:h-12 w-auto hidden dark:block"
-              transition={{ duration: 0.2 }}
-            />
-            {/* PANaCEa text with Poppins Bold font */}
-            <span 
-              className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)]"
-              style={{ fontFamily: "'Poppins', sans-serif" }}
-            >
-              PANaCEa
-            </span>
-          </motion.button>
-          <div className="flex items-center gap-2">
-            {/* Offline Sync Status Indicator */}
-            <OfflineSyncIndicator />
-            <motion.button
-              onClick={() => setIsSettingsModalOpen(true)}
-              className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
-              aria-label="Settings and Stats"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Settings className="w-5 h-5" />
-            </motion.button>
-            <ThemeToggleButton />
-          </div>
-        </div>
-      </header>
-
-      {/* Settings/Stats Modal */}
-      <Suspense fallback={null}>
-        <SettingsStatsModal
-          isOpen={isSettingsModalOpen}
-          onClose={() => setIsSettingsModalOpen(false)}
-          performanceData={performanceData}
-          clearPerformanceData={clearPerformanceData}
-          clearMissedQuestionsData={clearMissedQuestionsData}
-          clearFlaggedQuestionsData={clearFlaggedQuestionsData}
-          missedQuestionsCount={missedQuestions.length}
-          flaggedQuestionsCount={flaggedQuestions.length}
-          isSyncing={isSyncing}
-          lastSyncTime={lastSyncTime}
-          syncError={syncError}
+      <CommuterProvider>
+        {/* Sonner toast notifications */}
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          toastOptions={{
+            duration: 4000,
+            className: 'sonner-toast',
+          }}
         />
-      </Suspense>
+        <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] transition-colors duration-300">
+          {/* Loading Progress Bar */}
+          <LoadingProgress isLoading={isLoading} />
 
-      {/* Keyboard Shortcuts Modal */}
-      <Suspense fallback={null}>
-        <KeyboardShortcutsModal
-          isOpen={isShortcutsModalOpen}
-          onClose={() => setIsShortcutsModalOpen(false)}
-        />
-      </Suspense>
-
-      {/* Full-screen views that break out of max-w-4xl constraint */}
-      {view === "reference_library" && (
-        <div className="w-full">
-          <WithGeminiErrorBoundary viewName="reference_library" onRetry={() => setView("reference_library")}>
-            <Suspense fallback={<Loader />}>
-              <ClinicalReferenceLibrary 
-                onExit={() => setView("command_center")}
-              />
-            </Suspense>
-          </WithGeminiErrorBoundary>
-        </div>
-      )}
-
-      {/* Standard views with max-w-4xl constraint */}
-      {view !== "reference_library" && (
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24">
-        {isLoading && <Loader forceDark={view === "imaging_drill"} />}
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-4 p-3 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm border border-red-200 dark:border-red-800"
-          >
-            {error}
-          </motion.div>
-        )}
-
-        {/* Removed mode="wait" to allow overlapping transitions for faster perceived navigation */}
-        <AnimatePresence>
-          {view === "command_center" && (
-            <motion.div
-              key="command_center"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <Suspense fallback={<Loader />}>
-                <CommandCenterHub
-                  performanceData={heatmapPerformance}
-                  missedQuestions={missedQuestions}
-                  flaggedQuestions={flaggedQuestions}
-                  dueCount={dueQuestionsCount}
-                  onStartSession={handleStartSession}
-                  onNavigateToDrillMode={handleNavigateToDrillMode}
-                  onNavigateToToolkit={() => setView("toolkit")}
-                  onNavigateToGapAnalysis={() => setView("gap_analysis")}
-                  onNavigateToClinicalProfile={() => setView("clinical_profile")}
-                  onNavigateToIntegrations={() => setView("integrations")}
-                  onNavigateToSimulation={handleNavigateToSimulation}
-                  onNavigateToReference={() => setView("reference_library")}
-                  growthAreas={growthAreas}
-                  examLabel={examLabel}
+          {/* Premium Glass Header - Elegant and professional */}
+          <header className="sticky top-0 z-40 bg-[var(--color-bg-primary)]/85 backdrop-blur-xl border-b border-[var(--color-border)] transition-all duration-300 shadow-sm">
+            <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+              <motion.button
+                onClick={() => setView("command_center")}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                aria-label="Return to Dashboard"
+              >
+                {/* Favicon icons - opposites for light/dark mode */}
+                <motion.img
+                  src="/Favicon.svg"
+                  alt="PANaCEa Icon"
+                  className="h-10 sm:h-12 w-auto dark:hidden"
+                  transition={{ duration: 0.2 }}
                 />
-              </Suspense>
-            </motion.div>
-          )}
-
-          {view === "menu" && (
-            <motion.div
-              key="menu"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <Suspense fallback={< Loader />}>
-                <MenuView
-                  performanceData={heatmapPerformance}
-                  missedQuestions={missedQuestions}
-                  flaggedQuestions={flaggedQuestions}
-                  onBackToQuiz={handleBackToQuiz}
-                  hasActiveSession={hasActiveSession}
-                  setIsLoading={setIsLoading}
-                  setError={setError}
-                  onStartSession={handleStartSession}
-                  onConfirmSession={handleConfirmSession}
-                  growthAreas={growthAreas}
-                  onNavigateToDrillMode={handleNavigateToDrillMode}
-                  onNavigateToIntegrations={() => setView("integrations")}
-                  onNavigateToSocial={() => setView("social_dashboard")}
-                  onNavigateToToolkit={() => setView("toolkit")}
-                  onNavigateToGapAnalysis={() => setView("gap_analysis")}
-                  onNavigateToSimulation={handleNavigateToSimulation}
-                  isSyncing={isSyncing}
-                  lastSyncTime={lastSyncTime}
-                  syncError={syncError}
+                <motion.img
+                  src="/favicondarkmodeTP.svg"
+                  alt="PANaCEa Icon"
+                  className="h-10 sm:h-12 w-auto hidden dark:block"
+                  transition={{ duration: 0.2 }}
                 />
-              </Suspense>
-            </motion.div>
-          )}
-
-          {view === "quiz" && sessionSettings && (
-            <motion.div
-              key="quiz"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <WithGeminiErrorBoundary viewName="quiz" onRetry={() => setView("quiz")}>
-              <Suspense fallback={<Loader />}>
-                <QuizView
-                  initialQueue={questionQueue}
-                  setParentQueue={setQuestionQueue}
-                  addPerformanceRecord={addPerformanceRecord}
-                  addMissedQuestion={addMissedQuestion}
-                  updateReviewQuestion={updateReviewQuestion}
-                  updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
-                  setIsLoading={setIsLoading}
-                  setError={setError}
-                  sessionSettings={sessionSettings}
-                  growthAreas={growthAreas}
-                  onEndSession={handleEndSession}
-                  onShowMenu={() => setView("command_center")}
-                  performanceData={heatmapPerformance}
-                  fontSizeAdjustment={fontSizeAdjustment}
-                  setFontSizeAdjustment={setFontSizeAdjustment}
-                  flaggedQuestions={flaggedQuestions}
-                  addFlaggedQuestion={addFlaggedQuestion}
-                  removeFlaggedQuestion={removeFlaggedQuestion}
-                  updateQuestionNote={updateQuestionNote}
-                />
-              </Suspense>
-              </WithGeminiErrorBoundary>
-            </motion.div>
-          )}
-
-          {view === "photo_drill" && (
-            <WithGeminiErrorBoundary viewName="photo_drill" onRetry={() => setView("photo_drill")}>
-              <Suspense fallback={<Loader />}>
-                <PhotoDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {/* ECG, Derm, and Imaging drills use the same PhotoDrillSession component with different filters */}
-          {view === "ecg_drill" && (
-            <WithGeminiErrorBoundary viewName="ecg_drill" onRetry={() => setView("ecg_drill")}>
-              <Suspense fallback={<Loader />}>
-                <ECGDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "derm_drill" && (
-            <WithGeminiErrorBoundary viewName="derm_drill" onRetry={() => setView("derm_drill")}>
-              <Suspense fallback={<Loader />}>
-                <DermDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "imaging_drill" && (
-            <WithGeminiErrorBoundary viewName="imaging_drill" onRetry={() => setView("imaging_drill")}>
-              <Suspense fallback={<Loader />}>
-                <ImagingDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "rapid_recall" && (
-            <WithGeminiErrorBoundary viewName="rapid_recall" onRetry={() => setView("rapid_recall")}>
-              <Suspense fallback={<Loader />}>
-                <RapidRecallDrill onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "ddx_compare" && (
-            <WithGeminiErrorBoundary viewName="ddx_compare" onRetry={() => setView("ddx_compare")}>
-              <Suspense fallback={<Loader />}>
-                <DDxCompareDrill onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "mini_lab" && (
-            <WithGeminiErrorBoundary viewName="mini_lab" onRetry={() => setView("mini_lab")}>
-              <Suspense fallback={<Loader />}>
-                <MiniLabDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "pharmacology" && (
-            <WithGeminiErrorBoundary viewName="pharmacology" onRetry={() => setView("pharmacology")}>
-              <Suspense fallback={<Loader />}>
-                <PharmacologyDrillSession 
-                  onExit={() => setView("command_center")}
-                  addPerformanceRecord={addPerformanceRecord}
-                  addMissedQuestion={addMissedQuestion}
-                  updateReviewQuestion={updateReviewQuestion}
-                  updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
-                  performanceData={performanceData}
-                  fontSizeAdjustment={fontSizeAdjustment}
-                  setFontSizeAdjustment={setFontSizeAdjustment}
-                  flaggedQuestions={flaggedQuestions}
-                  addFlaggedQuestion={addFlaggedQuestion}
-                  removeFlaggedQuestion={removeFlaggedQuestion}
-                  updateQuestionNote={updateQuestionNote}
-                />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "first_line_treatment" && (
-            <WithGeminiErrorBoundary viewName="first_line_treatment" onRetry={() => setView("first_line_treatment")}>
-              <Suspense fallback={<Loader />}>
-                <FirstLineDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "condition_drill" && (
-            <WithGeminiErrorBoundary viewName="condition_drill" onRetry={() => setView("condition_drill")}>
-              <Suspense fallback={<Loader />}>
-                <ConditionDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "system_drill" && (
-            <WithGeminiErrorBoundary viewName="system_drill" onRetry={() => setView("system_drill")}>
-              <Suspense fallback={<Loader />}>
-                <SystemDrillSession 
-                  onExit={() => setView("command_center")}
-                  addPerformanceRecord={addPerformanceRecord}
-                  addMissedQuestion={addMissedQuestion}
-                  updateReviewQuestion={updateReviewQuestion}
-                  updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
-                  performanceData={performanceData}
-                  fontSizeAdjustment={fontSizeAdjustment}
-                  setFontSizeAdjustment={setFontSizeAdjustment}
-                  flaggedQuestions={flaggedQuestions}
-                  addFlaggedQuestion={addFlaggedQuestion}
-                  removeFlaggedQuestion={removeFlaggedQuestion}
-                  updateQuestionNote={updateQuestionNote}
-                />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "subcategory_drill" && (
-            <WithGeminiErrorBoundary viewName="subcategory_drill" onRetry={() => setView("subcategory_drill")}>
-              <Suspense fallback={<Loader />}>
-                <SubcategoryDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "guideline_drill" && (
-            <WithGeminiErrorBoundary viewName="guideline_drill" onRetry={() => setView("guideline_drill")}>
-              <Suspense fallback={<Loader />}>
-                <GuidelineDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "ventilator_hero" && (
-            <WithGeminiErrorBoundary viewName="ventilator_hero" onRetry={() => setView("ventilator_hero")}>
-              <Suspense fallback={<Loader />}>
-                <VentilatorDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "physiology_drill" && (
-            <WithGeminiErrorBoundary viewName="physiology_drill" onRetry={() => setView("physiology_drill")}>
-              <Suspense fallback={<Loader />}>
-                <PhysiologyDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "anatomy_review" && (
-            <WithGeminiErrorBoundary viewName="anatomy_review" onRetry={() => setView("anatomy_review")}>
-              <Suspense fallback={<Loader />}>
-                <AnatomyDrillSession onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "fluid_electrolyte" && (
-            <WithGeminiErrorBoundary viewName="fluid_electrolyte" onRetry={() => setView("fluid_electrolyte")}>
-              <Suspense fallback={<Loader />}>
-                <FluidElectrolyteMode onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "antibiotic_mode" && (
-            <WithGeminiErrorBoundary viewName="antibiotic_mode" onRetry={() => setView("antibiotic_mode")}>
-              <Suspense fallback={<Loader />}>
-                <AntibioticMode onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "patient_encounter" && (
-            <WithGeminiErrorBoundary viewName="patient_encounter" onRetry={() => setView("patient_encounter")}>
-              <Suspense fallback={<Loader />}>
-                <PatientEncounterMode onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "integrations" && (
-            <WithGeminiErrorBoundary viewName="integrations" onRetry={() => setView("integrations")}>
-              <Suspense fallback={<Loader />}>
-                <IntegrationsHub
-                  performanceData={performanceData}
-                  missedQuestions={missedQuestions}
-                  onBack={() => setView("command_center")}
-                />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "panre_la" && (
-            <WithGeminiErrorBoundary viewName="panre_la" onRetry={() => setView("panre_la")}>
-              <Suspense fallback={<Loader />}>
-                <PANRELASimulator onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "cram_mode" && (
-            <WithGeminiErrorBoundary viewName="cram_mode" onRetry={() => setView("cram_mode")}>
-              <Suspense fallback={<Loader />}>
-                <CramMode onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "code_blue_speed" && (
-            <WithGeminiErrorBoundary viewName="code_blue_speed" onRetry={() => setView("code_blue_speed")}>
-              <Suspense fallback={<Loader />}>
-                <CodeBlueSpeedMode onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "grand_rounds" && (
-            <WithGeminiErrorBoundary viewName="grand_rounds" onRetry={() => setView("grand_rounds")}>
-              <Suspense fallback={<Loader />}>
-                <GrandRoundsMode onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "medical_wordle" && (
-            <WithGeminiErrorBoundary viewName="medical_wordle" onRetry={() => setView("medical_wordle")}>
-              <Suspense fallback={<Loader />}>
-                <MedicalWordleMode onExit={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "social_dashboard" && (
-            <WithGeminiErrorBoundary viewName="social_dashboard" onRetry={() => setView("social_dashboard")}>
-              <Suspense fallback={<Loader />}>
-                <div className="relative">
-                  <button
-                    onClick={() => setView("command_center")}
-                    className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-slate-600 dark:text-slate-400"><path d="m15 18-6-6 6-6"/></svg>
-                  </button>
-                  <StudyGroupDashboard />
-                </div>
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "admin_media" && (
-            <WithGeminiErrorBoundary viewName="admin_media" onRetry={() => setView("admin_media")}>
-              <Suspense fallback={<Loader />}>
-                <MediaApproval onClose={() => setView("command_center")} />
-              </Suspense>
-            </WithGeminiErrorBoundary>
-          )}
-
-          {view === "toolkit" && (
-            <motion.div
-              key="toolkit"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <WithGeminiErrorBoundary viewName="toolkit" onRetry={() => setView("toolkit")}>
-                <Suspense fallback={<Loader />}>
-                  <ToolkitHub 
-                    onClose={() => setView("command_center")}
-                    onNavigateToItem={handleNavigateToDrillMode}
-                  />
-                </Suspense>
-              </WithGeminiErrorBoundary>
-            </motion.div>
-          )}
-
-          {view === "gap_analysis" && (
-            <motion.div
-              key="gap_analysis"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <WithGeminiErrorBoundary viewName="gap_analysis" onRetry={() => setView("gap_analysis")}>
-                <Suspense fallback={<Loader />}>
-                  <GapAnalysisDashboard />
-                </Suspense>
-              </WithGeminiErrorBoundary>
-            </motion.div>
-          )}
-
-          {view === "clinical_profile" && (
-            <motion.div
-              key="clinical_profile"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <WithGeminiErrorBoundary viewName="clinical_profile" onRetry={() => setView("clinical_profile")}>
-                <Suspense fallback={<Loader />}>
-                  <ClinicalProfileDashboard />
-                </Suspense>
-              </WithGeminiErrorBoundary>
-            </motion.div>
-          )}
-
-          {view === "training_menu" && (
-            <motion.div
-              key="training_menu"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <WithGeminiErrorBoundary viewName="training_menu" onRetry={() => setView("training_menu")}>
-                <Suspense fallback={<Loader />}>
-                  <TrainingMenu 
-                    onClose={() => setView("command_center")}
-                    onNavigateToMode={(route, mode) => handleNavigateToDrillMode(mode.id)}
-                    onStartSession={handleTrainingMenuStart}
-                    dueQuestionsCount={dueQuestionsCount}
-                    flaggedQuestionsCount={flaggedQuestions.length}
-                    growthAreasCount={growthAreas.length}
-                  />
-                </Suspense>
-              </WithGeminiErrorBoundary>
-            </motion.div>
-          )}
-
-          {view === "simulation_page" && (
-            <motion.div
-              key="simulation_page"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <WithGeminiErrorBoundary viewName="simulation_page" onRetry={() => setView("simulation_page")}>
-                <Suspense fallback={<Loader />}>
-                  <SimulationPage 
-                    onStartSession={handleConfirmSession}
-                    onBack={() => setView("command_center")}
-                    performanceData={heatmapPerformance}
-                    flaggedQuestions={flaggedQuestions}
-                    growthAreas={growthAreas}
-                    examLabel={examLabel}
-                  />
-                </Suspense>
-              </WithGeminiErrorBoundary>
-            </motion.div>
-          )}
-
-          {view === "command_center_page" && (
-            <motion.div
-              key="command_center_page"
-              variants={pageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={pageTransition}
-            >
-              <WithGeminiErrorBoundary viewName="command_center_page" onRetry={() => setView("command_center_page")}>
-                <Suspense fallback={<Loader />}>
-                  <CommandCenterPage 
-                    performanceData={heatmapPerformance}
-                    missedQuestions={missedQuestions}
-                    flaggedQuestions={flaggedQuestions}
-                    growthAreas={growthAreas}
-                    dueCount={dueQuestionsCount}
-                    examLabel={examLabel}
-                    onStartSession={handleConfirmSession}
-                    onNavigateToDrillMode={handleNavigateToDrillMode}
-                    onNavigateToToolkit={() => setView("toolkit")}
-                    onNavigateToGapAnalysis={() => setView("gap_analysis")}
-                    onNavigateToIntegrations={() => setView("integrations")}
-                    onNavigateToReference={() => setView("reference_library")}
-                    onBack={() => setView("command_center")}
-                  />
-                </Suspense>
-              </WithGeminiErrorBoundary>
-            </motion.div>
-          )}
-
-        </AnimatePresence>
-      </div>
-      )}
-
-      {/* Command Palette */}
-      <Suspense fallback={null}>
-        <CommandPalette
-          isOpen={isCommandPaletteOpen}
-          onClose={() => setIsCommandPaletteOpen(false)}
-          onNavigate={handleNavigateToDrillMode}
-        />
-      </Suspense>
-
-      {/* Global Session Setup Modal */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-50 p-4" 
-            onClick={() => setIsModalOpen(false)}
-          >
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2 }}
-              className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-4 md:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]" 
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Training Command Center</h2>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-                  aria-label="Close modal"
+                {/* PANaCEa text with Poppins Bold font */}
+                <span
+                  className="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)]"
+                  style={{ fontFamily: "'Poppins', sans-serif" }}
                 >
-                  <X className="w-6 h-6" />
-                </button>
+                  PANaCEa
+                </span>
+              </motion.button>
+              <div className="flex items-center gap-2">
+                {/* Offline Sync Status Indicator */}
+                <OfflineSyncIndicator />
+                <motion.button
+                  onClick={() => setIsSettingsModalOpen(true)}
+                  className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-all duration-200"
+                  aria-label="Settings and Stats"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Settings className="w-5 h-5" />
+                </motion.button>
+                <ThemeToggleButton />
               </div>
-              <Suspense fallback={<Loader />}>
-                <TrainingMenu
-                  onStartSession={handleTrainingMenuStart}
-                  onNavigateToMode={(route, mode) => {
-                    setIsModalOpen(false);
-                    handleNavigateToDrillMode(mode.id);
-                  }}
-                  onClose={() => setIsModalOpen(false)}
-                  dueQuestionsCount={dueQuestionsCount}
-                  flaggedQuestionsCount={flaggedQuestions.length}
-                  growthAreasCount={growthAreas.length}
-                />
-              </Suspense>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </div>
+          </header>
 
-      {/* User Profile Onboarding Modal */}
-      <Suspense fallback={null}>
-        <UserProfileModal
-          isOpen={isOnboardingModalOpen}
-          onComplete={handleOnboardingComplete}
-          onSkip={handleOnboardingSkip}
-          canSkip={true}
-        />
-      </Suspense>
-    </div>
-    </CommuterProvider>
+          {/* Settings/Stats Modal */}
+          <Suspense fallback={null}>
+            <SettingsStatsModal
+              isOpen={isSettingsModalOpen}
+              onClose={() => setIsSettingsModalOpen(false)}
+              performanceData={performanceData}
+              clearPerformanceData={clearPerformanceData}
+              clearMissedQuestionsData={clearMissedQuestionsData}
+              clearFlaggedQuestionsData={clearFlaggedQuestionsData}
+              missedQuestionsCount={missedQuestions.length}
+              flaggedQuestionsCount={flaggedQuestions.length}
+              isSyncing={isSyncing}
+              lastSyncTime={lastSyncTime}
+              syncError={syncError}
+            />
+          </Suspense>
+
+          {/* Keyboard Shortcuts Modal */}
+          <Suspense fallback={null}>
+            <KeyboardShortcutsModal
+              isOpen={isShortcutsModalOpen}
+              onClose={() => setIsShortcutsModalOpen(false)}
+            />
+          </Suspense>
+
+          {/* Full-screen views that break out of max-w-4xl constraint */}
+          {view === "reference_library" && (
+            <div className="w-full">
+              <WithGeminiErrorBoundary viewName="reference_library" onRetry={() => setView("reference_library")}>
+                <Suspense fallback={<Loader />}>
+                  <ClinicalReferenceLibrary
+                    onExit={() => setView("command_center")}
+                  />
+                </Suspense>
+              </WithGeminiErrorBoundary>
+            </div>
+          )}
+
+          {/* Standard views with max-w-4xl constraint */}
+          {view !== "reference_library" && (
+            <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-10 pb-20 sm:pb-24">
+              {isLoading && <Loader forceDark={view === "imaging_drill"} />}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-3 rounded-md bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-sm border border-red-200 dark:border-red-800"
+                >
+                  {error}
+                </motion.div>
+              )}
+
+              {/* Removed mode="wait" to allow overlapping transitions for faster perceived navigation */}
+              <AnimatePresence>
+                {view === "command_center" && (
+                  <motion.div
+                    key="command_center"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <Suspense fallback={<Loader />}>
+                      <CommandCenterHub
+                        performanceData={heatmapPerformance}
+                        missedQuestions={missedQuestions}
+                        flaggedQuestions={flaggedQuestions}
+                        dueCount={dueQuestionsCount}
+                        onStartSession={handleStartSession}
+                        onNavigateToDrillMode={handleNavigateToDrillMode}
+                        onNavigateToToolkit={() => setView("toolkit")}
+                        onNavigateToGapAnalysis={() => setView("gap_analysis")}
+                        onNavigateToClinicalProfile={() => setView("clinical_profile")}
+                        onNavigateToIntegrations={() => setView("integrations")}
+                        onNavigateToSimulation={handleNavigateToSimulation}
+                        onNavigateToReference={() => setView("reference_library")}
+                        growthAreas={growthAreas}
+                        examLabel={examLabel}
+                      />
+                    </Suspense>
+                  </motion.div>
+                )}
+
+                {view === "menu" && (
+                  <motion.div
+                    key="menu"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <Suspense fallback={< Loader />}>
+                      <MenuView
+                        performanceData={heatmapPerformance}
+                        missedQuestions={missedQuestions}
+                        flaggedQuestions={flaggedQuestions}
+                        onBackToQuiz={handleBackToQuiz}
+                        hasActiveSession={hasActiveSession}
+                        setIsLoading={setIsLoading}
+                        setError={setError}
+                        onStartSession={handleStartSession}
+                        onConfirmSession={handleConfirmSession}
+                        growthAreas={growthAreas}
+                        onNavigateToDrillMode={handleNavigateToDrillMode}
+                        onNavigateToIntegrations={() => setView("integrations")}
+                        onNavigateToSocial={() => setView("social_dashboard")}
+                        onNavigateToToolkit={() => setView("toolkit")}
+                        onNavigateToGapAnalysis={() => setView("gap_analysis")}
+                        onNavigateToSimulation={handleNavigateToSimulation}
+                        isSyncing={isSyncing}
+                        lastSyncTime={lastSyncTime}
+                        syncError={syncError}
+                      />
+                    </Suspense>
+                  </motion.div>
+                )}
+
+                {view === "quiz" && sessionSettings && (
+                  <motion.div
+                    key="quiz"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <WithGeminiErrorBoundary viewName="quiz" onRetry={() => setView("quiz")}>
+                      <Suspense fallback={<Loader />}>
+                        <QuizView
+                          initialQueue={questionQueue}
+                          setParentQueue={setQuestionQueue}
+                          addPerformanceRecord={addPerformanceRecord}
+                          addMissedQuestion={addMissedQuestion}
+                          updateReviewQuestion={updateReviewQuestion}
+                          updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                          setIsLoading={setIsLoading}
+                          setError={setError}
+                          sessionSettings={sessionSettings}
+                          growthAreas={growthAreas}
+                          onEndSession={handleEndSession}
+                          onShowMenu={() => setView("command_center")}
+                          performanceData={heatmapPerformance}
+                          fontSizeAdjustment={fontSizeAdjustment}
+                          setFontSizeAdjustment={setFontSizeAdjustment}
+                          flaggedQuestions={flaggedQuestions}
+                          addFlaggedQuestion={addFlaggedQuestion}
+                          removeFlaggedQuestion={removeFlaggedQuestion}
+                          updateQuestionNote={updateQuestionNote}
+                        />
+                      </Suspense>
+                    </WithGeminiErrorBoundary>
+                  </motion.div>
+                )}
+
+                {view === "photo_drill" && (
+                  <WithGeminiErrorBoundary viewName="photo_drill" onRetry={() => setView("photo_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <PhotoDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {/* ECG, Derm, and Imaging drills use the same PhotoDrillSession component with different filters */}
+                {view === "ecg_drill" && (
+                  <WithGeminiErrorBoundary viewName="ecg_drill" onRetry={() => setView("ecg_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <ECGDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "derm_drill" && (
+                  <WithGeminiErrorBoundary viewName="derm_drill" onRetry={() => setView("derm_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <DermDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "imaging_drill" && (
+                  <WithGeminiErrorBoundary viewName="imaging_drill" onRetry={() => setView("imaging_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <ImagingDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "rapid_recall" && (
+                  <WithGeminiErrorBoundary viewName="rapid_recall" onRetry={() => setView("rapid_recall")}>
+                    <Suspense fallback={<Loader />}>
+                      <RapidRecallDrill onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "ddx_compare" && (
+                  <WithGeminiErrorBoundary viewName="ddx_compare" onRetry={() => setView("ddx_compare")}>
+                    <Suspense fallback={<Loader />}>
+                      <DDxCompareDrill onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "mini_lab" && (
+                  <WithGeminiErrorBoundary viewName="mini_lab" onRetry={() => setView("mini_lab")}>
+                    <Suspense fallback={<Loader />}>
+                      <MiniLabDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "pharmacology" && (
+                  <WithGeminiErrorBoundary viewName="pharmacology" onRetry={() => setView("pharmacology")}>
+                    <Suspense fallback={<Loader />}>
+                      <PharmacologyDrillSession
+                        onExit={() => setView("command_center")}
+                        addPerformanceRecord={addPerformanceRecord}
+                        addMissedQuestion={addMissedQuestion}
+                        updateReviewQuestion={updateReviewQuestion}
+                        updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                        performanceData={performanceData}
+                        fontSizeAdjustment={fontSizeAdjustment}
+                        setFontSizeAdjustment={setFontSizeAdjustment}
+                        flaggedQuestions={flaggedQuestions}
+                        addFlaggedQuestion={addFlaggedQuestion}
+                        removeFlaggedQuestion={removeFlaggedQuestion}
+                        updateQuestionNote={updateQuestionNote}
+                      />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "first_line_treatment" && (
+                  <WithGeminiErrorBoundary viewName="first_line_treatment" onRetry={() => setView("first_line_treatment")}>
+                    <Suspense fallback={<Loader />}>
+                      <FirstLineDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "condition_drill" && (
+                  <WithGeminiErrorBoundary viewName="condition_drill" onRetry={() => setView("condition_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <ConditionDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "system_drill" && (
+                  <WithGeminiErrorBoundary viewName="system_drill" onRetry={() => setView("system_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <SystemDrillSession
+                        onExit={() => setView("command_center")}
+                        addPerformanceRecord={addPerformanceRecord}
+                        addMissedQuestion={addMissedQuestion}
+                        updateReviewQuestion={updateReviewQuestion}
+                        updateLastPerformanceErrorTag={updateLastPerformanceErrorTag}
+                        performanceData={performanceData}
+                        fontSizeAdjustment={fontSizeAdjustment}
+                        setFontSizeAdjustment={setFontSizeAdjustment}
+                        flaggedQuestions={flaggedQuestions}
+                        addFlaggedQuestion={addFlaggedQuestion}
+                        removeFlaggedQuestion={removeFlaggedQuestion}
+                        updateQuestionNote={updateQuestionNote}
+                      />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "subcategory_drill" && (
+                  <WithGeminiErrorBoundary viewName="subcategory_drill" onRetry={() => setView("subcategory_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <SubcategoryDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "guideline_drill" && (
+                  <WithGeminiErrorBoundary viewName="guideline_drill" onRetry={() => setView("guideline_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <GuidelineDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "ventilator_hero" && (
+                  <WithGeminiErrorBoundary viewName="ventilator_hero" onRetry={() => setView("ventilator_hero")}>
+                    <Suspense fallback={<Loader />}>
+                      <VentilatorDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "physiology_drill" && (
+                  <WithGeminiErrorBoundary viewName="physiology_drill" onRetry={() => setView("physiology_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <PhysiologyDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "anatomy_review" && (
+                  <WithGeminiErrorBoundary viewName="anatomy_review" onRetry={() => setView("anatomy_review")}>
+                    <Suspense fallback={<Loader />}>
+                      <AnatomyDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "contrastive_drill" && (
+                  <WithGeminiErrorBoundary viewName="contrastive_drill" onRetry={() => setView("contrastive_drill")}>
+                    <Suspense fallback={<Loader />}>
+                      <ContrastiveDrillSession onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "fluid_electrolyte" && (
+                  <WithGeminiErrorBoundary viewName="fluid_electrolyte" onRetry={() => setView("fluid_electrolyte")}>
+                    <Suspense fallback={<Loader />}>
+                      <FluidElectrolyteMode onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "antibiotic_mode" && (
+                  <WithGeminiErrorBoundary viewName="antibiotic_mode" onRetry={() => setView("antibiotic_mode")}>
+                    <Suspense fallback={<Loader />}>
+                      <AntibioticMode onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "patient_encounter" && (
+                  <WithGeminiErrorBoundary viewName="patient_encounter" onRetry={() => setView("patient_encounter")}>
+                    <Suspense fallback={<Loader />}>
+                      <PatientEncounterMode onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "integrations" && (
+                  <WithGeminiErrorBoundary viewName="integrations" onRetry={() => setView("integrations")}>
+                    <Suspense fallback={<Loader />}>
+                      <IntegrationsHub
+                        performanceData={performanceData}
+                        missedQuestions={missedQuestions}
+                        onBack={() => setView("command_center")}
+                      />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "panre_la" && (
+                  <WithGeminiErrorBoundary viewName="panre_la" onRetry={() => setView("panre_la")}>
+                    <Suspense fallback={<Loader />}>
+                      <PANRELASimulator onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "cram_mode" && (
+                  <WithGeminiErrorBoundary viewName="cram_mode" onRetry={() => setView("cram_mode")}>
+                    <Suspense fallback={<Loader />}>
+                      <CramMode onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "code_blue_speed" && (
+                  <WithGeminiErrorBoundary viewName="code_blue_speed" onRetry={() => setView("code_blue_speed")}>
+                    <Suspense fallback={<Loader />}>
+                      <CodeBlueSpeedMode onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "grand_rounds" && (
+                  <WithGeminiErrorBoundary viewName="grand_rounds" onRetry={() => setView("grand_rounds")}>
+                    <Suspense fallback={<Loader />}>
+                      <GrandRoundsMode onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "medical_wordle" && (
+                  <WithGeminiErrorBoundary viewName="medical_wordle" onRetry={() => setView("medical_wordle")}>
+                    <Suspense fallback={<Loader />}>
+                      <MedicalWordleMode onExit={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "social_dashboard" && (
+                  <WithGeminiErrorBoundary viewName="social_dashboard" onRetry={() => setView("social_dashboard")}>
+                    <Suspense fallback={<Loader />}>
+                      <div className="relative">
+                        <button
+                          onClick={() => setView("command_center")}
+                          className="absolute top-4 left-4 z-10 p-2 bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-slate-600 dark:text-slate-400"><path d="m15 18-6-6 6-6" /></svg>
+                        </button>
+                        <StudyGroupDashboard />
+                      </div>
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "admin_media" && (
+                  <WithGeminiErrorBoundary viewName="admin_media" onRetry={() => setView("admin_media")}>
+                    <Suspense fallback={<Loader />}>
+                      <MediaApproval onClose={() => setView("command_center")} />
+                    </Suspense>
+                  </WithGeminiErrorBoundary>
+                )}
+
+                {view === "toolkit" && (
+                  <motion.div
+                    key="toolkit"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <WithGeminiErrorBoundary viewName="toolkit" onRetry={() => setView("toolkit")}>
+                      <Suspense fallback={<Loader />}>
+                        <ToolkitHub
+                          onClose={() => setView("command_center")}
+                          onNavigateToItem={handleNavigateToDrillMode}
+                        />
+                      </Suspense>
+                    </WithGeminiErrorBoundary>
+                  </motion.div>
+                )}
+
+                {view === "gap_analysis" && (
+                  <motion.div
+                    key="gap_analysis"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <WithGeminiErrorBoundary viewName="gap_analysis" onRetry={() => setView("gap_analysis")}>
+                      <Suspense fallback={<Loader />}>
+                        <GapAnalysisDashboard />
+                      </Suspense>
+                    </WithGeminiErrorBoundary>
+                  </motion.div>
+                )}
+
+                {view === "clinical_profile" && (
+                  <motion.div
+                    key="clinical_profile"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <WithGeminiErrorBoundary viewName="clinical_profile" onRetry={() => setView("clinical_profile")}>
+                      <Suspense fallback={<Loader />}>
+                        <ClinicalProfileDashboard />
+                      </Suspense>
+                    </WithGeminiErrorBoundary>
+                  </motion.div>
+                )}
+
+                {view === "training_menu" && (
+                  <motion.div
+                    key="training_menu"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <WithGeminiErrorBoundary viewName="training_menu" onRetry={() => setView("training_menu")}>
+                      <Suspense fallback={<Loader />}>
+                        <TrainingMenu
+                          onClose={() => setView("command_center")}
+                          onNavigateToMode={(route, mode) => handleNavigateToDrillMode(mode.id)}
+                          onStartSession={handleTrainingMenuStart}
+                          dueQuestionsCount={dueQuestionsCount}
+                          flaggedQuestionsCount={flaggedQuestions.length}
+                          growthAreasCount={growthAreas.length}
+                        />
+                      </Suspense>
+                    </WithGeminiErrorBoundary>
+                  </motion.div>
+                )}
+
+                {view === "simulation_page" && (
+                  <motion.div
+                    key="simulation_page"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <WithGeminiErrorBoundary viewName="simulation_page" onRetry={() => setView("simulation_page")}>
+                      <Suspense fallback={<Loader />}>
+                        <SimulationPage
+                          onStartSession={handleConfirmSession}
+                          onBack={() => setView("command_center")}
+                          performanceData={heatmapPerformance}
+                          flaggedQuestions={flaggedQuestions}
+                          growthAreas={growthAreas}
+                          examLabel={examLabel}
+                        />
+                      </Suspense>
+                    </WithGeminiErrorBoundary>
+                  </motion.div>
+                )}
+
+                {view === "command_center_page" && (
+                  <motion.div
+                    key="command_center_page"
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    <WithGeminiErrorBoundary viewName="command_center_page" onRetry={() => setView("command_center_page")}>
+                      <Suspense fallback={<Loader />}>
+                        <CommandCenterPage
+                          performanceData={heatmapPerformance}
+                          missedQuestions={missedQuestions}
+                          flaggedQuestions={flaggedQuestions}
+                          growthAreas={growthAreas}
+                          dueCount={dueQuestionsCount}
+                          examLabel={examLabel}
+                          onStartSession={handleConfirmSession}
+                          onNavigateToDrillMode={handleNavigateToDrillMode}
+                          onNavigateToToolkit={() => setView("toolkit")}
+                          onNavigateToGapAnalysis={() => setView("gap_analysis")}
+                          onNavigateToIntegrations={() => setView("integrations")}
+                          onNavigateToReference={() => setView("reference_library")}
+                          onBack={() => setView("command_center")}
+                        />
+                      </Suspense>
+                    </WithGeminiErrorBoundary>
+                  </motion.div>
+                )}
+
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Command Palette */}
+          <Suspense fallback={null}>
+            <CommandPalette
+              isOpen={isCommandPaletteOpen}
+              onClose={() => setIsCommandPaletteOpen(false)}
+              onNavigate={handleNavigateToDrillMode}
+            />
+          </Suspense>
+
+          {/* Global Session Setup Modal */}
+          <AnimatePresence>
+            {isModalOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-[var(--color-overlay)] backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                onClick={() => setIsModalOpen(false)}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-[var(--color-bg-tertiary)] rounded-2xl shadow-2xl p-4 md:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-[var(--color-border)]"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-[var(--color-text-primary)]">Training Command Center</h2>
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="p-2 rounded-lg text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                      aria-label="Close modal"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <Suspense fallback={<Loader />}>
+                    <TrainingMenu
+                      onStartSession={handleTrainingMenuStart}
+                      onNavigateToMode={(route, mode) => {
+                        setIsModalOpen(false);
+                        handleNavigateToDrillMode(mode.id);
+                      }}
+                      onClose={() => setIsModalOpen(false)}
+                      dueQuestionsCount={dueQuestionsCount}
+                      flaggedQuestionsCount={flaggedQuestions.length}
+                      growthAreasCount={growthAreas.length}
+                    />
+                  </Suspense>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* User Profile Onboarding Modal */}
+          <Suspense fallback={null}>
+            <UserProfileModal
+              isOpen={isOnboardingModalOpen}
+              onComplete={handleOnboardingComplete}
+              onSkip={handleOnboardingSkip}
+              canSkip={true}
+            />
+          </Suspense>
+        </div>
+      </CommuterProvider>
     </ToastProvider>
   );
 };

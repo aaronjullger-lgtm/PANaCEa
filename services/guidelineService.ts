@@ -10,9 +10,9 @@ export const guidelineService = {
     if (guidelineCache) return guidelineCache;
 
     try {
-      const response = await fetch('/api/guidelines');
+      const response = await fetch('/api/reference/guidelines');
       if (!response.ok) throw new Error('Failed to fetch guidelines');
-      
+
       const data = await response.json();
       guidelineCache = data;
       return data;
@@ -32,7 +32,7 @@ export const guidelineService = {
     }
 
     try {
-      const response = await fetch(`/api/guidelines/${id}`);
+      const response = await fetch(`/api/reference/guidelines/${id}`);
       if (!response.ok) throw new Error('Failed to fetch guideline');
       return await response.json();
     } catch (error) {

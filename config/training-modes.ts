@@ -44,6 +44,7 @@ export type TrainingModeId =
   | 'polypharmacy_puzzle'
   | 'radiology_scroll'
   | 'physiology_drill'
+  | 'contrastive_drill'
   | 'anatomy_review';
 
 /**
@@ -51,7 +52,7 @@ export type TrainingModeId =
  */
 export type TrainingCategory =
   | 'visual_diagnostics'
-  | 'clinical_simulation' 
+  | 'clinical_simulation'
   | 'question_practice'
   | 'specialty_drills';
 
@@ -365,6 +366,16 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     theme: 'red',
     route: 'code_blue_speed',
     estimatedMinutes: 5,
+  },
+  {
+    id: 'contrastive_drill',
+    label: 'Contrastive Drills',
+    description: 'Master fine distinctions between similar conditions',
+    category: 'specialty_drills',
+    iconName: 'Microscope',
+    theme: 'teal',
+    route: 'contrastive_drill',
+    estimatedMinutes: 10,
   },
   // --- STANDALONE MODES ---
   {

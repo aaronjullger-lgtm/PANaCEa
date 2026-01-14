@@ -93,13 +93,13 @@ export class FSRS {
 
   next(card: FSRSCard, now: Date, rating: Rating): { card: FSRSCard; due: Date } {
     let newCard = { ...card };
-    
+
     if (card.state === FSRSState.New) {
       newCard.elapsed_days = 0;
     } else {
       newCard.elapsed_days = (now.getTime() - card.last_review.getTime()) / 86400000;
     }
-    
+
     newCard.last_review = now;
     newCard.reps += 1;
 
@@ -119,9 +119,9 @@ export class FSRS {
       const last_d = card.difficulty;
       const last_s = card.stability;
       const retrievability = Math.pow(1 + interval / (9 * last_s), -1);
-      
+
       this.next_ds(newCard, rating);
-      
+
       if (rating === Rating.Again) {
         newCard.state = FSRSState.Relearning;
         newCard.stability = this.next_forget_stability(last_d, last_s, retrievability);
@@ -207,5 +207,37 @@ export function createReviewSnapshot(
     difficulty: card.difficulty,
     rating,
     state: card.state,
+  };
+}
+
+/**
+ * Helper to convert a database record (UserTopicProgress) to an FSRSCard
+ */
+export function topicProgressToCard(record: any): FSRSCard {
+  const lastReview = record.lastReviewDate ? new Date(record.lastReviewDate) : new Date();
+  const nextReview = record.nextReviewDate ? new Date(record.nextReviewDate) : new Date();
+
+  // Calculate elapsed and scheduled days if not explicitly stored
+  // For a stored record, elapsed is time since last review to NOW (or to the review being processed)
+  // scheduled is time from last review to next review
+
+  const now = new Date();
+  const elapsedDays = record.lastReviewDate
+    ? (now.getTime() - lastReview.getTime()) / 86400000
+    : 0;
+
+  const scheduledDays = (record.nextReviewDate && record.lastReviewDate)
+    ? (nextReview.getTime() - lastReview.getTime()) / 86400000
+    : 0;
+
+  return {
+    stability: record.stability,
+    difficulty: record.difficulty,
+    state: record.state as FSRSState,
+    reps: record.reps,
+    lapses: record.lapses,
+    last_review: lastReview,
+    elapsed_days: elapsedDays,
+    scheduled_days: scheduledDays,
   };
 }

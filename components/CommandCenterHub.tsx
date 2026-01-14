@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RecommendationFeed } from './dashboard/RecommendationFeed';
 import { useUser } from '@clerk/clerk-react';
 import {
   Zap,
@@ -66,6 +67,7 @@ import {
   type TrainingCategory,
 } from '../config/training-modes';
 import { useUserContext } from '../hooks/useUserContext';
+import { RecommendationFeed } from './dashboard/RecommendationFeed';
 
 // ============================================================================
 // Types
@@ -106,7 +108,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 const GrandRoundsBanner: React.FC<{ onStart: () => void }> = ({ onStart }) => {
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -114,7 +116,7 @@ const GrandRoundsBanner: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/10 to-yellow-500/10 border border-amber-500/30 p-5 mb-6"
     >
       <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl" />
-      
+
       <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="p-3 rounded-xl bg-amber-500/20">
@@ -134,7 +136,7 @@ const GrandRoundsBanner: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             </p>
           </div>
         </div>
-        
+
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -170,7 +172,7 @@ const CoreAdaptiveHero: React.FC<{
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="relative">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="flex-1">
@@ -192,7 +194,7 @@ const CoreAdaptiveHero: React.FC<{
                   </p>
                 </div>
               </div>
-              
+
               {/* Stats cards */}
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 backdrop-blur-sm rounded-lg border border-emerald-400/20">
@@ -205,7 +207,7 @@ const CoreAdaptiveHero: React.FC<{
                 </div>
               </div>
             </div>
-            
+
             <motion.button
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
@@ -236,7 +238,7 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500 rounded-full blur-3xl" />
       </div>
-      
+
       <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-start gap-4 flex-1">
           <div className="p-3.5 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/25">
@@ -254,17 +256,17 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
             </p>
             <div className="flex items-center gap-4 mt-3">
               <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-                <Timer className="w-3.5 h-3.5" /> 
+                <Timer className="w-3.5 h-3.5" />
                 <span className="font-medium">~20 minutes</span>
               </span>
               <span className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-                <Stethoscope className="w-3.5 h-3.5" /> 
+                <Stethoscope className="w-3.5 h-3.5" />
                 <span className="font-medium">Clinical Skills</span>
               </span>
             </div>
           </div>
         </div>
-        
+
         <motion.button
           whileHover={{ scale: 1.03, y: -1 }}
           whileTap={{ scale: 0.97 }}
@@ -273,7 +275,7 @@ const OSCESection: React.FC<{ onStart: () => void }> = ({ onStart }) => {
         >
           <span>Start Encounter</span>
           <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </motion.button>
+        </motion.button>
       </div>
     </motion.div>
   );
@@ -318,7 +320,7 @@ const ModeCard: React.FC<{
   onSelect: () => void;
 }> = ({ mode, onSelect }) => {
   const Icon = ICON_MAP[mode.iconName] || Target;
-  
+
   return (
     <motion.button
       whileHover={{ y: -2, scale: 1.01 }}
@@ -373,9 +375,9 @@ const CategorySection: React.FC<{
 }> = ({ category, modes, onSelectMode }) => {
   const info = CATEGORY_INFO[category];
   const Icon = ICON_MAP[info.iconName] || Target;
-  
+
   if (modes.length === 0) return null;
-  
+
   return (
     <section className="mb-8">
       <div className="flex items-center gap-3 mb-4">
@@ -391,7 +393,7 @@ const CategorySection: React.FC<{
           </p>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {modes.map((mode) => (
           <ModeCard
@@ -435,36 +437,36 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
     const recent = performanceData.slice(-100);
     const correct = recent.filter(r => r.isCorrect).length;
     const accuracy = recent.length > 0 ? Math.round((correct / recent.length) * 100) : 0;
-    
+
     const todayRecords = (performanceData || []).filter(r => {
       if (!r?.timestamp) return false;
       const date = new Date(r.timestamp);
       const today = new Date();
       return date.getDate() === today.getDate() &&
-             date.getMonth() === today.getMonth() &&
-             date.getFullYear() === today.getFullYear();
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear();
     });
-    
+
     // Calculate streak from performance data
     let streak = 0;
-    const sortedData = [...(performanceData || [])].sort((a, b) => 
+    const sortedData = [...(performanceData || [])].sort((a, b) =>
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     let checkDate = new Date(today);
     const dateSet = new Set<string>();
-    
+
     for (const record of sortedData) {
       const recordDate = new Date(record.timestamp);
       recordDate.setHours(0, 0, 0, 0);
       const dateStr = recordDate.toISOString().split('T')[0];
-      
+
       if (!dateSet.has(dateStr)) {
         dateSet.add(dateStr);
-        
+
         if (recordDate.getTime() === checkDate.getTime()) {
           streak++;
           checkDate.setDate(checkDate.getDate() - 1);
@@ -473,17 +475,17 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         }
       }
     }
-    
+
     const dueCount = propDueCount !== undefined ? propDueCount : ((flaggedQuestions?.length || 0) + (missedQuestions?.length || 0));
-    
+
     return { streak, dueCount, accuracy, questionsToday: todayRecords.length };
   }, [performanceData, flaggedQuestions, missedQuestions, propDueCount]);
 
   // Filter modes based on user context (PANCE vs PANRE)
   const filteredModes = useMemo(() => {
-    const filterForContext = (modes: TrainingModeConfig[]) => 
+    const filterForContext = (modes: TrainingModeConfig[]) =>
       modes.filter(m => !m.panreOnly || showPANREContent);
-    
+
     return {
       visual: filterForContext(VISUAL_DIAGNOSTICS_MODES),
       clinical: filterForContext(CLINICAL_SIMULATION_MODES),
@@ -504,6 +506,14 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
       onNavigateToDrillMode(mode.route);
     }
   }, [onNavigateToDrillMode, onStartSession, onNavigateToSimulation]);
+
+  const handleNavigateToDrillModeWithSettings = (modeId: string, settings?: any) => {
+    if (modeId === 'core_adaptive' || modeId === 'custom_practice') {
+      onStartSession(settings);
+    } else {
+      onNavigateToDrillMode(modeId);
+    }
+  };
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -535,6 +545,9 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         accuracy={stats.accuracy}
         questionsToday={stats.questionsToday}
       />
+
+      {/* Intelligent Recommendations */}
+      <RecommendationFeed onNavigateToDrill={handleNavigateToDrillModeWithSettings} />
 
       {/* Grand Rounds - Daily Challenge (Standalone) */}
       <GrandRoundsBanner onStart={() => onNavigateToDrillMode('grand_rounds')} />
@@ -595,7 +608,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </p>
               </div>
             </div>
-            
+
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -619,11 +632,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] shadow-lg'
-                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${activeTab === tab.id
+              ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] shadow-lg'
+              : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+              }`}
           >
             <tab.icon className="w-4 h-4" />
             {tab.label}
@@ -713,7 +725,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </button>
               </div>
             </section>
-            
+
             {/* Clinical Reference Library */}
             {onNavigateToReference && (
               <section>
@@ -783,11 +795,10 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </h3>
                 <button
                   onClick={() => setShowAdvancedAnalytics(!showAdvancedAnalytics)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                    showAdvancedAnalytics
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
-                  }`}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${showAdvancedAnalytics
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
+                    }`}
                 >
                   {showAdvancedAnalytics ? '✦ Advanced View' : 'Switch to Advanced'}
                 </button>
@@ -804,16 +815,16 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 <BarChart3 className="w-5 h-5 text-[var(--color-text-muted)]" />
                 Performance Analysis
               </h3>
-              
+
               {/* Database-backed analytics (authenticated users) */}
               <DatabaseAnalyticsDashboard />
-              
+
               {/* Session-based analytics (local data) */}
               <div className="mt-6">
                 <h4 className="text-sm font-medium text-[var(--color-text-muted)] mb-3">Session Performance</h4>
                 <AnalyticsDashboard performanceData={performanceData} />
               </div>
-              
+
               {/* Additional navigation to detailed views */}
               <div className="grid md:grid-cols-2 gap-4 mt-6">
                 <button

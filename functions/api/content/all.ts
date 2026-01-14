@@ -22,11 +22,11 @@ export const onRequestOptions = handleCorsOptions;
 
 export async function onRequestGet(context: CloudflareContext) {
   const { env } = context;
-  
+
   if (!env.DATABASE_URL) {
-    return new Response(JSON.stringify({ error: 'Database not configured' }), { 
+    return new Response(JSON.stringify({ error: 'Database not configured' }), {
       status: 500,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       }
@@ -47,16 +47,19 @@ export async function onRequestGet(context: CloudflareContext) {
         condition: true,
         system: true,
         subcategory: true,
-        
+
+        // Hierarchy grouping
+        canonicalName: true,
+
         // Buzzwords are needed for search functionality
         buzzwords: true,
-        
+
         // Overview is a short text, useful for previews (no 'definition' field exists)
         overview: true,
-        
+
         // High-yield flag for filtering
         pance_yield: true,
-        
+
         // Classic patient for quick recognition
         classic_patient: true,
       },
@@ -68,7 +71,7 @@ export async function onRequestGet(context: CloudflareContext) {
     if (!allContent || allContent.length === 0) {
       console.warn('No published medical content found in database');
       return new Response(JSON.stringify({}), {
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -87,17 +90,18 @@ export async function onRequestGet(context: CloudflareContext) {
         condition: item.condition,
         system: item.system,
         subcategory: item.subcategory,
-        
+        canonicalName: item.canonicalName,
+
         // Search/filter support
         buzzwords: item.buzzwords && (item.buzzwords as any[]).length > 0 ? item.buzzwords : undefined,
-        
+
         // Preview text (kept short)
         overview: item.overview,
         classic_patient: item.classic_patient,
-        
+
         // Yield info
         pance_yield: item.pance_yield,
-        
+
         // Flag indicating full content must be fetched separately
         _isSummary: true,
       };
@@ -106,7 +110,7 @@ export async function onRequestGet(context: CloudflareContext) {
     console.log(`Returning summary for ${Object.keys(contentMap).length} conditions`);
 
     return new Response(JSON.stringify(contentMap), {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -117,12 +121,12 @@ export async function onRequestGet(context: CloudflareContext) {
 
   } catch (error) {
     console.error('Error fetching all content:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       error: 'Failed to fetch content',
       details: error instanceof Error ? error.message : 'Unknown error'
-    }), { 
+    }), {
       status: 500,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       }

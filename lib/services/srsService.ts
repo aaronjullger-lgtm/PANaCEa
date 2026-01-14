@@ -70,7 +70,7 @@ export interface SRSItem {
   stabilityScore: number;  // Research variable for forgetting curve
   createdAt: Date;
   updatedAt: Date;
-  
+
   // FSRS v5 Fields
   fsrsStability?: number;
   fsrsDifficulty?: number;
@@ -148,13 +148,13 @@ function loadSRSItems(): Map<string, SRSItem> {
   try {
     const stored = localStorage.getItem(SRS_STORAGE_KEY);
     if (!stored) return new Map();
-    
+
     const data = JSON.parse(stored);
     if (data.version !== SRS_VERSION) {
       console.log('[SRS] Version mismatch, clearing old data');
       return new Map();
     }
-    
+
     const items = new Map<string, SRSItem>();
     for (const item of data.items) {
       items.set(item.questionId, {
@@ -266,19 +266,19 @@ export function getNextQuestions(userId: string, limit: number = 10): NextQuesti
   const items = loadSRSItems();
   const now = new Date();
   const results: NextQuestionResult[] = [];
-  
+
   for (const item of items.values()) {
     if (item.userId !== userId) continue;
-    
+
     const overdueDays = Math.floor((now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     // Calculate priority based on overdue days and difficulty
     let priority = overdueDays;
     if (overdueDays > 0) {
       // Overdue items get higher priority
       priority += item.difficulty * 10;
     }
-    
+
     let reason = 'Scheduled review';
     if (overdueDays > 7) {
       reason = 'Significantly overdue';
@@ -289,7 +289,7 @@ export function getNextQuestions(userId: string, limit: number = 10): NextQuesti
     } else if (item.quality <= 2) {
       reason = 'Struggled previously';
     }
-    
+
     results.push({
       questionId: item.questionId,
       dueDate: item.dueDate,
@@ -298,7 +298,7 @@ export function getNextQuestions(userId: string, limit: number = 10): NextQuesti
       reason,
     });
   }
-  
+
   // Sort by priority (highest first) and return top N
   return results
     .sort((a, b) => b.priority - a.priority)
@@ -312,14 +312,14 @@ export function getDueCount(userId: string): number {
   const items = loadSRSItems();
   const now = new Date();
   let count = 0;
-  
+
   for (const item of items.values()) {
     if (item.userId !== userId) continue;
     if (item.dueDate <= now) {
       count++;
     }
   }
-  
+
   return count;
 }
 
@@ -341,17 +341,17 @@ export function getDueCount(userId: string): number {
  * @returns Array of SRS items ready for review
  */
 export function getDueCards(
-  userId: string, 
+  userId: string,
   filterTags: string[] = [],
   sortByDifficulty: boolean = false
 ): SRSItem[] {
   const items = loadSRSItems();
   const now = new Date();
   const results: SRSItem[] = [];
-  
+
   for (const item of items.values()) {
     if (item.userId !== userId) continue;
-    
+
     // If rotation mode is active (filterTags provided), return ALL cards
     // The caller should filter by tags using question metadata since
     // SRSItem stores questionId, not tags directly
@@ -365,7 +365,7 @@ export function getDueCards(
       }
     }
   }
-  
+
   // Sort by difficulty (rotation mode) or due date (standard mode)
   if (sortByDifficulty || filterTags.length > 0) {
     // Sort by difficulty (highest difficulty first for rotation mode)
@@ -374,7 +374,7 @@ export function getDueCards(
     // Sort by due date (most overdue first)
     results.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
   }
-  
+
   return results;
 }
 
@@ -394,15 +394,15 @@ export async function updateReviewOutcome(
   const userFsrs = await createUserFSRS(userId);
   const items = loadSRSItems();
   let item = items.get(questionId);
-  
+
   if (!item) {
     item = createNewSRSItem(userId, questionId);
   }
-  
+
   // FSRS Logic Integration
   if (USE_FSRS) {
     const rating = mapQualityToRating(input.quality);
-    
+
     const card: FSRSCard = {
       stability: item.fsrsStability || 0,
       difficulty: item.fsrsDifficulty || 0,
@@ -415,14 +415,14 @@ export async function updateReviewOutcome(
     };
 
     const { card: newCard } = userFsrs.next(card, new Date(), rating);
-    
+
     const interval = Math.max(1, Math.round(newCard.scheduled_days));
     // Keep legacy easiness updated for backward compatibility/fallback
     const easiness = Math.max(MINIMUM_EASINESS_FACTOR, item.easiness + (0.1 - (5 - input.quality) * (0.08 + (5 - input.quality) * 0.02)));
-    
+
     const now = new Date();
     const dueDate = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
-    
+
     const updatedItem: SRSItem = {
       ...item,
       interval,
@@ -437,10 +437,10 @@ export async function updateReviewOutcome(
       fsrsLastReview: now,
       updatedAt: now,
     };
-    
+
     items.set(questionId, updatedItem);
     saveSRSItems(items);
-    
+
     return {
       interval,
       repetition: newCard.reps,
@@ -456,24 +456,24 @@ export async function updateReviewOutcome(
   // Apply time-based quality adjustments
   let adjustedQuality = input.quality;
   const modifiersApplied: string[] = [];
-  
+
   if (input.baselineTime && input.timeToAnswer) {
     // Slow response: treat quality as one level lower
     if (input.timeToAnswer > input.baselineTime * SLOW_ANSWER_THRESHOLD_MULTIPLIER) {
       adjustedQuality = Math.max(0, adjustedQuality - 1);
       modifiersApplied.push('slow_response');
     }
-    
+
     // Fast wrong answer: anchoring bias penalty
     if (input.quality <= 2 && input.timeToAnswer < input.baselineTime * FAST_WRONG_THRESHOLD_MULTIPLIER) {
       adjustedQuality = Math.max(0, adjustedQuality - 1);
       modifiersApplied.push('anchoring_bias');
     }
   }
-  
+
   // Compute new easiness factor
   const newEasiness = calculateNewEasiness(item.easiness, adjustedQuality);
-  
+
   // Determine repetition count
   let newRepetition: number;
   if (adjustedQuality < 3) {
@@ -483,34 +483,34 @@ export async function updateReviewOutcome(
     // Passed - increment repetition
     newRepetition = item.repetition + 1;
   }
-  
+
   // Calculate base interval
   let interval = calculateBaseInterval(newRepetition, item.interval, newEasiness);
-  
+
   // Apply PANaCEa modifiers
   if (input.isInRedZone) {
     interval = Math.round(interval * RED_ZONE_MODIFIER);
     modifiersApplied.push('red_zone');
   }
-  
+
   if (input.isConfusionPair) {
     interval = Math.round(interval * CONFUSION_PAIR_MODIFIER);
     modifiersApplied.push('confusion_pair');
   }
-  
+
   if (input.streakLevel && input.streakLevel >= STREAK_BONUS_THRESHOLD) {
     interval = Math.round(interval * STREAK_BONUS_MODIFIER);
     modifiersApplied.push('streak_bonus');
   }
-  
+
   if (input.isGoldMastery) {
     interval = Math.round(interval * GOLD_MASTERY_MODIFIER);
     modifiersApplied.push('gold_mastery');
   }
-  
+
   // Ensure minimum interval of 1 day
   interval = Math.max(1, interval);
-  
+
   // Update difficulty based on response pattern
   let newDifficulty = item.difficulty;
   if (adjustedQuality <= 2) {
@@ -518,7 +518,7 @@ export async function updateReviewOutcome(
   } else if (adjustedQuality >= 4) {
     newDifficulty = Math.max(0, newDifficulty - 0.05);
   }
-  
+
   // Update stability score (simple exponential smoothing)
   const alpha = 0.3;
   const responseStability = adjustedQuality / 5;
@@ -529,7 +529,7 @@ export async function updateReviewOutcome(
   // ---------------------------------------------------------
   const now = new Date();
   const rating = mapQualityToRating(adjustedQuality);
-  
+
   const fsrsCard: FSRSCard = {
     stability: item.fsrsStability ?? 0,
     difficulty: item.fsrsDifficulty ?? 0,
@@ -542,21 +542,21 @@ export async function updateReviewOutcome(
   };
 
   const scheduled = userFsrs.next(fsrsCard, now, rating);
-  
+
   const newFsrsStability = scheduled.card.stability;
   const newFsrsDifficulty = scheduled.card.difficulty;
   const newFsrsState = scheduled.card.state;
   const newFsrsLastReview = now;
-  
+
   // Override interval if FSRS is enabled
   if (USE_FSRS) {
     interval = Math.max(1, Math.round(scheduled.card.scheduled_days));
     modifiersApplied.push('fsrs_v5');
   }
-  
+
   // Calculate new due date
   const dueDate = new Date(now.getTime() + interval * 24 * 60 * 60 * 1000);
-  
+
   // Update item
   const updatedItem: SRSItem = {
     ...item,
@@ -575,10 +575,10 @@ export async function updateReviewOutcome(
     fsrsState: newFsrsState,
     fsrsLastReview: newFsrsLastReview,
   };
-  
+
   items.set(questionId, updatedItem);
   saveSRSItems(items);
-  
+
   return {
     interval,
     repetition: newRepetition,
@@ -597,15 +597,15 @@ export async function updateReviewOutcome(
 export function markDue(userId: string): void {
   const items = loadSRSItems();
   const now = new Date();
-  
+
   for (const item of items.values()) {
     if (item.userId !== userId) continue;
     if (item.dueDate > now) continue;
-    
+
     // Update the item to be reviewed today
     item.updatedAt = now;
   }
-  
+
   saveSRSItems(items);
 }
 
@@ -617,7 +617,7 @@ export function postponeDueQuestions(userId: string): number {
   const items = loadSRSItems();
   const now = new Date();
   let postponedCount = 0;
-  
+
   // Collect all due items and sort by original due date
   const dueItems: SRSItem[] = [];
   for (const item of items.values()) {
@@ -626,10 +626,10 @@ export function postponeDueQuestions(userId: string): number {
       dueItems.push(item);
     }
   }
-  
+
   // Sort by due date (oldest first)
   dueItems.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
-  
+
   // Postpone each item by its position in the queue (1 day, 2 days, etc.)
   for (let i = 0; i < dueItems.length; i++) {
     const item = dueItems[i];
@@ -639,7 +639,7 @@ export function postponeDueQuestions(userId: string): number {
     item.updatedAt = now;
     postponedCount++;
   }
-  
+
   saveSRSItems(items);
   return postponedCount;
 }
@@ -649,13 +649,13 @@ export function postponeDueQuestions(userId: string): number {
  */
 export function clearSRSData(userId: string): void {
   const items = loadSRSItems();
-  
+
   for (const [key, item] of items.entries()) {
     if (item.userId === userId) {
       items.delete(key);
     }
   }
-  
+
   saveSRSItems(items);
 }
 
@@ -669,13 +669,13 @@ export function clearSRSData(userId: string): void {
 export function getAllSRSItems(userId: string): SRSItem[] {
   const items = loadSRSItems();
   const userItems: SRSItem[] = [];
-  
+
   for (const item of items.values()) {
     if (item.userId === userId) {
       userItems.push(item);
     }
   }
-  
+
   return userItems;
 }
 
@@ -685,20 +685,20 @@ export function getAllSRSItems(userId: string): SRSItem[] {
  */
 export function loadSRSItemsFromCloud(cloudItems: SRSItem[]): void {
   const localItems = loadSRSItems();
-  
+
   for (const cloudItem of cloudItems) {
     const existing = localItems.get(cloudItem.questionId);
-    
+
     // Ensure dates are properly compared as timestamps
-    const cloudUpdatedTime = typeof cloudItem.updatedAt === 'string' 
-      ? new Date(cloudItem.updatedAt).getTime() 
+    const cloudUpdatedTime = typeof cloudItem.updatedAt === 'string'
+      ? new Date(cloudItem.updatedAt).getTime()
       : cloudItem.updatedAt.getTime();
-    const existingUpdatedTime = existing 
-      ? (typeof existing.updatedAt === 'string' 
-          ? new Date(existing.updatedAt).getTime() 
-          : existing.updatedAt.getTime())
+    const existingUpdatedTime = existing
+      ? (typeof existing.updatedAt === 'string'
+        ? new Date(existing.updatedAt).getTime()
+        : existing.updatedAt.getTime())
       : 0;
-    
+
     // If no local item, or cloud item is newer, use cloud data
     if (!existing || cloudUpdatedTime > existingUpdatedTime) {
       localItems.set(cloudItem.questionId, {
@@ -710,7 +710,7 @@ export function loadSRSItemsFromCloud(cloudItems: SRSItem[]): void {
       });
     }
   }
-  
+
   saveSRSItems(localItems);
 }
 
@@ -724,7 +724,7 @@ export async function updateReviewOutcomeAsync(
   syncToCloud?: (items: SRSItem[]) => Promise<void>
 ): Promise<SRSScheduleResult> {
   const result = updateReviewOutcome(userId, questionId, input);
-  
+
   // If sync function provided, sync to cloud
   if (syncToCloud) {
     try {
@@ -735,7 +735,7 @@ export async function updateReviewOutcomeAsync(
       // Continue even if sync fails - data is saved locally
     }
   }
-  
+
   return result;
 }
 
@@ -754,29 +754,29 @@ export function getSRSStats(userId: string): {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-  
+
   let totalItems = 0;
   let dueToday = 0;
   let overdue = 0;
   let sumEasiness = 0;
   let sumDifficulty = 0;
   let sumStability = 0;
-  
+
   for (const item of items.values()) {
     if (item.userId !== userId) continue;
-    
+
     totalItems++;
     sumEasiness += item.easiness;
     sumDifficulty += item.difficulty;
     sumStability += item.stabilityScore;
-    
+
     if (item.dueDate < today) {
       overdue++;
     } else if (item.dueDate < tomorrow) {
       dueToday++;
     }
   }
-  
+
   return {
     totalItems,
     dueToday,
@@ -795,7 +795,7 @@ export function formatNextReview(dueDate: Date): string {
   const diffMs = dueDate.getTime() - now.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  
+
   if (diffDays < 0) {
     return `${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? 's' : ''} overdue`;
   } else if (diffDays === 0) {
@@ -839,14 +839,14 @@ export interface ForgettingCurvePoint {
 export function calculateForgettingCurve(item: SRSItem): ForgettingCurvePoint[] {
   const points: ForgettingCurvePoint[] = [];
   const maxDays = item.interval * 2; // Show curve beyond next review
-  
+
   // Calculate retention probability using exponential decay
   // R(t) = e^(-t/S) where S is stability (related to easiness and repetition)
   const stability = item.easiness * (1 + item.repetition * 0.5);
-  
+
   for (let day = 0; day <= maxDays; day += Math.max(1, Math.floor(maxDays / 20))) {
     const retention = Math.exp(-day / stability) * 100;
-    
+
     let label = '';
     if (day === 0) {
       label = 'Now';
@@ -855,14 +855,14 @@ export function calculateForgettingCurve(item: SRSItem): ForgettingCurvePoint[] 
     } else if (day === maxDays) {
       label = `+${Math.floor(maxDays)} days`;
     }
-    
+
     points.push({
       daysSinceReview: day,
       retentionProbability: Math.max(0, Math.min(100, retention)),
       label,
     });
   }
-  
+
   return points;
 }
 
@@ -881,21 +881,21 @@ export function getRetentionStats(items: SRSItem[]): {
   if (items.length === 0) {
     return { avgRetention: 0, criticalItems: 0, solidItems: 0, masteredItems: 0 };
   }
-  
+
   let totalRetention = 0;
   let criticalItems = 0;
   let solidItems = 0;
   let masteredItems = 0;
-  
+
   items.forEach(item => {
     const daysSinceReview = Math.floor(
       (Date.now() - item.lastReviewed.getTime()) / (1000 * 60 * 60 * 24)
     );
     const stability = item.easiness * (1 + item.repetition * 0.5);
     const retention = Math.exp(-daysSinceReview / stability) * 100;
-    
+
     totalRetention += retention;
-    
+
     if (retention < 50) {
       criticalItems++;
     } else if (retention < 80) {
@@ -904,7 +904,7 @@ export function getRetentionStats(items: SRSItem[]): {
       masteredItems++;
     }
   });
-  
+
   return {
     avgRetention: totalRetention / items.length,
     criticalItems,
@@ -953,17 +953,17 @@ export function getNextReviewWithPriority(
   const userItems = Array.from(items.values()).filter(
     (item) => item.userId === userId
   );
-  
+
   if (userItems.length === 0) {
     return null;
   }
-  
+
   const now = new Date();
   const mode = priorityOverride?.mode || 'standard';
-  
+
   // Apply mode-specific filtering and weighting
   let candidateItems = userItems;
-  
+
   switch (mode) {
     case 'cram':
       // Cram mode: Focus on items due soon, prioritize overdue and difficult items
@@ -974,17 +974,17 @@ export function getNextReviewWithPriority(
         return daysToDue <= 7; // Only items due within a week
       });
       break;
-      
+
     case 'maintenance':
       // Maintenance mode: Only review items that are actually due
       candidateItems = userItems.filter(item => item.dueDate <= now);
       break;
-      
+
     case 'weak_areas':
       // Weak areas mode: Focus on low-easiness items regardless of due date
       candidateItems = userItems.filter(item => item.easiness < 2.0);
       break;
-      
+
     case 'standard':
     default:
       // Standard mode: Include items due within the next day
@@ -996,39 +996,39 @@ export function getNextReviewWithPriority(
       });
       break;
   }
-  
+
   if (candidateItems.length === 0) {
     return null;
   }
-  
+
   // Calculate priority scores with mode-specific weights
   const weights = {
     overdue: priorityOverride?.overdueWeight || (mode === 'cram' ? 3.0 : 1.0),
     easy: priorityOverride?.easyWeight || (mode === 'cram' ? 0.3 : 1.0),
     hard: priorityOverride?.hardWeight || (mode === 'weak_areas' ? 2.0 : 1.0),
   };
-  
+
   const scoredItems = candidateItems.map(item => {
     const overdueDays = Math.max(
       0,
       Math.floor((now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24))
     );
-    
+
     // Base priority on how overdue the item is
     let priority = overdueDays * weights.overdue;
-    
+
     // Adjust for difficulty
     if (item.easiness < 2.0) {
       priority *= weights.hard;
     } else if (item.easiness > 2.5) {
       priority *= weights.easy;
     }
-    
+
     // Boost items with low stability (high forgetting risk)
     if (item.stabilityScore < 0.5) {
       priority *= 1.5;
     }
-    
+
     let reason = '';
     if (overdueDays > 0) {
       reason = `Overdue by ${overdueDays} day${overdueDays !== 1 ? 's' : ''}`;
@@ -1037,7 +1037,7 @@ export function getNextReviewWithPriority(
     } else {
       reason = 'Scheduled for review';
     }
-    
+
     return {
       item,
       priority,
@@ -1045,18 +1045,18 @@ export function getNextReviewWithPriority(
       reason,
     };
   });
-  
+
   // Sort by priority (highest first)
   scoredItems.sort((a, b) => b.priority - a.priority);
-  
+
   // Apply max items limit if specified
   const maxItems = priorityOverride?.maxItems || candidateItems.length;
   const selectedItem = scoredItems[0];
-  
+
   if (!selectedItem) {
     return null;
   }
-  
+
   return {
     questionId: selectedItem.item.questionId,
     dueDate: selectedItem.item.dueDate,
@@ -1083,11 +1083,11 @@ export function getCramSessionQuestions(
   const userItems = Array.from(items.values()).filter(
     (item) => item.userId === userId
   );
-  
+
   if (userItems.length === 0) {
     return [];
   }
-  
+
   // Create a set to track already selected question IDs
   const selectedIds = new Set<string>();
   const questionIds: string[] = [];
@@ -1095,14 +1095,14 @@ export function getCramSessionQuestions(
     mode: priorityMode,
     maxItems: count,
   };
-  
+
   // Get all candidate items and score them
   const now = new Date();
   const candidateItems = userItems.filter(item => {
     const daysToDue = Math.floor(
       (item.dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
     );
-    
+
     // Apply mode-specific filtering
     switch (priorityMode) {
       case 'cram':
@@ -1115,30 +1115,30 @@ export function getCramSessionQuestions(
         return daysToDue <= 1;
     }
   });
-  
+
   // Score and sort items
   const scoredItems = candidateItems.map(item => {
     const overdueDays = Math.max(
       0,
       Math.floor((now.getTime() - item.dueDate.getTime()) / (1000 * 60 * 60 * 24))
     );
-    
+
     let priority = overdueDays;
     if (overdueDays > 0) {
       // Overdue items get higher priority
       priority += item.difficulty * 10;
     }
-    
+
     return {
       item,
       priority,
       overdueDays,
     };
   });
-  
+
   // Sort by priority (highest first)
   scoredItems.sort((a, b) => b.priority - a.priority);
-  
+
   // Select top N items based on maxItems limit
   const maxItems = scoredItems.length;
   for (let i = 0; i < Math.min(maxItems, scoredItems.length); i++) {
@@ -1146,7 +1146,100 @@ export function getCramSessionQuestions(
     selectedIds.add(questionId);
     questionIds.push(questionId);
   }
-  
+
   return questionIds;
+}
+
+// ============================================================================
+// Second Chance Variant-Aware SRS Flow (API-backed)
+// ============================================================================
+
+export interface VariantNextResponse {
+  srsItemId: string | null;
+  topicProgressId?: string;
+  question: any; // Question or QuestionVariant content
+  isVariant: boolean;
+  taskType: string;
+  message?: string;
+}
+
+export interface VariantSubmitPayload {
+  srsItemId?: string | null;
+  topicProgressId?: string;
+  questionId: string;
+  variantId?: string;
+  rating: number; // 1=Again, 2=Hard, 3=Good, 4=Easy
+  isCorrect: boolean;
+  userAnswer?: string;
+  timeSpent?: number;
+}
+
+export interface VariantSubmitResponse {
+  success: boolean;
+  nextReviewDate?: string;
+  queuedVariantId?: string | null;
+}
+
+/**
+ * Fetch the next SRS item using the variant-aware Second Chance API.
+ * This prioritizes variants for users in Learning/Relearning states.
+ */
+export async function fetchNextVariantCard(): Promise<VariantNextResponse | null> {
+  try {
+    const response = await fetch('/api/srs/next', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Important for Clerk auth
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.warn('[SRS] User not authenticated for variant fetch');
+        return null;
+      }
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[SRS] Failed to fetch next card:', errorData);
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[SRS] Error fetching next variant card:', error);
+    return null;
+  }
+}
+
+/**
+ * Submit an SRS review using the variant-aware Second Chance API.
+ * This updates both SRSItem and UserTopicProgress, and triggers variant generation on incorrect answers.
+ */
+export async function submitVariantReview(payload: VariantSubmitPayload): Promise<VariantSubmitResponse | null> {
+  try {
+    const response = await fetch('/api/srs/submit', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.warn('[SRS] User not authenticated for variant submit');
+        return null;
+      }
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[SRS] Failed to submit review:', errorData);
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[SRS] Error submitting variant review:', error);
+    return null;
+  }
 }
 

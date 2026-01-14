@@ -42,14 +42,14 @@ export async function updateUserProgressWithHistory(
 
   // Prepare review history
   let reviewHistory: any[] = [];
-  
+
   if (existing) {
     reviewHistory = Array.isArray(existing.reviewHistory) ? existing.reviewHistory : [];
-    
+
     // Keep only last 365 days of history to prevent bloat
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 365);
-    
+
     reviewHistory = reviewHistory.filter((entry: any) => {
       const entryDate = new Date(entry.date);
       return entryDate >= thirtyDaysAgo;
@@ -204,4 +204,49 @@ export async function getAllUserReviewHistory(
 
   // Sort by date
   return allSnapshots.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
+/**
+ * Get aggregated mastery stats for a condition family
+ */
+export async function getConditionFamilyMastery(
+  prisma: any,
+  canonicalName: string,
+  userId: string
+) {
+  // Get all conditions in family
+  const family = await prisma.medicalContent.findMany({
+    where: { canonicalName },
+    select: { id: true, condition: true }
+  });
+
+  if (family.length === 0) {
+    return null;
+  }
+
+  // Get UserProgress for all family members
+  const progressRecords = await prisma.userProgress.findMany({
+    where: {
+      userId,
+      conditionId: { in: family.map((c: any) => c.id) }
+    }
+  });
+
+  // Calculate aggregate mastery
+  const totalStability = progressRecords.reduce((sum: number, p: any) => sum + (p.fsrsCard?.stability || 0), 0);
+  const avgStability = progressRecords.length > 0 ? totalStability / progressRecords.length : 0;
+
+  // Determine overall mastery level
+  let overallMastery = 'low'; // < 0.8
+  if (avgStability > 10) overallMastery = 'high';
+  else if (avgStability > 3) overallMastery = 'medium';
+
+  return {
+    canonicalName,
+    familyMemberCount: family.length,
+    progressRecordCount: progressRecords.length,
+    avgStability,
+    overallMastery, // 'high' | 'medium' | 'low'
+    coveragePercentage: Math.round((progressRecords.length / family.length) * 100)
+  };
 }

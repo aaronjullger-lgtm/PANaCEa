@@ -12,6 +12,42 @@ ALTER TABLE "Question" ADD COLUMN IF NOT EXISTS "conditionId" TEXT;
 -- QuestionAttempt → proper FK relations
 ALTER TABLE "QuestionAttempt" ADD COLUMN IF NOT EXISTS "userId_fk" TEXT;
 
+-- ScoringSystem (Recovered from missing migration)
+CREATE TABLE IF NOT EXISTS "ScoringSystem" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "displayName" TEXT,
+    "aliases" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "category" TEXT NOT NULL,
+    "condition" TEXT,
+    "panceYield" INTEGER,
+    "isHighYield" BOOLEAN NOT NULL DEFAULT false,
+    "boardYieldFacts" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "components" JSONB NOT NULL,
+    "maxScore" INTEGER,
+    "minScore" INTEGER DEFAULT 0,
+    "interpretation" JSONB NOT NULL,
+    "actionThresholds" JSONB,
+    "sensitivity" DOUBLE PRECISION,
+    "specificity" DOUBLE PRECISION,
+    "validationStudies" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "limitations" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "whenToUse" TEXT,
+    "whenNotToUse" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "clinicalContext" TEXT,
+    "clinicalPearls" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "commonMistakes" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "testQuestionTips" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "mnemonics" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "calculatorUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ScoringSystem_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "ScoringSystem_name_key" ON "ScoringSystem"("name");
+
 -- ScoringSystem → Condition link
 ALTER TABLE "ScoringSystem" ADD COLUMN IF NOT EXISTS "conditionId" TEXT;
 

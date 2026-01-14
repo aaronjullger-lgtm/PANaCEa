@@ -129,7 +129,12 @@
     "audit:loading": "tsx scripts/audit-loading-states.ts",
     "audit:services": "tsx scripts/audit-service-consolidation.ts",
     "audit:components": "tsx scripts/audit-component-organization.ts",
-    "audit:all": "npm run audit:prisma && npm run audit:zod && npm run audit:loading && npm run audit:services && npm run audit:components"
+    "audit:all": "npm run audit:prisma && npm run audit:zod && npm run audit:loading && npm run audit:services && npm run audit:components",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@clerk/backend": "^2.25.0",
@@ -140,6 +145,7 @@
     "@prisma/adapter-neon": "^7.1.0",
     "@prisma/client": "^7.2.0",
     "@prisma/extension-accelerate": "^3.0.1",
+    "@radix-ui/react-progress": "^1.1.8",
     "@sentry/react": "^10.32.1",
     "@sentry/vite-plugin": "^4.6.1",
     "@supabase/supabase-js": "^2.89.0",
@@ -186,6 +192,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260103.0",
+    "@eslint/js": "^9.17.0",
     "@playwright/test": "^1.57.0",
     "@prisma/adapter-pg": "^7.2.0",
     "@testing-library/react": "^16.3.0",
@@ -195,12 +202,18 @@
     "@types/pg": "^8.16.0",
     "@types/uuid": "^9.0.8",
     "concurrently": "^9.1.2",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
     "jsdom": "^27.2.0",
     "pg": "^8.16.3",
+    "prettier": "^3.4.2",
     "sharp": "^0.34.5",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
     "typescript": "~5.8.2",
+    "typescript-eslint": "^8.20.0",
     "vitest": "^4.0.14",
     "wrangler": "^4.18.0"
   },

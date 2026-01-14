@@ -12,14 +12,15 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Stethoscope, TestTube, Pill, Brain, AlertTriangle, BookOpen,
-  X, ChevronDown, ChevronUp 
+  X, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { YieldBadge, SystemBadge } from '@/components/ui/badges';
 import { normalizeMedicalContent, parseListField, parseTextField } from '@/lib/utils/normalization';
 import { ContentFieldRenderer } from '@/components/ui/content-renderers';
 import type { MedicalContentDisplay } from '@/types/medical-content';
+import { TopicMasteryBreakdown } from '@/components/dashboard/TopicMasteryBreakdown';
 
 interface ConditionDetailPanelProps {
   content: Partial<MedicalContentDisplay>;
@@ -163,7 +164,7 @@ const DetailSection: React.FC<{
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {buzzwords.map((word, idx) => (
-                        <span 
+                        <span
                           key={idx}
                           className="px-2.5 py-1 rounded-lg bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)] text-sm font-medium"
                         >
@@ -260,7 +261,7 @@ export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({
         {/* Header */}
         <div className="p-6 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]/30">
           <div className="flex items-start justify-between mb-3">
-            <h2 
+            <h2
               className="text-3xl font-bold text-[var(--color-text-primary)] tracking-wide"
               style={{ fontFamily: "'Teko', 'Poppins', sans-serif" }}
             >
@@ -297,6 +298,14 @@ export const ConditionDetailPanel: React.FC<ConditionDetailPanelProps> = ({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {/* Topic Mastery Breakdown - Second Chance System */}
+          {normalized.conditionId && (
+            <TopicMasteryBreakdown
+              conditionId={normalized.conditionId}
+              conditionName={normalized.condition}
+            />
+          )}
+
           {SECTION_MAPPINGS.map((section, idx) => (
             <DetailSection
               key={section.title}

@@ -1,0 +1,174 @@
+
+import React, { useEffect, useState } from 'react';
+import { Card } from '../ui/card';
+import { Button } from '../ui/button';
+import { ChevronRight, ChevronDown, Activity, AlertTriangle, Layers } from 'lucide-react';
+import { cn } from '../../lib/utils';
+// import { useFetcher } from '@remix-run/react'; // Removed Remix dependency
+
+interface ConditionFamilyViewProps {
+    canonicalName: string;
+    className?: string;
+    onNavigate?: (id: string) => void;
+}
+
+interface FamilyMember {
+    id: string;
+    condition: string;
+    relationshipType: 'subtype' | 'complication' | 'manifestation' | 'variant' | null;
+    mastery?: number;
+}
+
+interface FamilyData {
+    canonicalName: string;
+    parent?: FamilyMember;
+    members: FamilyMember[];
+    stats?: {
+        avgStability: number;
+        overallMastery: 'high' | 'medium' | 'low';
+        coveragePercentage: number;
+    };
+}
+
+export function ConditionFamilyView({ canonicalName, className, onNavigate }: ConditionFamilyViewProps) {
+    // const fetcher = useFetcher<FamilyData>();
+    const [data, setData] = useState<FamilyData | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [expanded, setExpanded] = useState(true);
+
+    useEffect(() => {
+        let mounted = true;
+        async function loadFamily() {
+            if (!canonicalName) return;
+            setLoading(true);
+            try {
+                const res = await fetch(`/ api / conditions / family / ${encodeURIComponent(canonicalName)} `);
+                if (res.ok) {
+                    const json = await res.json();
+                    if (mounted) setData(json);
+                } else {
+                    console.error("Failed to load family data: ", res.status, res.statusText);
+                }
+            } catch (e) {
+                console.error("Failed to load family data", e);
+            } finally {
+                if (mounted) setLoading(false);
+            }
+        }
+        loadFamily();
+        return () => { mounted = false; };
+    }, [canonicalName]);
+
+    if (loading && !data) {
+        return (
+            <Card className={cn("p-4 animate-pulse", className)}>
+                <div className="h-6 w-1/3 bg-gray-200 rounded mb-4" />
+                <div className="space-y-2">
+                    <div className="h-4 w-full bg-gray-100 rounded" />
+                    <div className="h-4 w-5/6 bg-gray-100 rounded" />
+                </div>
+            </Card>
+        );
+    }
+
+    if (!data) return null;
+
+    const subtypes = data.members.filter(m => m.relationshipType === 'subtype');
+    const complications = data.members.filter(m => m.relationshipType === 'complication');
+    const manifestations = data.members.filter(m => m.relationshipType === 'manifestation' || !m.relationshipType);
+
+    const getMasteryColor = (mastery: string | undefined) => {
+        if (mastery === 'high') return 'bg-green-500';
+        if (mastery === 'medium') return 'bg-yellow-500';
+        return 'bg-red-500';
+    };
+
+    return (
+        <Card className={cn("overflow-hidden border-l-4", className, {
+            "border-l-green-500": data.stats?.overallMastery === 'high',
+            "border-l-yellow-500": data.stats?.overallMastery === 'medium',
+            "border-l-red-500": data.stats?.overallMastery === 'low',
+        })}>
+            <div className="p-4 bg-gray-50/50">
+                <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                        <Layers className="w-5 h-5 text-gray-500" />
+                        {data.canonicalName} Family
+                    </h3>
+                    <Button variant="ghost" onClick={() => setExpanded(!expanded)}>
+                        {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </Button>
+                </div>
+                {data.stats && (
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-1">
+                            <span className={cn("w-2 h-2 rounded-full", getMasteryColor(data.stats.overallMastery))} />
+                            {data.stats.overallMastery === 'high' ? 'Strong' : data.stats.overallMastery === 'medium' ? 'Developing' : 'Needs Focus'}
+                        </div>
+                        <div>{data.stats.coveragePercentage}% Covered</div>
+                    </div>
+                )}
+            </div>
+
+            {expanded && (
+                <div className="p-4 space-y-4">
+                    {subtypes.length > 0 && (
+                        <section>
+                            <h4 className="text-xs uppercase font-bold text-gray-500 mb-2 flex items-center gap-1">
+                                <ChevronRight className="w-3 h-3" /> Subtypes
+                            </h4>
+                            <div className="space-y-1 pl-2 border-l-2 border-gray-100 ml-1">
+                                {subtypes.map(m => <MemberRow key={m.id} member={m} onNavigate={onNavigate} />)}
+                            </div>
+                        </section>
+                    )}
+                    {complications.length > 0 && (
+                        <section>
+                            <h4 className="text-xs uppercase font-bold text-red-500 mb-2 flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" /> Complications
+                            </h4>
+                            <div className="space-y-1 pl-2 border-l-2 border-red-100 ml-1">
+                                {complications.map(m => <MemberRow key={m.id} member={m} onNavigate={onNavigate} />)}
+                            </div>
+                        </section>
+                    )}
+                    {manifestations.length > 0 && (
+                        <section>
+                            <h4 className="text-xs uppercase font-bold text-blue-500 mb-2 flex items-center gap-1">
+                                <Activity className="w-3 h-3" /> Manifestations
+                            </h4>
+                            <div className="space-y-1 pl-2 border-l-2 border-blue-100 ml-1">
+                                {manifestations.map(m => <MemberRow key={m.id} member={m} onNavigate={onNavigate} />)}
+                            </div>
+                        </section>
+                    )}
+                </div>
+            )}
+        </Card>
+    );
+}
+
+function MemberRow({ member, onNavigate }: { member: FamilyMember, onNavigate?: (id: string) => void }) {
+    return (
+        <div
+            className="flex items-center justify-between p-2 rounded hover:bg-gray-50 cursor-pointer group"
+            onClick={() => onNavigate?.(member.id)}
+        >
+            <span className="text-sm font-medium group-hover:text-blue-600 transition-colors">
+                {member.condition}
+            </span>
+            {member.mastery !== undefined && (
+                <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                        className={cn("h-full rounded-full", {
+                            "bg-red-500": member.mastery < 50,
+                            "bg-yellow-500": member.mastery >= 50 && member.mastery < 80,
+                            "bg-green-500": member.mastery >= 80
+                        })}
+                        style={{ width: `${member.mastery}%` }}
+                    />
+                </div>
+            )}
+        </div>
+    );
+}
