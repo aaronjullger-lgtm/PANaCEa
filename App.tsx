@@ -95,6 +95,8 @@ const DRILL_MODE_MINI_LAB: TrainingModeId = 'mini_lab';
 const DRILL_MODE_PHARMACOLOGY: TrainingModeId = 'pharmacology';
 const DRILL_MODE_FIRST_LINE: TrainingModeId = 'first_line_treatment';
 const DRILL_MODE_CONDITION: TrainingModeId = 'condition_drill';
+const DRILL_MODE_SYSTEM: TrainingModeId = 'system_drill';
+const DRILL_MODE_SUBCATEGORY: TrainingModeId = 'subcategory_drill';
 const DRILL_MODE_GUIDELINE: TrainingModeId = 'guideline_drill';
 const DRILL_MODE_FLUID_ELECTROLYTE: TrainingModeId = 'fluid_electrolyte';
 const DRILL_MODE_ANTIBIOTIC: TrainingModeId = 'antibiotic_mode';
@@ -479,6 +481,8 @@ const App: React.FC = () => {
       [DRILL_MODE_PHARMACOLOGY]: 'pharmacology',
       [DRILL_MODE_FIRST_LINE]: 'first_line_treatment',
       [DRILL_MODE_CONDITION]: 'condition_drill',
+      [DRILL_MODE_SYSTEM]: 'system_drill',
+      [DRILL_MODE_SUBCATEGORY]: 'subcategory_drill',
       [DRILL_MODE_GUIDELINE]: 'guideline_drill',
       [DRILL_MODE_FLUID_ELECTROLYTE]: 'fluid_electrolyte',
       [DRILL_MODE_ANTIBIOTIC]: 'antibiotic_mode',
