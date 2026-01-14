@@ -37,13 +37,17 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
       take: 50, // Limit to 50 most recent
     });
 
-    return createSuccessResponse({ 
-      recommendations,
-      total: recommendations.length 
-    });
+    // Return just the recommendations array for simpler frontend handling
+    return createSuccessResponse(recommendations);
   } catch (error) {
-    console.error('[recommendations/list] Failed to fetch recommendations', error);
-    return createErrorResponse('Failed to fetch recommendations', 500);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('[recommendations/list] Failed to fetch recommendations', {
+      message: errorMessage,
+      stack: errorStack,
+      name: error instanceof Error ? error.name : typeof error
+    });
+    return createErrorResponse(`Failed to fetch recommendations: ${errorMessage}`, 500);
   } finally {
     await safePrismaDisconnect(prisma as any);
   }

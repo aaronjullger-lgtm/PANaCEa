@@ -39,12 +39,30 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({ onNaviga
                     'Content-Type': 'application/json',
                 },
             });
-            if (res.ok) {
-                const data = await res.json();
+            
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`API error (${res.status}): ${errorText}`);
+            }
+
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`Expected JSON but received ${contentType || 'unknown content type'}. Server may have returned HTML (404/500 error).`);
+            }
+
+            const data = await res.json();
+            
+            // Backend returns array of recommendations directly
+            if (Array.isArray(data)) {
                 setRecommendations(data);
+            } else {
+                throw new Error('Invalid response format from server');
             }
         } catch (e) {
-            console.error("Failed to fetch recommendations", e);
+            const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+            console.error('[RecommendationFeed] Failed to fetch recommendations:', errorMsg);
+            toast.error('Failed to load recommendations. Please try again.');
+            setRecommendations([]); // Clear on error
         } finally {
             setLoading(false);
         }
@@ -67,19 +85,33 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({ onNaviga
                     'Content-Type': 'application/json',
                 },
             });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.length > 0) {
-                    toast.success(`Found ${data.length} new recommendations!`);
-                    fetchRecommendations();
-                } else if (recommendations.length === 0) {
-                    toast.info("You're all caught up! No new recommendations.");
-                }
+            
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`Generate API error (${res.status}): ${errorText}`);
+            }
+
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`Expected JSON but received ${contentType || 'unknown content type'}`);
+            }
+
+            const data = await res.json();
+            
+            // Handle response structure from generate endpoint: { success, count, recommendations }
+            const newRecs = data.recommendations || [];
+            
+            if (newRecs.length > 0) {
+                toast.success(`Found ${newRecs.length} new recommendation${newRecs.length > 1 ? 's' : ''}!`);
+                await fetchRecommendations(); // Refresh list
             } else {
-                toast.error("Failed to generate recommendations");
+                // Only show "all caught up" if generation succeeded but found nothing
+                toast.info("You're all caught up! No new recommendations.");
             }
         } catch (e) {
-            toast.error("Failed to analyze progress");
+            const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+            console.error('[RecommendationFeed] Failed to generate recommendations:', errorMsg);
+            toast.error('Failed to analyze progress. Please try again.');
         } finally {
             setGenerating(false);
         }
@@ -87,8 +119,8 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({ onNaviga
 
     useEffect(() => {
         fetchRecommendations();
-        // Auto-generate on mount if empty to keep it fresh.
-        generateRecommendations();
+        // Note: Auto-generation removed to reduce API load.
+        // User can manually trigger via Refresh button.
     }, [getToken]);
 
     const handleAction = async (id: string, action: 'complete' | 'dismiss') => {

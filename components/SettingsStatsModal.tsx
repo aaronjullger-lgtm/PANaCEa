@@ -54,6 +54,8 @@ import WeaknessCheatsheetExporter from './analytics/WeaknessCheatsheetExporter';
 import { ALL_MINI_MODES, MODE_REGISTRY } from '@/config/training-modes';
 import EnhancedSettingsTab from './settings/EnhancedSettingsTab';
 import { useCommuter } from '@/contexts/CommuterContext';
+import RadialProgress from './ui/RadialProgress';
+import TrendSparkline from './ui/TrendSparkline';
 
 // Lazy load Character Gallery
 const CharacterGallery = lazy(() => import('./characters/CharacterGallery'));
@@ -568,6 +570,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
         recentTrend: 0,
         studyDays: 0,
         avgQuestionsPerDay: 0,
+        recentSessionAccuracies: [],
       };
     }
 
@@ -658,6 +661,17 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
     const studyDays = uniqueDays.size;
     const avgQuestionsPerDay = studyDays > 0 ? Math.round(totalQuestions / studyDays) : 0;
 
+    // Calculate last 10 session accuracies for sparkline (group by sessions of ~10 questions)
+    const sessionSize = 10;
+    const recentSessionAccuracies: number[] = [];
+    for (let i = Math.max(0, totalQuestions - 100); i < totalQuestions; i += sessionSize) {
+      const sessionEnd = Math.min(i + sessionSize, totalQuestions);
+      const sessionData = performanceData.slice(i, sessionEnd);
+      const sessionCorrect = sessionData.filter(r => r.isCorrect).length;
+      const sessionAccuracy = sessionData.length > 0 ? (sessionCorrect / sessionData.length) * 100 : 0;
+      recentSessionAccuracies.push(sessionAccuracy);
+    }
+
     return {
       totalQuestions,
       totalCorrect,
@@ -672,6 +686,7 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
       recentTrend,
       studyDays,
       avgQuestionsPerDay,
+      recentSessionAccuracies,
     };
   }, [performanceData]);
 
@@ -806,40 +821,68 @@ const SettingsStatsModal: React.FC<SettingsStatsModalProps> = ({
                 </div>
 
                 {/* Priority: Current Form Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-                  {/* Recent Trend - Most Important */}
-                  <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'gold-achievement' : 'bg-[var(--color-bg-secondary)]'}`}>
-                    <div className="flex items-center justify-center gap-2">
-                      {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD && <Flame className="w-5 h-5 text-amber-900" />}
-                      <div className={`text-2xl sm:text-3xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Recent Trend with Sparkline - Most Important */}
+                  <div className={`rounded-xl p-4 ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'gold-achievement' : 'bg-[var(--color-bg-secondary)]'}`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD && <Flame className="w-5 h-5 text-amber-900" />}
+                        <span className="text-sm font-medium text-[var(--color-text-muted)]">
+                          {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'Hot Streak!' : 'Recent Form'}
+                        </span>
+                      </div>
+                      <div className={`text-xl font-bold ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900' : stats.recentTrend >= 0 ? 'text-green-500' : 'text-orange-500'}`}>
                         {stats.recentTrend >= 0 ? '+' : ''}{stats.recentTrend}%
                       </div>
                     </div>
-                    <div className={`text-xs ${stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'text-amber-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
-                      {stats.recentTrend >= GOLD_ACHIEVEMENT_TREND_THRESHOLD ? 'Hot Streak!' : 'Recent Form'}
-                    </div>
+                    {stats.recentSessionAccuracies.length > 0 ? (
+                      <div className="flex justify-center">
+                        <TrendSparkline
+                          data={stats.recentSessionAccuracies}
+                          width={200}
+                          height={50}
+                          colorScheme="auto"
+                          showTrend={false}
+                          showValue={false}
+                          ariaLabel="Recent performance trend across last 10 sessions"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex justify-center py-2">
+                        <span className="text-xs text-[var(--color-text-muted)] italic">
+                          Complete more questions to see trend
+                        </span>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Current Streak */}
-                  <div className={`rounded-xl p-3 sm:p-4 text-center ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'gold-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}>
-                    {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD && <Award className="absolute top-1 right-1 w-4 h-4 text-amber-900" />}
-                    <div className="flex items-center justify-center gap-1">
+                  <div className={`rounded-xl p-4 text-center ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'gold-achievement relative' : 'bg-[var(--color-bg-secondary)]'}`}>
+                    {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD && <Award className="absolute top-2 right-2 w-4 h-4 text-amber-900" />}
+                    <div className="flex items-center justify-center gap-1 mb-2">
                       <Zap className={`w-5 h-5 ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`} />
-                      <span className={`text-2xl sm:text-3xl font-bold ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`}>
-                        {stats.currentStreak}
+                      <span className={`text-xs font-medium ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-[var(--color-text-muted)]'}`}>
+                        {stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'Exceptional!' : 'Active Streak'}
                       </span>
                     </div>
-                    <div className={`text-xs ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900 font-semibold' : 'text-[var(--color-text-muted)]'}`}>
-                      Active Streak
+                    <div className={`text-3xl font-bold ${stats.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD ? 'text-amber-900' : 'text-orange-500'}`}>
+                      {stats.currentStreak}
+                    </div>
+                    <div className="text-xs text-[var(--color-text-muted)] mt-1">
+                      questions in a row
                     </div>
                   </div>
                   
-                  {/* Overall Accuracy */}
-                  <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3 sm:p-4 text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-[var(--color-accent)]">
-                      {stats.overallAccuracy}%
-                    </div>
-                    <div className="text-xs text-[var(--color-text-muted)]">Overall Accuracy</div>
+                  {/* Overall Accuracy with Radial Progress */}
+                  <div className="bg-[var(--color-bg-secondary)] rounded-xl p-4 flex flex-col items-center justify-center">
+                    <RadialProgress
+                      value={stats.overallAccuracy}
+                      size={100}
+                      strokeWidth={8}
+                      showValue={true}
+                      label="Overall Accuracy"
+                      ariaLabel={`Overall accuracy: ${stats.overallAccuracy.toFixed(0)}% correct across all questions`}
+                    />
                   </div>
                 </div>
                 

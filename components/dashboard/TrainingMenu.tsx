@@ -497,14 +497,12 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         className={`
           relative p-5 rounded-2xl border overflow-hidden
           text-left transition-all duration-200
-          ${styles.background}
-          ${styles.border}
           ${isDisabled 
-            ? 'opacity-40 grayscale cursor-not-allowed bg-slate-50 dark:bg-slate-900/30 text-slate-400 dark:text-slate-600 border-dashed' 
-            : 'hover:scale-[1.02] cursor-pointer shadow-md hover:shadow-xl'
+            ? 'opacity-40 grayscale cursor-not-allowed bg-slate-900/30 text-slate-600 border-dashed border-slate-700' 
+            : 'bg-transparent hover:bg-slate-800/20 cursor-pointer border-slate-700 hover:border-white hover:shadow-xl'
           }
           ${featuredClasses}
-          ${isDailyRecommended && !isDisabled ? 'ring-2 ring-blue-400 ring-offset-2 dark:ring-offset-slate-900' : ''}
+          ${isDailyRecommended && !isDisabled ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' : ''}
         `}
       >
         {isDisabled && (
@@ -515,21 +513,21 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         
         {/* Daily Recommended badge */}
         {isDailyRecommended && !isDisabled && (
-          <div className="absolute top-2 right-2 flex items-center gap-1 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg">
+          <div className="absolute top-2 right-2 flex items-center gap-1 bg-white text-slate-900 px-2 py-1 rounded-full text-xs font-bold z-10 shadow-lg border border-slate-200">
             <TrendingUp className="w-3 h-3" />
             Daily Pick
           </div>
         )}
         
         <div className="flex flex-col gap-3 relative z-[1]">
-          <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shadow-sm ${isDisabled ? 'opacity-50' : ''}`}>
+          <div className={`w-10 h-10 rounded-xl bg-slate-800/60 flex items-center justify-center shadow-sm border border-slate-700 ${isDisabled ? 'opacity-50' : ''}`}>
             <IconComponent className={`w-5 h-5 ${styles.iconColor} ${isDisabled ? 'opacity-50' : ''}`} />
           </div>
           <div className="min-h-[80px]">
-            <h3 className={`font-semibold text-[#1F283A] dark:text-[#E9ECF1] text-base flex items-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}>
+            <h3 className={`font-semibold text-white text-base flex items-center gap-2 ${isDisabled ? 'opacity-50' : ''}`}>
               {mode.label}
             </h3>
-            <p className={`text-sm text-[#364154] dark:text-[#cbd5e1] mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}>
+            <p className={`text-sm text-slate-300 mt-1 line-clamp-2 ${isDisabled ? 'opacity-50' : ''}`}>
               {getDrillDescription(mode)}
             </p>
           </div>
@@ -558,8 +556,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     return (
       <section key={key} id={`section-${key}`} className="space-y-3 scroll-mt-4">
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="text-lg font-bold text-[#1F283A] dark:text-[#E9ECF1]">{title}</h3>
-          <p className="text-sm text-[#364154] dark:text-[#cbd5e1] hidden sm:block">{description}</p>
+          <h3 className="text-lg font-bold text-white">{title}</h3>
+          <p className="text-sm text-slate-400 hidden sm:block">{description}</p>
         </div>
         
         {/* Desktop: Standard 3-column grid */}
@@ -585,8 +583,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
     <div className="flex gap-6 h-full">
       {/* Sticky Category Sidebar - Desktop only */}
       <aside className="hidden lg:block w-56 flex-shrink-0 sticky top-0 h-fit">
-        <div className="bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-2xl p-4 shadow-sm space-y-2">
-          <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3 px-2">
+        <div className="bg-slate-900/50 border border-slate-700 rounded-2xl p-4 shadow-sm space-y-2">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3 px-2">
             Categories
           </h3>
           {CATEGORY_SECTIONS.map((section) => (
@@ -595,8 +593,8 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
               onClick={() => scrollToSection(section.key)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left ${
                 activeSection === section.key
-                  ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] font-medium'
-                  : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)]'
+                  ? 'bg-slate-800 text-white font-medium border border-slate-600'
+                  : 'text-slate-400 hover:bg-slate-800/50 hover:text-white'
               }`}
             >
               <span className="text-sm truncate">{section.title}</span>
@@ -610,30 +608,30 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
       <div className="flex-1 space-y-8 overflow-y-auto">
         {/* Search Bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
             type="text"
             placeholder="Search modes (e.g., ECG, Antibiotics, Rapid)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-[var(--color-bg-primary)] border border-[var(--color-border)] rounded-xl text-sm placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/50"
           />
         </div>
 
-        {/* Core Adaptive Card */}
+        {/* Core PANCE Simulation - Primary Action (Stormy Slate Theme) */}
         {coreMode && !searchQuery && (
-          <div className="bg-white dark:bg-[#1F283A] rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-lg">
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl border border-slate-700 p-6 shadow-xl">
             <div className="flex flex-col md:flex-row gap-6">
               <div className="flex-1">
                 <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-[#E9ECF1] dark:bg-[#364154] flex items-center justify-center shadow-sm border border-slate-200 dark:border-slate-600">
-                    <Brain className="w-7 h-7 text-[#1F283A] dark:text-[#E9ECF1]" />
+                  <div className="w-14 h-14 rounded-2xl bg-slate-800/60 flex items-center justify-center shadow-sm border border-slate-600">
+                    <Brain className="w-7 h-7 text-slate-100" />
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-xl font-bold text-[#1F283A] dark:text-[#E9ECF1]">
+                    <h2 className="text-xl font-bold text-white">
                       Core PANCE Simulation
                     </h2>
-                    <p className="text-[#364154] dark:text-[#cbd5e1] mt-1 min-h-[3rem] transition-all duration-200">
+                    <p className="text-slate-300 mt-1 min-h-[3rem] transition-all duration-200">
                       {getFocusDescription()}
                     </p>
                   </div>
@@ -648,7 +646,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
                 <button
                   type="button"
                   onClick={handleCoreStart}
-                  className="w-full md:w-auto px-8 py-3.5 bg-[#1F283A] text-[#E9ECF1] dark:bg-[#E9ECF1] dark:text-[#1F283A] font-semibold rounded-xl hover:bg-[#364154] dark:hover:bg-white transition-colors shadow-md hover:shadow-lg"
+                  className="w-full md:w-auto px-8 py-3.5 bg-slate-100 text-slate-900 font-semibold rounded-xl hover:bg-white hover:shadow-xl transition-all shadow-lg border border-slate-300"
                 >
                   Start Session
                 </button>
@@ -656,6 +654,45 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
             </div>
           </div>
         )}
+
+        {/* Grand Rounds - Secondary Daily Challenge (Stormy Slate Theme) */}
+        {!searchQuery && (() => {
+          const grandRoundsMode = MODE_REGISTRY.find(m => m.id === 'grand_rounds');
+          if (!grandRoundsMode) return null;
+          
+          return (
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-600 p-6 shadow-lg">
+              <div className="flex flex-col md:flex-row gap-6 items-center">
+                <div className="flex-1">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-slate-700/60 flex items-center justify-center shadow-sm border border-slate-600">
+                      <Trophy className="w-6 h-6 text-slate-200" />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                        Grand Rounds
+                        <span className="px-2 py-0.5 text-xs font-semibold bg-slate-700 text-slate-200 rounded-full border border-slate-600">
+                          Daily Challenge
+                        </span>
+                      </h2>
+                      <p className="text-slate-400 text-sm mt-1">
+                        Same questions for everyone today - compete with your peers
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={() => handleDrillClick(grandRoundsMode)}
+                  className="px-6 py-3 bg-slate-800 text-white font-semibold rounded-xl hover:bg-slate-700 hover:border-white transition-all border border-slate-600"
+                >
+                  Start Challenge
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Intent-Based Sections */}
         <div className="space-y-8">
@@ -667,7 +704,7 @@ const TrainingMenu: React.FC<TrainingMenuProps> = ({
         {/* No Results Message */}
         {searchQuery && filteredModes.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-[var(--color-text-muted)]">No modes found matching "{searchQuery}"</p>
+            <p className="text-slate-500">No modes found matching "{searchQuery}"</p>
           </div>
         )}
       </div>

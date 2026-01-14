@@ -25,8 +25,14 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
       recommendations 
     });
   } catch (error) {
-    console.error('[recommendations/generate] Recommendation generation failed', error);
-    return createErrorResponse('Failed to generate recommendations', 500);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('[recommendations/generate] Recommendation generation failed', {
+      message: errorMessage,
+      stack: errorStack,
+      name: error instanceof Error ? error.name : typeof error
+    });
+    return createErrorResponse(`Failed to generate recommendations: ${errorMessage}`, 500);
   } finally {
     await safePrismaDisconnect(prisma as any);
   }
