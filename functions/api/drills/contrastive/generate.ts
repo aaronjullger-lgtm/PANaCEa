@@ -1,7 +1,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-import { prisma } from '../../../../lib/prisma';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { buildContrastivePrompt, GeneratedContrastiveQuestion } from '../../../../lib/contrastiveDrillGenerator';
 import type { CloudflareContext } from '../../_shared/types';
 
@@ -32,6 +32,7 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<Gener
 
 export async function onRequestPost(context: CloudflareContext<Env>) {
     const { request, env } = context;
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
     const body = await request.json() as any;
     const { setId, conditionIndex } = body;
 
@@ -39,47 +40,41 @@ export async function onRequestPost(context: CloudflareContext<Env>) {
         return Response.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 });
     }
 
-    const set = await prisma.contrastiveSet.findUnique({ where: { id: setId } });
-    if (!set) return Response.json({ error: 'Set not found' }, { status: 404 });
-
-    if (conditionIndex < 0 || conditionIndex >= set.conditionIds.length) {
-        return Response.json({ error: 'Invalid condition index' }, { status: 400 });
-    }
-
-    const targetConditionId = set.conditionIds[conditionIndex];
-
-    // Resolve condition name from ID if possible, or use the ID string if it was stored as name
-    // Since we stored checking IDs but falling back to names, we can probably use the string directly 
-    // or fetch the name.
-    // Let's assume the string in conditionIds IS the name or useful ID.
-    // If it's an ID, we should fetch the Condition name.
-
-    let targetConditionName = targetConditionId;
-    const condition = await prisma.condition.findUnique({ where: { id: targetConditionId } });
-    if (condition) targetConditionName = condition.name;
-    else {
-        // Try medical content? 
-        const content = await prisma.medicalContent.findUnique({ where: { id: targetConditionId } });
-        if (content) targetConditionName = content.condition;
-    }
-
-    // Get names of others for the prompt
-    const otherConditionNames: string[] = [];
-    for (const id of set.conditionIds) {
-        if (id === targetConditionId) continue;
-        let name = id;
-        const c = await prisma.condition.findUnique({ where: { id } });
-        if (c) name = c.name;
-        else {
-            const mc = await prisma.medicalContent.findUnique({ where: { id } });
-            if (mc) name = mc.condition;
-        }
-        otherConditionNames.push(name);
-    }
-
-    const prompt = buildContrastivePrompt(set, targetConditionName, otherConditionNames);
-
     try {
+        prisma = createEdgePrismaClient(env.DATABASE_URL);
+
+        const set = await prisma.contrastiveSet.findUnique({ where: { id: setId } });
+        if (!set) return Response.json({ error: 'Set not found' }, { status: 404 });
+
+        if (conditionIndex < 0 || conditionIndex >= set.conditionIds.length) {
+            return Response.json({ error: 'Invalid condition index' }, { status: 400 });
+        }
+
+        const targetConditionId = set.conditionIds[conditionIndex];
+
+        let targetConditionName = targetConditionId;
+        const condition = await prisma.condition.findUnique({ where: { id: targetConditionId } });
+        if (condition) targetConditionName = condition.name;
+        else {
+            const content = await prisma.medicalContent.findUnique({ where: { id: targetConditionId } });
+            if (content) targetConditionName = content.condition;
+        }
+
+        const otherConditionNames: string[] = [];
+        for (const id of set.conditionIds) {
+            if (id === targetConditionId) continue;
+            let name = id;
+            const c = await prisma.condition.findUnique({ where: { id } });
+            if (c) name = c.name;
+            else {
+                const mc = await prisma.medicalContent.findUnique({ where: { id } });
+                if (mc) name = mc.condition;
+            }
+            otherConditionNames.push(name);
+        }
+
+        const prompt = buildContrastivePrompt(set, targetConditionName, otherConditionNames);
+
         const generated = await generateWithGemini(env.GEMINI_API_KEY, prompt);
 
         return Response.json({
@@ -92,5 +87,7 @@ export async function onRequestPost(context: CloudflareContext<Env>) {
     } catch (error) {
         console.error("LLM Generation failed:", error);
         return Response.json({ error: 'Failed to generate question', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
+    } finally {
+        await safePrismaDisconnect(prisma);
     }
 }

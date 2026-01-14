@@ -1,6 +1,6 @@
 import { json } from '@remix-run/cloudflare';
 import type { ActionFunctionArgs } from '@remix-run/cloudflare';
-import { prisma } from '../../../../../lib/prisma';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
 const UpdateParentSchema = z.object({
@@ -8,7 +8,7 @@ const UpdateParentSchema = z.object({
     relationshipType: z.enum(['subtype', 'complication', 'manifestation', 'variant']).optional(),
 });
 
-export async function action({ request, params }: ActionFunctionArgs) {
+export async function action({ request, params, context }: ActionFunctionArgs) {
     if (request.method !== 'PATCH') {
         return json({ error: 'Method not allowed' }, { status: 405 });
     }
@@ -18,7 +18,18 @@ export async function action({ request, params }: ActionFunctionArgs) {
         return json({ error: 'Condition ID is required' }, { status: 400 });
     }
 
+    const databaseUrl = (context as any)?.cloudflare?.env?.DATABASE_URL
+        || (context as any)?.env?.DATABASE_URL
+        || process.env.DATABASE_URL;
+
+    if (!databaseUrl) {
+        return json({ error: 'DATABASE_URL is not configured' }, { status: 500 });
+    }
+
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+
     try {
+        prisma = createEdgePrismaClient(databaseUrl);
         const data = await request.json();
         const result = UpdateParentSchema.safeParse(data);
 
@@ -71,5 +82,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     } catch (error) {
         console.error('Error updating parent relationship:', error);
         return json({ error: 'Failed to update relationship' }, { status: 500 });
+    } finally {
+        await safePrismaDisconnect(prisma);
     }
 }

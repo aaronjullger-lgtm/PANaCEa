@@ -1,6 +1,6 @@
 import { json } from '@remix-run/cloudflare';
 import type { LoaderFunctionArgs } from '@remix-run/cloudflare';
-import { prisma } from '../../../../lib/prisma';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
 import { z } from 'zod';
 
 // Add type safety for hierarchy fields since they might not be in the generated client yet
@@ -13,14 +13,25 @@ interface ConditionHierarchy extends Record<string, any> {
     children?: any[];
 }
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({ params, context }: LoaderFunctionArgs) {
     const { id } = params;
 
     if (!id) {
         return json({ error: 'Condition ID is required' }, { status: 400 });
     }
 
+    const databaseUrl = (context as any)?.cloudflare?.env?.DATABASE_URL
+        || (context as any)?.env?.DATABASE_URL
+        || process.env.DATABASE_URL;
+
+    if (!databaseUrl) {
+        return json({ error: 'DATABASE_URL is not configured' }, { status: 500 });
+    }
+
+    let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+
     try {
+        prisma = createEdgePrismaClient(databaseUrl);
         // We are casting types or relying on updated client
         const condition = await prisma.medicalContent.findUnique({
             where: { id },
@@ -69,5 +80,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     } catch (error) {
         console.error('Error fetching condition hierarchy:', error);
         return json({ error: 'Failed to fetch hierarchy' }, { status: 500 });
+    } finally {
+        await safePrismaDisconnect(prisma);
     }
 }
