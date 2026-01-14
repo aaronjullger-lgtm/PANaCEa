@@ -167,15 +167,14 @@ export const recommendationService = {
      */
     async getPendingRecommendations(userId: string) {
         return prisma.studyRecommendation.findMany({
+        return prisma.studyRecommendation.findMany({
             where: {
-                userId,
                 userId,
                 status: 'pending'
             },
-        },
             orderBy: {
-            createdAt: 'desc'
-        }
+                createdAt: 'desc'
+            }
         });
     },
 
@@ -183,9 +182,9 @@ export const recommendationService = {
      * Dismisses a recommendation.
      */
     async dismissRecommendation(id: string, userId: string) {
-    return prisma.studyRecommendation.update({
-        where: { id, userId }, // Ensure ownership
-        data: { status: 'dismissed' }
-    });
-}
+        return prisma.studyRecommendation.update({
+            where: { id, userId }, // Ensure ownership
+            data: { status: 'dismissed' }
+        });
+    }
 };

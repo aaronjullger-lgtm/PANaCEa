@@ -38,13 +38,9 @@ export type TrainingModeId =
   | 'panre_la'
   | 'code_blue_speed'
   | 'grand_rounds'
-  | 'cram_mode'
-  | 'medical_wordle'
   | 'ventilator_hero'
   | 'polypharmacy_puzzle'
-  | 'radiology_scroll'
   | 'physiology_drill'
-  | 'contrastive_drill'
   | 'anatomy_review';
 
 /**
@@ -310,12 +306,12 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
   {
     id: 'rapid_recall',
     label: 'Rapid Recall',
-    description: 'High-yield buzzwords & associations',
+    description: 'High-intensity rapid-fire questions with buzzwords & associations',
     category: 'specialty_drills',
     iconName: 'Zap',
     theme: 'amber',
     route: '/modes/rapid-recall',
-    estimatedMinutes: 5,
+    estimatedMinutes: 15,
   },
   {
     id: 'antibiotic_mode',
@@ -349,13 +345,13 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
   },
   {
     id: 'ddx_compare',
-    label: 'DDx Compare',
-    description: 'Side-by-side differential diagnosis builder',
+    label: 'Differential Diagnosis',
+    description: 'Side-by-side comparison & fine distinctions between similar conditions',
     category: 'specialty_drills',
     iconName: 'GitCompare',
     theme: 'blue',
     route: '/modes/ddx-compare',
-    estimatedMinutes: 10,
+    estimatedMinutes: 12,
   },
   {
     id: 'code_blue_speed',
@@ -366,16 +362,6 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
     theme: 'red',
     route: '/modes/code-blue-speed',
     estimatedMinutes: 5,
-  },
-  {
-    id: 'contrastive_drill',
-    label: 'Contrastive Drills',
-    description: 'Master fine distinctions between similar conditions',
-    category: 'specialty_drills',
-    iconName: 'Flame',
-    theme: 'teal',
-    route: '/modes/contrastive-drill',
-    estimatedMinutes: 10,
   },
   // --- STANDALONE MODES ---
   {
@@ -411,26 +397,6 @@ export const TRAINING_MODES: TrainingModeConfig[] = [
   },
 
   // --- ADDITIONAL MODES FOR COVERAGE ---
-  {
-    id: 'cram_mode',
-    label: 'Cram Mode',
-    description: 'High-intensity rapid questions',
-    category: 'question_practice',
-    iconName: 'Clock',
-    theme: 'orange',
-    route: '/modes/cram-mode',
-    estimatedMinutes: 20,
-  },
-  {
-    id: 'medical_wordle',
-    label: 'Daily Term Challenge',
-    description: 'Guess the medical term of the day',
-    category: 'specialty_drills',
-    iconName: 'Hash',
-    theme: 'slate',
-    route: '/modes/medical-wordle',
-    estimatedMinutes: 5,
-  },
   {
     id: 'polypharmacy_puzzle',
     label: 'Polypharmacy Puzzle',

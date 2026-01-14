@@ -51,18 +51,15 @@ const AnatomyDrillSession = lazy(() => import("./components/drill/AnatomyDrillSe
 const ECGDrillSession = lazy(() => import("./components/drill/ECGDrillSession"));
 const DermDrillSession = lazy(() => import("./components/drill/DermDrillSession"));
 const ImagingDrillSession = lazy(() => import("./components/drill/ImagingDrillSession"));
-const ContrastiveDrillSession = lazy(() => import("./components/drill/ContrastiveDrillSession").then(m => ({ default: m.ContrastiveDrillSession })));
 const FluidElectrolyteMode = lazy(() => import("./components/modes/FluidElectrolyteMode"));
 const AntibioticMode = lazy(() => import("./components/modes/AntibioticMode"));
 const PatientEncounterMode = lazy(() => import("./components/modes/PatientEncounterMode"));
 const CodeBlueSpeedMode = lazy(() => import("./components/modes/CodeBlueSpeedMode"));
 const GrandRoundsMode = lazy(() => import("./components/modes/GrandRoundsMode"));
-const MedicalWordleMode = lazy(() => import("./components/modes/MedicalWordleMode"));
 const IntegrationsHub = lazy(() => import("./components/integrations/IntegrationsHub"));
 const SettingsStatsModal = lazy(() => import("./components/SettingsStatsModal"));
 const KeyboardShortcutsModal = lazy(() => import("./components/KeyboardShortcutsModal"));
 const PANRELASimulator = lazy(() => import("./components/lifelong-learning/PANRELASimulator"));
-const CramMode = lazy(() => import("./components/modes/CramMode"));
 const CommandPalette = lazy(() => import("./components/CommandPalette"));
 const UserProfileModal = lazy(() => import("./components/onboarding/UserProfileModal"));
 const MediaApproval = lazy(() => import("./pages/admin/MediaApproval"));
@@ -103,14 +100,11 @@ const DRILL_MODE_ANTIBIOTIC: TrainingModeId = 'antibiotic_mode';
 const DRILL_MODE_PATIENT_ENCOUNTER: TrainingModeId = 'patient_encounter';
 const DRILL_MODE_CODE_BLUE: TrainingModeId = 'code_blue_speed';
 const DRILL_MODE_GRAND_ROUNDS: TrainingModeId = 'grand_rounds';
-const DRILL_MODE_CRAM: TrainingModeId = 'cram_mode';
-const DRILL_MODE_MEDICAL_WORDLE: TrainingModeId = 'medical_wordle';
 const DRILL_MODE_VENTILATOR: TrainingModeId = 'ventilator_hero';
 const DRILL_MODE_PHYSIOLOGY: TrainingModeId = 'physiology_drill';
 const DRILL_MODE_ANATOMY: TrainingModeId = 'anatomy_review';
-const DRILL_MODE_CONTRASTIVE: TrainingModeId = 'contrastive_drill';
 
-type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "system_drill" | "subcategory_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "cram_mode" | "medical_wordle" | "ventilator_hero" | "physiology_drill" | "anatomy_review" | "contrastive_drill" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "clinical_profile" | "training_menu" | "simulation_page" | "command_center_page" | "reference_library";
+type View = "menu" | "command_center" | "quiz" | "integrations" | "photo_drill" | "ecg_drill" | "derm_drill" | "imaging_drill" | "rapid_recall" | "ddx_compare" | "mini_lab" | "pharmacology" | "first_line_treatment" | "condition_drill" | "system_drill" | "subcategory_drill" | "guideline_drill" | "fluid_electrolyte" | "antibiotic_mode" | "patient_encounter" | "panre_la" | "code_blue_speed" | "grand_rounds" | "ventilator_hero" | "physiology_drill" | "anatomy_review" | "admin_media" | "social_dashboard" | "toolkit" | "gap_analysis" | "clinical_profile" | "training_menu" | "simulation_page" | "command_center_page" | "reference_library";
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -490,12 +484,9 @@ const App: React.FC = () => {
       [DRILL_MODE_CODE_BLUE]: 'code_blue_speed',
       [DRILL_MODE_GRAND_ROUNDS]: 'grand_rounds',
       'panre_la': 'panre_la',
-      [DRILL_MODE_CRAM]: 'cram_mode',
-      [DRILL_MODE_MEDICAL_WORDLE]: 'medical_wordle',
       [DRILL_MODE_VENTILATOR]: 'ventilator_hero',
       [DRILL_MODE_PHYSIOLOGY]: 'physiology_drill',
       [DRILL_MODE_ANATOMY]: 'anatomy_review',
-      [DRILL_MODE_CONTRASTIVE]: 'contrastive_drill',
       'admin_media': 'admin_media',
       'toolkit': 'toolkit',
     };
@@ -917,14 +908,6 @@ const App: React.FC = () => {
                   </WithGeminiErrorBoundary>
                 )}
 
-                {view === "contrastive_drill" && (
-                  <WithGeminiErrorBoundary viewName="contrastive_drill" onRetry={() => setView("contrastive_drill")}>
-                    <Suspense fallback={<Loader />}>
-                      <ContrastiveDrillSession onExit={() => setView("command_center")} />
-                    </Suspense>
-                  </WithGeminiErrorBoundary>
-                )}
-
                 {view === "fluid_electrolyte" && (
                   <WithGeminiErrorBoundary viewName="fluid_electrolyte" onRetry={() => setView("fluid_electrolyte")}>
                     <Suspense fallback={<Loader />}>
@@ -969,14 +952,6 @@ const App: React.FC = () => {
                   </WithGeminiErrorBoundary>
                 )}
 
-                {view === "cram_mode" && (
-                  <WithGeminiErrorBoundary viewName="cram_mode" onRetry={() => setView("cram_mode")}>
-                    <Suspense fallback={<Loader />}>
-                      <CramMode onExit={() => setView("command_center")} />
-                    </Suspense>
-                  </WithGeminiErrorBoundary>
-                )}
-
                 {view === "code_blue_speed" && (
                   <WithGeminiErrorBoundary viewName="code_blue_speed" onRetry={() => setView("code_blue_speed")}>
                     <Suspense fallback={<Loader />}>
@@ -989,14 +964,6 @@ const App: React.FC = () => {
                   <WithGeminiErrorBoundary viewName="grand_rounds" onRetry={() => setView("grand_rounds")}>
                     <Suspense fallback={<Loader />}>
                       <GrandRoundsMode onExit={() => setView("command_center")} />
-                    </Suspense>
-                  </WithGeminiErrorBoundary>
-                )}
-
-                {view === "medical_wordle" && (
-                  <WithGeminiErrorBoundary viewName="medical_wordle" onRetry={() => setView("medical_wordle")}>
-                    <Suspense fallback={<Loader />}>
-                      <MedicalWordleMode onExit={() => setView("command_center")} />
                     </Suspense>
                   </WithGeminiErrorBoundary>
                 )}
