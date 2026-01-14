@@ -13,7 +13,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { CONDITION_REGISTRY, buildConditionDefinition, type ConditionMeta } from '../conditionRegistry';
+import { CONDITION_REGISTRY, buildConditionDefinition, type ConditionMeta } from '../config/conditionRegistry';
 import type { SystemCode } from '../types';
 
 const prisma = new PrismaClient();

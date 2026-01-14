@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
-import { CONDITION_REGISTRY, buildConditionDefinition } from '../conditionRegistry';
+import { CONDITION_REGISTRY, buildConditionDefinition } from '../config/conditionRegistry';
 
 const prisma = new PrismaClient();
 

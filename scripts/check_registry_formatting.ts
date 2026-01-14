@@ -1,5 +1,5 @@
 
-import { CONDITION_REGISTRY } from '../conditionRegistry';
+import { CONDITION_REGISTRY } from '../config/conditionRegistry';
 
 const badEntries = [];
 

@@ -365,7 +365,8 @@ export async function getOptimalQuestions(
       const result = await getIntelligentQuestions(
         { maxQuestions: count },
         systemMastery,
-        previousQuestionIds
+        previousQuestionIds,
+        getToken
       );
       
       if (result.questions.length >= count * 0.8) {

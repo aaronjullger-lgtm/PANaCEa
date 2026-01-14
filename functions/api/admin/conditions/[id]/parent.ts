@@ -1,88 +1,116 @@
-import { json } from '@remix-run/cloudflare';
-import type { ActionFunctionArgs } from '@remix-run/cloudflare';
-import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { createEdgePrismaClient, safePrismaDisconnect } from '../../../_shared/prisma-edge';
+import { authenticateRequest, handleCorsOptions } from '../../../_shared/auth';
+import type { CloudflareContext } from '../../../_shared/types';
+import { isAdmin, type UserRole } from '../../../_shared/rbac';
 import { z } from 'zod';
 
 const UpdateParentSchema = z.object({
-    parentId: z.string().optional(),
+        parentId: z.string().nullable().optional(),
     relationshipType: z.enum(['subtype', 'complication', 'manifestation', 'variant']).optional(),
 });
 
-export async function action({ request, params, context }: ActionFunctionArgs) {
-    if (request.method !== 'PATCH') {
-        return json({ error: 'Method not allowed' }, { status: 405 });
-    }
+export const onRequestOptions = handleCorsOptions;
 
-    const { id } = params;
+const CORS_HEADERS = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'PATCH, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export const onRequestPatch = async (context: CloudflareContext) => {
+    const id = context.params?.id;
     if (!id) {
-        return json({ error: 'Condition ID is required' }, { status: 400 });
-    }
-
-    const databaseUrl = (context as any)?.cloudflare?.env?.DATABASE_URL
-        || (context as any)?.env?.DATABASE_URL
-        || process.env.DATABASE_URL;
-
-    if (!databaseUrl) {
-        return json({ error: 'DATABASE_URL is not configured' }, { status: 500 });
+        return new Response(JSON.stringify({ error: 'Condition ID is required' }), {
+            status: 400,
+            headers: CORS_HEADERS,
+        });
     }
 
     let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
 
     try {
-        prisma = createEdgePrismaClient(databaseUrl);
-        const data = await request.json();
-        const result = UpdateParentSchema.safeParse(data);
+        prisma = createEdgePrismaClient(context.env);
 
+        const auth = await authenticateRequest(context.request as any, context.env as any);
+        if (!auth?.userId) {
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+                status: 401,
+                headers: CORS_HEADERS,
+            });
+        }
+
+        // Admin-only endpoint
+        const user = await prisma.user.findUnique({
+            where: { clerkId: auth.userId },
+            select: { role: true },
+        });
+
+        if (!user || !isAdmin(user.role as UserRole)) {
+            return new Response(JSON.stringify({ error: 'Admin access required' }), {
+                status: 403,
+                headers: CORS_HEADERS,
+            });
+        }
+
+        const data = await context.request.json();
+        const result = UpdateParentSchema.safeParse(data);
         if (!result.success) {
-            return json({ error: 'Invalid input', details: result.error.flatten() }, { status: 400 });
+            return new Response(
+                JSON.stringify({ error: 'Invalid input', details: result.error.flatten() }),
+                { status: 400, headers: CORS_HEADERS }
+            );
         }
 
         const { parentId, relationshipType } = result.data;
 
-        // Check if condition exists
-        const condition = await prisma.medicalContent.findUnique({
-            where: { id }
-        });
-
+        const condition = await prisma.medicalContent.findUnique({ where: { id } });
         if (!condition) {
-            return json({ error: 'Condition not found' }, { status: 404 });
+            return new Response(JSON.stringify({ error: 'Condition not found' }), {
+                status: 404,
+                headers: CORS_HEADERS,
+            });
         }
 
         // If setting a parentId, check if parent exists
-        let canonicalName = condition.canonicalName;
+        let canonicalName: string | null = (condition as any).canonicalName;
 
-        if (parentId) {
-            const parent = await prisma.medicalContent.findUnique({
-                where: { id: parentId }
-            });
-
+        if (typeof parentId === 'string' && parentId) {
+            const parent = await prisma.medicalContent.findUnique({ where: { id: parentId } });
             if (!parent) {
-                return json({ error: 'Parent condition not found' }, { status: 404 });
+                return new Response(JSON.stringify({ error: 'Parent condition not found' }), {
+                    status: 404,
+                    headers: CORS_HEADERS,
+                });
             }
 
-            // Inherit canonical name from parent (or use parent's own canonical name if set)
-            canonicalName = parent.canonicalName || parent.condition;
-        } else if (parentId === null) {
-            // Clearing parent
+            canonicalName = (parent as any).canonicalName || parent.condition;
+        }
+
+        if (parentId === null) {
             canonicalName = null;
         }
 
-        // Update condition
         const updated = await prisma.medicalContent.update({
             where: { id },
             data: {
-                parentId,
+                parentId: parentId === undefined ? undefined : parentId,
                 relationshipType,
-                canonicalName
-            }
+                canonicalName,
+            },
         });
 
-        return json({ success: true, condition: updated });
-
+        return new Response(JSON.stringify({ success: true, condition: updated }), {
+            status: 200,
+            headers: CORS_HEADERS,
+        });
     } catch (error) {
         console.error('Error updating parent relationship:', error);
-        return json({ error: 'Failed to update relationship' }, { status: 500 });
+        return new Response(JSON.stringify({ error: 'Failed to update relationship' }), {
+            status: 500,
+            headers: CORS_HEADERS,
+        });
     } finally {
         await safePrismaDisconnect(prisma);
     }
-}
+};

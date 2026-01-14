@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 
 interface FlagQuestionData {
   userId: string;
@@ -29,16 +30,19 @@ interface FlagResult {
 export function useQuestionFlag() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
 
   const flagQuestion = async (data: FlagQuestionData): Promise<FlagResult> => {
     setLoading(true);
     setError(null);
 
     try {
+      const token = await getToken();
       const response = await fetch('/api/questions/flag', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(data),
       });
@@ -76,6 +80,7 @@ export function useQuestionFlags() {
   const [loading, setLoading] = useState(false);
   const [flags, setFlags] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const { getToken } = useAuth();
 
   const fetchFlags = async (filters?: {
     status?: string;
@@ -89,7 +94,10 @@ export function useQuestionFlags() {
       if (filters?.status) params.append('status', filters.status);
       if (filters?.priority) params.append('priority', filters.priority);
 
-      const response = await fetch(`/api/questions/flags?${params.toString()}`);
+      const token = await getToken();
+      const response = await fetch(`/api/questions/flags?${params.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       const result = await response.json();
 
       if (!response.ok) {
@@ -114,10 +122,12 @@ export function useQuestionFlags() {
     setError(null);
 
     try {
+      const token = await getToken();
       const response = await fetch(`/api/questions/flag/${flagId}/resolve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           reviewedBy,

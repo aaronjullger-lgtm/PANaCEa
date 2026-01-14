@@ -66,16 +66,27 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
 
     const peakStudyHours = currentStats?.peakStudyHours && currentStats.peakStudyHours.length
       ? currentStats.peakStudyHours
-      : derivePeakHoursFromSessions(
-          (await prisma.questionAttempt.findMany({
-            where: { userId },
-            select: { createdAt: true },
-            take: 500,
-            orderBy: { createdAt: 'desc' },
-          })).map((a) => new Date(a.createdAt).getHours())
-        );
+      : await (async () => {
+          try {
+            const attempts = await prisma.questionAttempt.findMany({
+              where: { userId },
+              select: { createdAt: true },
+              take: 500,
+              orderBy: { createdAt: 'desc' },
+            });
+            return derivePeakHoursFromSessions(attempts.map((a) => new Date(a.createdAt).getHours()));
+          } catch (err) {
+            console.error('[clinical-profile] Failed to derive peak hours', err);
+            return [];
+          }
+        })();
 
-    const avgSessionLength = currentStats?.avgSessionLength ?? (await recomputeAvgSessionLength(prisma as any, userId));
+    const avgSessionLength = currentStats?.avgSessionLength ?? (
+      await recomputeAvgSessionLength(prisma as any, userId).catch(err => {
+        console.error('[clinical-profile] Failed to compute avg session length', err);
+        return null;
+      })
+    );
 
     // Persist refreshed aggregates
     await prisma.userStatistics.upsert({
@@ -135,8 +146,15 @@ export const onRequestGet = async (context: { request: Request; env: Env }) => {
 
     return createSuccessResponse(response);
   } catch (error) {
-    console.error('[user/clinical-profile] Failed to load profile', error);
-    return createErrorResponse('Failed to load clinical profile', 500);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('[user/clinical-profile] Failed to load profile', { 
+      message: errorMessage, 
+      stack: errorStack,
+      name: error instanceof Error ? error.name : typeof error 
+    });
+    // Return more diagnostic info in dev (still obscured in production)
+    return createErrorResponse(`Failed to load clinical profile: ${errorMessage}`, 500);
   } finally {
     await safePrismaDisconnect(prisma as any);
   }

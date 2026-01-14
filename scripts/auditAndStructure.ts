@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { CONDITION_REGISTRY } from '../conditionRegistry';
+import { CONDITION_REGISTRY } from '../config/conditionRegistry';
 // import { BUZZWORD_BANK } from '../data/buzzwordBank';
 // import { FIRST_LINE_TREATMENTS } from '../data/firstLineTreatmentData';
 // import { GUIDELINES_DATABASE } from '../data/guidelinesData';

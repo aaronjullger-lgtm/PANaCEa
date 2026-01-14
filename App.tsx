@@ -30,6 +30,7 @@ import { getExamLabel } from "./services/userContextService";
 import type { TrainingModeId } from "./config/training-modes";
 import { CommuterProvider } from "./contexts/CommuterContext";
 import { ToastProvider } from "./contexts/ToastContext";
+import { KeyboardShortcutsProvider, useKeyboardShortcuts } from "./contexts/KeyboardShortcutsContext";
 
 // Lazy load components for better performance
 const QuizView = lazy(() => import("./components/QuizView"));

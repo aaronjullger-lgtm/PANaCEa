@@ -167,7 +167,6 @@ export const recommendationService = {
      */
     async getPendingRecommendations(userId: string) {
         return prisma.studyRecommendation.findMany({
-        return prisma.studyRecommendation.findMany({
             where: {
                 userId,
                 status: 'pending'

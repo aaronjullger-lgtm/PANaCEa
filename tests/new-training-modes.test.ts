@@ -16,10 +16,9 @@ import {
 // Note: Polypharmacy mode is database-driven (not yet implemented)
 
 describe('New Training Modes Configuration', () => {
-  it('should have medical_wordle in MODE_REGISTRY', () => {
-    const wordleMode = MODE_REGISTRY.find(m => m.id === 'medical_wordle');
-    expect(wordleMode).toBeDefined();
-    expect(wordleMode?.label).toBe('Daily Term Challenge');
+  it('should not have medical_wordle in MODE_REGISTRY (deprecated)', () => {
+    const wordleMode = MODE_REGISTRY.find(m => m.id === ('medical_wordle' as any));
+    expect(wordleMode).toBeUndefined();
   });
 
   it('should have ventilator_hero in MODE_REGISTRY', () => {
@@ -40,18 +39,18 @@ describe('New Training Modes Configuration', () => {
   });
 });
 
-describe('Daily Rituals - Medical Wordle', () => {
-  it('should generate consistent daily wordle for a given date', () => {
+describe('Daily Rituals - Medical Wordle (deprecated)', () => {
+  it('should still generate consistent daily wordle for a given date', () => {
     const wordle1 = getTodaysMedicalWordle();
     const wordle2 = getTodaysMedicalWordle();
-    
+
     expect(wordle1.targetWord).toBe(wordle2.targetWord);
     expect(wordle1.date).toBe(wordle2.date);
   });
 
   it('should have valid category and hints', () => {
     const wordle = getTodaysMedicalWordle();
-    
+
     expect(['drugs', 'conditions', 'anatomy']).toContain(wordle.category);
     expect(wordle.hints).toBeDefined();
     expect(wordle.hints.class).toBeDefined();

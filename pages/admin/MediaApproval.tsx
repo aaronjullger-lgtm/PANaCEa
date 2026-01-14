@@ -26,7 +26,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, ThumbsDown, Eye, AlertCircle, TrendingUp, Filter, Search, RefreshCw, FileText, Video, Music, Image } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUser } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 
 interface MediaAsset {
   id: string;
@@ -91,6 +91,7 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
   const [batchMode, setBatchMode] = useState(false);
   
   // Get authenticated user from Clerk
+  const { getToken } = useAuth();
   const { user } = useUser();
   const currentUserId = user?.id || 'unknown-user';
 
@@ -109,7 +110,10 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
         params.append('category', filter);
       }
 
-      const response = await fetch(`/api/admin/media/pending?${params}`);
+      const token = await getToken();
+      const response = await fetch(`/api/admin/media/pending?${params}` , {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -125,9 +129,13 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
   const handleApprove = async (mediaId: string) => {
     try {
+      const token = await getToken();
       const response = await fetch('/api/admin/media/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           mediaId,
           action: 'approve',
@@ -151,9 +159,13 @@ export function MediaApproval({ onClose }: MediaApprovalProps) {
 
   const handleReject = async (mediaId: string, reason: string) => {
     try {
+      const token = await getToken();
       const response = await fetch('/api/admin/media/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           mediaId,
           action: 'reject',

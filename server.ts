@@ -1,9 +1,22 @@
 
 /**
- * Backend server for PANaCEa
- * Runs on port 3001 to serve API endpoints.
+ * ============================================================================
+ * ⚠️  LEGACY SERVER - LOCAL DEVELOPMENT ONLY ⚠️
+ * ============================================================================
  * 
- * REFACTORED: Now uses modular routes in ./server/routes/
+ * This Express server is for LOCAL DEVELOPMENT and TESTING only.
+ * 
+ * PRODUCTION uses Cloudflare Pages Functions in /functions/api/
+ * 
+ * When to use this server:
+ * - `npm run dev:all` - Runs Vite + this server for local proxy testing
+ * - Testing Express-specific middleware or routes before migrating to CF
+ * 
+ * DO NOT deploy this server to production. All production API traffic
+ * should go through Cloudflare Pages Functions.
+ * 
+ * See: CLOUDFLARE_FUNCTIONS_GUIDE.md for production deployment info.
+ * ============================================================================
  */
 
 import express, { Request, Response, NextFunction } from 'express';

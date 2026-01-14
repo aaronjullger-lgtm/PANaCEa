@@ -2,13 +2,17 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { createEdgePrismaClient, safePrismaDisconnect } from '../../_shared/prisma-edge';
+import { handleCorsOptions, verifyAuthToken } from '../../_shared/auth';
 import { buildContrastivePrompt, GeneratedContrastiveQuestion } from '../../../../lib/contrastiveDrillGenerator';
 import type { CloudflareContext } from '../../_shared/types';
 
 interface Env {
     DATABASE_URL: string;
     GEMINI_API_KEY: string;
+    CLERK_SECRET_KEY: string;
 }
+
+export const onRequestOptions = handleCorsOptions;
 
 // Function to call Gemini
 async function generateWithGemini(apiKey: string, prompt: string): Promise<GeneratedContrastiveQuestion> {
@@ -33,6 +37,13 @@ async function generateWithGemini(apiKey: string, prompt: string): Promise<Gener
 export async function onRequestPost(context: CloudflareContext<Env>) {
     const { request, env } = context;
     let prisma: ReturnType<typeof createEdgePrismaClient> | null = null;
+
+    // Require authentication to prevent Gemini API abuse
+    const clerkId = await verifyAuthToken(request, env);
+    if (!clerkId) {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json() as any;
     const { setId, conditionIndex } = body;
 

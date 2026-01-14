@@ -93,7 +93,7 @@ export async function onRequestGet(context: any) {
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
       message: 'Failed to search content',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: undefined
     }), { 
       status: 500,
       headers: { 

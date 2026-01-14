@@ -99,7 +99,8 @@ const SYSTEM_CODE_MAP: Record<string, string> = {
 export async function getIntelligentQuestions(
   request: IntelligentQuestionRequest,
   systemMastery: SystemMasteryProfile[],
-  previousQuestionIds: string[] = []
+  previousQuestionIds: string[] = [],
+  getToken?: () => Promise<string | null>
 ): Promise<IntelligentQuestionResult> {
   // Get current user state
   const cognitiveState = getCognitiveState();
@@ -160,7 +161,8 @@ export async function getIntelligentQuestions(
   );
   
   // Fetch questions based on criteria
-  const questions = await fetchQuestionsFromPool(criteria, maxQuestions);
+  const token = getToken ? await getToken() : null;
+  const questions = await fetchQuestionsFromPool(criteria, maxQuestions, token);
   
   // Track adaptations made
   const adaptations: QuestionAdaptation[] = [];
@@ -355,10 +357,18 @@ function buildSelectionCriteria(
  */
 async function fetchQuestionsFromPool(
   criteria: QuestionSelectionCriteria[],
-  maxTotal: number
+  maxTotal: number,
+  token?: string | null
 ): Promise<Question[]> {
   const questions: Question[] = [];
   const seenIds = new Set<string>();
+
+  // Pool endpoint is protected in production; without a token, return empty so callers can fall back.
+  if (!token) return [];
+
+  const headers: HeadersInit = {
+    'Authorization': `Bearer ${token}`,
+  };
   
   // Try to fetch from each criteria set
   for (const criterion of criteria) {
@@ -374,7 +384,7 @@ async function fetchQuestionsFromPool(
         params.set('excludeIds', criterion.excludeIds.join(','));
       }
       
-      const response = await fetch(`/api/questions/pool?${params}`);
+      const response = await fetch(`/api/questions/pool?${params}`, { headers });
       
       if (response.ok) {
         const data = await response.json();
@@ -394,7 +404,7 @@ async function fetchQuestionsFromPool(
   if (questions.length < maxTotal) {
     try {
       const needed = maxTotal - questions.length;
-      const response = await fetch(`/api/questions/pool?count=${needed}`);
+      const response = await fetch(`/api/questions/pool?count=${needed}`, { headers });
       
       if (response.ok) {
         const data = await response.json();
@@ -450,7 +460,8 @@ function convertPoolQuestion(poolQ: any): Question {
  */
 export async function getWeakAreaQuestions(
   systemMastery: SystemMasteryProfile[],
-  maxQuestions: number = 10
+  maxQuestions: number = 10,
+  getToken?: () => Promise<string | null>
 ): Promise<Question[]> {
   // Find weakest systems
   const weakSystems = systemMastery
@@ -464,6 +475,10 @@ export async function getWeakAreaQuestions(
   
   const questions: Question[] = [];
   const perSystem = Math.ceil(maxQuestions / weakSystems.length);
+
+  const token = getToken ? await getToken() : null;
+  if (!token) return [];
+  const headers: HeadersInit = { Authorization: `Bearer ${token}` };
   
   for (const system of weakSystems) {
     try {
@@ -478,7 +493,7 @@ export async function getWeakAreaQuestions(
         params.set('tags', system.weakSubtopics.slice(0, 2).join(','));
       }
       
-      const response = await fetch(`/api/questions/pool?${params}`);
+      const response = await fetch(`/api/questions/pool?${params}`, { headers });
       
       if (response.ok) {
         const data = await response.json();
@@ -499,13 +514,18 @@ export async function getWeakAreaQuestions(
  */
 export async function getReviewQuestions(
   dueConditionIds: string[],
-  maxQuestions: number = 15
+  maxQuestions: number = 15,
+  getToken?: () => Promise<string | null>
 ): Promise<Question[]> {
   if (dueConditionIds.length === 0) {
     return [];
   }
   
   const questions: Question[] = [];
+
+  const token = getToken ? await getToken() : null;
+  if (!token) return [];
+  const headers: HeadersInit = { Authorization: `Bearer ${token}` };
   
   for (const conditionId of dueConditionIds.slice(0, maxQuestions)) {
     try {
@@ -514,7 +534,7 @@ export async function getReviewQuestions(
         conditionId,
       });
       
-      const response = await fetch(`/api/questions/pool?${params}`);
+      const response = await fetch(`/api/questions/pool?${params}`, { headers });
       
       if (response.ok) {
         const data = await response.json();
@@ -535,7 +555,8 @@ export async function getReviewQuestions(
  */
 export async function getFlowStateQuestions(
   systemMastery: SystemMasteryProfile[],
-  maxQuestions: number = 10
+  maxQuestions: number = 10,
+  getToken?: () => Promise<string | null>
 ): Promise<Question[]> {
   const cognitive = getCognitiveState();
   
@@ -557,10 +578,14 @@ export async function getFlowStateQuestions(
   
   const questions: Question[] = [];
   const perSystem = Math.ceil(maxQuestions / flowSystems.length);
+
+  const token = getToken ? await getToken() : null;
+  if (!token) return [];
+  const headers: HeadersInit = { Authorization: `Bearer ${token}` };
   
   for (const system of flowSystems) {
     try {
-      const response = await fetch(`/api/questions/pool?count=${perSystem}&system=${system.system}&difficulty=${difficulty}`);
+      const response = await fetch(`/api/questions/pool?count=${perSystem}&system=${system.system}&difficulty=${difficulty}`, { headers });
       
       if (response.ok) {
         const data = await response.json();

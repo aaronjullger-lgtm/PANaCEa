@@ -1,5 +1,5 @@
 
-import { CONDITION_REGISTRY } from '../conditionRegistry';
+import { CONDITION_REGISTRY } from '../config/conditionRegistry';
 import fs from 'fs';
 import path from 'path';
 

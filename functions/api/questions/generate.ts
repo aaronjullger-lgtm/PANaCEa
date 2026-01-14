@@ -1,5 +1,5 @@
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
-import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
+import { handleCorsOptions, verifyAuthToken, authenticateRequest } from '../_shared/auth';
 import { validateRequired } from '../_shared/validation';
 import { findSimilarCachedQuestion, cacheGeneratedQuestion } from '../_shared/semantic-cache';
 import { loadConditionData } from '../_shared/condition-loader';
@@ -21,23 +21,23 @@ export const onRequestPost = async (context) => {
     // It didn't have requireAuth middleware in the snippet!
     // But usually API endpoints should be protected.
     // I'll check if I should require auth. Given it consumes AI credits, yes.
-    
+
     // Actually, let's check server.ts again.
     // app.post('/api/questions/generate', validateRequired(['queryText', 'questionType']), async (req: Request, res: Response) => { ... })
     // It does NOT have requireAuth.
     // However, for production safety, I should probably require it or at least rate limit it.
     // I'll add verifyAuthToken but make it optional if the client doesn't send it?
     // No, better to be safe. I'll require it.
-    
-    const authResult = await verifyAuthToken(request, env);
-    if (!authResult) {
-       // If the frontend expects it to be public, this might break.
-       // But PANaCEa seems to be auth-heavy.
-       // I'll allow it for now but log a warning if no auth, or just enforce it.
-       // Let's enforce it to prevent abuse.
-       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+
+    const auth = await authenticateRequest(request as any, env as any);
+    if (!auth) {
+      // If the frontend expects it to be public, this might break.
+      // But PANaCEa seems to be auth-heavy.
+      // I'll allow it for now but log a warning if no auth, or just enforce it.
+      // Let's enforce it to prevent abuse.
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
@@ -45,12 +45,12 @@ export const onRequestPost = async (context) => {
     }
 
     // Rate limiting for Gemini API calls (expensive)
-    const identifier = getRateLimitIdentifier(request, authResult.userId);
+    const identifier = getRateLimitIdentifier(request, auth.userId);
     const limiter = createRateLimiter(env);
     const rateLimitCheck = await limiter.checkAndRespond(identifier, 'gemini');
-    
+
     if (!rateLimitCheck.allowed) {
-      const response = rateLimitCheck.response;
+      const response = 'response' in rateLimitCheck ? rateLimitCheck.response : new Response('Rate limited', { status: 429 });
       const newHeaders = new Headers(response.headers);
       newHeaders.set('Access-Control-Allow-Origin', '*');
       return new Response(response.body, {
@@ -62,12 +62,12 @@ export const onRequestPost = async (context) => {
     const body = await request.json();
     const missing = validateRequired(body, ['queryText', 'questionType']);
     if (missing.length > 0) {
-      return new Response(JSON.stringify({ 
-        error: 'Validation failed', 
-        missing 
+      return new Response(JSON.stringify({
+        error: 'Validation failed',
+        missing
       }), {
         status: 400,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
@@ -77,12 +77,12 @@ export const onRequestPost = async (context) => {
     const { queryText, questionType, system, difficulty } = body;
 
     if (!env.DATABASE_URL) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Database not configured' 
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Database not configured'
       }), {
         status: 503,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
@@ -106,7 +106,7 @@ export const onRequestPost = async (context) => {
         cached: true,
         similarity: cached.similarity,
       }), {
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*'
         }
@@ -118,7 +118,7 @@ export const onRequestPost = async (context) => {
 
     try {
       const conditionData = await loadConditionData(prisma, queryText);
-      
+
       if (conditionData && env.GEMINI_API_KEY) {
         const transformedCondition = {
           condition: conditionData.name,
@@ -187,7 +187,7 @@ export const onRequestPost = async (context) => {
       question: newQuestion,
       cached: false,
     }), {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       }
@@ -195,19 +195,19 @@ export const onRequestPost = async (context) => {
 
   } catch (error) {
     console.error('Failed to generate question:', error);
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: 'Failed to generate question' 
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'Failed to generate question'
     }), {
       status: 500,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
       }
     });
   } finally {
     if (prisma) {
-      await prisma.$disconnect().catch(() => {});
+      await prisma.$disconnect().catch(() => { });
     }
   }
 };

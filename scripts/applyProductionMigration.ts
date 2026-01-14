@@ -17,11 +17,10 @@
  *   - Can be run multiple times safely
  */
 
-import { PrismaClient } from '@prisma/client';
+import { prisma, disconnectPrisma } from './helpers/prisma-client';
 import { createInterface } from 'readline';
 import { execSync } from 'child_process';
 
-const prisma = new PrismaClient();
 
 interface MigrationCheck {
   hasUserTable: boolean;
@@ -269,6 +268,9 @@ async function main() {
   }
 }
 
+process.on('beforeExit', async () => {
+  await disconnectPrisma();
+});
 // Run the script
 main()
   .catch((error) => {

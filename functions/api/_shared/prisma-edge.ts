@@ -27,6 +27,13 @@ const DEBUG = process.env.NODE_ENV !== 'production';
  */
 export type EdgePrismaClient = ReturnType<typeof createEdgePrismaClient>;
 
+type DatabaseUrlInput =
+  | string
+  | { DATABASE_URL?: string | undefined }
+  | { env?: { DATABASE_URL?: string | undefined } | undefined }
+  | null
+  | undefined;
+
 /**
  * Creates a Prisma Client instance for Cloudflare Edge Runtime.
  * 
@@ -46,7 +53,14 @@ export type EdgePrismaClient = ReturnType<typeof createEdgePrismaClient>;
  * @param databaseUrl - Prisma Accelerate connection string
  * @returns Configured PrismaClient with Accelerate extension
  */
-export function createEdgePrismaClient(databaseUrl: string) {
+export function createEdgePrismaClient(databaseUrlOrEnv: DatabaseUrlInput) {
+  const databaseUrl =
+    typeof databaseUrlOrEnv === 'string'
+      ? databaseUrlOrEnv
+      : (databaseUrlOrEnv && 'DATABASE_URL' in databaseUrlOrEnv
+          ? (databaseUrlOrEnv as any).DATABASE_URL
+          : (databaseUrlOrEnv as any)?.env?.DATABASE_URL) || '';
+
   if (!databaseUrl) {
     console.error('[Prisma Edge] DATABASE_URL is missing');
     throw new Error(

@@ -1,6 +1,6 @@
 
 import { PrismaClient } from '@prisma/client';
-import { CONDITION_REGISTRY } from '../conditionRegistry';
+import { CONDITION_REGISTRY } from '../config/conditionRegistry';
 
 const prisma = new PrismaClient();
 

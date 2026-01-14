@@ -80,21 +80,6 @@ async function checkECGPattern() {
 async function main() {
   await checkImagingStudy();
   await checkECGPattern();
-}
-
-if (require.main === module) {
-  main()
-    .then(() => disconnectPrisma())
-    .catch(async (err) => {
-      console.error(err);
-      await disconnectPrisma();
-      process.exit(1);
-    });
-}
-
-async function main() {
-  await checkImagingStudy();
-  await checkECGPattern();
   
   // Check link tables
   const imgLinks = await prisma.imagingConditionLink.count();
@@ -107,4 +92,6 @@ async function main() {
   await prisma.$disconnect();
 }
 
-main().catch(console.error);
+if (require.main === module) {
+  main().catch(console.error);
+}

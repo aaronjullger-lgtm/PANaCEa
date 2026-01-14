@@ -7,13 +7,15 @@
  * PUBLIC endpoint - generates questions for a shared pool, no user data involved
  */
 
-import { handleCorsOptions } from '../_shared/auth';
+import { handleCorsOptions, verifyAuthToken } from '../_shared/auth';
 import { createEdgePrismaClient } from '../_shared/prisma-edge';
 import type { CloudflareContext } from '../_shared/types';
 
 interface Env {
   DATABASE_URL: string;
   GEMINI_API_KEY: string;
+  CLERK_SECRET_KEY: string;
+  CRON_SECRET?: string; // Optional: for cron job access
 }
 
 const DEFAULT_BATCH_SIZE = 10;
@@ -28,14 +30,29 @@ export function onRequestOptions() {
 }
 
 export const onRequestPost = async (context: CloudflareContext<Env>) => {
-  const prisma = createEdgePrismaClient(context.env.DATABASE_URL);
+  const { request, env } = context;
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
   
   const corsHeaders = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
+
+  // Allow cron jobs with CRON_SECRET or authenticated users
+  const authHeader = request.headers.get('Authorization');
+  const isCronJob = authHeader === `Bearer ${env.CRON_SECRET}` && env.CRON_SECRET;
+  
+  if (!isCronJob) {
+    const clerkId = await verifyAuthToken(request, env);
+    if (!clerkId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: corsHeaders,
+      });
+    }
+  }
   
   try {
 

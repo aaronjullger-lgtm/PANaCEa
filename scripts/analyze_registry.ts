@@ -1,5 +1,5 @@
 
-import { CONDITION_REGISTRY } from '../conditionRegistry';
+import { CONDITION_REGISTRY } from '../config/conditionRegistry';
 
 function normalize(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");

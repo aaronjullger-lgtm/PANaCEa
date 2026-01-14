@@ -20,6 +20,9 @@ export function useTheme(): [Theme, Dispatch<SetStateAction<Theme>>] {
     const root = window.document.documentElement;
     const body = window.document.body;
     
+    // Add transitioning class to prevent flash of unstyled content
+    root.classList.add('theme-transitioning');
+    
     if (theme === 'dark') {
       root.classList.add('dark');
       body.classList.add('dark');
@@ -27,6 +30,13 @@ export function useTheme(): [Theme, Dispatch<SetStateAction<Theme>>] {
       root.classList.remove('dark');
       body.classList.remove('dark');
     }
+    
+    // Remove transitioning class after a brief delay to allow CSS to update
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        root.classList.remove('theme-transitioning');
+      });
+    });
     
     try {
       window.localStorage.setItem('pance-ai-theme', theme);

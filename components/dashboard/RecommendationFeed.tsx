@@ -103,24 +103,18 @@ export const RecommendationFeed: React.FC<RecommendationFeedProps> = ({ onNaviga
                 return;
             }
 
-            if (action === 'dismiss') {
-                await fetch(`/api/recommendations/${id}/dismiss`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-            } else {
-                // For 'complete' we might also just dismiss or have a specific complete endpoint.
-                // For now, let's treat complete as dismiss but with positive toast.
-                await fetch(`/api/recommendations/${id}/dismiss`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
+            // Use the action endpoint with body containing recommendationId and action
+            const res = await fetch('/api/recommendations/action', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ recommendationId: id, action }),
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to update recommendation');
             }
 
             if (action === 'complete') {

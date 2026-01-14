@@ -1,7 +1,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { CONDITION_REGISTRY, findConditionMeta, buildConditionDefinition } from '../conditionRegistry';
+import { CONDITION_REGISTRY, findConditionMeta, buildConditionDefinition } from '../config/conditionRegistry';
 
 const RAW_PATH = path.join(process.cwd(), 'data', 'conditionContent.json');
 const CLEAN_PATH = path.join(process.cwd(), 'data', 'conditionContent.clean.json');

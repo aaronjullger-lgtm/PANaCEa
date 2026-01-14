@@ -633,7 +633,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all whitespace-nowrap ${activeTab === tab.id
-              ? 'bg-[var(--color-text-primary)] text-[var(--color-bg-primary)] shadow-lg'
+              ? 'bg-blue-600 text-white dark:bg-blue-500 dark:text-white shadow-lg'
               : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
               }`}
           >
@@ -735,7 +735,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                 </h3>
                 <button
                   onClick={onNavigateToReference}
-                  className="w-full text-left p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-lg transition-all group"
+                  className="w-full text-left p-5 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-accent)] hover:shadow-lg transition-all group"
                 >
                   <div className="flex items-start gap-4">
                     <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30">
@@ -743,7 +743,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-[var(--color-text-primary)]">Clinical Reference Library</h4>
-                      <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                      <p className="text-sm text-[var(--color-text-secondary)] mt-1">
                         Browse Anatomy, Labs, Drugs, ECG Patterns, Procedures, Physiology & more
                       </p>
                       <div className="flex flex-wrap gap-2 mt-3">

@@ -10,6 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@clerk/clerk-react';
 import {
   CheckCircle,
   XCircle,
@@ -82,6 +83,7 @@ export function QuestionQualityDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [systemFilter, setSystemFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const { getToken } = useAuth();
 
   const fetchStats = async () => {
     setIsLoading(true);
@@ -92,7 +94,10 @@ export function QuestionQualityDashboard() {
       if (systemFilter) params.set('system', systemFilter);
       if (statusFilter) params.set('validationStatus', statusFilter);
       
-      const response = await fetch(`/api/analytics/question-quality?${params}`);
+      const token = await getToken();
+      const response = await fetch(`/api/analytics/question-quality?${params}` , {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       
       if (!response.ok) {
         throw new Error('Failed to fetch quality stats');

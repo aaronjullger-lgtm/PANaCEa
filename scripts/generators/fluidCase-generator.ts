@@ -150,11 +150,11 @@ Rules: Use apostrophes not quotes, spell out symbols, no null values`;
     
     // Ensure correctAnswer and marginOfError are numbers
     if (typeof parsed.correctAnswer === 'string') {
-      const num = parseFloat(parsed.correctAnswer.replace(/[^0-9.-]/g, ''));
+      const num = parseFloat((parsed.correctAnswer as string).replace(/[^0-9.-]/g, ''));
       parsed.correctAnswer = isNaN(num) ? 100 : num;
     }
     if (typeof parsed.marginOfError === 'string') {
-      const num = parseFloat(parsed.marginOfError.replace(/[^0-9.-]/g, ''));
+      const num = parseFloat((parsed.marginOfError as string).replace(/[^0-9.-]/g, ''));
       parsed.marginOfError = isNaN(num) ? 10 : num;
     }
     // Ensure labs is an object

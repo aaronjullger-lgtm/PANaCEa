@@ -16,7 +16,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { config } from 'dotenv';
-import { CONDITION_REGISTRY, buildConditionDefinition } from '../conditionRegistry';
+import { CONDITION_REGISTRY, buildConditionDefinition } from '../config/conditionRegistry';
 import { fileURLToPath } from 'url';
 
 // Load environment variables

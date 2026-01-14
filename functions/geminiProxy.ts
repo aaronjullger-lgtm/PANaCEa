@@ -11,7 +11,6 @@ import {
 // 1. Define Types
 interface Env {
   GEMINI_API_KEY?: string;
-  VITE_GEMINI_API_KEY?: string;
   GOOGLE_API_KEY?: string;
   RATE_LIMIT_KV?: KVNamespace;
 }
@@ -79,7 +78,7 @@ export async function onRequestOptions(): Promise<Response> {
 // Allows you to visit /geminiProxy in the browser to confirm it exists
 export async function onRequestGet(context: PagesContext): Promise<Response> {
   const { env } = context;
-  const hasKey = !!(env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || env.GOOGLE_API_KEY);
+  const hasKey = !!(env.GEMINI_API_KEY || env.GOOGLE_API_KEY);
   
   return new Response(
     JSON.stringify({ 
@@ -121,7 +120,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     const rateLimitHeaders = rateLimitResult.headers;
     
     // Get API key from environment (try multiple names)
-    const apiKey = env.GEMINI_API_KEY || env.VITE_GEMINI_API_KEY || env.GOOGLE_API_KEY;
+    const apiKey = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
     
     if (!apiKey) {
       console.error("Missing API Key on Server");

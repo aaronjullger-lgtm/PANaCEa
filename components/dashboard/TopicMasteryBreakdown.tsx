@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { TASK_TYPES } from '../../lib/taskTypes';
@@ -21,11 +22,15 @@ interface TopicMasteryBreakdownProps {
 export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicMasteryBreakdownProps) {
     const [data, setData] = useState<TopicProgress | null>(null);
     const [loading, setLoading] = useState(true);
+    const { getToken } = useAuth();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`/api/user/topic-progress/${conditionId}`);
+                const token = await getToken();
+                const response = await fetch(`/api/user/topic-progress/${conditionId}`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+                });
                 if (response.ok) {
                     const result = await response.json();
                     setData(result);
@@ -40,7 +45,7 @@ export function TopicMasteryBreakdown({ conditionId, conditionName }: TopicMaste
         if (conditionId) {
             fetchData();
         }
-    }, [conditionId]);
+    }, [conditionId, getToken]);
 
     if (loading) return <div>Loading mastery...</div>;
     if (!data) return null;
