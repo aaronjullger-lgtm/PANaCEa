@@ -163,11 +163,11 @@ export async function getDailyPearl(userId?: string) {
 
   if (userId) {
     // Get pearls from questions the user has answered
-    const userHistory = await prisma.userQuestionHistory.findMany({
+    const userHistory = await prisma.userQuestionSeen.findMany({
       where: { userId },
       select: { questionId: true },
       take: 100, // Recent questions
-      orderBy: { seenAt: "desc" },
+      orderBy: { lastSeenAt: "desc" },
     });
 
     const questionIds = userHistory.map((h) => h.questionId);
@@ -218,10 +218,10 @@ export async function getDailyPearl(userId?: string) {
  */
 export async function getUserPearls(userId: string, limit: number = 20) {
   // Get questions the user has seen
-  const userHistory = await prisma.userQuestionHistory.findMany({
+  const userHistory = await prisma.userQuestionSeen.findMany({
     where: { userId },
     select: { questionId: true },
-    orderBy: { seenAt: "desc" },
+    orderBy: { lastSeenAt: "desc" },
   });
 
   const questionIds = userHistory.map((h) => h.questionId);

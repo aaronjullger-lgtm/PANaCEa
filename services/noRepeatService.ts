@@ -31,20 +31,30 @@ export async function recordQuestionSeen(
     wasCorrect?: boolean;
   }
 ) {
-  await prisma.userQuestionHistory.upsert({
+  const now = new Date();
+  await prisma.userQuestionSeen.upsert({
     where: {
-      userId_questionId: {
+      userId_questionId_questionType: {
         userId,
         questionId,
+        questionType: metadata.questionType,
       },
     },
     update: {
-      isCorrect: metadata.wasCorrect || false,
+      lastSeenAt: now,
+      timesShown: { increment: 1 },
+      timesCorrect: metadata.wasCorrect ? { increment: 1 } : undefined,
+      timesIncorrect: metadata.wasCorrect === false ? { increment: 1 } : undefined,
     },
     create: {
       userId,
       questionId,
-      isCorrect: metadata.wasCorrect || false,
+      questionType: metadata.questionType,
+      firstSeenAt: now,
+      lastSeenAt: now,
+      timesShown: 1,
+      timesCorrect: metadata.wasCorrect ? 1 : 0,
+      timesIncorrect: metadata.wasCorrect ? 0 : 1,
     },
   });
 }
@@ -65,7 +75,7 @@ export async function getUserSeenQuestions(userId: string, filter?: QuestionFilt
     where.questionType = filter.questionType;
   }
 
-  const history = await prisma.userQuestionHistory.findMany({
+  const history = await prisma.userQuestionSeen.findMany({
     where,
     select: { questionId: true },
   });
@@ -301,9 +311,9 @@ export async function cleanupOldHistory(daysToKeep: number = 365) {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
 
-  const deleted = await prisma.userQuestionHistory.deleteMany({
+  const deleted = await prisma.userQuestionSeen.deleteMany({
     where: {
-      seenAt: {
+      lastSeenAt: {
         lt: cutoffDate,
       },
     },

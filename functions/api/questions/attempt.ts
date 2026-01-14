@@ -2,7 +2,7 @@
  * API Endpoint: /api/questions/attempt
  * 
  * Record a question attempt for a user.
- * Updates UserQuestionHistory and QuestionAttempt tables.
+ * Updates UserQuestionSeen and QuestionAttempt tables.
  * Used for tracking user progress and FSRS scheduling.
  */
 
@@ -74,9 +74,8 @@ export const onRequestPost: PagesFunction<Env> = async (context): Promise<any> =
     // Support both timeSpent and timeSpentMs field names
     const timeSpentMillis = timeSpentMs !== undefined ? timeSpentMs : (timeSpent !== undefined ? timeSpent : null);
 
-    // Generate unique IDs
+    // Generate unique ID for attempt
     const attemptId = `attempt-${userId}-${questionId}-${Date.now()}`;
-    const historyId = `${userId}-${questionId}`;
 
     // Use transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
@@ -98,23 +97,7 @@ export const onRequestPost: PagesFunction<Env> = async (context): Promise<any> =
         },
       });
 
-      // 2. Update UserQuestionHistory (legacy - keeping for backward compatibility)
-      await tx.userQuestionHistory.upsert({
-        where: { id: historyId },
-        create: {
-          id: historyId,
-          userId,
-          questionId,
-          isCorrect: correctness,
-          seenAt: new Date(),
-        },
-        update: {
-          isCorrect: correctness,
-          seenAt: new Date(),
-        },
-      });
-
-      // 3. Update UserQuestionSeen with comprehensive metrics
+      // 2. Update UserQuestionSeen with comprehensive metrics
       const qType = questionType || 'question';
       const existingSeen = await tx.userQuestionSeen.findUnique({
         where: {

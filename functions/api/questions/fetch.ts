@@ -50,15 +50,11 @@ export const onRequestPost = async (context: CloudflareContext<Env>) => {
       // 1. Get seen question IDs
       const historyWhere: {
         userId: string;
-        system?: string;
-        conditionId?: string;
         questionType?: string;
       } = { userId };
-      if (system) historyWhere.system = system;
-      if (conditionId) historyWhere.conditionId = conditionId;
       if (questionType) historyWhere.questionType = questionType;
 
-      const history = await prisma.userQuestionHistory.findMany({
+      const history = await prisma.userQuestionSeen.findMany({
         where: historyWhere,
         select: { questionId: true },
       });

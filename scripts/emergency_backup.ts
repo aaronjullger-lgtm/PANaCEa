@@ -60,7 +60,7 @@ async function backup() {
     { name: 'BranchChange', filename: 'branch_changes.json', accessor: () => prisma.branchChange.findMany() },
     { name: 'Question', filename: 'questions.json', accessor: () => prisma.question.findMany() },
     { name: 'StagingQuestion', filename: 'staging_questions.json', accessor: () => prisma.stagingQuestion.findMany() },
-    { name: 'UserQuestionHistory', filename: 'user_question_history.json', accessor: () => prisma.userQuestionHistory.findMany() },
+    { name: 'UserQuestionSeen', filename: 'user_question_seen.json', accessor: () => prisma.userQuestionSeen.findMany() },
     { name: 'QuestionAttempt', filename: 'question_attempts.json', accessor: () => prisma.questionAttempt.findMany() },
     { name: 'ClinicalPearl', filename: 'clinical_pearls.json', accessor: () => prisma.clinicalPearl.findMany() },
     { name: 'EncounterResult', filename: 'encounter_results.json', accessor: () => prisma.encounterResult.findMany() },

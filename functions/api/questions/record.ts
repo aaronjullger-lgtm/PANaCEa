@@ -54,21 +54,39 @@ export const onRequestPost = async (context) => {
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 
     // Record the question as seen (no-repeat guard)
-    await prisma.userQuestionHistory.upsert({
-      where: {
-        userId_questionId: {
-          userId,
-          questionId,
-        },
-      },
-      update: {
-        isCorrect: wasCorrect || false,
-      },
+    const seenKey = {
+      userId,
+      questionId,
+      questionType,
+    } as const;
+
+    const existingSeen = await prisma.userQuestionSeen.findUnique({
+      where: { userId_questionId_questionType: seenKey },
+      select: { timesShown: true, avgTimeMs: true },
+    });
+
+    const now = new Date();
+    const updateData: any = {
+      lastSeenAt: now,
+      timesShown: { increment: 1 },
+    };
+
+    if (wasCorrect !== undefined) {
+      updateData.timesCorrect = wasCorrect ? { increment: 1 } : undefined;
+      updateData.timesIncorrect = wasCorrect ? undefined : { increment: 1 };
+    }
+
+    await prisma.userQuestionSeen.upsert({
+      where: { userId_questionId_questionType: seenKey },
       create: {
-        userId,
-        questionId,
-        isCorrect: wasCorrect || false,
+        ...seenKey,
+        firstSeenAt: now,
+        lastSeenAt: now,
+        timesShown: 1,
+        timesCorrect: wasCorrect ? 1 : 0,
+        timesIncorrect: wasCorrect ? 0 : 1,
       },
+      update: updateData,
     });
 
     // Always log attempts for drill history / analytics

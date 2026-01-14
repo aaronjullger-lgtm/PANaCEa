@@ -114,7 +114,7 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
     }
 
     // Get questions user has already seen
-    const seenQuestionIds = await prisma.userQuestionHistory.findMany({
+    const seenQuestionIds = await prisma.userQuestionSeen.findMany({
       where: { userId },
       select: { questionId: true },
     });
@@ -310,13 +310,16 @@ async function getFromPreGeneratedPool(
   // Record in user history ONLY - do NOT mark questions as globally used
   // This enables multi-tenant pooling where each user gets fresh questions
   if (toMarkUsed.length > 0) {
-    await prisma.userQuestionHistory.createMany({
+    await prisma.userQuestionSeen.createMany({
       data: toMarkUsed.map(questionId => ({
-        id: `${userId}-${questionId}`,
         userId,
         questionId,
-        isCorrect: false,
-        seenAt: new Date(),
+        questionType: 'pre_generated',
+        firstSeenAt: new Date(),
+        lastSeenAt: new Date(),
+        timesShown: 1,
+        timesCorrect: 0,
+        timesIncorrect: 0,
       })),
       skipDuplicates: true,
     });
@@ -412,13 +415,16 @@ async function getFromMainTable(
 
   // Record in history
   if (toRecord.length > 0) {
-    await prisma.userQuestionHistory.createMany({
+    await prisma.userQuestionSeen.createMany({
       data: toRecord.map(questionId => ({
-        id: `${userId}-${questionId}`,
         userId,
         questionId,
-        isCorrect: false,
-        seenAt: new Date(),
+        questionType: 'question',
+        firstSeenAt: new Date(),
+        lastSeenAt: new Date(),
+        timesShown: 1,
+        timesCorrect: 0,
+        timesIncorrect: 0,
       })),
       skipDuplicates: true,
     });

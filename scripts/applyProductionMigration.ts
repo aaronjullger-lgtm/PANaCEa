@@ -60,7 +60,7 @@ const EXPECTED_TABLES = [
   'ContentBranch',
   'BranchChange',
   'StagingQuestion',
-  'UserQuestionHistory',
+  'UserQuestionSeen',
   'QuestionSeed',
   'ClinicalPearl',
   'UserPearl',

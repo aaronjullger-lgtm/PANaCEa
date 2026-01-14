@@ -216,7 +216,7 @@ export const onRequestGet: PagesFunction<Env> = async (context): Promise<any> =>
     }
 
     // Get questions seen count
-    const questionsSeenCount = await prisma.userQuestionHistory.count({
+    const questionsSeenCount = await prisma.userQuestionSeen.count({
       where: { userId },
     });
 

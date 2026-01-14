@@ -6,7 +6,7 @@
  * 
  * MULTI-TENANT ARCHITECTURE:
  * Questions are permanent assets in the pool - they're never "consumed" globally.
- * Each user has their own history via UserQuestionHistory.
+ * Each user has their own history via UserQuestionSeen.
  * This endpoint shows:
  * - Total questions in pool (permanent library)
  * - Per-user: how many they've seen vs. fresh questions available
@@ -54,7 +54,7 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
       // Get user-specific counts if authenticated
       let userSeen = 0;
       if (user) {
-        const seenQuestions = await prisma.userQuestionHistory.findMany({
+        const seenQuestions = await prisma.userQuestionSeen.findMany({
           where: { userId: user.id },
           select: { questionId: true },
         });
@@ -83,7 +83,7 @@ export const onRequestGet = async (context: CloudflareContext<Env>) => {
     // Get user's seen count across all systems
     let totalUserSeen = 0;
     if (user) {
-      const allSeenHistory = await prisma.userQuestionHistory.findMany({
+      const allSeenHistory = await prisma.userQuestionSeen.findMany({
         where: { userId: user.id },
         select: { questionId: true },
       });

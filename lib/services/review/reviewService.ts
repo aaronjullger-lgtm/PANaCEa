@@ -113,7 +113,7 @@ export class ReviewService {
       originalQuestions.map(q => [q.id, { conditionId: q.conditionId, condition: q.condition, system: q.system }])
     );
 
-    const seenHistory = await this.prisma.userQuestionHistory.findMany({
+    const seenHistory = await this.prisma.userQuestionSeen.findMany({
       where: { userId: this.userId },
       select: { questionId: true },
     });

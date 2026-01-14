@@ -94,7 +94,7 @@ async function getFromPreGeneratedPool(
   const { count, system, difficulty, category } = options;
 
   // Get IDs of questions this user has already seen
-  const seenQuestionIds = await prisma.userQuestionHistory.findMany({
+  const seenQuestionIds = await prisma.userQuestionSeen.findMany({
     where: { userId },
     select: { questionId: true },
   });
@@ -102,7 +102,7 @@ async function getFromPreGeneratedPool(
 
   // Build where clause for pre-generated questions
   // Do NOT filter by usedAt - questions remain available to all users
-  // Per-user filtering happens via seenIds from UserQuestionHistory
+  // Per-user filtering happens via seenIds from UserQuestionSeen
   const where: any = {};
 
   if (system) {
@@ -153,13 +153,16 @@ async function getFromPreGeneratedPool(
   // Record in user history ONLY - do NOT mark questions as globally used
   // This enables multi-tenant pooling where each user gets fresh questions
   if (toMarkUsed.length > 0) {
-    await prisma.userQuestionHistory.createMany({
+    await prisma.userQuestionSeen.createMany({
       data: toMarkUsed.map(questionId => ({
-        id: `${userId}-${questionId}`,
         userId,
         questionId,
-        isCorrect: false, // Will be updated when user answers
-        seenAt: new Date(),
+        questionType: 'pre_generated',
+        firstSeenAt: new Date(),
+        lastSeenAt: new Date(),
+        timesShown: 1,
+        timesCorrect: 0,
+        timesIncorrect: 0,
       })),
       skipDuplicates: true,
     });
@@ -183,7 +186,7 @@ async function getFromMainTable(
   const { count, system, difficulty, category } = options;
 
   // Get IDs of questions this user has already seen
-  const seenQuestionIds = await prisma.userQuestionHistory.findMany({
+  const seenQuestionIds = await prisma.userQuestionSeen.findMany({
     where: { userId },
     select: { questionId: true },
   });
@@ -246,13 +249,16 @@ async function getFromMainTable(
 
   // Record in user history
   if (toRecord.length > 0) {
-    await prisma.userQuestionHistory.createMany({
+    await prisma.userQuestionSeen.createMany({
       data: toRecord.map(questionId => ({
-        id: `${userId}-${questionId}`,
         userId,
         questionId,
-        isCorrect: false, // Will be updated when user answers
-        seenAt: new Date(),
+        questionType: 'question',
+        firstSeenAt: new Date(),
+        lastSeenAt: new Date(),
+        timesShown: 1,
+        timesCorrect: 0,
+        timesIncorrect: 0,
       })),
       skipDuplicates: true,
     });

@@ -201,20 +201,29 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
       },
     });
 
-    await prisma.userQuestionHistory.upsert({
+    await prisma.userQuestionSeen.upsert({
       where: {
-        id: `${user.id}-${body.questionId}`,
-      },
-      update: {
-        isCorrect: body.wasCorrect,
-        seenAt: now,
+        userId_questionId_questionType: {
+          userId: user.id,
+          questionId: body.questionId,
+          questionType: 'review',
+        },
       },
       create: {
-        id: `${user.id}-${body.questionId}`,
         userId: user.id,
         questionId: body.questionId,
-        isCorrect: body.wasCorrect,
-        seenAt: now,
+        questionType: 'review',
+        firstSeenAt: now,
+        lastSeenAt: now,
+        timesShown: 1,
+        timesCorrect: body.wasCorrect ? 1 : 0,
+        timesIncorrect: body.wasCorrect ? 0 : 1,
+      },
+      update: {
+        lastSeenAt: now,
+        timesShown: { increment: 1 },
+        timesCorrect: body.wasCorrect ? { increment: 1 } : undefined,
+        timesIncorrect: body.wasCorrect ? undefined : { increment: 1 },
       },
     });
 

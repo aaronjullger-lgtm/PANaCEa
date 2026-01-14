@@ -86,8 +86,8 @@ export async function checkUserPoolExhaustion(
   if (system) where.system = system;
   
   // Get user's seen questions
-  const seenCount = await prisma.userQuestionHistory.count({
-    where: { userId, ...(system ? { system } : {}) },
+  const seenCount = await prisma.userQuestionSeen.count({
+    where: { userId, questionType: 'pre_generated' },
   });
   
   // Get total available questions

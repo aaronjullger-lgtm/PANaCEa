@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 // Mock Prisma
 vi.mock('../lib/prisma', () => ({
   prisma: {
-    userQuestionHistory: {
+    userQuestionSeen: {
       upsert: vi.fn(),
       findMany: vi.fn(),
       deleteMany: vi.fn(),
@@ -35,7 +35,7 @@ describe('No-Repeat Service', () => {
 
   describe('recordQuestionSeen', () => {
     it('should record a question as seen by user', async () => {
-      (prisma.userQuestionHistory.upsert as any).mockResolvedValue({
+      (prisma.userQuestionSeen.upsert as any).mockResolvedValue({
         id: 'history-id',
         userId: 'user-1',
         questionId: 'q-1',
@@ -47,20 +47,28 @@ describe('No-Repeat Service', () => {
         wasCorrect: true,
       });
 
-      expect(prisma.userQuestionHistory.upsert).toHaveBeenCalledWith({
+      expect(prisma.userQuestionSeen.upsert).toHaveBeenCalledWith({
         where: {
-          userId_questionId: {
+          userId_questionId_questionType: {
             userId: 'user-1',
             questionId: 'q-1',
+            questionType: 'mcq',
           },
         },
         update: {
-          isCorrect: true,
+          lastSeenAt: expect.any(Date),
+          timesShown: { increment: 1 },
+          timesCorrect: { increment: 1 },
         },
         create: {
           userId: 'user-1',
           questionId: 'q-1',
-          isCorrect: true,
+          questionType: 'mcq',
+          firstSeenAt: expect.any(Date),
+          lastSeenAt: expect.any(Date),
+          timesShown: 1,
+          timesCorrect: 1,
+          timesIncorrect: 0,
         },
       });
     });
@@ -68,7 +76,7 @@ describe('No-Repeat Service', () => {
 
   describe('getUserSeenQuestions', () => {
     it('should return list of seen question IDs', async () => {
-      (prisma.userQuestionHistory.findMany as any).mockResolvedValue([
+      (prisma.userQuestionSeen.findMany as any).mockResolvedValue([
         { questionId: 'q-1' },
         { questionId: 'q-2' },
         { questionId: 'q-3' },
@@ -80,20 +88,20 @@ describe('No-Repeat Service', () => {
     });
 
     it('should filter by system when provided', async () => {
-      (prisma.userQuestionHistory.findMany as any).mockResolvedValue([
+      (prisma.userQuestionSeen.findMany as any).mockResolvedValue([
         { questionId: 'q-1' },
       ]);
 
       await getUserSeenQuestions('user-1', { system: 'CV' });
 
-      const call = (prisma.userQuestionHistory.findMany as any).mock.calls[0][0];
+      const call = (prisma.userQuestionSeen.findMany as any).mock.calls[0][0];
       expect(call.where.system).toBe('CV');
     });
   });
 
   describe('fetchUnseenQuestions', () => {
     it('should fetch questions user has not seen', async () => {
-      (prisma.userQuestionHistory.findMany as any).mockResolvedValue([
+      (prisma.userQuestionSeen.findMany as any).mockResolvedValue([
         { questionId: 'q-1' },
         { questionId: 'q-2' },
       ]);
@@ -114,7 +122,7 @@ describe('No-Repeat Service', () => {
     });
 
     it('should prioritize unused questions', async () => {
-      (prisma.userQuestionHistory.findMany as any).mockResolvedValue([]);
+      (prisma.userQuestionSeen.findMany as any).mockResolvedValue([]);
       (prisma.preGeneratedQuestion.findMany as any).mockResolvedValue([]);
 
       await fetchUnseenQuestions('user-1', {}, 10);
@@ -126,7 +134,7 @@ describe('No-Repeat Service', () => {
 
   describe('getQuestionsWithNoRepeat', () => {
     it('should return database questions when available', async () => {
-      (prisma.userQuestionHistory.findMany as any).mockResolvedValue([]);
+      (prisma.userQuestionSeen.findMany as any).mockResolvedValue([]);
       (prisma.preGeneratedQuestion.findMany as any).mockResolvedValue([
         { id: 'q-1' },
         { id: 'q-2' },
@@ -141,7 +149,7 @@ describe('No-Repeat Service', () => {
     });
 
     it('should indicate generation needed when no questions available', async () => {
-      (prisma.userQuestionHistory.findMany as any).mockResolvedValue([]);
+      (prisma.userQuestionSeen.findMany as any).mockResolvedValue([]);
       (prisma.preGeneratedQuestion.findMany as any).mockResolvedValue([]);
 
       const result = await getQuestionsWithNoRepeat('user-1', { system: 'CV' }, 10);

@@ -234,9 +234,9 @@ async function restore() {
         await prisma.stagingQuestion.upsert({ where: { id: item.id }, update: item, create: item });
       }
     }},
-    { name: 'UserQuestionHistory', filename: 'user_question_history.json', accessor: async (data: any[]) => {
+    { name: 'UserQuestionSeen', filename: 'user_question_seen.json', accessor: async (data: any[]) => {
       for (const item of data) {
-        await prisma.userQuestionHistory.upsert({ where: { id: item.id }, update: item, create: item });
+        await prisma.userQuestionSeen.upsert({ where: { id: item.id }, update: item, create: item });
       }
     }},
     { name: 'QuestionAttempt', filename: 'question_attempts.json', accessor: async (data: any[]) => {

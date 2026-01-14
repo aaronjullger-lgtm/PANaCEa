@@ -18,7 +18,7 @@ const mockPrisma = {
   preGeneratedQuestion: {
     findFirst: vi.fn(),
   },
-  userQuestionHistory: {
+  userQuestionSeen: {
     findMany: vi.fn(),
   },
   $disconnect: vi.fn(),
