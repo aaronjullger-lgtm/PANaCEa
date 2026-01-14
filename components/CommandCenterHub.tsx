@@ -495,7 +495,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
   }, [showPANREContent]);
 
   const handleModeSelect = useCallback((mode: TrainingModeConfig) => {
-    if (mode.route === 'core_adaptive') {
+    if (mode.id === 'core_adaptive') {
       // Navigate to dedicated simulation page instead of opening modal
       if (onNavigateToSimulation) {
         onNavigateToSimulation();
@@ -503,7 +503,7 @@ export const CommandCenterHub: React.FC<CommandCenterHubProps> = ({
         onStartSession({ focus: 'all', difficulty: 'same' });
       }
     } else {
-      onNavigateToDrillMode(mode.route);
+      onNavigateToDrillMode(mode.id);
     }
   }, [onNavigateToDrillMode, onStartSession, onNavigateToSimulation]);
 
