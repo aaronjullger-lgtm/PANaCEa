@@ -22,8 +22,8 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-purple-600 rounded-lg">
-          <Calendar className="w-5 h-5 text-white" />
+        <div className="p-2 bg-slate-700 rounded-lg">
+          <Calendar className="w-5 h-5 text-slate-200" />
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -38,7 +38,7 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
       {/* Event Content */}
       <div className="space-y-3">
         <div className="flex items-start gap-2">
-          <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+          <span className="text-3xl font-bold text-slate-700 dark:text-slate-300">
             {event.year}
           </span>
           <div className="flex-1">
@@ -55,7 +55,7 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
         {event.relatedQuestions && event.relatedQuestions.length > 0 && (
           <button
             onClick={() => onQuestionClick?.(event.relatedQuestions!)}
-            className="w-full mt-4 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
+            className="w-full mt-4 flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
           >
             <BookOpen className="w-5 h-5" />
             Practice {event.relatedQuestions.length} Related Questions
@@ -63,12 +63,12 @@ const ThisDayInMedicine: React.FC<ThisDayInMedicineProps> = ({ onQuestionClick }
         )}
 
         {/* Learn More */}
-        <div className="pt-3 border-t border-purple-200 dark:border-purple-700">
+        <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
           <a
             href={`https://en.wikipedia.org/wiki/${encodeURIComponent(event.title.replace(/\s+/g, '_'))}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-purple-600 dark:text-purple-400 hover:underline"
+            className="inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:underline"
           >
             Learn more on Wikipedia
             <ExternalLink className="w-4 h-4" />

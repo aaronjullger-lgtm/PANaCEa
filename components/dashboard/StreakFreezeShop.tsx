@@ -30,8 +30,8 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-600 rounded-lg">
-            <Shield className="w-5 h-5 text-white" />
+          <div className="p-2 bg-slate-700 rounded-lg">
+            <Shield className="w-5 h-5 text-slate-200" />
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -60,7 +60,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
                 key={i}
                 className={`w-5 h-5 ${
                   i < streakFreezes
-                    ? 'text-orange-600 fill-orange-600'
+                    ? 'text-slate-600 fill-slate-600 dark:text-slate-400 dark:fill-slate-400'
                     : 'text-gray-300'
                 }`}
               />
@@ -74,9 +74,9 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
 
       {/* Purchase Section */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-orange-300 dark:border-orange-600">
+        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-slate-300 dark:border-slate-600">
           <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-orange-600" />
+            <Shield className="w-8 h-8 text-slate-600 dark:text-slate-400" />
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">
                 1 Streak Freeze
@@ -101,7 +101,7 @@ const StreakFreezeShop: React.FC<StreakFreezeShopProps> = ({
             w-full py-3 rounded-lg font-semibold transition-all flex items-center justify-center gap-2
             ${
               canPurchase
-                ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                ? 'bg-slate-700 hover:bg-slate-800 text-white'
                 : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
             }
           `}

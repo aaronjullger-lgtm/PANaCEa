@@ -118,6 +118,28 @@ export default {
           900: '#4C3E4C',
         },
         
+        // ============================================
+        // STORMY SLATE - Design System Tokens
+        // ============================================
+        surface: {
+          primary: '#0f172a',          // Slate 900 (Deep Navy)
+          secondary: '#1e293b',        // Slate 800
+          glass: 'rgba(30, 41, 59, 0.5)', // Slate 800 @ 50%
+          elevated: 'rgba(51, 65, 85, 0.6)', // Slate 700 @ 60%
+        },
+        action: {
+          primary: '#f8fafc',          // Slate 50 (White - high contrast CTA)
+          secondary: '#334155',        // Slate 700
+          'primary-hover': '#e2e8f0',  // Slate 200
+          'secondary-hover': '#475569', // Slate 600
+        },
+        data: {
+          pass: '#14b8a6',             // Teal 500 - success/passing
+          fail: '#ef4444',             // Red 500 - failure/errors
+          provisional: '#f59e0b',      // Amber 500 - building/uncertain
+          neutral: '#64748b',          // Slate 500 - baseline
+        },
+        
         // Semantic Design System
         background: 'var(--background)',
         foreground: 'var(--foreground)',

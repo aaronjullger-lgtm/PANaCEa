@@ -15,6 +15,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import type { Rolling360Stats } from '../../../hooks/useRolling360Stats';
+import { StartSessionButton } from '../../ui/SemanticButton';
 
 // =============================================================================
 // ICONS
@@ -339,26 +340,15 @@ export function CalibrationProtocolUI({
         </p>
       </div>
 
-      {/* Start/Continue Button */}
-      <motion.button
+      {/* Start/Continue Button - Primary CTA with high contrast */}
+      <StartSessionButton
         onClick={onStartSession}
-        disabled={isStarting}
-        className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-orange-500 
-                   hover:from-amber-400 hover:to-orange-400 
-                   text-white font-semibold rounded-xl
-                   flex items-center justify-center gap-3
-                   transition-all duration-200 shadow-lg shadow-amber-500/25
-                   disabled:opacity-50 disabled:cursor-not-allowed"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        isLoading={isStarting}
+        leftIcon={!isStarting && <PlayIcon className="w-6 h-6" />}
+        buttonId="start-session-calibration"
       >
-        {isStarting ? (
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : (
-          <PlayIcon className="w-6 h-6" />
-        )}
         {isStarting ? 'Generating Session...' : 'Continue Calibration'}
-      </motion.button>
+      </StartSessionButton>
     </div>
   );
 }

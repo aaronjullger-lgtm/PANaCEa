@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, BarChart, Bar } from 'recharts';
-import { Sparkles, Gauge, Clock, TrendingUp, Activity, AlertCircle, BarChart3, Brain } from 'lucide-react';
+import { Sparkles, Gauge, Clock, TrendingUp, Activity, AlertCircle, BarChart3, Brain, Play } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 import type { PerformanceRecord, SystemCode } from '@/types';
 import { ABBREVIATION_TO_TOPIC_MAP } from '@/src/constants';
@@ -185,17 +185,30 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ performa
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State - With CTA to prevent dead ends */}
       {!hasData && (
-        <div className="flex flex-col items-center justify-center py-12 px-4 bg-[var(--color-bg-secondary)] rounded-xl">
-          <div className="mb-4">
-            <BarChart3 className="w-16 h-16 text-[var(--color-text-muted)] opacity-50" />
+        <div className="flex flex-col items-center justify-center py-12 px-6 bg-surface-secondary dark:bg-slate-800/50 rounded-xl border border-slate-700/50">
+          <div className="mb-4 p-4 rounded-full bg-slate-700/30">
+            <BarChart3 className="w-12 h-12 text-slate-400" />
           </div>
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-2">
-            No Analytics Data Yet
+          <h3 className="text-xl font-semibold text-white mb-2">
+            Start Building Your Profile
           </h3>
-          <p className="text-sm text-[var(--color-text-muted)] text-center max-w-sm">
-            Complete a few practice sessions to see your performance analytics and track your progress.
+          <p className="text-sm text-slate-400 text-center max-w-md mb-6">
+            Complete your first 20-question session to unlock personalized analytics, 
+            track your progress across organ systems, and identify your focus areas.
+          </p>
+          <a
+            href="/study/main-session"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 hover:bg-slate-200 
+                       text-slate-900 font-semibold rounded-xl transition-all duration-200
+                       shadow-lg shadow-slate-900/20 hover:shadow-xl hover:-translate-y-0.5"
+          >
+            <Play className="w-5 h-5" />
+            Start Calibration Session
+          </a>
+          <p className="text-xs text-slate-500 mt-3">
+            ~15 minutes • Interleaved across 3+ organ systems
           </p>
         </div>
       )}

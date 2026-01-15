@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRolling360Stats, Rolling360Stats } from '../../../hooks/useRolling360Stats';
 import { useSessionGenerator } from '../../../hooks/useSessionGenerator';
 import { CalibrationProtocolUI } from './CalibrationProtocolUI';
+import { StartSessionButton, SemanticButton } from '../../ui/SemanticButton';
 
 /** Calibration threshold - users below this see the Calibration Protocol UI */
 const CALIBRATION_THRESHOLD = 60;
@@ -157,26 +158,15 @@ function CollectingState({ stats, onStartSession, isStarting }: CollectingStateP
         </p>
       </div>
 
-      {/* Start Button */}
-      <motion.button
+      {/* Start Button - Primary CTA with high contrast */}
+      <StartSessionButton
         onClick={onStartSession}
-        disabled={isStarting}
-        className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-orange-500 
-                   hover:from-amber-400 hover:to-orange-400 
-                   text-white font-semibold rounded-xl
-                   flex items-center justify-center gap-3
-                   transition-all duration-200 shadow-lg shadow-amber-500/25
-                   disabled:opacity-50 disabled:cursor-not-allowed"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        isLoading={isStarting}
+        leftIcon={!isStarting && <PlayIcon className="w-6 h-6" />}
+        buttonId="start-session-collecting"
       >
-        {isStarting ? (
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : (
-          <PlayIcon className="w-6 h-6" />
-        )}
         {isStarting ? 'Generating Session...' : 'Start Main Session'}
-      </motion.button>
+      </StartSessionButton>
     </div>
   );
 }
@@ -261,26 +251,15 @@ function ProvisionalState({ stats, onStartSession, isStarting }: ProvisionalStat
         </p>
       </div>
 
-      {/* Start Button */}
-      <motion.button
+      {/* Start Button - Primary CTA with high contrast */}
+      <StartSessionButton
         onClick={onStartSession}
-        disabled={isStarting}
-        className="w-full py-4 px-6 bg-gradient-to-r from-amber-500 to-orange-500 
-                   hover:from-amber-400 hover:to-orange-400 
-                   text-white font-semibold rounded-xl
-                   flex items-center justify-center gap-3
-                   transition-all duration-200 shadow-lg shadow-amber-500/25
-                   disabled:opacity-50 disabled:cursor-not-allowed"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        isLoading={isStarting}
+        leftIcon={!isStarting && <PlayIcon className="w-6 h-6" />}
+        buttonId="start-session-provisional"
       >
-        {isStarting ? (
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : (
-          <PlayIcon className="w-6 h-6" />
-        )}
         {isStarting ? 'Generating Session...' : 'Continue Main Session'}
-      </motion.button>
+      </StartSessionButton>
     </div>
   );
 }
@@ -389,31 +368,19 @@ function ConfidentState({ stats, onStartSession, isStarting }: ConfidentStatePro
         </div>
       )}
 
-      {/* Start Button */}
-      <motion.button
+      {/* Start Button - Success variant for passing, Primary for needs work */}
+      <SemanticButton
+        variant={isPassing ? 'success' : 'primary'}
+        size="xl"
+        fullWidth
         onClick={onStartSession}
-        disabled={isStarting}
-        className={`w-full py-4 px-6 font-semibold rounded-xl
-                   flex items-center justify-center gap-3
-                   transition-all duration-200 shadow-lg
-                   disabled:opacity-50 disabled:cursor-not-allowed
-                   ${isPassing 
-                     ? 'bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 shadow-teal-500/25' 
-                     : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 shadow-amber-500/25'}
-                   text-white`}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        isLoading={isStarting}
+        leftIcon={!isStarting && <PlayIcon className="w-6 h-6" />}
+        rightIcon={!isStarting && <ArrowTrendingUpIcon className="w-5 h-5" />}
+        buttonId="start-session-confident"
       >
-        {isStarting ? (
-          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : (
-          <>
-            <PlayIcon className="w-6 h-6" />
-            <span>Start Main Session</span>
-            <ArrowTrendingUpIcon className="w-5 h-5" />
-          </>
-        )}
-      </motion.button>
+        {isStarting ? 'Generating Session...' : 'Start Main Session'}
+      </SemanticButton>
     </div>
   );
 }

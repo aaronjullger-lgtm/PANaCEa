@@ -165,26 +165,27 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
         </motion.div>
 
         {/* ===== QUICK STATS ROW ===== */}
+        {/* Stormy Slate Design System: Icons use muted slate, data colors only for pass/fail */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <QuickStat
-            icon={<Flame className="w-5 h-5 text-orange-600" />}
+            icon={<Flame className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
             label="Day Streak"
             value={mockStreak}
-            color="bg-orange-50 dark:bg-orange-900/20"
+            color="bg-slate-100 dark:bg-slate-800/50"
             delay={0}
           />
           <QuickStat
-            icon={<BookOpen className="w-5 h-5 text-blue-600" />}
+            icon={<BookOpen className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
             label="Cards Learned"
             value={mockCardsLearned}
-            color="bg-blue-50 dark:bg-blue-900/20"
+            color="bg-slate-100 dark:bg-slate-800/50"
             delay={0.1}
           />
           <QuickStat
-            icon={<Award className="w-5 h-5 text-purple-600" />}
+            icon={<Award className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
             label="PANCE Predictor"
             value={`${mockPANCEPredictor}%`}
-            color="bg-purple-50 dark:bg-purple-900/20"
+            color="bg-slate-100 dark:bg-slate-800/50"
             delay={0.2}
           />
         </div>
