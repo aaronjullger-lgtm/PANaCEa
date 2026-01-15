@@ -1,13 +1,24 @@
 /**
  * Session Interleaving Utility
  * 
- * Sprint B - Step 5: Ensure questions are properly interleaved by system
+ * @deprecated DEPRECATED as of v2.0.0 - Use MainSessionQuestionSelector instead.
  * 
- * Purpose: Prevent clustering of questions from the same system, which reduces
+ * The new Interleaved Assembler in lib/services/mainSessionQuestionSelector.ts
+ * implements stricter interleaving (no same system twice in a row) and is
+ * integrated directly into the question selection algorithm.
+ * 
+ * This file is kept for backward compatibility with existing imports but
+ * should not be used for new code.
+ * 
+ * See: docs/plans/interleaver-upgrade.md for migration details.
+ * 
+ * ---
+ * 
+ * Legacy Purpose: Prevent clustering of questions from the same system, which reduces
  * learning effectiveness. Research shows interleaved practice improves long-term
  * retention compared to blocked practice.
  * 
- * Rules:
+ * Legacy Rules:
  * - Maximum 2 questions from the same system in any 5-question sliding window
  * - Respects question difficulty and other properties
  * - Maintains diversity for better learning outcomes

@@ -28,16 +28,17 @@ const generateSampleData = (): PerformanceRecord[] => {
     const isCorrect = Math.random() > 0.25; // 75% accuracy
     
     records.push({
-      id: `demo-${i}`,
-      questionId: `q-${i}`,
       conditionId: `cond-${Math.floor(Math.random() * 50)}`,
       condition: 'Sample Condition',
-      system: ['CARD', 'RESP', 'NEURO', 'GI', 'RENAL'][Math.floor(Math.random() * 5)] as any,
+      topic: 'Sample Topic',
+      system: ['CV', 'DERM', 'ENDO', 'GI', 'RENAL'][Math.floor(Math.random() * 5)] as any,
+      subcategory: null,
       isCorrect,
       timeSpentMs: Math.floor(Math.random() * 60000) + 10000,
       timestamp,
-      difficulty: Math.floor(Math.random() * 3) + 1 as any,
-      questionType: 'condition' as any,
+      focus: 'all' as const,
+      difficulty: 'same' as const,
+      questionType: 'diagnosis' as const,
     });
   }
   

@@ -10,9 +10,9 @@
  */
 
 import React from 'react';
-import RadialProgress, { RadialProgressCompact, MultiRadialProgress } from './ui/RadialProgress';
-import TrendSparkline, { TrendSparklineCompact } from './ui/TrendSparkline';
-import ActivityHeatmap from './analytics/ActivityHeatmap';
+import RadialProgress, { RadialProgressCompact, MultiRadialProgress } from '../ui/RadialProgress';
+import TrendSparkline, { TrendSparklineCompact } from '../ui/TrendSparkline';
+import ActivityHeatmap from '../analytics/ActivityHeatmap';
 import type { PerformanceRecord } from '@/types';
 
 // ============================================================================

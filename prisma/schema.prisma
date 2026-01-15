@@ -1713,11 +1713,16 @@ model QuestionAttempt {
   answerChangedCount Int? // Number of times answer was changed before submission
   createdAt          DateTime @default(now())
 
+  // Rolling 360 Support
+  isMainSession    Boolean @default(false) // True for Main Session mode only
+  systemNormalized String? // Pre-computed normalized system name for fast aggregation
+
   @@index([isRankedAttempt])
   @@index([mode])
   @@index([questionId])
   @@index([userId, createdAt])
   @@index([system])
+  @@index([userId, isMainSession, createdAt])
 }
 
 model QuestionFlag {
@@ -2216,6 +2221,7 @@ model User {
   SessionAnalytics        SessionAnalytics[]
   PersonalizedFSRSParams  PersonalizedFSRSParams?
   UserStatistics          UserStatistics?
+  UserRolling360Stats     UserRolling360Stats?
 
   @@index([clerkId])
   @@index([email])
@@ -3272,6 +3278,91 @@ model SessionAnalytics {
 
   @@index([userId])
   @@index([computedAt])
+}
+
+// =============================================================================
+// ROLLING 360 STATISTICAL ENGINE
+// User-facing "Current Form" metrics based on last 360 Main Session questions
+// =============================================================================
+
+/// NCCPA PANCE Blueprint configuration for exam distribution validation
+model NCCPABlueprintConfig {
+  id            String   @id @default(cuid())
+  version       String   @unique // "2024", "2025", etc.
+  isActive      Boolean  @default(false)
+  weights       Json     // {"Cardiovascular": 0.11, "Pulmonary": 0.09, ...}
+  systemCount   Int
+  effectiveDate DateTime @db.Date
+  expirationDate DateTime? @db.Date
+  createdAt     DateTime @default(now())
+
+  @@index([isActive])
+}
+
+/// Cache table for O(1) dashboard reads of Rolling 360 metrics
+model UserRolling360Stats {
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+
+  // Rolling Aggregates (max 360)
+  totalInWindow            Int      @default(0)
+  correctInWindow          Int      @default(0)
+  accuracyPercent          Decimal? @db.Decimal(5, 2)
+
+  // System Breakdown (JSONB)
+  // Format: {"Cardiovascular": {"total": 42, "correct": 35}, ...}
+  systemStats              Json     @default("{}")
+
+  // PANCE Score Prediction (200-800 scale)
+  predictedScore           Int?
+  scoreConfidence          String?  // 'collecting' | 'provisional' | 'confident'
+  passLikelihood           Decimal? @db.Decimal(5, 2) // 0-100%
+
+  // Blueprint Adherence
+  blueprintAdherence       Decimal? @db.Decimal(5, 4) // 0-1 (cosine similarity)
+  isValidExamDistribution  Boolean  @default(false)
+
+  // Weakness Detection
+  weakestSystems           String[] @default([])
+  strongestSystems         String[] @default([])
+
+  // Window Tracking
+  windowStartAttemptId     String?  // Oldest attempt in window
+  windowEndAttemptId       String?  // Newest attempt in window
+  windowStartTime          DateTime?
+  windowEndTime            DateTime?
+
+  // Circular Buffer Index
+  currentSlotIndex         Int      @default(0) // 0-359
+
+  // Metadata
+  lastRecalculatedAt       DateTime @default(now())
+  recalculationVersion     Int      @default(1)
+  createdAt                DateTime @default(now())
+
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([predictedScore])
+}
+
+/// Circular buffer table for O(1) sliding window updates (360 slots per user)
+model Rolling360Buffer {
+  id               String   @id @default(cuid())
+  userId           String
+  slotIndex        Int      // 0-359
+
+  // Cached data from original QuestionAttempt
+  attemptId        String?  // FK to QuestionAttempt
+  isCorrect        Boolean?
+  systemNormalized String?
+  answeredAt       DateTime?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([userId, slotIndex])
+  @@index([userId, slotIndex])
 }
 
 // PersonalizedFSRSParams: Per-user FSRS optimization

@@ -17,6 +17,7 @@ import StabilityPyramid from './charts/StabilityPyramid';
 import AlgorithmStatusWidget from './AlgorithmStatusWidget';
 import ClinicalSkeleton from '../ui/ClinicalSkeleton';
 import DailyTriad from './DailyTriad';
+import { ExamReadinessCard, SystemPerformanceWidget } from './Rolling360';
 
 // ============================================================================
 // Types
@@ -188,36 +189,46 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onNavigate }) => {
           />
         </div>
 
-        {/* ===== PRIORITY ACTION ROW (HERO) ===== */}
+        {/* ===== ROLLING 360 EXAM READINESS (HERO) ===== */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Study Now Card */}
+          {/* Left: Exam Readiness Card with Start Session Button */}
+          <ExamReadinessCard />
+
+          {/* Right: System Performance Widget */}
+          <SystemPerformanceWidget maxSystems={5} />
+        </div>
+
+        {/* ===== ALGORITHM STATUS & REVIEW ROW ===== */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left: Smart Review Card (Legacy) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl p-8 text-white shadow-lg relative overflow-hidden"
+            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 shadow-sm"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <Brain className="w-8 h-8" />
-                <h2 className="text-2xl font-bold">
-                  {data.dueCount > 0 ? 'Smart Review' : 'All Caught Up'}
-                </h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <Brain className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <p className="text-blue-100 mb-6 text-lg">
-                {data.dueCount > 0
-                  ? `${data.dueCount} cards due for review`
-                  : 'No cards due right now. Great work!'}
-              </p>
-              <button
-                onClick={() => handleNavigation(data.dueCount > 0 ? '/study/smart-review' : '/study/qbank')}
-                className="inline-flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors cursor-pointer"
-              >
-                {data.dueCount > 0 ? 'Start Session' : 'Review Ahead'}
-                <ArrowRight className="w-5 h-5" />
-              </button>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {data.dueCount > 0 ? 'FSRS Review Queue' : 'All Caught Up'}
+              </h2>
             </div>
+            <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+              {data.dueCount > 0
+                ? `${data.dueCount} cards due for spaced review`
+                : 'No FSRS cards due right now.'}
+            </p>
+            {data.dueCount > 0 && (
+              <button
+                onClick={() => handleNavigation('/study/smart-review')}
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline"
+              >
+                Start Review
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </motion.div>
 
           {/* Right: Algorithm Status */}

@@ -718,7 +718,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Bookmark className="w-8 h-8 mb-2 text-amber-500" />
+                    <Bookmark className="w-8 h-8 mb-2 text-slate-400" />
                     <div className="font-semibold text-sm text-slate-900 dark:text-white">Bookmarks</div>
                     <div className="text-xs text-slate-500 dark:text-slate-400">Saved questions</div>
                   </motion.button>
@@ -740,7 +740,7 @@ const MenuView: React.FC<MenuViewProps> = ({
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Award className="w-8 h-8 mb-2 text-amber-500" />
+                    <Award className="w-8 h-8 mb-2 text-slate-400" />
                     <div className="font-semibold text-sm text-slate-900 dark:text-white">Leaderboard</div>
                     <div className="text-xs text-slate-500 dark:text-slate-400">Compare stats</div>
                   </motion.button>

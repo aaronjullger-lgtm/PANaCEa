@@ -12,7 +12,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { getQuestionBatch } from '../services/questionService';
-import type { Question, SessionSettings, MissedQuestion } from '../types';
+import type { Question, SessionSettings } from '../types';
 
 const INITIAL_QUEUE_SIZE = 3;
 
@@ -30,7 +30,7 @@ interface SessionContextValue {
   /** Start a new session */
   startSession: (
     settings: SessionSettings, 
-    missedQuestions: MissedQuestion[], 
+    missedQuestions: Question[], 
     flaggedQuestions: Question[],
     growthAreas: string[]
   ) => Promise<void>;
@@ -62,7 +62,7 @@ export function SessionProvider({ children }: SessionProviderProps) {
 
   const startSession = useCallback(async (
     settings: SessionSettings,
-    missedQuestions: MissedQuestion[],
+    missedQuestions: Question[],
     flaggedQuestions: Question[],
     growthAreas: string[]
   ) => {

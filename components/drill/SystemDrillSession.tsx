@@ -316,13 +316,13 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-2">Select Organ System</h2>
-          <p className="text-[var(--color-text-secondary)]">Master conditions from a single system</p>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
+          <h2 className="text-4xl font-bold mb-3">Select Organ System</h2>
+          <p className="text-lg text-[var(--color-text-secondary)]">Master conditions from a single system</p>
         </motion.div>
 
-        {/* System grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl mx-auto">
+        {/* System grid - Responsive 3-column layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {SYSTEM_OPTIONS.map((system, index) => {
             const Icon = system.icon;
             return (
@@ -332,21 +332,21 @@ const SystemDrillSession: React.FC<SystemDrillSessionProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => handleSystemSelect(system.id)}
-                className="relative p-6 rounded-xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-indigo-300 hover:shadow-md transition-all text-left group"
+                className="relative p-8 rounded-xl bg-slate-800/30 backdrop-blur-sm border-2 border-slate-700 hover:border-white hover:shadow-2xl hover:bg-slate-800/50 transition-all text-left group hover:scale-[1.03]"
               >
                 <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-lg bg-${system.color}-100 dark:bg-${system.color}-900/20`}>
-                    <Icon className={`w-6 h-6 text-${system.color}-600 dark:text-${system.color}-400`} />
+                  <div className="p-3 rounded-lg bg-slate-700/40 group-hover:bg-slate-600/60 transition-colors">
+                    <Icon className="w-7 h-7 text-slate-300 group-hover:text-white transition-colors" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-1">
+                    <h3 className="text-xl font-bold text-white mb-2">
                       {system.name}
                     </h3>
-                    <p className="text-sm text-[var(--color-text-muted)]">
+                    <p className="text-sm text-slate-300 leading-relaxed">
                       {system.description}
                     </p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-[var(--color-text-muted)] group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 group-hover:text-white transition-all" />
                 </div>
               </motion.button>
             );

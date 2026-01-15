@@ -130,11 +130,15 @@ const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
   score,
   passProbability,
 }) => {
+  // Safely handle NaN or invalid values
+  const safeScore = isNaN(score) || !isFinite(score) ? 0 : Math.min(100, Math.max(0, score));
+  const safePassProb = isNaN(passProbability) || !isFinite(passProbability) ? 0 : Math.min(100, Math.max(0, passProbability));
+  
   const getColor = (s: number) => {
     if (s >= 80) return '#10b981'; // green
-    if (s >= 65) return '#3b82f6'; // blue
-    if (s >= 50) return '#f59e0b'; // amber
-    return '#ef4444'; // red
+    if (s >= 65) return '#64748b'; // slate
+    if (s >= 50) return '#94a3b8'; // slate
+    return '#cbd5e1'; // slate
   };
   
   const getLabel = (s: number) => {
@@ -174,35 +178,35 @@ const ReadinessGauge: React.FC<{ score: number; passProbability: number }> = ({
               strokeLinecap="round"
               strokeDasharray={251.2}
               initial={{ strokeDashoffset: 251.2 }}
-              animate={{ strokeDashoffset: 251.2 - (251.2 * score / 100) }}
+              animate={{ strokeDashoffset: 251.2 - (251.2 * safeScore / 100) }}
               transition={{ duration: 1, ease: 'easeOut' }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-bold text-[var(--color-text-primary)]">{score}</span>
+            <span className="text-2xl font-bold text-[var(--color-text-primary)]">{safeScore}</span>
             <span className="text-xs text-[var(--color-text-muted)]">/ 100</span>
           </div>
         </div>
         
         <div className="flex-1">
-          <p className="text-lg font-semibold text-[var(--color-text-primary)]" style={{ color: getColor(score) }}>
-            {getLabel(score)}
+          <p className="text-lg font-semibold text-[var(--color-text-primary)]" style={{ color: getColor(safeScore) }}>
+            {getLabel(safeScore)}
           </p>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            {passProbability}% estimated pass probability
+            {safePassProb}% estimated pass probability
           </p>
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="text-[var(--color-text-muted)]">Pass Probability</span>
-              <span className="font-medium text-[var(--color-text-primary)]">{passProbability}%</span>
+              <span className="font-medium text-[var(--color-text-primary)]">{safePassProb}%</span>
             </div>
             <div className="h-2 bg-[var(--color-surface)] rounded-full overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${passProbability}%` }}
+                animate={{ width: `${safePassProb}%` }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
                 className="h-full rounded-full"
-                style={{ backgroundColor: getColor(passProbability) }}
+                style={{ backgroundColor: getColor(safePassProb) }}
               />
             </div>
           </div>
@@ -267,10 +271,10 @@ const RecommendationCard: React.FC<{
   const [expanded, setExpanded] = useState(false);
   
   const priorityColors = {
-    critical: 'border-red-500/50 bg-red-500/5',
-    high: 'border-amber-500/50 bg-amber-500/5',
-    medium: 'border-blue-500/50 bg-blue-500/5',
-    low: 'border-slate-500/50 bg-slate-500/5',
+    critical: 'border-slate-500/50 bg-slate-500/5',
+    high: 'border-slate-400/50 bg-slate-400/5',
+    medium: 'border-slate-600/50 bg-slate-600/5',
+    low: 'border-slate-700/50 bg-slate-700/5',
   };
 
   return (
@@ -285,9 +289,9 @@ const RecommendationCard: React.FC<{
         className="w-full p-4 flex items-start gap-3 text-left hover:bg-[var(--color-surface)] transition-colors"
       >
         <div className={`mt-0.5 ${
-          recommendation.priority === 'critical' ? 'text-red-500' :
-          recommendation.priority === 'high' ? 'text-amber-500' :
-          'text-blue-500'
+          recommendation.priority === 'critical' ? 'text-slate-300' :
+          recommendation.priority === 'high' ? 'text-slate-400' :
+          'text-slate-500'
         }`}>
           <Lightbulb className="w-5 h-5" />
         </div>

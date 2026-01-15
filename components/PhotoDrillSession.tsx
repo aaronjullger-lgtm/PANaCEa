@@ -265,12 +265,12 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
             <div className="flex items-center gap-1.5">
               <Flame
                 className={`w-5 h-5 ${
-                  streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
+                  streak > 0 ? 'text-white' : 'text-[var(--color-text-muted)]'
                 }`}
               />
               <span
                 className={`text-sm font-bold ${
-                  streak > 0 ? 'text-orange-500' : 'text-[var(--color-text-muted)]'
+                  streak > 0 ? 'text-white' : 'text-[var(--color-text-muted)]'
                 }`}
               >
                 {streak}
@@ -297,10 +297,10 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                   <div className="w-full space-y-4">
                     {/* Patient Chart Header */}
                     <div className="bg-[var(--color-bg-tertiary)] backdrop-blur-sm rounded-xl border border-[var(--color-border)] overflow-hidden">
-                      <div className="px-4 py-3 bg-gradient-to-r from-violet-900/50 to-purple-900/50 border-b border-[var(--color-border)] flex items-center gap-3">
-                        <ClipboardList className="w-5 h-5 text-violet-400" />
+                      <div className="px-4 py-3 bg-gradient-to-r from-slate-800 to-slate-900 border-b border-[var(--color-border)] flex items-center gap-3">
+                        <ClipboardList className="w-5 h-5 text-slate-400" />
                         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Patient Chart</h2>
-                        <span className="ml-auto px-2.5 py-1 bg-violet-600/30 rounded-lg text-xs font-medium text-violet-300 uppercase tracking-wide">
+                        <span className="ml-auto px-2.5 py-1 bg-slate-700/60 rounded-lg text-xs font-medium text-slate-300 uppercase tracking-wide">
                           Clinical Presentation Mode
                         </span>
                       </div>
@@ -384,7 +384,7 @@ const PhotoDrillSession: React.FC<PhotoDrillSessionProps> = ({ onExit, filterTyp
                     {/* Reveal Image Button */}
                     <button
                       onClick={handleRevealImage}
-                      className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 rounded-xl text-white font-semibold flex items-center justify-center gap-3 transition-all shadow-lg shadow-violet-900/30"
+                      className="w-full py-4 bg-slate-800/50 hover:bg-slate-700 border border-slate-600 hover:border-white rounded-xl text-white font-semibold flex items-center justify-center gap-3 transition-all shadow-lg"
                     >
                       <Eye className="w-5 h-5" />
                       View Clinical Findings
