@@ -27,7 +27,7 @@ import DrugDetailModal from "./DrugDetailModal";
 import { findConditionMetaById } from "../src/lib/conditionSearch";
 import { findDrugByName } from "../src/lib/drugSearch";
 import { unifiedSearch, type UnifiedSearchResult } from "../src/lib/unifiedSearch";
-import type { DrugEntry } from "../pharm/drugTypes";
+import type { DrugEntry } from "../src/archived/pharm-old/drugTypes";
 import { StreakTracker } from "./StreakTracker";
 import { QuickReviewMode } from "./QuickReviewMode";
 import { BookmarksPanel } from "./BookmarksPanel";
@@ -1005,9 +1005,9 @@ const MenuView: React.FC<MenuViewProps> = ({
             <button
               onClick={() => {
                 setShowLeaderboard(false);
-                onNavigateToDrillMode("grand_rounds");
+                onNavigateToDrillMode?.("grand_rounds");
               }}
-              className="w-full px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors"
+              className="w-full px-6 py-3 bg-muted-amber-500 hover:bg-muted-amber-600 text-white rounded-lg font-semibold transition-colors"
             >
               Go to Grand Rounds
             </button>
