@@ -18,9 +18,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     // Use raw query for random selection
     // Note: RANDOM() is PostgreSQL specific. If using MySQL/SQLite, syntax differs.
     const buzzwords = await prisma.$queryRaw`

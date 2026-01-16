@@ -41,7 +41,10 @@ export type TrainingModeId =
   | 'ventilator_hero'
   | 'polypharmacy_puzzle'
   | 'physiology_drill'
-  | 'anatomy_review';
+  | 'anatomy_review'
+  | 'medical_wordle'
+  | 'cram_mode'
+  | 'radiology_scroll';
 
 /**
  * Categories based on learning activity type

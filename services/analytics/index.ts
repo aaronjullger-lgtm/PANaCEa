@@ -116,7 +116,29 @@ export {
 } from './userAnalyticsService';
 
 // Additional exports from circadianAnalyticsService
-export { recordCircadianPerformance } from '../circadianAnalyticsService';
+export { recordCircadianPerformance, formatHour } from '../circadianAnalyticsService';
+
+// Type exports from advancedUserAnalyticsEngine (needed by components)
+export type {
+  CognitiveState,
+  LearningVelocity,
+  PerformanceByTimeOfDay,
+  PerformanceByDayOfWeek,
+  SystemMasteryProfile,
+  OptimalStudyConditions,
+  PersonalizedFSRSParams,
+  QuestionTargeting,
+  ComprehensiveUserAnalytics,
+  AnalyticsInsight,
+  ResponsePatternMetrics,
+} from '../advancedUserAnalyticsEngine';
+
+// Type exports from researchBackedAnalytics (needed by components)
+export type {
+  UserFriendlyStats,
+  TestReadinessAssessment,
+  StrengthWeaknessAnalysis,
+} from '../researchBackedAnalytics';
 
 // Alias for cleaner imports
 export { default as userAnalytics } from './userAnalyticsService';

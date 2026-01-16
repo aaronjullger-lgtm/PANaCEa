@@ -317,8 +317,9 @@ export const TieredAnalytics: React.FC<TieredAnalyticsProps> = ({
     const secondHalf = performanceData.slice(half);
     const firstHalfAcc = firstHalf.filter(r => r.isCorrect).length / firstHalf.length;
     const secondHalfAcc = secondHalf.filter(r => r.isCorrect).length / secondHalf.length;
-    const recentTrend = secondHalfAcc > firstHalfAcc + 0.05 ? 'improving' :
-                        secondHalfAcc < firstHalfAcc - 0.05 ? 'declining' : 'stable';
+    const recentTrend: 'improving' | 'stable' | 'declining' = 
+      secondHalfAcc > firstHalfAcc + 0.05 ? 'improving' :
+      secondHalfAcc < firstHalfAcc - 0.05 ? 'declining' : 'stable';
     
     return {
       readinessScore: accuracy,

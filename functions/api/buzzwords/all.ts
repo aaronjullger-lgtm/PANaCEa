@@ -13,9 +13,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     // Fetch all buzzwords
     const buzzwords = await prisma.buzzword.findMany({
       orderBy: { condition: 'asc' }

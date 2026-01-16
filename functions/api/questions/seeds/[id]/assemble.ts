@@ -9,6 +9,8 @@ export const onRequestGet = async (context) => {
   const { request, env, params } = context;
   const { id } = params;
 
+  let prisma;
+
   try {
     const authResult = await verifyAuthToken(request, env);
     if (!authResult) {
@@ -34,7 +36,7 @@ export const onRequestGet = async (context) => {
       });
     }
 
-    const prisma = createEdgePrismaClient(env);
+    prisma = createEdgePrismaClient(env);
     const question = await assembleQuestionFromSeed(prisma, id as string);
 
     return new Response(JSON.stringify({ success: true, question }), {

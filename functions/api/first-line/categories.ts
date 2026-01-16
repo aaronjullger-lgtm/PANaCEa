@@ -13,8 +13,9 @@ export async function onRequestGet(context: any) {
     });
   }
 
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
     const categories = await prisma.firstLineTreatment.groupBy({
       by: ['category'],
       orderBy: { category: 'asc' }

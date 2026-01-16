@@ -68,6 +68,9 @@ const DRILL_INFO: Record<DrillType, { label: string; icon: React.ElementType; co
   rapid_recall: { label: 'Rapid Recall', icon: Flame, color: 'red' },
   code_blue_speed: { label: 'Code Blue Speed', icon: Activity, color: 'red' },
   ddx_compare: { label: 'DDx Compare', icon: Target, color: 'purple' },
+  ddx_drill: { label: 'Differential Dx', icon: Activity, color: 'blue' },
+  procedure_drill: { label: 'Procedures', icon: Target, color: 'green' },
+  history_drill: { label: 'History Taking', icon: Heart, color: 'purple' },
   antibiotic_mode: { label: 'Bug-Drug Match', icon: Beaker, color: 'teal' },
   polypharmacy_puzzle: { label: 'Polypharmacy Puzzle', icon: Droplets, color: 'amber' },
 };

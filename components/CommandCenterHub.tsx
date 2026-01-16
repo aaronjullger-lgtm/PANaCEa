@@ -69,7 +69,6 @@ import {
   type TrainingCategory,
 } from '../config/training-modes';
 import { useUserContext } from '../hooks/useUserContext';
-import { RecommendationFeed } from './dashboard/RecommendationFeed';
 
 // ============================================================================
 // Types

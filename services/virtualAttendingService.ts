@@ -9,7 +9,7 @@ import { GEMINI_FLASH_MODEL } from '@/src/constants';
 
 export type AttendingPersona = 'nurturer' | 'surgeon' | 'professor' | 'comedian' | 'drill-sergeant';
 
-interface PersonaProfile {
+export interface PersonaProfile {
   id: AttendingPersona;
   name: string;
   description: string;

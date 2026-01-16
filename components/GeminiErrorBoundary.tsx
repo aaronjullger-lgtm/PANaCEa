@@ -10,7 +10,7 @@ import { AlertTriangle, RefreshCw, Wifi, Clock, Server } from 'lucide-react';
 
 // Lazy load Sentry to avoid initialization conflicts with Clerk
 let captureError: ((error: Error, context?: Record<string, unknown>) => void) | null = null;
-let addBreadcrumb: ((category: string, message: string, data?: Record<string, unknown>) => void) | null = null;
+let addBreadcrumb: ((message: string, category: string, level?: 'error' | 'warning' | 'info' | 'debug' | 'fatal', data?: Record<string, unknown>) => void) | null = null;
 if (import.meta.env.PROD) {
   import('../lib/monitoring/sentry').then((sentry) => {
     captureError = sentry.captureError;

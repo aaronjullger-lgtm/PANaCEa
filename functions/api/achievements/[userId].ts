@@ -30,27 +30,27 @@ export async function onRequestOptions(): Promise<Response> {
 export async function onRequestGet(context: PagesContext): Promise<Response> {
   const { request, env, params } = context;
 
+  const authContext = await authenticateRequest(request, env);
+
+  if (!authContext) {
+    return createErrorResponse('Unauthorized', 401);
+  }
+
+  const { userId: authenticatedUserId } = authContext;
+  const { userId: requestedUserId } = params;
+
+  // Users can only fetch their own achievements
+  if (authenticatedUserId !== requestedUserId) {
+    return createErrorResponse('Forbidden', 403);
+  }
+
+  if (!env.DATABASE_URL) {
+    return createErrorResponse('Database not configured', 500);
+  }
+
+  const prisma = createEdgePrismaClient(env.DATABASE_URL);
+
   try {
-    const authContext = await authenticateRequest(request, env);
-
-    if (!authContext) {
-      return createErrorResponse('Unauthorized', 401);
-    }
-
-    const { userId: authenticatedUserId } = authContext;
-    const { userId: requestedUserId } = params;
-
-    // Users can only fetch their own achievements
-    if (authenticatedUserId !== requestedUserId) {
-      return createErrorResponse('Forbidden', 403);
-    }
-
-    if (!env.DATABASE_URL) {
-      return createErrorResponse('Database not configured', 500);
-    }
-
-    const prisma = createEdgePrismaClient(env.DATABASE_URL);
-    
     const achievements = await prisma.userAchievement.findMany({
       where: { userId: requestedUserId }
     });

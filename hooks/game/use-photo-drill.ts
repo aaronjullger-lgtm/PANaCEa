@@ -160,12 +160,13 @@ export interface PhotoCase {
 
 /**
  * Represents the current state of the game.
+ * - 'landing': Landing page for the drill (before category selection)
  * - 'menu': User is selecting a category in the lobby
  * - 'playing': Actively drilling with infinite queue
  * - 'feedback': Showing feedback for the last answer
  * - 'summary': Session complete
  */
-export type GameStatus = 'menu' | 'playing' | 'feedback' | 'summary';
+export type GameStatus = 'landing' | 'menu' | 'playing' | 'feedback' | 'summary';
 
 /**
  * @deprecated Use GameStatus instead.
@@ -321,6 +322,8 @@ export interface UsePhotoDrillReturn {
   currentCaseIndex: number;
   /** Total number of cases in queue */
   totalCases: number;
+  /** Total number of questions attempted in this session (alias for currentCaseIndex) */
+  totalAttempts: number;
   /** Current score (number correct) */
   score: number;
   /** Current streak of correct answers */
@@ -657,6 +660,7 @@ export function usePhotoDrill(initialCases: PhotoCase[] = MOCK_CASES): UsePhotoD
     currentCase,
     currentCaseIndex,
     totalCases,
+    totalAttempts: currentCaseIndex,
     score,
     streak,
     userAnswer,

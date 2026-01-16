@@ -72,7 +72,7 @@ const generateCoverageDrill = (guidelines: AntibioticGuideline[]): AntibioticDri
   const organism: OrganismInfection = {
     id: guideline.id,
     name: guideline.organism,
-    category: guideline.class.toLowerCase().replace(' ', '_'),
+    category: guideline.class.toLowerCase().replace(' ', '_') as OrganismInfection['category'],
     description: guideline.description || undefined
   };
 
@@ -625,14 +625,14 @@ const AntibioticMode: React.FC<AntibioticModeProps> = ({ onExit }) => {
             <div className="text-center">
               <motion.button
                 onClick={handleStart}
-                disabled={viewState === 'loading'}
+                disabled={(viewState as string) === 'loading'}
                 className="px-10 py-4 bg-[#1F283A] text-[#E9ECF1] dark:bg-[#E9ECF1] dark:text-[#1F283A] hover:bg-[#364154] dark:hover:bg-white
                          disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-semibold text-lg
                          transition-all flex items-center justify-center gap-3 mx-auto shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {viewState === 'loading' ? (
+                {(viewState as string) === 'loading' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Loading Drill...

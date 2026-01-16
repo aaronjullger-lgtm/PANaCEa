@@ -314,7 +314,7 @@ export function DrillSetup({
               <div className="flex justify-between">
                 <span>Difficulty:</span>
                 <span className="font-medium text-[var(--color-text-primary)]">
-                  {difficulty === 'easier' ? 'Easier' : difficulty === 'same' ? 'PANCE-Level' : 'Harder'}
+                  PANCE-Level
                 </span>
               </div>
               <div className="flex justify-between">

@@ -53,6 +53,17 @@ export const socraticService = socraticHintServiceModule;
 export const virtualPreceptor = virtualPreceptorServiceModule;
 export const virtualAttending = virtualAttendingServiceModule;
 
+// Re-export attending persona types and functions
+export {
+  type AttendingPersona,
+  type PersonaProfile,
+  ATTENDING_PERSONAS,
+  savePreferredPersona,
+  loadPreferredPersona,
+  getPersona,
+  getAllPersonas,
+} from '../virtualAttendingService';
+
 // ============================================================================
 // DEPRECATION GUIDE
 // ============================================================================

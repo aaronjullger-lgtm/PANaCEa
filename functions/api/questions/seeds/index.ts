@@ -9,6 +9,8 @@ export const onRequestPost = async (context) => {
 
   const { request, env } = context;
 
+  let prisma;
+
   try {
     const authResult = await verifyAuthToken(request, env);
     if (!authResult) {
@@ -49,7 +51,8 @@ export const onRequestPost = async (context) => {
       });
     }
 
-    const prisma = createEdgePrismaClient(env);
+    prisma = createEdgePrismaClient(env);
+
     const seed = await createQuestionSeed(prisma, body);
 
     return new Response(JSON.stringify({ success: true, seed }), {
@@ -72,6 +75,6 @@ export const onRequestPost = async (context) => {
       }
     });
   } finally {
-    await prisma.$disconnect();
+    if (prisma) await prisma.$disconnect();
   }
 };

@@ -107,13 +107,6 @@ import { useImplicitMetrics } from "../hooks/useImplicitMetrics";
 
 // Other services (non-barrel)
 import { feedback } from "../services/feedbackService";
-// Sprint 4: Optimistic UI for instant feedback
-import { 
-  optimisticUpdateStats, 
-  optimisticUpdateSystemStats, 
-  createOptimisticPerformanceRecord,
-  showOptimisticFeedback,
-} from "../lib/utils/optimisticUI";
 
 interface QuizViewProps {
   initialQueue: Question[];
