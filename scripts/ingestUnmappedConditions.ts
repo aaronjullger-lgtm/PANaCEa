@@ -118,7 +118,6 @@ async function main() {
         aliases: raw !== name ? [raw] : [],
         relatedSystems: [],
         status: 'draft',
-        updatedAt: new Date(),
       },
     });
 

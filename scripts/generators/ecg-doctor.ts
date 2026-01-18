@@ -81,7 +81,6 @@ async function seedECGPatterns(dryRun = false) {
 
             id: uuidv4(),
 
-            updatedAt: new Date(),
 
             name: pattern.name,
             category: pattern.category,

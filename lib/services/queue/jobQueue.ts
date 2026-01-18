@@ -53,7 +53,6 @@ export async function createJob(prisma: PrismaClientLike, options: CreateJobOpti
       priority: options.priority || 5,
       scheduledFor: options.scheduledFor || new Date(),
       maxAttempts: options.maxAttempts || 3,
-      updatedAt: new Date(),
     },
   });
 }

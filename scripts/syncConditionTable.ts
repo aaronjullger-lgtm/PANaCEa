@@ -69,7 +69,6 @@ async function syncCondition(meta: any): Promise<void> {
       await prisma.condition.create({
         data: {
 
-          updatedAt: new Date(),
 
           id: conditionId,
           name: meta.condition,

@@ -291,7 +291,6 @@ async function seedAntibioticGuidelines() {
 
           id: uuidv4(),
 
-          updatedAt: new Date(),
 
           organism: guideline.organism,
           class: guideline.class,

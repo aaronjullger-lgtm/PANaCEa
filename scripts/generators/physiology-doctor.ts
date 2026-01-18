@@ -151,7 +151,6 @@ async function seedPhysiologyConcepts() {
 
           id: uuidv4(),
 
-          updatedAt: new Date(),
 
           name: concept.name,
           system: concept.system,

@@ -350,7 +350,6 @@ class DriftDetector {
 
         id: uuidv4(),
 
-        updatedAt: new Date(),
 
         action: "DRIFT_DETECTION",
         entityType: "SYSTEM",

@@ -555,7 +555,6 @@ async function main() {
         data: {
           id: uuidv4(),
           ...cleanedData,
-          updatedAt: new Date(),
         },
       });
 

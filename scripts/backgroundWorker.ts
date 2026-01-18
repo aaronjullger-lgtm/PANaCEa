@@ -134,7 +134,6 @@ async function processQuestionGeneration(job: any): Promise<void> {
 
           id: uuidv4(),
 
-          updatedAt: new Date(),
 
           questionType: 'vignette',
           system: system,
@@ -200,7 +199,6 @@ async function processHealthCheck(job: any): Promise<void> {
 
       id: uuidv4(),
 
-      updatedAt: new Date(),
 
       totalContent: Object.keys(content).length,
       missingExplanations: issues.filter((i) => i.issueType === 'missing_explanation').length,

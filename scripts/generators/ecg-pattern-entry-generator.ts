@@ -3,6 +3,7 @@
  * Creates missing ECG patterns for PANCE coverage
  */
 
+import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
@@ -440,7 +441,6 @@ async function main() {
             clinicalPearls: ensureArray(data.clinicalPearls),
             boardYieldFacts: ensureArray(data.boardYieldFacts),
             mnemonics: ensureArray(data.mnemonics),
-            updatedAt: new Date(),
           },
         });
 

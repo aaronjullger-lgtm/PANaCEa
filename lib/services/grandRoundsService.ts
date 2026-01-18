@@ -56,7 +56,6 @@ export async function getOrCreateDailyChallenge() {
       id: uuidv4(),
       date: today,
       questionIds,
-      updatedAt: new Date(),
     },
   });
 

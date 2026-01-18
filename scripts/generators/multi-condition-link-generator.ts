@@ -983,7 +983,6 @@ async function processLabLinks() {
             data: {
               id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1044,7 +1043,6 @@ async function processFindingLinks() {
             data: {
               id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1105,7 +1103,6 @@ async function processProcedureLinks() {
             data: {
               id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1166,7 +1163,6 @@ async function processPhysiologyLinks() {
             data: {
               id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1227,7 +1223,6 @@ async function processAnatomyLinks() {
             data: {
               id: uuidv4(),
               ...link,
-              updatedAt: new Date(),
             },
           });
           existingSet.add(key);
@@ -1312,7 +1307,6 @@ async function processDrugLinks() {
                 notes: link.notes,
                 evidenceLevel: link.evidenceLevel,
                 isFirstLine: link.isFirstLine,
-                updatedAt: new Date(),
               },
             });
             existingSet.add(key);
@@ -1395,7 +1389,6 @@ async function processTreatmentLinks() {
                 notes: link.notes,
                 evidenceLevel: link.evidenceLevel,
                 isFirstLine: link.isFirstLine,
-                updatedAt: new Date(),
               },
             });
             existingSet.add(key);

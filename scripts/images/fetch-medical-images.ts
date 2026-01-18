@@ -199,7 +199,6 @@ async function addImage(conditionId: string, image: ImageResult): Promise<boolea
     await prisma.mediaAsset.create({
       data: {
 
-        updatedAt: new Date(),
 
         id: uuidv4(),
         conditionId,
@@ -211,7 +210,6 @@ async function addImage(conditionId: string, image: ImageResult): Promise<boolea
         tags: [image.source.toLowerCase()],
         status: 'approved',
         approvalStatus: 'approved',
-        updatedAt: new Date(),
       },
     });
     return true;

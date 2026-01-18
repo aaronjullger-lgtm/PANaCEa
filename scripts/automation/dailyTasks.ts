@@ -308,7 +308,6 @@ async function createGrandRoundsChallenge(): Promise<void> {
     // await prisma.grandRoundsChallenge.create({
     //   data: {
     //     id: uuidv4(),
-    //     updatedAt: new Date(),
     //     date: today,
     //     questionIds,
     //   },

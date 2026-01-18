@@ -972,7 +972,6 @@ async function insertKnownTests(dryRun: boolean) {
       await prisma.specialTest.create({
         data: {
           id: uuidv4(),
-          updatedAt: new Date(),
           name: test.name,
           displayName: test.displayName || test.name,
           aliases: test.aliases,
@@ -1056,7 +1055,6 @@ async function generateAITests(dryRun: boolean, batchSize: number) {
           await prisma.specialTest.create({
             data: {
               id: uuidv4(),
-              updatedAt: new Date(),
               name: candidate.name,
               displayName: candidate.name,
               aliases: candidate.aliases,

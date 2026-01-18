@@ -72,7 +72,6 @@ async function replenishPool() {
                 conditionId: conditionMeta.id,
                 system: conditionMeta.system,
                 difficulty: generated.difficulty || 'medium',
-                updatedAt: new Date(),
                 questionData: {
                   vignette: generated.vignette,
                   question: generated.question,

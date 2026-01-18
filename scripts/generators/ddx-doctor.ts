@@ -358,7 +358,6 @@ async function createDDx(
       commonMistakes: ensureArray(content.commonMistakes, 'Avoid premature diagnostic closure'),
       isHighYield: true,
       panceYield: 3,
-      updatedAt: new Date(),
     },
   });
 }

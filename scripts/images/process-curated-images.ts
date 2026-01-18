@@ -316,7 +316,6 @@ async function main() {
       await prisma.mediaAsset.create({
         data: {
 
-          updatedAt: new Date(),
 
           id: uuidv4(),
           conditionId,
@@ -346,7 +345,6 @@ async function main() {
                 : img.folder.toLowerCase() === 'derm'
                   ? 'derm'
                   : null,
-          updatedAt: new Date(),
         },
       });
 

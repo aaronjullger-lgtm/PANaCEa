@@ -243,7 +243,6 @@ async function main() {
         data: {
           id: crypto.randomUUID(),
           ...data,
-          updatedAt: new Date()
         }
       });
       

@@ -575,7 +575,6 @@ async function saveMediaAsset(
   await prisma.mediaAsset.create({
     data: {
 
-      updatedAt: new Date(),
 
       id: uuidv4(),
       conditionId,
@@ -600,7 +599,6 @@ async function saveMediaAsset(
       distractors: condition.distractors,
       difficulty: 'medium',
       isClinical: true,
-      updatedAt: new Date(),
     },
   });
 }

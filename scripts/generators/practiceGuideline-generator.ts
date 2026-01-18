@@ -334,7 +334,6 @@ async function main() {
           year: data.year,
           summary: data.summary,
           recommendations: data.recommendations,
-          updatedAt: new Date(),
         },
       });
 

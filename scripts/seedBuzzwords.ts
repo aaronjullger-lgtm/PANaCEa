@@ -113,7 +113,6 @@ async function main() {
 
           id: uuidv4(),
 
-          updatedAt: new Date(),
 
           condition: condition,
           buzzword: entry.buzzword,

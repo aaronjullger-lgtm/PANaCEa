@@ -58,7 +58,6 @@ export async function createDraft(
       version: 1,
       createdBy: options.userId,
       updatedBy: options.userId,
-      updatedAt: new Date(),
     },
   });
 
@@ -122,7 +121,6 @@ export async function updateContent(
       changeType: 'update',
       changeDescription: options.description,
       changedBy: options.userId,
-      updatedAt: new Date(),
     },
   });
 
@@ -195,7 +193,6 @@ export async function transitionStatus(
       changeType: getChangeType(newStatus),
       changeDescription: options.description || `Status changed to ${newStatus}`,
       changedBy: options.userId,
-      updatedAt: new Date(),
     },
   });
 

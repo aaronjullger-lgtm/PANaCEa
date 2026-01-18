@@ -462,7 +462,6 @@ async function syncConditionTables(dryRun: boolean) {
           await prisma.condition.create({
             data: {
               id: mc.conditionId,
-              updatedAt: new Date(),
               name: mc.condition,
               system: mc.system,
               subcategory: mc.subcategory || 'General',

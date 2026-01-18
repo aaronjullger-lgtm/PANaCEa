@@ -31,7 +31,6 @@ router.post(
             questionId,
             reaction,
             userId: userId || null,
-            updatedAt: new Date(),
           },
         });
       }
@@ -59,7 +58,6 @@ router.post(
             userId,
             conditionId,
             wasCorrect,
-            updatedAt: new Date(),
           },
         });
       }
@@ -108,7 +106,6 @@ router.post(
               realCondition: correctCondition,
               mistakenFor: selectedCondition,
               count: 1,
-              updatedAt: new Date(),
             },
           });
         }
@@ -144,7 +141,6 @@ router.post('/soap-note', async (req: Request, res: Response) => {
               caseId,
               totalScore,
               breakdown,
-              updatedAt: new Date(),
             },
           });
         }

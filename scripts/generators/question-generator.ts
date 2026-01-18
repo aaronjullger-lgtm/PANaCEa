@@ -323,7 +323,6 @@ async function main() {
           source: 'ai-generated',
           conditionId: condition.conditionId, // Link to Condition
           medicalContentId: condition.medicalContentId, // Link to MedicalContent
-          updatedAt: new Date(),
         },
       });
 

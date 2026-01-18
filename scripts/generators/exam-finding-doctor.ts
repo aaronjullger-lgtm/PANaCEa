@@ -155,7 +155,6 @@ async function seedExamFindings() {
 
           id: uuidv4(),
 
-          updatedAt: new Date(),
 
           name: finding.name,
           system: finding.system,

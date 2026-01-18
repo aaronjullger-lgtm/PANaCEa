@@ -69,7 +69,6 @@ async function syncAnatomy(meta: any): Promise<void> {
     await prisma.anatomyStructure.create({
       data: {
 
-        updatedAt: new Date(),
 
         id: anatomyId,
         name: meta.name,

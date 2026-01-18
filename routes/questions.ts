@@ -276,7 +276,6 @@ router.post(
           flagType,
           description,
           priority: priority || 'medium',
-          updatedAt: new Date(),
         },
       });
 

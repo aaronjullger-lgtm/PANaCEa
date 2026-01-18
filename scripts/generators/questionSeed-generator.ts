@@ -258,7 +258,6 @@ async function main() {
             explanation: data.explanation,
             difficulty: 'medium', // All seeds are PANCE-level
             tags: data.tags,
-            updatedAt: new Date(),
           },
         });
 

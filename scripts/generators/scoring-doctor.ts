@@ -77,7 +77,6 @@ async function seedScoringSystems(dryRun = false) {
 
             id: uuidv4(),
 
-            updatedAt: new Date(),
 
             name: system.name,
             condition: system.condition,

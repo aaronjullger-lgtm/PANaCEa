@@ -399,7 +399,6 @@ async function main() {
           reassuringFeatures: data.reassuringFeatures || [],
           redFlags: data.redFlags || [],
           typicalPresentation: data.typicalPresentation,
-          updatedAt: new Date(),
         },
       });
 

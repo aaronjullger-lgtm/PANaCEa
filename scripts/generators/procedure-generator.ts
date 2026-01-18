@@ -565,7 +565,6 @@ async function main() {
         data: {
           id: uuidv4(),
           ...createData,
-          updatedAt: new Date(),
         },
       });
 

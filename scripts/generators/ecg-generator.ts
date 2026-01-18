@@ -275,7 +275,6 @@ async function main(): Promise<void> {
         await prisma.eCGPattern.create({
           data: {
 
-            updatedAt: new Date(),
 
             id: uuidv4(),
             name: pattern.name,
@@ -312,7 +311,6 @@ async function main(): Promise<void> {
             commonMistakes: content.commonMistakes || [],
             testQuestionTips: content.testQuestionTips || [],
             mnemonics: content.mnemonics || [],
-            updatedAt: new Date(),
           },
         });
         console.log(`  ✅ Created: ${pattern.name}`);

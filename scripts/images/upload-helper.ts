@@ -1025,7 +1025,6 @@ async function uploadSingleImage(
     const mediaAsset = await prisma.mediaAsset.create({
       data: {
 
-        updatedAt: new Date(),
 
         id: generateId(),
         conditionId: dbContent?.conditionId || null,
@@ -1058,7 +1057,6 @@ async function uploadSingleImage(
         isClinical: true,
         sourceUrl: imageUrl,
         citation: options.sourceAttribution,
-        updatedAt: new Date(),
       },
     });
 

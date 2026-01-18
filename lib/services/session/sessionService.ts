@@ -531,7 +531,6 @@ export class SessionService {
               conditionId: content.conditionId,
               medicalContentId: content.id,
               difficulty: generated.difficulty,
-              updatedAt: new Date(),
               questionData: {
                 question: generated.question,
                 vignette: generated.vignette,

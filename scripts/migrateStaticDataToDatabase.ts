@@ -331,7 +331,6 @@ async function migrateConditions() {
           id: uuidv4(),
           name: item.condition,
           system: item.system,
-          updatedAt: new Date(),
         },
       });
 

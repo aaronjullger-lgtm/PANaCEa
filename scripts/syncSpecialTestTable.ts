@@ -229,7 +229,6 @@ async function syncSpecialTest(meta: any): Promise<void> {
     await prisma.specialTest.create({
       data: {
 
-        updatedAt: new Date(),
 
         id: testId,
         name: meta.name,

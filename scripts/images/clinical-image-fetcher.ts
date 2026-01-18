@@ -1009,7 +1009,6 @@ async function acquireImagesForCondition(
         await prisma.mediaAsset.create({
           data: {
 
-            updatedAt: new Date(),
 
             id: generateId(),
             type: mapCategoryToDbType(condition.category),
@@ -1032,7 +1031,6 @@ async function acquireImagesForCondition(
               license: result.license,
               qualityScore: result.quality_score,
             },
-            updatedAt: new Date(),
           },
         });
 

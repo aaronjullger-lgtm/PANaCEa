@@ -382,7 +382,6 @@ async function insertKnownBuzzwords(dryRun: boolean) {
       await prisma.buzzword.create({
         data: {
           id: uuidv4(),
-          updatedAt: new Date(),
           buzzword: candidate.buzzword,
           condition: candidate.conditionName,
           system: candidate.system,
@@ -474,7 +473,6 @@ async function generateAIBuzzwords(dryRun: boolean, batchSize: number) {
           await prisma.buzzword.create({
             data: {
               id: uuidv4(),
-              updatedAt: new Date(),
               buzzword: candidate.buzzword,
               condition: candidate.conditionName,
               system: candidate.system,

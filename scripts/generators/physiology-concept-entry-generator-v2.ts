@@ -4,6 +4,7 @@
  * Fixed to match Prisma schema exactly
  */
 
+import { randomUUID } from 'crypto';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
@@ -300,7 +301,6 @@ async function main() {
             regulatoryFactors: ensureArray(data.regulatoryFactors),
             signalTransduction: ensureString(data.signalTransduction),
             testQuestionTips: ensureArray(data.testQuestionTips),
-            updatedAt: new Date(),
           },
         });
 

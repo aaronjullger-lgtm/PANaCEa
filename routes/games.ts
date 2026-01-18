@@ -200,7 +200,6 @@ router.post(
           score: finalScore,
           correctCount,
           timeSpentMs,
-          updatedAt: new Date(),
         },
       });
 

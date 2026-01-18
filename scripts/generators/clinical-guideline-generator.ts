@@ -802,7 +802,6 @@ async function gapAnalysis() {
             components: data.components as any,
             scoringMap: data.scoringMap as any,
             vignettes: data.vignettes as any,
-            updatedAt: new Date(),
           },
         });
 
@@ -887,7 +886,6 @@ async function main() {
           components: data.components as any,
           scoringMap: data.scoringMap as any,
           vignettes: data.vignettes as any,
-          updatedAt: new Date(),
         },
       });
 

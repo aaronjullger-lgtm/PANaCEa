@@ -86,7 +86,6 @@ router.post('/performance', requireAuth, async (req: AuthenticatedRequest, res: 
         errorTag: record.errorTag,
         subcategoryName: record.subcategoryName,
         conditionName: record.conditionName,
-        updatedAt: new Date(),
       },
     });
 

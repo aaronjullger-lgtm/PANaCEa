@@ -53,7 +53,6 @@ export const recommendationService = {
             priority: rec.priority,
             status: 'pending',
             data: rec.data || {},
-            updatedAt: new Date(),
           },
         });
       }

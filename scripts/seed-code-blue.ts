@@ -211,7 +211,6 @@ async function seedCodeBlueQuestions() {
 
           id: uuidv4(),
 
-          updatedAt: new Date(),
 
           question: q.question,
           options: q.options,

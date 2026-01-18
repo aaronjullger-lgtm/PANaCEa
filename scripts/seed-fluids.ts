@@ -309,7 +309,6 @@ async function seedFluidCases() {
 
           id: uuidv4(),
 
-          updatedAt: new Date(),
 
           title: fluidCase.title,
           scenario: fluidCase.scenario,

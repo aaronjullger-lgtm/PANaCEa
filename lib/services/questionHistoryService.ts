@@ -65,7 +65,6 @@ export async function saveQuestionVersion(
         changedBy: changedBy || null,
         changeReason: changeReason || null,
         validFrom: new Date(),
-        updatedAt: new Date(),
       },
     });
 

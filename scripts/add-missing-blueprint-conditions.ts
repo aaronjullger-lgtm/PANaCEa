@@ -378,7 +378,6 @@ async function addMissingConditions() {
           prisma.medicalContent.create({
             data: {
 
-              updatedAt: new Date(),
 
               id: `content_${id}`,
               conditionId: id,

@@ -77,7 +77,6 @@ async function migrateMediaManifest() {
 
             id: uuidv4(),
 
-            updatedAt: new Date(),
 
             conditionId: conditionId || null,
             type: entry.category,

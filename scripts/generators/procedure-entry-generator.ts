@@ -3,6 +3,7 @@
  * Creates missing medical procedures for PANCE coverage
  */
 
+import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
@@ -416,7 +417,6 @@ async function main() {
             commonMistakes: ensureArray(data.commonPitfalls),
             clinicalPearls: ensureArray(data.clinicalPearls),
             boardYieldFacts: ensureArray(data.boardYieldFacts),
-            updatedAt: new Date(),
           },
         });
 

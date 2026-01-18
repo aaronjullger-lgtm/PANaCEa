@@ -153,7 +153,6 @@ async function seedAnatomyStructures() {
 
           id: uuidv4(),
 
-          updatedAt: new Date(),
 
           name: structure.name,
           system: structure.system,

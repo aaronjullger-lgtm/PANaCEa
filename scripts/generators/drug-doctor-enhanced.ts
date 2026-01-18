@@ -1924,7 +1924,6 @@ CRITICAL RULES:
                 await prisma.drug.create({
                   data: {
                     id: uuidv4(),
-                    updatedAt: new Date(),
                     genericName: sanitized.genericName,
                     brandName: sanitized.brandName || suggestion.brandName || null,
                     displayName: sanitized.displayName,

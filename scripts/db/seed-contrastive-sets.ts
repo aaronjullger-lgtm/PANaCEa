@@ -72,7 +72,6 @@ async function main() {
 
         id: uuidv4(),
 
-        updatedAt: new Date(),
 
         symptom: set.symptom,
         conditionIds: resolvedIds, // Using resolved IDs or names as fallback

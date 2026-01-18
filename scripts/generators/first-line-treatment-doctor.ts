@@ -847,7 +847,6 @@ async function insertKnownTreatments(dryRun: boolean) {
       await prisma.firstLineTreatment.create({
         data: {
           id: uuidv4(),
-          updatedAt: new Date(),
           condition: candidate.condition,
           treatment: candidate.treatment,
           category: candidate.category,
@@ -933,7 +932,6 @@ async function generateAITreatmentsForConditions(dryRun: boolean, batchSize: num
           await prisma.firstLineTreatment.create({
             data: {
               id: uuidv4(),
-              updatedAt: new Date(),
               condition: candidate.condition,
               treatment: candidate.treatment,
               category: candidate.category,

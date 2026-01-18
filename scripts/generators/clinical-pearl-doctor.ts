@@ -1213,7 +1213,6 @@ async function insertKnownPearls(dryRun: boolean) {
       await prisma.clinicalPearl.create({
         data: {
           id: uuidv4(),
-          updatedAt: new Date(),
           pearlText: candidate.pearlText,
           fullExplanation: candidate.fullExplanation,
           system: candidate.system,
@@ -1290,7 +1289,6 @@ async function generateAIPearlsForConditions(dryRun: boolean, batchSize: number)
           await prisma.clinicalPearl.create({
             data: {
               id: uuidv4(),
-              updatedAt: new Date(),
               pearlText: candidate.pearlText,
               fullExplanation: candidate.fullExplanation,
               system: candidate.system,

@@ -469,7 +469,6 @@ async function generateECGConditionLinks() {
           data: {
             id: uuidv4(),
             ...link,
-            updatedAt: new Date(),
           },
         });
         existingSet.add(key);
@@ -583,7 +582,6 @@ async function generateImagingConditionLinks() {
             specificity: link.specificity,
             isFirstLine: link.isFirstLine,
             panceYield: link.panceYield,
-            updatedAt: new Date(),
           },
         });
         existingSet.add(key);

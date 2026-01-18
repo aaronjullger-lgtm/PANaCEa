@@ -213,7 +213,6 @@ async function backfillConditionData() {
       await prisma.condition.create({
         data: {
 
-          updatedAt: new Date(),
 
           id: conditionDef.id,
           name: meta.condition,

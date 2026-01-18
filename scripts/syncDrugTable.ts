@@ -70,7 +70,6 @@ async function syncDrug(meta: any): Promise<void> {
     await prisma.drug.create({
       data: {
 
-        updatedAt: new Date(),
 
         id: drugId,
         genericName: meta.genericName,

@@ -16,13 +16,11 @@ export async function createStudyGroup(userId: string, name: string, description
       description,
       code,
       ownerId: userId,
-      updatedAt: new Date(),
       StudyGroupMember: {
         create: {
           id: uuidv4(),
           userId,
           role: 'admin',
-          updatedAt: new Date(),
         },
       },
     },
@@ -65,7 +63,6 @@ export async function joinStudyGroup(userId: string, code: string) {
       userId,
       groupId: group.id,
       role: 'member',
-      updatedAt: new Date(),
     },
   });
 

@@ -3,6 +3,7 @@
  * Creates missing imaging studies for PANCE coverage
  */
 
+import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
@@ -450,7 +451,6 @@ async function main() {
             boardYieldFacts: ensureArray(data.boardYieldFacts),
             indications: ensureArray(data.whenToOrder),
             alternativeTo: ensureArray(data.alternativeStudies),
-            updatedAt: new Date(),
           },
         });
 

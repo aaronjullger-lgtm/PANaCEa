@@ -128,7 +128,6 @@ async function createMissingMedicalContent(conditionIds: string[]): Promise<numb
           createdBy: 'system',
           updatedBy: 'system',
           createdAt: new Date(),
-          updatedAt: new Date(),
         },
       });
 

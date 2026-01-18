@@ -50,7 +50,6 @@ export async function createAuditLog(prisma: PrismaClientLike, data: AuditLogDat
       changedByRole: data.changedByRole,
       ipAddress: data.ipAddress,
       userAgent: data.userAgent,
-      updatedAt: new Date(),
     },
   });
 }

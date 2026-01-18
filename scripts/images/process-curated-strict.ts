@@ -347,7 +347,6 @@ async function saveImage(
         filename,
         originalUrl: publicUrl,
         sourceUrl: publicUrl,
-        updatedAt: new Date(),
         tags: analysis.visualKeys,
         description: analysis.explanation,
         altText: `${analysis.detectedCondition} - ${analysis.imageType}`,
@@ -372,7 +371,6 @@ async function saveImage(
                 : null,
         explanation: analysis.explanation,
         difficulty: 'medium', // All questions are PANCE-level
-        updatedAt: new Date(),
       },
     });
 

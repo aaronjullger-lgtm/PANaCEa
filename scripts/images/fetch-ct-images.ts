@@ -907,7 +907,6 @@ async function saveMediaAsset(
       distractors: condition.distractors,
       difficulty: 'medium',
       isClinical: true,
-      updatedAt: new Date(),
     },
   });
 }

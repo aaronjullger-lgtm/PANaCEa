@@ -386,7 +386,6 @@ async function main() {
         data: {
           id: uuidv4(),
           ...data,
-          updatedAt: new Date(),
         },
       });
 

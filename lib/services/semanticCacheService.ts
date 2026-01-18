@@ -195,7 +195,6 @@ export async function cacheGeneratedQuestion(
         difficulty: query.difficulty || null,
         cachedQuestion: question,
         qualityScore: qualityScore || 0,
-        updatedAt: new Date(),
       },
     });
 

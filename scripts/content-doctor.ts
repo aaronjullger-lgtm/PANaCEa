@@ -534,7 +534,6 @@ Valid system codes: ${SYSTEM_CODES.join(', ')}`;
           await prisma.condition.create({
             data: {
 
-              updatedAt: new Date(),
 
               id: conditionId,
               name: gap.name,

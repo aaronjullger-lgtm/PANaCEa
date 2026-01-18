@@ -741,7 +741,6 @@ Return ONLY valid JSON, no markdown code blocks.`;
             createdBy: 'system_ai_enrichment',
             updatedBy: 'system_ai_enrichment',
             createdAt: new Date(),
-            updatedAt: new Date(),
             ...contentData,
           },
         });
