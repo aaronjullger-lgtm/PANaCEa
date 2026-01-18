@@ -360,7 +360,7 @@ export const sessionAnalyticsQuerySchema = z.object({
     .string()
     .optional()
     .transform((val) => val !== 'false')
-    .default('true'),
+    .default(true),
 });
 
 /**

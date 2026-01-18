@@ -30,16 +30,16 @@ const PerformanceRecordSchema = z.object({
   accuracy: z.number().min(0).max(1),
   timeSpent: z.number().int().min(0).max(86400000), // Max 24 hours in ms
   bestStreak: z.number().int().min(0).max(1000).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 type PerformanceRecordInput = z.infer<typeof PerformanceRecordSchema>;
 
 export const onRequestOptions = withCors();
 
-export const onRequestPost = authenticatedEndpoint(
+export const onRequestPost = authenticatedEndpoint<PerformanceRecordInput>(
   PerformanceRecordSchema,
-  async (context: AuthenticatedContext & ValidatedContext<PerformanceRecordInput>) => {
+  async (context) => {
     const { env, auth, validated } = context;
     const prisma = createEdgePrismaClient(env.DATABASE_URL);
 

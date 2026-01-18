@@ -70,6 +70,7 @@ export async function initializeSentry(config?: Partial<SentryConfig>): Promise<
       tracesSampleRate: finalConfig.tracesSampleRate,
       replaysSessionSampleRate: finalConfig.replaysSessionSampleRate,
       replaysOnErrorSampleRate: finalConfig.replaysOnErrorSampleRate,
+      sendDefaultPii: true, // Required for agent monitoring
 
       // Filter sensitive data
       beforeSend: (event) => {

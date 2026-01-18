@@ -50,10 +50,7 @@ export const onRequestPost = authenticatedEndpoint(SubmitSchema, async ({ env, v
 
     if (!user) {
       log.warn('User not found', { clerkId: auth.userId });
-      return new Response(JSON.stringify({ error: 'User not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { status: 404, error: 'User not found' };
     }
 
     // Check if user already submitted
@@ -68,12 +65,7 @@ export const onRequestPost = authenticatedEndpoint(SubmitSchema, async ({ env, v
 
     if (existingAttempt) {
       log.warn('Challenge already completed', { userId: user.id, challengeId });
-      return new Response(JSON.stringify({
-        error: 'Challenge already completed. You can only attempt each challenge once.',
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { status: 400, error: 'Challenge already completed. You can only attempt each challenge once.' };
     }
 
     // Get the challenge
@@ -83,10 +75,7 @@ export const onRequestPost = authenticatedEndpoint(SubmitSchema, async ({ env, v
 
     if (!challenge) {
       log.warn('Challenge not found', { challengeId });
-      return new Response(JSON.stringify({ error: 'Challenge not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { status: 404, error: 'Challenge not found' };
     }
 
     // Validate that answers match challenge questions
@@ -98,21 +87,13 @@ export const onRequestPost = authenticatedEndpoint(SubmitSchema, async ({ env, v
         expected: expectedQuestionIds.length,
         received: submittedQuestionIds.length,
       });
-      return new Response(JSON.stringify({
-        error: `Expected ${expectedQuestionIds.length} answers, got ${submittedQuestionIds.length}`,
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return { status: 400, error: `Expected ${expectedQuestionIds.length} answers, got ${submittedQuestionIds.length}` };
     }
 
     for (const qid of submittedQuestionIds) {
       if (!expectedQuestionIds.includes(qid)) {
         log.warn('Invalid question ID in answers', { questionId: qid });
-        return new Response(JSON.stringify({ error: `Invalid question ID: ${qid}` }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return { status: 400, error: `Invalid question ID: ${qid}` };
       }
     }
 
@@ -195,26 +176,20 @@ export const onRequestPost = authenticatedEndpoint(SubmitSchema, async ({ env, v
     const percentile =
       totalAttempts > 1 ? Math.round(((totalAttempts - ranking) / (totalAttempts - 1)) * 100) : 100;
 
-    return new Response(JSON.stringify({
-      success: true,
-      score: finalScore,
-      correctCount,
-      totalQuestions: expectedQuestionIds.length,
-      percentile,
-      ranking,
-      speedBonus,
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return {
+      data: {
+        success: true,
+        score: finalScore,
+        correctCount,
+        totalQuestions: expectedQuestionIds.length,
+        percentile,
+        ranking,
+        speedBonus,
+      },
+    };
   } catch (error: any) {
     log.error('Grand Rounds submit error', { error: error.message });
-    return new Response(JSON.stringify({
-      error: 'Failed to submit attempt: ' + (error.message || 'Unknown error'),
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { status: 500, error: 'Failed to submit attempt: ' + (error.message || 'Unknown error') };
   } finally {
     await safePrismaDisconnect(prisma);
   }

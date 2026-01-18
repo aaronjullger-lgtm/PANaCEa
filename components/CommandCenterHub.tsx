@@ -85,7 +85,7 @@ interface CommandCenterHubProps {
   onNavigateToDrillMode: (modeId: string) => void;
   onNavigateToToolkit: () => void;
   onNavigateToGapAnalysis: () => void;
-  onNavigateToClinicalProfile: () => void;
+  onNavigateToClinicalProfile?: () => void;
   onNavigateToIntegrations?: () => void;
   onNavigateToSimulation?: () => void;
   onNavigateToReference?: () => void;

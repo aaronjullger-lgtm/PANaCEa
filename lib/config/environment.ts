@@ -20,7 +20,7 @@ const envSchema = z.object({
 
   // Server config with defaults
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().transform(Number).default('3001'),
+  PORT: z.coerce.number().default(3001),
 
   // Optional - Gracefully degraded if missing
   FRONTEND_URL: z.string().url().optional().default('http://localhost:3000'),

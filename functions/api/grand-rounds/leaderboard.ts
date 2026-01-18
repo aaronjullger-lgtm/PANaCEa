@@ -60,16 +60,10 @@ export const onRequestGet = authenticatedEndpoint(LeaderboardSchema, async ({ en
 
     log.info('Fetched Grand Rounds leaderboard', { date: today.toISOString(), entryCount: leaderboard.length });
 
-    return new Response(JSON.stringify({ leaderboard }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { data: { leaderboard } };
   } catch (error: any) {
     log.error('Error fetching Grand Rounds leaderboard', { error: error.message });
-    return new Response(JSON.stringify({ error: 'Failed to fetch leaderboard' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { status: 500, error: 'Failed to fetch leaderboard' };
   } finally {
     await safePrismaDisconnect(prisma);
   }

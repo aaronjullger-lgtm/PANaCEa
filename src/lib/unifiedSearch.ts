@@ -20,6 +20,8 @@ const FALLBACK_DRUGS: Array<DrugSearchResult & { score: number }> = [
     genericName: 'Fluoxetine',
     drugClass: 'SSRI',
     subclass: 'Antidepressant',
+    type: 'drug',
+    aliases: ['fluoxetine', 'Sarafem'],
     score: 1,
   },
   {
@@ -28,6 +30,8 @@ const FALLBACK_DRUGS: Array<DrugSearchResult & { score: number }> = [
     genericName: 'Aspirin',
     drugClass: 'NSAID',
     subclass: 'Analgesic',
+    type: 'drug',
+    aliases: ['acetylsalicylic acid', 'ASA'],
     score: 1,
   },
   {
@@ -36,6 +40,8 @@ const FALLBACK_DRUGS: Array<DrugSearchResult & { score: number }> = [
     genericName: 'Neomycin',
     drugClass: 'Antibiotic',
     subclass: 'Aminoglycoside',
+    type: 'drug',
+    aliases: ['neomycin sulfate'],
     score: 1,
   },
 ];

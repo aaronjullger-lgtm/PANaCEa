@@ -5,7 +5,15 @@
  * Errors propagate to UI for proper handling.
  */
 
-import { BuzzwordEntry } from '@/types';
+interface BuzzwordEntry {
+  id: string;
+  word: string;
+  buzzword?: string;  // Alias for word
+  definition?: string;
+  category?: string;
+  conditionId?: string;
+  condition?: string;  // Display name for the condition
+}
 
 let buzzwordCache: BuzzwordEntry[] | null = null;
 

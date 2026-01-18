@@ -162,8 +162,8 @@ async function getUserRole(userId: string): Promise<'admin' | 'superadmin' | nul
     }
 
     // Check if user has admin privileges
-    if (user.role === 'admin' || user.role === 'superadmin') {
-      return user.role as 'admin' | 'superadmin';
+    if (user.role === 'ADMIN' || user.role === 'SUPERADMIN') {
+      return user.role === 'ADMIN' ? 'admin' : 'superadmin';
     }
 
     return null;

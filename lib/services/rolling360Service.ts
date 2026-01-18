@@ -302,7 +302,7 @@ export class Rolling360Service {
         });
 
         // Step 3: Calculate delta - what we're removing from aggregates
-        let systemStats = (stats.systemStats as Record<string, SystemStats>) || {};
+        let systemStats = (stats.systemStats as unknown as Record<string, SystemStats>) || {};
         let totalDelta = 1;
         let correctDelta = isCorrect ? 1 : 0;
 

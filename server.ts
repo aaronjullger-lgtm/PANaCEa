@@ -104,17 +104,37 @@ app.use(
 
 console.log('✓ Security headers configured (CSP allows Clerk, Service Workers, API calls)');
 
-// Rate limiting
-const limiter = rateLimit({
+// Enhanced Rate Limiting Configuration
+const API_LIMITER = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: { error: 'Too many requests, please try again later.' },
+  keyGenerator: (req) => {
+    // Use user ID if authenticated, otherwise use IP
+    return req.user?.id || req.ip;
+  },
+  skip: (req) => {
+    // Skip rate limiting for health checks and options
+    return req.path === '/health' || req.method === 'OPTIONS';
+  },
+});
+
+// Strict limiter for auth endpoints
+const AUTH_LIMITER = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // More restrictive for auth endpoints
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts. Please try again later.' },
 });
 
 // Apply rate limiting to all requests
-app.use(limiter);
+app.use(API_LIMITER);
+
+// Apply stricter rate limiting to auth routes
+app.use('/api/auth/*', AUTH_LIMITER);
 
 // Middleware
 app.use(

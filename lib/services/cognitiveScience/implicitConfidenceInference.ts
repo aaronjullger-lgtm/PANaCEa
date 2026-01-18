@@ -28,7 +28,7 @@
  * @module lib/services/cognitiveScience/implicitConfidenceInference
  */
 
-import { Rating, State } from '../../fsrs';
+import { Rating, FSRSState as State } from '../../fsrs';
 
 export interface BehavioralSignals {
   // Timing signals

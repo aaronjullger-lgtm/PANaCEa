@@ -22,7 +22,7 @@ export function hasCompleteContent(data: ConditionData): boolean {
 /**
  * Build database context string for AI prompts
  */
-export function buildDatabaseContext(data: LoadedConditionData): string {
+export function buildDatabaseContext(data: any): string {
   const lines: string[] = [
     `Condition: ${data.name}`,
     `System: ${data.system}`,
