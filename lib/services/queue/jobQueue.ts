@@ -11,6 +11,8 @@
  * For production with high volume, consider Redis + BullMQ.
  */
 
+import { v4 as uuidv4 } from 'uuid';
+
 // Generic Prisma client type that works with both standard and edge clients
 type PrismaClientLike = {
   backgroundJob: any;
@@ -45,11 +47,13 @@ export interface CreateJobOptions {
 export async function createJob(prisma: PrismaClientLike, options: CreateJobOptions): Promise<any> {
   return prisma.backgroundJob.create({
     data: {
+      id: uuidv4(),
       jobType: options.jobType,
       payload: options.payload,
       priority: options.priority || 5,
       scheduledFor: options.scheduledFor || new Date(),
       maxAttempts: options.maxAttempts || 3,
+      updatedAt: new Date(),
     },
   });
 }

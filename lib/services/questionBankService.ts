@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma';
 import { loadConditionData } from '../../services/conditionDataLoader';
@@ -119,6 +120,7 @@ async function storeGeneratedQuestion(payload: {
 
   const record = await prisma.question.create({
     data: {
+      id: uuidv4(),
       vignette: generated.question,
       question: generated.question,
       options: generated.options || [],
@@ -128,6 +130,7 @@ async function storeGeneratedQuestion(payload: {
       tags: generated.sourceSections || [],
       difficulty: payload.difficulty || 'medium',
       source: 'ai_generated',
+      updatedAt: new Date(),
     },
   });
 

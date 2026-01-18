@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../prisma';
 
 export interface RecommendationContext {
@@ -44,6 +45,7 @@ export const recommendationService = {
       if (!existing) {
         await prisma.studyRecommendation.create({
           data: {
+            id: uuidv4(),
             userId,
             type: rec.type,
             topic: rec.topic,
@@ -51,6 +53,7 @@ export const recommendationService = {
             priority: rec.priority,
             status: 'pending',
             data: rec.data || {},
+            updatedAt: new Date(),
           },
         });
       }

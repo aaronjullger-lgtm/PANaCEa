@@ -6,6 +6,7 @@
  * [Timestamp] [User_ID] [Field_Changed] [Old_Value] -> [New_Value]
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import type { UserRole } from '../../../functions/api/_shared/rbac';
 
 // Generic Prisma client type that works with both standard and edge clients
@@ -36,6 +37,7 @@ export interface AuditLogData {
 export async function createAuditLog(prisma: PrismaClientLike, data: AuditLogData): Promise<void> {
   await prisma.contentAuditLog.create({
     data: {
+      id: uuidv4(),
       contentId: data.contentId,
       conditionId: data.conditionId,
       version: data.version,
@@ -48,6 +50,7 @@ export async function createAuditLog(prisma: PrismaClientLike, data: AuditLogDat
       changedByRole: data.changedByRole,
       ipAddress: data.ipAddress,
       userAgent: data.userAgent,
+      updatedAt: new Date(),
     },
   });
 }

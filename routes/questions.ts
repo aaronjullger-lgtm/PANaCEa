@@ -11,6 +11,7 @@
  * Extracted from server.ts for modularity.
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { Router, Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthenticatedRequest } from '../lib/middleware/clerkAuth';
@@ -263,6 +264,7 @@ router.post(
       // Create flag in database
       const flag = await prisma.questionFlag.create({
         data: {
+          id: uuidv4(),
           userId,
           userEmail: userEmail || null,
           userFirstName: userFirstName || null,
@@ -274,6 +276,7 @@ router.post(
           flagType,
           description,
           priority: priority || 'medium',
+          updatedAt: new Date(),
         },
       });
 

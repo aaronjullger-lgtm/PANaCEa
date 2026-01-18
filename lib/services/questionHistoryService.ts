@@ -4,6 +4,8 @@
  * Vital for disputes if a student claims an answer was wrong back then
  */
 
+import { v4 as uuidv4 } from 'uuid';
+
 interface QuestionSnapshot {
   questionId: string;
   version: number;
@@ -56,12 +58,14 @@ export async function saveQuestionVersion(
     // Create new version
     await prisma.questionHistory.create({
       data: {
+        id: uuidv4(),
         questionId,
         version: newVersion,
         questionData,
         changedBy: changedBy || null,
         changeReason: changeReason || null,
         validFrom: new Date(),
+        updatedAt: new Date(),
       },
     });
 

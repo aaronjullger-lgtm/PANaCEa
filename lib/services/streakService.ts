@@ -3,6 +3,7 @@
  * Manages daily activity streaks and flame level calculation
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { getPrismaClient } from '../db';
 import { getTodayUTC } from '../utils/timeUtils';
 
@@ -59,11 +60,13 @@ export async function recordDailyActivity(
       studyMinutes: { increment: studyMinutes },
     },
     create: {
+      id: uuidv4(),
       userId,
       date: today,
       questionsAnswered,
       accuracyPercent,
       studyMinutes,
+      updatedAt: new Date(),
     },
   });
 }

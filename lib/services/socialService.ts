@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { getPrismaClient } from '../db';
 
 const getPrisma = () => getPrismaClient();
@@ -10,14 +11,18 @@ export async function createStudyGroup(userId: string, name: string, description
 
   const group = await prisma.studyGroup.create({
     data: {
+      id: uuidv4(),
       name,
       description,
       code,
       ownerId: userId,
+      updatedAt: new Date(),
       StudyGroupMember: {
         create: {
+          id: uuidv4(),
           userId,
           role: 'admin',
+          updatedAt: new Date(),
         },
       },
     },
@@ -56,9 +61,11 @@ export async function joinStudyGroup(userId: string, code: string) {
 
   await prisma.studyGroupMember.create({
     data: {
+      id: uuidv4(),
       userId,
       groupId: group.id,
       role: 'member',
+      updatedAt: new Date(),
     },
   });
 

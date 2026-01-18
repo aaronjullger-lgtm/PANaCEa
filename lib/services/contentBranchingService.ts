@@ -3,6 +3,8 @@
  * Allows admins to work on guideline updates without affecting live content
  */
 
+import { v4 as uuidv4 } from 'uuid';
+
 interface BranchCreateOptions {
   name: string;
   description?: string;
@@ -68,10 +70,12 @@ export async function createBranch(options: BranchCreateOptions): Promise<string
     // Create branch
     const branch = await prisma.contentBranch.create({
       data: {
+        id: uuidv4(),
         name: options.name,
         description: options.description || null,
         baseBranch: options.baseBranch || 'main',
         createdBy: options.createdBy,
+        updatedAt: new Date(),
       },
     });
 
@@ -110,6 +114,7 @@ export async function addChangeToBranch(branchName: string, change: BranchChange
     // Add change
     const branchChange = await prisma.branchChange.create({
       data: {
+        id: uuidv4(),
         branchId: branch.id,
         contentId: change.contentId,
         conditionId: change.conditionId,
@@ -117,6 +122,7 @@ export async function addChangeToBranch(branchName: string, change: BranchChange
         contentData: change.contentData,
         previousData: change.previousData || null,
         createdBy: change.createdBy,
+        updatedAt: new Date(),
       },
     });
 

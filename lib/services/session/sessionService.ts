@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { createEdgePrismaClient } from '../../../functions/api/_shared/prisma-edge';
 import { ContentService } from '../content/contentService';
 import type { Env } from '../../../functions/api/_shared/auth';
@@ -530,6 +531,7 @@ export class SessionService {
               conditionId: content.conditionId,
               medicalContentId: content.id,
               difficulty: generated.difficulty,
+              updatedAt: new Date(),
               questionData: {
                 question: generated.question,
                 vignette: generated.vignette,

@@ -5,6 +5,7 @@
  * Extracted from server.ts for modularity.
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthenticatedRequest } from '../lib/middleware/clerkAuth';
@@ -66,10 +67,12 @@ router.post('/session', requireAuth, async (req: AuthenticatedRequest, res: Resp
     // Create new session
     const session = await prisma.patientEncounterSession.create({
       data: {
+        id: uuidv4(),
         userId: user.id,
         caseId,
         messages: [],
         status: 'active',
+        updatedAt: new Date(),
       },
     });
 

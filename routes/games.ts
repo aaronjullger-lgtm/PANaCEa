@@ -5,6 +5,7 @@
  * Extracted from server.ts for modularity.
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthenticatedRequest } from '../lib/middleware/clerkAuth';
@@ -193,12 +194,13 @@ router.post(
 
       await prisma.grandRoundsAttempt.create({
         data: {
-          id: crypto.randomUUID(),
+          id: uuidv4(),
           userId: user.id,
           challengeId,
           score: finalScore,
           correctCount,
           timeSpentMs,
+          updatedAt: new Date(),
         },
       });
 
