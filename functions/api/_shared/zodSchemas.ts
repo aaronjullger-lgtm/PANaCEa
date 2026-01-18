@@ -358,9 +358,9 @@ export const sessionAnalyticsQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   includeProfile: z
     .string()
+    .default('true')
     .optional()
-    .transform((val) => val !== 'false')
-    .default('true'),
+    .transform((val) => val !== 'false'),
 });
 
 /**

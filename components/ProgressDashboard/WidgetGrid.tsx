@@ -260,7 +260,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
     const delay = index * 0.05;
 
     switch (widgetId) {
-      case 'currentStreak':
+      case 'currentStreak': {
         // Gold achievement: Extraordinary streak threshold
         const isExtraordinaryStreak = data.currentStreak >= GOLD_ACHIEVEMENT_STREAK_THRESHOLD;
         return (
@@ -277,6 +277,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             delay={delay}
           />
         );
+      }
 
       case 'bestStreak':
         // De-emphasized: Lifetime stat
@@ -322,7 +323,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
           />
         );
 
-      case 'todayProgress':
+      case 'todayProgress': {
         // Emphasize: Today's performance
         // Gold achievement: Perfect day with threshold questions
         const isPerfectDay =
@@ -346,6 +347,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             delay={delay}
           />
         );
+      }
 
       case 'weekProgress':
         return (
@@ -397,7 +399,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
         );
 
       // Deep Insight Widgets
-      case 'vignetteStamina':
+      case 'vignetteStamina': {
         // Short/Long question word count thresholds for UI display
         const SHORT_THRESHOLD = 50;
         const LONG_THRESHOLD = 150;
@@ -467,6 +469,7 @@ const WidgetGrid: React.FC<WidgetGridProps> = ({ data, enabledWidgets, timeScope
             </p>
           </motion.div>
         );
+      }
 
       case 'speedVsAccuracy':
         return (

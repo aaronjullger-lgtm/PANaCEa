@@ -68,7 +68,7 @@ const UserPreferencesSchema = z.object({
     showOnLeaderboard: z.boolean().optional(),
 
     // Custom settings (flexible JSON)
-    customSettings: z.record(z.unknown()).optional(),
+    customSettings: z.record(z.string(), z.unknown()).optional(),
   }),
 });
 
@@ -104,7 +104,7 @@ const PartialPreferencesSchema = z.object({
     pushNotifications: z.boolean().optional(),
     shareAnonymousData: z.boolean().optional(),
     showOnLeaderboard: z.boolean().optional(),
-    customSettings: z.record(z.unknown()).optional(),
+    customSettings: z.record(z.string(), z.unknown()).optional(),
   }),
 });
 

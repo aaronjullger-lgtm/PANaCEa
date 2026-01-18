@@ -30,7 +30,7 @@ const PerformanceRecordSchema = z.object({
   accuracy: z.number().min(0).max(1),
   timeSpent: z.number().int().min(0).max(86400000), // Max 24 hours in ms
   bestStreak: z.number().int().min(0).max(1000).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 type PerformanceRecordInput = z.infer<typeof PerformanceRecordSchema>;
